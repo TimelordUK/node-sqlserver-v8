@@ -1,26 +1,32 @@
 {
-  "name": "msnodesql",
-  "description": "Microsoft Driver for Node.js for SQL Server",
-  "author": "Microsoft Corp.",
-  "contributors": [ "Jonathan Guerin <jguerin@microsoft.com>", "Jay Kint <jkint@microsoft.com>", "Warren Read <wread@microsoft.com>", "George Yan <georgeya@microsoft.com>", "Inga Verbitskaya <ingave@microsoft.com>"],
-  "version": "0.2.1",
-  "keywords": ["sql", "database", "mssql", "azure", "sqlserver", "tds", "microsoft", "msnodesql", "node-sqlserver"],
+  "name": "msnodesqlv8",
+  "description": "Microsoft Driver for Node.js for SQL Server compatible with Node 0.12 and stored procedure support",
+  "author": "Stephen James",
+  "contributors": [ "Microsoft", "Stephen James"],
+  "version": "0.1.0",
+  "keywords": ["sql", "database", "procedure", "sproc", "mssql", "azure", "sqlserver", "tds", "microsoft", "msnodesql", "node-sqlserver"],
   "homepage": "https://github.com/WindowsAzure/node-sqlserver",
   "bugs": "https://github.com/WindowsAzure/node-sqlserver/issues",
   "licenses": [
     {
       "type": "Apache 2.0",
-      "url": "https://raw.github.com/WindowsAzure/node-sqlserver/master/LICENSE"
+      "url": "https://github.com/TimelordUK/node-sqlserver-v8/blob/master/LICENSE"
     }
   ],
   "main": "./lib/sql.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/WindowsAzure/node-sqlserver.git" 
+    "url": "https://github.com/TimelordUK/node-sqlserver-v8.git" 
   },
   "engines": {
-    "node": ">=0.6"
+    "node": ">=0.12"
   },
+  "maintainers": [
+    {
+      "name": "Stephen James",
+      "email": "sjames8888@gmail.com"
+    }
+  ],
   "devDependencies": {
      "mocha" : "0.14.x",
      "async" : "0.1.x"
