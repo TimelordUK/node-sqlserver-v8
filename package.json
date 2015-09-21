@@ -1,12 +1,35 @@
 {
   "name": "msnodesqlv8",
   "description": "Microsoft Driver for Node.js for SQL Server compatible with Node 0.12 and stored procedure support",
-  "author": "Stephen James",
-  "contributors": [ "Microsoft", "Stephen James"],
-  "version": "0.1.4",
-  "keywords": ["sql", "database", "procedure", "sproc", "mssql", "azure", "sqlserver", "tds", "microsoft", "msnodesql", "node-sqlserver"],
+  "author": {
+    "name": "Stephen James"
+  },
+  "contributors": [
+    {
+      "name": "Microsoft"
+    },
+    {
+      "name": "Stephen James"
+    }
+  ],
+  "version": "0.1.5",
+  "keywords": [
+    "sql",
+    "database",
+    "procedure",
+    "sproc",
+    "mssql",
+    "azure",
+    "sqlserver",
+    "tds",
+    "microsoft",
+    "msnodesql",
+    "node-sqlserver"
+  ],
   "homepage": "https://github.com/TimelordUK/node-sqlserver-v8",
-  "bugs": "https://github.com/TimelordUK/node-sqlserver-v8/issues",
+  "bugs": {
+    "url": "https://github.com/TimelordUK/node-sqlserver-v8/issues"
+  },
   "licenses": [
     {
       "type": "Apache 2.0",
@@ -16,7 +39,7 @@
   "main": "./lib/sql.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/TimelordUK/node-sqlserver-v8.git" 
+    "url": "git+https://github.com/TimelordUK/node-sqlserver-v8.git"
   },
   "engines": {
     "node": ">=0.12"
@@ -28,8 +51,18 @@
     }
   ],
   "devDependencies": {
-     "mocha" : "0.14.x",
-     "async" : "0.1.x"
+    "mocha": ">=2.2.5",
+    "async": ">=1.4.2"
   },
-  "os" : [ "win32" ]
+  "os": [
+    "win32"
+  ],
+  "readme": "# Note\r\n\r\nThis driver is branched from the Microsft node-sqlserver module. The MS team are working on an entirely new version and in the interim this version will be gradually improved to include new features.\r\n# Microsoft / Contributors Node V8 Driver for Node.js for SQL Server\r\n\r\nThis version includes stored procedure support for SQL Server\r\n\r\n1. supports input/output parameters.\r\n2. captures return code from stored procedure.\r\n3. will obtain meta data describing parameters.\r\n4. compatibe with Node 0.12.x \r\n5. includes 64 bit/ia32 precompiled libraries.\r\n6. npm package coming soon.\r\n7. new features to be made available over coming months.\r\n\r\n## Test\r\n\r\nIncluded are a few unit tests.  They require mocha, async, and assert to be \r\ninstalled via npm.  Also, set the variables in test-config.js, then run the \r\ntests as follows:\r\n\r\n    cd test\r\n    node runtests.js\r\n\r\n## Known Issues\r\n\r\n\r\n\r\n\r\n\r\n",
+  "readmeFilename": "README.md",
+  "gitHead": "e025462083dd1140eed2519c449bc257482bc61b",
+  "_id": "msnodesqlv8@0.1.3",
+  "scripts": {},
+  "_shasum": "e67c4f74489e045e8a57072b73f8a55018e1b2a8",
+  "_from": "msnodesqlv8@*",
+  "_resolved": "file:node-sqlserver-v8"
 }

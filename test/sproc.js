@@ -34,7 +34,7 @@ function testBoilerPlate(proc_name, proc_sql, doneFunction) {
 suite('sproc', function () {
 
     var c;
-    this.timeout(45000);
+    timeout(45000);
     var localDate = new Date();
 
     setup(function (test_done) {

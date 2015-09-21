@@ -22,7 +22,7 @@ open a connection, and get an instance of procedureMgr
     sql.open(conn_str, function (err, conn) {
             var pm = conn.procedureMgr();
             pm.callproc('my_proc', [10], function(err, results, output) {
-        });
+      
     }
     
 in above example a call is issued to the stored procedure my_proc which takes one input integer parameter. results will contain rows selected within the procedure and output parameters are inserted into output vector. Note the [0] element in output will be the return result of the procedure. If no return exists in the procedure, this value will be 0. Any further elements in the array will be output parameters populated by the execution of the procedure.
