@@ -3,7 +3,7 @@
   "description": "Microsoft Driver for Node.js for SQL Server compatible with Node 0.12 and stored procedure support",
   "author": "Stephen James",
   "contributors": [ "Microsoft", "Stephen James"],
-  "version": "0.1.2",
+  "version": "0.1.3",
   "keywords": ["sql", "database", "procedure", "sproc", "mssql", "azure", "sqlserver", "tds", "microsoft", "msnodesql", "node-sqlserver"],
   "homepage": "https://github.com/TimelordUK/node-sqlserver-v8",
   "bugs": "https://github.com/TimelordUK/node-sqlserver-v8/issues",
