@@ -8,6 +8,7 @@
         'src/Connection.cpp',
         'src/OdbcConnection.cpp',
         'src/OdbcError.cpp',
+        'src/Operation.cpp',
         'src/OdbcOperation.cpp',
         'src/ResultSet.cpp',
         'src/stdafx.cpp',
