@@ -8,14 +8,14 @@ This version includes stored procedure support for SQL Server
 1. supports input/output parameters.
 2. captures return code from stored procedure.
 3. will obtain meta data describing parameters.
-4. compatibe with Node 0.12.x 
+4. compatibe with Node 0.12.x/4.1.0
 5. includes 64 bit/ia32 precompiled libraries.
 6. npm install with npm install msnodesqlv8
 7. new features to be made available over coming months.
 
 ## Node V4 supported. 
 
-this build now supports Node version 4.1.0 and >= 0.12.7.  The binaries for 32 bit/64 bit on both node platforms are now supported.
+this build now supports Node version 4.1.0 and >= 0.12.7.  The binaries for 32 bit/64 bit on both node platforms are now provided.
 
 ## stored procedures
 
