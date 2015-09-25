@@ -91,6 +91,14 @@ namespace mssql
 		  return Number::New(isolate, d);
 	   }
 
+	   void scopedCallback(const Persistent<Function> & callback, int argc, Local<Value> args[])
+	   {
+		   auto cons = newCallbackFunction(callback);
+		   auto context = isolate->GetCurrentContext();
+		   auto global = context->Global();
+		   cons->Call(global, argc, args);
+	   }
+
 	   Local<Integer> newInteger(int32_t i)
 	   {
 		  return Integer::New(isolate, i);
@@ -188,7 +196,11 @@ namespace mssql
 
 	   Local<Value> newBuffer(int size)
 	   {
-		  return node::Buffer::New(isolate, size);
+		   return node::Buffer::New(isolate, size)
+#ifdef NODE_GYP_V4 
+			   .ToLocalChecked()
+#endif
+			   ;
 	   }
 
 	   Local<Object> error(const stringstream &full_error)

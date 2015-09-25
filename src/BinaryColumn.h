@@ -21,8 +21,11 @@ namespace mssql
 
 	   Handle<Value> ToValue() override
 	   {
-		  auto v = node::Buffer::New(d.p->data(), d.p->size(), deleteBuffer, &d.id);
-		  return v;
+		   return node::Buffer::New(Isolate::GetCurrent(), d.p->data(), d.p->size(), deleteBuffer, &d.id)
+#ifdef NODE_GYP_V4 
+			   .ToLocalChecked()
+#endif
+			   ;
 	   }
 
 	   bool More() const override

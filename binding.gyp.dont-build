@@ -1,7 +1,7 @@
 {
   'targets': [
     {
-      'target_name': 'sqlserver',
+      'target_name': 'sqlserverv8',
 
       'sources': [ 
         'src/Column.cpp',
@@ -18,6 +18,8 @@
       'include_dirs': [
         'src',
       ],
+
+			 'defines': [ 'NODE_GYP_V4'],
 
       'conditions': [
         [ 'OS=="win"', {
