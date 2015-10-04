@@ -53,7 +53,7 @@ suite( 'open', function() {
 			}
 			catch( e ) {
 
-				assert( e == "Error: [msnodesql] Connection is closed.")
+				assert( e == "Error: [msnodesql] Connection is closed.");
 				thrown = true;
 			}
 
@@ -92,7 +92,7 @@ suite( 'open', function() {
 			}
 			catch( e ) {
 
-				assert( e == "Error: [msnodesql] Invalid parameters passed to close.")
+				assert( e == "Error: [msnodesql] Invalid parameters passed to close.");
 				thrown = true;
 			}
 

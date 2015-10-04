@@ -74,7 +74,7 @@ suite( 'txn', function() {
                     async_done();
                     test_done();
                 });
-            },
+            }
         ]);
     });
 

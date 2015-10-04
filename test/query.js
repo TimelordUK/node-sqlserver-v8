@@ -58,7 +58,7 @@ suite('query', function () {
                                { name: '', size: 3, nullable: false, type: 'text', sqlType: 'varchar' },
                                { name: '', size: 8, nullable: false, type: 'binary', sqlType: 'varbinary' }],
                 rows: [[1, 'ABC', buffer]]
-            }
+            };
 
             assert.deepEqual(results, expected, "raw results didn't match");
 
@@ -392,7 +392,7 @@ suite('query', function () {
                 },
             ]);
         });
-    })
+    });
 
     test( 'test retrieving a non-LOB string of max size', function( test_done ) {
 

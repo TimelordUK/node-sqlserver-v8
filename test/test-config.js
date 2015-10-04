@@ -19,11 +19,11 @@
 
 // server connection info
 var driver = 'SQL Server Native Client 11.0';
-var server = 'localhost';
-var user = '<user>';
-var pwd = '<pwd>';
+var server = 'james-air';
+var user = 'node';
+var pwd = 'node';
 var database = 'scratch';
-var useTrustedConnection = true;
+var useTrustedConnection = false;
 var conn_str = "Driver={" + driver + "};Server=" + server + ";" + (useTrustedConnection == true ? "Trusted_Connection={Yes};" : "UID=" + user + ";PWD=" + pwd + ";") + "Database={" + database + "};";
 
 // The following need to be exported for building connection strings within a test...

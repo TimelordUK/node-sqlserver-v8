@@ -110,7 +110,7 @@ suite('datatypes', function () {
                     //console.log("all done ... end each");
                     done();
                 });
-        })
+        });
 
 
         testname = 'test 002 - verify functionality of data type \'datetime\', fetch as date';
@@ -227,7 +227,7 @@ suite('datatypes', function () {
                 },
                 function (async_done) {
                     commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, done);
-                },
+                }
             ]);  // end of async.series()
         }); // end of test()
 
@@ -384,7 +384,7 @@ suite('datatypes', function () {
                 },
                 function (async_done) {
                     commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, done);
-                },
+                }
             ]);  // end of async.series()
         }); // end of test()
 
@@ -470,7 +470,7 @@ suite('datatypes', function () {
                 },
                 function (async_done) {
                     commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, done);
-                },
+                }
             ]);  // end of async.series()
         }); // end of test()
 
@@ -556,7 +556,7 @@ suite('datatypes', function () {
                 },
                 function (async_done) {
                     commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
-                },
+                }
             ]);  // end of async.series()
             // end of test():
         });
@@ -687,7 +687,7 @@ suite('datatypes', function () {
                 },
                 function (async_done) {
                     commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
-                },
+                }
             ]);  // end of async.series()
             // end of test():
         });
@@ -728,7 +728,7 @@ suite('datatypes', function () {
                 },
                 function (async_done) {
                     commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
-                },
+                }
             ]);  // end of async.series()
             // end of test():
         });
@@ -814,7 +814,7 @@ suite('datatypes', function () {
                     },
                     function (async_done) {
                         commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
-                    },
+                    }
                 ]);  // end of async.series()
             }
             // end of test():
@@ -856,7 +856,7 @@ suite('datatypes', function () {
                 },
                 function (async_done) {
                     commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
-                },
+                }
             ]);  // end of async.series()
             // end of test():
         });
@@ -904,7 +904,7 @@ suite('datatypes', function () {
                     function (async_done) {
                         commonTestFns.invalidQueryTSQL(c, tsql, expectedError, testname, done);
                         //                commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
-                    },
+                    }
                 ]);  // end of async.series()
             }
             // end of test():
@@ -1030,7 +1030,7 @@ suite('datatypes', function () {
                 },
                 function (async_done) {
                     commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
-                },
+                }
             ]);  // end of async.series()
             // end of test():
         });
@@ -1113,7 +1113,7 @@ suite('datatypes', function () {
                 },
                 function (async_done) {
                     commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
-                },
+                }
             ]);  // end of async.series()
             // end of test():
         });
@@ -1156,7 +1156,7 @@ suite('datatypes', function () {
                 },
                 function (async_done) {
                     commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
-                },
+                }
             ]);  // end of async.series()
             // end of test():
         });
@@ -1199,7 +1199,7 @@ suite('datatypes', function () {
                 },
                 function (async_done) {
                     commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
-                },
+                }
             ]);  // end of async.series()
             // end of test():
         });
@@ -1240,7 +1240,7 @@ suite('datatypes', function () {
                 },
                 function (async_done) {
                     commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
-                },
+                }
             ]);  // end of async.series()
             // end of test():
         });
@@ -1282,7 +1282,7 @@ suite('datatypes', function () {
                 },
                 function (async_done) {
                     commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
-                },
+                }
             ]);  // end of async.series()
             // end of test():
         });
@@ -1369,7 +1369,7 @@ suite('datatypes', function () {
                 },
                 function (async_done) {
                     commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
-                },
+                }
             ]);  // end of async.series()
             // end of test():
         });
@@ -1494,7 +1494,7 @@ suite('datatypes', function () {
                 },
                 function (async_done) {
                     commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
-                },
+                }
             ]);  // end of async.series()
             // end of test():
         });
@@ -1578,7 +1578,7 @@ suite('datatypes', function () {
                 },
                 function (async_done) {
                     commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
-                },
+                }
             ]);  // end of async.series()
             // end of test():
         });
@@ -1620,7 +1620,7 @@ suite('datatypes', function () {
                 },
                 function (async_done) {
                     commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
-                },
+                }
             ]);  // end of async.series()
             // end of test():
         });
@@ -1661,7 +1661,7 @@ suite('datatypes', function () {
                 },
                 function (async_done) {
                     commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
-                },
+                }
             ]);  // end of async.series()
             // end of test():
         });

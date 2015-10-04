@@ -35,7 +35,6 @@ suite('sproc', function () {
 
     var c;
     this.timeout(45000);
-    var localDate = new Date();
 
     setup(function (test_done) {
 

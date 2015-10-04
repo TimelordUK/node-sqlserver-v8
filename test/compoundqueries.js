@@ -97,8 +97,8 @@ suite('compoundqueries', function () {
     },
     function (async_done) {
         commonTestFns.compoundQueryTSQL(c, tsql, expected1, expected2, expected3, testname, done);
-    },
-    ]);  // end of async.series()
+    }
+        ]);  // end of async.series()
     }); // end of test()
 
     testname = 'test 002 - batched query: SELECT....; PRINT ....; SELECT....;';
@@ -142,8 +142,8 @@ suite('compoundqueries', function () {
     },
     function (async_done) {
         commonTestFns.compoundQueryTSQL(c, tsql, expected1, expected2, expected1, testname, done);
-    },
-    ]);  // end of async.series()
+    }
+        ]);  // end of async.series()
     }); // end of test()
 
     testname = 'test 003 - batched query: SELECT....; SELECT (with no results) ....; SELECT....;';
@@ -188,8 +188,8 @@ suite('compoundqueries', function () {
     },
     function (async_done) {
         commonTestFns.compoundQueryTSQL(c, tsql, expected1, expected2, expected1, testname, done);
-    },
-    ]);  // end of async.series()
+    }
+        ]);  // end of async.series()
     }); // end of test()
 
     testname = 'test 004 - batched query: SELECT....; INSERT (invalid...should fail) ....; SELECT....;';
@@ -238,7 +238,7 @@ suite('compoundqueries', function () {
     },
     function (async_done) {
         commonTestFns.invalidQueryTSQL(c, tsql, expectedError, testname, done);
-    },
-    ]);  // end of async.series()
+    }
+        ]);  // end of async.series()
     }); // end of test()
 });
