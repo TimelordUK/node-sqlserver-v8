@@ -62,14 +62,12 @@ namespace mssql
     OdbcEnvironmentHandle OdbcConnection::environment;
 
     // bind all the parameters in the array
-    // for now they are all treated as input parameters
-    bool OdbcConnection::BindParams(QueryOperation::param_bindings& params)
+    bool OdbcConnection::BindParams(BoundDatumSet& params)
     {
 	   int current_param = 1;
 	   for (auto itr = params.begin(); itr != params.end(); ++itr) {
 		  auto & rr = *itr;
-		  SQLRETURN r = SQLBindParameter(statement, current_param++, rr.param_type, rr.c_type, rr.sql_type, rr.param_size,
-			 rr.digits, rr.buffer, rr.buffer_len, &rr.indptr);
+		  SQLRETURN r = SQLBindParameter(statement, current_param++, rr.param_type, rr.c_type, rr.sql_type, rr.param_size, rr.digits, rr.buffer, rr.buffer_len, &rr.indptr);
 		  // no need to check for SQL_STILL_EXECUTING
 		  CHECK_ODBC_ERROR(r, statement);
 	   }
@@ -183,7 +181,7 @@ namespace mssql
 	   return true;
     }
 
-    bool OdbcConnection::TryExecute(const wstring& query, QueryOperation::param_bindings& paramIt)
+    bool OdbcConnection::TryExecute(const wstring& query, BoundDatumSet& paramIt)
     {
 	   assert(connectionState == Open);
 

@@ -24,7 +24,7 @@ namespace mssql
     using namespace std;
 
     template<SQLSMALLINT HandleType>
-    class OdbcHandle
+    class    OdbcHandle
     {
     public:
 

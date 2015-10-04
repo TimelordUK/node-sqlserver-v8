@@ -122,50 +122,12 @@ namespace mssql
 		return false;
 	}
 
-	static Local<Value> get(Local<Object> o, const char *v)
-	{
-		nodeTypeFactory fact;
-		auto vp = fact.newString(v);
-		auto val = o->Get(vp);
-		return val;
-	}
-
-	static Local<String> getH(Local<Value> o, const char *v)
-	{
-		nodeTypeFactory fact;
-		auto vp = fact.newString(v);
-		auto val = o->ToObject()->Get(vp);
-		return val->ToString();
-	}
-
 	bool QueryOperation::BindParameters(Handle<Array> &node_params)
 	{
-		uint32_t count = node_params->Length();
-		bool res = true;
-		output_param_count = 0;
-		if (count > 0) {
-			for (uint32_t i = 0; i < count; ++i) {
-				BoundDatum binding;
-				auto v = node_params->Get(i);
-				res = binding.bind(v);
-				
-				switch (binding.param_type)
-				{
-				case SQL_PARAM_OUTPUT:
-				case SQL_PARAM_INPUT_OUTPUT:
-					output_param_count++;
-					break;
-
-				default:
-					break;
-				}
-				if (!res) {
-					char *e = binding.getErr();
-					if (e != nullptr) ParameterErrorToUserCallback(i, e);
-					break;
-				}
-				params.push_back(move(binding));
-			}
+		auto res = params.bind(node_params);
+		if (!res)
+		{
+			ParameterErrorToUserCallback(params.first_error, params.err);
 		}
 
 		return res;
@@ -173,27 +135,7 @@ namespace mssql
 
 	Local<Array> QueryOperation::UnbindParameters()
 	{
-		nodeTypeFactory fact;
-		auto arr = fact.newArray(output_param_count);
-		int i = 0;
-
-		std::for_each(params.begin(), params.end(), [&](BoundDatum& param) mutable
-		{
-			switch (param.param_type)
-			{
-			case SQL_PARAM_OUTPUT:
-			case SQL_PARAM_INPUT_OUTPUT:
-			{
-				auto v = param.unbind();
-				arr->Set(i++, v);
-			}
-			break;
-
-			default:
-				break;
-			}
-		});
-		return arr;
+		return params.unbind();
 	}
 
 	bool QueryOperation::TryInvokeOdbc()

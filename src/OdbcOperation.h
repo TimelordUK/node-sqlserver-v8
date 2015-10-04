@@ -20,9 +20,7 @@
 #pragma once
 
 #include "Operation.h"
-
-#include <list>
-#include "BoundDatum.h"
+#include "BoundDatumSet.h"
 
 namespace mssql
 {
@@ -98,7 +96,7 @@ namespace mssql
 	{
 	public:
 
-		typedef list<BoundDatum> param_bindings; // list because we only insert and traverse in-order
+	
 
 		QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, Handle<Object> callback);
 
@@ -114,7 +112,7 @@ namespace mssql
 	protected:
 
 		wstring query;
-		param_bindings params;
+		BoundDatumSet params;
 		int output_param_count;
 	};
 

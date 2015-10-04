@@ -68,9 +68,7 @@ namespace mssql
 	   } connectionState;
 
 	   bool endOfResults;
-
-	   bool BindParams(QueryOperation::param_bindings& params);
-
+	   bool BindParams(BoundDatumSet& params);
 	   // set binary true if a binary Buffer should be returned instead of a JS string
 	   bool TryReadString(bool binary, int column);
 
@@ -97,7 +95,7 @@ namespace mssql
 	   bool TryBeginTran();
 	   bool TryClose();
 	   bool TryOpen(const wstring& connectionString);
-	   bool TryExecute(const wstring& query, QueryOperation::param_bindings& paramIt);
+	   bool TryExecute(const wstring& query, BoundDatumSet& paramIt);
 	   bool TryEndTran(SQLSMALLINT completionType);
 	   bool TryReadRow();
 	   bool TryReadColumn(int column);
