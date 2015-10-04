@@ -17,5 +17,4 @@ namespace mssql
 		  return fact.null();
 	   }
     }; 
-
 }

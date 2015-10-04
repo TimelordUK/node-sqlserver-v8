@@ -22,6 +22,4 @@ namespace mssql
     private:
 	   double value;
     };
-
-
 }

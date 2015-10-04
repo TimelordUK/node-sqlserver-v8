@@ -22,5 +22,4 @@ namespace mssql
     private:
 	   bool value;
     };
-
 }
