@@ -67,7 +67,7 @@ namespace mssql
 	   int current_param = 1;
 	   for (auto itr = params.begin(); itr != params.end(); ++itr) {
 		  auto & rr = *itr;
-		  SQLRETURN r = SQLBindParameter(statement, current_param++, rr.param_type, rr.c_type, rr.sql_type, rr.param_size, rr.digits, rr.buffer, rr.buffer_len, &rr.indptr);
+		  SQLRETURN r = SQLBindParameter(statement, current_param++, rr.param_type, rr.c_type, rr.sql_type, rr.param_size, rr.digits, rr.buffer, rr.buffer_len, rr.getInd());
 		  // no need to check for SQL_STILL_EXECUTING
 		  CHECK_ODBC_ERROR(r, statement);
 	   }

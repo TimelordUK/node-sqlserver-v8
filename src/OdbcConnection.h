@@ -49,6 +49,9 @@ namespace mssql
 	   typedef map<SQLSMALLINT, dispatcher_p> dispatcher_map;
 	   dispatcher_map dispatchers;
 
+	   typedef map<PTR, size_t> buffer_map;
+	   buffer_map buffers;
+
 	   void init();
 
 	   bool d_String(int col);
@@ -83,14 +86,14 @@ namespace mssql
 	   OdbcConnection()
 		  : error(nullptr),
 		  connectionState(Closed),
-		  endOfResults(true)
+		  endOfResults(true),bulkCount(0), paramsProcessed(0)
 	   {
 		  init();
 	   }
 
 	   static bool InitializeEnvironment();
 	   bool readNext(int column);
-	    bool StartReadingResults();
+	   bool StartReadingResults();
 
 	   bool TryBeginTran();
 	   bool TryClose();
@@ -102,6 +105,10 @@ namespace mssql
 	   bool Lob(int display_size, int column);
 	   bool boundedString(int display_size, int column);
 	   bool TryReadNextResult();
+
+	   int bulkCount;
+	   SQLULEN paramsProcessed;
+	   vector<SQLUSMALLINT> paramStatusArray;
 
 	   Handle<Value> GetMetaValue()
 	   {

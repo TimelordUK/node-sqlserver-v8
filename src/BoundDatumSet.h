@@ -11,6 +11,7 @@ namespace mssql
 		Local<Array> unbind();
 		
 		void clear() { bindings.clear(); }
+		int size() { return bindings.size(); }
 		vector<BoundDatum>::iterator begin() { return bindings.begin(); }
 		vector<BoundDatum>::iterator end() { return bindings.end(); }
 
