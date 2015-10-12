@@ -38,8 +38,8 @@ namespace mssql
 		sql_type = SQL_WVARCHAR;
 		auto str_param = p->ToString();
 		uint16vec_ptr = make_shared<vector<uint16_t>>(str_len + 1);
-		auto first_p = (*uint16vec_ptr).data();
-		buffer = first_p; 
+		auto first_p = uint16vec_ptr->data();
+		buffer = first_p;
 		str_param->Write(first_p);
 		if (str_len > 4000) {
 			param_size = 0; // max types require 0 precision
@@ -58,26 +58,26 @@ namespace mssql
 		c_type = SQL_C_WCHAR;
 		sql_type = SQL_WVARCHAR;
 
+		int strLen = 0; 
+
 		auto arr = Local<Array>::Cast(p);
 		auto len = arr->Length();
-		indvec.resize(len);
-		int maxLen = 0;
+		
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			auto str = arr->Get(i)->ToString();
-			if (str->Length() > maxLen)
-				maxLen = str->Length();
+			if (str->Length() > strLen) strLen = str->Length() + 1;
 		}
-		digits = 0;
-		buffer_len = len * (maxLen + 1);
-		uint16vec_ptr = make_shared<vector<uint16_t>>(buffer_len);
-		param_size = maxLen;
+
+		indvec.resize(len);
+		uint16vec_ptr = make_shared<vector<uint16_t>>(len * strLen);
+		buffer = uint16vec_ptr->data();
+		param_size = strLen;
 		for (uint32_t i = 0; i < len; ++i)
 		{
-			indvec[i] = maxLen;
 			auto str = arr->Get(i)->ToString();
-			auto next_p = &(*uint16vec_ptr)[i * (maxLen + 1)];
-			str->Write(next_p);
+			indvec[i] = SQL_NTS;
+			str->Write(&(*uint16vec_ptr)[i * strLen]);
 		}
 	}
 
@@ -95,7 +95,7 @@ namespace mssql
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			(*uint16vec_ptr)[i] = arr->Get(i)->BooleanValue();
-		}				
+		}
 	}
 
 	void BoundDatum::bindBoolean(SQLLEN len)
@@ -200,7 +200,7 @@ namespace mssql
 		buffer = timevec_ptr->data();
 		// TODO: Determine proper precision and size based on version of server we're talking to
 		param_size = SQL_SERVER_2008_DEFAULT_DATETIME_PRECISION;
-		digits = SQL_SERVER_2008_DEFAULT_DATETIME_SCALE;	
+		digits = SQL_SERVER_2008_DEFAULT_DATETIME_SCALE;
 	}
 
 	void BoundDatum::bindDateArray(const Local<Value>& p)
@@ -357,13 +357,13 @@ namespace mssql
 			bindDefault(p);
 		}
 		else {
-			err =  "Invalid parameter type";
+			err = "Invalid parameter type";
 			return false;
 		}
 
 		return true;
 	}
-	
+
 	static Local<Value> get(Local<Object> o, const char *v)
 	{
 		nodeTypeFactory fact;

@@ -61,16 +61,25 @@ namespace mssql
 
     OdbcEnvironmentHandle OdbcConnection::environment;
 
+	int getSize(BoundDatumSet& params)
+	{
+		auto f = params.begin();
+		int size =  f != params.end() ? f->size() : 0;
+		return size;
+	}
+
     // bind all the parameters in the array
     bool OdbcConnection::BindParams(BoundDatumSet& params)
     {
-	   int current_param = 1;
-	   for (auto itr = params.begin(); itr != params.end(); ++itr) {
-		  auto & rr = *itr;
-		  SQLRETURN r = SQLBindParameter(statement, current_param++, rr.param_type, rr.c_type, rr.sql_type, rr.param_size, rr.digits, rr.buffer, rr.buffer_len, rr.getInd());
-		  // no need to check for SQL_STILL_EXECUTING
-		  CHECK_ODBC_ERROR(r, statement);
-	   }
+		int size = getSize(params);
+		if (size <= 0) return true;
+		SQLSetStmtAttr(statement, SQL_ATTR_PARAMSET_SIZE, reinterpret_cast<SQLPOINTER>(size), 0);
+		int current_param = 1;
+		for (auto itr = params.begin(); itr != params.end(); ++itr) {
+			auto & rr = *itr;
+			SQLRETURN r = SQLBindParameter(statement, current_param++, rr.param_type, rr.c_type, rr.sql_type, rr.param_size, rr.digits, rr.buffer, rr.buffer_len, rr.getInd());
+			CHECK_ODBC_ERROR(r, statement);
+		}
 
 	   return true;
     }
@@ -89,7 +98,6 @@ namespace mssql
 
 	   return true;
     }
-
 
     bool OdbcConnection::readNext(int column)
     {
@@ -199,9 +207,8 @@ namespace mssql
 	   }
 
 	   endOfResults = true;     // reset 
-	   //column = 0;
 
-	   SQLRETURN ret = SQLExecDirect(statement, const_cast<wchar_t*>(query.c_str()), query.length());
+	   SQLRETURN ret = SQLExecDirect(statement, const_cast<wchar_t*>(query.c_str()), SQL_NTS);
 	   if (ret != SQL_NO_DATA && !SQL_SUCCEEDED(ret))
 	   {
 		  resultset = make_shared<ResultSet>(0);

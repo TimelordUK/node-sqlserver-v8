@@ -51,6 +51,11 @@ namespace mssql
 			err = other.err;
 
 			other.buffer = nullptr;
+			other.doublevec_ptr = nullptr;
+			other.uint16vec_ptr = nullptr;
+			other.int32vec_ptr = nullptr;
+			other.uint32vec_ptr = nullptr;
+			other.int64vec_ptr = nullptr;
 			other.buffer_len = 0;
 		}
 
@@ -135,6 +140,5 @@ namespace mssql
 		Handle<Value> BoundDatum::unbindUint32();
 		Handle<Value> BoundDatum::unbindNumber();
 		Handle<Value> BoundDatum::unbindDate();
-
 	};
 }

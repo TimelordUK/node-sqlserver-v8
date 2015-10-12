@@ -82,11 +82,10 @@ namespace mssql
 		  return  resultset != nullptr && resultset->EndOfRows();
 	   }
 
-
 	   OdbcConnection()
 		  : error(nullptr),
 		  connectionState(Closed),
-		  endOfResults(true),bulkCount(0), paramsProcessed(0)
+		  endOfResults(true)
 	   {
 		  init();
 	   }
@@ -105,10 +104,6 @@ namespace mssql
 	   bool Lob(int display_size, int column);
 	   bool boundedString(int display_size, int column);
 	   bool TryReadNextResult();
-
-	   int bulkCount;
-	   SQLULEN paramsProcessed;
-	   vector<SQLUSMALLINT> paramStatusArray;
 
 	   Handle<Value> GetMetaValue()
 	   {
