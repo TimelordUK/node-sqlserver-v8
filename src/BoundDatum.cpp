@@ -105,6 +105,7 @@ namespace mssql
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			(*uint16vec_ptr)[i] = arr->Get(i)->BooleanValue();
+			indvec[i] = 0;
 		}
 	}
 
@@ -112,13 +113,12 @@ namespace mssql
 	{
 		buffer_len = len * sizeof(uint16_t);
 		uint16vec_ptr = make_shared<vector<uint16_t>>(len);
-		indvec.reserve(len);
+		indvec.resize(len);
 		js_type = JS_BOOLEAN;
 		c_type = SQL_C_BIT;
 		sql_type = SQL_BIT;
 		buffer = uint16vec_ptr->data();
-		buffer_len = len;
-		param_size = 1;
+		param_size = sizeof(uint16_t);;
 		digits = 0;
 	}
 
