@@ -52,33 +52,43 @@ namespace mssql
 		indvec[0] = buffer_len;
 	}
 
+	int getMaxStrLen(const Local<Value> & p)
+	{
+		int strLen = 0;
+		auto arr = Local<Array>::Cast(p);
+		auto len = arr->Length();
+		for (uint32_t i = 0; i < len; ++i)
+		{
+			auto str = arr->Get(i)->ToString();
+			if (str->Length() > strLen) strLen = str->Length() + 1;
+		}
+		return strLen;
+	}
+
 	void BoundDatum::bindStringArray(const Local<Value> & p)
 	{
 		js_type = JS_STRING;
 		c_type = SQL_C_WCHAR;
 		sql_type = SQL_WVARCHAR;
 
-		int strLen = 0; 
-
+		int strLen = getMaxStrLen(p);
 		auto arr = Local<Array>::Cast(p);
 		auto len = arr->Length();
 		
-		for (uint32_t i = 0; i < len; ++i)
-		{
-			auto str = arr->Get(i)->ToString();
-			if (str->Length() > strLen) strLen = str->Length() + 1;
-		}
-
 		indvec.resize(len);
 		uint16vec_ptr = make_shared<vector<uint16_t>>(len * strLen);
 		buffer = uint16vec_ptr->data();
 		buffer_len = strLen * sizeof(uint16_t);
 		param_size = strLen;
+		auto itr = uint16vec_ptr->begin();
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			auto str = arr->Get(i)->ToString();
-			indvec[i] = strLen * sizeof(uint16_t);
-			str->Write(&(*uint16vec_ptr)[i * strLen]);
+			auto width = str->Length() * sizeof(uint16_t);
+			indvec[i] = width;
+			//str->Write(&(*uint16vec_ptr)[i * strLen]);
+			str->Write(&*itr);
+			itr += strLen;
 		}
 	}
 
