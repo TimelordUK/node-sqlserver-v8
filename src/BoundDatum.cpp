@@ -86,7 +86,6 @@ namespace mssql
 			auto str = arr->Get(i)->ToString();
 			auto width = str->Length() * sizeof(uint16_t);
 			indvec[i] = width;
-			//str->Write(&(*uint16vec_ptr)[i * strLen]);
 			str->Write(&*itr);
 			itr += strLen;
 		}
