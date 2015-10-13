@@ -72,11 +72,12 @@ namespace mssql
 		indvec.resize(len);
 		uint16vec_ptr = make_shared<vector<uint16_t>>(len * strLen);
 		buffer = uint16vec_ptr->data();
+		buffer_len = strLen * sizeof(uint16_t);
 		param_size = strLen;
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			auto str = arr->Get(i)->ToString();
-			indvec[i] = SQL_NTS;
+			indvec[i] = strLen * sizeof(uint16_t);
 			str->Write(&(*uint16vec_ptr)[i * strLen]);
 		}
 	}
