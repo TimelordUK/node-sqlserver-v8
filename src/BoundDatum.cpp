@@ -65,6 +65,49 @@ namespace mssql
 		return strLen;
 	}
 
+	int getMaxObjectLen(const Local<Value> & p)
+	{
+		int strLen = 0;
+		auto arr = Local<Array>::Cast(p);
+		auto len = arr->Length();
+		for (uint32_t i = 0; i < len; ++i)
+		{
+			auto o = arr->Get(i)->ToObject();
+			auto width = node::Buffer::Length(o);
+			if (width > strLen) strLen = width;
+		}
+		return strLen;
+	}
+
+	void BoundDatum::bindDefaultArray(const Local<Value> & p)
+	{
+		auto arr = Local<Array>::Cast(p);
+		auto len = arr->Length();
+
+		js_type = JS_BUFFER;
+		c_type = SQL_C_BINARY;
+		sql_type = SQL_VARBINARY;
+		digits = 0;
+
+		int objLen = getMaxObjectLen(p);
+		charvec_ptr = make_shared<vector<char>>(len * objLen);
+		indvec.resize(len);
+		buffer = charvec_ptr->data();
+		buffer_len = objLen;
+		param_size = objLen;
+		auto itr = charvec_ptr->begin();
+
+		for (uint32_t i = 0; i < len; ++i)
+		{
+			auto o = arr->Get(i)->ToObject();
+			auto ptr = node::Buffer::Data(o);
+			auto width = node::Buffer::Length(o);
+			indvec[i] = width;
+			memcpy(&*itr, ptr, width);			
+			itr += objLen;
+		}
+	}
+
 	void BoundDatum::bindStringArray(const Local<Value> & p)
 	{
 		js_type = JS_STRING;
@@ -549,7 +592,7 @@ namespace mssql
 			bindDateArray(pp);
 		}
 		else if (p->IsObject() && node::Buffer::HasInstance(p)) {
-			bindDefault(p);
+			bindDefaultArray(pp);
 		}
 		else {
 			err = "Invalid parameter type";

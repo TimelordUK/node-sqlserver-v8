@@ -8,7 +8,7 @@ namespace mssql
 	public:
 
 		bool bind(Local<Value> &p);
-		Local<Value> BoundDatum::unbind();
+		Local<Value> unbind();
 		SQLLEN * getInd() { return indvec.data(); }
 		char *getErr() { return err;  }
 		int size() { return indvec.size(); }
@@ -22,7 +22,13 @@ namespace mssql
 			buffer(nullptr),
 			buffer_len(0),
 			param_type(SQL_PARAM_INPUT),
+			doublevec_ptr(nullptr),
 			uint16vec_ptr(nullptr),
+			int32vec_ptr(nullptr),
+			uint32vec_ptr(nullptr),
+			int64vec_ptr(nullptr),
+			timevec_ptr(nullptr), 
+			charvec_ptr(nullptr),
 			err(nullptr)
 		{
 			indvec = vector<SQLLEN>(1);
@@ -44,12 +50,14 @@ namespace mssql
 			uint32vec_ptr = other.uint32vec_ptr;
 			int64vec_ptr = other.int64vec_ptr;
 			timevec_ptr = other.timevec_ptr;
+			charvec_ptr = other.charvec_ptr;
 
 			indvec = other.indvec;
 
 			param_type = other.param_type;
 			err = other.err;
 
+			other.charvec_ptr = nullptr;
 			other.buffer = nullptr;
 			other.doublevec_ptr = nullptr;
 			other.uint16vec_ptr = nullptr;
@@ -85,6 +93,7 @@ namespace mssql
 	
 		vector<SQLLEN> indvec;
 
+		shared_ptr<vector<char>> charvec_ptr;
 		shared_ptr<vector<uint16_t>> uint16vec_ptr;
 		shared_ptr<vector<int32_t>> int32vec_ptr;
 		shared_ptr<vector<uint32_t>> uint32vec_ptr;
@@ -127,6 +136,8 @@ namespace mssql
 		void bindNumberArray(const Local<Value> & p);
 			
 		void bindDefault(Local<Value> & p);
+		void bindDefaultArray(const Local<Value> & p);
+
 		bool bindDatumType(Local<Value>& p);
 		bool bind(Local<Object> o, const char* if_str, uint16_t type);
 		bool bindObject(Local<Value> &p);
