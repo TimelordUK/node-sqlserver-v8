@@ -102,9 +102,10 @@ namespace mssql
 		auto arr = Local<Array>::Cast(p);
 		auto len = arr->Length();
 		bindBoolean(len);
+		auto & vec = *uint16vec_ptr;
 		for (uint32_t i = 0; i < len; ++i)
 		{
-			(*uint16vec_ptr)[i] = arr->Get(i)->BooleanValue();
+			vec[i] = arr->Get(i)->BooleanValue();
 			indvec[i] = 0;
 		}
 	}
@@ -133,9 +134,10 @@ namespace mssql
 		auto arr = Local<Array>::Cast(p);
 		int len = arr->Length();
 		bindInt32(len);
+		auto & vec = *int32vec_ptr;
 		for (int i = 0; i < len; ++i)
 		{
-			(*int32vec_ptr)[i] = arr->Get(i)->Int32Value();
+			vec[i] = arr->Get(i)->Int32Value();
 			indvec[i] = 0;
 		}
 	}
@@ -164,9 +166,10 @@ namespace mssql
 		auto arr = Local<Array>::Cast(p);
 		auto len = arr->Length();
 		bindUint32(len);
+		auto & vec = *uint32vec_ptr;
 		for (uint32_t i = 0; i < len; ++i)
 		{
-			(*uint32vec_ptr)[i] = arr->Get(i)->Uint32Value();
+			vec[i] = arr->Get(i)->Uint32Value();
 		}
 	}
 
@@ -218,10 +221,11 @@ namespace mssql
 		auto arr = Local<Array>::Cast(p);
 		auto len = arr->Length();
 		bindUint32(len);
+		auto & vec = *timevec_ptr;
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			auto d = Handle<Date>::Cast<Value>(arr->Get(i));
-			auto & ts = (*timevec_ptr)[i];
+			auto & ts = vec[i];
 			TimestampColumn sql_date(d->NumberValue());
 			sql_date.ToTimestampOffset(ts);
 		}
@@ -251,9 +255,10 @@ namespace mssql
 		auto arr = Local<Array>::Cast(p);
 		auto len = arr->Length();
 		bindUint32(len);
+		auto & vec = *int64vec_ptr;
 		for (uint32_t i = 0; i < len; ++i)
 		{
-			(*int64vec_ptr)[i] = arr->Get(i)->IntegerValue();
+			vec[i] = arr->Get(i)->IntegerValue();
 		}
 	}
 
@@ -282,9 +287,10 @@ namespace mssql
 		auto arr = Local<Array>::Cast(p);
 		auto len = arr->Length();
 		bindDouble(len);
+		auto & vec = *doublevec_ptr;
 		for (uint32_t i = 0; i < len; ++i)
 		{
-			(*doublevec_ptr)[i] = arr->Get(i)->NumberValue();
+			vec[i] = arr->Get(i)->NumberValue();
 		}
 	}
 
