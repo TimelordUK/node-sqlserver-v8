@@ -14,14 +14,30 @@ namespace mssql
 
 	void BoundDatum::bindNull(const Local<Value> & p)
 	{
+		bindNull(1);
+		indvec[0] = SQL_NULL_DATA;
+	}
+
+	void BoundDatum::bindNullArray(const Local<Value> & p)
+	{
+		auto arr = Local<Array>::Cast(p);
+		auto len = arr->Length();
+		for (uint32_t i = 0; i < len; ++i)
+		{
+			indvec[i] = SQL_NULL_DATA;
+		}
+	}
+
+	void BoundDatum::bindNull(SQLLEN len)
+	{
+		buffer_len = 0;
+		indvec.resize(len);
 		js_type = JS_NULL;
 		c_type = SQL_C_CHAR;
 		sql_type = SQL_CHAR;
 		param_size = 1;
 		digits = 0;
 		buffer = nullptr;
-		buffer_len = 0;
-		indvec[0] = SQL_NULL_DATA;
 	}
 
 	void BoundDatum::bindString(const Local<Value> & p)
@@ -73,7 +89,7 @@ namespace mssql
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			auto o = arr->Get(i)->ToObject();
-			auto width = node::Buffer::Length(o);
+			auto width = node::Buffer::Length(o); 
 			if (width > strLen) strLen = width;
 		}
 		return strLen;
@@ -99,11 +115,15 @@ namespace mssql
 
 		for (uint32_t i = 0; i < len; ++i)
 		{
-			auto o = arr->Get(i)->ToObject();
-			auto ptr = node::Buffer::Data(o);
-			auto width = node::Buffer::Length(o);
-			indvec[i] = width;
-			memcpy(&*itr, ptr, width);			
+			indvec[i] = SQL_NULL_DATA;
+			auto elem = arr->Get(i);
+			if (!elem->IsNull()) {
+				auto o = elem->ToObject();
+				auto ptr = node::Buffer::Data(o);
+				auto width = node::Buffer::Length(o);
+				indvec[i] = width;
+				memcpy(&*itr, ptr, width);
+			}
 			itr += objLen;
 		}
 	}
@@ -123,13 +143,18 @@ namespace mssql
 		buffer = uint16vec_ptr->data();
 		buffer_len = strLen * sizeof(uint16_t);
 		param_size = strLen;
+
 		auto itr = uint16vec_ptr->begin();
 		for (uint32_t i = 0; i < len; ++i)
 		{
-			auto str = arr->Get(i)->ToString();
-			auto width = str->Length() * sizeof(uint16_t);
-			indvec[i] = width;
-			str->Write(&*itr);
+			indvec[i] = SQL_NULL_DATA;
+			auto elem = arr->Get(i);			
+			if (!elem->IsNull()) {
+				auto str = arr->Get(i)->ToString();
+				auto width = str->Length() * sizeof(uint16_t);
+				indvec[i] = width;
+				str->Write(&*itr);
+			}
 			itr += strLen;
 		}
 	}
@@ -148,8 +173,13 @@ namespace mssql
 		auto & vec = *uint16vec_ptr;
 		for (uint32_t i = 0; i < len; ++i)
 		{
-			vec[i] = arr->Get(i)->BooleanValue();
-			indvec[i] = 0;
+			indvec[i] = SQL_NULL_DATA;
+			auto elem = arr->Get(i);
+			if (!elem->IsNull()) {
+				auto b = elem->BooleanValue();
+				vec[i] = b;
+				indvec[i] = 0;
+			}
 		}
 	}
 
@@ -180,8 +210,12 @@ namespace mssql
 		auto & vec = *int32vec_ptr;
 		for (int i = 0; i < len; ++i)
 		{
-			vec[i] = arr->Get(i)->Int32Value();
-			indvec[i] = 0;
+			indvec[i] = SQL_NULL_DATA;
+			auto elem = arr->Get(i);
+			if (!elem->IsNull()) {
+				vec[i] = elem->Int32Value();
+				indvec[i] = 0;
+			}
 		}
 	}
 
@@ -212,7 +246,12 @@ namespace mssql
 		auto & vec = *uint32vec_ptr;
 		for (uint32_t i = 0; i < len; ++i)
 		{
-			vec[i] = arr->Get(i)->Uint32Value();
+			indvec[i] = SQL_NULL_DATA;
+			auto elem = arr->Get(i);
+			if (!elem->IsNull()) {
+				vec[i] = elem->Uint32Value();
+				indvec[i] = 0;
+			}
 		}
 	}
 
@@ -267,10 +306,15 @@ namespace mssql
 		auto & vec = *timevec_ptr;
 		for (uint32_t i = 0; i < len; ++i)
 		{
-			auto d = Handle<Date>::Cast<Value>(arr->Get(i));
-			auto & ts = vec[i];
-			TimestampColumn sql_date(d->NumberValue());
-			sql_date.ToTimestampOffset(ts);
+			indvec[i] = SQL_NULL_DATA;
+			auto elem = arr->Get(i);
+			if (!elem->IsNull()) {
+				indvec[i] = 0;
+				auto d = Handle<Date>::Cast<Value>(elem);
+				auto & ts = vec[i];
+				TimestampColumn sql_date(d->NumberValue());
+				sql_date.ToTimestampOffset(ts);
+			}
 		}
 	}
 
@@ -301,7 +345,12 @@ namespace mssql
 		auto & vec = *int64vec_ptr;
 		for (uint32_t i = 0; i < len; ++i)
 		{
-			vec[i] = arr->Get(i)->IntegerValue();
+			indvec[i] = SQL_NULL_DATA;
+			auto elem = arr->Get(i);
+			if (!elem->IsNull()) {
+				indvec[i] = 0;
+				vec[i] = elem->IntegerValue();
+			}
 		}
 	}
 
@@ -333,7 +382,12 @@ namespace mssql
 		auto & vec = *doublevec_ptr;
 		for (uint32_t i = 0; i < len; ++i)
 		{
-			vec[i] = arr->Get(i)->NumberValue();
+			indvec[i] = SQL_NULL_DATA;
+			auto elem = arr->Get(i);
+			if (!elem->IsNull()) {
+				vec[i] = elem->NumberValue();
+				indvec[i] = 0;
+			}
 		}
 	}
 
@@ -562,11 +616,18 @@ namespace mssql
 
 	bool BoundDatum::bindArray(Local<Value> & pp)
 	{
+		nodeTypeFactory fact;
 		auto arr = Local<Array>::Cast(pp);
-		auto p = arr->Get(0);
+		Local<Value> p = fact.null();
+		
+		for (int i = 0; i < arr->Length(); ++i)
+		{
+			p = arr->Get(i);
+			if (!p->IsNull()) break;
+		}
 
 		if (p->IsNull()) {
-			bindNull(p);
+			bindNullArray(p);
 		}
 		else if (p->IsString()) {
 			bindStringArray(pp);

@@ -104,6 +104,9 @@ namespace mssql
 		char * err;
 
 		void bindNull(const Local<Value> & p);
+		void bindNullArray(const Local<Value> & p);
+		void bindNull(SQLLEN len);
+
 		void bindString(const Local<Value> & p);
 		void bindString(const Local<Value>& p, int str_len);
 		void bindStringArray(const Local<Value> & p);
