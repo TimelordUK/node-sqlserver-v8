@@ -82,7 +82,7 @@ namespace mssql
         }
 
     private:
-
+		Local<Object> getEntry(nodeTypeFactory & fact, const ColumnDefinition & definition);
         vector<ColumnDefinition> metadata;
         SQLLEN rowcount;
         bool endOfRows;

@@ -22,6 +22,7 @@ namespace mssql
 	{
 		auto arr = Local<Array>::Cast(p);
 		auto len = arr->Length();
+		bindNull(len);
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			indvec[i] = SQL_NULL_DATA;
@@ -43,8 +44,7 @@ namespace mssql
 	void BoundDatum::bindString(const Local<Value> & p)
 	{
 		auto str_param = p->ToString();
-		int str_len = str_param->Length();
-		bindString(p, str_len);
+		bindString(p, str_param->Length());
 	}
 
 	void BoundDatum::bindString(const Local<Value> & p, int str_len)
@@ -321,7 +321,8 @@ namespace mssql
 	void BoundDatum::bindInteger(const Local<Value> & p)
 	{
 		bindInteger(1);
-		(*int64vec_ptr)[0] = p->IntegerValue();
+		auto & vec = *int64vec_ptr;
+		vec[0] = p->IntegerValue();
 	}
 
 	void BoundDatum::bindInteger(SQLLEN len)
@@ -357,7 +358,8 @@ namespace mssql
 	void BoundDatum::bindDouble(const Local<Value> & p)
 	{
 		bindDouble(1);
-		(*doublevec_ptr)[0] = p->NumberValue();
+		auto & vec = *doublevec_ptr;
+		vec[0] = p->NumberValue();
 	}
 
 	void BoundDatum::bindDouble(SQLLEN len)
@@ -692,7 +694,7 @@ namespace mssql
 	Handle<Value> BoundDatum::unbindDouble()
 	{
 		nodeTypeFactory fact;
-		auto s = fact.newNumber((*doublevec_ptr)[0]);
+		auto s = fact.newNumber(*doublevec_ptr->data());
 		return s;
 	}
 
@@ -706,14 +708,14 @@ namespace mssql
 	Handle<Value> BoundDatum::unbindInt32()
 	{
 		nodeTypeFactory fact;
-		auto s = fact.newInt32((*int32vec_ptr)[0]);
+		auto s = fact.newInt32(*int32vec_ptr->data());
 		return s;
 	}
 
 	Handle<Value> BoundDatum::unbindUint32()
 	{
 		nodeTypeFactory fact;
-		auto s = fact.newUint32((*uint32vec_ptr)[0]);
+		auto s = fact.newUint32(*uint32vec_ptr->data());
 		return s;
 	}
 
@@ -725,14 +727,14 @@ namespace mssql
 		}
 		else {
 			nodeTypeFactory fact;
-			v = fact.newInt64((*int64vec_ptr)[0]);
+			v = fact.newInt64(*int64vec_ptr->data());
 		}
 		return v;
 	}
 
 	Handle<Value> BoundDatum::unbindDate()
 	{
-		TimestampColumn tsc((*timevec_ptr)[0]);
+		TimestampColumn tsc(*timevec_ptr->data());
 		return tsc.ToValue();
 	}
 

@@ -74,28 +74,28 @@ namespace mssql
 	   return typeName;
     }
 
+	Local<Object> ResultSet::getEntry(nodeTypeFactory & fact, const ColumnDefinition & definition) {
+
+		auto typeName = mapType(definition.dataType);
+		auto entry = fact.newObject();
+		entry->Set(fact.fromTwoByte(L"size"), fact.newInteger(definition.columnSize));
+		entry->Set(fact.fromTwoByte(L"name"), fact.fromTwoByte(definition.name.c_str()));
+		entry->Set(fact.fromTwoByte(L"nullable"), fact.newBoolean(definition.nullable != 0));
+		entry->Set(fact.fromTwoByte(L"type"), fact.fromTwoByte(typeName));
+		entry->Set(fact.fromTwoByte(L"sqlType"), fact.fromTwoByte(definition.dataTypeName.c_str()));
+		if (definition.dataType == SQL_SS_UDT) {
+			entry->Set(fact.fromTwoByte(L"udtType"), fact.fromTwoByte(definition.udtTypeName.c_str()));
+		}
+		return entry;
+	}
+
     Handle<Value> ResultSet::MetaToValue()
     {
 	   nodeTypeFactory fact;
 	   auto metadata = fact.newArray();
 
-	   auto makeentry = [&fact](const ColumnDefinition definition)
-	   {
-		  auto typeName = mapType(definition.dataType);
-		  auto entry = fact.newObject();
-		   entry->Set(fact.fromTwoByte(L"size"), fact.newInteger(definition.columnSize));
-		   entry->Set(fact.fromTwoByte(L"name"), fact.fromTwoByte(definition.name.c_str()));
-		   entry->Set(fact.fromTwoByte(L"nullable"), fact.newBoolean(definition.nullable != 0));
-		   entry->Set(fact.fromTwoByte(L"type"), fact.fromTwoByte(typeName));
-		   entry->Set(fact.fromTwoByte(L"sqlType"), fact.fromTwoByte(definition.dataTypeName.c_str()));
-		   if (definition.dataType == SQL_SS_UDT) {
-			  entry->Set(fact.fromTwoByte(L"udtType"), fact.fromTwoByte(definition.udtTypeName.c_str()));
-		   }
-		   return entry;
-	   };
-
-	   for_each(this->metadata.begin(), this->metadata.end(), [&metadata, &makeentry](const ColumnDefinition& definition) {
-		  metadata->Set(metadata->Length(), makeentry(definition));
+	   for_each(this->metadata.begin(), this->metadata.end(), [&](const ColumnDefinition& definition) {
+		  metadata->Set(metadata->Length(), getEntry(fact, definition));
 	   });
 
 	   return metadata;

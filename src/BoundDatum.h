@@ -6,12 +6,10 @@ namespace mssql
 
 	class BoundDatum {
 	public:
-
 		bool bind(Local<Value> &p);
 		Local<Value> unbind();
-		SQLLEN * getInd() { return indvec.data(); }
+		vector<SQLLEN> & getIndVec() { return indvec; }
 		char *getErr() { return err;  }
-		int size() { return indvec.size(); }
 
 		BoundDatum(void) :
 			js_type(JS_UNKNOWN),
@@ -34,6 +32,25 @@ namespace mssql
 			indvec = vector<SQLLEN>(1);
 		}
 
+		void ReassignStorage(BoundDatum&other)
+		{
+			doublevec_ptr = other.doublevec_ptr;
+			uint16vec_ptr = other.uint16vec_ptr;
+			int32vec_ptr = other.int32vec_ptr;
+			uint32vec_ptr = other.uint32vec_ptr;
+			int64vec_ptr = other.int64vec_ptr;
+			timevec_ptr = other.timevec_ptr;
+			charvec_ptr = other.charvec_ptr;
+
+			other.charvec_ptr = nullptr;
+			other.buffer = nullptr;
+			other.doublevec_ptr = nullptr;
+			other.uint16vec_ptr = nullptr;
+			other.int32vec_ptr = nullptr;
+			other.uint32vec_ptr = nullptr;
+			other.int64vec_ptr = nullptr;
+		}
+
 		BoundDatum(BoundDatum&& other)
 		{
 			js_type = other.js_type;
@@ -44,26 +61,11 @@ namespace mssql
 			buffer = other.buffer;
 			buffer_len = other.buffer_len;
 
-			doublevec_ptr = other.doublevec_ptr;
-			uint16vec_ptr = other.uint16vec_ptr;
-			int32vec_ptr = other.int32vec_ptr;
-			uint32vec_ptr = other.uint32vec_ptr;
-			int64vec_ptr = other.int64vec_ptr;
-			timevec_ptr = other.timevec_ptr;
-			charvec_ptr = other.charvec_ptr;
+			ReassignStorage(other);
 
 			indvec = other.indvec;
-
 			param_type = other.param_type;
 			err = other.err;
-
-			other.charvec_ptr = nullptr;
-			other.buffer = nullptr;
-			other.doublevec_ptr = nullptr;
-			other.uint16vec_ptr = nullptr;
-			other.int32vec_ptr = nullptr;
-			other.uint32vec_ptr = nullptr;
-			other.int64vec_ptr = nullptr;
 			other.buffer_len = 0;
 		}
 

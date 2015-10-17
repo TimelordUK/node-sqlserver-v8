@@ -64,7 +64,7 @@ namespace mssql
 	int getSize(BoundDatumSet& params)
 	{
 		auto f = params.begin();
-		int size =  f != params.end() ? f->size() : 0;
+		int size =  f != params.end() ? f->getIndVec().size() : 0;
 		return size;
 	}
 
@@ -76,8 +76,8 @@ namespace mssql
 		SQLSetStmtAttr(statement, SQL_ATTR_PARAMSET_SIZE, reinterpret_cast<SQLPOINTER>(size), 0);
 		int current_param = 1;
 		for (auto itr = params.begin(); itr != params.end(); ++itr) {
-			auto & rr = *itr;
-			SQLRETURN r = SQLBindParameter(statement, current_param++, rr.param_type, rr.c_type, rr.sql_type, rr.param_size, rr.digits, rr.buffer, rr.buffer_len, rr.getInd());
+			auto & datum = *itr;
+			SQLRETURN r = SQLBindParameter(statement, current_param++, datum.param_type, datum.c_type, datum.sql_type, datum.param_size, datum.digits, datum.buffer, datum.buffer_len, datum.getIndVec().data());
 			CHECK_ODBC_ERROR(r, statement);
 		}
 
