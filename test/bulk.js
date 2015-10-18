@@ -142,6 +142,7 @@ suite('bulk', function () {
             function bulkDone(err, results) {
                 assert(results.length === 10);
                 assert.deepEqual(results, parsedJSON, "results didn't match");
+                test_done();
             }
         }
     });
