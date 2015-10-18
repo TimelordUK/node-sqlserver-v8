@@ -284,9 +284,9 @@ namespace mssql
 
 	void BoundDatum::bindDate(SQLLEN len)
 	{
-		buffer_len = len * sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT);
+		buffer_len = sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT);
 		timevec_ptr = make_shared<vector<SQL_SS_TIMESTAMPOFFSET_STRUCT>>(len);
-		indvec.reserve(len);
+		indvec.resize(len);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC		
 		js_type = JS_DATE;
 		c_type = SQL_C_BINARY;
@@ -302,14 +302,15 @@ namespace mssql
 	{
 		auto arr = Local<Array>::Cast(p);
 		auto len = arr->Length();
-		bindUint32(len);
+		bindDate(len);
 		auto & vec = *timevec_ptr;
+		buffer_len = sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT);
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			indvec[i] = SQL_NULL_DATA;
 			auto elem = arr->Get(i);
 			if (!elem->IsNull()) {
-				indvec[i] = 0;
+				indvec[i] = sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT);
 				auto d = Handle<Date>::Cast<Value>(elem);
 				auto & ts = vec[i];
 				TimestampColumn sql_date(d->NumberValue());

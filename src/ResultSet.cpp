@@ -80,7 +80,7 @@ namespace mssql
 		auto entry = fact.newObject();
 		entry->Set(fact.fromTwoByte(L"size"), fact.newInteger(definition.columnSize));
 		entry->Set(fact.fromTwoByte(L"name"), fact.fromTwoByte(definition.name.c_str()));
-		entry->Set(fact.fromTwoByte(L"nullable"), fact.newBoolean(definition.nullable != 0));
+		entry->Set(fact.fromTwoByte(L"nullable"), fact.newBoolean(definition.nullable != 0));  
 		entry->Set(fact.fromTwoByte(L"type"), fact.fromTwoByte(typeName));
 		entry->Set(fact.fromTwoByte(L"sqlType"), fact.fromTwoByte(definition.dataTypeName.c_str()));
 		if (definition.dataType == SQL_SS_UDT) {

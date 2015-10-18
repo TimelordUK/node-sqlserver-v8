@@ -44,13 +44,14 @@ function testBoilerPlate(name, doneFunction) {
                     }
                 }
 
+                // submit the SQL one chunk at a time to create table with constraints.
                 readFile(file, function (createSql) {
                     createSql = createSql.replace(/<name>/g, name);
                     var arr = createSql.split("GO");
                     for (var i = 0; i < arr.length; ++i) {
                         arr[i] = arr[i].replace(/^\s+|\s+$/g, '');
                     }
-                    inChunks(arr, function() {
+                    inChunks(arr, function () {
                         async_done();
                     });
                 });
@@ -58,8 +59,8 @@ function testBoilerPlate(name, doneFunction) {
 
             function (async_done) {
                 var tm = conn.tableMgr();
-                tm.bind(name, function(bulkMgr) {
-                    assert(bulkMgr.columns.length === 16, "Error creating table");
+                tm.bind(name, function (bulkMgr) {
+                    assert(bulkMgr.columns.length > 0, "Error creating table");
                     async_done();
                 });
             }];
@@ -74,7 +75,7 @@ function testBoilerPlate(name, doneFunction) {
 suite('bulk', function () {
 
     var c;
-    this.timeout(45000);
+    this.timeout(5000);
 
     setup(function (test_done) {
 
@@ -96,7 +97,7 @@ suite('bulk', function () {
         });
     });
 
-    test('insert bulk rows to table', function (test_done) {
+    test('employee bulk operations', function (test_done) {
 
         var table_name = "Employee";
 
@@ -104,6 +105,44 @@ suite('bulk', function () {
 
         function go() {
             var tm = c.tableMgr();
+            tm.bind(table_name, test);
+        }
+
+        function patch(parsedJSON) {
+            for (var i = 0; i < parsedJSON.length; ++i) {
+                parsedJSON[i].OrganizationNode = new Buffer(parsedJSON[i].OrganizationNode.data, 'utf8');
+                parsedJSON[i].BirthDate = new Date(parsedJSON[i].BirthDate);
+                parsedJSON[i].HireDate = new Date(parsedJSON[i].HireDate);
+                parsedJSON[i].ModifiedDate = new Date(parsedJSON[i].ModifiedDate);
+            }
+
+            var keys = [];
+            parsedJSON.forEach(function (emp) {
+                keys.push({
+                    BusinessEntityID: emp.BusinessEntityID
+                });
+            });
+            return keys;
+        }
+
+        function test(bulkMgr) {
+
+            var folder = __dirname;
+            var parsedJSON = require(folder + '/employee.json');
+            var keys = patch(parsedJSON);
+
+            bulkMgr.insertRows(parsedJSON, insertDone);
+
+            function insertDone(err,res) {
+                assert.ifError(err);
+                assert(res.length == 0);
+                bulkMgr.selectRows(keys, bulkDone);
+            }
+
+            function bulkDone(err, results) {
+                assert(results.length === 10);
+                assert.deepEqual(results, parsedJSON, "results didn't match");
+            }
         }
     });
 });
