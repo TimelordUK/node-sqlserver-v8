@@ -75,7 +75,7 @@ function testBoilerPlate(name, doneFunction) {
 suite('bulk', function () {
 
     var c;
-    this.timeout(5000);
+    this.timeout(45000);
 
     setup(function (test_done) {
 

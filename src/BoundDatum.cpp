@@ -162,7 +162,7 @@ namespace mssql
 	void BoundDatum::bindBoolean(const Local<Value> & p)
 	{
 		bindBoolean(1);
-		(*uint16vec_ptr)[0] = p->BooleanValue();
+		(*charvec_ptr)[0] = p->BooleanValue() == false ? 0 : 1;
 	}
 
 	void BoundDatum::bindBooleanArray(const Local<Value> & p)
@@ -170,13 +170,13 @@ namespace mssql
 		auto arr = Local<Array>::Cast(p);
 		auto len = arr->Length();
 		bindBoolean(len);
-		auto & vec = *uint16vec_ptr;
+		auto & vec = *charvec_ptr;
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			indvec[i] = SQL_NULL_DATA;
 			auto elem = arr->Get(i);
 			if (!elem->IsNull()) {
-				auto b = elem->BooleanValue();
+				auto b = elem->BooleanValue() == false ? 0 : 1;
 				vec[i] = b;
 				indvec[i] = 0;
 			}
@@ -185,14 +185,14 @@ namespace mssql
 
 	void BoundDatum::bindBoolean(SQLLEN len)
 	{
-		buffer_len = len * sizeof(uint16_t);
-		uint16vec_ptr = make_shared<vector<uint16_t>>(len);
+		buffer_len = len * sizeof(char);
+		charvec_ptr = make_shared<vector<char>>(len);
 		indvec.resize(len);
 		js_type = JS_BOOLEAN;
 		c_type = SQL_C_BIT;
 		sql_type = SQL_BIT;
-		buffer = uint16vec_ptr->data();
-		param_size = sizeof(uint16_t);;
+		buffer = charvec_ptr->data();
+		param_size = sizeof(char);;
 		digits = 0;
 	}
 
