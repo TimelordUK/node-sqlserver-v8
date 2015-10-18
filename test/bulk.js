@@ -97,6 +97,25 @@ suite('bulk', function () {
         });
     });
 
+    function getJSON(keys) {
+        var folder = __dirname;
+        var parsedJSON = require(folder + '/employee.json');
+
+        for (var i = 0; i < parsedJSON.length; ++i) {
+            parsedJSON[i].OrganizationNode = new Buffer(parsedJSON[i].OrganizationNode.data, 'utf8');
+            parsedJSON[i].BirthDate = new Date(parsedJSON[i].BirthDate);
+            parsedJSON[i].HireDate = new Date(parsedJSON[i].HireDate);
+            parsedJSON[i].ModifiedDate = new Date(parsedJSON[i].ModifiedDate);
+        }
+
+        parsedJSON.forEach(function (emp) {
+            keys.push({
+                BusinessEntityID: emp.BusinessEntityID
+            });
+        });
+        return parsedJSON;
+    }
+
     test('employee bulk operations', function (test_done) {
 
         var table_name = "Employee";
@@ -108,28 +127,9 @@ suite('bulk', function () {
             tm.bind(table_name, test);
         }
 
-        function patch(parsedJSON) {
-            for (var i = 0; i < parsedJSON.length; ++i) {
-                parsedJSON[i].OrganizationNode = new Buffer(parsedJSON[i].OrganizationNode.data, 'utf8');
-                parsedJSON[i].BirthDate = new Date(parsedJSON[i].BirthDate);
-                parsedJSON[i].HireDate = new Date(parsedJSON[i].HireDate);
-                parsedJSON[i].ModifiedDate = new Date(parsedJSON[i].ModifiedDate);
-            }
-
-            var keys = [];
-            parsedJSON.forEach(function (emp) {
-                keys.push({
-                    BusinessEntityID: emp.BusinessEntityID
-                });
-            });
-            return keys;
-        }
-
         function test(bulkMgr) {
-
-            var folder = __dirname;
-            var parsedJSON = require(folder + '/employee.json');
-            var keys = patch(parsedJSON);
+            var keys = [];
+            var parsedJSON = getJSON(keys);
 
             bulkMgr.insertRows(parsedJSON, insertDone);
 
@@ -143,6 +143,57 @@ suite('bulk', function () {
                 assert(results.length === 10);
                 assert.deepEqual(results, parsedJSON, "results didn't match");
                 test_done();
+            }
+        }
+    });
+
+    function buildTest(count) {
+        var arr = [];
+        var str = '-';
+        for (var i = 0; i < count; ++i) {
+            str = str + i;
+            if (i % 10 === 0) str = '-';
+            var inst = {
+                pkid : i,
+                num1 : i * 3,
+                num2 : i * 4,
+                num3: i % 2 === 0 ? null : i * 32,
+                st: str
+            };
+            arr.push(inst);
+        }
+        return arr;
+    }
+
+    test('simple large bulk insert with batches', function (test_done) {
+
+        var table_name = "BulkTest";
+
+        testBoilerPlate(table_name, go);
+
+        function go() {
+            var tm = c.tableMgr();
+            tm.setBatchSize(100);
+            tm.bind(table_name, test);
+        }
+
+        function test(bulkMgr) {
+            var batch = 1000;
+            var vec = buildTest(batch);
+            bulkMgr.insertRows(vec, insertDone);
+
+            function insertDone(err,res) {
+                assert.ifError(err);
+                assert(res.length == 0);
+                var s = "select count(*) as count from " + table_name;
+                c.query(s, function(err, results) {
+                    var expected = [ {
+                        count : batch
+                    }];
+                    assert.ifError(err);
+                    assert.deepEqual(results, expected, "results didn't match");
+                    test_done();
+                });
             }
         }
     });
