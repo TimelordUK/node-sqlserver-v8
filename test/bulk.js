@@ -120,6 +120,20 @@ suite('bulk', function () {
         return parsedJSON;
     }
 
+    test('bulk insert varbinary column', function(test_done) {
+        var arr = [];
+        var str = '';
+        for (var i = 0; i < 10; ++i) {
+            str = str + i;
+            arr.push(new Buffer(str))
+        }
+        simpleColumnBulkTest('varbinary(100)', function(i) {
+            var idx = i % 10;
+            var s = arr[idx];
+            return  s;
+        }, test_done)
+    });
+
     test('bulk insert datetime column', function(test_done) {
         var dt = new Date('2002-02-06T00:00:00.000Z');
         simpleColumnBulkTest('datetime', function(i) {
@@ -232,7 +246,7 @@ suite('bulk', function () {
 
         function go() {
             var tm = c.tableMgr();
-            tm.setBatchSize(100);
+            tm.setBatchSize(250);
             tm.bind(table_name, test);
         }
 
@@ -284,9 +298,6 @@ suite('bulk', function () {
             }
         }
     }
-
-
-
 
     test('employee bulk operations', function (test_done) {
 
