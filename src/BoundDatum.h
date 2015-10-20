@@ -1,4 +1,7 @@
 #pragma once
+// undo these tokens to use numeric_limits below
+#undef min
+#undef max
 
 namespace mssql
 {
@@ -158,3 +161,66 @@ namespace mssql
 		Handle<Value> BoundDatum::unbindDate();
 	};
 }
+
+class nodeTypeCounter
+{
+public:
+	void Decode(v8::Local<v8::Value> p)
+	{
+		if (p->IsNull()) {
+			++nullCount;
+		}
+		else if (p->IsString()) {
+			++stringCount;
+		}
+		else if (p->IsBoolean()) {
+			++boolCount;
+		}
+		else if (p->IsInt32()) {
+			++int32Count;
+		}
+		else if (p->IsUint32()) {
+			++uint32Count;
+		}
+		else if (p->IsNumber()) {
+			double d = p->NumberValue();
+			if (_isnan(d)) ++nanCount;
+			else if (!_finite(d)) ++infiniteCount;
+			if (d == floor(d) &&
+				d >= std::numeric_limits<int32_t>::min() &&
+				d <= std::numeric_limits<int32_t>::max()) {
+				++int32Count;
+			}
+			else if (d == floor(d) &&
+				d >= std::numeric_limits<int64_t>::min() &&
+				d <= std::numeric_limits<int64_t>::max()) {
+				++int64Count;
+			}
+			else ++numberCount;
+		}
+		else if (p->IsDate()) {
+			++dateCount;
+		}
+		else if (p->IsObject() && node::Buffer::HasInstance(p)) {
+			++bufferCount;
+		}
+		else {
+			++invalidCount;
+		}
+	}
+
+	bool getoutBoundsCount() { return nanCount + infiniteCount; }
+
+	int boolCount = 0;
+	int stringCount = 0;
+	int nullCount = 0;
+	int int32Count = 0;
+	int uint32Count = 0;
+	int numberCount = 0;
+	int dateCount = 0;
+	int bufferCount = 0;
+	int invalidCount = 0;
+	int nanCount = 0;
+	int infiniteCount = 0;
+	int int64Count = 0;
+};

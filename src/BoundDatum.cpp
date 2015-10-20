@@ -3,10 +3,6 @@
 #include <TimestampColumn.h>
 #include <limits>
 
-// undo these tokens to use numeric_limits below
-#undef min
-#undef max
-
 namespace mssql
 {
 	const int SQL_SERVER_2008_DEFAULT_DATETIME_PRECISION = 34;
@@ -89,7 +85,7 @@ namespace mssql
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			auto o = arr->Get(i)->ToObject();
-			auto width = node::Buffer::Length(o); 
+			auto width = node::Buffer::Length(o);
 			if (width > strLen) strLen = width;
 		}
 		return strLen;
@@ -137,7 +133,7 @@ namespace mssql
 		int strLen = getMaxStrLen(p);
 		auto arr = Local<Array>::Cast(p);
 		auto len = arr->Length();
-		
+
 		indvec.resize(len);
 		uint16vec_ptr = make_shared<vector<uint16_t>>(len * (strLen + 5));
 		buffer = uint16vec_ptr->data();
@@ -148,7 +144,7 @@ namespace mssql
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			indvec[i] = SQL_NULL_DATA;
-			auto elem = arr->Get(i);			
+			auto elem = arr->Get(i);
 			if (!elem->IsNull()) {
 				auto str = arr->Get(i)->ToString();
 				auto width = str->Length() * sizeof(uint16_t);
@@ -259,7 +255,7 @@ namespace mssql
 	{
 		buffer_len = len * sizeof(uint32_t);
 		uint32vec_ptr = make_shared<vector<uint32_t>>(len);
-		indvec.reserve(len);
+		indvec.resize(len);
 		js_type = JS_UINT;
 		c_type = SQL_C_ULONG;
 		sql_type = SQL_BIGINT;
@@ -329,7 +325,7 @@ namespace mssql
 	void BoundDatum::bindInteger(SQLLEN len)
 	{
 		int64vec_ptr = make_shared<vector<int64_t>>(len);
-		indvec.reserve(len);
+		indvec.resize(len);
 		js_type = JS_NUMBER;
 		c_type = SQL_C_SBIGINT;
 		sql_type = SQL_BIGINT;
@@ -367,7 +363,7 @@ namespace mssql
 	{
 		buffer_len = len * sizeof(int32_t);
 		doublevec_ptr = make_shared<vector<double>>(len);
-		indvec.reserve(len);
+		indvec.resize(len);
 		js_type = JS_NUMBER;
 		c_type = SQL_C_DOUBLE;
 		sql_type = SQL_DOUBLE;
@@ -619,44 +615,53 @@ namespace mssql
 
 	bool BoundDatum::bindArray(Local<Value> & pp)
 	{
-		nodeTypeFactory fact;
-		auto arr = Local<Array>::Cast(pp);
-		Local<Value> p = fact.null();
-		
+		auto arr = Local<Array>::Cast(pp);	
+		nodeTypeCounter counts;
+
 		for (int i = 0; i < arr->Length(); ++i)
 		{
-			p = arr->Get(i);
-			if (!p->IsNull()) break;
+			auto p = arr->Get(i);
+			counts.Decode(p);
 		}
 
-		if (p->IsNull()) {
-			bindNullArray(p);
-		}
-		else if (p->IsString()) {
-			bindStringArray(pp);
-		}
-		else if (p->IsBoolean()) {
+		if (counts.boolCount != 0)
+		{
 			bindBooleanArray(pp);
 		}
-		else if (p->IsInt32()) {
-			bindInt32Array(pp);
+		else if (counts.stringCount != 0)
+		{
+			bindStringArray(pp);
 		}
-		else if (p->IsUint32()) {
-			bindUint32Array(pp);
-		}
-		else if (p->IsNumber()) {
-			double d = p->NumberValue();
-			if (_isnan(d) || !_finite(d)) {
-				err = "Invalid number parameter";
-				return false;
-			}
-			bindNumberArray(pp);
-		}
-		else if (p->IsDate()) {
+		else if (counts.dateCount != 0)
+		{
 			bindDateArray(pp);
 		}
-		else if (p->IsObject() && node::Buffer::HasInstance(p)) {
+		else if (counts.bufferCount != 0)
+		{
 			bindDefaultArray(pp);
+		}
+		else if (counts.getoutBoundsCount() > 0) {
+			err = "Invalid number parameter";
+			return false;
+		}
+		else if (counts.numberCount > 0)
+		{
+			bindDoubleArray(pp);
+		}
+		else if (counts.int64Count > 0) {
+			bindIntegerArray(pp);
+		}
+		else if (counts.int32Count != 0)
+		{
+			bindInt32Array(pp);
+		}
+		else if (counts.uint32Count != 0)
+		{
+			bindUint32Array(pp);
+		}
+		else if (counts.nullCount == arr->Length())
+		{
+			bindNullArray(pp);
 		}
 		else {
 			err = "Invalid parameter type";
