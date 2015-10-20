@@ -76,7 +76,7 @@ namespace mssql
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			auto str = arr->Get(i)->ToString();
-			if (str->Length() > strLen) strLen = str->Length() + 2;
+			if (str->Length() > strLen) strLen = str->Length();
 		}
 		return strLen;
 	}
@@ -139,7 +139,7 @@ namespace mssql
 		auto len = arr->Length();
 		
 		indvec.resize(len);
-		uint16vec_ptr = make_shared<vector<uint16_t>>(len * strLen);
+		uint16vec_ptr = make_shared<vector<uint16_t>>(len * (strLen + 5));
 		buffer = uint16vec_ptr->data();
 		buffer_len = strLen * sizeof(uint16_t);
 		param_size = strLen;
