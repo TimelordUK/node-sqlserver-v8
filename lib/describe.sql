@@ -1,4 +1,4 @@
-SELECT
+SELECT distinct
   c.name                                          name,
   t.Name                                          type,
   c.max_length,

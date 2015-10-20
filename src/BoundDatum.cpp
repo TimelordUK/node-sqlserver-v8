@@ -76,7 +76,7 @@ namespace mssql
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			auto str = arr->Get(i)->ToString();
-			if (str->Length() > strLen) strLen = str->Length() + 1;
+			if (str->Length() > strLen) strLen = str->Length() + 2;
 		}
 		return strLen;
 	}

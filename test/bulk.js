@@ -6,7 +6,10 @@ var sql = require('../'),
 
 var conn_str = config.conn_str;
 
-function testBoilerPlate(name, doneFunction) {
+function testBoilerPlate(params, doneFunction) {
+
+    var name = params.name;
+    var type = params.type;
 
     sql.open(conn_str, opened);
 
@@ -30,7 +33,7 @@ function testBoilerPlate(name, doneFunction) {
 
             function (async_done) {
                 var folder = __dirname;
-                var file = folder + '/' + name;
+                var file = folder + '/sql/' + name;
                 file += '.sql';
 
                 function inChunks(arr, callback) {
@@ -47,6 +50,7 @@ function testBoilerPlate(name, doneFunction) {
                 // submit the SQL one chunk at a time to create table with constraints.
                 readFile(file, function (createSql) {
                     createSql = createSql.replace(/<name>/g, name);
+                    createSql = createSql.replace(/<type>/g, type);
                     var arr = createSql.split("GO");
                     for (var i = 0; i < arr.length; ++i) {
                         arr[i] = arr[i].replace(/^\s+|\s+$/g, '');
@@ -116,60 +120,122 @@ suite('bulk', function () {
         return parsedJSON;
     }
 
-    test('employee bulk operations', function (test_done) {
+    function simpleColumnBulkTest(type, buildfn, test_done) {
 
-        var table_name = "Employee";
+        var table_name = 'bulkColumn';
 
-        testBoilerPlate(table_name, go);
+        testBoilerPlate( {
+            name : table_name,
+            type : type
+        }, go);
 
         function go() {
             var tm = c.tableMgr();
+            //tm.setBatchSize(100);
             tm.bind(table_name, test);
         }
 
-        function test(bulkMgr) {
-            var keys = [];
-            var parsedJSON = getJSON(keys);
+        function buildTest(batch) {
+            var arr = [];
 
-            bulkMgr.insertRows(parsedJSON, insertDone);
+            for (var i = 0; i < batch; ++i) {
+                arr.push(
+                    {
+                        pkid : i,
+                        col1 : buildfn(i)
+                    }
+                )
+            }
+            return arr;
+        }
+
+        function test(bulkMgr) {
+            var batch = 1000;
+            var vec = buildTest(batch);
+            bulkMgr.insertRows(vec, insertDone);
 
             function insertDone(err,res) {
                 assert.ifError(err);
                 assert(res.length == 0);
-                bulkMgr.selectRows(keys, bulkDone);
+                var s = "select count(*) as count from " + table_name;
+                c.query(s, function(err, results) {
+                    var expected = [ {
+                        count : batch
+                    }];
+                    assert.ifError(err);
+                    assert.deepEqual(results, expected, "results didn't match");
+                    checkCompare(vec);
+                });
             }
 
-            function bulkDone(err, results) {
-                assert(results.length === 10);
-                assert.deepEqual(results, parsedJSON, "results didn't match");
-                test_done();
+            function checkCompare(expected) {
+                var fetch = [];
+                for (var i = 0; i < expected.length; ++i) {
+                    fetch.push( {
+                        pkid : i
+                    })
+                }
+                bulkMgr.selectRows(fetch, function(err, results) {
+                    assert.ifError(err);
+                    assert.deepEqual(results, expected, "results didn't match");
+                    test_done();
+                });
             }
         }
-    });
-
-    function buildTest(count) {
-        var arr = [];
-        var str = '-';
-        for (var i = 0; i < count; ++i) {
-            str = str + i;
-            if (i % 10 === 0) str = '-';
-            var inst = {
-                pkid : i,
-                num1 : i * 3,
-                num2 : i * 4,
-                num3: i % 2 === 0 ? null : i * 32,
-                st: str
-            };
-            arr.push(inst);
-        }
-        return arr;
     }
 
+    test('bulk insert varchar column', function(test_done) {
+        var arr = [];
+        var str = '';
+        for (var i = 0; i < 10; ++i) {
+            str = str + i;
+            arr.push(str)
+        }
+        simpleColumnBulkTest('varchar(100)', function(i) {
+            var idx = i % 10;
+            var s = arr[idx];
+            return  s;
+        }, test_done)
+    });
+
+    test('bulk insert bool column', function(test_done) {
+        simpleColumnBulkTest('bit', function(i) {
+            return  i % 2 == 0;
+        }, test_done)
+    });
+
+    test('bulk insert int column', function(test_done) {
+        simpleColumnBulkTest('int', function(i) {
+            return  i * 2;
+        }, test_done)
+    });
+
+    /*
     test('simple large bulk insert with batches', function (test_done) {
+
+        function buildTest(count) {
+            var arr = [];
+            var str = '-';
+            for (var i = 0; i < count; ++i) {
+                str = str + i;
+                if (i % 10 === 0) str = '-';
+                var inst = {
+                    pkid : i,
+                    num1 : i * 3,
+                    num2 : i * 4,
+                    num3: i % 2 === 0 ? null : i * 32,
+                    st: str
+                };
+                arr.push(inst);
+            }
+            return arr;
+        }
 
         var table_name = "BulkTest";
 
-        testBoilerPlate(table_name, go);
+        testBoilerPlate( {
+            name : table_name
+        }, go);
 
         function go() {
             var tm = c.tableMgr();
@@ -194,6 +260,39 @@ suite('bulk', function () {
                     assert.deepEqual(results, expected, "results didn't match");
                     test_done();
                 });
+            }
+        }
+    });*/
+
+    test('employee bulk operations', function (test_done) {
+
+        var table_name = "Employee";
+
+        testBoilerPlate( {
+            name : table_name
+        }, go);
+
+        function go() {
+            var tm = c.tableMgr();
+            tm.bind(table_name, test);
+        }
+
+        function test(bulkMgr) {
+            var keys = [];
+            var parsedJSON = getJSON(keys);
+
+            bulkMgr.insertRows(parsedJSON, insertDone);
+
+            function insertDone(err,res) {
+                assert.ifError(err);
+                assert(res.length == 0);
+                bulkMgr.selectRows(keys, bulkDone);
+            }
+
+            function bulkDone(err, results) {
+                assert(results.length === 10);
+                assert.deepEqual(results, parsedJSON, "results didn't match");
+                test_done();
             }
         }
     });
