@@ -120,7 +120,7 @@ suite('bulk', function () {
         return parsedJSON;
     }
 
-    test('bulk insert varbinary column', function(test_done) {
+    test('bulk insert/select varbinary column', function(test_done) {
         var arr = [];
         var str = '';
         for (var i = 0; i < 10; ++i) {
@@ -131,44 +131,50 @@ suite('bulk', function () {
             var idx = i % 10;
             var s = arr[idx];
             return  s;
-        }, test_done)
+        }, true, test_done)
     });
 
-    test('bulk insert datetime column', function(test_done) {
+    test('bulk insert/select datetime column', function(test_done) {
         var dt = new Date('2002-02-06T00:00:00.000Z');
-        simpleColumnBulkTest('datetime', function(i) {
+        simpleColumnBulkTest('datetime', function() {
             dt.setTime( dt.getTime() + 86400000 );
             var nt = new Date();
             nt.setTime(dt.getTime());
             return nt;
-        }, test_done)
+        }, true, test_done)
     });
 
-    test('bulk insert int column of signed', function(test_done) {
+    test('bulk insert only int column of signed', function(test_done) {
         simpleColumnBulkTest('int', function(i) {
             return i % 2 == 0 ? -i :  i;
-        }, test_done)
+        }, false, test_done)
     });
 
-    test('bulk insert int column of unsigned', function(test_done) {
+    test('bulk insert/select int column of signed', function(test_done) {
+        simpleColumnBulkTest('int', function(i) {
+            return i % 2 == 0 ? -i :  i;
+        }, true, test_done)
+    });
+
+    test('bulk insert/select int column of unsigned', function(test_done) {
         simpleColumnBulkTest('int', function(i) {
             return  i * 2;
-        }, test_done)
+        }, true, test_done)
     });
 
-    test('bulk insert bool column', function(test_done) {
+    test('bulk insert/select bool column', function(test_done) {
         simpleColumnBulkTest('bit', function(i) {
             return  i % 2 == 0;
-        }, test_done)
+        }, true, test_done)
     });
 
-    test('bulk insert decimal column', function(test_done) {
+    test('bulk insert/select decimal column', function(test_done) {
         simpleColumnBulkTest('decimal(18,4)', function(i) {
             return  (i * 10) + (i * 0.1);
-        }, test_done)
+        }, true, test_done)
     });
 
-    test('bulk insert varchar column', function(test_done) {
+    test('bulk insert/select varchar column', function(test_done) {
         var arr = [];
         var str = '';
         for (var i = 0; i < 10; ++i) {
@@ -179,7 +185,7 @@ suite('bulk', function () {
             var idx = i % 10;
             var s = arr[idx];
             return  s;
-        }, test_done)
+        }, true, test_done)
     });
 
     test('simple large bulk insert with batches', function (test_done) {
@@ -235,7 +241,7 @@ suite('bulk', function () {
         }
     });
 
-    function simpleColumnBulkTest(type, buildfn, test_done) {
+    function simpleColumnBulkTest(type, buildfn, check, test_done) {
 
         var table_name = 'bulkColumn';
 
@@ -246,7 +252,7 @@ suite('bulk', function () {
 
         function go() {
             var tm = c.tableMgr();
-            tm.setBatchSize(250);
+            tm.setBatchSize(500);
             tm.bind(table_name, test);
         }
 
@@ -279,7 +285,8 @@ suite('bulk', function () {
                     }];
                     assert.ifError(err);
                     assert.deepEqual(results, expected, "results didn't match");
-                    checkCompare(vec);
+                    if (check) checkCompare(vec);
+                    else test_done();
                 });
             }
 
