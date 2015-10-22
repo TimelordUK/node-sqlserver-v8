@@ -131,10 +131,21 @@ suite('bulk', function () {
         return parsedJSON;
     }
 
+
+
     function nullTest(batchSize, selectAfterInsert, test_done) {
-        simpleColumnBulkTest('datetime', function(i) {
-            return null;
-        }, selectAfterInsert, batchSize, test_done)
+
+        var params = {
+            columnType : 'datetime',
+            buildFunction : function() {
+                return null;
+            },
+            check : selectAfterInsert,
+            deleteAfterTest : false,
+            batchSize : batchSize
+        };
+
+        simpleColumnBulkTest(params, test_done)
     }
 
     test('bulk insert/select null column of datetime batchSize ' + test1BatchSize, function(test_done) {
@@ -152,11 +163,20 @@ suite('bulk', function () {
             str = str + i;
             arr.push(new Buffer(str))
         }
-        simpleColumnBulkTest('varbinary(100)', function(i) {
-            var idx = i % 10;
-            var s = arr[idx];
-            return  s;
-        }, selectAfterInsert, batchSize, test_done)
+
+        var params = {
+            columnType : 'varbinary(100)',
+            buildFunction : function(i) {
+                var idx = i % 10;
+                var s = arr[idx];
+                return  s;
+            },
+            check : selectAfterInsert,
+            deleteAfterTest : false,
+            batchSize : batchSize
+        };
+
+        simpleColumnBulkTest(params, test_done)
     }
 
     test('bulk insert/select varbinary column batchSize ' + test1BatchSize, function(test_done) {
@@ -169,12 +189,21 @@ suite('bulk', function () {
 
     function dateTest(batchSize, selectAfterInsert, test_done) {
         var dt = new Date('2002-02-06T00:00:00.000Z');
-        simpleColumnBulkTest('datetime', function() {
-            dt.setTime( dt.getTime() + 86400000 );
-            var nt = new Date();
-            nt.setTime(dt.getTime());
-            return nt;
-        }, selectAfterInsert, batchSize, test_done)
+
+        var params = {
+            columnType: 'datetime',
+            buildFunction: function () {
+                dt.setTime(dt.getTime() + 86400000);
+                var nt = new Date();
+                nt.setTime(dt.getTime());
+                return nt;
+            },
+            check: selectAfterInsert,
+            deleteAfterTest : false,
+            batchSize: batchSize
+        };
+
+        simpleColumnBulkTest(params, test_done)
     }
 
     test('bulk insert/select datetime column batchSize ' + test1BatchSize, function(test_done) {
@@ -186,9 +215,18 @@ suite('bulk', function () {
     });
 
     function unsignedTest(batchSize, selectAfterInsert, test_done) {
-        simpleColumnBulkTest('int', function(i) {
-            return i % 2 == 0 ? -i :  i;
-        }, selectAfterInsert, batchSize, test_done)
+
+        var params = {
+            columnType: 'int',
+            buildFunction: function(i) {
+                return i % 2 == 0 ? -i :  i;
+            },
+            check: selectAfterInsert,
+            deleteAfterTest : false,
+            batchSize: batchSize
+        };
+
+        simpleColumnBulkTest(params, test_done)
     }
 
     test('bulk insert only int column of unsigned batchSize ' + test1BatchSize, function(test_done) {
@@ -200,9 +238,18 @@ suite('bulk', function () {
     });
 
     function signedTest(batchSize, selectAfterInsert, test_done) {
-        simpleColumnBulkTest('int', function(i) {
-            return i % 2 == 0 ? -i :  i;
-        }, selectAfterInsert, batchSize, test_done)
+
+        var params = {
+            columnType: 'int',
+            buildFunction : function(i) {
+                return i % 2 == 0 ? -i :  i;
+            },
+            check: selectAfterInsert,
+            deleteAfterTest : false,
+            batchSize: batchSize
+        };
+
+        simpleColumnBulkTest(params, test_done)
     }
 
     test('bulk insert/select int column of signed batchSize ' + test1BatchSize, function(test_done) {
@@ -214,9 +261,18 @@ suite('bulk', function () {
     });
 
     function unsignedTest(batchSize, selectAfterInsert, test_done) {
-        simpleColumnBulkTest('int', function(i) {
-            return  i * 2;
-        }, selectAfterInsert, batchSize, test_done)
+
+        var params = {
+            columnType: 'int',
+            buildFunction : function(i) {
+                return  i * 2;
+            },
+            check: selectAfterInsert,
+            deleteAfterTest : false,
+            batchSize: batchSize
+        };
+
+        simpleColumnBulkTest(params, test_done)
     }
 
     test('bulk insert/select int column of unsigned batchSize ' + test1BatchSize, function(test_done) {
@@ -228,9 +284,18 @@ suite('bulk', function () {
     });
 
     function bitTest(batchSize, selectAfterInsert, test_done) {
-        simpleColumnBulkTest('bit', function(i) {
-            return  i % 2 == 0;
-        }, selectAfterInsert, batchSize, test_done)
+
+        var params = {
+            columnType: 'bit',
+            buildFunction : function(i) {
+                return  i % 2 == 0;
+            },
+            check: selectAfterInsert,
+            deleteAfterTest : false,
+            batchSize: batchSize
+        };
+
+        simpleColumnBulkTest(params, test_done)
     }
 
     test('bulk insert/select bit column batchSize ' + test1BatchSize, function(test_done) {
@@ -241,40 +306,66 @@ suite('bulk', function () {
         bitTest(test2BatchSize, true, test_done);
     });
 
-    function decimalTest(batchSize, selectAfterInsert, test_done) {
-        simpleColumnBulkTest('decimal(18,4)', function(i) {
-            return  (i * 10) + (i * 0.1);
-        }, selectAfterInsert, batchSize, test_done)
+    function decimalTest(batchSize, selectAfterInsert, deleteAfterTest, test_done) {
+
+        var params = {
+            columnType: 'decimal(18,4)',
+            buildFunction : function(i) {
+                return  (i * 10) + (i * 0.1);
+            },
+            check: selectAfterInsert,
+            deleteAfterTest : deleteAfterTest,
+            batchSize: batchSize
+        };
+
+        simpleColumnBulkTest(params, test_done)
     }
 
     test('bulk insert/select decimal column batchSize ' + test1BatchSize, function(test_done) {
-        decimalTest(test1BatchSize, true, test_done);
+        decimalTest(test1BatchSize, true, false, test_done);
     });
 
     test('bulk insert/select decimal column batchSize ' + test2BatchSize, function(test_done) {
-        decimalTest(test2BatchSize, true, test_done);
+        decimalTest(test2BatchSize, true, false, test_done);
     });
 
-    function varcharTest(batchSize, selectAfterInsert, test_done) {
+    test('bulk insert/select/delete decimal column batchSize ' + test2BatchSize, function(test_done) {
+        decimalTest(test2BatchSize, true, true, test_done);
+    });
+
+    function varcharTest(batchSize, selectAfterInsert, deleteAfterTest, test_done) {
         var arr = [];
         var str = '';
         for (var i = 0; i < 10; ++i) {
             str = str + i;
             arr.push(str)
         }
-        simpleColumnBulkTest('varchar(100)', function (i) {
-            var idx = i % 10;
-            var s = arr[idx];
-            return s;
-        }, selectAfterInsert, batchSize, test_done)
+
+        var params = {
+            columnType: 'varchar(100)',
+            buildFunction : function (i) {
+                var idx = i % 10;
+                var s = arr[idx];
+                return s;
+            },
+            check : selectAfterInsert,
+            deleteAfterTest : deleteAfterTest,
+            batchSize : batchSize
+        };
+
+        simpleColumnBulkTest(params, test_done)
     }
 
     test('bulk insert/select varchar column batchSize ' + test1BatchSize, function(test_done) {
-        varcharTest(test1BatchSize, true, test_done);
+        varcharTest(test1BatchSize, true, false, test_done);
     });
 
     test('bulk insert/select varchar column batchSize ' + test2BatchSize, function(test_done) {
-        varcharTest(test2BatchSize, true, test_done);
+        varcharTest(test2BatchSize, true, false, test_done);
+    });
+
+    test('bulk insert/select/delete varchar column batchSize ' + test2BatchSize, function(test_done) {
+        varcharTest(test2BatchSize, true, true, test_done);
     });
 
     test('bulk insert simple multi-column object in batches ' + test2BatchSize, function (test_done) {
@@ -329,7 +420,15 @@ suite('bulk', function () {
         }
     });
 
-    function simpleColumnBulkTest(type, buildFunction, check, batchSize, test_done) {
+
+
+    function simpleColumnBulkTest(params, test_done) {
+
+        var type = params.columnType;
+        var buildFunction = params.buildFunction;
+        var check = params.check;
+        var batchSize = params.batchSize;
+        var deleteAfterTest = params.deleteAfterTest;
 
         var table_name = 'bulkColumn';
 
@@ -388,8 +487,28 @@ suite('bulk', function () {
                 bulkMgr.selectRows(fetch, function(err, results) {
                     assert.ifError(err);
                     assert.deepEqual(results, expected, "results didn't match");
-                    test_done();
+                    if (deleteAfterTest) {
+                        bulkMgr.deleteRows(results, function(err, res) {
+                            assert.ifError(err);
+                            assert(res.length == 0);
+                            checkDeleted(test_done);
+                        })
+                    }else {
+                        test_done();
+                    }
                 });
+
+                function checkDeleted(test_done) {
+                    var s = "select count(*) as count from " + table_name;
+                    c.query(s, function(err, results) {
+                        var expected = [{
+                            count : 0
+                        }];
+                        assert.ifError(err);
+                        assert.deepEqual(results, expected, "results didn't match");
+                        test_done();
+                    });
+                }
             }
         }
     }
