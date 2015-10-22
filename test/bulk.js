@@ -14,6 +14,7 @@ function testBoilerPlate(params, doneFunction) {
     sql.open(conn_str, opened);
 
     function opened(err, conn) {
+        assert.ifError(err);
         function readFile(f, done) {
             fs.readFile(f, 'utf8', function (err, data) {
                 if (err) {
@@ -40,6 +41,8 @@ function testBoilerPlate(params, doneFunction) {
                     var i = 0;
                     conn.query(arr[i], next);
                     function next(err, res) {
+                        assert.ifError(err);
+                        assert(res.length === 0);
                         ++i;
                         if (i < arr.length)
                             conn.query(arr[i], next);
@@ -112,25 +115,6 @@ suite('bulk', function () {
         });
     });
 
-    function getJSON(keys) {
-        var folder = __dirname;
-        var parsedJSON = require(folder + '/employee.json');
-
-        for (var i = 0; i < parsedJSON.length; ++i) {
-            parsedJSON[i].OrganizationNode = new Buffer(parsedJSON[i].OrganizationNode.data, 'utf8');
-            parsedJSON[i].BirthDate = new Date(parsedJSON[i].BirthDate);
-            parsedJSON[i].HireDate = new Date(parsedJSON[i].HireDate);
-            parsedJSON[i].ModifiedDate = new Date(parsedJSON[i].ModifiedDate);
-        }
-
-        parsedJSON.forEach(function (emp) {
-            keys.push({
-                BusinessEntityID: emp.BusinessEntityID
-            });
-        });
-        return parsedJSON;
-    }
-
 
 
     function nullTest(batchSize, selectAfterInsert, test_done) {
@@ -140,6 +124,7 @@ suite('bulk', function () {
             buildFunction : function() {
                 return null;
             },
+            updateFunction : null,
             check : selectAfterInsert,
             deleteAfterTest : false,
             batchSize : batchSize
@@ -168,9 +153,9 @@ suite('bulk', function () {
             columnType : 'varbinary(100)',
             buildFunction : function(i) {
                 var idx = i % 10;
-                var s = arr[idx];
-                return  s;
+                return  arr[idx];
             },
+            updateFunction : null,
             check : selectAfterInsert,
             deleteAfterTest : false,
             batchSize : batchSize
@@ -198,9 +183,10 @@ suite('bulk', function () {
                 nt.setTime(dt.getTime());
                 return nt;
             },
-            check: selectAfterInsert,
+            updateFunction : null,
+            check : selectAfterInsert,
             deleteAfterTest : false,
-            batchSize: batchSize
+            batchSize : batchSize
         };
 
         simpleColumnBulkTest(params, test_done)
@@ -214,73 +200,64 @@ suite('bulk', function () {
         dateTest(test2BatchSize, true, test_done);
     });
 
-    function unsignedTest(batchSize, selectAfterInsert, test_done) {
-
-        var params = {
-            columnType: 'int',
-            buildFunction: function(i) {
-                return i % 2 == 0 ? -i :  i;
-            },
-            check: selectAfterInsert,
-            deleteAfterTest : false,
-            batchSize: batchSize
-        };
-
-        simpleColumnBulkTest(params, test_done)
-    }
-
-    test('bulk insert only int column of unsigned batchSize ' + test1BatchSize, function(test_done) {
-        unsignedTest(test1BatchSize, false, test_done);
-    });
-
-    test('bulk insert only int column of unsigned batchSize ' + test2BatchSize, function(test_done) {
-        unsignedTest(test2BatchSize, false, test_done);
-    });
-
-    function signedTest(batchSize, selectAfterInsert, test_done) {
+    function signedTest(batchSize, selectAfterInsert, runUpdateFunction, test_done) {
 
         var params = {
             columnType: 'int',
             buildFunction : function(i) {
                 return i % 2 == 0 ? -i :  i;
             },
-            check: selectAfterInsert,
+            updateFunction : runUpdateFunction ? function(i) {
+                return i % 2 == 0 ? -i * 3 :  i * 3;
+            } : null,
+            check : selectAfterInsert,
             deleteAfterTest : false,
-            batchSize: batchSize
+            batchSize : batchSize
         };
 
         simpleColumnBulkTest(params, test_done)
     }
 
     test('bulk insert/select int column of signed batchSize ' + test1BatchSize, function(test_done) {
-        signedTest(test1BatchSize, true, test_done);
+        signedTest(test1BatchSize, true, false, test_done);
     });
 
     test('bulk insert/select int column of signed batchSize ' + test2BatchSize, function(test_done) {
-        signedTest(test2BatchSize, true, test_done);
+        signedTest(test2BatchSize, true, false, test_done);
     });
 
-    function unsignedTest(batchSize, selectAfterInsert, test_done) {
+    test('bulk insert/update/select int column of signed batchSize ' + test2BatchSize, function(test_done) {
+        signedTest(test2BatchSize, true, true, test_done);
+    });
+
+    function unsignedTest(batchSize, selectAfterInsert, runUpdateFunction, test_done) {
 
         var params = {
-            columnType: 'int',
+            columnType : 'int',
             buildFunction : function(i) {
                 return  i * 2;
             },
-            check: selectAfterInsert,
+            updateFunction : runUpdateFunction ? function(i) {
+                return i * 3;
+            } : null,
+            check : selectAfterInsert,
             deleteAfterTest : false,
-            batchSize: batchSize
+            batchSize : batchSize
         };
 
         simpleColumnBulkTest(params, test_done)
     }
 
     test('bulk insert/select int column of unsigned batchSize ' + test1BatchSize, function(test_done) {
-        unsignedTest(test1BatchSize, true, test_done);
+        unsignedTest(test1BatchSize, true, false, test_done);
     });
 
     test('bulk insert/select int column of unsigned batchSize ' + test2BatchSize, function(test_done) {
-        unsignedTest(test2BatchSize, true, test_done);
+        unsignedTest(test2BatchSize, true, false, test_done);
+    });
+
+    test('bulk insert/select/update int column of unsigned batchSize ' + test2BatchSize, function(test_done) {
+        unsignedTest(test2BatchSize, true, true, test_done);
     });
 
     function bitTest(batchSize, selectAfterInsert, test_done) {
@@ -290,9 +267,10 @@ suite('bulk', function () {
             buildFunction : function(i) {
                 return  i % 2 == 0;
             },
-            check: selectAfterInsert,
+            updateFunction : null,
+            check : selectAfterInsert,
             deleteAfterTest : false,
-            batchSize: batchSize
+            batchSize : batchSize
         };
 
         simpleColumnBulkTest(params, test_done)
@@ -313,9 +291,10 @@ suite('bulk', function () {
             buildFunction : function(i) {
                 return  (i * 10) + (i * 0.1);
             },
-            check: selectAfterInsert,
+            updateFunction : null,
+            check : selectAfterInsert,
             deleteAfterTest : deleteAfterTest,
-            batchSize: batchSize
+            batchSize : batchSize
         };
 
         simpleColumnBulkTest(params, test_done)
@@ -345,9 +324,9 @@ suite('bulk', function () {
             columnType: 'varchar(100)',
             buildFunction : function (i) {
                 var idx = i % 10;
-                var s = arr[idx];
-                return s;
+                return arr[idx];
             },
+            updateFunction : null,
             check : selectAfterInsert,
             deleteAfterTest : deleteAfterTest,
             batchSize : batchSize
@@ -420,12 +399,11 @@ suite('bulk', function () {
         }
     });
 
-
-
     function simpleColumnBulkTest(params, test_done) {
 
         var type = params.columnType;
         var buildFunction = params.buildFunction;
+        var updateFunction = params.updateFunction;
         var check = params.check;
         var batchSize = params.batchSize;
         var deleteAfterTest = params.deleteAfterTest;
@@ -442,14 +420,14 @@ suite('bulk', function () {
             tm.bind(table_name, test);
         }
 
-        function buildTestObjects(batch) {
+        function buildTestObjects(batch, functionToRun) {
             var arr = [];
 
             for (var i = 0; i < batch; ++i) {
                 arr.push(
                     {
                         pkid : i,
-                        col1 : buildFunction(i)
+                        col1 : functionToRun(i)
                     }
                 )
             }
@@ -459,7 +437,7 @@ suite('bulk', function () {
         function test(bulkMgr) {
             bulkMgr.setBatchSize(batchSize);
             var batch = totalObjectsForInsert;
-            var vec = buildTestObjects(batch);
+            var vec = buildTestObjects(batch, buildFunction);
             bulkMgr.insertRows(vec, insertDone);
 
             function insertDone(err,res) {
@@ -472,12 +450,24 @@ suite('bulk', function () {
                     }];
                     assert.ifError(err);
                     assert.deepEqual(results, expected, "results didn't match");
-                    if (check) checkCompare(vec);
+
+                    // if an updater was provided now run it.
+
+                    if (updateFunction != null) {
+                        var update = buildTestObjects(batch, updateFunction);
+                        bulkMgr.updateRows(update, function(err, res) {
+                            assert.ifError(err);
+                            assert(res.length == 0);
+                            if (check) checkCompare(update, test_done);
+                            else test_done();
+                        });
+                    }
+                    else if (check) checkCompare(vec, test_done);
                     else test_done();
                 });
             }
 
-            function checkCompare(expected) {
+            function checkCompare(expected, checkComplete) {
                 var fetch = [];
                 for (var i = 0; i < expected.length; ++i) {
                     fetch.push( {
@@ -488,17 +478,21 @@ suite('bulk', function () {
                     assert.ifError(err);
                     assert.deepEqual(results, expected, "results didn't match");
                     if (deleteAfterTest) {
-                        bulkMgr.deleteRows(results, function(err, res) {
-                            assert.ifError(err);
-                            assert(res.length == 0);
-                            checkDeleted(test_done);
-                        })
+                        deleteRows(results);
                     }else {
-                        test_done();
+                        checkComplete();
                     }
                 });
 
-                function checkDeleted(test_done) {
+                function deleteRows(results) {
+                    bulkMgr.deleteRows(results, function(err, res) {
+                        assert.ifError(err);
+                        assert(res.length == 0);
+                        checkDeleted();
+                    })
+                }
+
+                function checkDeleted() {
                     var s = "select count(*) as count from " + table_name;
                     c.query(s, function(err, results) {
                         var expected = [{
@@ -506,14 +500,33 @@ suite('bulk', function () {
                         }];
                         assert.ifError(err);
                         assert.deepEqual(results, expected, "results didn't match");
-                        test_done();
+                        checkComplete();
                     });
                 }
             }
         }
     }
 
-    test('employee bulk operations', function (test_done) {
+    function getJSON(keys) {
+        var folder = __dirname;
+        var parsedJSON = require(folder + '/employee.json');
+
+        for (var i = 0; i < parsedJSON.length; ++i) {
+            parsedJSON[i].OrganizationNode = new Buffer(parsedJSON[i].OrganizationNode.data, 'utf8');
+            parsedJSON[i].BirthDate = new Date(parsedJSON[i].BirthDate);
+            parsedJSON[i].HireDate = new Date(parsedJSON[i].HireDate);
+            parsedJSON[i].ModifiedDate = new Date(parsedJSON[i].ModifiedDate);
+        }
+
+        parsedJSON.forEach(function (emp) {
+            keys.push({
+                BusinessEntityID : emp.BusinessEntityID
+            });
+        });
+        return parsedJSON;
+    }
+
+    test('employee complex json object array bulk operations', function (test_done) {
 
         var table_name = "Employee";
 
@@ -539,6 +552,7 @@ suite('bulk', function () {
             }
 
             function bulkDone(err, results) {
+                assert.ifError(err);
                 assert(results.length === 10);
                 assert.deepEqual(results, parsedJSON, "results didn't match");
                 test_done();
