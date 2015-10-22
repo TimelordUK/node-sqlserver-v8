@@ -260,14 +260,16 @@ suite('bulk', function () {
         unsignedTest(test2BatchSize, true, true, test_done);
     });
 
-    function bitTest(batchSize, selectAfterInsert, test_done) {
+    function bitTest(batchSize, selectAfterInsert, runUpdateFunction, test_done) {
 
         var params = {
             columnType: 'bit',
             buildFunction : function(i) {
                 return  i % 2 == 0;
             },
-            updateFunction : null,
+            updateFunction : runUpdateFunction ? function(i) {
+                return i % 3 == 0;
+            } : null,
             check : selectAfterInsert,
             deleteAfterTest : false,
             batchSize : batchSize
@@ -277,21 +279,27 @@ suite('bulk', function () {
     }
 
     test('bulk insert/select bit column batchSize ' + test1BatchSize, function(test_done) {
-        bitTest(test1BatchSize, true, test_done);
+        bitTest(test1BatchSize, true, false, test_done);
     });
 
     test('bulk insert/select bit column ' + test2BatchSize, function(test_done) {
-        bitTest(test2BatchSize, true, test_done);
+        bitTest(test2BatchSize, true, false, test_done);
     });
 
-    function decimalTest(batchSize, selectAfterInsert, deleteAfterTest, test_done) {
+    test('bulk insert/update/select bit column ' + test2BatchSize, function(test_done) {
+        bitTest(test2BatchSize, true, true, test_done);
+    });
+
+    function decimalTest(batchSize, selectAfterInsert, deleteAfterTest, runUpdateFunction, test_done) {
 
         var params = {
             columnType: 'decimal(18,4)',
             buildFunction : function(i) {
                 return  (i * 10) + (i * 0.1);
             },
-            updateFunction : null,
+            updateFunction : runUpdateFunction ? function(i) {
+                return  (i * 1) + (i * 0.2);
+            } : null,
             check : selectAfterInsert,
             deleteAfterTest : deleteAfterTest,
             batchSize : batchSize
@@ -301,18 +309,22 @@ suite('bulk', function () {
     }
 
     test('bulk insert/select decimal column batchSize ' + test1BatchSize, function(test_done) {
-        decimalTest(test1BatchSize, true, false, test_done);
+        decimalTest(test1BatchSize, true, false, false, test_done);
     });
 
     test('bulk insert/select decimal column batchSize ' + test2BatchSize, function(test_done) {
-        decimalTest(test2BatchSize, true, false, test_done);
+        decimalTest(test2BatchSize, true, false, false, test_done);
     });
 
     test('bulk insert/select/delete decimal column batchSize ' + test2BatchSize, function(test_done) {
-        decimalTest(test2BatchSize, true, true, test_done);
+        decimalTest(test2BatchSize, true, true, false, test_done);
     });
 
-    function varcharTest(batchSize, selectAfterInsert, deleteAfterTest, test_done) {
+    test('bulk insert/update/select decimal column batchSize ' + test2BatchSize, function(test_done) {
+        decimalTest(test2BatchSize, true, false, true, test_done);
+    });
+
+    function varcharTest(batchSize, selectAfterInsert, deleteAfterTest, runUpdateFunction, test_done) {
         var arr = [];
         var str = '';
         for (var i = 0; i < 10; ++i) {
@@ -326,7 +338,10 @@ suite('bulk', function () {
                 var idx = i % 10;
                 return arr[idx];
             },
-            updateFunction : null,
+            updateFunction : runUpdateFunction ? function(i) {
+                var idx = 9 - (i % 10);
+                return arr[idx];
+            } : null,
             check : selectAfterInsert,
             deleteAfterTest : deleteAfterTest,
             batchSize : batchSize
@@ -336,15 +351,23 @@ suite('bulk', function () {
     }
 
     test('bulk insert/select varchar column batchSize ' + test1BatchSize, function(test_done) {
-        varcharTest(test1BatchSize, true, false, test_done);
+        varcharTest(test1BatchSize, true, false, false, test_done);
     });
 
     test('bulk insert/select varchar column batchSize ' + test2BatchSize, function(test_done) {
-        varcharTest(test2BatchSize, true, false, test_done);
+        varcharTest(test2BatchSize, true, false, false, test_done);
     });
 
     test('bulk insert/select/delete varchar column batchSize ' + test2BatchSize, function(test_done) {
-        varcharTest(test2BatchSize, true, true, test_done);
+        varcharTest(test2BatchSize, true, true, false, test_done);
+    });
+
+    test('bulk insert/update/select varchar column batchSize ' + test2BatchSize, function(test_done) {
+        varcharTest(test2BatchSize, true, false, true, test_done);
+    });
+
+    test('bulk insert/update/select/delete varchar column batchSize ' + test2BatchSize, function(test_done) {
+        varcharTest(test2BatchSize, true, true, true, test_done);
     });
 
     test('bulk insert simple multi-column object in batches ' + test2BatchSize, function (test_done) {
