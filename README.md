@@ -122,7 +122,7 @@ tell the bulkMgr which columns to use for the update and send in the modificatio
                 bulkMgr.setUpdateCols(updateCols);
                 bulkMgr.updateRows(modifications, updateDone);
 
-the manager can also delete rows - the where clause is used in binding signature so be default the primary key.  Similar to the select examples above :-
+the manager can also delete rows - the where clause is used in binding signature so by default this will be the primary key.  Similar to the select examples above :-
 
                  bulkMgr.deleteRows(keys, function (err, res) {
                  })
