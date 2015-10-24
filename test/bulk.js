@@ -115,6 +115,59 @@ suite('bulk', function () {
         });
     });
 
+    test('bulk insert simple multi-column object - default a nullable column ' + test2BatchSize, function (test_done) {
+
+        function buildTest(count) {
+            var arr = [];
+            var str = '-';
+            for (var i = 0; i < count; ++i) {
+                str = str + i;
+                if (i % 10 === 0) str = '-';
+                var inst = {
+                    pkid: i,
+                    num1: i * 3,
+                    num2: i * 4,
+                    // do not present num3 - an array of nulls should be inserted.
+                    st: str
+                };
+                arr.push(inst);
+            }
+            return arr;
+        }
+
+        var table_name = "BulkTest";
+
+        testBoilerPlate({
+            name: table_name
+        }, go);
+
+        function go() {
+            var tm = c.tableMgr();
+            tm.bind(table_name, test);
+        }
+
+        function test(bulkMgr) {
+            var batch = totalObjectsForInsert;
+            var vec = buildTest(batch);
+            bulkMgr.setBatchSize(totalObjectsForInsert);
+            bulkMgr.insertRows(vec, insertDone);
+
+            function insertDone(err, res) {
+                assert.ifError(err);
+                assert(res.length == 0);
+                var s = "select count(*) as count from " + table_name;
+                c.query(s, function (err, results) {
+                    var expected = [{
+                        count: batch
+                    }];
+                    assert.ifError(err);
+                    assert.deepEqual(results, expected, "results didn't match");
+                    test_done();
+                });
+            }
+        }
+    });
+
     function getJSON() {
         var folder = __dirname;
         var fs = require('fs');
@@ -530,6 +583,7 @@ suite('bulk', function () {
     test('bulk insert/update/select/delete varchar column batchSize ' + test2BatchSize, function (test_done) {
         varcharTest(test2BatchSize, true, true, true, test_done);
     });
+
 
     test('bulk insert simple multi-column object in batches ' + test2BatchSize, function (test_done) {
 
