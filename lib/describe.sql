@@ -1,6 +1,6 @@
 SELECT
-  c.name                                          name,
-  t.Name                                          type,
+  c.name name,
+  t.Name type,
   c.max_length,
   c.precision,
   c.scale,
@@ -20,7 +20,7 @@ SELECT
                            WHERE TYPE = 'F')
     THEN 1
   ELSE 0
-  END                                          AS is_foreign_key
+  END AS is_foreign_key
 FROM INFORMATION_SCHEMA.TABLES st
   INNER JOIN INFORMATION_SCHEMA.COLUMNS sc
     ON sc.TABLE_CATALOG = st.TABLE_CATALOG
