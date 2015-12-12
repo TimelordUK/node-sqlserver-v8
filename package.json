@@ -12,7 +12,7 @@
       "name": "Stephen James"
     }
   ],
-  "version": "0.1.8",
+  "version": "0.1.14",
   "keywords": [
     "sql",
     "database",
@@ -57,7 +57,7 @@
   "os": [
     "win32"
   ],
-  "readme": "# Note\r\n\r\nThis driver is branched from the Microsft node-sqlserver module. The MS team are working on an entirely new version and in the interim this version will be gradually improved to include new features.\r\n# Microsoft / Contributors Node V8 Driver for Node.js for SQL Server\r\n\r\nThis version includes stored procedure support for SQL Server\r\n\r\n1. supports input/output parameters.\r\n2. captures return code from stored procedure.\r\n3. will obtain meta data describing parameters.\r\n4. compatibe with Node 0.12.x \r\n5. includes 64 bit/ia32 precompiled libraries.\r\n6. npm package coming soon.\r\n7. new features to be made available over coming months.\r\n\r\n## Test\r\n\r\nIncluded are a few unit tests.  They require mocha, async, and assert to be \r\ninstalled via npm.  Also, set the variables in test-config.js, then run the \r\ntests as follows:\r\n\r\n    cd test\r\n    node runtests.js\r\n\r\n## Known Issues\r\n\r\n\r\n\r\n\r\n\r\n",
+  "readme": "",
   "readmeFilename": "README.md",
   "gitHead": "e025462083dd1140eed2519c449bc257482bc61b",
   "_id": "msnodesqlv8@0.1.3",
