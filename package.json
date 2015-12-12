@@ -12,7 +12,7 @@
       "name": "Stephen James"
     }
   ],
-  "version": "0.1.15",
+  "version": "0.1.16",
   "keywords": [
     "sql",
     "database",
@@ -57,7 +57,6 @@
   "os": [
     "win32"
   ],
-  "readme": "",
   "readmeFilename": "README.md",
   "gitHead": "e025462083dd1140eed2519c449bc257482bc61b",
   "_id": "msnodesqlv8@0.1.3",
