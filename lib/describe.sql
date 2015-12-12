@@ -6,8 +6,7 @@ SELECT distinct
   c.scale,
   c.is_nullable,
   c.is_computed,
-  Columnproperty(Object_id(sc.TABLE_SCHEMA + '.' + sc.TABLE_NAME),
-                 sc.COLUMN_NAME, 'ISIDENTITY') AS is_identity,
+  c.is_identity,
   CASE
   WHEN CONSTRAINT_NAME IN (SELECT NAME
                            FROM sys.objects
@@ -42,3 +41,4 @@ FROM INFORMATION_SCHEMA.TABLES st
 WHERE
   c.object_id = OBJECT_ID('<table_name>')
   AND TABLE_TYPE = 'BASE TABLE'
+  AND sc.TABLE_NAME = '<table_name>'
