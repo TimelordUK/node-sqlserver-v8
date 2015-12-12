@@ -136,13 +136,8 @@ finally, to reset the signatures the summary can help :-
                  bulkMgr.setWhereCols(summary.primaryColumns);
                  bulkMgr.setUpdateCols(summary.assignableColumns);
 
-    
-meta will contain the parameter array associated with the procedure, the type, size and call signature required.
-
-the test folder includes some simple unit tests for stored procedures. If you discover any problems with using this new feature please include a simple example, preferably a unit test illustrating the issue. I will endeavour to fix the issue promptly.
-
+ 
 Further enhancements will be made to the library over the coming months - please leave feedback or suggestions for required features.
-
 
 ## Test
 
@@ -152,6 +147,26 @@ tests as follows:
 
     cd test
     node runtests.js
+
+note if you wish to run the code through an IDE such as PHPStorm, the following fragment may help :-
+
+    function runTest() {
+
+    var mocha = new Mocha(
+        {
+            ui : 'tdd'
+        });
+
+    -- change path as required to unit test file, set breakpoint and run via IDE
+    
+    mocha.addFile('node_modules/node-sqlserver-v8/test/huge-bulk.js');
+
+    mocha.run(function (failures) {
+        process.on('exit', function () {
+            process.exit(failures);
+        });
+    });
+
 
 ## Known Issues
 
