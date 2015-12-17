@@ -19,13 +19,46 @@ suite('concurrent', function () {
         done();
     });
 
-    test('open connections simultaneously and prove distinct connection objects created', function (test_done) {
-        var open = function(done) {
-            sql.open(conn_str, function(err, conn) {
-                if (err) { console.error(err); process.exit(); };
-                done(conn);
+    var open = function(done) {
+        sql.open(conn_str, function(err, conn) {
+            if (err) { console.error(err); process.exit(); };
+            done(conn);
+        });
+    };
+
+    test('open connections in sequence and prove distinct connection objects created', function(test_done) {
+
+        var connections = [];
+
+        open(function(conn1) {
+            connections.push(conn1);
+
+            open(function(conn2) {
+                connections.push(conn2);
+
+                open(function(conn3) {
+                    connections.push(conn3);
+
+                    done();
+                });
             });
-        };
+        });
+
+        function done() {
+            var c0 = connections[0];
+            var c1 = connections[1];
+            var c2 = connections[2];
+
+            var t1 = c0 === c1 && c1 === c2;
+            assert(t1 === false);
+            assert(c0.id != c1.id);
+            assert(c1.id != c2.id);
+
+            test_done();
+        }
+    }),
+
+    test('open connections simultaneously and prove distinct connection objects created', function (test_done) {
 
         var connections = [];
 
@@ -46,8 +79,15 @@ suite('concurrent', function () {
 
         function done() {
 
-            var t1 = connections[0] === connections[1] && connections[1] === connections[2];
+            var c0 = connections[0];
+            var c1 = connections[1];
+            var c2 = connections[2];
+
+            var t1 = c0 === c1 && c1 === c2;
             assert(t1 === false);
+            assert(c0.id != c1.id);
+            assert(c1.id != c2.id);
+
             test_done();
         }
     }),
