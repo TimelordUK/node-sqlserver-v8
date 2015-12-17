@@ -19,6 +19,39 @@ suite('concurrent', function () {
         done();
     });
 
+    test('open connections simultaneously and prove distinct connection objects created', function (test_done) {
+        var open = function(done) {
+            sql.open(conn_str, function(err, conn) {
+                if (err) { console.error(err); process.exit(); };
+                done(conn);
+            });
+        };
+
+        var connections = [];
+
+        open(function(conn1) {
+            connections.push(conn1);
+            if (connections.length === 3) done();
+        });
+
+        open(function(conn2) {
+            connections.push(conn2);
+            if (connections.length === 3) done();
+        });
+
+        open(function(conn3) {
+            connections.push(conn3);
+            if (connections.length === 3) done();
+        });
+
+        function done() {
+
+            var t1 = connections[0] === connections[1] && connections[1] === connections[2];
+            assert(t1 === false);
+            test_done();
+        }
+    }),
+
     test('make sure two concurrent connections each have unique spid ', function (test_done) {
 
         var spid1;
