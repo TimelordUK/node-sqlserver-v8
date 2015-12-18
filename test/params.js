@@ -146,9 +146,7 @@ suite('params', function () {
             function (async_done) {
                 c.queryRaw("INSERT INTO invalid_numbers_test (f) VALUES (?)", [Number.POSITIVE_INFINITY], function (e) {
                     assert(e == "Error: IMNOD: [msnodesql] Parameter 1: Invalid number parameter");
-                    setTimeout(function () {
-                        async_done();
-                    }, 0);
+                    async_done();
                 })
             },
             function (async_done) {
@@ -808,9 +806,7 @@ suite('params', function () {
                 function (async_done) {
                     conn.queryRaw("INSERT INTO non_buffer_object (object_col) VALUES (?)", [o], function (e, r) {
                         assert(e == "Error: IMNOD: [msnodesql] Parameter 1: Invalid parameter type");
-                        setTimeout(function () {
-                            async_done();
-                        }, 0);
+                        async_done();
                     });
                 },
                 function (done) {

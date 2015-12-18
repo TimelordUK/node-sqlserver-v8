@@ -9,7 +9,7 @@ var conn_str = config.conn_str;
 suite('concurrent', function () {
 
     var c;
-    this.timeout(25 * 1000);
+    this.timeout(5 * 1000);
 
     setup(function (test_done) {
         test_done();
@@ -19,24 +19,28 @@ suite('concurrent', function () {
         done();
     });
 
-    var open = function(done) {
-        sql.open(conn_str, function(err, conn) {
-            if (err) { console.error(err); process.exit(); };
+    var open = function (done) {
+        sql.open(conn_str, function (err, conn) {
+            if (err) {
+                console.error(err);
+                process.exit();
+            }
+            ;
             done(conn);
         });
     };
 
-    test('open connections in sequence and prove distinct connection objects created', function(test_done) {
+    test('open connections in sequence and prove distinct connection objects created', function (test_done) {
 
         var connections = [];
 
-        open(function(conn1) {
+        open(function (conn1) {
             connections.push(conn1);
 
-            open(function(conn2) {
+            open(function (conn2) {
                 connections.push(conn2);
 
-                open(function(conn3) {
+                open(function (conn3) {
                     connections.push(conn3);
 
                     done();
@@ -56,23 +60,61 @@ suite('concurrent', function () {
 
             test_done();
         }
-    }),
+    });
+
+    test('check for blocked calls to api', function (test_done) {
+
+        open(function (conn1) {
+
+            var seq = [];
+            var delays = [];
+            var start = Date.now();
+
+            function test() {
+                var expected = ['a', 'b', 'c', 'd', 'e'];
+                assert.deepEqual(expected, seq);
+                test_done();
+            }
+
+            function pushTest(c) {
+                seq.push(c);
+                delays.push(Date.now() - start);
+                if (seq.length === 5) {
+                    test();
+                }
+            }
+
+            pushTest('a');
+            process.nextTick(function () {
+                pushTest('c');
+            });
+
+            conn1.query("waitfor delay \'00:00:02\';", function (res) {
+                pushTest('e');
+            });
+
+            pushTest('b');
+            process.nextTick(function () {
+                pushTest('d');
+            });
+        });
+    });
 
     test('open connections simultaneously and prove distinct connection objects created', function (test_done) {
 
         var connections = [];
 
-        open(function(conn1) {
+        open(function (conn1) {
             connections.push(conn1);
             if (connections.length === 3) done();
         });
 
-        open(function(conn2) {
+        open(function (conn2) {
             connections.push(conn2);
             if (connections.length === 3) done();
         });
 
-        open(function(conn3) {
+        open(function (conn3) {
             connections.push(conn3);
             if (connections.length === 3) done();
         });
@@ -90,7 +132,7 @@ suite('concurrent', function () {
 
             test_done();
         }
-    }),
+    });
 
     test('make sure two concurrent connections each have unique spid ', function (test_done) {
 

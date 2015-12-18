@@ -1,3 +1,4 @@
+params.js
 concurrent.js
 bulk.js
 connect.js
@@ -5,6 +6,5 @@ query.js
 txn.js
 datatypes.js
 dates.js
-params.js
 compoundqueries.js
 sproc.js
