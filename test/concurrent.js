@@ -9,7 +9,7 @@ var conn_str = config.conn_str;
 suite('concurrent', function () {
 
     var c;
-    this.timeout(5 * 1000);
+    this.timeout(20 * 1000);
 
     setup(function (test_done) {
         test_done();
@@ -69,9 +69,9 @@ suite('concurrent', function () {
             var seq = [];
             var delays = [];
             var start = Date.now();
+            var expected = ['a', 'b', 'c', 'd', 'e'];
 
             function test() {
-                var expected = ['a', 'b', 'c', 'd', 'e'];
                 assert.deepEqual(expected, seq);
                 test_done();
             }
@@ -79,7 +79,7 @@ suite('concurrent', function () {
             function pushTest(c) {
                 seq.push(c);
                 delays.push(Date.now() - start);
-                if (seq.length === 5) {
+                if (seq.length === expected.length) {
                     test();
                 }
             }
@@ -93,6 +93,53 @@ suite('concurrent', function () {
                 pushTest('e');
             });
 
+            pushTest('b');
+            process.nextTick(function () {
+                pushTest('d');
+            });
+        });
+    });
+
+    test('check for blocked calls to api with nested query', function (test_done) {
+
+        open(function (conn1) {
+
+            var seq = [];
+            var delays = [];
+            var start = Date.now();
+            var expected = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
+
+            function test() {
+                assert.deepEqual(expected, seq);
+                test_done();
+            }
+
+            function pushTest(c) {
+                seq.push(c);
+                delays.push(Date.now() - start);
+                if (seq.length === expected.length) {
+                    test();
+                }
+            }
+
+            pushTest('a');
+            process.nextTick(function () {
+                pushTest('c');
+            });
+            conn1.query("waitfor delay \'00:00:02\';", [], function (res) {
+                pushTest('e');
+                pushTest('f');
+                process.nextTick(function () {
+                    pushTest('h');
+                });
+                conn1.query("waitfor delay \'00:00:02\';", [], function (res) {
+                    pushTest('j');
+                });
+                pushTest('g');
+                process.nextTick(function () {
+                    pushTest('i');
+                });
+            });
             pushTest('b');
             process.nextTick(function () {
                 pushTest('d');
