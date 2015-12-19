@@ -30,6 +30,43 @@ suite('concurrent', function () {
         });
     };
 
+    test('check for blocked calls to api with event emission', function(test_done){
+
+        var delays = [];
+        var start = Date.now();
+        var expected = ['a', 'b', 'c', 'd'];
+        var seq = [];
+
+        function test() {
+            assert.deepEqual(expected, seq);
+            test_done();
+        }
+
+        function pushTest(c) {
+            seq.push(c);
+            delays.push(Date.now() - start);
+            if (seq.length === expected.length) {
+                test();
+            }
+        }
+
+        open(function(conn1) {
+            var req = conn1.query("waitfor delay \'00:00:02\';");
+            req.on('done', function() {
+                pushTest('a');
+                process.nextTick(function() {
+                    pushTest('b');
+                });
+                setImmediate(function() {
+                    pushTest('d');
+                });
+                process.nextTick(function() {
+                    pushTest('c');
+                });
+            })
+        });
+    });
+
     test('open connections in sequence and prove distinct connection objects created', function (test_done) {
 
         var connections = [];
