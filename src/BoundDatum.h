@@ -10,9 +10,9 @@ namespace mssql
 	class BoundDatum {
 	public:
 		bool bind(Local<Value> &p);
-		Local<Value> unbind();
+		Local<Value> unbind() const;
 		vector<SQLLEN> & getIndVec() { return indvec; }
-		char *getErr() { return err;  }
+		char *getErr() const { return err;  }
 
 		BoundDatum(void) :
 			js_type(JS_UNKNOWN),
@@ -151,14 +151,14 @@ namespace mssql
 		bool bindObject(Local<Value> &p);
 		bool bindArray(Local<Value> &p);
 		
-		Handle<Value> BoundDatum::unbindNull();
-		Handle<Value> BoundDatum::unbindString();
-		Handle<Value> BoundDatum::unbindDouble();
-		Handle<Value> BoundDatum::unbindBoolean();
-		Handle<Value> BoundDatum::unbindInt32();
-		Handle<Value> BoundDatum::unbindUint32();
-		Handle<Value> BoundDatum::unbindNumber();
-		Handle<Value> BoundDatum::unbindDate();
+		Handle<Value> BoundDatum::unbindNull() const;
+		Handle<Value> BoundDatum::unbindString() const;
+		Handle<Value> BoundDatum::unbindDouble() const;
+		Handle<Value> BoundDatum::unbindBoolean() const;
+		Handle<Value> BoundDatum::unbindInt32() const;
+		Handle<Value> BoundDatum::unbindUint32() const;
+		Handle<Value> BoundDatum::unbindNumber() const;
+		Handle<Value> BoundDatum::unbindDate() const;
 	};
 }
 
@@ -209,7 +209,7 @@ public:
 		}
 	}
 
-	bool getoutBoundsCount() { return nanCount + infiniteCount; }
+	bool getoutBoundsCount() const { return nanCount + infiniteCount; }
 
 	int boolCount = 0;
 	int stringCount = 0;

@@ -684,48 +684,48 @@ namespace mssql
 		return res;
 	}
 
-	Handle<Value> BoundDatum::unbindNull()
+	Handle<Value> BoundDatum::unbindNull() const
 	{
 		nodeTypeFactory fact;
 		return fact.null();
 	}
 
-	Handle<Value> BoundDatum::unbindString()
+	Handle<Value> BoundDatum::unbindString() const
 	{
 		nodeTypeFactory fact;
 		auto s = fact.fromTwoByte(uint16vec_ptr->data());
 		return s;
 	}
 
-	Handle<Value> BoundDatum::unbindDouble()
+	Handle<Value> BoundDatum::unbindDouble() const
 	{
 		nodeTypeFactory fact;
 		auto s = fact.newNumber(*doublevec_ptr->data());
 		return s;
 	}
 
-	Handle<Value> BoundDatum::unbindBoolean()
+	Handle<Value> BoundDatum::unbindBoolean() const
 	{
 		nodeTypeFactory fact;
 		auto s = fact.newBoolean(*uint16vec_ptr->data());
 		return s;
 	}
 
-	Handle<Value> BoundDatum::unbindInt32()
+	Handle<Value> BoundDatum::unbindInt32() const
 	{
 		nodeTypeFactory fact;
 		auto s = fact.newInt32(*int32vec_ptr->data());
 		return s;
 	}
 
-	Handle<Value> BoundDatum::unbindUint32()
+	Handle<Value> BoundDatum::unbindUint32() const
 	{
 		nodeTypeFactory fact;
 		auto s = fact.newUint32(*uint32vec_ptr->data());
 		return s;
 	}
 
-	Handle<Value> BoundDatum::unbindNumber()
+	Handle<Value> BoundDatum::unbindNumber() const
 	{
 		Handle<Value> v;
 		if (sql_type == SQL_C_DOUBLE) {
@@ -738,13 +738,13 @@ namespace mssql
 		return v;
 	}
 
-	Handle<Value> BoundDatum::unbindDate()
+	Handle<Value> BoundDatum::unbindDate() const
 	{
 		TimestampColumn tsc(*timevec_ptr->data());
 		return tsc.ToValue();
 	}
 
-	Local<Value> BoundDatum::unbind()
+	Local<Value> BoundDatum::unbind() const
 	{
 		Local<Value> v;
 

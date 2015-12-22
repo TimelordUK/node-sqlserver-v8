@@ -66,7 +66,7 @@ namespace mssql
             this->column = column;
         }
 
-        shared_ptr<Column> GetColumn()
+        shared_ptr<Column> GetColumn() const
         {
             return column;
         }
@@ -82,7 +82,7 @@ namespace mssql
         }
 
     private:
-		Local<Object> getEntry(nodeTypeFactory & fact, const ColumnDefinition & definition);
+		Local<Object> getEntry(nodeTypeFactory & fact, const ColumnDefinition & definition) const;
         vector<ColumnDefinition> metadata;
         SQLLEN rowcount;
         bool endOfRows;

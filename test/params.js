@@ -815,4 +815,17 @@ suite('params', function () {
                 test_done);
         });
     });
+
+    test('verify sql_variant correctly translated', function(test_done) {
+        sql.open(conn_str, function (err, conn) {
+            conn.query("select cast(11 as sql_variant) as data;", [null], function(err, res) {
+                assert.ifError(err);
+                var expected = [ {
+                    data : '11'
+                }];
+                assert.deepEqual(expected, res);
+                test_done();
+            });
+        });
+    });
 });

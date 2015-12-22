@@ -47,16 +47,16 @@ namespace mssql
 	   int32_t nanoseconds_delta;    // just the fractional part of the time passed in, not since epoch time
 
 	   // return the number of days since Jan 1, 1970
-	   double DaysSinceEpoch(SQLSMALLINT y, SQLUSMALLINT m, SQLUSMALLINT d);
+	   double DaysSinceEpoch(SQLSMALLINT y, SQLUSMALLINT m, SQLUSMALLINT d) const;
 
 	   // derived from ECMA 262 15.9
 	   void MillisecondsFromDate(SQL_SS_TIMESTAMPOFFSET_STRUCT const& timeStruct);
 
 	   // return the year from the epoch time.  The remainder is returned in the day parameter
-	   int64_t YearFromDay(int64_t& day);
+	   int64_t YearFromDay(int64_t& day) const;
 
 	   // calculate the individual components of a date from the total milliseconds
 	   // since Jan 1, 1970
-	   void DateFromMilliseconds(SQL_SS_TIMESTAMPOFFSET_STRUCT& date);
+	   void DateFromMilliseconds(SQL_SS_TIMESTAMPOFFSET_STRUCT& date) const;
     };
 }

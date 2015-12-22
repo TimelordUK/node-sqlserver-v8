@@ -78,7 +78,7 @@ namespace mssql
     public:
 	   shared_ptr<ResultSet> resultset;
 
-	   bool endRows() {
+	   bool endRows() const {
 		  return  resultset != nullptr && resultset->EndOfRows();
 	   }
 
@@ -105,24 +105,24 @@ namespace mssql
 	   bool boundedString(int display_size, int column);
 	   bool TryReadNextResult();
 
-	   Handle<Value> GetMetaValue()
+	   Handle<Value> GetMetaValue() const
 	   {
 		  return resultset->MetaToValue();
 	   }
 
-	   Handle<Value> EndOfResults()
+	   Handle<Value> EndOfResults() const
 	   {
 		  nodeTypeFactory fact;
 		  return fact.newBoolean(endOfResults);
 	   }
 
-	   Handle<Value> EndOfRows()
+	   Handle<Value> EndOfRows() const
 	   {
 		  nodeTypeFactory fact;
 		  return fact.newBoolean(resultset->EndOfRows());
 	   }
 
-	   Handle<Value> GetColumnValue()
+	   Handle<Value> GetColumnValue() const
 	   {
 		  nodeTypeFactory fact;
 		  auto result = fact.newObject();
@@ -132,7 +132,7 @@ namespace mssql
 		  return result;
 	   }
 
-	   shared_ptr<OdbcError> LastError(void)
+	   shared_ptr<OdbcError> LastError(void) const
 	   {
 		  return error;
 	   }

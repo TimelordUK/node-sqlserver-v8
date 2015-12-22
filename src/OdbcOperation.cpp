@@ -42,7 +42,7 @@ namespace mssql
 		}
 	}
 
-	int OdbcOperation::Error(Local<Value> args[])
+	int OdbcOperation::Error(Local<Value> args[]) const
 	{
 		nodeTypeFactory fact;
 		auto err = fact.error(failure->Message());

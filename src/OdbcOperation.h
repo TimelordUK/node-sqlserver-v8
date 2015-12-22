@@ -63,7 +63,7 @@ namespace mssql
 		virtual Local<Value> CreateCompletionArg() = 0;
 
 		void InvokeBackground() override;
-		int Error(Local<Value> args[]);
+		int Error(Local<Value> args[]) const;
 		int Success(Local<Value> args[]);
 		void CompleteForeground() override;
 	};

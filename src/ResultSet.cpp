@@ -74,7 +74,7 @@ namespace mssql
 	   return typeName;
     }
 
-	Local<Object> ResultSet::getEntry(nodeTypeFactory & fact, const ColumnDefinition & definition) {
+	Local<Object> ResultSet::getEntry(nodeTypeFactory & fact, const ColumnDefinition & definition) const {
 
 		auto typeName = mapType(definition.dataType);
 		auto entry = fact.newObject();

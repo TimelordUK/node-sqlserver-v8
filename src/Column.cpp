@@ -37,7 +37,7 @@ namespace mssql {
 	}
 
 	// return the number of days since Jan 1, 1970
-	double TimestampColumn::DaysSinceEpoch(SQLSMALLINT y, SQLUSMALLINT m, SQLUSMALLINT d)
+	double TimestampColumn::DaysSinceEpoch(SQLSMALLINT y, SQLUSMALLINT m, SQLUSMALLINT d) const
 	{
 		// table derived from ECMA 262 15.9.1.4
 		static const double days_in_months[] = { 0.0, 31.0, 59.0, 90.0, 120.0, 151.0, 181.0, 212.0, 243.0, 273.0, 304.0, 334.0 };
@@ -80,7 +80,7 @@ namespace mssql {
 		nanoseconds_delta = timeStruct.fraction % NANOSECONDS_PER_MS;
 	}
 
-	int64_t TimestampColumn::YearFromDay(int64_t& day)
+	int64_t TimestampColumn::YearFromDay(int64_t& day) const
 	{
 		int64_t year = 1970;
 		int64_t days_in_year = 365;
@@ -123,7 +123,7 @@ namespace mssql {
 
 	// calculate the individual components of a date from the total milliseconds
 	// since Jan 1, 1970.  Dates before 1970 are represented as negative numbers.
-	void TimestampColumn::DateFromMilliseconds(SQL_SS_TIMESTAMPOFFSET_STRUCT& date)
+	void TimestampColumn::DateFromMilliseconds(SQL_SS_TIMESTAMPOFFSET_STRUCT& date) const
 	{
 		static const int64_t days_in_months[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 		static const int64_t leap_days_in_months[] = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
