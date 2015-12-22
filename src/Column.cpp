@@ -72,8 +72,8 @@ namespace mssql {
 		ms += timeStruct.fraction / NANOSECONDS_PER_MS;    // fraction is in nanoseconds
 
 														   // handle timezone adjustment to UTC
-		ms += timeStruct.timezone_hour * MS_PER_HOUR;
-		ms += timeStruct.timezone_minute * MS_PER_MINUTE;
+		ms -= timeStruct.timezone_hour * MS_PER_HOUR;
+		ms -= timeStruct.timezone_minute * MS_PER_MINUTE;
 
 		milliseconds = ms;
 

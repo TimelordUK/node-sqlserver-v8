@@ -315,6 +315,7 @@ function verifyData_Datetime(Connection, TableName, ColumnName, RowWithNullData,
                         assert.deepEqual(re, ExpectedData, dataComparisonFailed);
                     }
                     catch (assert) {
+                        console.log("test results re = " + re + ' ExpectedData = ' + ExpectedData);
                         dataComparisonFailedMessage(testname, ExpectedData, re, done);
                         return;
                     }

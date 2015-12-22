@@ -327,7 +327,12 @@ suite('datatypes', function () {
             var offsetHours = 13;
             var offsetMinutes = 30;
             // Month in JS is 0-based, so expected will be month minus 1
-            var js_date_expected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day) + offsetHours, minute + offsetMinutes, second, nanosecond);
+
+            var js_date_expected = new Date(year, month - 1, day, hour, minute, second, nanosecond);
+            js_date_expected.setHours(js_date_expected.getHours() - commonTestFns.getTimezoneOffsetInHours(year, month, day));
+            js_date_expected.setHours(js_date_expected.getHours() - offsetHours);
+            js_date_expected.setMinutes(js_date_expected.getMinutes() - offsetMinutes);
+
             var testdata2Expected = "2001-04-10 10:12:59.1234567 +" + offsetHours + ":" + offsetMinutes;
             var testdata2TsqlInsert = "'" + testdata2Expected + "'";
 
@@ -367,7 +372,12 @@ suite('datatypes', function () {
             var offsetHours = 13;
             var offsetMinutes = 30;
             // Month in JS is 0-based, so expected will be month minus 1
-            var js_date_expected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day) + offsetHours, minute + offsetMinutes, second, nanosecond);
+
+            var js_date_expected = new Date(year, month - 1, day, hour, minute, second, nanosecond);
+            js_date_expected.setHours(js_date_expected.getHours() - commonTestFns.getTimezoneOffsetInHours(year, month, day));
+            js_date_expected.setHours(js_date_expected.getHours() - offsetHours);
+            js_date_expected.setMinutes(js_date_expected.getMinutes() - offsetMinutes);
+
             var testdata2Expected = "2001-04-10 10:12:59.1234567 +" + offsetHours + ":" + offsetMinutes;
             var testdata2TsqlInsert = "'" + testdata2Expected + "'";
 
@@ -408,17 +418,13 @@ suite('datatypes', function () {
             var offsetHours = 13;
             var offsetMinutes = 30;
             // Month in JS is 0-based, so expected will be month minus 1
-            var js_date_expected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day) + offsetHours, minute + offsetMinutes, second, nanosecond);
+
+            var js_date_expected = new Date(Date.UTC(year, month - 1, day, hour, minute, second, nanosecond));
+            js_date_expected.setHours(js_date_expected.getHours() - offsetHours);
+            js_date_expected.setMinutes(js_date_expected.getMinutes() - offsetMinutes);
+
             var testdata2Expected = "2001-04-10 10:12:59.1234567 +" + offsetHours + ":" + offsetMinutes;
             var testdata2TsqlInsert = "'" + testdata2Expected + "'";
-            // note - month is 0-based in js
-            var utcDate = new Date(Date.UTC(year,
-                month - 1,
-                day,
-                hour + offsetHours,
-                minute + offsetMinutes,
-                second,
-                nanosecond));
 
             async.series([
 
@@ -432,7 +438,7 @@ suite('datatypes', function () {
                     commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, utcDate, testname, done);
+                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, done);
                 }
             ]);  // end of async.series()
         }); // end of test()

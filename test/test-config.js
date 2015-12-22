@@ -19,7 +19,7 @@
 
 // server connection info
 var driver = 'SQL Server Native Client 11.0';
-var server = 'james-air';
+var server = 'desktop-j2eqa1u';
 var user = 'node';
 var pwd = 'node';
 var database = 'scratch';
