@@ -90,7 +90,7 @@ namespace mssql
 		  return fact.newInteger(operation->ID);
 	   }
 
-	   Handle<Value> UnbindParameters(Handle<Value> val)
+	   static Handle<Value> UnbindParameters(Handle<Value> val)
 	   {
 		  int id = val->Int32Value();
 		  auto op = OperationManager::GetOperation(id);
@@ -108,12 +108,12 @@ namespace mssql
 		  return fact.null();
 	   }
 
-	   Handle<Integer> ReadRowCount(void)
+	   Handle<Integer> ReadRowCount(void) const
 	   {
 		  assert(connection);
 		  assert(connection->resultset);
 		  nodeTypeFactory fact;
-		  return fact.newInteger(connection->resultset->RowCount());
+		  return fact.newInteger(static_cast<int32_t>(connection->resultset->RowCount()));
 	   }
 
 	   Handle<Value> ReadNextResult(Handle<Object> callback)

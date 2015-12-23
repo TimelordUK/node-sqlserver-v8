@@ -8,6 +8,19 @@ namespace mssql
 	const int SQL_SERVER_2008_DEFAULT_DATETIME_PRECISION = 34;
 	const int SQL_SERVER_2008_DEFAULT_DATETIME_SCALE = 7;
 
+	bool BoundDatum::bind(Local<Value> & p)
+	{
+		bool res = false;
+		if (p->IsArray()) {
+			res = bindArray(p);
+		}
+		else if (p->IsObject()) {
+			res = bindObject(p);
+		}
+		if (!res) res = bindDatumType(p);
+		return res;
+	}
+
 	void BoundDatum::bindNull(const Local<Value> & p)
 	{
 		bindNull(1);
@@ -77,9 +90,9 @@ namespace mssql
 		return strLen;
 	}
 
-	int getMaxObjectLen(const Local<Value> & p)
+	size_t getMaxObjectLen(const Local<Value> & p)
 	{
-		int strLen = 0;
+		size_t strLen = 0;
 		auto arr = Local<Array>::Cast(p);
 		auto len = arr->Length();
 		for (uint32_t i = 0; i < len; ++i)
@@ -101,7 +114,7 @@ namespace mssql
 		sql_type = SQL_VARBINARY;
 		digits = 0;
 
-		int objLen = getMaxObjectLen(p);
+		size_t objLen = getMaxObjectLen(p);
 		charvec_ptr = make_shared<vector<char>>(len * objLen);
 		indvec.resize(len);
 		buffer = charvec_ptr->data();
@@ -425,16 +438,21 @@ namespace mssql
 		// TODO: Determine if we need something to keep the Buffer object from going
 		// away while we use it we could just copy the data, but with buffers being 
 		// potentially very large, that could be problematic
+		
 		auto o = p.As<Object>();
+
+		indvec[0] = SQL_NULL_DATA;
+		if (!o->IsNull()) {
+			buffer = node::Buffer::Data(o);
+			buffer_len = node::Buffer::Length(o);
+			param_size = buffer_len;
+			indvec[0] = buffer_len;
+		}
 
 		js_type = JS_BUFFER;
 		c_type = SQL_C_BINARY;
 		sql_type = SQL_VARBINARY;
-		buffer = node::Buffer::Data(o);
-		buffer_len = node::Buffer::Length(o);
-		param_size = buffer_len;
 		digits = 0;
-		indvec[0] = buffer_len;
 	}
 
 	bool BoundDatum::bindDatumType(Local<Value> & p)
@@ -591,34 +609,49 @@ namespace mssql
 
 	bool BoundDatum::bindObject(Local<Value> &p)
 	{
-		Local<Value> v = get(p->ToObject(), "is_output");
-		if (v->IsUndefined()) return false;
-		auto isOutput = v->ToInt32();
-		Local<Value> pval;
-		int size;
-		size = get(p->ToObject(), "max_length")->Int32Value();
-		if (isOutput->Int32Value() != 0)
-		{
-			param_type = SQL_PARAM_OUTPUT;
-			pval = reserveOutputParam(p, size);
-		}
-		else
-		{
-			param_type = SQL_PARAM_INPUT;
-			pval = get(p->ToObject(), "val");
+		auto v = get(p->ToObject(), "is_output");
+		if (!v->IsUndefined()) {
+			auto isOutput = v->ToInt32();
+			Local<Value> pval;
+			int size;
+			size = get(p->ToObject(), "max_length")->Int32Value();
+			if (isOutput->Int32Value() != 0)
+			{
+				param_type = SQL_PARAM_OUTPUT;
+				pval = reserveOutputParam(p, size);
+			}
+			else
+			{
+				param_type = SQL_PARAM_INPUT;
+				pval = get(p->ToObject(), "val");
+			}
+
+			bindDatumType(pval);
+
+			return true;
 		}
 
-		bindDatumType(pval);
-
-		return true;
+		v = get(p->ToObject(), "sql_type");
+		if (!v->IsUndefined())
+		{
+			auto sqlType = v->Int32Value();
+			if (sqlType == SQL_VARBINARY)
+			{
+				auto b = get(p->ToObject(), "value");
+				bindDefault(b);
+				return true;
+			}
+		}
+		
+		return false;
 	}
 
 	bool BoundDatum::bindArray(Local<Value> & pp)
 	{
-		auto arr = Local<Array>::Cast(pp);	
+		auto arr = Local<Array>::Cast(pp);
 		nodeTypeCounter counts;
 
-		for (int i = 0; i < arr->Length(); ++i)
+		for (uint32_t i = 0; i < arr->Length(); ++i)
 		{
 			auto p = arr->Get(i);
 			counts.Decode(p);
@@ -671,20 +704,7 @@ namespace mssql
 		return true;
 	}
 
-	bool BoundDatum::bind(Local<Value> & p)
-	{
-		bool res = false;
-		if (p->IsArray()) {
-			res = bindArray(p);
-		}
-		else if (p->IsObject()) {
-			res = bindObject(p);
-		}
-		if (!res) res = bindDatumType(p);
-		return res;
-	}
-
-	Handle<Value> BoundDatum::unbindNull() const
+	Handle<Value> BoundDatum::unbindNull()
 	{
 		nodeTypeFactory fact;
 		return fact.null();

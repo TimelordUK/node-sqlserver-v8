@@ -53,7 +53,7 @@ namespace mssql
 	   void MillisecondsFromDate(SQL_SS_TIMESTAMPOFFSET_STRUCT const& timeStruct);
 
 	   // return the year from the epoch time.  The remainder is returned in the day parameter
-	   int64_t YearFromDay(int64_t& day) const;
+	   static int64_t YearFromDay(int64_t& day);
 
 	   // calculate the individual components of a date from the total milliseconds
 	   // since Jan 1, 1970

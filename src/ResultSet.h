@@ -54,7 +54,7 @@ namespace mssql
             return metadata[column];
         }
 
-        int GetColumns() const
+        size_t GetColumns() const
         {
             return metadata.size();
         }
@@ -82,7 +82,7 @@ namespace mssql
         }
 
     private:
-		Local<Object> getEntry(nodeTypeFactory & fact, const ColumnDefinition & definition) const;
+		static Local<Object> getEntry(nodeTypeFactory & fact, const ColumnDefinition & definition);
         vector<ColumnDefinition> metadata;
         SQLLEN rowcount;
         bool endOfRows;

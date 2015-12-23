@@ -61,17 +61,17 @@ namespace mssql
 
 	OdbcEnvironmentHandle OdbcConnection::environment;
 
-	int getSize(BoundDatumSet& params)
+	size_t getSize(BoundDatumSet& params)
 	{
 		auto f = params.begin();
-		int size = f != params.end() ? f->getIndVec().size() : 0;
+		size_t size = f != params.end() ? f->getIndVec().size() : 0;
 		return size;
 	}
 
 	// bind all the parameters in the array
 	bool OdbcConnection::BindParams(BoundDatumSet& params)
 	{
-		int size = getSize(params);
+		size_t size = getSize(params);
 		if (size <= 0) return true;
 		SQLSetStmtAttr(statement, SQL_ATTR_PARAMSET_SIZE, reinterpret_cast<SQLPOINTER>(size), 0);
 		int current_param = 1;
@@ -120,10 +120,11 @@ namespace mssql
 		CHECK_ODBC_ERROR(ret, statement);
 		current.dataTypeName = wstring(typeName, typeNameLen);
 
-		SQLLEN variantType;
 		if (current.dataType == SQL_SS_VARIANT) {
-			ret = SQLColAttribute(statement, column + 1, SQL_CA_SS_VARIANT_TYPE, nullptr, NULL, nullptr, &variantType);  //Figure out the type
-			current.dataType = variantType;
+			SQLLEN variantType;
+			ret = SQLColAttribute(statement, column + 1, SQL_CA_SS_VARIANT_TYPE, nullptr, NULL, nullptr, &variantType);
+			CHECK_ODBC_ERROR(ret, statement);
+			current.dataType = static_cast<SQLSMALLINT>(variantType);
 		}
 
 		else if (current.dataType == SQL_SS_UDT) {
@@ -187,7 +188,7 @@ namespace mssql
 
 		this->connection = move(localConnection);
 
-		ret = SQLDriverConnect(connection, nullptr, const_cast<wchar_t*>(connectionString.c_str()), connectionString.length(), nullptr, 0, nullptr, SQL_DRIVER_NOPROMPT);
+		ret = SQLDriverConnect(connection, nullptr, const_cast<wchar_t*>(connectionString.c_str()), static_cast<SQLSMALLINT>(connectionString.length()), nullptr, 0, nullptr, SQL_DRIVER_NOPROMPT);
 		CHECK_ODBC_ERROR(ret, connection);
 
 		connectionState = Open;
@@ -408,7 +409,7 @@ namespace mssql
 				more = wcsncmp(SQLState, L"01004", 6) == 0;
 			}
 
-			int amount = strLen_or_IndPtr;
+			auto amount = strLen_or_IndPtr;
 			if (more) {
 				amount = buffer.size();
 			}
@@ -434,7 +435,7 @@ namespace mssql
 		return false;
 	}
 
-	bool OdbcConnection::Lob(int display_size, int column)
+	bool OdbcConnection::Lob(SQLLEN display_size, int column)
 	{
 		SQLLEN value_len;
 		bool more;
@@ -443,8 +444,7 @@ namespace mssql
 		value_len = LOB_PACKET_SIZE + 1;
 		auto value = make_unique<StringColumn::StringValue>(value_len);
 
-		r = SQLGetData(statement, column + 1, SQL_C_WCHAR, value->data(), value_len *
-			sizeof(StringColumn::StringValue::value_type), &value_len);
+		r = SQLGetData(statement, column + 1, SQL_C_WCHAR, value->data(), value_len * sizeof(StringColumn::StringValue::value_type), &value_len);
 
 		CHECK_ODBC_NO_DATA(r, statement);
 		CHECK_ODBC_ERROR(r, statement);
@@ -469,7 +469,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcConnection::boundedString(int display_size, int column)
+	bool OdbcConnection::boundedString(SQLLEN display_size, int column)
 	{
 		unique_ptr<StringColumn::StringValue> value(new StringColumn::StringValue());
 		SQLLEN value_len = 0;
@@ -541,9 +541,9 @@ namespace mssql
 	bool OdbcConnection::TryBeginTran(void)
 	{
 		// turn off autocommit
-		auto ret = SQLSetConnectAttr(connection, SQL_ATTR_AUTOCOMMIT, reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_OFF),
-			SQL_IS_UINTEGER);
+		auto ret = SQLSetConnectAttr(connection, SQL_ATTR_AUTOCOMMIT, reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_OFF), SQL_IS_UINTEGER);
 		CHECK_ODBC_ERROR(ret, connection);
+
 		return true;
 	}
 
@@ -553,8 +553,7 @@ namespace mssql
 		CHECK_ODBC_ERROR(ret, connection);
 
 		// put the connection back into auto commit mode
-		ret = SQLSetConnectAttr(connection, SQL_ATTR_AUTOCOMMIT, reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_ON),
-			SQL_IS_UINTEGER);
+		ret = SQLSetConnectAttr(connection, SQL_ATTR_AUTOCOMMIT, reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_ON), SQL_IS_UINTEGER);
 		CHECK_ODBC_ERROR(ret, connection);
 
 		return true;

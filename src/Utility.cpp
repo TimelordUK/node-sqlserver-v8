@@ -55,7 +55,7 @@ namespace mssql
         {
             // length includes null terminator
             messageBuffer.resize(length);
-            ::WideCharToMultiByte(CP_UTF8, 0, input, -1, messageBuffer.data(), messageBuffer.size(), nullptr, nullptr);
+            ::WideCharToMultiByte(CP_UTF8, 0, input, -1, messageBuffer.data(), static_cast<int>(messageBuffer.size()), nullptr, nullptr);
         }
         return string(messageBuffer.data());
     }

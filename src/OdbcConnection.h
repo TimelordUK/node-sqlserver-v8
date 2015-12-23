@@ -101,8 +101,8 @@ namespace mssql
 	   bool TryEndTran(SQLSMALLINT completionType);
 	   bool TryReadRow();
 	   bool TryReadColumn(int column);
-	   bool Lob(int display_size, int column);
-	   bool boundedString(int display_size, int column);
+	   bool Lob(SQLLEN display_size, int column);
+	   bool boundedString(SQLLEN display_size, int column);
 	   bool TryReadNextResult();
 
 	   Handle<Value> GetMetaValue() const

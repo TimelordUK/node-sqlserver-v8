@@ -828,4 +828,30 @@ suite('params', function () {
             });
         });
     });
+
+    test('bind a null to binary using sqlTypes.asVarBinary(null)', function(test_done) {
+        sql.open(conn_str, function(err, conn) {
+            var tm = conn.tableMgr();
+            conn.query("declare @bin binary(4) = ?; select @bin as bin", [tm.sqlTypes.asVarBinary(null)], function (err, res) {
+                var expected = [ {
+                    'bin' : null
+                }];
+                assert.deepEqual(expected, res);
+                test_done();
+            });
+        });
+    });
+
+    test('bind a Buffer([0,1,2,3])] to binary', function(test_done) {
+        sql.open(conn_str, function(err, conn) {
+            var tm = conn.tableMgr();
+            conn.query("declare @bin binary(4) = ?; select @bin as bin", [new Buffer([0,1,2,3])], function (err, res) {
+                var expected = [ {
+                    'bin' : new Buffer([0, 1, 2, 3])
+                }];
+                assert.deepEqual(expected, res);
+                test_done();
+            });
+        });
+    });
 });

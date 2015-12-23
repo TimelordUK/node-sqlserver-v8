@@ -151,14 +151,14 @@ namespace mssql
 		bool bindObject(Local<Value> &p);
 		bool bindArray(Local<Value> &p);
 		
-		Handle<Value> BoundDatum::unbindNull() const;
-		Handle<Value> BoundDatum::unbindString() const;
-		Handle<Value> BoundDatum::unbindDouble() const;
-		Handle<Value> BoundDatum::unbindBoolean() const;
-		Handle<Value> BoundDatum::unbindInt32() const;
-		Handle<Value> BoundDatum::unbindUint32() const;
-		Handle<Value> BoundDatum::unbindNumber() const;
-		Handle<Value> BoundDatum::unbindDate() const;
+		static Handle<Value> unbindNull();
+		Handle<Value> unbindString() const;
+		Handle<Value> unbindDouble() const;
+		Handle<Value> unbindBoolean() const;
+		Handle<Value> unbindInt32() const;
+		Handle<Value> unbindUint32() const;
+		Handle<Value> unbindNumber() const;
+		Handle<Value> unbindDate() const;
 	};
 }
 
@@ -209,7 +209,7 @@ public:
 		}
 	}
 
-	bool getoutBoundsCount() const { return nanCount + infiniteCount; }
+	int getoutBoundsCount() const { return nanCount + infiniteCount; }
 
 	int boolCount = 0;
 	int stringCount = 0;

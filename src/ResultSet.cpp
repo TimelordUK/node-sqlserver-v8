@@ -74,11 +74,11 @@ namespace mssql
 	   return typeName;
     }
 
-	Local<Object> ResultSet::getEntry(nodeTypeFactory & fact, const ColumnDefinition & definition) const {
+	Local<Object> ResultSet::getEntry(nodeTypeFactory & fact, const ColumnDefinition & definition)  {
 
 		auto typeName = mapType(definition.dataType);
 		auto entry = fact.newObject();
-		entry->Set(fact.fromTwoByte(L"size"), fact.newInteger(definition.columnSize));
+		entry->Set(fact.fromTwoByte(L"size"), fact.newInteger(static_cast<int32_t>(definition.columnSize)));
 		entry->Set(fact.fromTwoByte(L"name"), fact.fromTwoByte(definition.name.c_str()));
 		entry->Set(fact.fromTwoByte(L"nullable"), fact.newBoolean(definition.nullable != 0));  
 		entry->Set(fact.fromTwoByte(L"type"), fact.fromTwoByte(typeName));

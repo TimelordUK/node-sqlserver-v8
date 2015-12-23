@@ -80,7 +80,7 @@ namespace mssql {
 		nanoseconds_delta = timeStruct.fraction % NANOSECONDS_PER_MS;
 	}
 
-	int64_t TimestampColumn::YearFromDay(int64_t& day) const
+	int64_t TimestampColumn::YearFromDay(int64_t& day)
 	{
 		int64_t year = 1970;
 		int64_t days_in_year = 365;
@@ -160,8 +160,8 @@ namespace mssql {
 		date.day = static_cast<SQLUSMALLINT>(day + 1);
 
 		// SQL Server has 100 nanosecond resolution, so we adjust the milliseconds to high bits
-		date.hour = time / MS_PER_HOUR;
-		date.minute = (time % MS_PER_HOUR) / MS_PER_MINUTE;
+		date.hour = static_cast<SQLUSMALLINT>(time / MS_PER_HOUR);
+		date.minute = static_cast<SQLUSMALLINT>((time % MS_PER_HOUR) / MS_PER_MINUTE);
 		date.second = (time % MS_PER_MINUTE) / MS_PER_SECOND;
 		date.fraction = (time % 1000) * NANOSECONDS_PER_MS;
 		date.timezone_hour = 0;
