@@ -177,11 +177,11 @@ namespace mssql
 
     void Connection::Open(const FunctionCallbackInfo<Value>& info)
     {
-	   auto connectionString = info[0].As<String>();
+	   auto connectionObject = info[0].As<Object>();
 	   auto callback = info[1].As<Object>();
 
 	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->innerConnection->Open(connectionString, callback, info.This());
+	   auto ret = connection->innerConnection->Open(connectionObject, callback, info.This());
 	   info.GetReturnValue().Set(ret);
     }
 }

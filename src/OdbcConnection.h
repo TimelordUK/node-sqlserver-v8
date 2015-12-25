@@ -26,115 +26,120 @@
 
 namespace mssql
 {
-    using namespace std;
+	using namespace std;
 
-    class OdbcConnection
-    {
-	   typedef bool (OdbcConnection::* dispatcher_p)(int);
+	class OdbcConnection
+	{
+		typedef bool (OdbcConnection::* dispatcher_p)(int);
 
-	   static OdbcEnvironmentHandle environment;
+		static OdbcEnvironmentHandle environment;
 
-	   OdbcConnectionHandle connection;
-	   OdbcStatementHandle statement;
-	   CriticalSection closeCriticalSection;
+		OdbcConnectionHandle connection;
+		OdbcStatementHandle statement;
+		CriticalSection closeCriticalSection;
 
-	   pair<SQLSMALLINT, dispatcher_p> getPair(SQLSMALLINT i, dispatcher_p p)
-	   {
-		  return pair<SQLSMALLINT, dispatcher_p>(i, p);
-	   }
+		static pair<SQLSMALLINT, dispatcher_p> getPair(SQLSMALLINT i, dispatcher_p p)
+		{
+			return pair<SQLSMALLINT, dispatcher_p>(i, p);
+		}
 
-	   // any error that occurs when a Try* function returns false is stored here
-	   // and may be retrieved via the Error function below.
-	   shared_ptr<OdbcError> error;
-	   typedef map<SQLSMALLINT, dispatcher_p> dispatcher_map;
-	   dispatcher_map dispatchers;
+		// any error that occurs when a Try* function returns false is stored here
+		// and may be retrieved via the Error function below.
+		shared_ptr<OdbcError> error;
+		typedef map<SQLSMALLINT, dispatcher_p> dispatcher_map;
+		dispatcher_map dispatchers;
 
-	   typedef map<PTR, size_t> buffer_map;
-	   buffer_map buffers;
+		typedef map<PTR, size_t> buffer_map;
+		buffer_map buffers;
 
-	   void init();
+		void init();
 
-	   bool d_String(int col);
-	   bool d_Bit(int col);
-	   bool d_Integer(int col);
-	   bool d_Decimal(int col);
-	   bool d_Binary(int col);
-	   bool d_Timestamp(int col);
-	   bool d_Time(int col);
+		bool d_String(int col);
+		bool d_Bit(int col);
+		bool d_Integer(int col);
+		bool d_Decimal(int col);
+		bool d_Binary(int col);
+		bool d_Timestamp(int col);
+		bool d_Time(int col);
 
-	   enum ConnectionStates
-	   {
-		  Closed,
-		  Opening,
-		  TurnOffAutoCommit,
-		  Open
-	   } connectionState;
+		enum ConnectionStates
+		{
+			Closed,
+			Opening,
+			TurnOffAutoCommit,
+			Open
+		} connectionState;
 
-	   bool endOfResults;
-	   bool BindParams(BoundDatumSet& params);
-	   // set binary true if a binary Buffer should be returned instead of a JS string
-	   bool TryReadString(bool binary, int column);
+		bool endOfResults;
+		bool BindParams(BoundDatumSet& params);
+		// set binary true if a binary Buffer should be returned instead of a JS string
+		bool TryReadString(bool binary, int column);
 
-    public:
-	   shared_ptr<ResultSet> resultset;
+	public:
+		shared_ptr<ResultSet> resultset;
 
-	   bool endRows() const {
-		  return  resultset != nullptr && resultset->EndOfRows();
-	   }
+		bool endRows() const {
+			return  resultset != nullptr && resultset->EndOfRows();
+		}
 
-	   OdbcConnection()
-		  : error(nullptr),
-		  connectionState(Closed),
-		  endOfResults(true)
-	   {
-		  init();
-	   }
+		SQLLEN RowCount() const
+		{
+			return resultset != nullptr ? resultset->RowCount() : -1;
+		}
 
-	   static bool InitializeEnvironment();
-	   bool readNext(int column);
-	   bool StartReadingResults();
+		OdbcConnection()
+			: error(nullptr),
+			connectionState(Closed),
+			endOfResults(true)
+		{
+			init();
+		}
 
-	   bool TryBeginTran();
-	   bool TryClose();
-	   bool TryOpen(const wstring& connectionString);
-	   bool TryExecute(const wstring& query, BoundDatumSet& paramIt);
-	   bool TryEndTran(SQLSMALLINT completionType);
-	   bool TryReadRow();
-	   bool TryReadColumn(int column);
-	   bool Lob(SQLLEN display_size, int column);
-	   bool boundedString(SQLLEN display_size, int column);
-	   bool TryReadNextResult();
+		static bool InitializeEnvironment();
+		bool readNext(int column);
+		bool StartReadingResults();
 
-	   Handle<Value> GetMetaValue() const
-	   {
-		  return resultset->MetaToValue();
-	   }
+		bool TryBeginTran();
+		bool TryClose();
+		bool TryOpen(const wstring& connectionString, int timeout);
+		bool TryExecute(const wstring& query, BoundDatumSet& paramIt);
+		bool TryEndTran(SQLSMALLINT completionType);
+		bool TryReadRow();
+		bool TryReadColumn(int column);
+		bool Lob(SQLLEN display_size, int column);
+		bool boundedString(SQLLEN display_size, int column);
+		bool TryReadNextResult();
 
-	   Handle<Value> EndOfResults() const
-	   {
-		  nodeTypeFactory fact;
-		  return fact.newBoolean(endOfResults);
-	   }
+		Handle<Value> GetMetaValue() const
+		{
+			return resultset->MetaToValue();
+		}
 
-	   Handle<Value> EndOfRows() const
-	   {
-		  nodeTypeFactory fact;
-		  return fact.newBoolean(resultset->EndOfRows());
-	   }
+		Handle<Value> EndOfResults() const
+		{
+			nodeTypeFactory fact;
+			return fact.newBoolean(endOfResults);
+		}
 
-	   Handle<Value> GetColumnValue() const
-	   {
-		  nodeTypeFactory fact;
-		  auto result = fact.newObject();
-		  auto column = resultset->GetColumn();
-		  result->Set(fact.fromTwoByte(L"data"), column->ToValue());
-		  result->Set(fact.fromTwoByte(L"more"), fact.newBoolean(column->More()));
-		  return result;
-	   }
+		Handle<Value> EndOfRows() const
+		{
+			nodeTypeFactory fact;
+			return fact.newBoolean(resultset->EndOfRows());
+		}
 
-	   shared_ptr<OdbcError> LastError(void) const
-	   {
-		  return error;
-	   }
-    };
+		Handle<Value> GetColumnValue() const
+		{
+			nodeTypeFactory fact;
+			auto result = fact.newObject();
+			auto column = resultset->GetColumn();
+			result->Set(fact.fromTwoByte(L"data"), column->ToValue());
+			result->Set(fact.fromTwoByte(L"more"), fact.newBoolean(column->More()));
+			return result;
+		}
+
+		shared_ptr<OdbcError> LastError(void) const
+		{
+			return error;
+		}
+	};
 }

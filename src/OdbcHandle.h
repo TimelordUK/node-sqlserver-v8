@@ -28,7 +28,7 @@ namespace mssql
     {
     public:
 
-        OdbcHandle( void ) : handle(SQL_NULL_HANDLE)
+        OdbcHandle( void ) : handle(nullptr)
         {
         }
 
@@ -76,18 +76,18 @@ namespace mssql
 
         void Free()
         {
-            if (handle != SQL_NULL_HANDLE)
+            if (handle != nullptr)
             {
                 SQLFreeHandle( HandleType, handle );
-                handle = SQL_NULL_HANDLE;
+                handle = nullptr;
             }
         }
 
         operator SQLHANDLE() const { return handle; }
 
-        operator bool() const { return handle != SQL_NULL_HANDLE; }
+        operator bool() const { return handle != nullptr; }
 
-        shared_ptr<OdbcError> LastError( void )
+        shared_ptr<OdbcError> LastError( void ) const
         {
             vector<wchar_t> buffer;
 

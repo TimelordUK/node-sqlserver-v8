@@ -148,7 +148,9 @@ namespace mssql
 
 		while (column < resultset->GetColumns())
 		{
-			if (!readNext(column++)) return false;
+			if (!readNext(column++)) {
+				return false;
+			}
 		}
 
 		ret = SQLRowCount(statement, &resultset->rowcount);
@@ -176,7 +178,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcConnection::TryOpen(const wstring& connectionString)
+	bool OdbcConnection::TryOpen(const wstring& connectionString, int timeout)
 	{
 		SQLRETURN ret;
 
@@ -185,8 +187,16 @@ namespace mssql
 		OdbcConnectionHandle localConnection;
 
 		if (!localConnection.Alloc(environment)) { RETURN_ODBC_ERROR(environment); }
-
 		this->connection = move(localConnection);
+
+		if (timeout > 0)
+		{
+			ret = SQLSetConnectAttr(connection, SQL_ATTR_CONNECTION_TIMEOUT, reinterpret_cast<SQLPOINTER>(timeout), 0);
+			CHECK_ODBC_ERROR(ret, connection);
+
+			ret = SQLSetConnectAttr(connection, SQL_ATTR_LOGIN_TIMEOUT, reinterpret_cast<SQLPOINTER>(timeout), 0);
+			CHECK_ODBC_ERROR(ret, connection);
+		}
 
 		ret = SQLDriverConnect(connection, nullptr, const_cast<wchar_t*>(connectionString.c_str()), static_cast<SQLSMALLINT>(connectionString.length()), nullptr, 0, nullptr, SQL_DRIVER_NOPROMPT);
 		CHECK_ODBC_ERROR(ret, connection);

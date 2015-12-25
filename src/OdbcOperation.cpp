@@ -83,7 +83,7 @@ namespace mssql
 
 	bool OpenOperation::TryInvokeOdbc()
 	{
-		return connection->TryOpen(connectionString);
+		return connection->TryOpen(connectionString, timeout);
 	}
 
 	Local<Value> OpenOperation::CreateCompletionArg()
@@ -171,7 +171,10 @@ namespace mssql
 
 	bool ReadNextResultOperation::TryInvokeOdbc()
 	{
-		return connection->TryReadNextResult();
+		preRowCount = connection->RowCount();
+		auto res = connection->TryReadNextResult();
+		postRowCount = connection->RowCount();
+		return res;
 	}
 
 	Local<Value> ReadNextResultOperation::CreateCompletionArg()
@@ -180,6 +183,8 @@ namespace mssql
 		auto more_meta = fact.newObject();
 		more_meta->Set(fact.newString("endOfResults"), connection->EndOfResults());
 		more_meta->Set(fact.newString("meta"), connection->GetMetaValue());
+		more_meta->Set(fact.newString("preRowCount"), fact.newInt32(static_cast<int32_t>(preRowCount)));
+		more_meta->Set(fact.newString("rowCount"), fact.newInt32(static_cast<int32_t>(postRowCount)));
 
 		return more_meta;
 	}

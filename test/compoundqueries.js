@@ -42,8 +42,90 @@ suite('compoundqueries', function () {
     });
 
     teardown(function (done) {
-
         c.close(function (err) { assert.ifError(err); done(); });
+    });
+
+    test('check row count emission is as expected for compound queries 1 insert', function(test_done) {
+        var expected = [1];
+        var received = [];
+
+        var cmd = [
+            'create table rowsAffectedTest (id int, val int)',
+            'insert into rowsAffectedTest values (1, 5)',
+            'drop table rowsAffectedTest'
+        ];
+
+        var batch = cmd.join(';');
+        var q = c.query(batch, function(err, res) {
+            assert.ifError(err);
+        });
+
+        q.on('rowcount', function (count) {
+            received.push(count);
+            if (received.length == expected.length) {
+                assert.deepEqual(expected, received);
+                test_done();
+            }
+        })
+    });
+
+    test('check row count emission is as expected for compound queries 3 inserts, update all', function(test_done) {
+        var expected = [1, 1, 1, 3];
+        var received = [];
+
+        var cmd = [
+            'create table rowsAffectedTest (id int)',
+            'insert into rowsAffectedTest values (1)',
+            'insert into rowsAffectedTest values (1)',
+            'insert into rowsAffectedTest values (1)',
+            'update rowsAffectedTest set id = 1',
+            'drop table rowsAffectedTest'
+        ];
+
+        var batch = cmd.join(';');
+        var q = c.query(batch, function(err, res) {
+            assert.ifError(err);
+        });
+
+        q.on('rowcount', function (count) {
+            received.push(count);
+            if (received.length == expected.length) {
+                assert.deepEqual(expected, received);
+                test_done();
+            }
+        })
+    });
+
+    test('check row count emission is as expected for compound queries 4 inserts, 2 updates, 2 updates, update all', function(test_done) {
+        var expected = [1, 1, 1, 1, 2, 2, 4];
+        var received = [];
+
+        var cmd = [
+            'create table rowsAffectedTest (id int, val int)',
+            'insert into rowsAffectedTest values (1, 5)',
+            'insert into rowsAffectedTest values (2, 10)',
+            'insert into rowsAffectedTest values (3, 20)',
+            'insert into rowsAffectedTest values (4, 30)',
+
+            'update rowsAffectedTest set val = 100  where id in (1, 2)',
+            'update rowsAffectedTest set val = 100  where id in (3, 4)',
+            'update rowsAffectedTest set val = 100  where id in (1, 2, 3, 4)',
+
+            'drop table rowsAffectedTest'
+        ];
+
+        var batch = cmd.join(';');
+        var q = c.query(batch, function(err, res) {
+            assert.ifError(err);
+        });
+
+        q.on('rowcount', function (count) {
+            received.push(count);
+            if (received.length == expected.length) {
+                assert.deepEqual(expected, received);
+                test_done();
+            }
+        })
     });
 
     testname = 'test 001 - batched query: SELECT....; INSERT ....; SELECT....;';

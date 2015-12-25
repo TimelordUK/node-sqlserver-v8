@@ -36,6 +36,7 @@ namespace mssql
 		shared_ptr<OdbcConnection> connection;
 		Persistent<Function> callback;
 		Handle<Value> output_param;
+		Local<Object> cb;
 
 	private:
 
@@ -47,6 +48,7 @@ namespace mssql
 		OdbcOperation(shared_ptr<OdbcConnection> connection, Local<Object> cb)
 			: connection(connection),
 			callback(Isolate::GetCurrent(), cb.As<Function>()),
+			cb(cb),
 			failed(false),
 			failure(nullptr)
 		{
@@ -72,13 +74,15 @@ namespace mssql
 	{
 		wstring connectionString;
 		Persistent<Object> backpointer;
+		int timeout;
 
 	public:
-		OpenOperation(shared_ptr<OdbcConnection> connection, const wstring& connectionString, Handle<Object> callback,
+		OpenOperation(shared_ptr<OdbcConnection> connection, const wstring& connectionString, int timeout, Handle<Object> callback,
 			Handle<Object> backpointer)
 			: OdbcOperation(connection, callback),
 			connectionString(connectionString),
-			backpointer(Isolate::GetCurrent(), backpointer)
+			backpointer(Isolate::GetCurrent(), backpointer),
+			timeout(timeout)
 		{
 		}
 
@@ -161,13 +165,15 @@ namespace mssql
 	{
 	public:
 		ReadNextResultOperation(shared_ptr<OdbcConnection> connection, Handle<Object> callback)
-			: OdbcOperation(connection, callback)
+			: OdbcOperation(connection, callback), preRowCount(-1), postRowCount(-1)
 		{
 		}
 
 		bool TryInvokeOdbc() override;
 
 		Local<Value> CreateCompletionArg() override;
+		SQLLEN preRowCount;
+		SQLLEN postRowCount;
 	};
 
 	class CloseOperation : public OdbcOperation

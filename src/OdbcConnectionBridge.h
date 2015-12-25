@@ -130,9 +130,20 @@ namespace mssql
 		  return fact.null();
 	   }
 
-	   Handle<Value> Open(Handle<String> connectionString, Handle<Object> callback, Handle<Object> backpointer)
+	   static Local<Value> get(Local<Object> o, const char *v)
 	   {
-		  OperationManager::Add(make_shared<OpenOperation>(connection, FromV8String(connectionString), callback, backpointer));
+		   nodeTypeFactory fact;
+		   auto vp = fact.newString(v);
+		   auto val = o->Get(vp);
+		   return val;
+	   }
+
+	   Handle<Value> Open(Handle<Object> connectionObject, Handle<Object> callback, Handle<Object> backpointer)
+	   {
+		  auto connectionString = get(connectionObject, "conn_str")->ToString();
+		  auto timeout = get(connectionObject, "conn_timeout")->Int32Value();
+
+		  OperationManager::Add(make_shared<OpenOperation>(connection, FromV8String(connectionString), timeout, callback, backpointer));
 		  nodeTypeFactory fact;
 		  return fact.null();
 	   }
