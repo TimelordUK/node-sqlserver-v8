@@ -30,6 +30,33 @@ suite('userbind', function () {
         });
     };
 
+    test('test user bind WVarChar(\'hello world\')', function(test_done){
+        var str = 'hello world';
+        var expected = str;
+        open(function(conn) {
+            conn.query("declare @v varchar(20) = ?; select @v as v", [sql.WVarChar(str)], function (err, res) {
+                assert.ifError(err);
+                var test = res[0]['v'];
+                assert(typeof test === 'string');
+                assert.deepEqual(test, expected);
+                test_done();
+            });
+        });
+    });
+
+    test('test user bind WVarChar(null)', function(test_done){
+        var expected = null;
+        open(function(conn) {
+            conn.query("declare @v varchar(20) = ?; select @v as v", [sql.WVarChar(null)], function (err, res) {
+                assert.ifError(err);
+                var test = res[0]['v'];
+                assert(typeof test === 'object');
+                assert.deepEqual(test, expected);
+                test_done();
+            });
+        });
+    });
+
     test('test user bind Integer(null)', function(test_done){
         var expected = null;
         open(function(conn) {

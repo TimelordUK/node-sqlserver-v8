@@ -61,20 +61,23 @@ namespace mssql
 		js_type = JS_STRING;
 		c_type = SQL_C_WCHAR;
 		sql_type = SQL_WVARCHAR;
-		auto str_param = p->ToString();
-		uint16vec_ptr = make_shared<vector<uint16_t>>(str_len + 1);
-		auto first_p = uint16vec_ptr->data();
-		buffer = first_p;
-		str_param->Write(first_p);
-		if (str_len > 4000) {
-			param_size = 0; // max types require 0 precision
+
+		indvec[0] = SQL_NULL_DATA;
+		if (!p->IsNull()) {
+			auto str_param = p->ToString();
+			uint16vec_ptr = make_shared<vector<uint16_t>>(str_len + 1);
+			auto first_p = uint16vec_ptr->data();
+			buffer = first_p;
+			str_param->Write(first_p);
+			if (str_len > 4000) {
+				param_size = 0; // max types require 0 precision
+			}
+			else {
+				param_size = str_len;
+			}
+			buffer_len = str_len * sizeof(uint16_t);
+			indvec[0] = buffer_len;
 		}
-		else {
-			param_size = str_len;
-		}
-		buffer_len = str_len * sizeof(uint16_t);
-		digits = 0;
-		indvec[0] = buffer_len;
 	}
 
 	int getMaxStrLen(const Local<Value> & p)
@@ -653,6 +656,13 @@ namespace mssql
 		{
 			auto i = get(p->ToObject(), "value");
 			bindInt32(i);
+		}
+		break;
+
+		case SQL_WVARCHAR:
+		{
+			auto s = get(p->ToObject(), "value");
+			bindString(s);
 		}
 		break;
 
