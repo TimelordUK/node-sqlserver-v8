@@ -30,6 +30,33 @@ suite('userbind', function () {
         });
     };
 
+    test('test user bind Bit(null)', function(test_done){
+        var expected = null;
+        open(function(conn) {
+            conn.query("declare @v bit = ?; select @v as v", [sql.Bit(null)], function (err, res) {
+                assert.ifError(err);
+                var test = res[0]['v'];
+                assert(typeof test === 'object');
+                assert.deepEqual(test, expected);
+                test_done();
+            });
+        });
+    });
+
+    test('test user bind Bit(true)', function(test_done){
+        var b = true;
+        var expected = b;
+        open(function(conn) {
+            conn.query("declare @v bit = ?; select @v as v", [sql.Bit(b)], function (err, res) {
+                assert.ifError(err);
+                var test = res[0]['v'];
+                assert(typeof test === 'boolean');
+                assert.deepEqual(test, expected);
+                test_done();
+            });
+        });
+    });
+
     test('test user bind SSTimeStampOffset(utcDate)', function(test_done) {
         var localDate = new Date();
         var utcDate = new Date(Date.UTC(localDate.getUTCFullYear(),

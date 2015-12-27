@@ -174,7 +174,12 @@ namespace mssql
 	void BoundDatum::bindBoolean(const Local<Value> & p)
 	{
 		bindBoolean(1);
-		(*charvec_ptr)[0] = p->BooleanValue() == false ? 0 : 1;
+		auto & vec = *charvec_ptr;
+		indvec[0] = SQL_NULL_DATA;
+		if (!p->IsNull()) {
+			vec[0] = p->BooleanValue() == false ? 0 : 1;
+			indvec[0] = 0;
+		}
 	}
 
 	void BoundDatum::bindBooleanArray(const Local<Value> & p)
@@ -673,6 +678,13 @@ namespace mssql
 		{
 			auto d = get(p->ToObject(), "value");
 			bindDate(d);
+		}
+		break;
+
+		case SQL_BIT:
+		{
+			auto b = get(p->ToObject(), "value");
+			bindBoolean(b);
 		}
 		break;
 
