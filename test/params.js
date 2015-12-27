@@ -832,7 +832,7 @@ suite('params', function () {
     test('bind a null to binary using sqlTypes.asVarBinary(null)', function(test_done) {
         sql.open(conn_str, function(err, conn) {
             var tm = conn.tableMgr();
-            conn.query("declare @bin binary(4) = ?; select @bin as bin", [tm.sqlTypes.asVarBinary(null)], function (err, res) {
+            conn.query("declare @bin binary(4) = ?; select @bin as bin", [sql.VarBinary(null)], function (err, res) {
                 var expected = [ {
                     'bin' : null
                 }];

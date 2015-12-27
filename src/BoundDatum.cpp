@@ -617,20 +617,21 @@ namespace mssql
 	{
 		auto isOutput = v->ToInt32();
 	
+		Local<Value> pval;
 		int size;
 		size = get(p->ToObject(), "max_length")->Int32Value();
 		if (isOutput->Int32Value() != 0)
 		{
 			param_type = SQL_PARAM_OUTPUT;
-			reserveOutputParam(p, size);
+			pval = reserveOutputParam(p, size);
 		}
 		else
 		{
 			param_type = SQL_PARAM_INPUT;
-			get(p->ToObject(), "val");
+			pval = get(p->ToObject(), "val");
 		}
 
-		return true;
+		return bindDatumType(pval);
 	}
 
 	bool BoundDatum::userBind(Local<Value> &p, Local<Value> &v)
