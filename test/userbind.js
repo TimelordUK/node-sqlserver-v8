@@ -212,6 +212,33 @@ suite('userbind', function () {
             });
         });
     });
+
+    test('test user bind Double(null)', function(test_done){
+        var expected = null;
+        open(function(conn) {
+            conn.query("declare @v  decimal(18,4) = ?; select @v as v", [sql.Double(null)], function (err, res) {
+                assert.ifError(err);
+                var test = res[0]['v'];
+                assert(typeof test === 'object');
+                assert.deepEqual(test, expected);
+                test_done();
+            });
+        });
+    });
+
+    test('test user bind Double(1234567890.1234)', function(test_done){
+        var d = 1234567890.1234;
+        var expected = d;
+        open(function(conn) {
+            conn.query("declare @v decimal(18,4) = ?; select @v as v", [sql.Double(d)], function (err, res) {
+                assert.ifError(err);
+                var test = res[0]['v'];
+                assert(typeof test === 'number');
+                assert.deepEqual(test, expected);
+                test_done();
+            });
+        });
+    });
 });
 
 

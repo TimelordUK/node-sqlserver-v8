@@ -391,7 +391,11 @@ namespace mssql
 	{
 		bindDouble(1);
 		auto & vec = *doublevec_ptr;
-		vec[0] = p->NumberValue();
+		indvec[0] = SQL_NULL_DATA;
+		if (!p->IsNull()) {
+			vec[0] = p->NumberValue();
+			indvec[0] = 0;
+		}
 	}
 
 	void BoundDatum::bindDouble(SQLLEN len)
@@ -697,6 +701,13 @@ namespace mssql
 		{
 			auto i = get(p->ToObject(), "value");
 			bindUint32(i);
+		}
+		break;
+
+		case SQL_DOUBLE:
+		{
+			auto d = get(p->ToObject(), "value");
+			bindDouble(d);
 		}
 		break;
 
