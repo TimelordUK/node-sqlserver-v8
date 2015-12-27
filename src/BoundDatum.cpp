@@ -354,7 +354,11 @@ namespace mssql
 	{
 		bindInteger(1);
 		auto & vec = *int64vec_ptr;
-		vec[0] = p->IntegerValue();
+		indvec[0] = SQL_NULL_DATA;
+		if (!p->IsNull()) {
+			vec[0] = p->IntegerValue();
+			indvec[0] = 0;
+		}
 	}
 
 	void BoundDatum::bindInteger(SQLLEN len)
@@ -700,7 +704,7 @@ namespace mssql
 		case SQL_BIGINT:
 		{
 			auto i = get(p->ToObject(), "value");
-			bindUint32(i);
+			bindInteger(i);
 		}
 		break;
 
