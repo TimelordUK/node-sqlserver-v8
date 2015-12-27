@@ -151,6 +151,9 @@ namespace mssql
 		bool bindObject(Local<Value> &p);
 		bool bindArray(Local<Value> &p);
 		
+		bool procBind(Local<Value> &p, Local<Value> &v);
+		bool userBind(Local<Value> &p, Local<Value> &v);
+
 		static Handle<Value> unbindNull();
 		Handle<Value> unbindString() const;
 		Handle<Value> unbindDouble() const;

@@ -208,7 +208,13 @@ namespace mssql
 	void BoundDatum::bindInt32(const Local<Value> & p)
 	{
 		bindInt32(1);
-		(*int32vec_ptr)[0] = p->Int32Value();
+		indvec[0] = SQL_NULL_DATA;
+		auto & vec = *int32vec_ptr;
+		vec[0] = SQL_NULL_DATA;
+		if (!p->IsNull()) {
+			vec[0] = p->Int32Value();
+			indvec[0] = 0;
+		}
 	}
 
 	void BoundDatum::bindInt32Array(const Local<Value>& p)
@@ -438,7 +444,7 @@ namespace mssql
 		// TODO: Determine if we need something to keep the Buffer object from going
 		// away while we use it we could just copy the data, but with buffers being 
 		// potentially very large, that could be problematic
-		
+
 		auto o = p.As<Object>();
 
 		indvec[0] = SQL_NULL_DATA;
@@ -607,42 +613,69 @@ namespace mssql
 		return pval;
 	}
 
+	bool BoundDatum::procBind(Local<Value> &p, Local<Value> &v)
+	{
+		auto isOutput = v->ToInt32();
+	
+		int size;
+		size = get(p->ToObject(), "max_length")->Int32Value();
+		if (isOutput->Int32Value() != 0)
+		{
+			param_type = SQL_PARAM_OUTPUT;
+			reserveOutputParam(p, size);
+		}
+		else
+		{
+			param_type = SQL_PARAM_INPUT;
+			get(p->ToObject(), "val");
+		}
+
+		return true;
+	}
+
+	bool BoundDatum::userBind(Local<Value> &p, Local<Value> &v)
+	{
+		auto sqlType = v->Int32Value();
+		auto res = true;
+
+		switch (sqlType)
+		{
+
+		case SQL_VARBINARY:
+		{
+			auto b = get(p->ToObject(), "value");
+			bindDefault(b);
+		}
+		break;
+
+		case SQL_INTEGER:
+		{
+			auto i = get(p->ToObject(), "value");
+			bindInt32(i);
+		}
+		break;
+
+		default:
+			res = false;
+			break;
+		}
+
+		return res;
+	}
+
 	bool BoundDatum::bindObject(Local<Value> &p)
 	{
 		auto v = get(p->ToObject(), "is_output");
 		if (!v->IsUndefined()) {
-			auto isOutput = v->ToInt32();
-			Local<Value> pval;
-			int size;
-			size = get(p->ToObject(), "max_length")->Int32Value();
-			if (isOutput->Int32Value() != 0)
-			{
-				param_type = SQL_PARAM_OUTPUT;
-				pval = reserveOutputParam(p, size);
-			}
-			else
-			{
-				param_type = SQL_PARAM_INPUT;
-				pval = get(p->ToObject(), "val");
-			}
-
-			bindDatumType(pval);
-
-			return true;
+			return procBind(p, v);
 		}
 
 		v = get(p->ToObject(), "sql_type");
 		if (!v->IsUndefined())
 		{
-			auto sqlType = v->Int32Value();
-			if (sqlType == SQL_VARBINARY)
-			{
-				auto b = get(p->ToObject(), "value");
-				bindDefault(b);
-				return true;
-			}
+			return userBind(p, v);
 		}
-		
+
 		return false;
 	}
 
