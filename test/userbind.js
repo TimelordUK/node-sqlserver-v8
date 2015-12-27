@@ -145,10 +145,11 @@ suite('userbind', function () {
         });
     });
 
-    test('test user bind Integer(100)', function(test_done){
-        var expected = 100;
+    test('test user bind Integer(-1000)', function(test_done){
+        var i = 1000;
+        var expected = i;
         open(function(conn) {
-            conn.query("declare @v int = ?; select @v as v", [sql.Integer(100)], function (err, res) {
+            conn.query("declare @v int = ?; select @v as v", [sql.Integer(i)], function (err, res) {
                 assert.ifError(err);
                 var test = res[0]['v'];
                 assert(typeof test === 'number');
@@ -179,6 +180,33 @@ suite('userbind', function () {
                 assert.ifError(err);
                 var test = res[0]['v'];
                 assert(typeof test === 'object');
+                assert.deepEqual(test, expected);
+                test_done();
+            });
+        });
+    });
+
+    test('test user bind BigInt(null)', function(test_done){
+        var expected = null;
+        open(function(conn) {
+            conn.query("declare @v int = ?; select @v as v", [sql.BigInt(null)], function (err, res) {
+                assert.ifError(err);
+                var test = res[0]['v'];
+                assert(typeof test === 'object');
+                assert.deepEqual(test, expected);
+                test_done();
+            });
+        });
+    });
+
+    test('test user bind BigInt(1234567890)', function(test_done){
+        var i = 1234567890;
+        var expected = i;
+        open(function(conn) {
+            conn.query("declare @v int = ?; select @v as v", [sql.BigInt(i)], function (err, res) {
+                assert.ifError(err);
+                var test = res[0]['v'];
+                assert(typeof test === 'number');
                 assert.deepEqual(test, expected);
                 test_done();
             });

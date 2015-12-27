@@ -258,7 +258,12 @@ namespace mssql
 	void BoundDatum::bindUint32(const Local<Value> & p)
 	{
 		bindUint32(1);
-		(*uint32vec_ptr)[0] = p->Uint32Value();
+		auto & vec = *uint32vec_ptr;
+		indvec[0] = SQL_NULL_DATA;
+		if (!p->IsNull()) {
+			vec[0] = p->Uint32Value();
+			indvec[0] = 0;
+		}
 	}
 
 	void BoundDatum::bindUint32Array(const Local<Value>& p)
@@ -685,6 +690,13 @@ namespace mssql
 		{
 			auto b = get(p->ToObject(), "value");
 			bindBoolean(b);
+		}
+		break;
+
+		case SQL_BIGINT:
+		{
+			auto i = get(p->ToObject(), "value");
+			bindUint32(i);
 		}
 		break;
 
