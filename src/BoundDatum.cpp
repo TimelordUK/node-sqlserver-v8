@@ -290,14 +290,17 @@ namespace mssql
 	{
 		bindDate(1);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC
-		auto dateObject = Handle<Date>::Cast<Value>(p);
-		assert(!dateObject.IsEmpty());
-		// dates in JS are stored internally as ms count from Jan 1, 1970
-		double d = dateObject->NumberValue();
-		auto & ts = (*timevec_ptr)[0];
-		TimestampColumn sql_date(d);
-		sql_date.ToTimestampOffset(ts);
-		indvec[0] = buffer_len;
+		indvec[0] = SQL_NULL_DATA;
+		if (!p->IsNull()) {
+			auto dateObject = Handle<Date>::Cast<Value>(p);
+			assert(!dateObject.IsEmpty());
+			// dates in JS are stored internally as ms count from Jan 1, 1970
+			double d = dateObject->NumberValue();
+			auto & ts = (*timevec_ptr)[0];
+			TimestampColumn sql_date(d);
+			sql_date.ToTimestampOffset(ts);
+			indvec[0] = buffer_len;
+		}
 	}
 
 	void BoundDatum::bindDate(SQLLEN len)
@@ -663,6 +666,13 @@ namespace mssql
 		{
 			auto s = get(p->ToObject(), "value");
 			bindString(s);
+		}
+		break;
+
+		case SQL_SS_TIMESTAMPOFFSET:
+		{
+			auto d = get(p->ToObject(), "value");
+			bindDate(d);
 		}
 		break;
 

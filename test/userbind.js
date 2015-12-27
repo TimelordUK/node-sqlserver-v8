@@ -30,6 +30,54 @@ suite('userbind', function () {
         });
     };
 
+    test('test user bind SSTimeStampOffset(utcDate)', function(test_done) {
+        var localDate = new Date();
+        var utcDate = new Date(Date.UTC(localDate.getUTCFullYear(),
+            localDate.getUTCMonth(),
+            localDate.getUTCDate(),
+            localDate.getUTCHours(),
+            localDate.getUTCMinutes(),
+            localDate.getUTCSeconds(),
+            0));
+
+        var expected = utcDate;
+        open(function(conn) {
+            conn.query("declare @v datetime = ?; select @v as v", [sql.SSTimeStampOffset(utcDate)], function (err, res) {
+                assert.ifError(err);
+                var test = res[0]['v'];
+                assert(test instanceof Date);
+                assert.deepEqual(test, expected);
+                test_done();
+            });
+        });
+    });
+
+    test('test user bind SSTimeStampOffset(null)', function(test_done){
+        var expected = null;
+        open(function(conn) {
+            conn.query("declare @v datetime = ?; select @v as v", [sql.SSTimeStampOffset(null)], function (err, res) {
+                assert.ifError(err);
+                var test = res[0]['v'];
+                assert(typeof test === 'object');
+                assert.deepEqual(test, expected);
+                test_done();
+            });
+        });
+    });
+
+    test('test user bind WVarChar(null)', function(test_done){
+        var expected = null;
+        open(function(conn) {
+            conn.query("declare @v varchar(20) = ?; select @v as v", [sql.WVarChar(null)], function (err, res) {
+                assert.ifError(err);
+                var test = res[0]['v'];
+                assert(typeof test === 'object');
+                assert.deepEqual(test, expected);
+                test_done();
+            });
+        });
+    });
+
     test('test user bind WVarChar(\'hello world\')', function(test_done){
         var str = 'hello world';
         var expected = str;
