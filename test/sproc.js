@@ -56,6 +56,61 @@ suite('sproc', function () {
         });
     });
 
+    test('call proc that waits for delay of input param - wait 5, timeout 2 - should error', function (test_done) {
+
+        var sp_name = "test_spwait_for";
+
+        var def = "alter PROCEDURE <name>"+
+            "(\n" +
+            "@timeout datetime"+
+            "\n)" +
+            "AS\n" +
+            "BEGIN\n" +
+            "waitfor delay @timeout;"+
+            "END\n";
+
+        def = def.replace(/<name>/g, sp_name);
+
+        testBoilerPlate(sp_name, def, go);
+
+        function go() {
+            var pm = c.procedureMgr();
+            pm.setTimeout(2);
+            pm.callproc(sp_name, ['0:0:5'], function(err, results, output) {
+                assert(err != null);
+                assert(err.message.indexOf('Query timeout expired') > 0)
+                test_done();
+            });
+        }
+    });
+
+    test('call proc that waits for delay of input param - wait 2, timeout 5 - should not error', function (test_done) {
+
+        var sp_name = "test_spwait_for";
+
+        var def = "alter PROCEDURE <name>"+
+            "(\n" +
+            "@timeout datetime"+
+            "\n)" +
+            "AS\n" +
+            "BEGIN\n" +
+            "waitfor delay @timeout;"+
+            "END\n";
+
+        def = def.replace(/<name>/g, sp_name);
+
+        testBoilerPlate(sp_name, def, go);
+
+        function go() {
+            var pm = c.procedureMgr();
+            pm.setTimeout(5);
+            pm.callproc(sp_name, ['0:0:2'], function(err, results, output) {
+                assert.ifError(err);
+                test_done();
+            });
+        }
+    });
+
     test('call proc that returns length of input string and decribes itself in results', function (test_done) {
 
         var sp_name = "test_sp";

@@ -246,7 +246,7 @@ namespace mssql
 
 	bool ProcedureOperation::TryInvokeOdbc()
 	{
-		return connection->TryExecute(query, 0, params);
+		return connection->TryExecute(query, timeout, params);
 	}
 
 	Local<Value> ProcedureOperation::CreateCompletionArg()
