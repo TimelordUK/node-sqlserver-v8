@@ -93,8 +93,8 @@ namespace mssql
 		return o;
 	}
 
-	QueryOperation::QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, Handle<Object> callback) :
-		OdbcOperation(connection, callback), query(query),
+	QueryOperation::QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int timeout,  Handle<Object> callback) :
+		OdbcOperation(connection, callback), timeout(timeout), query(query),
 		output_param_count(0)
 	{
 	}
@@ -140,7 +140,7 @@ namespace mssql
 
 	bool QueryOperation::TryInvokeOdbc()
 	{
-		return connection->TryExecute(query, params);
+		return connection->TryExecute(query, timeout, params);
 	}
 
 	Local<Value> QueryOperation::CreateCompletionArg()
@@ -238,15 +238,15 @@ namespace mssql
 		return fact.null();
 	}
 
-	ProcedureOperation::ProcedureOperation(shared_ptr<OdbcConnection> connection, const wstring& query, Handle<Object> callback) :
-		QueryOperation(connection, query, callback)
+	ProcedureOperation::ProcedureOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int timeout, Handle<Object> callback) :
+		QueryOperation(connection, query, timeout, callback)
 	{
 		persists = true;
 	}
 
 	bool ProcedureOperation::TryInvokeOdbc()
 	{
-		return connection->TryExecute(query, params);
+		return connection->TryExecute(query, 0, params);
 	}
 
 	Local<Value> ProcedureOperation::CreateCompletionArg()

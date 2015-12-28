@@ -99,10 +99,7 @@ namespace mssql
 	class QueryOperation : public OdbcOperation
 	{
 	public:
-
-	
-
-		QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, Handle<Object> callback);
+		QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int timeout, Handle<Object> callback);
 
 		bool BindParameters(Handle<Array> & node_params);
 		Local<Array> UnbindParameters();
@@ -115,6 +112,7 @@ namespace mssql
 
 	protected:
 
+		u_int timeout;
 		wstring query;
 		BoundDatumSet params;
 		int output_param_count;
@@ -127,7 +125,7 @@ namespace mssql
 
 		Local<Value> CreateCompletionArg() override;
 
-		ProcedureOperation(shared_ptr<OdbcConnection> connection, const wstring& query, Handle<Object> callback);
+		ProcedureOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int timeout, Handle<Object> callback);
 	};
 
 	class ReadRowOperation : public OdbcOperation

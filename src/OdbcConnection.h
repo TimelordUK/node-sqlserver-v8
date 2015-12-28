@@ -102,7 +102,7 @@ namespace mssql
 		bool TryBeginTran();
 		bool TryClose();
 		bool TryOpen(const wstring& connectionString, int timeout);
-		bool TryExecute(const wstring& query, BoundDatumSet& paramIt);
+		bool TryExecute(const wstring& query, u_int timeout, BoundDatumSet& paramIt);
 		bool TryEndTran(SQLSMALLINT completionType);
 		bool TryReadRow();
 		bool TryReadColumn(int column);

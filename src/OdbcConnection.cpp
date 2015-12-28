@@ -205,7 +205,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcConnection::TryExecute(const wstring& query, BoundDatumSet& paramIt)
+	bool OdbcConnection::TryExecute(const wstring& query, u_int timeout, BoundDatumSet& paramIt)
 	{
 		assert(connectionState == Open);
 
@@ -223,8 +223,16 @@ namespace mssql
 		}
 
 		endOfResults = true;     // reset 
+		SQLRETURN ret;
 
-		SQLRETURN ret = SQLExecDirect(statement, const_cast<wchar_t*>(query.c_str()), SQL_NTS);
+		if (timeout > 0) {
+			ret = SQLSetStmtAttr(statement, SQL_QUERY_TIMEOUT, reinterpret_cast<SQLPOINTER>(timeout), SQL_IS_UINTEGER);
+			CHECK_ODBC_ERROR(ret, connection);
+			SQLSetStmtAttr(statement, SQL_ATTR_QUERY_TIMEOUT, reinterpret_cast<SQLPOINTER>(timeout), SQL_IS_UINTEGER);
+			CHECK_ODBC_ERROR(ret, connection);
+		}
+
+		ret = SQLExecDirect(statement, const_cast<wchar_t*>(query.c_str()), SQL_NTS);
 		if (ret != SQL_NO_DATA && !SQL_SUCCEEDED(ret))
 		{
 			resultset = make_shared<ResultSet>(0);

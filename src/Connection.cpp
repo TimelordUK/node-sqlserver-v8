@@ -115,24 +115,24 @@ namespace mssql
 
     void Connection::Query(const FunctionCallbackInfo<Value>& info)
     {
-	   auto query = info[0].As<String>();
+	   auto queryObject = info[0].As<Object>();
 	   auto params = info[1].As<Array>();
 	   auto callback = info[2].As<Object>();
 
 	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->innerConnection->Query(query, params, callback);
+	   auto ret = connection->innerConnection->Query(queryObject, params, callback);
 	   info.GetReturnValue().Set(ret);
     }
 
     void Connection::CallProcedure(const FunctionCallbackInfo<Value>& info)
     {
 	   // need to ensure the signature is changed (in js ?) to form (?) = call sproc (?, ? ... );
-	   auto query = info[0].As<String>();
+	   auto queryObject = info[0].As<Object>();
 	   auto params = info[1].As<Array>();
 	   auto callback = info[2].As<Object>();
 
 	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->innerConnection->CallProcedure(query, params, callback);
+	   auto ret = connection->innerConnection->CallProcedure(queryObject, params, callback);
 	   info.GetReturnValue().Set(ret);
     }
 

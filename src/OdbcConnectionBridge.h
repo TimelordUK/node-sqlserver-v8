@@ -70,9 +70,11 @@ namespace mssql
 		  return fact.null();
 	   }
 
-	   Handle<Value> Query(Handle<String> query, Handle<Array> params, Handle<Object> callback)
+	   Handle<Value> Query(Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback)
 	   {
-		  auto operation = make_shared<QueryOperation>(connection, FromV8String(query), callback);
+		  auto queryString = get(queryObject, "query_str")->ToString();
+		  auto timeout = get(queryObject, "query_timeout")->Int32Value();
+		  auto operation = make_shared<QueryOperation>(connection, FromV8String(queryString), timeout, callback);
 		  if (operation->BindParameters(params)) {
 			 OperationManager::Add(operation);
 		  }
@@ -80,14 +82,16 @@ namespace mssql
 		  return fact.null();
 	   }
 
-	   Handle<Value> CallProcedure(Handle<String> procedure, Handle<Array> params, Handle<Object> callback)
+	   Handle<Value> CallProcedure(Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback)
 	   {
-		  auto operation = make_shared<ProcedureOperation>(connection, FromV8String(procedure), callback);
-		  if (operation->BindParameters(params)) {
-			 OperationManager::Add(operation);
-		  }
-		  nodeTypeFactory fact;
-		  return fact.newInteger(operation->ID);
+		   auto queryString = get(queryObject, "query_str")->ToString();
+		   auto timeout = get(queryObject, "query_timeout")->Int32Value();
+		   auto operation = make_shared<ProcedureOperation>(connection, FromV8String(queryString), timeout, callback);
+		   if (operation->BindParameters(params)) {
+			   OperationManager::Add(operation);
+		   }
+		   nodeTypeFactory fact;
+		   return fact.newInteger(operation->ID);
 	   }
 
 	   static Handle<Value> UnbindParameters(Handle<Value> val)
