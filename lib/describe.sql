@@ -39,6 +39,8 @@ FROM INFORMATION_SCHEMA.TABLES st
   LEFT OUTER JOIN
   sys.indexes i ON ic.object_id = i.object_id AND ic.index_id = i.index_id
 WHERE
-  c.object_id = OBJECT_ID('<table_name>')
+  c.object_id = OBJECT_ID('<escaped_table_name>')
   AND TABLE_TYPE = 'BASE TABLE'
   AND sc.TABLE_NAME = '<table_name>'
+  AND (sc.TABLE_SCHEMA = '<table_schema>' or '<table_schema>' = '')
+  
