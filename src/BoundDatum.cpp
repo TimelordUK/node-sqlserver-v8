@@ -2,6 +2,7 @@
 #include "BoundDatum.h"
 #include <TimestampColumn.h>
 #include <limits>
+#include<algorithm>
 
 namespace mssql
 {
@@ -56,26 +57,31 @@ namespace mssql
 		bindString(p, str_param->Length());
 	}
 
-	void BoundDatum::bindString(const Local<Value> & p, int str_len)
+	void BoundDatum::bindChar(const Local<Value> & p)
+	{
+		auto str_param = p->ToString();
+		SQLULEN precision = str_param->Length();
+		if (param_size > 0) precision = std::min(param_size, precision);
+		bindString(p, precision);
+		sql_type = SQL_VARCHAR;
+	}
+
+	void BoundDatum::bindString(const Local<Value> & p, int precision)
 	{
 		js_type = JS_STRING;
 		c_type = SQL_C_WCHAR;
 		sql_type = SQL_WVARCHAR;
+		digits = 0;
 
 		indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull()) {
 			auto str_param = p->ToString();
-			uint16vec_ptr = make_shared<vector<uint16_t>>(str_len + 1);
+			uint16vec_ptr = make_shared<vector<uint16_t>>(precision);
 			auto first_p = uint16vec_ptr->data();
 			buffer = first_p;
-			str_param->Write(first_p);
-			if (str_len > 4000) {
-				param_size = 0; // max types require 0 precision
-			}
-			else {
-				param_size = str_len;
-			}
-			buffer_len = str_len * sizeof(uint16_t);
+			str_param->Write(first_p, 0, precision);
+			buffer_len = precision * sizeof(uint16_t);
+			param_size = precision <= 4000 ? buffer_len : 0;
 			indvec[0] = buffer_len;
 		}
 	}
@@ -182,7 +188,7 @@ namespace mssql
 		auto len = arr->Length();
 
 		indvec.resize(len);
-		uint16vec_ptr = make_shared<vector<uint16_t>>(len * (strLen + 5));
+		uint16vec_ptr = make_shared<vector<uint16_t>>(len * strLen);
 		buffer = uint16vec_ptr->data();
 		buffer_len = strLen * sizeof(uint16_t);
 		param_size = strLen;
@@ -196,7 +202,7 @@ namespace mssql
 				auto str = arr->Get(i)->ToString();
 				auto width = str->Length() * sizeof(uint16_t);
 				indvec[i] = width;
-				str->Write(&*itr);
+				str->Write(&*itr, 0, strLen);
 			}
 			itr += strLen;
 		}
@@ -262,6 +268,7 @@ namespace mssql
 
 	void BoundDatum::bindNumeric(SQLLEN len)
 	{
+		definedPrecision = true;
 		buffer_len = len * sizeof(SQL_NUMERIC_STRUCT);
 		numeric_ptr = make_shared<vector<SQL_NUMERIC_STRUCT>>(len);
 		indvec.resize(len);
@@ -727,6 +734,15 @@ namespace mssql
 		auto pv = p->ToObject();
 		auto pp = get(pv, "value");
 
+		auto precision = get(pv, "precision");
+		if (!precision->IsUndefined()) {
+			param_size = precision->Int32Value();
+		}
+		auto scale = get(pv, "scale");
+		if (!scale->IsUndefined()) {
+			digits = scale->Int32Value();
+		}
+
 		switch (sql_type)
 		{
 
@@ -787,18 +803,12 @@ namespace mssql
 			break;
 
 		case SQL_NUMERIC:
-		{
-			auto precision = get(pv, "precision");
-			if (!precision->IsUndefined()) {
-				param_size = precision->Int32Value();
-			}
-			auto scale = get(pv, "scale");
-			if (!scale->IsUndefined()) {
-				digits = scale->Int32Value();
-			}
 			bindNumeric(pp);
-		}
 		break;
+
+		case SQL_CHAR:
+			bindChar(pp);
+			break;
 
 		default:
 			return false;

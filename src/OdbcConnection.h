@@ -98,7 +98,7 @@ namespace mssql
 		static bool InitializeEnvironment();
 		bool readNext(int column);
 		bool StartReadingResults();
-		void applyNumeric(BoundDatum & datum, int current_param) const;
+		void applyPrecision(BoundDatum & datum, int current_param) const;
 
 		bool TryBeginTran();
 		bool TryClose();

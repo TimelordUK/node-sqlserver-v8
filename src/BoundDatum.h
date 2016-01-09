@@ -11,6 +11,13 @@ namespace mssql
 	class BoundDatum {
 	public:
 		bool bind(Local<Value> &p);
+		bool getDefinedPrecision() const {
+			return definedPrecision;
+		}
+
+		bool getDefinedScale() const {
+			return definedScale;
+		}
 		Local<Value> unbind() const;
 		vector<SQLLEN> & getIndVec() { return indvec; }
 		char *getErr() const { return err; }
@@ -32,6 +39,8 @@ namespace mssql
 			doublevec_ptr(nullptr),
 			timevec_ptr(nullptr),
 			numeric_ptr(nullptr),
+			definedPrecision(false),
+			definedScale(false),
 			err(nullptr)
 		{
 			indvec = vector<SQLLEN>(1);
@@ -117,6 +126,8 @@ namespace mssql
 		shared_ptr<vector<double>> doublevec_ptr;
 		shared_ptr<vector<SQL_SS_TIMESTAMPOFFSET_STRUCT>> timevec_ptr;
 		shared_ptr<vector<SQL_NUMERIC_STRUCT>> numeric_ptr;
+		bool definedPrecision;
+		bool definedScale;
 
 		char * err;
 
@@ -175,7 +186,9 @@ namespace mssql
 		bool bindArray(Local<Value> &p);
 
 		bool procBind(Local<Value> &p, Local<Value> &v);
+		void bindChar(const Local<Value> & pp);
 		bool userBind(Local<Value> &p, Local<Value> &v);
+
 
 
 		static Handle<Value> unbindNull();

@@ -31,7 +31,7 @@ suite('userbind', function () {
 
     function testUserBind(params, cb) {
 
-        open(function(conn) {
+        open(function (conn) {
 
             var allres = [];
 
@@ -79,120 +79,152 @@ suite('userbind', function () {
     }
 
     function compare(params, res) {
-        assert.deepEqual(res,
-            [
-                {
-                    v: params.min
-                },
-                {
-                    v: params.max
-                },
-                {
-                    v: null
-                }
-            ]);
+
+        var min = params.expected != null ? params.expected[0] : params.min;
+        var max = params.expected != null ? params.expected[1] : params.max;
+        var expected = [
+            {v: min},
+            {v: max},
+            {v: null}
+        ];
+
+        assert.deepEqual(res, expected);
     }
 
-    test('user bind float', function(test_done) {
+    test('user bind char - 1', function (test_done) {
         var params = {
-            query : 'declare @v float = ?; select @v as v',
-            type : 'float',
-            min : -1.7976931348623158E+308,
-            max : 1.7976931348623158E+308,
-            setter : function(v) {
+            query: 'declare @v char(5) = ?; select @v as v',
+            min: 'five',
+            max: 'hello world',
+            expected: [
+                'five ',
+                'hello'
+            ],
+            setter: function (v) {
+                return sql.Char(v);
+            }
+        };
+        testUserBind(params, function (err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
+        });
+    });
+
+    test('user bind char - 2', function (test_done) {
+        var params = {
+            query: 'declare @v char(5) = ?; select @v as v',
+            min: 'h',
+            max: 'world',
+            expected: [
+                'h    ',
+                'world'
+            ],
+            setter: function (v) {
+                return sql.Char(v);
+            }
+        };
+        testUserBind(params, function (err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
+        });
+    });
+
+    test('user bind float', function (test_done) {
+        var params = {
+            query: 'declare @v float = ?; select @v as v',
+            min: -1.7976931348623158E+308,
+            max: 1.7976931348623158E+308,
+            setter: function (v) {
                 return sql.Float(v);
             }
         };
-        testUserBind(params, function(err, res) {
+        testUserBind(params, function (err, res) {
             assert.ifError(err);
             compare(params, res);
             test_done();
         });
     });
 
-    test('user bind bit', function(test_done) {
+    test('user bind bit', function (test_done) {
         var params = {
-            query : 'declare @v bit = ?; select @v as v',
-            type : 'bit',
-            min : false,
-            max : true,
-            setter : function(v) {
+            query: 'declare @v bit = ?; select @v as v',
+            min: false,
+            max: true,
+            setter: function (v) {
                 return sql.Bit(v);
             }
         };
-        testUserBind(params, function(err, res) {
+        testUserBind(params, function (err, res) {
             assert.ifError(err);
             compare(params, res);
             test_done();
         });
     });
 
-    test('user bind bigint', function(test_done) {
+    test('user bind bigint', function (test_done) {
 
         var params = {
-            query : 'declare @v bigint = ?; select @v as v',
-            type : 'bigint',
-            min : -9007199254740991,
-            max : 9007199254740991,
-            setter : function(v) {
+            query: 'declare @v bigint = ?; select @v as v',
+            min: -9007199254740991,
+            max: 9007199254740991,
+            setter: function (v) {
                 return sql.BigInt(v);
             }
         };
-        testUserBind(params, function(err, res) {
+        testUserBind(params, function (err, res) {
             assert.ifError(err);
             compare(params, res);
             test_done();
         });
     });
 
-    test('user bind int', function(test_done) {
+    test('user bind int', function (test_done) {
 
         var params = {
-            query : 'declare @v int = ?; select @v as v',
-            type : 'int',
-            min : -2147483648,
-            max : 2147483647,
-            setter : function(v) {
+            query: 'declare @v int = ?; select @v as v',
+            min: -2147483648,
+            max: 2147483647,
+            setter: function (v) {
                 return sql.Int(v);
             }
         };
-        testUserBind(params, function(err, res) {
+        testUserBind(params, function (err, res) {
             assert.ifError(err);
             compare(params, res);
             test_done();
         });
     });
 
-    test('user bind tinyint', function(test_done) {
+    test('user bind tinyint', function (test_done) {
 
         var params = {
-            query : 'declare @v tinyint = ?; select @v as v',
-            type : 'tinyint',
-            min : 0,
-            max : 255,
-            setter : function(v) {
+            query: 'declare @v tinyint = ?; select @v as v',
+            min: 0,
+            max: 255,
+            setter: function (v) {
                 return sql.TinyInt(v);
             }
         };
-        testUserBind(params, function(err, res) {
+        testUserBind(params, function (err, res) {
             assert.ifError(err);
             compare(params, res);
             test_done();
         });
     });
 
-    test('user bind smallint', function(test_done) {
+    test('user bind smallint', function (test_done) {
 
         var params = {
-            query : 'declare @v smallint = ?; select @v as v',
-            type : 'smallint',
-            min : -32768,
-            max : 32767,
-            setter : function(v) {
+            query: 'declare @v smallint = ?; select @v as v',
+            min: -32768,
+            max: 32767,
+            setter: function (v) {
                 return sql.SmallInt(v);
             }
         };
-        testUserBind(params, function(err, res) {
+        testUserBind(params, function (err, res) {
             assert.ifError(err);
             compare(params, res);
             test_done();
