@@ -155,13 +155,13 @@ namespace mssql
 	{
 		SQLSMALLINT nameLength;
 		SQLRETURN ret;
-
-		ret = SQLDescribeCol(statement, column + 1, nullptr, 0, &nameLength, nullptr, nullptr, nullptr, nullptr);
+		auto index = column + 1;
+		ret = SQLDescribeCol(statement, index, nullptr, 0, &nameLength, nullptr, nullptr, nullptr, nullptr);
 		CHECK_ODBC_ERROR(ret, statement);
 
 		ResultSet::ColumnDefinition& current = resultset->GetMetadata(column);
 		vector<wchar_t> buffer(nameLength + 1);
-		ret = SQLDescribeCol(statement, column + 1, buffer.data(), nameLength + 1, &nameLength, &current.dataType, &current.columnSize, &current.decimalDigits, &current.nullable);
+		ret = SQLDescribeCol(statement, index, buffer.data(), nameLength + 1, &nameLength, &current.dataType, &current.columnSize, &current.decimalDigits, &current.nullable);
 		CHECK_ODBC_ERROR(ret, statement);
 		current.name = wstring(buffer.data(), nameLength);
 

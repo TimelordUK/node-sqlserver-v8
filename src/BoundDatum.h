@@ -138,8 +138,8 @@ namespace mssql
 		void bindLongVarBinary(Local<Value> & p);
 		void bindVarBinary(Local<Value> & p);
 
-		void bindString(const Local<Value> & p);
-		void bindString(const Local<Value>& p, int str_len);
+		void bindWVarChar(const Local<Value> & p);
+		void bindWVarChar(const Local<Value>& p, int str_len);
 		void bindStringArray(const Local<Value> & p);
 
 		void bindBoolean(const Local<Value> & p);
@@ -188,6 +188,7 @@ namespace mssql
 		bool procBind(Local<Value> &p, Local<Value> &v);
 		void bindChar(const Local<Value> & pp);
 		void bindVarChar(const Local<Value> & pp);
+		void bindVarChar(const Local<Value> & p, int precision);
 		bool userBind(Local<Value> &p, Local<Value> &v);
 
 		static Handle<Value> unbindNull();

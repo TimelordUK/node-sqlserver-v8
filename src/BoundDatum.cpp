@@ -51,10 +51,10 @@ namespace mssql
 		buffer = nullptr;
 	}
 
-	void BoundDatum::bindString(const Local<Value> & p)
+	void BoundDatum::bindWVarChar(const Local<Value> & p)
 	{
 		auto str_param = p->ToString();
-		bindString(p, str_param->Length());
+		bindWVarChar(p, str_param->Length());
 	}
 
 	void BoundDatum::bindChar(const Local<Value> & p)
@@ -67,11 +67,29 @@ namespace mssql
 		auto str_param = p->ToString();
 		SQLULEN precision = str_param->Length();
 		if (param_size > 0) precision = std::min(param_size, precision);
-		bindString(p, precision);
-		sql_type = SQL_VARCHAR;
+		bindVarChar(p, precision);
 	}
 
-	void BoundDatum::bindString(const Local<Value> & p, int precision)
+	void BoundDatum::bindVarChar(const Local<Value> & p, int precision)
+	{
+		js_type = JS_STRING;
+		c_type = SQL_C_CHAR;
+		sql_type = SQL_VARCHAR;
+		digits = 0;
+
+		indvec[0] = SQL_NULL_DATA;
+		if (!p->IsNull()) {
+			auto str_param = p->ToString();
+			charvec_ptr = make_shared<vector<char>>(precision);
+			buffer = charvec_ptr->data();
+			str_param->WriteUtf8(charvec_ptr->data(), precision);
+			buffer_len = precision;
+			param_size = 0;
+			indvec[0] = buffer_len;
+		}
+	}
+
+	void BoundDatum::bindWVarChar(const Local<Value> & p, int precision)
 	{
 		js_type = JS_STRING;
 		c_type = SQL_C_WCHAR;
@@ -564,7 +582,7 @@ namespace mssql
 			bindNull(p);
 		}
 		else if (p->IsString()) {
-			bindString(p);
+			bindWVarChar(p);
 		}
 		else if (p->IsBoolean()) {
 			bindBoolean(p);
@@ -772,7 +790,7 @@ namespace mssql
 			break;
 
 		case SQL_WVARCHAR:
-			bindString(pp);
+			bindWVarChar(pp);
 			break;
 
 		case SQL_SS_TIMESTAMPOFFSET:
@@ -816,7 +834,7 @@ namespace mssql
 			break;
 
 		case SQL_VARCHAR:
-			bindChar(pp);
+			bindVarChar(pp);
 			break;
 
 		default:
