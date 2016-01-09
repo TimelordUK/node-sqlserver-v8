@@ -59,6 +59,11 @@ namespace mssql
 
 	void BoundDatum::bindChar(const Local<Value> & p)
 	{
+		bindVarChar(p);
+	}
+
+	void BoundDatum::bindVarChar(const Local<Value> & p)
+	{
 		auto str_param = p->ToString();
 		SQLULEN precision = str_param->Length();
 		if (param_size > 0) precision = std::min(param_size, precision);
@@ -807,6 +812,10 @@ namespace mssql
 		break;
 
 		case SQL_CHAR:
+			bindChar(pp);
+			break;
+
+		case SQL_VARCHAR:
 			bindChar(pp);
 			break;
 

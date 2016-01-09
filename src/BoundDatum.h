@@ -187,9 +187,8 @@ namespace mssql
 
 		bool procBind(Local<Value> &p, Local<Value> &v);
 		void bindChar(const Local<Value> & pp);
+		void bindVarChar(const Local<Value> & pp);
 		bool userBind(Local<Value> &p, Local<Value> &v);
-
-
 
 		static Handle<Value> unbindNull();
 		Handle<Value> unbindString() const;
