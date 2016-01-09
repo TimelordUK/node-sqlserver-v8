@@ -91,7 +91,7 @@ suite('userbind', function () {
         assert.deepEqual(res, expected);
     }
 
-    test('user bind char - 1', function (test_done) {
+    test('user bind char - check truncated user strings (1)', function (test_done) {
         var params = {
             query: 'declare @v char(5) = ?; select @v as v',
             min: 'five',
@@ -111,7 +111,7 @@ suite('userbind', function () {
         });
     });
 
-    test('user bind char - 2', function (test_done) {
+    test('user bind char - returned string will be padded (2)', function (test_done) {
         var params = {
             query: 'declare @v char(5) = ?; select @v as v',
             min: 'h',
@@ -131,7 +131,27 @@ suite('userbind', function () {
         });
     });
 
-    test('user bind float', function (test_done) {
+    test('user bind char - use precision to clip user string (3)', function (test_done) {
+        var params = {
+            query: 'declare @v char(11) = ?; select @v as v',
+            min: 'h',
+            max: 'world',
+            expected: [
+                'h' + new Array(11).join(" "),
+                'wo'  + new Array(10).join(" ")
+            ],
+            setter: function (v) {
+                return sql.Char(v, 2);
+            }
+        };
+        testUserBind(params, function (err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
+        });
+    });
+
+    test('user bind float, maps to numeric data structure.', function (test_done) {
         var params = {
             query: 'declare @v float = ?; select @v as v',
             min: -1.7976931348623158E+308,
