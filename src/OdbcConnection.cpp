@@ -115,6 +115,42 @@ namespace mssql
 		return true;
 	}
 
+	bool OdbcConnection::readColAttributes(ResultSet::ColumnDefinition& current, int column)
+	{
+		SQLRETURN ret;
+
+		wchar_t typeName[1024];
+		SQLSMALLINT typeNameLen;
+		auto index = column + 1;
+		ret = SQLColAttribute(statement, index, SQL_DESC_TYPE_NAME, typeName, 1024 * sizeof(wchar_t),
+			&typeNameLen, nullptr);
+		CHECK_ODBC_ERROR(ret, statement);
+		current.dataTypeName = wstring(typeName, typeNameLen);
+
+		switch (current.dataType)
+		{
+		case SQL_SS_VARIANT:
+			SQLLEN variantType;
+			ret = SQLColAttribute(statement, index, SQL_CA_SS_VARIANT_TYPE, nullptr, NULL, nullptr, &variantType);
+			CHECK_ODBC_ERROR(ret, statement);
+			current.dataType = static_cast<SQLSMALLINT>(variantType);
+			break;
+
+		case SQL_SS_UDT:
+			wchar_t udtTypeName[1024];
+			SQLSMALLINT udtTypeNameLen;
+			ret = SQLColAttribute(statement, index, SQL_CA_SS_UDT_TYPE_NAME, udtTypeName, 1024 * sizeof(wchar_t), &udtTypeNameLen, nullptr);
+			CHECK_ODBC_ERROR(ret, statement);
+			current.udtTypeName = wstring(udtTypeName, udtTypeNameLen);
+			break;
+
+		default:
+			break;
+		}
+
+		return true;
+	}
+
 	bool OdbcConnection::readNext(int column)
 	{
 		SQLSMALLINT nameLength;
@@ -129,28 +165,10 @@ namespace mssql
 		CHECK_ODBC_ERROR(ret, statement);
 		current.name = wstring(buffer.data(), nameLength);
 
-		wchar_t typeName[1024];
-		SQLSMALLINT typeNameLen;
-		ret = SQLColAttribute(statement, column + 1, SQL_DESC_TYPE_NAME, typeName, 1024 * sizeof(wchar_t),
-			&typeNameLen, nullptr);
+		ret = readColAttributes(current, column);
 		CHECK_ODBC_ERROR(ret, statement);
-		current.dataTypeName = wstring(typeName, typeNameLen);
 
-		if (current.dataType == SQL_SS_VARIANT) {
-			SQLLEN variantType;
-			ret = SQLColAttribute(statement, column + 1, SQL_CA_SS_VARIANT_TYPE, nullptr, NULL, nullptr, &variantType);
-			CHECK_ODBC_ERROR(ret, statement);
-			current.dataType = static_cast<SQLSMALLINT>(variantType);
-		}
-
-		else if (current.dataType == SQL_SS_UDT) {
-			wchar_t udtTypeName[1024];
-			SQLSMALLINT udtTypeNameLen;
-			ret = SQLColAttribute(statement, column + 1, SQL_CA_SS_UDT_TYPE_NAME, udtTypeName, 1024 * sizeof(wchar_t), &udtTypeNameLen, nullptr);
-			CHECK_ODBC_ERROR(ret, statement);
-			current.udtTypeName = wstring(udtTypeName, udtTypeNameLen);
-		}
-		return true;
+		return ret;
 	}
 
 	bool OdbcConnection::StartReadingResults()
@@ -194,6 +212,20 @@ namespace mssql
 		return true;
 	}
 
+	SQLRETURN OdbcConnection::openTimeout(int timeout)
+	{
+		SQLRETURN ret;
+		if (timeout > 0)
+		{
+			ret = SQLSetConnectAttr(connection, SQL_ATTR_CONNECTION_TIMEOUT, reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout)), 0);
+			CHECK_ODBC_ERROR(ret, connection);
+
+			ret = SQLSetConnectAttr(connection, SQL_ATTR_LOGIN_TIMEOUT, reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout)), 0);
+			CHECK_ODBC_ERROR(ret, connection);
+		}
+		return true;
+	}
+
 	bool OdbcConnection::TryOpen(const wstring& connectionString, int timeout)
 	{
 		SQLRETURN ret;
@@ -205,19 +237,25 @@ namespace mssql
 		if (!localConnection.Alloc(environment)) { RETURN_ODBC_ERROR(environment); }
 		this->connection = move(localConnection);
 
-		if (timeout > 0)
-		{
-			ret = SQLSetConnectAttr(connection, SQL_ATTR_CONNECTION_TIMEOUT, reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout)), 0);
-			CHECK_ODBC_ERROR(ret, connection);
-
-			ret = SQLSetConnectAttr(connection, SQL_ATTR_LOGIN_TIMEOUT, reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout)), 0);
-			CHECK_ODBC_ERROR(ret, connection);
-		}
+		ret = openTimeout(timeout);
+		CHECK_ODBC_ERROR(ret, connection);
 
 		ret = SQLDriverConnect(connection, nullptr, const_cast<wchar_t*>(connectionString.c_str()), static_cast<SQLSMALLINT>(connectionString.length()), nullptr, 0, nullptr, SQL_DRIVER_NOPROMPT);
 		CHECK_ODBC_ERROR(ret, connection);
 
 		connectionState = Open;
+		return true;
+	}
+
+	SQLRETURN OdbcConnection::queryTimeout(int timeout)
+	{
+		SQLRETURN ret;
+		if (timeout > 0) {
+			ret = SQLSetStmtAttr(statement, SQL_QUERY_TIMEOUT, reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout)), SQL_IS_UINTEGER);
+			CHECK_ODBC_ERROR(ret, connection);
+			SQLSetStmtAttr(statement, SQL_ATTR_QUERY_TIMEOUT, reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout)), SQL_IS_UINTEGER);
+			CHECK_ODBC_ERROR(ret, connection);
+		}
 		return true;
 	}
 
@@ -239,14 +277,8 @@ namespace mssql
 		}
 
 		endOfResults = true;     // reset 
-		SQLRETURN ret;
-
-		if (timeout > 0) {
-			ret = SQLSetStmtAttr(statement, SQL_QUERY_TIMEOUT, reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout)), SQL_IS_UINTEGER);
-			CHECK_ODBC_ERROR(ret, connection);
-			SQLSetStmtAttr(statement, SQL_ATTR_QUERY_TIMEOUT, reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout)), SQL_IS_UINTEGER);
-			CHECK_ODBC_ERROR(ret, connection);
-		}
+		SQLRETURN ret = queryTimeout(timeout);
+		CHECK_ODBC_ERROR(ret, connection);
 
 		ret = SQLExecDirect(statement, const_cast<wchar_t*>(query.c_str()), SQL_NTS);
 		if (ret != SQL_NO_DATA && !SQL_SUCCEEDED(ret))
@@ -455,7 +487,6 @@ namespace mssql
 		return true;
 	}
 
-
 	bool OdbcConnection::TryReadColumn(int column)
 	{
 		assert(column >= 0 && column < resultset->GetColumns());
@@ -465,7 +496,7 @@ namespace mssql
 		{
 			return (this->*r->second)(column);
 		}
-		assert(false);
+
 		return false;
 	}
 

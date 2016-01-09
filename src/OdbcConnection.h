@@ -99,10 +99,11 @@ namespace mssql
 		bool readNext(int column);
 		bool StartReadingResults();
 		void applyPrecision(BoundDatum & datum, int current_param) const;
-
+		bool readColAttributes(ResultSet::ColumnDefinition& current, int column);
 		bool TryBeginTran();
 		bool TryClose();
 		bool TryOpen(const wstring& connectionString, int timeout);
+		
 		bool TryExecute(const wstring& query, u_int timeout, BoundDatumSet& paramIt);
 		bool TryEndTran(SQLSMALLINT completionType);
 		bool TryReadRow();
@@ -142,5 +143,9 @@ namespace mssql
 		{
 			return error;
 		}
+
+		private:
+			SQLRETURN openTimeout(int timeout);
+			SQLRETURN queryTimeout(int timeout);
 	};
 }
