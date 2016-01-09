@@ -99,7 +99,7 @@ namespace mssql
 	class QueryOperation : public OdbcOperation
 	{
 	public:
-		QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int timeout, Handle<Object> callback);
+		QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int id, u_int timeout, Handle<Object> callback);
 
 		bool BindParameters(Handle<Array> & node_params);
 		Local<Array> UnbindParameters();
@@ -125,7 +125,7 @@ namespace mssql
 
 		Local<Value> CreateCompletionArg() override;
 
-		ProcedureOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int timeout, Handle<Object> callback);
+		ProcedureOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int id, u_int timeout, Handle<Object> callback);
 	};
 
 	class ReadRowOperation : public OdbcOperation

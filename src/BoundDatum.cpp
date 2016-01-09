@@ -107,7 +107,38 @@ namespace mssql
 		return strLen;
 	}
 
-	void BoundDatum::bindDefaultArray(const Local<Value> & p)
+	void BoundDatum::bindLongVarBinary(Local<Value> & p)
+	{
+		bindVarBinary(p);
+		sql_type = SQL_LONGVARBINARY;
+	}
+
+	void BoundDatum::bindVarBinary(Local<Value> & p)
+	{
+		auto o = p.As<Object>();
+		indvec.resize(1);
+		indvec[0] = SQL_NULL_DATA;
+
+		if (!o->IsNull()) {
+			auto objLen = node::Buffer::Length(o);
+			digits = 0;
+			charvec_ptr = make_shared<vector<char>>(objLen);
+			buffer = charvec_ptr->data();
+			buffer_len = objLen;
+			param_size = objLen;
+			auto itr = charvec_ptr->begin();
+			auto ptr = node::Buffer::Data(o);
+			indvec[0] = objLen;
+			memcpy(&*itr, ptr, objLen);
+		}
+
+		js_type = JS_BUFFER;
+		c_type = SQL_C_BINARY;
+		sql_type = SQL_VARBINARY;
+		digits = 0;
+	}
+
+	void BoundDatum::bindVarBinaryArray(const Local<Value> & p)
 	{
 		auto arr = Local<Array>::Cast(p);
 		auto len = arr->Length();
@@ -211,6 +242,45 @@ namespace mssql
 		buffer = charvec_ptr->data();
 		param_size = sizeof(char);;
 		digits = 0;
+	}
+
+	void BoundDatum::bindNumeric(const Local<Value> & p)
+	{
+		bindNumeric(1);
+		sql_type = SQL_NUMERIC;
+		indvec[0] = SQL_NULL_DATA;
+		if (!p->IsNull()) {
+			double d = p->NumberValue();
+			auto &vec = *numeric_ptr;
+			auto & ns = vec[0];
+			encodeNumericStruct(d, param_size, digits, ns);
+			param_size = ns.precision;
+			digits = ns.scale;
+			indvec[0] = sizeof(SQL_NUMERIC_STRUCT);
+		}
+	}
+
+	void BoundDatum::bindNumeric(SQLLEN len)
+	{
+		buffer_len = len * sizeof(SQL_NUMERIC_STRUCT);
+		numeric_ptr = make_shared<vector<SQL_NUMERIC_STRUCT>>(len);
+		indvec.resize(len);
+		js_type = JS_NUMBER;
+		c_type = SQL_C_NUMERIC;
+		sql_type = SQL_NUMERIC;
+		buffer = numeric_ptr->data();
+	}
+
+	void BoundDatum::bindTinyInt(const Local<Value> & p)
+	{
+		bindInt32(p);
+		sql_type = SQL_TINYINT;
+	}
+
+	void BoundDatum::bindSmallInt(const Local<Value> & p)
+	{
+		bindInt32(p);
+		sql_type = SQL_SMALLINT;
 	}
 
 	void BoundDatum::bindInt32(const Local<Value> & p)
@@ -391,6 +461,18 @@ namespace mssql
 		}
 	}
 
+	void BoundDatum::bindFloat(const Local<Value> & p)
+	{
+		bindDouble(p);
+		sql_type = SQL_FLOAT;
+	}
+
+	void BoundDatum::bindReal(const Local<Value> & p)
+	{
+		bindDouble(p);
+		sql_type = SQL_REAL;
+	}
+
 	void BoundDatum::bindDouble(const Local<Value> & p)
 	{
 		bindDouble(1);
@@ -404,7 +486,6 @@ namespace mssql
 
 	void BoundDatum::bindDouble(SQLLEN len)
 	{
-		buffer_len = len * sizeof(int32_t);
 		doublevec_ptr = make_shared<vector<double>>(len);
 		indvec.resize(len);
 		js_type = JS_NUMBER;
@@ -463,27 +544,7 @@ namespace mssql
 		}
 	}
 
-	void BoundDatum::bindDefault(Local<Value> & p)
-	{
-		// TODO: Determine if we need something to keep the Buffer object from going
-		// away while we use it we could just copy the data, but with buffers being 
-		// potentially very large, that could be problematic
 
-		auto o = p.As<Object>();
-
-		indvec[0] = SQL_NULL_DATA;
-		if (!o->IsNull()) {
-			buffer = node::Buffer::Data(o);
-			buffer_len = node::Buffer::Length(o);
-			param_size = buffer_len;
-			indvec[0] = buffer_len;
-		}
-
-		js_type = JS_BUFFER;
-		c_type = SQL_C_BINARY;
-		sql_type = SQL_VARBINARY;
-		digits = 0;
-	}
 
 	bool BoundDatum::bindDatumType(Local<Value> & p)
 	{
@@ -514,7 +575,7 @@ namespace mssql
 			bindDate(p);
 		}
 		else if (p->IsObject() && node::Buffer::HasInstance(p)) {
-			bindDefault(p);
+			bindVarBinary(p);
 		}
 		else {
 			err = "Invalid parameter type";
@@ -640,7 +701,7 @@ namespace mssql
 	bool BoundDatum::procBind(Local<Value> &p, Local<Value> &v)
 	{
 		auto isOutput = v->ToInt32();
-	
+
 		Local<Value> pval;
 		int size;
 		size = get(p->ToObject(), "max_length")->Int32Value();
@@ -660,79 +721,103 @@ namespace mssql
 
 	bool BoundDatum::userBind(Local<Value> &p, Local<Value> &v)
 	{
-		auto sqlType = v->Int32Value();
-		auto res = true;
+		sql_type = v->Int32Value();
+		param_type = SQL_PARAM_INPUT;
 
-		switch (sqlType)
+		auto pv = p->ToObject();
+		auto pp = get(pv, "value");
+
+		switch (sql_type)
 		{
+
+		case SQL_LONGVARBINARY:
+			bindLongVarBinary(pp);
+			break;
 
 		case SQL_VARBINARY:
 		{
-			auto b = get(p->ToObject(), "value");
-			bindDefault(b);
+			if (pp->IsNull() || (pp->IsObject() && node::Buffer::HasInstance(pp))) {
+				bindVarBinary(pp);
+			}
+			else {
+				err = "Invalid parameter type";
+				return false;
+			}
 		}
 		break;
 
 		case SQL_INTEGER:
-		{
-			auto i = get(p->ToObject(), "value");
-			bindInt32(i);
-		}
-		break;
+			bindInt32(pp);
+			break;
 
 		case SQL_WVARCHAR:
-		{
-			auto s = get(p->ToObject(), "value");
-			bindString(s);
-		}
-		break;
+			bindString(pp);
+			break;
 
 		case SQL_SS_TIMESTAMPOFFSET:
-		{
-			auto d = get(p->ToObject(), "value");
-			bindDate(d);
-		}
-		break;
+			bindDate(pp);
+			break;
 
 		case SQL_BIT:
-		{
-			auto b = get(p->ToObject(), "value");
-			bindBoolean(b);
-		}
-		break;
+			bindBoolean(pp);
+			break;
 
 		case SQL_BIGINT:
-		{
-			auto i = get(p->ToObject(), "value");
-			bindInteger(i);
-		}
-		break;
+			bindInteger(pp);
+			break;
 
 		case SQL_DOUBLE:
+			bindDouble(pp);
+			break;
+
+		case SQL_FLOAT:
+			bindFloat(pp);
+			break;
+
+		case SQL_REAL:
+			bindReal(pp);
+			break;
+
+		case SQL_TINYINT:
+			bindTinyInt(pp);
+			break;
+
+		case SQL_SMALLINT:
+			bindSmallInt(pp);
+			break;
+
+		case SQL_NUMERIC:
 		{
-			auto d = get(p->ToObject(), "value");
-			bindDouble(d);
+			auto precision = get(pv, "precision");
+			if (!precision->IsUndefined()) {
+				param_size = precision->Int32Value();
+			}
+			auto scale = get(pv, "scale");
+			if (!scale->IsUndefined()) {
+				digits = scale->Int32Value();
+			}
+			bindNumeric(pp);
 		}
 		break;
 
 		default:
-			res = false;
-			break;
+			return false;
 		}
 
-		return res;
+		return true;
 	}
 
 	bool BoundDatum::bindObject(Local<Value> &p)
 	{
-		auto v = get(p->ToObject(), "is_output");
+		auto po = p->ToObject();
+
+		auto v = get(po, "is_output");
 		if (!v->IsUndefined()) {
 			return procBind(p, v);
 		}
 
-		v = get(p->ToObject(), "sql_type");
-		if (!v->IsUndefined())
-		{
+		v = get(po, "sql_type");
+		if (!v->IsUndefined()) {
 			return userBind(p, v);
 		}
 
@@ -764,7 +849,7 @@ namespace mssql
 		}
 		else if (counts.bufferCount != 0)
 		{
-			bindDefaultArray(pp);
+			bindVarBinaryArray(pp);
 		}
 		else if (counts.getoutBoundsCount() > 0) {
 			err = "Invalid number parameter";
@@ -813,28 +898,28 @@ namespace mssql
 	Handle<Value> BoundDatum::unbindDouble() const
 	{
 		nodeTypeFactory fact;
-		auto s = fact.newNumber(*doublevec_ptr->data());
+		auto s = fact.newNumber((*doublevec_ptr)[0]);
 		return s;
 	}
 
 	Handle<Value> BoundDatum::unbindBoolean() const
 	{
 		nodeTypeFactory fact;
-		auto s = fact.newBoolean(*uint16vec_ptr->data());
+		auto s = fact.newBoolean((*uint16vec_ptr)[0]);
 		return s;
 	}
 
 	Handle<Value> BoundDatum::unbindInt32() const
 	{
 		nodeTypeFactory fact;
-		auto s = fact.newInt32(*int32vec_ptr->data());
+		auto s = fact.newInt32((*int32vec_ptr)[0]);
 		return s;
 	}
 
 	Handle<Value> BoundDatum::unbindUint32() const
 	{
 		nodeTypeFactory fact;
-		auto s = fact.newUint32(*uint32vec_ptr->data());
+		auto s = fact.newUint32((*uint32vec_ptr)[0]);
 		return s;
 	}
 
@@ -846,14 +931,14 @@ namespace mssql
 		}
 		else {
 			nodeTypeFactory fact;
-			v = fact.newInt64(*int64vec_ptr->data());
+			v = fact.newInt64((*int64vec_ptr)[0]);
 		}
 		return v;
 	}
 
 	Handle<Value> BoundDatum::unbindDate() const
 	{
-		TimestampColumn tsc(*timevec_ptr->data());
+		TimestampColumn tsc((*timevec_ptr)[0]);
 		return tsc.ToValue();
 	}
 

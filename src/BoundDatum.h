@@ -7,12 +7,13 @@ namespace mssql
 {
 	using namespace std;
 
+
 	class BoundDatum {
 	public:
 		bool bind(Local<Value> &p);
 		Local<Value> unbind() const;
 		vector<SQLLEN> & getIndVec() { return indvec; }
-		char *getErr() const { return err;  }
+		char *getErr() const { return err; }
 
 		BoundDatum(void) :
 			js_type(JS_UNKNOWN),
@@ -23,13 +24,14 @@ namespace mssql
 			buffer(nullptr),
 			buffer_len(0),
 			param_type(SQL_PARAM_INPUT),
-			doublevec_ptr(nullptr),
+			charvec_ptr(nullptr),
 			uint16vec_ptr(nullptr),
 			int32vec_ptr(nullptr),
 			uint32vec_ptr(nullptr),
 			int64vec_ptr(nullptr),
-			timevec_ptr(nullptr), 
-			charvec_ptr(nullptr),
+			doublevec_ptr(nullptr),
+			timevec_ptr(nullptr),
+			numeric_ptr(nullptr),
 			err(nullptr)
 		{
 			indvec = vector<SQLLEN>(1);
@@ -44,6 +46,7 @@ namespace mssql
 			int64vec_ptr = other.int64vec_ptr;
 			timevec_ptr = other.timevec_ptr;
 			charvec_ptr = other.charvec_ptr;
+			numeric_ptr = other.numeric_ptr;
 
 			other.charvec_ptr = nullptr;
 			other.buffer = nullptr;
@@ -52,6 +55,7 @@ namespace mssql
 			other.int32vec_ptr = nullptr;
 			other.uint32vec_ptr = nullptr;
 			other.int64vec_ptr = nullptr;
+			other.numeric_ptr = nullptr;
 		}
 
 		BoundDatum(BoundDatum&& other)
@@ -95,7 +99,14 @@ namespace mssql
 		uint16_t param_type;
 
 	private:
-	
+
+		typedef void (BoundDatum::* dispatcher_p)(const Local<Value> & p);
+
+		static pair<SQLSMALLINT, dispatcher_p> getPair(SQLSMALLINT i, dispatcher_p p)
+		{
+			return pair<SQLSMALLINT, dispatcher_p>(i, p);
+		}
+
 		vector<SQLLEN> indvec;
 
 		shared_ptr<vector<char>> charvec_ptr;
@@ -105,12 +116,16 @@ namespace mssql
 		shared_ptr<vector<int64_t>> int64vec_ptr;
 		shared_ptr<vector<double>> doublevec_ptr;
 		shared_ptr<vector<SQL_SS_TIMESTAMPOFFSET_STRUCT>> timevec_ptr;
+		shared_ptr<vector<SQL_NUMERIC_STRUCT>> numeric_ptr;
 
 		char * err;
 
 		void bindNull(const Local<Value> & p);
 		void bindNullArray(const Local<Value> & p);
 		void bindNull(SQLLEN len);
+
+		void bindLongVarBinary(Local<Value> & p);
+		void bindVarBinary(Local<Value> & p);
 
 		void bindString(const Local<Value> & p);
 		void bindString(const Local<Value>& p, int str_len);
@@ -119,6 +134,11 @@ namespace mssql
 		void bindBoolean(const Local<Value> & p);
 		void bindBoolean(SQLLEN len);
 		void bindBooleanArray(const Local<Value> & p);
+
+		void bindSmallInt(const Local<Value> & p);
+		void bindTinyInt(const Local<Value> & p);
+		void bindNumeric(const Local<Value> & p);
+		void bindNumeric(SQLLEN len);
 
 		void bindInt32(const Local<Value> & p);
 		void bindInt32(SQLLEN len);
@@ -132,6 +152,9 @@ namespace mssql
 		void bindInteger(SQLLEN len);
 		void bindIntegerArray(const Local<Value> & p);
 
+		void bindFloat(const Local<Value> & p);
+		void bindReal(const Local<Value> & p);
+
 		void bindDouble(const Local<Value>& p);
 		void bindDouble(SQLLEN len);
 		void bindDoubleArray(const Local<Value> & p);
@@ -142,17 +165,18 @@ namespace mssql
 
 		void bindNumber(const Local<Value> & p);
 		void bindNumberArray(const Local<Value> & p);
-			
-		void bindDefault(Local<Value> & p);
-		void bindDefaultArray(const Local<Value> & p);
+
+		void bindVarBinary(const Local<Value> & p);
+		void bindVarBinaryArray(const Local<Value> & p);
 
 		bool bindDatumType(Local<Value>& p);
 		bool bind(Local<Object> o, const char* if_str, uint16_t type);
 		bool bindObject(Local<Value> &p);
 		bool bindArray(Local<Value> &p);
-		
+
 		bool procBind(Local<Value> &p, Local<Value> &v);
 		bool userBind(Local<Value> &p, Local<Value> &v);
+
 
 		static Handle<Value> unbindNull();
 		Handle<Value> unbindString() const;

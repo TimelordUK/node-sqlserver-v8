@@ -35,6 +35,7 @@ namespace mssql
     }
 
     wstring FromV8String(Handle<String> input);
+	void encodeNumericStruct(double v, int precision, int upscaleLimit, SQL_NUMERIC_STRUCT & numeric);
 
     string w2a(const wchar_t* input);
 

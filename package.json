@@ -12,7 +12,7 @@
       "name": "Stephen James"
     }
   ],
-  "version": "0.1.34",
+  "version": "0.1.35",
   "keywords": [
     "sql",
     "database",
@@ -46,7 +46,7 @@
   },
   "maintainers": [
     {
-      "name": "Stephen James",
+      "name": "timelorduk",
       "email": "sjames8888@gmail.com"
     }
   ],
@@ -57,11 +57,22 @@
   "os": [
     "win32"
   ],
-  "readmeFilename": "README.md",
   "gitHead": "e025462083dd1140eed2519c449bc257482bc61b",
-  "_id": "msnodesqlv8@0.1.3",
+  "_id": "msnodesqlv8@0.1.35",
   "scripts": {},
-  "_shasum": "e67c4f74489e045e8a57072b73f8a55018e1b2a8",
+  "_shasum": "7ef7b229b0abf09aeeb847df6eb249626b626669",
   "_from": "msnodesqlv8@*",
-  "_resolved": "file:node-sqlserver-v8"
+  "_resolved": "https://registry.npmjs.org/msnodesqlv8/-/msnodesqlv8-0.1.35.tgz",
+  "_npmVersion": "2.14.7",
+  "_nodeVersion": "4.2.3",
+  "_npmUser": {
+    "name": "timelorduk",
+    "email": "sjames8888@gmail.com"
+  },
+  "dist": {
+    "shasum": "7ef7b229b0abf09aeeb847df6eb249626b626669",
+    "tarball": "http://registry.npmjs.org/msnodesqlv8/-/msnodesqlv8-0.1.35.tgz"
+  },
+  "directories": {},
+  "readme": "ERROR: No README data found!"
 }

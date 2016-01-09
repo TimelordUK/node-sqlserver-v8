@@ -68,6 +68,18 @@ namespace mssql
 		return size;
 	}
 
+	void OdbcConnection::applyNumeric(BoundDatum & datum, int current_param) const
+	{
+		/* Modify the fields in the implicit application parameter descriptor */
+		SQLHDESC   hdesc = nullptr;
+		
+		SQLGetStmtAttr(statement, SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, nullptr);
+		SQLSetDescField(hdesc, current_param, SQL_DESC_TYPE, reinterpret_cast<SQLPOINTER>(SQL_C_NUMERIC), 0);
+		SQLSetDescField(hdesc, current_param, SQL_DESC_PRECISION, reinterpret_cast<SQLPOINTER>(datum.param_size), 0);
+		SQLSetDescField(hdesc, current_param, SQL_DESC_SCALE, reinterpret_cast<SQLPOINTER>(datum.digits), 0);
+		SQLSetDescField(hdesc, current_param, SQL_DESC_DATA_PTR, static_cast<SQLPOINTER>(datum.buffer), 0);
+	}
+
 	// bind all the parameters in the array
 	bool OdbcConnection::BindParams(BoundDatumSet& params)
 	{
@@ -77,8 +89,10 @@ namespace mssql
 		int current_param = 1;
 		for (auto itr = params.begin(); itr != params.end(); ++itr) {
 			auto & datum = *itr;
-			SQLRETURN r = SQLBindParameter(statement, current_param++, datum.param_type, datum.c_type, datum.sql_type, datum.param_size, datum.digits, datum.buffer, datum.buffer_len, datum.getIndVec().data());
-			CHECK_ODBC_ERROR(r, statement);
+			auto r = SQLBindParameter(statement, current_param, datum.param_type, datum.c_type, datum.sql_type, datum.param_size, datum.digits, datum.buffer, datum.buffer_len, datum.getIndVec().data());
+			CHECK_ODBC_ERROR(r, statement);		
+			if (datum.sql_type == SQL_NUMERIC) applyNumeric(datum, current_param);
+			++current_param;
 		}
 
 		return true;
@@ -191,10 +205,10 @@ namespace mssql
 
 		if (timeout > 0)
 		{
-			ret = SQLSetConnectAttr(connection, SQL_ATTR_CONNECTION_TIMEOUT, reinterpret_cast<SQLPOINTER>(timeout), 0);
+			ret = SQLSetConnectAttr(connection, SQL_ATTR_CONNECTION_TIMEOUT, reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout)), 0);
 			CHECK_ODBC_ERROR(ret, connection);
 
-			ret = SQLSetConnectAttr(connection, SQL_ATTR_LOGIN_TIMEOUT, reinterpret_cast<SQLPOINTER>(timeout), 0);
+			ret = SQLSetConnectAttr(connection, SQL_ATTR_LOGIN_TIMEOUT, reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout)), 0);
 			CHECK_ODBC_ERROR(ret, connection);
 		}
 
@@ -226,9 +240,9 @@ namespace mssql
 		SQLRETURN ret;
 
 		if (timeout > 0) {
-			ret = SQLSetStmtAttr(statement, SQL_QUERY_TIMEOUT, reinterpret_cast<SQLPOINTER>(timeout), SQL_IS_UINTEGER);
+			ret = SQLSetStmtAttr(statement, SQL_QUERY_TIMEOUT, reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout)), SQL_IS_UINTEGER);
 			CHECK_ODBC_ERROR(ret, connection);
-			SQLSetStmtAttr(statement, SQL_ATTR_QUERY_TIMEOUT, reinterpret_cast<SQLPOINTER>(timeout), SQL_IS_UINTEGER);
+			SQLSetStmtAttr(statement, SQL_ATTR_QUERY_TIMEOUT, reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout)), SQL_IS_UINTEGER);
 			CHECK_ODBC_ERROR(ret, connection);
 		}
 

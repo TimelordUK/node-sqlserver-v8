@@ -74,7 +74,8 @@ namespace mssql
 	   {
 		  auto queryString = get(queryObject, "query_str")->ToString();
 		  auto timeout = get(queryObject, "query_timeout")->Int32Value();
-		  auto operation = make_shared<QueryOperation>(connection, FromV8String(queryString), timeout, callback);
+		  auto id = get(queryObject, "query_id")->Int32Value();
+		  auto operation = make_shared<QueryOperation>(connection, FromV8String(queryString), id, timeout, callback);
 		  if (operation->BindParameters(params)) {
 			 OperationManager::Add(operation);
 		  }
@@ -86,7 +87,8 @@ namespace mssql
 	   {
 		   auto queryString = get(queryObject, "query_str")->ToString();
 		   auto timeout = get(queryObject, "query_timeout")->Int32Value();
-		   auto operation = make_shared<ProcedureOperation>(connection, FromV8String(queryString), timeout, callback);
+		   auto id = get(queryObject, "query_id")->Int32Value();
+		   auto operation = make_shared<ProcedureOperation>(connection, FromV8String(queryString), id, timeout, callback);
 		   if (operation->BindParameters(params)) {
 			   OperationManager::Add(operation);
 		   }

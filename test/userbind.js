@@ -25,218 +25,177 @@ suite('userbind', function () {
                 console.error(err);
                 process.exit();
             }
-            ;
             done(conn);
         });
     };
 
-    test('test user bind Bit(null)', function(test_done){
-        var expected = null;
+    function testUserBind(params, cb) {
+
         open(function(conn) {
-            conn.query("declare @v bit = ?; select @v as v", [sql.Bit(null)], function (err, res) {
-                assert.ifError(err);
-                var test = res[0]['v'];
-                assert(typeof test === 'object');
-                assert.deepEqual(test, expected);
-                test_done();
-            });
+
+            var allres = [];
+
+            var sequence = [
+
+                function (async_done) {
+                    conn.query(params.query, [params.setter(params.min)], function (err, res) {
+                        if (err) {
+                            cb(err, res);
+                        }
+                        allres.push(res[0]);
+                        async_done();
+                    });
+                },
+
+                function (async_done) {
+                    conn.query(params.query, [params.setter(params.max)], function (err, res) {
+                        if (err) {
+                            cb(err, res);
+                        }
+                        allres.push(res[0]);
+                        async_done();
+                    });
+                },
+
+                function (async_done) {
+                    conn.query(params.query, [params.setter(null)], function (err, res) {
+                        if (err) {
+                            cb(err, res);
+                        }
+                        allres.push(res[0]);
+                        async_done();
+                    });
+                },
+
+                function (async_done) {
+                    async_done();
+                }];
+
+            async.series(sequence,
+                function () {
+                    cb(null, allres);
+                });
+        });
+    }
+
+    function compare(params, res) {
+        assert.deepEqual(res,
+            [
+                {
+                    v: params.min
+                },
+                {
+                    v: params.max
+                },
+                {
+                    v: null
+                }
+            ]);
+    }
+
+    test('user bind float', function(test_done) {
+        var params = {
+            query : 'declare @v float = ?; select @v as v',
+            type : 'float',
+            min : -1.7976931348623158E+308,
+            max : 1.7976931348623158E+308,
+            setter : function(v) {
+                return sql.Float(v);
+            }
+        };
+        testUserBind(params, function(err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
         });
     });
 
-    test('test user bind Bit(true)', function(test_done){
-        var b = true;
-        var expected = b;
-        open(function(conn) {
-            conn.query("declare @v bit = ?; select @v as v", [sql.Bit(b)], function (err, res) {
-                assert.ifError(err);
-                var test = res[0]['v'];
-                assert(typeof test === 'boolean');
-                assert.deepEqual(test, expected);
-                test_done();
-            });
+    test('user bind bit', function(test_done) {
+        var params = {
+            query : 'declare @v bit = ?; select @v as v',
+            type : 'bit',
+            min : false,
+            max : true,
+            setter : function(v) {
+                return sql.Bit(v);
+            }
+        };
+        testUserBind(params, function(err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
         });
     });
 
-    test('test user bind SSTimeStampOffset(utcDate)', function(test_done) {
-        var localDate = new Date();
-        var utcDate = new Date(Date.UTC(localDate.getUTCFullYear(),
-            localDate.getUTCMonth(),
-            localDate.getUTCDate(),
-            localDate.getUTCHours(),
-            localDate.getUTCMinutes(),
-            localDate.getUTCSeconds(),
-            0));
+    test('user bind bigint', function(test_done) {
 
-        var expected = utcDate;
-        open(function(conn) {
-            conn.query("declare @v datetime = ?; select @v as v", [sql.SSTimeStampOffset(utcDate)], function (err, res) {
-                assert.ifError(err);
-                var test = res[0]['v'];
-                assert(test instanceof Date);
-                assert.deepEqual(test, expected);
-                test_done();
-            });
+        var params = {
+            query : 'declare @v bigint = ?; select @v as v',
+            type : 'bigint',
+            min : -9007199254740991,
+            max : 9007199254740991,
+            setter : function(v) {
+                return sql.BigInt(v);
+            }
+        };
+        testUserBind(params, function(err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
         });
     });
 
-    test('test user bind SSTimeStampOffset(null)', function(test_done){
-        var expected = null;
-        open(function(conn) {
-            conn.query("declare @v datetime = ?; select @v as v", [sql.SSTimeStampOffset(null)], function (err, res) {
-                assert.ifError(err);
-                var test = res[0]['v'];
-                assert(typeof test === 'object');
-                assert.deepEqual(test, expected);
-                test_done();
-            });
+    test('user bind int', function(test_done) {
+
+        var params = {
+            query : 'declare @v int = ?; select @v as v',
+            type : 'int',
+            min : -2147483648,
+            max : 2147483647,
+            setter : function(v) {
+                return sql.Int(v);
+            }
+        };
+        testUserBind(params, function(err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
         });
     });
 
-    test('test user bind WVarChar(null)', function(test_done){
-        var expected = null;
-        open(function(conn) {
-            conn.query("declare @v varchar(20) = ?; select @v as v", [sql.WVarChar(null)], function (err, res) {
-                assert.ifError(err);
-                var test = res[0]['v'];
-                assert(typeof test === 'object');
-                assert.deepEqual(test, expected);
-                test_done();
-            });
+    test('user bind tinyint', function(test_done) {
+
+        var params = {
+            query : 'declare @v tinyint = ?; select @v as v',
+            type : 'tinyint',
+            min : 0,
+            max : 255,
+            setter : function(v) {
+                return sql.TinyInt(v);
+            }
+        };
+        testUserBind(params, function(err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
         });
     });
 
-    test('test user bind WVarChar(\'hello world\')', function(test_done){
-        var str = 'hello world';
-        var expected = str;
-        open(function(conn) {
-            conn.query("declare @v varchar(20) = ?; select @v as v", [sql.WVarChar(str)], function (err, res) {
-                assert.ifError(err);
-                var test = res[0]['v'];
-                assert(typeof test === 'string');
-                assert.deepEqual(test, expected);
-                test_done();
-            });
-        });
-    });
+    test('user bind smallint', function(test_done) {
 
-    test('test user bind WVarChar(null)', function(test_done){
-        var expected = null;
-        open(function(conn) {
-            conn.query("declare @v varchar(20) = ?; select @v as v", [sql.WVarChar(null)], function (err, res) {
-                assert.ifError(err);
-                var test = res[0]['v'];
-                assert(typeof test === 'object');
-                assert.deepEqual(test, expected);
-                test_done();
-            });
-        });
-    });
-
-    test('test user bind Integer(null)', function(test_done){
-        var expected = null;
-        open(function(conn) {
-            conn.query("declare @v int = ?; select @v as v", [sql.Integer(null)], function (err, res) {
-                assert.ifError(err);
-                var test = res[0]['v'];
-                assert(typeof test === 'object');
-                assert.deepEqual(test, expected);
-                test_done();
-            });
-        });
-    });
-
-    test('test user bind Integer(-1000)', function(test_done){
-        var i = 1000;
-        var expected = i;
-        open(function(conn) {
-            conn.query("declare @v int = ?; select @v as v", [sql.Integer(i)], function (err, res) {
-                assert.ifError(err);
-                var test = res[0]['v'];
-                assert(typeof test === 'number');
-                assert.deepEqual(test, expected);
-                test_done();
-            });
-        });
-    });
-
-    test('test user bind VarBinary([0,1,2,3])', function(test_done){
-       var vec = [0, 1, 2, 3];
-        var expected = new Buffer(vec);
-        open(function(conn) {
-            conn.query("declare @v binary(4) = ?; select @v as v", [sql.VarBinary(new Buffer(vec))], function (err, res) {
-                assert.ifError(err);
-                var test = res[0]['v'];
-                assert(test instanceof Buffer);
-                assert.deepEqual(test, expected);
-                test_done();
-            });
-        });
-    });
-
-    test('test user bind VarBinary(null)', function(test_done){
-        var expected = null;
-        open(function(conn) {
-            conn.query("declare @v binary(4) = ?; select @v as v", [sql.VarBinary(null)], function (err, res) {
-                assert.ifError(err);
-                var test = res[0]['v'];
-                assert(typeof test === 'object');
-                assert.deepEqual(test, expected);
-                test_done();
-            });
-        });
-    });
-
-    test('test user bind BigInt(null)', function(test_done){
-        var expected = null;
-        open(function(conn) {
-            conn.query("declare @v int = ?; select @v as v", [sql.BigInt(null)], function (err, res) {
-                assert.ifError(err);
-                var test = res[0]['v'];
-                assert(typeof test === 'object');
-                assert.deepEqual(test, expected);
-                test_done();
-            });
-        });
-    });
-
-    test('test user bind BigInt(1234567890)', function(test_done){
-        var i = 1234567890;
-        var expected = i;
-        open(function(conn) {
-            conn.query("declare @v int = ?; select @v as v", [sql.BigInt(i)], function (err, res) {
-                assert.ifError(err);
-                var test = res[0]['v'];
-                assert(typeof test === 'number');
-                assert.deepEqual(test, expected);
-                test_done();
-            });
-        });
-    });
-
-    test('test user bind Double(null)', function(test_done){
-        var expected = null;
-        open(function(conn) {
-            conn.query("declare @v  decimal(18,4) = ?; select @v as v", [sql.Double(null)], function (err, res) {
-                assert.ifError(err);
-                var test = res[0]['v'];
-                assert(typeof test === 'object');
-                assert.deepEqual(test, expected);
-                test_done();
-            });
-        });
-    });
-
-    test('test user bind Double(1234567890.1234)', function(test_done){
-        var d = 1234567890.1234;
-        var expected = d;
-        open(function(conn) {
-            conn.query("declare @v decimal(18,4) = ?; select @v as v", [sql.Double(d)], function (err, res) {
-                assert.ifError(err);
-                var test = res[0]['v'];
-                assert(typeof test === 'number');
-                assert.deepEqual(test, expected);
-                test_done();
-            });
+        var params = {
+            query : 'declare @v smallint = ?; select @v as v',
+            type : 'smallint',
+            min : -32768,
+            max : 32767,
+            setter : function(v) {
+                return sql.SmallInt(v);
+            }
+        };
+        testUserBind(params, function(err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
         });
     });
 });

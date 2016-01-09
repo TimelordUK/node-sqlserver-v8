@@ -93,10 +93,11 @@ namespace mssql
 		return o;
 	}
 
-	QueryOperation::QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int timeout,  Handle<Object> callback) :
+	QueryOperation::QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int id, u_int timeout,  Handle<Object> callback) :
 		OdbcOperation(connection, callback), timeout(timeout), query(query),
 		output_param_count(0)
 	{
+		ID = id;
 	}
 
 	bool QueryOperation::ParameterErrorToUserCallback(uint32_t param, const char* error)
@@ -238,8 +239,8 @@ namespace mssql
 		return fact.null();
 	}
 
-	ProcedureOperation::ProcedureOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int timeout, Handle<Object> callback) :
-		QueryOperation(connection, query, timeout, callback)
+	ProcedureOperation::ProcedureOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int id, u_int timeout, Handle<Object> callback) :
+		QueryOperation(connection, query, id, timeout, callback)
 	{
 		persists = true;
 	}
