@@ -37,7 +37,8 @@ namespace mssql
 			uint32vec_ptr(nullptr),
 			int64vec_ptr(nullptr),
 			doublevec_ptr(nullptr),
-			timevec_ptr(nullptr),
+			timestampvec_ptr(nullptr),
+			time2vec_ptr(nullptr),
 			numeric_ptr(nullptr),
 			definedPrecision(false),
 			definedScale(false),
@@ -53,18 +54,10 @@ namespace mssql
 			int32vec_ptr = other.int32vec_ptr;
 			uint32vec_ptr = other.uint32vec_ptr;
 			int64vec_ptr = other.int64vec_ptr;
-			timevec_ptr = other.timevec_ptr;
+			timestampvec_ptr = other.timestampvec_ptr;
+			time2vec_ptr = other.time2vec_ptr;
 			charvec_ptr = other.charvec_ptr;
 			numeric_ptr = other.numeric_ptr;
-
-			other.charvec_ptr = nullptr;
-			other.buffer = nullptr;
-			other.doublevec_ptr = nullptr;
-			other.uint16vec_ptr = nullptr;
-			other.int32vec_ptr = nullptr;
-			other.uint32vec_ptr = nullptr;
-			other.int64vec_ptr = nullptr;
-			other.numeric_ptr = nullptr;
 		}
 
 		BoundDatum(BoundDatum&& other)
@@ -124,7 +117,8 @@ namespace mssql
 		shared_ptr<vector<uint32_t>> uint32vec_ptr;
 		shared_ptr<vector<int64_t>> int64vec_ptr;
 		shared_ptr<vector<double>> doublevec_ptr;
-		shared_ptr<vector<SQL_SS_TIMESTAMPOFFSET_STRUCT>> timevec_ptr;
+		shared_ptr<vector<SQL_SS_TIMESTAMPOFFSET_STRUCT>> timestampvec_ptr;
+		shared_ptr<vector<SQL_SS_TIME2_STRUCT>> time2vec_ptr;
 		shared_ptr<vector<SQL_NUMERIC_STRUCT>> numeric_ptr;
 		bool definedPrecision;
 		bool definedScale;
@@ -169,6 +163,9 @@ namespace mssql
 		void bindDouble(const Local<Value>& p);
 		void bindDouble(SQLLEN len);
 		void bindDoubleArray(const Local<Value> & p);
+
+		void bindTime(const Local<Value> & p);
+		void bindTime(SQLLEN len);
 
 		void bindDate(const Local<Value> & p);
 		void bindDate(SQLLEN len);

@@ -106,7 +106,33 @@ suite('userbind', function () {
         });
     });
 
-
+    test('user bind Time', function (test_done) {
+        var today = new Date();
+        var timeOnly = new Date(Date.UTC(1900,
+            0,
+            1,
+            today.getUTCHours(),
+            today.getUTCMinutes(),
+            today.getUTCSeconds(),
+            today.getUTCMilliseconds()));
+        var params = {
+            query: 'declare @v time = ?; select @v as v',
+            min: today,
+            max: today,
+            expected: [
+                timeOnly,
+                timeOnly
+            ],
+            setter: function (v) {
+                return sql.Time(v);
+            }
+        };
+        testUserBind(params, function (err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
+        });
+    });
 
     test('user bind Xml - well formatted.', function (test_done) {
         var params = {

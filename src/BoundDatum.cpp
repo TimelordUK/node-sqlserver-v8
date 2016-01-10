@@ -397,6 +397,45 @@ namespace mssql
 		digits = 0;
 	}
 
+	void BoundDatum::bindTime(const Local<Value> & p)
+	{
+		bindTime(1);
+		// Since JS dates have no timezone context, all dates are assumed to be UTC
+		indvec[0] = SQL_NULL_DATA;
+		if (!p->IsNull()) {
+			auto dateObject = Handle<Date>::Cast<Value>(p);
+			assert(!dateObject.IsEmpty());
+			// dates in JS are stored internally as ms count from Jan 1, 1970
+			double d = dateObject->NumberValue();
+			SQL_SS_TIMESTAMPOFFSET_STRUCT  ts;
+			TimestampColumn sql_date(d);
+			sql_date.ToTimestampOffset(ts);
+			auto & time2 = (*time2vec_ptr)[0];
+			time2.hour = ts.hour;
+			time2.minute = ts.minute;
+			time2.second = ts.second;
+			time2.fraction = ts.fraction;
+			indvec[0] = buffer_len;
+		}
+	}
+
+	void BoundDatum::bindTime(SQLLEN len)
+	{
+		buffer_len = len * sizeof(SQL_SS_TIME2_STRUCT);
+		time2vec_ptr = make_shared<vector<SQL_SS_TIME2_STRUCT>>(len);
+		indvec.resize(len);
+		// Since JS dates have no timezone context, all dates are assumed to be UTC		
+		js_type = JS_DATE;
+		c_type = SQL_C_BINARY;
+		// TODO: Determine proper SQL type based on version of server we're talking to
+		sql_type = SQL_SS_TIME2;
+		buffer = time2vec_ptr->data();
+		// TODO: Determine proper precision and size based on version of server we're talking to
+		if (param_size <= 0) 
+			param_size = SQL_SERVER_2008_DEFAULT_DATETIME_PRECISION;
+		digits = SQL_SERVER_2008_DEFAULT_DATETIME_SCALE;
+	}
+
 	void BoundDatum::bindDate(const Local<Value> & p)
 	{
 		bindDate(1);
@@ -407,7 +446,7 @@ namespace mssql
 			assert(!dateObject.IsEmpty());
 			// dates in JS are stored internally as ms count from Jan 1, 1970
 			double d = dateObject->NumberValue();
-			auto & ts = (*timevec_ptr)[0];
+			auto & ts = (*timestampvec_ptr)[0];
 			TimestampColumn sql_date(d);
 			sql_date.ToTimestampOffset(ts);
 			indvec[0] = buffer_len;
@@ -417,14 +456,14 @@ namespace mssql
 	void BoundDatum::bindDate(SQLLEN len)
 	{
 		buffer_len = sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT);
-		timevec_ptr = make_shared<vector<SQL_SS_TIMESTAMPOFFSET_STRUCT>>(len);
+		timestampvec_ptr = make_shared<vector<SQL_SS_TIMESTAMPOFFSET_STRUCT>>(len);
 		indvec.resize(len);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC		
 		js_type = JS_DATE;
 		c_type = SQL_C_BINARY;
 		// TODO: Determine proper SQL type based on version of server we're talking to
 		sql_type = SQL_SS_TIMESTAMPOFFSET;
-		buffer = timevec_ptr->data();
+		buffer = timestampvec_ptr->data();
 		// TODO: Determine proper precision and size based on version of server we're talking to
 		param_size = SQL_SERVER_2008_DEFAULT_DATETIME_PRECISION;
 		digits = SQL_SERVER_2008_DEFAULT_DATETIME_SCALE;
@@ -435,7 +474,7 @@ namespace mssql
 		auto arr = Local<Array>::Cast(p);
 		auto len = arr->Length();
 		bindDate(len);
-		auto & vec = *timevec_ptr;
+		auto & vec = *timestampvec_ptr;
 		buffer_len = sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT);
 		for (uint32_t i = 0; i < len; ++i)
 		{
@@ -838,6 +877,10 @@ namespace mssql
 			bindVarChar(pp);
 			break;
 
+		case SQL_SS_TIME2:
+			bindTime(pp);
+			break;
+
 		default:
 			return false;
 		}
@@ -976,7 +1019,7 @@ namespace mssql
 
 	Handle<Value> BoundDatum::unbindDate() const
 	{
-		TimestampColumn tsc((*timevec_ptr)[0]);
+		TimestampColumn tsc((*timestampvec_ptr)[0]);
 		return tsc.ToValue();
 	}
 
