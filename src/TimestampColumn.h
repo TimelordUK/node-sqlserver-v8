@@ -34,9 +34,41 @@ namespace mssql
 		  return dd;
 	   }
 
-	   void ToTimestampOffset(SQL_SS_TIMESTAMPOFFSET_STRUCT& date)
+	   void ToTimestampOffset(SQL_SS_TIMESTAMPOFFSET_STRUCT& date) const
 	   {
 		  DateFromMilliseconds(date);
+	   }
+
+	   void ToTimestampStruct(SQL_TIMESTAMP_STRUCT & timestamp) const
+	   {
+		   SQL_SS_TIMESTAMPOFFSET_STRUCT ts;
+		   ToTimestampOffset(ts);
+		   timestamp.year = ts.year;
+		   timestamp.month =ts.month;
+		   timestamp.day = ts.day;
+		   timestamp.hour = ts.hour;
+		   timestamp.minute = ts.minute;
+		   timestamp.second = ts.second;
+		   timestamp.fraction = ts.fraction;
+	   }
+
+	   void ToTime2Struct(SQL_SS_TIME2_STRUCT & time2) const
+	   {
+		   SQL_SS_TIMESTAMPOFFSET_STRUCT ts;
+		   ToTimestampOffset(ts);
+		   time2.hour = ts.hour;
+		   time2.minute = ts.minute;
+		   time2.second = ts.second;
+		   time2.fraction = ts.fraction;
+	   }
+
+	   void ToDateStruct(SQL_DATE_STRUCT & dt) const
+	   {
+		   SQL_SS_TIMESTAMPOFFSET_STRUCT ts;
+		   ToTimestampOffset(ts);
+		   dt.year = ts.year;
+		   dt.month = ts.month;
+		   dt.day = ts.day;
 	   }
 
 	   static const int64_t NANOSECONDS_PER_MS = 1000000;                  // nanoseconds per millisecond

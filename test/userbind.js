@@ -106,6 +106,34 @@ suite('userbind', function () {
         });
     });
 
+    test('user bind DateTime to sql type datetime', function (test_done) {
+        var today = new Date();
+        var utcDate =  new Date(Date.UTC(today.getUTCFullYear(),
+            today.getUTCMonth(),
+            today.getUTCDate(),
+            today.getUTCHours(),
+            today.getUTCMinutes(),
+            today.getUTCSeconds(),
+            today.getUTCMilliseconds()));
+        var params = {
+            query: 'declare @v datetime = ?; select @v as v',
+            min: today,
+            max: today,
+            expected: [
+                utcDate,
+                utcDate
+            ],
+            setter: function (v) {
+                return sql.DateTime(v);
+            }
+        };
+        testUserBind(params, function (err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
+        });
+    });
+
     test('user bind Time', function (test_done) {
         var today = new Date();
         var timeOnly = new Date(Date.UTC(1900,
