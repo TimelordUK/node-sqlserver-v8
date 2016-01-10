@@ -90,7 +90,25 @@ suite('userbind', function () {
         assert.deepEqual(res, expected);
     }
 
-    test('user bind well formatted xml', function (test_done) {
+    test('user bind UniqueIdentifier', function (test_done) {
+        var params = {
+            query: 'declare @v uniqueidentifier = ?; select @v as v',
+            min: 'F01251E5-96A3-448D-981E-0F99D789110D',
+            max: '45E8F437-670D-4409-93CB-F9424A40D6EE',
+            setter: function (v) {
+                return sql.UniqueIdentifier(v);
+            }
+        };
+        testUserBind(params, function (err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
+        });
+    });
+
+
+
+    test('user bind Xml - well formatted.', function (test_done) {
         var params = {
             query: 'declare @v xml = ?; select @v as v',
             min: '<Cars><Car id="1234"><Make>Volkswagen</Make><Model>Eurovan</Model><Year>2003</Year><Color>White</Color></Car></Cars>',
@@ -106,7 +124,7 @@ suite('userbind', function () {
         });
     });
 
-    test('user bind xml - bad xml should give error', function (test_done) {
+    test('user bind Xml - bad xml should give error', function (test_done) {
         var params = {
             query: 'declare @v xml = ?; select @v as v',
             min: '',
@@ -222,7 +240,7 @@ suite('userbind', function () {
         });
     });
 
-    test('user bind float, maps to numeric data structure.', function (test_done) {
+    test('user bind Float, maps to numeric data structure.', function (test_done) {
         var params = {
             query: 'declare @v float = ?; select @v as v',
             min: -1.7976931348623158E+308,
@@ -239,7 +257,7 @@ suite('userbind', function () {
     });
 
 
-    test('user bind double, maps to numeric data structure.', function (test_done) {
+    test('user bind Double, maps to numeric data structure.', function (test_done) {
         var params = {
             query: 'declare @v float = ?; select @v as v',
             min: -1.7976931348623158E+308,
@@ -255,7 +273,7 @@ suite('userbind', function () {
         });
     });
 
-    test('user bind bit', function (test_done) {
+    test('user bind Bit', function (test_done) {
         var params = {
             query: 'declare @v bit = ?; select @v as v',
             min: false,
@@ -271,7 +289,7 @@ suite('userbind', function () {
         });
     });
 
-    test('user bind bigint', function (test_done) {
+    test('user bind BigInt', function (test_done) {
 
         var params = {
             query: 'declare @v bigint = ?; select @v as v',
@@ -288,7 +306,7 @@ suite('userbind', function () {
         });
     });
 
-    test('user bind int', function (test_done) {
+    test('user bind Int', function (test_done) {
 
         var params = {
             query: 'declare @v int = ?; select @v as v',
@@ -305,7 +323,7 @@ suite('userbind', function () {
         });
     });
 
-    test('user bind tinyint', function (test_done) {
+    test('user bind TinyInt', function (test_done) {
 
         var params = {
             query: 'declare @v tinyint = ?; select @v as v',
@@ -322,7 +340,7 @@ suite('userbind', function () {
         });
     });
 
-    test('user bind smallint', function (test_done) {
+    test('user bind SmallInt', function (test_done) {
 
         var params = {
             query: 'declare @v smallint = ?; select @v as v',

@@ -81,11 +81,12 @@ namespace mssql
 		if (!p->IsNull()) {
 			auto str_param = p->ToString();
 			charvec_ptr = make_shared<vector<char>>(precision);
-			buffer = charvec_ptr->data();
-			str_param->WriteUtf8(charvec_ptr->data(), precision);
+			auto * itr_p = charvec_ptr->data();
+			buffer = itr_p;
+			str_param->WriteUtf8(itr_p, precision);
 			buffer_len = precision;
 			param_size = 0;
-			indvec[0] = buffer_len;
+			indvec[0] = precision;
 		}
 	}
 
