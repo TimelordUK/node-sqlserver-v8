@@ -134,6 +134,34 @@ suite('userbind', function () {
         });
     });
 
+    test('user bind Date', function (test_done) {
+        var today = new Date();
+        var dateOnly = new Date(Date.UTC(today.getUTCFullYear(),
+            today.getUTCMonth(),
+            today.getUTCDate(),
+            0,
+            0,
+            0,
+            0));
+        var params = {
+            query: 'declare @v date = ?; select @v as v',
+            min: today,
+            max: today,
+            expected: [
+                dateOnly,
+                dateOnly
+            ],
+            setter: function (v) {
+                return sql.Date(v);
+            }
+        };
+        testUserBind(params, function (err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
+        });
+    });
+
     test('user bind Xml - well formatted.', function (test_done) {
         var params = {
             query: 'declare @v xml = ?; select @v as v',

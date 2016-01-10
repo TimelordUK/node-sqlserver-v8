@@ -39,6 +39,7 @@ namespace mssql
 			doublevec_ptr(nullptr),
 			timestampvec_ptr(nullptr),
 			time2vec_ptr(nullptr),
+			datevec_ptr(nullptr),
 			numeric_ptr(nullptr),
 			definedPrecision(false),
 			definedScale(false),
@@ -55,6 +56,7 @@ namespace mssql
 			uint32vec_ptr = other.uint32vec_ptr;
 			int64vec_ptr = other.int64vec_ptr;
 			timestampvec_ptr = other.timestampvec_ptr;
+			datevec_ptr = other.datevec_ptr;
 			time2vec_ptr = other.time2vec_ptr;
 			charvec_ptr = other.charvec_ptr;
 			numeric_ptr = other.numeric_ptr;
@@ -119,6 +121,7 @@ namespace mssql
 		shared_ptr<vector<double>> doublevec_ptr;
 		shared_ptr<vector<SQL_SS_TIMESTAMPOFFSET_STRUCT>> timestampvec_ptr;
 		shared_ptr<vector<SQL_SS_TIME2_STRUCT>> time2vec_ptr;
+		shared_ptr<vector<SQL_DATE_STRUCT >> datevec_ptr;
 		shared_ptr<vector<SQL_NUMERIC_STRUCT>> numeric_ptr;
 		bool definedPrecision;
 		bool definedScale;
@@ -169,7 +172,10 @@ namespace mssql
 
 		void bindDate(const Local<Value> & p);
 		void bindDate(SQLLEN len);
-		void bindDateArray(const Local<Value> & p);
+
+		void bindTimeStamp(const Local<Value> & p);
+		void bindTimeStamp(SQLLEN len);
+		void bindTimeStampArray(const Local<Value> & p);
 
 		void bindNumber(const Local<Value> & p);
 		void bindNumberArray(const Local<Value> & p);
