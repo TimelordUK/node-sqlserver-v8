@@ -71,7 +71,7 @@ namespace mssql
 		   dt.day = ts.day;
 	   }
 
-	   static const int64_t NANOSECONDS_PER_MS = 1000000;                  // nanoseconds per millisecond
+	   static const int64_t NANOSECONDS_PER_MS = 1e6;                  // nanoseconds per millisecond
 
     private:
 

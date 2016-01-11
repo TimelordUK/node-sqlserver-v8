@@ -24,7 +24,7 @@ namespace mssql {
 
 	namespace {
 
-		const int64_t MS_PER_SECOND = 1000;
+		const int64_t MS_PER_SECOND = 1e3;
 		const int64_t MS_PER_MINUTE = 60 * MS_PER_SECOND;
 		const int64_t MS_PER_HOUR = 60 * MS_PER_MINUTE;
 		const int64_t MS_PER_DAY = 24 * MS_PER_HOUR;

@@ -90,13 +90,18 @@ suite('userbind', function () {
         assert.deepEqual(res, expected);
     }
 
-    test('user bind UniqueIdentifier', function (test_done) {
+    test('user bind DateTime to sql type datetime2(7)', function (test_done) {
+        var now = new Date();
         var params = {
-            query: 'declare @v uniqueidentifier = ?; select @v as v',
-            min: 'F01251E5-96A3-448D-981E-0F99D789110D',
-            max: '45E8F437-670D-4409-93CB-F9424A40D6EE',
+            query: 'declare @v DATETIME2(7) = ?; select @v as v',
+            min: now,
+            max: now,
+            expected: [
+                now,
+                now
+            ],
             setter: function (v) {
-                return sql.UniqueIdentifier(v);
+                return sql.DateTime(v);
             }
         };
         testUserBind(params, function (err, res) {
@@ -106,25 +111,30 @@ suite('userbind', function () {
         });
     });
 
-    test('user bind DateTime to sql type datetime', function (test_done) {
-        var today = new Date();
-        var utcDate =  new Date(Date.UTC(today.getUTCFullYear(),
-            today.getUTCMonth(),
-            today.getUTCDate(),
-            today.getUTCHours(),
-            today.getUTCMinutes(),
-            today.getUTCSeconds(),
-            today.getUTCMilliseconds()));
+    test('user bind DateTime to sql type datetime - driver currently only supports 10ms accuracy with datetime', function (test_done) {
+        var now = sql.DateRound();
         var params = {
-            query: 'declare @v datetime = ?; select @v as v',
-            min: today,
-            max: today,
-            expected: [
-                utcDate,
-                utcDate
-            ],
+            query: 'declare @v DATETIME2(7) = ?; select @v as v',
+            min: now,
+            max: now,
             setter: function (v) {
                 return sql.DateTime(v);
+            }
+        };
+        testUserBind(params, function (err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
+        });
+    });
+
+    test('user bind UniqueIdentifier', function (test_done) {
+        var params = {
+            query: 'declare @v uniqueidentifier = ?; select @v as v',
+            min: 'F01251E5-96A3-448D-981E-0F99D789110D',
+            max: '45E8F437-670D-4409-93CB-F9424A40D6EE',
+            setter: function (v) {
+                return sql.UniqueIdentifier(v);
             }
         };
         testUserBind(params, function (err, res) {

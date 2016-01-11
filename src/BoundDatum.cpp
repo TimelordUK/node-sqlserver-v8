@@ -491,14 +491,16 @@ namespace mssql
 		indvec.resize(len);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC		
 		js_type = JS_DATE;
-		c_type = SQL_C_BINARY;
+		c_type = SQL_C_TIMESTAMP;
 		// TODO: Determine proper SQL type based on version of server we're talking to
 		sql_type = SQL_TYPE_TIMESTAMP;
 		buffer = timestampvec_ptr->data();
 		// TODO: Determine proper precision and size based on version of server we're talking to
+		if (digits <= 0) {
+			digits = SQL_SERVER_2008_DEFAULT_TIMESTAMP_PRECISION;
+		}
 
-		param_size = SQL_SERVER_2008_DEFAULT_TIMESTAMP_PRECISION;
-		if (digits <= 0) digits = SQL_SERVER_2008_DEFAULT_DATETIME_SCALE;
+		digits = SQL_SERVER_2008_DEFAULT_DATETIME_SCALE;
 	}
 
 	void BoundDatum::bindTimeStampOffset(const Local<Value> & p)
