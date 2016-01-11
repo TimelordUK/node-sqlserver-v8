@@ -9,7 +9,7 @@ namespace mssql
 	bool OperationManager::Add(shared_ptr<Operation> operation_ptr)
 	{
 		lock_guard<mutex> lock(g_i_mutex);
-		operation_ptr->ID = ++_id;
+		operation_ptr->ID = static_cast<int>(++_id);
 		operations.insert(pair<size_t, shared_ptr<Operation>>(operation_ptr->ID, operation_ptr));
 		operation_ptr->work.data = operation_ptr.get();
 

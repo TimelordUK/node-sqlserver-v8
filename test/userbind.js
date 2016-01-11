@@ -90,16 +90,44 @@ suite('userbind', function () {
         assert.deepEqual(res, expected);
     }
 
+    test('user bind DateTime2 to sql type datetime2(7) - with scale set to illegal value, should error', function (test_done) {
+        var now = new Date();
+        var params = {
+            query: 'declare @v DATETIME2(7) = ?; select @v as v',
+            min: now,
+            max: now,
+            setter: function (v) {
+                return sql.DateTime2(v, 8); // set scale too low
+            }
+        };
+        testUserBind(params, function (err, res) {
+            assert.ok(err.message.indexOf('Invalid precision value') > 0);
+            test_done();
+        });
+    });
+
+    test('user bind DateTime2 to sql type datetime2(7) - with scale set too low, should error', function (test_done) {
+        var now = new Date();
+        var params = {
+            query: 'declare @v DATETIME2(7) = ?; select @v as v',
+            min: now,
+            max: now,
+            setter: function (v) {
+                return sql.DateTime2(v, 1); // set scale too low
+            }
+        };
+        testUserBind(params, function (err, res) {
+            assert.ok(err.message.indexOf('Fractional second precision exceeds the scale specified') > 0);
+            test_done();
+        });
+    });
+
     test('user bind DateTime to sql type datetime2(7)', function (test_done) {
         var now = new Date();
         var params = {
             query: 'declare @v DATETIME2(7) = ?; select @v as v',
             min: now,
             max: now,
-            expected: [
-                now,
-                now
-            ],
             setter: function (v) {
                 return sql.DateTime(v);
             }

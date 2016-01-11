@@ -69,7 +69,7 @@ namespace mssql
 		auto str_param = p->ToString();
 		SQLULEN precision = str_param->Length();
 		if (param_size > 0) precision = std::min(param_size, precision);
-		bindVarChar(p, precision);
+		bindVarChar(p, static_cast<int>(precision));
 	}
 
 	void BoundDatum::bindVarChar(const Local<Value> & p, int precision)
@@ -285,7 +285,7 @@ namespace mssql
 			double d = p->NumberValue();
 			auto &vec = *numeric_ptr;
 			auto & ns = vec[0];
-			encodeNumericStruct(d, param_size, digits, ns);
+			encodeNumericStruct(d, static_cast<int>(param_size), digits, ns);
 			param_size = ns.precision;
 			digits = ns.scale;
 			indvec[0] = sizeof(SQL_NUMERIC_STRUCT);
@@ -496,11 +496,8 @@ namespace mssql
 		sql_type = SQL_TYPE_TIMESTAMP;
 		buffer = timestampvec_ptr->data();
 		// TODO: Determine proper precision and size based on version of server we're talking to
-		if (digits <= 0) {
-			digits = SQL_SERVER_2008_DEFAULT_TIMESTAMP_PRECISION;
-		}
-
-		digits = SQL_SERVER_2008_DEFAULT_DATETIME_SCALE;
+		param_size = SQL_SERVER_2008_DEFAULT_TIMESTAMP_PRECISION;
+		if (digits <= 0) digits = SQL_SERVER_2008_DEFAULT_DATETIME_SCALE;	
 	}
 
 	void BoundDatum::bindTimeStampOffset(const Local<Value> & p)
