@@ -90,6 +90,40 @@ suite('userbind', function () {
         assert.deepEqual(res, expected);
     }
 
+    test('user bind DateTime2 to sql type datetime2(7) default scale', function (test_done) {
+        var now = new Date();
+        var params = {
+            query: 'declare @v DATETIME2(7) = ?; select @v as v',
+            min: now,
+            max: now,
+            setter: function (v) {
+                return sql.DateTime2(v);
+            }
+        };
+        testUserBind(params, function (err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
+        });
+    });
+
+    test('user bind DateTime2 to sql type datetime2(7) - with scale set correctly, should pass', function (test_done) {
+        var now = new Date();
+        var params = {
+            query: 'declare @v DATETIME2(7) = ?; select @v as v',
+            min: now,
+            max: now,
+            setter: function (v) {
+                return sql.DateTime2(v, 3); // set scale just right for ms
+            }
+        };
+        testUserBind(params, function (err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
+        });
+    });
+
     test('user bind DateTime2 to sql type datetime2(7) - with scale set to illegal value, should error', function (test_done) {
         var now = new Date();
         var params = {
@@ -97,7 +131,7 @@ suite('userbind', function () {
             min: now,
             max: now,
             setter: function (v) {
-                return sql.DateTime2(v, 8); // set scale too low
+                return sql.DateTime2(v, 8); // set scale illegal
             }
         };
         testUserBind(params, function (err, res) {
