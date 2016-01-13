@@ -530,7 +530,7 @@ namespace mssql
 		buffer = timestampoffsetvec_ptr->data();
 		// TODO: Determine proper precision and size based on version of server we're talking to
 		param_size = SQL_SERVER_2008_DEFAULT_DATETIME_PRECISION;
-		digits = SQL_SERVER_2008_DEFAULT_DATETIME_SCALE;
+		if (digits <= 0) digits = SQL_SERVER_2008_DEFAULT_DATETIME_SCALE;
 	}
 
 	void BoundDatum::bindTimeStampOffsetArray(const Local<Value>& p)

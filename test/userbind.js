@@ -90,6 +90,30 @@ suite('userbind', function () {
         assert.deepEqual(res, expected);
     }
 
+    test('user bind SmallDateTime to sql type smalldatetime', function (test_done) {
+        var now = new Date();
+        var smalldt = new Date(Date.UTC(now.getUTCFullYear(),
+            now.getUTCMonth(),
+            now.getUTCDate(),
+            now.getUTCHours(),
+            now.getUTCMinutes(),
+            0,
+            0));
+        var params = {
+            query: 'declare @v smalldatetime = ?; select @v as v',
+            min: smalldt,
+            max: smalldt,
+            setter: function (v) {
+                return sql.SmallDateTime(v);
+            }
+        };
+        testUserBind(params, function (err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
+        });
+    });
+
     test('user bind DateTime2 to sql type datetime2(7) default scale', function (test_done) {
         var now = new Date();
         var params = {

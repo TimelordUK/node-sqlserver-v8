@@ -33,7 +33,6 @@ namespace mssql {
 		{
 			return (year % 4 == 0 && (year % 100 != 0) || (year % 400) == 0);
 		}
-
 	}
 
 	// return the number of days since Jan 1, 1970
@@ -164,8 +163,8 @@ namespace mssql {
 		date.minute = static_cast<SQLUSMALLINT>((time % MS_PER_HOUR) / MS_PER_MINUTE);
 		date.second = (time % MS_PER_MINUTE) / MS_PER_SECOND;
 		date.fraction = (time % 1000) * NANOSECONDS_PER_MS;
-		date.timezone_hour = 0;
-		date.timezone_minute = 0;
+		date.timezone_hour = offset_minutes / 60;
+		date.timezone_minute = offset_minutes % 60;
 	}
 
 }   // namespace mssql
