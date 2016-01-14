@@ -31,6 +31,7 @@ namespace mssql
 			buffer(nullptr),
 			buffer_len(0),
 			param_type(SQL_PARAM_INPUT),
+			offset(0),
 			charvec_ptr(nullptr),
 			uint16vec_ptr(nullptr),
 			int32vec_ptr(nullptr),
@@ -73,6 +74,7 @@ namespace mssql
 			digits = other.digits;
 			buffer = other.buffer;
 			buffer_len = other.buffer_len;
+			offset = other.offset;
 
 			ReassignStorage(other);
 
@@ -103,6 +105,7 @@ namespace mssql
 		SQLPOINTER buffer;
 		SQLLEN buffer_len;
 		uint16_t param_type;
+		uint32_t offset;
 
 	private:
 
@@ -200,6 +203,7 @@ namespace mssql
 		void bindVarChar(const Local<Value> & pp);
 		void bindVarChar(const Local<Value> & p, int precision);
 		bool userBind(Local<Value> &p, Local<Value> &v);
+		void assignPrecision(Local<Object> &pv);
 
 		static Handle<Value> unbindNull();
 		Handle<Value> unbindString() const;

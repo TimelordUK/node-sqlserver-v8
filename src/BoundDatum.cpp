@@ -511,7 +511,7 @@ namespace mssql
 			// dates in JS are stored internally as ms count from Jan 1, 1970
 			double d = dateObject->NumberValue();
 			auto & ts = (*timestampoffsetvec_ptr)[0];
-			TimestampColumn sql_date(d);
+			TimestampColumn sql_date(d, 0, offset);
 			sql_date.ToTimestampOffset(ts);
 			indvec[0] = buffer_len;
 		}
@@ -853,6 +853,24 @@ namespace mssql
 		return bindDatumType(pval);
 	}
 
+	void BoundDatum::assignPrecision(Local<Object> &pv)
+	{
+		auto precision = get(pv, "precision");
+		if (!precision->IsUndefined()) {
+			param_size = precision->Int32Value();
+		}
+
+		auto scale = get(pv, "scale");
+		if (!scale->IsUndefined()) {
+			digits = scale->Int32Value();
+		}
+
+		auto off = get(pv, "offset");
+		if (!off->IsUndefined()) {
+			offset = off->Int32Value();
+		}
+	}
+
 	bool BoundDatum::userBind(Local<Value> &p, Local<Value> &v)
 	{
 		sql_type = v->Int32Value();
@@ -861,14 +879,7 @@ namespace mssql
 		auto pv = p->ToObject();
 		auto pp = get(pv, "value");
 
-		auto precision = get(pv, "precision");
-		if (!precision->IsUndefined()) {
-			param_size = precision->Int32Value();
-		}
-		auto scale = get(pv, "scale");
-		if (!scale->IsUndefined()) {
-			digits = scale->Int32Value();
-		}
+		assignPrecision(pv);
 
 		switch (sql_type)
 		{

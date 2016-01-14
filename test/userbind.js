@@ -90,6 +90,63 @@ suite('userbind', function () {
         assert.deepEqual(res, expected);
     }
 
+    test('user bind DateTimeOffset to sql type DateTimeOffset - provide offset of 60 minutes', function (test_done) {
+        var offset = 60;
+        var scale = 7;
+        var now = new Date();
+        var smalldt = new Date(Date.UTC(now.getUTCFullYear(),
+            now.getUTCMonth(),
+            now.getUTCDate(),
+            14,
+            0,
+            0,
+            0));
+
+        var expected = new Date(smalldt.getTime() - offset * 60000);
+
+        var params = {
+            query: 'declare @v DateTimeOffset = ?; select @v as v',
+            min: smalldt,
+            max: smalldt,
+            expected: [
+                expected,
+                expected
+            ],
+            setter: function (v) {
+                return sql.DateTimeOffset(v, scale, offset);
+            }
+        };
+        testUserBind(params, function (err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
+        });
+    });
+
+    test('user bind DateTimeOffset to sql type DateTimeOffset - no offset ', function (test_done) {
+        var now = new Date();
+        var smalldt = new Date(Date.UTC(now.getUTCFullYear(),
+            now.getUTCMonth(),
+            now.getUTCDate(),
+            14,
+            0,
+            0,
+            0));
+        var params = {
+            query: 'declare @v DateTimeOffset = ?; select @v as v',
+            min: smalldt,
+            max: smalldt,
+            setter: function (v) {
+                return sql.DateTimeOffset(v);
+            }
+        };
+        testUserBind(params, function (err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
+        });
+    });
+
     test('user bind SmallDateTime to sql type smalldatetime', function (test_done) {
         var now = new Date();
         var smalldt = new Date(Date.UTC(now.getUTCFullYear(),
