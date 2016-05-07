@@ -214,6 +214,9 @@ note if you wish to run the code through an IDE such as PHPStorm, the following 
 
 ## Known Issues
 
+Currently, the driver does not work correctly with Node version 6.1.  The library compiles OK but currently does not register correctly with
+Node.  This is still under investigation.  If anyone can help I would be very grateful.
+
 
 
 
