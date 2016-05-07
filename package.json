@@ -1,6 +1,6 @@
 {
   "name": "msnodesqlv8",
-  "description": "Microsoft Driver for Node.js for SQL Server compatible with Node 0.12 and stored procedure support",
+  "description": "Microsoft Driver for Node.js for SQL Server compatible with Node 0.14 / 4.4.3 and stored procedure support",
   "author": {
     "name": "Stephen James"
   },
@@ -12,7 +12,7 @@
       "name": "Stephen James"
     }
   ],
-  "version": "0.1.35",
+  "version": "0.1.36",
   "keywords": [
     "sql",
     "database",
