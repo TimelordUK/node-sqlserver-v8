@@ -8,7 +8,7 @@ This version includes stored procedure support and bulk insert/delete/amend for 
 1. supports input/output parameters.
 2. captures return code from stored procedure.
 3. will obtain meta data describing parameters.
-4. compatibe with Node 0.12.x/4.2.0
+4. compatibe with Node 0.12.x/4.3.0
 5. includes 64 bit/ia32 precompiled libraries.
 6. npm install with npm install msnodesqlv8
 7. new features to be made available over coming months.
@@ -21,6 +21,50 @@ This version includes stored procedure support and bulk insert/delete/amend for 
 Based on node-sqlserver, this version will compile in Visual Studio 2013/2015 and is built against the v8 node module API.  The module will work against node version 0.12.x. and >= 4.1.x.    Included in the repository are pre compiled binaries for both x64 and x86 targets.  
 
 Functionally the API should work exactly as the existing library. The existing unit tests pass based on Node 0.12 and also against Node 4.2.1.
+
+## Query Timeout
+
+send in a query object such as that shown below to set a timeout for a particular query.  Note usual semantics of using a sql string parameter will result in no timeout being set
+
+        open(function(conn) {
+            var queryObj = {
+                query_str : "waitfor delay \'00:00:10\';",
+                query_timeout : 2
+            };
+
+            conn.query(queryObj, function (err, res) {
+                assert(err != null);
+                assert(err.message.indexOf('Query timeout expired') > 0)
+                test_done();
+            });
+        });
+
+A timeout can also be used with a stored procedure call as follows :-
+
+        function go() {
+            var pm = c.procedureMgr();
+            pm.setTimeout(2);
+            pm.callproc(sp_name, ['0:0:5'], function(err, results, output) {
+                assert(err != null);
+                assert(err.message.indexOf('Query timeout expired') > 0)
+                test_done();
+            });
+        }
+
+## User Binding Of Parameters
+
+In many cases letting the driver decide on the parameter type is sufficient.  There are occasions however where more control is required. The API now includes some methods which explicitly set the type alongside the value.  The driver will in this case
+use the type as provided.  For example, to set column type as binary and pass in null value, use the sql.VarBinary as shown below.  There are more examples in test harness file userbind.js.
+
+     sql.open(connStr, function(err, conn) {
+         conn.query("declare @bin binary(4) = ?; select @bin as bin", [sql.VarBinary(null)], function (err, res) {
+             var expected = [ {
+                 'bin' : null
+             }];
+             assert.ifError(err);
+             assert.deepEqual(expected, res);
+         });
+     });
 
 ## Stored Procedure Support 
 

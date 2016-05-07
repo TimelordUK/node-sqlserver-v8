@@ -25,7 +25,7 @@ suite('querytimeout', function () {
                 console.error(err);
                 process.exit();
             }
-            ;
+
             done(conn);
         });
     };
@@ -36,7 +36,7 @@ suite('querytimeout', function () {
                 query_str : "waitfor delay \'00:00:10\';",
                 query_timeout : 2
             };
-            Error
+
             conn.query(queryObj, function (err, res) {
                 assert(err != null);
                 assert(err.message.indexOf('Query timeout expired') > 0)
@@ -51,7 +51,7 @@ suite('querytimeout', function () {
                 query_str : "waitfor delay \'00:00:2\';",
                 query_timeout : 10
             };
-            Error
+
             conn.query(queryObj, function (err, res) {
                 assert(err === null);
                 test_done();
@@ -60,12 +60,13 @@ suite('querytimeout', function () {
     });
 
     test('test timeout 0 secs on waitfor delay 4', function(test_done){
+
         open(function(conn) {
             var queryObj = {
                 query_str : "waitfor delay \'00:00:4\';",
                 query_timeout : 0
             };
-            Error
+
             conn.query(queryObj, function (err, res) {
                 assert(err === null);
                 test_done();
