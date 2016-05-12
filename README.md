@@ -8,7 +8,7 @@ This version includes stored procedure support and bulk insert/delete/amend for 
 1. supports input/output parameters.
 2. captures return code from stored procedure.
 3. will obtain meta data describing parameters.
-4. compatibe with Node 0.12.x/4.3.0
+4. compatibe with Node 0.12.x / 4.3.0 / 6.1.0
 5. includes 64 bit/ia32 precompiled libraries.
 6. npm install with npm install msnodesqlv8
 7. new features to be made available over coming months.
@@ -21,6 +21,10 @@ This version includes stored procedure support and bulk insert/delete/amend for 
 Based on node-sqlserver, this version will compile in Visual Studio 2013/2015 and is built against the v8 node module API.  The module will work against node version 0.12.x. and >= 4.1.x.    Included in the repository are pre compiled binaries for both x64 and x86 targets.  
 
 Functionally the API should work exactly as the existing library. The existing unit tests pass based on Node 0.12 and also against Node 4.2.1.
+
+## Node 6.1.0
+
+The library has been built against the latest Node 6.1 version.  The test cases pass OK, please take library for a spin. Note native libraries have been included, it should work out the box.
 
 ## Query Timeout
 
@@ -214,8 +218,7 @@ note if you wish to run the code through an IDE such as PHPStorm, the following 
 
 ## Known Issues
 
-Currently, the driver does not work correctly with Node version 6.1.  The library compiles OK but currently does not register correctly with
-Node.  This is still under investigation.  If anyone can help I would be very grateful.
+
 
 
 
