@@ -26,7 +26,8 @@ var database = 'scratch';
 var useTrustedConnection = false;
 //var conn_str = "Driver={" + driver + "};Server=" + server + ";" + (useTrustedConnection == true ? "Trusted_Connection={Yes};" : "UID=" + user + ";PWD=" + pwd + ";") + "Database={" + database + "};";
 
-var conn_str = "Driver={SQL Server Native Client 11.0};Server=np:\\\\.\\pipe\\LOCALDB#461318ED\\tsql\\query;Database={scratch};Trusted_Connection=Yes;";
+//var conn_str = "Driver={ODBC Driver 13 for SQL Server};Server=np:\\\\.\\pipe\\LOCALDB#52B903B5\\tsql\\query;Database={scratch};Trusted_Connection=Yes;";
+var conn_str = "Driver={SQL Server Native Client 11.0};Server=np:\\\\.\\pipe\\LOCALDB#87BD7C63\\tsql\\query;Database={scratch};Trusted_Connection=Yes;";
 
 // The following need to be exported for building connection strings within a test...
 exports.database = database;

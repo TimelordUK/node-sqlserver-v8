@@ -197,6 +197,39 @@ suite('sproc', function () {
             });
         }
     });
+
+    test('call proc that has 2 input params + 1 output', function (test_done) {
+
+        var sp_name = "test_sp_get_int_int";
+
+        var def = "alter PROCEDURE <name>"+
+            "(\n" +
+            "@num1 INT,\n" +
+            "@num2 INT,\n" +
+            "@num3 INT OUTPUT\n" +
+            "\n)" +
+            "AS\n" +
+            "BEGIN\n" +
+            "   SET @num3 = @num1 + @num2\n"+
+            "   RETURN 99;\n"+
+            "END\n";
+
+        def = def.replace(/<name>/g, sp_name);
+
+        testBoilerPlate(sp_name, def, go);
+
+        function go() {
+            var pm = c.procedureMgr();
+            pm.callproc(sp_name, [10, 5], function(err, results, output) {
+                var expected = [99, 15];
+                assert.deepEqual(output, expected, "results didn't match");
+                test_done();
+            });
+        }
+    });
+
+
+
 });
 
 

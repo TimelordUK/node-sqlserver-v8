@@ -1,3 +1,4 @@
+sproc.js
 userbind.js
 params.js
 querytimeout.js
@@ -9,4 +10,3 @@ txn.js
 datatypes.js
 dates.js
 compoundqueries.js
-sproc.js
