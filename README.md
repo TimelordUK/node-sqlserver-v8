@@ -26,6 +26,32 @@ Functionally the API should work exactly as the existing library. The existing u
 
 The library has been built against the latest Node 6.1 version.  The test cases pass OK, please take library for a spin. Note native libraries have been included, it should work out the box.
 
+## Connect Timeout
+
+send in a connect object to pass a timeout to the driver for connect request
+
+    function connect_timeout() {
+        var co = {
+            conn_str : connStr,
+            conn_timeout : 2
+        };
+        var start = new Date().getTime();
+        console.log ('connect ' + start);
+        sql.open(co, function(err, conn) {
+            var end = new Date().getTime();
+            var elapsed = end - start;
+            console.log ('callback ..... ' + elapsed );
+            if (err) {
+                console.log(err);
+                return;
+            }
+            var ts = new Date().getTime();
+            conn.query("declare @v time = ?; select @v as v", [sql.Time(ts)], function (err, res) {
+                assert.ifError(err);
+                console.log(res);
+            });
+        });
+
 ## Query Timeout
 
 send in a query object such as that shown below to set a timeout for a particular query.  Note usual semantics of using a sql string parameter will result in no timeout being set
