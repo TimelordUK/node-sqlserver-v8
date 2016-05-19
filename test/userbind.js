@@ -57,13 +57,19 @@ suite('userbind', function () {
                 },
 
                 function (async_done) {
-                    conn.query(params.query, [params.setter(null)], function (err, res) {
-                        if (err) {
-                            cb(err, res);
+                    if (params.hasOwnProperty('test_null')) {
+                        if (!params.test_null) {
+                            async_done();
                         }
-                        allres.push(res[0]);
-                        async_done();
-                    });
+                    }else {
+                        conn.query(params.query, [params.setter(null)], function (err, res) {
+                            if (err) {
+                                cb(err, res);
+                            }
+                            allres.push(res[0]);
+                            async_done();
+                        });
+                    }
                 },
 
                 function (async_done) {
@@ -83,12 +89,46 @@ suite('userbind', function () {
         var max = params.expected != null ? params.expected[1] : params.max;
         var expected = [
             {v: min},
-            {v: max},
-            {v: null}
+            {v: max}
         ];
+
+        var testNull = true;
+        if (params.hasOwnProperty('test_null')) {
+            testNull = params.test_null;
+        }
+
+        if (testNull) {
+            expected.push({
+                v : null
+            });
+        }
 
         assert.deepEqual(res, expected);
     }
+
+    test('user bind WLongVarChar to NVARCHAR(MAX)', function (test_done) {
+
+        String.prototype.repeat = function (num) {
+            return new Array(num + 1).join(this);
+        };
+        
+        var smallLen = 2200;
+        var largeLen = 8200;
+        var params = {
+            query : 'declare @v NVARCHAR(MAX) = ?; select @v as v',
+            min : "N".repeat(smallLen),
+            max : "X".repeat(largeLen),
+            test_null : false,
+            setter: function (v) {
+                return sql.WLongVarChar(v);
+            }
+        };
+        testUserBind(params, function (err, res) {
+            assert.ifError(err);
+            compare(params, res);
+            test_done();
+        });
+    });
 
     test('user bind DateTimeOffset to sql type DateTimeOffset - provide offset of 60 minutes', function (test_done) {
         var offset = 60;
@@ -442,7 +482,7 @@ suite('userbind', function () {
             max: 'world',
             expected: [
                 'h' + new Array(11).join(" "),
-                'wo'  + new Array(10).join(" ")
+                'wo' + new Array(10).join(" ")
             ],
             setter: function (v) {
                 return sql.Char(v, 2);

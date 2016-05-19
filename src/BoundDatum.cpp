@@ -53,6 +53,13 @@ namespace mssql
 		buffer = nullptr;
 	}
 
+	void BoundDatum::bindWLongVarChar(const Local<Value> & p)
+	{
+		bindWVarChar(p);
+		sql_type = SQL_WLONGVARCHAR;
+		param_size = buffer_len;
+	}
+
 	void BoundDatum::bindWVarChar(const Local<Value> & p)
 	{
 		auto str_param = p->ToString();
@@ -678,14 +685,12 @@ namespace mssql
 		}
 	}
 
-
-
 	bool BoundDatum::bindDatumType(Local<Value> & p)
 	{
 		if (p->IsNull()) {
 			bindNull(p);
 		}
-		else if (p->IsString()) {
+		else if (p->IsString()) {		
 			bindWVarChar(p);
 		}
 		else if (p->IsBoolean()) {
@@ -906,6 +911,10 @@ namespace mssql
 
 		case SQL_WVARCHAR:
 			bindWVarChar(pp);
+			break;
+
+		case SQL_WLONGVARCHAR:
+			bindWLongVarChar(pp);
 			break;
 
 		case SQL_BIT:

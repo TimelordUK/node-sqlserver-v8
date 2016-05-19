@@ -142,6 +142,7 @@ namespace mssql
 		void bindLongVarBinary(Local<Value> & p);
 		void bindVarBinary(Local<Value> & p);
 
+		void bindWLongVarChar(const Local<Value> & p);
 		void bindWVarChar(const Local<Value> & p);
 		void bindWVarChar(const Local<Value>& p, int str_len);
 		void bindStringArray(const Local<Value> & p);
