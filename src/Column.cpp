@@ -60,6 +60,21 @@ namespace mssql {
 		return floor(days);
 	}
 
+	void TimestampColumn::MillisecondsFromDate(TIMESTAMP_STRUCT const & ts)
+	{
+		SQL_SS_TIMESTAMPOFFSET_STRUCT timeStruct;
+		timeStruct.year = ts.year;
+		timeStruct.month = ts.month;
+		timeStruct.day = ts.day;
+		timeStruct.hour = ts.hour;
+		timeStruct.minute = ts.minute;
+		timeStruct.second = ts.second;
+		timeStruct.fraction = ts.fraction;
+		timeStruct.timezone_hour = 0;
+		timeStruct.timezone_minute = 0;
+		MillisecondsFromDate(timeStruct);
+	}
+
 	// derived from ECMA 262 15.9
 	void TimestampColumn::MillisecondsFromDate(SQL_SS_TIMESTAMPOFFSET_STRUCT const& timeStruct)
 	{

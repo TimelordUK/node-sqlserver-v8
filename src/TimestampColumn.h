@@ -21,6 +21,11 @@ namespace mssql
 			MillisecondsFromDate(timeStruct);
 		}
 
+		TimestampColumn(TIMESTAMP_STRUCT const& timeStruct)
+		{
+			MillisecondsFromDate(timeStruct);
+		}
+
 		TimestampColumn(double ms, int32_t delta, int32_t offset) :
 			milliseconds(ms),
 			nanoseconds_delta(delta),
@@ -85,6 +90,8 @@ namespace mssql
 
 									  // return the number of days since Jan 1, 1970
 		double DaysSinceEpoch(SQLSMALLINT y, SQLUSMALLINT m, SQLUSMALLINT d) const;
+
+		void MillisecondsFromDate(TIMESTAMP_STRUCT const & ts);
 
 		// derived from ECMA 262 15.9
 		void MillisecondsFromDate(SQL_SS_TIMESTAMPOFFSET_STRUCT const& timeStruct);

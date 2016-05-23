@@ -54,11 +54,13 @@ namespace mssql
 
 		void init();
 
+		bool d_Variant(int col);
 		bool d_String(int col);
 		bool d_Bit(int col);
 		bool d_Integer(int col);
 		bool d_Decimal(int col);
 		bool d_Binary(int col);
+		bool d_TimestampOffset(int col);
 		bool d_Timestamp(int col);
 		bool d_Time(int col);
 

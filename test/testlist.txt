@@ -1,8 +1,8 @@
+params.js
 query.js
 sproc.js
 bulk.js
 userbind.js
-params.js
 querytimeout.js
 concurrent.js
 connect.js

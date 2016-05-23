@@ -72,7 +72,7 @@ namespace mssql
 	{
 		/* Modify the fields in the implicit application parameter descriptor */
 		SQLHDESC   hdesc = nullptr;
-		
+
 		SQLGetStmtAttr(statement, SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, nullptr);
 		SQLSetDescField(hdesc, current_param, SQL_DESC_TYPE, reinterpret_cast<SQLPOINTER>(datum.c_type), 0);
 		SQLSetDescField(hdesc, current_param, SQL_DESC_PRECISION, reinterpret_cast<SQLPOINTER>(datum.param_size), 0);
@@ -90,7 +90,7 @@ namespace mssql
 		for (auto itr = params.begin(); itr != params.end(); ++itr) {
 			auto & datum = *itr;
 			auto r = SQLBindParameter(statement, current_param, datum.param_type, datum.c_type, datum.sql_type, datum.param_size, datum.digits, datum.buffer, datum.buffer_len, datum.getIndVec().data());
-			CHECK_ODBC_ERROR(r, statement);		
+			CHECK_ODBC_ERROR(r, statement);
 			if (datum.getDefinedPrecision()) {
 				applyPrecision(datum, current_param);
 			}
@@ -119,30 +119,31 @@ namespace mssql
 	{
 		SQLRETURN ret;
 
-		wchar_t typeName[1024];
+		const size_t l = 1024;
+		wchar_t typeName[l];
 		SQLSMALLINT typeNameLen;
 		auto index = column + 1;
-		ret = SQLColAttribute(statement, index, SQL_DESC_TYPE_NAME, typeName, 1024 * sizeof(wchar_t),
-			&typeNameLen, nullptr);
+		ret = SQLColAttribute(statement, index, SQL_DESC_TYPE_NAME, typeName, l * sizeof(wchar_t), &typeNameLen, nullptr);
 		CHECK_ODBC_ERROR(ret, statement);
 		current.dataTypeName = wstring(typeName, typeNameLen);
 
 		switch (current.dataType)
 		{
 		case SQL_SS_VARIANT:
-			SQLLEN variantType;
-			ret = SQLColAttribute(statement, index, SQL_CA_SS_VARIANT_TYPE, nullptr, NULL, nullptr, &variantType);
-			CHECK_ODBC_ERROR(ret, statement);
-			current.dataType = static_cast<SQLSMALLINT>(variantType);
-			break;
+		{
+			// dispatch as variant type which reads underlying column type and re-reads correctly.
+		}
+		break;
 
 		case SQL_SS_UDT:
-			wchar_t udtTypeName[1024];
+		{
+			wchar_t udtTypeName[l];
 			SQLSMALLINT udtTypeNameLen;
-			ret = SQLColAttribute(statement, index, SQL_CA_SS_UDT_TYPE_NAME, udtTypeName, 1024 * sizeof(wchar_t), &udtTypeNameLen, nullptr);
+			ret = SQLColAttribute(statement, index, SQL_CA_SS_UDT_TYPE_NAME, udtTypeName, l * sizeof(wchar_t), &udtTypeNameLen, nullptr);
 			CHECK_ODBC_ERROR(ret, statement);
 			current.udtTypeName = wstring(udtTypeName, udtTypeNameLen);
-			break;
+		}
+		break;
 
 		default:
 			break;
@@ -295,7 +296,7 @@ namespace mssql
 	{
 		//column = 0; // reset
 
-		SQLRETURN ret = SQLFetch(statement);
+		auto ret = SQLFetch(statement);
 		if (ret == SQL_NO_DATA)
 		{
 			resultset->endOfRows = true;
@@ -306,9 +307,10 @@ namespace mssql
 
 		return true;
 	}
-
+	
 	void OdbcConnection::init()
 	{
+		dispatchers.insert(getPair(SQL_SS_VARIANT, &OdbcConnection::d_Variant));
 		dispatchers.insert(getPair(SQL_CHAR, &OdbcConnection::d_String));
 		dispatchers.insert(getPair(SQL_VARCHAR, &OdbcConnection::d_String));
 		dispatchers.insert(getPair(SQL_LONGVARCHAR, &OdbcConnection::d_String));
@@ -319,7 +321,7 @@ namespace mssql
 		dispatchers.insert(getPair(SQL_GUID, &OdbcConnection::d_String));
 
 		dispatchers.insert(getPair(SQL_BIT, &OdbcConnection::d_Bit));
-
+	
 		dispatchers.insert(getPair(SQL_SMALLINT, &OdbcConnection::d_Integer));
 		dispatchers.insert(getPair(SQL_TINYINT, &OdbcConnection::d_Integer));
 		dispatchers.insert(getPair(SQL_INTEGER, &OdbcConnection::d_Integer));
@@ -336,12 +338,34 @@ namespace mssql
 		dispatchers.insert(getPair(SQL_LONGVARBINARY, &OdbcConnection::d_Binary));
 		dispatchers.insert(getPair(SQL_SS_UDT, &OdbcConnection::d_Binary));
 
-		dispatchers.insert(getPair(SQL_TYPE_TIMESTAMP, &OdbcConnection::d_Timestamp));
-		dispatchers.insert(getPair(SQL_TYPE_DATE, &OdbcConnection::d_Timestamp));
-		dispatchers.insert(getPair(SQL_SS_TIMESTAMPOFFSET, &OdbcConnection::d_Timestamp));
+		dispatchers.insert(getPair(SQL_TYPE_TIMESTAMP, &OdbcConnection::d_TimestampOffset));
+		dispatchers.insert(getPair(SQL_TYPE_DATE, &OdbcConnection::d_TimestampOffset));
+		dispatchers.insert(getPair(SQL_SS_TIMESTAMPOFFSET, &OdbcConnection::d_TimestampOffset));
 
 		dispatchers.insert(getPair(SQL_TYPE_TIME, &OdbcConnection::d_Time));
 		dispatchers.insert(getPair(SQL_SS_TIME2, &OdbcConnection::d_Time));
+
+		// variant header underlying type
+		dispatchers.insert(getPair(-16, &OdbcConnection::d_Integer));
+		dispatchers.insert(getPair(SQL_TIMESTAMP, &OdbcConnection::d_Timestamp));
+		dispatchers.insert(getPair(SQL_DATETIME, &OdbcConnection::d_Timestamp));
+	}
+
+	bool OdbcConnection::d_Variant(int column)
+	{		
+		SQLLEN variantType;
+		SQLLEN iv;
+		char b;
+		auto ret = SQLGetData(statement, column + 1, SQL_C_BINARY, &b, 0, &iv);//Figure out the length
+		CHECK_ODBC_ERROR(ret, statement);
+		//Figure out the type
+		ret = SQLColAttribute(statement, column + 1, SQL_CA_SS_VARIANT_TYPE, nullptr, NULL, nullptr, &variantType);
+		CHECK_ODBC_ERROR(ret, statement);
+		// set the definiton to actual data underlying data type.
+		auto & definition = resultset->GetMetadata(column);
+		definition.dataType = static_cast<SQLSMALLINT>(variantType);
+		auto r = TryReadColumn(column);
+		return r;
 	}
 
 	bool OdbcConnection::d_Time(int column)
@@ -350,8 +374,7 @@ namespace mssql
 		SQL_SS_TIME2_STRUCT time;
 		memset(&time, 0, sizeof(time));
 
-		SQLRETURN ret = SQLGetData(statement, column + 1, SQL_C_DEFAULT, &time, sizeof(time),
-			&strLen_or_IndPtr);
+		auto ret = SQLGetData(statement, column + 1, SQL_C_DEFAULT, &time, sizeof(time), &strLen_or_IndPtr);
 		CHECK_ODBC_ERROR(ret, statement);
 		if (strLen_or_IndPtr == SQL_NULL_DATA)
 		{
@@ -373,14 +396,13 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcConnection::d_Timestamp(int column)
+	bool OdbcConnection::d_TimestampOffset(int column)
 	{
 		SQLLEN strLen_or_IndPtr;
 		SQL_SS_TIMESTAMPOFFSET_STRUCT datetime;
 		memset(&datetime, 0, sizeof(datetime));
 
-		SQLRETURN ret = SQLGetData(statement, column + 1, SQL_C_DEFAULT, &datetime, sizeof(datetime),
-			&strLen_or_IndPtr);
+		auto ret = SQLGetData(statement, column + 1, SQL_C_DEFAULT, &datetime, sizeof(datetime),&strLen_or_IndPtr);
 		CHECK_ODBC_ERROR(ret, statement);
 		if (strLen_or_IndPtr == SQL_NULL_DATA)
 		{
@@ -389,6 +411,23 @@ namespace mssql
 		}
 
 		resultset->SetColumn(make_shared<TimestampColumn>(datetime));
+
+		return true;
+	}
+
+	bool OdbcConnection::d_Timestamp(int column)
+	{
+		TIMESTAMP_STRUCT ts;
+		SQLLEN strLen_or_IndPtr;
+		auto ret = SQLGetData(statement, column + 1, SQL_C_TIMESTAMP, &ts, sizeof(ts), &strLen_or_IndPtr);
+		CHECK_ODBC_ERROR(ret, statement);
+		if (strLen_or_IndPtr == SQL_NULL_DATA)
+		{
+			resultset->SetColumn(make_shared<NullColumn>());
+			return true; // break
+		}
+
+		resultset->SetColumn(make_shared<TimestampColumn>(ts));
 
 		return true;
 	}
@@ -490,14 +529,13 @@ namespace mssql
 	bool OdbcConnection::TryReadColumn(int column)
 	{
 		assert(column >= 0 && column < resultset->GetColumns());
-		auto definition = resultset->GetMetadata(column);
+		auto & definition = resultset->GetMetadata(column);
 		auto r = dispatchers.find(definition.dataType);
 		if (r != dispatchers.end())
 		{
 			return (this->*r->second)(column);
 		}
-
-		return false;
+		return d_String(column);
 	}
 
 	bool OdbcConnection::Lob(SQLLEN display_size, int column)

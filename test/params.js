@@ -112,6 +112,130 @@ suite('params', function () {
         });
     });
 
+    test('verify bool (true) to sql_variant', function(test_done) {
+        sql.open(conn_str, function (err, conn) {
+            conn.query("select cast(CAST('TRUE' as bit) as sql_variant) as data;", function (err, res) {
+                assert.ifError(err);
+                var expected = [{
+                    data: true
+                }];
+                assert.deepEqual(expected, res);
+                test_done();
+            });
+        });
+    });
+
+    test('verify bool (false) to sql_variant', function(test_done) {
+        sql.open(conn_str, function (err, conn) {
+            conn.query("select cast(CAST('FALSE' as bit) as sql_variant) as data;", function (err, res) {
+                assert.ifError(err);
+                var expected = [{
+                    data: false
+                }];
+                assert.deepEqual(expected, res);
+                test_done();
+            });
+        });
+    });
+
+    test('verify varchar to sql_variant', function(test_done) {
+        sql.open(conn_str, function (err, conn) {
+            conn.query("select cast('hello' as sql_variant) as data;", function (err, res) {
+                assert.ifError(err);
+                var expected = [{
+                    data: 'hello'
+                }];
+                assert.deepEqual(expected, res);
+                test_done();
+            });
+        });
+    });
+
+    test('verify numeric decimal to sql_variant', function(test_done) {
+        sql.open(conn_str, function (err, conn) {
+            conn.query("select cast(11.77 as sql_variant) as data;", function (err, res) {
+                assert.ifError(err);
+                var expected = [{
+                    data: 11.77
+                }];
+                assert.deepEqual(expected, res);
+                test_done();
+            });
+        });
+    });
+
+    test('verify int to sql_variant', function(test_done) {
+        sql.open(conn_str, function (err, conn) {
+            conn.query("select cast(10000 as sql_variant) as data;", function (err, res) {
+                assert.ifError(err);
+                var expected = [{
+                    data: 10000
+                }];
+                assert.deepEqual(expected, res);
+                test_done();
+            });
+        });
+    });
+
+    function toUTC(date) {
+        return new Date(Date.UTC(date.getUTCFullYear(),
+            date.getUTCMonth(),
+            date.getUTCDate(),
+            date.getUTCHours(),
+            0,
+            0,
+            0));
+    }
+
+    test('verify getdate (date) to sql_variant', function(test_done) {
+
+        sql.open(conn_str, function (err, conn) {
+            conn.query("select cast(convert(date, getdate()) as sql_variant) as data", function (err, res) {
+                assert.ifError(err);
+                var date = res[0].data;
+                assert(date instanceof Date);
+                date = toUTC(date);
+                var now = new Date();
+                var smalldt = toUTC(now);
+
+                assert(smalldt.getYear() == date.getYear());
+                assert(smalldt.getMonth() == date.getMonth());
+                assert(smalldt.getDay() == date.getDay());
+                test_done();
+            });
+        });
+    });
+
+    test('verify getdate (datetime) to sql_variant', function(test_done) {
+
+        sql.open(conn_str, function (err, conn) {
+            conn.query("select getdate() as data;", function (err, res) {
+                assert.ifError(err);
+                var date = res[0].data;
+                assert(date instanceof Date);
+                date = toUTC(date);
+                var now = new Date();
+                var smalldt = toUTC(now);
+
+                assert(smalldt.getYear() == date.getYear());
+                assert(smalldt.getMonth() == date.getMonth());
+                assert(smalldt.getDay() == date.getDay());
+                test_done();
+            });
+        });
+    });
+
+    test('verify getdate to sql_variant', function(test_done) {
+        sql.open(conn_str, function (err, conn) {
+            conn.query("select getdate() as data;", function (err, res) {
+                assert.ifError(err);
+                var date = res[0].data;
+                assert(date instanceof Date);
+                test_done();
+            });
+        });
+    });
+
     test('insert null as parameter', function (test_done) {
 
         testBoilerPlate(
@@ -848,6 +972,7 @@ suite('params', function () {
         });
     });
 
+    /*
     test('verify sql_variant correctly translated', function(test_done) {
         sql.open(conn_str, function (err, conn) {
             conn.query("select cast(11 as sql_variant) as data;", [null], function(err, res) {
@@ -859,7 +984,7 @@ suite('params', function () {
                 test_done();
             });
         });
-    });
+    });*/
 
     test('bind a null to binary using sqlTypes.asVarBinary(null)', function(test_done) {
         sql.open(conn_str, function(err, conn) {
