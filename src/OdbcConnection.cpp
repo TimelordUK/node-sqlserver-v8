@@ -346,7 +346,14 @@ namespace mssql
 		dispatchers.insert(getPair(SQL_SS_TIME2, &OdbcConnection::d_Time));
 
 		// variant header underlying type
-		dispatchers.insert(getPair(-16, &OdbcConnection::d_Integer));
+
+		dispatchers.insert(getPair(SQL_C_SLONG, &OdbcConnection::d_Integer));
+		dispatchers.insert(getPair(SQL_C_SSHORT, &OdbcConnection::d_Integer));
+		dispatchers.insert(getPair(SQL_C_STINYINT, &OdbcConnection::d_Integer));
+		dispatchers.insert(getPair(SQL_C_ULONG, &OdbcConnection::d_Integer));
+		dispatchers.insert(getPair(SQL_C_USHORT, &OdbcConnection::d_Integer));
+		dispatchers.insert(getPair(SQL_C_UTINYINT, &OdbcConnection::d_Integer));
+
 		dispatchers.insert(getPair(SQL_TIMESTAMP, &OdbcConnection::d_Timestamp));
 		dispatchers.insert(getPair(SQL_DATETIME, &OdbcConnection::d_Timestamp));
 	}
