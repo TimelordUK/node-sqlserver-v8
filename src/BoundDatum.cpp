@@ -2,7 +2,7 @@
 #include "BoundDatum.h"
 #include <TimestampColumn.h>
 #include <limits>
-#include<algorithm>
+#include <algorithm>
 
 namespace mssql
 {
@@ -89,12 +89,12 @@ namespace mssql
 		indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull()) {
 			auto str_param = p->ToString();
-			charvec_ptr = make_shared<vector<char>>(precision);
+			charvec_ptr = make_shared<vector<char>>(std::max(1, precision));
 			auto * itr_p = charvec_ptr->data();
 			buffer = itr_p;
 			str_param->WriteUtf8(itr_p, precision);
 			buffer_len = precision;
-			param_size = 0;
+			param_size = std::max(buffer_len, static_cast<SQLLEN>(1));
 			indvec[0] = precision;
 		}
 	}
@@ -109,12 +109,19 @@ namespace mssql
 		indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull()) {
 			auto str_param = p->ToString();
-			uint16vec_ptr = make_shared<vector<uint16_t>>(precision);
+			uint16vec_ptr = make_shared<vector<uint16_t>>(std::max(1, precision));
 			auto first_p = uint16vec_ptr->data();
 			buffer = first_p;
 			str_param->Write(first_p, 0, precision);
 			buffer_len = precision * sizeof(uint16_t);
-			param_size = precision <= 4000 ? buffer_len : 0;
+			if (precision > 4000)
+			{
+				param_size = 0;
+			}else
+			{
+				param_size = std::max(buffer_len, static_cast<SQLLEN>(1));
+			}
+			
 			indvec[0] = buffer_len;
 		}
 	}

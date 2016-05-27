@@ -112,6 +112,32 @@ suite('params', function () {
         });
     });
 
+    test('verify empty string is sent as empty string, not null', function(test_done) {
+        sql.open(conn_str, function (err, conn) {
+            conn.query("declare @s NVARCHAR(MAX) = ?; select @s as data", [''], function (err, res) {
+                assert.ifError(err);
+                var expected = [{
+                    data: ''
+                }];
+                assert.deepEqual(expected, res);
+                test_done();
+            });
+        });
+    });
+
+    test('verify null string is sent as null, not empty string', function(test_done) {
+        sql.open(conn_str, function (err, conn) {
+            conn.query("declare @s NVARCHAR(MAX) = ?; select @s as data", [null], function (err, res) {
+                assert.ifError(err);
+                var expected = [{
+                    data: null
+                }];
+                assert.deepEqual(expected, res);
+                test_done();
+            });
+        });
+    });
+
     test('verify bool (true) to sql_variant', function(test_done) {
         sql.open(conn_str, function (err, conn) {
             conn.query("select cast(CAST('TRUE' as bit) as sql_variant) as data;", function (err, res) {
@@ -181,7 +207,7 @@ suite('params', function () {
         return new Date(Date.UTC(date.getUTCFullYear(),
             date.getUTCMonth(),
             date.getUTCDate(),
-            date.getUTCHours(),
+            0,
             0,
             0,
             0));
