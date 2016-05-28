@@ -138,6 +138,19 @@ suite('params', function () {
         });
     });
 
+    test('verify single char string param', function(test_done) {
+        sql.open(conn_str, function (err, conn) {
+            conn.query("declare @s NVARCHAR(MAX) = ?; select @s as data", ['p'], function (err, res) {
+                assert.ifError(err);
+                var expected = [{
+                    data: 'p'
+                }];
+                assert.deepEqual(expected, res);
+                test_done();
+            });
+        });
+    });
+
     test('verify bool (true) to sql_variant', function(test_done) {
         sql.open(conn_str, function (err, conn) {
             conn.query("select cast(CAST('TRUE' as bit) as sql_variant) as data;", function (err, res) {
