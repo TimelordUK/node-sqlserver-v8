@@ -40,6 +40,7 @@ namespace mssql
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "nextResult", ReadNextResult);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "callProcedure", CallProcedure);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "unbind", Unbind);
+	   NODE_SET_PROTOTYPE_METHOD(tpl, "prepare", Prepare);
     }
 
     void Connection::Initialize(Handle<Object> exports)
@@ -150,6 +151,16 @@ namespace mssql
 	   auto ret = connection->innerConnection->ReadRow(cb);
 	   info.GetReturnValue().Set(ret);
     }
+
+	void Connection::Prepare(const FunctionCallbackInfo<Value>& info)
+	{
+		auto queryObject = info[0].As<Object>();
+		auto callback = info[1].As<Object>();
+
+		auto connection = Unwrap<Connection>(info.This());
+		auto ret = connection->innerConnection->Prepare(queryObject, callback);
+		info.GetReturnValue().Set(ret);
+	}
 
     void Connection::ReadColumn(const FunctionCallbackInfo<Value>& info)
     {

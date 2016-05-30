@@ -128,6 +128,15 @@ namespace mssql
 		ProcedureOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int id, u_int timeout, Handle<Object> callback);
 	};
 
+	class PrepareOperation : public QueryOperation
+	{
+	public:
+		PrepareOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int id, u_int timeout, Handle<Object> callback);
+		bool TryInvokeOdbc() override;
+
+		Local<Value> CreateCompletionArg() override;
+	};
+
 	class ReadRowOperation : public OdbcOperation
 	{
 	public:

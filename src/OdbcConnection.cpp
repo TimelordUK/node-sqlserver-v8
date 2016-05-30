@@ -160,7 +160,7 @@ namespace mssql
 		ret = SQLDescribeCol(statement, index, nullptr, 0, &nameLength, nullptr, nullptr, nullptr, nullptr);
 		CHECK_ODBC_ERROR(ret, statement);
 
-		ResultSet::ColumnDefinition& current = resultset->GetMetadata(column);
+		auto & current = resultset->GetMetadata(column);
 		vector<wchar_t> buffer(nameLength + 1);
 		ret = SQLDescribeCol(statement, index, buffer.data(), nameLength + 1, &nameLength, &current.dataType, &current.columnSize, &current.decimalDigits, &current.nullable);
 		CHECK_ODBC_ERROR(ret, statement);
@@ -218,10 +218,11 @@ namespace mssql
 		SQLRETURN ret;
 		if (timeout > 0)
 		{
-			ret = SQLSetConnectAttr(connection, SQL_ATTR_CONNECTION_TIMEOUT, reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout)), 0);
+			SQLPOINTER to = reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout));
+			ret = SQLSetConnectAttr(connection, SQL_ATTR_CONNECTION_TIMEOUT, to, 0);
 			CHECK_ODBC_ERROR(ret, connection);
 
-			ret = SQLSetConnectAttr(connection, SQL_ATTR_LOGIN_TIMEOUT, reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout)), 0);
+			ret = SQLSetConnectAttr(connection, SQL_ATTR_LOGIN_TIMEOUT, to, 0);
 			CHECK_ODBC_ERROR(ret, connection);
 		}
 		return true;
@@ -240,8 +241,9 @@ namespace mssql
 
 		ret = openTimeout(timeout);
 		CHECK_ODBC_ERROR(ret, connection);
-
-		ret = SQLDriverConnect(connection, nullptr, const_cast<wchar_t*>(connectionString.c_str()), static_cast<SQLSMALLINT>(connectionString.length()), nullptr, 0, nullptr, SQL_DRIVER_NOPROMPT);
+		SQLWCHAR * conn_str = const_cast<wchar_t *>(connectionString.c_str());
+		SQLSMALLINT len = static_cast<SQLSMALLINT>(connectionString.length());
+		ret = SQLDriverConnect(connection, nullptr, conn_str, len, nullptr, 0, nullptr, SQL_DRIVER_NOPROMPT);
 		CHECK_ODBC_ERROR(ret, connection);
 
 		connectionState = Open;
@@ -252,15 +254,16 @@ namespace mssql
 	{
 		SQLRETURN ret;
 		if (timeout > 0) {
-			ret = SQLSetStmtAttr(statement, SQL_QUERY_TIMEOUT, reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout)), SQL_IS_UINTEGER);
+			SQLPOINTER to = reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout));
+			ret = SQLSetStmtAttr(statement, SQL_QUERY_TIMEOUT, to, SQL_IS_UINTEGER);
 			CHECK_ODBC_ERROR(ret, connection);
-			SQLSetStmtAttr(statement, SQL_ATTR_QUERY_TIMEOUT, reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout)), SQL_IS_UINTEGER);
+			SQLSetStmtAttr(statement, SQL_ATTR_QUERY_TIMEOUT, to, SQL_IS_UINTEGER);
 			CHECK_ODBC_ERROR(ret, connection);
 		}
 		return true;
 	}
 
-	bool OdbcConnection::TryExecute(const wstring& query, u_int timeout, BoundDatumSet& paramIt)
+	bool OdbcConnection::TryExecute(const wstring& query, u_int timeout, BoundDatumSet& params)
 	{
 		assert(connectionState == Open);
 
@@ -271,7 +274,7 @@ namespace mssql
 			if (!statement.Alloc(connection)) { RETURN_ODBC_ERROR(connection); }
 		}
 
-		bool bound = BindParams(paramIt);
+		bool bound = BindParams(params);
 		if (!bound) {
 			// error already set in BindParams
 			return false;
@@ -281,7 +284,8 @@ namespace mssql
 		SQLRETURN ret = queryTimeout(timeout);
 		CHECK_ODBC_ERROR(ret, connection);
 
-		ret = SQLExecDirect(statement, const_cast<wchar_t*>(query.c_str()), SQL_NTS);
+		SQLWCHAR * sql_str = const_cast<wchar_t *>(query.c_str());
+		ret = SQLExecDirect(statement, sql_str, SQL_NTS);
 		if (ret != SQL_NO_DATA && !SQL_SUCCEEDED(ret))
 		{
 			resultset = make_shared<ResultSet>(0);
@@ -308,54 +312,80 @@ namespace mssql
 		return true;
 	}
 	
-	void OdbcConnection::init()
+	bool OdbcConnection::dispatch(SQLSMALLINT t, int column)
 	{
-		dispatchers.insert(getPair(SQL_SS_VARIANT, &OdbcConnection::d_Variant));
-		dispatchers.insert(getPair(SQL_CHAR, &OdbcConnection::d_String));
-		dispatchers.insert(getPair(SQL_VARCHAR, &OdbcConnection::d_String));
-		dispatchers.insert(getPair(SQL_LONGVARCHAR, &OdbcConnection::d_String));
-		dispatchers.insert(getPair(SQL_WCHAR, &OdbcConnection::d_String));
-		dispatchers.insert(getPair(SQL_WVARCHAR, &OdbcConnection::d_String));
-		dispatchers.insert(getPair(SQL_WLONGVARCHAR, &OdbcConnection::d_String));
-		dispatchers.insert(getPair(SQL_SS_XML, &OdbcConnection::d_String));
-		dispatchers.insert(getPair(SQL_GUID, &OdbcConnection::d_String));
+		bool res;
+		switch (t)
+		{
+		case SQL_SS_VARIANT:
+			res = d_Variant(column);
+			break;
 
-		dispatchers.insert(getPair(SQL_BIT, &OdbcConnection::d_Bit));
-	
-		dispatchers.insert(getPair(SQL_SMALLINT, &OdbcConnection::d_Integer));
-		dispatchers.insert(getPair(SQL_TINYINT, &OdbcConnection::d_Integer));
-		dispatchers.insert(getPair(SQL_INTEGER, &OdbcConnection::d_Integer));
+		case SQL_CHAR:
+		case SQL_VARCHAR:
+		case SQL_LONGVARCHAR:
+		case SQL_WCHAR:
+		case SQL_WVARCHAR:
+		case SQL_WLONGVARCHAR:
+		case SQL_SS_XML:
+		case SQL_GUID:
+			res = d_String(column);
+			break;
 
-		dispatchers.insert(getPair(SQL_DECIMAL, &OdbcConnection::d_Decimal));
-		dispatchers.insert(getPair(SQL_NUMERIC, &OdbcConnection::d_Decimal));
-		dispatchers.insert(getPair(SQL_REAL, &OdbcConnection::d_Decimal));
-		dispatchers.insert(getPair(SQL_FLOAT, &OdbcConnection::d_Decimal));
-		dispatchers.insert(getPair(SQL_DOUBLE, &OdbcConnection::d_Decimal));
-		dispatchers.insert(getPair(SQL_BIGINT, &OdbcConnection::d_Decimal));
+		case SQL_BIT:
+			res = d_Bit(column);
+			break;
 
-		dispatchers.insert(getPair(SQL_BINARY, &OdbcConnection::d_Binary));
-		dispatchers.insert(getPair(SQL_VARBINARY, &OdbcConnection::d_Binary));
-		dispatchers.insert(getPair(SQL_LONGVARBINARY, &OdbcConnection::d_Binary));
-		dispatchers.insert(getPair(SQL_SS_UDT, &OdbcConnection::d_Binary));
+		case SQL_SMALLINT:
+		case SQL_TINYINT:
+		case SQL_INTEGER:
+		case SQL_C_SLONG:
+		case SQL_C_SSHORT:
+		case SQL_C_STINYINT:
+		case SQL_C_ULONG:
+		case SQL_C_USHORT:
+		case SQL_C_UTINYINT:
+			res = d_Integer(column);
+			break;
 
-		dispatchers.insert(getPair(SQL_TYPE_TIMESTAMP, &OdbcConnection::d_TimestampOffset));
-		dispatchers.insert(getPair(SQL_TYPE_DATE, &OdbcConnection::d_TimestampOffset));
-		dispatchers.insert(getPair(SQL_SS_TIMESTAMPOFFSET, &OdbcConnection::d_TimestampOffset));
+		case SQL_DECIMAL:
+		case SQL_NUMERIC:
+		case SQL_REAL:
+		case SQL_FLOAT:
+		case SQL_DOUBLE:
+		case SQL_BIGINT:
+			res = d_Decimal(column);
+			break;
 
-		dispatchers.insert(getPair(SQL_TYPE_TIME, &OdbcConnection::d_Time));
-		dispatchers.insert(getPair(SQL_SS_TIME2, &OdbcConnection::d_Time));
+		case SQL_BINARY:
+		case SQL_VARBINARY:
+		case SQL_LONGVARBINARY:
+		case SQL_SS_UDT:
+			res = d_Binary(column);
+			break;
 
-		// variant header underlying type
+		case SQL_TYPE_TIMESTAMP:
+		case SQL_TYPE_DATE:
+		case SQL_SS_TIMESTAMPOFFSET:
+			res = d_TimestampOffset(column);
+			break;
 
-		dispatchers.insert(getPair(SQL_C_SLONG, &OdbcConnection::d_Integer));
-		dispatchers.insert(getPair(SQL_C_SSHORT, &OdbcConnection::d_Integer));
-		dispatchers.insert(getPair(SQL_C_STINYINT, &OdbcConnection::d_Integer));
-		dispatchers.insert(getPair(SQL_C_ULONG, &OdbcConnection::d_Integer));
-		dispatchers.insert(getPair(SQL_C_USHORT, &OdbcConnection::d_Integer));
-		dispatchers.insert(getPair(SQL_C_UTINYINT, &OdbcConnection::d_Integer));
+		case SQL_TYPE_TIME:
+		case SQL_SS_TIME2:
+			res = d_Time(column);
+			break;
 
-		dispatchers.insert(getPair(SQL_TIMESTAMP, &OdbcConnection::d_Timestamp));
-		dispatchers.insert(getPair(SQL_DATETIME, &OdbcConnection::d_Timestamp));
+		case SQL_TIMESTAMP:
+		case SQL_DATETIME:
+			res = d_Timestamp(column);
+			break;
+
+		default:
+			res = d_String(column);
+			break;
+		}
+
+		return res;
 	}
 
 	bool OdbcConnection::d_Variant(int column)
@@ -409,7 +439,7 @@ namespace mssql
 		SQL_SS_TIMESTAMPOFFSET_STRUCT datetime;
 		memset(&datetime, 0, sizeof(datetime));
 
-		auto ret = SQLGetData(statement, column + 1, SQL_C_DEFAULT, &datetime, sizeof(datetime),&strLen_or_IndPtr);
+		auto ret = SQLGetData(statement, column + 1, SQL_C_DEFAULT, &datetime, sizeof(datetime), &strLen_or_IndPtr);
 		CHECK_ODBC_ERROR(ret, statement);
 		if (strLen_or_IndPtr == SQL_NULL_DATA)
 		{
@@ -536,13 +566,8 @@ namespace mssql
 	bool OdbcConnection::TryReadColumn(int column)
 	{
 		assert(column >= 0 && column < resultset->GetColumns());
-		auto & definition = resultset->GetMetadata(column);
-		auto r = dispatchers.find(definition.dataType);
-		if (r != dispatchers.end())
-		{
-			return (this->*r->second)(column);
-		}
-		return d_String(column);
+		const auto & definition = resultset->GetMetadata(column);
+		return dispatch(definition.dataType, column);
 	}
 
 	bool OdbcConnection::Lob(SQLLEN display_size, int column)
@@ -553,8 +578,9 @@ namespace mssql
 
 		value_len = LOB_PACKET_SIZE + 1;
 		auto value = make_unique<StringColumn::StringValue>(value_len);
+		size_t size = sizeof(StringColumn::StringValue::value_type);
 
-		r = SQLGetData(statement, column + 1, SQL_C_WCHAR, value->data(), value_len * sizeof(StringColumn::StringValue::value_type), &value_len);
+		r = SQLGetData(statement, column + 1, SQL_C_WCHAR, value->data(), value_len * size, &value_len);
 
 		CHECK_ODBC_NO_DATA(r, statement);
 		CHECK_ODBC_ERROR(r, statement);
@@ -565,13 +591,13 @@ namespace mssql
 		}
 
 		// an unknown amount is left on the field so no total was returned
-		if (value_len == SQL_NO_TOTAL || value_len / sizeof(StringColumn::StringValue::value_type) > LOB_PACKET_SIZE) {
+		if (value_len == SQL_NO_TOTAL || value_len / size > LOB_PACKET_SIZE) {
 			more = true;
 			value->resize(LOB_PACKET_SIZE);
 		}
 		else {
 			// value_len is in bytes
-			value->resize(value_len / sizeof(StringColumn::StringValue::value_type));
+			value->resize(value_len / size);
 			more = false;
 		}
 
@@ -582,14 +608,14 @@ namespace mssql
 	bool OdbcConnection::boundedString(SQLLEN display_size, int column)
 	{
 		unique_ptr<StringColumn::StringValue> value(new StringColumn::StringValue());
+		size_t size = sizeof(StringColumn::StringValue::value_type);
 		SQLLEN value_len = 0;
 		SQLRETURN r;
 
 		display_size++;                 // increment for null terminator
 		value->resize(display_size);
 
-		r = SQLGetData(statement, column + 1, SQL_C_WCHAR, value->data(), display_size *
-			sizeof(StringColumn::StringValue::value_type), &value_len);
+		r = SQLGetData(statement, column + 1, SQL_C_WCHAR, value->data(), display_size * size, &value_len);
 		CHECK_ODBC_ERROR(r, statement);
 		CHECK_ODBC_NO_DATA(r, statement);
 
@@ -599,7 +625,7 @@ namespace mssql
 		}
 
 		assert(value_len % 2 == 0);   // should always be even
-		value_len /= sizeof(StringColumn::StringValue::value_type);
+		value_len /= size;
 
 		assert(value_len >= 0 && value_len <= display_size - 1);
 		value->resize(value_len);
@@ -651,7 +677,8 @@ namespace mssql
 	bool OdbcConnection::TryBeginTran(void)
 	{
 		// turn off autocommit
-		auto ret = SQLSetConnectAttr(connection, SQL_ATTR_AUTOCOMMIT, reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_OFF), SQL_IS_UINTEGER);
+		SQLPOINTER acoff = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_OFF);
+		auto ret = SQLSetConnectAttr(connection, SQL_ATTR_AUTOCOMMIT, acoff, SQL_IS_UINTEGER);
 		CHECK_ODBC_ERROR(ret, connection);
 
 		return true;
@@ -661,9 +688,9 @@ namespace mssql
 	{
 		auto ret = SQLEndTran(SQL_HANDLE_DBC, connection, completionType);
 		CHECK_ODBC_ERROR(ret, connection);
-
+		SQLPOINTER acon = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_ON);
 		// put the connection back into auto commit mode
-		ret = SQLSetConnectAttr(connection, SQL_ATTR_AUTOCOMMIT, reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_ON), SQL_IS_UINTEGER);
+		ret = SQLSetConnectAttr(connection, SQL_ATTR_AUTOCOMMIT, acon, SQL_IS_UINTEGER);
 		CHECK_ODBC_ERROR(ret, connection);
 
 		return true;

@@ -46,13 +46,11 @@ namespace mssql
 		// any error that occurs when a Try* function returns false is stored here
 		// and may be retrieved via the Error function below.
 		shared_ptr<OdbcError> error;
-		typedef map<SQLSMALLINT, dispatcher_p> dispatcher_map;
-		dispatcher_map dispatchers;
 
 		typedef map<PTR, size_t> buffer_map;
 		buffer_map buffers;
 
-		void init();
+		bool dispatch(SQLSMALLINT t, int column);
 
 		bool d_Variant(int col);
 		bool d_String(int col);
@@ -94,7 +92,6 @@ namespace mssql
 			connectionState(Closed),
 			endOfResults(true)
 		{
-			init();
 		}
 
 		static bool InitializeEnvironment();

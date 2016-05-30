@@ -762,7 +762,12 @@ namespace mssql
 	{
 		auto str = getH(p, "type_id");
 		auto v = FromV8String(str);
-		bool res = v == L"numeric" || v == L"decimal" || v == L"smallmoney" || v == L"money" || v == L"float" || v == L"real";
+		bool res = v == L"numeric" 
+			|| v == L"decimal" 
+			|| v == L"smallmoney" 
+			|| v == L"money" 
+			|| v == L"float" 
+			|| v == L"real";
 		return res;
 	}
 
@@ -778,7 +783,9 @@ namespace mssql
 	{
 		auto str = getH(p, "type_id");
 		auto v = FromV8String(str);
-		bool res = v == L"smallint" || v == L"int" || v == L"tinyint";
+		bool res = v == L"smallint" 
+			|| v == L"int" 
+			|| v == L"tinyint";
 		return res;
 	}
 
@@ -786,7 +793,9 @@ namespace mssql
 	{
 		auto str = getH(p, "type_id");
 		auto v = FromV8String(str);
-		bool res = v == L"char" || v == L"text" || v == L"varchar";
+		bool res = v == L"char" 
+			|| v == L"text" 
+			|| v == L"varchar";
 		return res;
 	}
 
@@ -802,7 +811,12 @@ namespace mssql
 	{
 		auto str = getH(p, "type_id");
 		auto v = FromV8String(str);
-		bool res = v == L"date" || v == L"datetimeoffset" || v == L"datetime2" || v == L"smalldatetime" || v == L"datetime" || v == L"time";
+		bool res = v == L"date" 
+			|| v == L"datetimeoffset" 
+			|| v == L"datetime2" 
+			|| v == L"smalldatetime" 
+			|| v == L"datetime" 
+			|| v == L"time";
 		return res;
 	}
 
@@ -1078,28 +1092,32 @@ namespace mssql
 	Handle<Value> BoundDatum::unbindDouble() const
 	{
 		nodeTypeFactory fact;
-		auto s = fact.newNumber((*doublevec_ptr)[0]);
+		auto & vec = *doublevec_ptr;
+		auto s = fact.newNumber(vec[0]);
 		return s;
 	}
 
 	Handle<Value> BoundDatum::unbindBoolean() const
 	{
 		nodeTypeFactory fact;
-		auto s = fact.newBoolean((*uint16vec_ptr)[0]);
+		auto & vec = *uint16vec_ptr;
+		auto s = fact.newBoolean(vec[0]);
 		return s;
 	}
 
 	Handle<Value> BoundDatum::unbindInt32() const
 	{
 		nodeTypeFactory fact;
-		auto s = fact.newInt32((*int32vec_ptr)[0]);
+		auto & vec = *int32vec_ptr;
+		auto s = fact.newInt32(vec[0]);
 		return s;
 	}
 
 	Handle<Value> BoundDatum::unbindUint32() const
 	{
 		nodeTypeFactory fact;
-		auto s = fact.newUint32((*uint32vec_ptr)[0]);
+		auto & vec = *uint32vec_ptr;
+		auto s = fact.newUint32(vec[0]);
 		return s;
 	}
 
@@ -1111,14 +1129,16 @@ namespace mssql
 		}
 		else {
 			nodeTypeFactory fact;
-			v = fact.newInt64((*int64vec_ptr)[0]);
+			auto & vec = *int64vec_ptr;
+			v = fact.newInt64(vec[0]);
 		}
 		return v;
 	}
 
 	Handle<Value> BoundDatum::unbindDate() const
 	{
-		TimestampColumn tsc((*timestampoffsetvec_ptr)[0]);
+		auto & vec = *timestampoffsetvec_ptr;
+		TimestampColumn tsc(vec[0]);
 		return tsc.ToValue();
 	}
 

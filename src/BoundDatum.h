@@ -7,7 +7,6 @@ namespace mssql
 {
 	using namespace std;
 
-
 	class BoundDatum {
 	public:
 		bool bind(Local<Value> &p);
@@ -108,14 +107,6 @@ namespace mssql
 		uint32_t offset;
 
 	private:
-
-		typedef void (BoundDatum::* dispatcher_p)(const Local<Value> & p);
-
-		static pair<SQLSMALLINT, dispatcher_p> getPair(SQLSMALLINT i, dispatcher_p p)
-		{
-			return pair<SQLSMALLINT, dispatcher_p>(i, p);
-		}
-
 		vector<SQLLEN> indvec;
 
 		shared_ptr<vector<char>> charvec_ptr;
