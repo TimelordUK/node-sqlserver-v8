@@ -68,14 +68,14 @@ namespace mssql
     Connection::~Connection(void)
     {
 	   // close the connection now since the object is being collected
-	   innerConnection->Collect();
+		connectionBridge->Collect();
     }
 
     void Connection::Close(const FunctionCallbackInfo<Value>& info)
     {
 	   auto cb = info[0].As<Object>();
 	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->innerConnection->Close(cb);
+	   auto ret = connection->connectionBridge->Close(cb);
 	   info.GetReturnValue().Set(ret);
     }
 
@@ -83,7 +83,7 @@ namespace mssql
     {
 	   auto cb = info[0].As<Object>();
 	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->innerConnection->BeginTransaction(cb);
+	   auto ret = connection->connectionBridge->BeginTransaction(cb);
 	   info.GetReturnValue().Set(ret);
     }
 
@@ -91,7 +91,7 @@ namespace mssql
     {
 	   auto cb = info[0].As<Object>();
 	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->innerConnection->Commit(cb);
+	   auto ret = connection->connectionBridge->Commit(cb);
 	   info.GetReturnValue().Set(ret);
     }
 
@@ -99,7 +99,7 @@ namespace mssql
     {
 	   auto cb = info[0].As<Object>();
 	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->innerConnection->Rollback(cb);
+	   auto ret = connection->connectionBridge->Rollback(cb);
 	   info.GetReturnValue().Set(ret);
     }
 
@@ -121,7 +121,7 @@ namespace mssql
 	   auto callback = info[2].As<Object>();
 
 	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->innerConnection->Query(queryObject, params, callback);
+	   auto ret = connection->connectionBridge->Query(queryObject, params, callback);
 	   info.GetReturnValue().Set(ret);
     }
 
@@ -133,14 +133,14 @@ namespace mssql
 	   auto callback = info[2].As<Object>();
 
 	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->innerConnection->CallProcedure(queryObject, params, callback);
+	   auto ret = connection->connectionBridge->CallProcedure(queryObject, params, callback);
 	   info.GetReturnValue().Set(ret);
     }
 
     void Connection::Unbind(const FunctionCallbackInfo<Value>& info)
     {
 	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->innerConnection->UnbindParameters(info[0]);
+	   auto ret = connection->connectionBridge->UnbindParameters(info[0]);
 	   info.GetReturnValue().Set(ret);
     }
 
@@ -148,7 +148,7 @@ namespace mssql
     {
 	   auto cb = info[0].As<Object>();
 	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->innerConnection->ReadRow(cb);
+	   auto ret = connection->connectionBridge->ReadRow(cb);
 	   info.GetReturnValue().Set(ret);
     }
 
@@ -158,7 +158,7 @@ namespace mssql
 		auto callback = info[1].As<Object>();
 
 		auto connection = Unwrap<Connection>(info.This());
-		auto ret = connection->innerConnection->Prepare(queryObject, callback);
+		auto ret = connection->connectionBridge->Prepare(queryObject, callback);
 		info.GetReturnValue().Set(ret);
 	}
 
@@ -167,7 +167,7 @@ namespace mssql
 	   auto column = info[0].As<Number>();
 	   auto cb = info[1].As<Object>();
 	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->innerConnection->ReadColumn(column, cb);
+	   auto ret = connection->connectionBridge->ReadColumn(column, cb);
 	   info.GetReturnValue().Set(ret);
     }
 
@@ -175,14 +175,14 @@ namespace mssql
     {
 	   auto callback = info[0].As<Object>();
 	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->innerConnection->ReadNextResult(callback);
+	   auto ret = connection->connectionBridge->ReadNextResult(callback);
 	   info.GetReturnValue().Set(ret);
     }
 
     void Connection::ReadRowCount(const FunctionCallbackInfo<Value>& info)
     {
 	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->innerConnection->ReadRowCount();
+	   auto ret = connection->connectionBridge->ReadRowCount();
 	   info.GetReturnValue().Set(ret);
     }
 
@@ -192,7 +192,7 @@ namespace mssql
 	   auto callback = info[1].As<Object>();
 
 	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->innerConnection->Open(connectionObject, callback, info.This());
+	   auto ret = connection->connectionBridge->Open(connectionObject, callback, info.This());
 	   info.GetReturnValue().Set(ret);
     }
 }

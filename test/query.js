@@ -30,6 +30,49 @@ suite('query', function () {
 
     var conn_str = config.conn_str;
 
+    test( 'query with errors', function( done ) {
+
+        var c = sql.open( conn_str, function( e ) {
+
+            assert.ifError( e );
+
+            var  expectedError = new Error( "[Microsoft][" + config.driver + "][SQL Server]Unclosed quotation mark after the character string 'm with NOBODY'." );
+            expectedError.sqlstate = '42000';
+            expectedError.code = 105;
+
+            async.series( [
+
+                function( async_done ) {
+
+                    assert.doesNotThrow( function() {
+
+                        c.queryRaw( "I'm with NOBODY", function( e, r ) {
+
+                            assert( e instanceof Error );
+                            assert.deepEqual( e, expectedError, "Unexpected error returned" );
+                            async_done();
+                        });
+                    });
+                },
+
+                function( async_done ) {
+
+                    assert.doesNotThrow( function() {
+
+                        var s = c.queryRaw( "I'm with NOBODY" );
+                        s.on( 'error', function( e ) {
+
+                            assert( e instanceof Error );
+                            assert.deepEqual( e, expectedError, "Unexpected error returned" );
+                            async_done();
+                            done();
+                        });
+                    });
+                }
+            ]);
+        });
+    });
+
     test('simple query', function (done) {
 
         sql.query(conn_str, "SELECT 1 as X, 'ABC', 0x0123456789abcdef ", function (err, results) {

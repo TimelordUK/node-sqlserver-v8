@@ -51,5 +51,6 @@ namespace mssql
 
 	private:
 		shared_ptr<OdbcConnection> connection;
+		shared_ptr<OdbcStatement> statement;
 	};
 }

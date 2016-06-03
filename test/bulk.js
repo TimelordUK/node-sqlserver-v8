@@ -82,7 +82,7 @@ function testBoilerPlate(params, doneFunction) {
 suite('bulk', function () {
 
     var c;
-    this.timeout(45000);
+    this.timeout(6000);
     var tm;
 
     /*
@@ -91,9 +91,9 @@ suite('bulk', function () {
      var test2BatchSize = 1000;
      */
 
-    var totalObjectsForInsert = 500;
+    var totalObjectsForInsert = 200;
     var test1BatchSize = 1;
-    var test2BatchSize = 500;
+    var test2BatchSize = 200;
 
     setup(function (test_done) {
 
@@ -113,6 +113,14 @@ suite('bulk', function () {
             assert.ifError(err);
             done();
         });
+    });
+
+    test('bulk insert/select null column of datetime batchSize ' + test2BatchSize, function (test_done) {
+        nullTest(test2BatchSize, false, test_done);
+    });
+
+    test('bulk insert/select null column of datetime batchSize ' + test1BatchSize, function (test_done) {
+        nullTest(test1BatchSize, false, test_done);
     });
 
     test('bulk insert simple multi-column object - default a nullable column ' + test2BatchSize, function (test_done) {
@@ -347,13 +355,7 @@ suite('bulk', function () {
         simpleColumnBulkTest(params, test_done)
     }
 
-    test('bulk insert/select null column of datetime batchSize ' + test1BatchSize, function (test_done) {
-        nullTest(test1BatchSize, false, test_done);
-    });
 
-    test('bulk insert/select null column of datetime batchSize ' + test2BatchSize, function (test_done) {
-        nullTest(test2BatchSize, false, test_done);
-    });
 
     function varbinaryTest(batchSize, selectAfterInsert, test_done) {
         var arr = [];

@@ -22,50 +22,66 @@
 #include "ResultSet.h"
 #include "CriticalSection.h"
 #include "OdbcOperation.h"
-#include "OdbcStatement.h"
-#include <map>
 
 namespace mssql
 {
 	using namespace std;
 
-	class OdbcConnection
+	class OdbcStatement
 	{
 	public:
-		OdbcConnection()
-			:
-			error(nullptr),
-			connectionState(Closed)
-		{
-		}
+		OdbcStatement(OdbcConnectionHandle &c);
+		~OdbcStatement();
+		SQLLEN RowCount() const { return resultset != nullptr ? resultset->RowCount() : -1; }
+		shared_ptr<ResultSet> GetResultSet() const
+		{ return resultset; } 
 
-		static bool InitializeEnvironment();
-		bool TryBeginTran();
-		bool TryEndTran(SQLSMALLINT completionType);
-		bool TryOpen(const wstring& connectionString, int timeout);
+		Handle<Value> GetMetaValue() const;
+		Handle<Value> EndOfResults() const;
+		Handle<Value> EndOfRows() const;
+		Handle<Value> GetColumnValue() const;
 		shared_ptr<OdbcError> LastError(void) const { return error; }
-		bool TryClose();
-		shared_ptr<OdbcStatement> CreateStatement();
+
+		bool TryExecute(const wstring& query, u_int timeout, BoundDatumSet& paramIt);
+		bool TryReadRow();
+		bool TryReadColumn(int column);
+		bool TryReadNextResult();
 
 	private:
+		bool StartReadingResults();
+		SQLRETURN queryTimeout(int timeout);
+		bool d_Variant(int col);
+		bool d_String(int col);
+		bool d_Bit(int col);
+		bool d_Integer(int col);
+		bool d_Decimal(int col);
+		bool d_Binary(int col);
+		bool d_TimestampOffset(int col);
+		bool d_Timestamp(int col);
+		bool d_Time(int col);
+		bool boundedString(SQLLEN display_size, int column);
+		void applyPrecision(const BoundDatum & datum, int current_param) const;
+		bool readColAttributes(ResultSet::ColumnDefinition& current, int column);
+		bool readNext(int column);
+		bool Lob(SQLLEN display_size, int column);
 		static OdbcEnvironmentHandle environment;
-		SQLRETURN openTimeout(int timeout);
-		
-		OdbcConnectionHandle connection;
+		bool dispatch(SQLSMALLINT t, int column);
+		bool BindParams(BoundDatumSet& params);
+		bool TryReadString(bool binary, int column);
+
+		OdbcConnectionHandle & connection;
+		OdbcStatementHandle statement;
 		CriticalSection closeCriticalSection;
 
 		// any error that occurs when a Try* function returns false is stored here
 		// and may be retrieved via the Error function below.
 
 		shared_ptr<OdbcError> error;
-		enum ConnectionStates
-		{
-			Closed,
-			Opening,
-			TurnOffAutoCommit,
-			Open
-		} connectionState;
+
+		bool endOfResults;
 
 		// set binary true if a binary Buffer should be returned instead of a JS string
+
+		shared_ptr<ResultSet> resultset;
 	};
 }

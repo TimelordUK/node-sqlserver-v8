@@ -28,12 +28,14 @@ namespace mssql
 	using namespace v8;
 
 	class OdbcConnection;
+	class OdbcStatement;
 
 	class OdbcOperation : public Operation
 	{
 	protected:
 
 		shared_ptr<OdbcConnection> connection;
+		shared_ptr<OdbcStatement> statement;
 		Persistent<Function> callback;
 		Handle<Value> output_param;
 		Local<Object> cb;
@@ -45,8 +47,20 @@ namespace mssql
 
 	public:
 
+		OdbcOperation(shared_ptr<OdbcStatement> statement, Local<Object> cb)
+			: statement(statement), connection(nullptr),
+			callback(Isolate::GetCurrent(), cb.As<Function>()),
+			cb(cb),
+			failed(false),
+			failure(nullptr)
+		{
+			nodeTypeFactory fact;
+			output_param = fact.null();
+		}
+
+
 		OdbcOperation(shared_ptr<OdbcConnection> connection, Local<Object> cb)
-			: connection(connection),
+			: connection(connection), statement(nullptr),
 			callback(Isolate::GetCurrent(), cb.As<Function>()),
 			cb(cb),
 			failed(false),
@@ -99,7 +113,7 @@ namespace mssql
 	class QueryOperation : public OdbcOperation
 	{
 	public:
-		QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int id, u_int timeout, Handle<Object> callback);
+		QueryOperation(shared_ptr<OdbcStatement> statement, const wstring& query, u_int id, u_int timeout, Handle<Object> callback);
 
 		bool BindParameters(Handle<Array> & node_params);
 		Local<Array> UnbindParameters();
@@ -125,24 +139,15 @@ namespace mssql
 
 		Local<Value> CreateCompletionArg() override;
 
-		ProcedureOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int id, u_int timeout, Handle<Object> callback);
-	};
-
-	class PrepareOperation : public QueryOperation
-	{
-	public:
-		PrepareOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int id, u_int timeout, Handle<Object> callback);
-		bool TryInvokeOdbc() override;
-
-		Local<Value> CreateCompletionArg() override;
+		ProcedureOperation(shared_ptr<OdbcStatement> statement, const wstring& query, u_int id, u_int timeout, Handle<Object> callback);
 	};
 
 	class ReadRowOperation : public OdbcOperation
 	{
 	public:
 
-		ReadRowOperation(shared_ptr<OdbcConnection> connection, Handle<Object> callback)
-			: OdbcOperation(connection, callback)
+		ReadRowOperation(shared_ptr<OdbcStatement> statement, Handle<Object> callback)
+			: OdbcOperation(statement, callback)
 		{
 		}
 
@@ -157,8 +162,8 @@ namespace mssql
 
 	public:
 
-		ReadColumnOperation(shared_ptr<OdbcConnection> connection, int column, Handle<Object> callback)
-			: OdbcOperation(connection, callback),
+		ReadColumnOperation(shared_ptr<OdbcStatement> statement, int column, Handle<Object> callback)
+			: OdbcOperation(statement, callback),
 			column(column)
 		{
 		}
@@ -171,8 +176,8 @@ namespace mssql
 	class ReadNextResultOperation : public OdbcOperation
 	{
 	public:
-		ReadNextResultOperation(shared_ptr<OdbcConnection> connection, Handle<Object> callback)
-			: OdbcOperation(connection, callback), preRowCount(-1), postRowCount(-1)
+		ReadNextResultOperation(shared_ptr<OdbcStatement> statement, Handle<Object> callback)
+			: OdbcOperation(statement, callback), preRowCount(-1), postRowCount(-1)
 		{
 		}
 

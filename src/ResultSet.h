@@ -89,5 +89,6 @@ namespace mssql
         shared_ptr<Column> column;
 
         friend class OdbcConnection;    // allow access to the endOfRows flag to just the ResultSet creating class
+		friend class OdbcStatement;
     };
 }

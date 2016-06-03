@@ -6,11 +6,11 @@ namespace mssql
 {
 	bool ReadColumnOperation::TryInvokeOdbc()
 	{
-		return connection->TryReadColumn(column);
+		return statement->TryReadColumn(column);
 	}
 
 	Local<Value> ReadColumnOperation::CreateCompletionArg()
 	{
-		return connection->GetColumnValue();
+		return statement->GetColumnValue();
 	}
 }

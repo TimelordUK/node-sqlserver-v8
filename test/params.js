@@ -216,14 +216,15 @@ suite('params', function () {
         });
     });
 
-    function toUTC(date) {
-        return new Date(Date.UTC(date.getUTCFullYear(),
-            date.getUTCMonth(),
-            date.getUTCDate(),
-            0,
-            0,
+    function toUTC(localDate) {
+        var utcDate = new Date(Date.UTC(localDate.getUTCFullYear(),
+            localDate.getUTCMonth(),
+            localDate.getUTCDate(),
+            localDate.getUTCHours(),
+            localDate.getUTCMinutes(),
             0,
             0));
+        return utcDate;
     }
 
     test('verify getdate (date) to sql_variant', function(test_done) {
@@ -234,8 +235,7 @@ suite('params', function () {
                 var date = res[0].data;
                 assert(date instanceof Date);
                 date = toUTC(date);
-                var now = new Date();
-                var smalldt = toUTC(now);
+                var smalldt = toUTC(new Date());
 
                 assert(smalldt.getYear() == date.getYear());
                 assert(smalldt.getMonth() == date.getMonth());
@@ -253,9 +253,7 @@ suite('params', function () {
                 var date = res[0].data;
                 assert(date instanceof Date);
                 date = toUTC(date);
-                var now = new Date();
-                var smalldt = toUTC(now);
-
+                var smalldt = toUTC(new Date());
                 assert(smalldt.getYear() == date.getYear());
                 assert(smalldt.getMonth() == date.getMonth());
                 assert(smalldt.getDay() == date.getDay());

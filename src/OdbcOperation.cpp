@@ -37,7 +37,9 @@ namespace mssql
 		failed = !TryInvokeOdbc();
 
 		if (failed) {
-			failure = connection->LastError();
+			if (connection != nullptr)
+				failure = connection->LastError();
+			else failure = statement->LastError();
 		}
 	}
 

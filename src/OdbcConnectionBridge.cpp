@@ -24,7 +24,8 @@ namespace mssql
 	using namespace std;
 	using namespace v8;
 
-	OdbcConnectionBridge::OdbcConnectionBridge()
+	OdbcConnectionBridge::OdbcConnectionBridge() : 
+		statement(nullptr)
 	{
 		connection = make_shared<OdbcConnection>();
 	}
@@ -67,7 +68,8 @@ namespace mssql
 		auto queryString = get(queryObject, "query_str")->ToString();
 		auto timeout = get(queryObject, "query_timeout")->Int32Value();
 		auto id = get(queryObject, "query_id")->Int32Value();
-		auto operation = make_shared<QueryOperation>(connection, FromV8String(queryString), id, timeout, callback);
+		statement = connection->CreateStatement();
+		auto operation = make_shared<QueryOperation>(statement, FromV8String(queryString), id, timeout, callback);
 		if (operation->BindParameters(params)) {
 			OperationManager::Add(operation);
 		}
@@ -80,7 +82,7 @@ namespace mssql
 		auto queryString = get(queryObject, "query_str")->ToString();
 		auto timeout = get(queryObject, "query_timeout")->Int32Value();
 		auto id = get(queryObject, "query_id")->Int32Value();
-		auto operation = make_shared<PrepareOperation>(connection, FromV8String(queryString), id, timeout, callback);
+		//auto operation = make_shared<PrepareOperation>(connection, FromV8String(queryString), id, timeout, callback);
 		nodeTypeFactory fact;
 		return fact.null();
 	}
@@ -90,7 +92,8 @@ namespace mssql
 		auto queryString = get(queryObject, "query_str")->ToString();
 		auto timeout = get(queryObject, "query_timeout")->Int32Value();
 		auto id = get(queryObject, "query_id")->Int32Value();
-		auto operation = make_shared<ProcedureOperation>(connection, FromV8String(queryString), id, timeout, callback);
+		statement = connection->CreateStatement();
+		auto operation = make_shared<ProcedureOperation>(statement, FromV8String(queryString), id, timeout, callback);
 		if (operation->BindParameters(params)) {
 			OperationManager::Add(operation);
 		}
@@ -111,7 +114,7 @@ namespace mssql
 
 	Handle<Value> OdbcConnectionBridge::ReadRow(Handle<Object> callback)
 	{
-		OperationManager::Add(make_shared<ReadRowOperation>(connection, callback));
+		OperationManager::Add(make_shared<ReadRowOperation>(statement, callback));
 		nodeTypeFactory fact;
 		return fact.null();
 	}
@@ -119,21 +122,21 @@ namespace mssql
 	Handle<Integer> OdbcConnectionBridge::ReadRowCount(void) const
 	{
 		assert(connection);
-		assert(connection->resultset);
+		assert(statement->GetResultSet());
 		nodeTypeFactory fact;
-		return fact.newInteger(static_cast<int32_t>(connection->resultset->RowCount()));
+		return fact.newInteger(static_cast<int32_t>(statement->GetResultSet()->RowCount()));
 	}
 
 	Handle<Value> OdbcConnectionBridge::ReadNextResult(Handle<Object> callback)
 	{
-		OperationManager::Add(make_shared<ReadNextResultOperation>(connection, callback));
+		OperationManager::Add(make_shared<ReadNextResultOperation>(statement, callback));
 		nodeTypeFactory fact;
 		return fact.null();
 	}
 
 	Handle<Value> OdbcConnectionBridge::ReadColumn(Handle<Number> column, Handle<Object> callback)
 	{
-		OperationManager::Add(make_shared<ReadColumnOperation>(connection, column->Int32Value(), callback));
+		OperationManager::Add(make_shared<ReadColumnOperation>(statement, column->Int32Value(), callback));
 		nodeTypeFactory fact;
 		return fact.null();
 	}

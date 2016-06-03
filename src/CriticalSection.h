@@ -19,6 +19,8 @@
 
 namespace mssql {
 
+#pragma once
+
    class CriticalSection {
 
    public:

@@ -4,8 +4,8 @@
 
 namespace mssql
 {
-	QueryOperation::QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int id, u_int timeout, Handle<Object> callback) :
-		OdbcOperation(connection, callback), timeout(timeout), query(query),
+	QueryOperation::QueryOperation(shared_ptr<OdbcStatement> statement, const wstring& query, u_int id, u_int timeout, Handle<Object> callback) :
+		OdbcOperation(statement, callback), timeout(timeout), query(query),
 		output_param_count(0)
 	{
 		ID = id;
@@ -52,11 +52,11 @@ namespace mssql
 
 	bool QueryOperation::TryInvokeOdbc()
 	{
-		return connection->TryExecute(query, timeout, params);
+		return statement->TryExecute(query, timeout, params);
 	}
 
 	Local<Value> QueryOperation::CreateCompletionArg()
 	{
-		return connection->GetMetaValue();
+		return statement->GetMetaValue();
 	}
 }

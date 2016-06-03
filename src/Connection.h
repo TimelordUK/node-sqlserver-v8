@@ -29,14 +29,9 @@ namespace mssql
 
     class Connection :node::ObjectWrap
     {
-	   static Persistent<Function> constructor;
-	   static  void api(Local<FunctionTemplate>& tpl);
-	   unique_ptr<OdbcConnectionBridge> innerConnection;
-	   Persistent<Object> This;
-
     public:
 	   Connection()
-		  : innerConnection(new OdbcConnectionBridge())
+		  : connectionBridge(make_unique<OdbcConnectionBridge>())
 	   {
 	   }
 
@@ -57,6 +52,12 @@ namespace mssql
 	   static void ReadColumn(const FunctionCallbackInfo<Value>& info);
 	   static void ReadNextResult(const FunctionCallbackInfo<Value>& info);
 	   static void ReadRowCount(const FunctionCallbackInfo<Value>& info);
+
+	private:
+		static Persistent<Function> constructor;
+		static void api(Local<FunctionTemplate>& tpl);
+		unique_ptr<OdbcConnectionBridge> connectionBridge;
+		Persistent<Object> This;
     };
 }
 

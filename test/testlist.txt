@@ -1,9 +1,9 @@
-params.js
 query.js
-sproc.js
+params.js
 bulk.js
 userbind.js
 querytimeout.js
+sproc.js
 concurrent.js
 connect.js
 txn.js

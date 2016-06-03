@@ -6,12 +6,12 @@ namespace mssql
 {
 	bool ReadRowOperation::TryInvokeOdbc()
 	{
-		bool res = connection->TryReadRow();
+		bool res = statement->TryReadRow();
 		return res;
 	}
 
 	Local<Value> ReadRowOperation::CreateCompletionArg()
 	{
-		return connection->EndOfRows();
+		return statement->EndOfRows();
 	}
 }
