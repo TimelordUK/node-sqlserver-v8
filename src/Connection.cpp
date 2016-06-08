@@ -40,7 +40,6 @@ namespace mssql
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "nextResult", ReadNextResult);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "callProcedure", CallProcedure);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "unbind", Unbind);
-	   NODE_SET_PROTOTYPE_METHOD(tpl, "prepare", Prepare);
     }
 
     void Connection::Initialize(Handle<Object> exports)
@@ -116,75 +115,72 @@ namespace mssql
 
     void Connection::Query(const FunctionCallbackInfo<Value>& info)
     {
-	   auto queryObject = info[0].As<Object>();
-	   auto params = info[1].As<Array>();
-	   auto callback = info[2].As<Object>();
-
-	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->connectionBridge->Query(queryObject, params, callback);
-	   info.GetReturnValue().Set(ret);
-    }
-
-    void Connection::CallProcedure(const FunctionCallbackInfo<Value>& info)
-    {
-	   // need to ensure the signature is changed (in js ?) to form (?) = call sproc (?, ? ... );
-	   auto queryObject = info[0].As<Object>();
-	   auto params = info[1].As<Array>();
-	   auto callback = info[2].As<Object>();
-
-	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->connectionBridge->CallProcedure(queryObject, params, callback);
-	   info.GetReturnValue().Set(ret);
-    }
-
-    void Connection::Unbind(const FunctionCallbackInfo<Value>& info)
-    {
-	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->connectionBridge->UnbindParameters(info[0]);
-	   info.GetReturnValue().Set(ret);
-    }
-
-    void Connection::ReadRow(const FunctionCallbackInfo<Value>& info)
-    {
-	   auto cb = info[0].As<Object>();
-	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->connectionBridge->ReadRow(cb);
-	   info.GetReturnValue().Set(ret);
-    }
-
-	void Connection::Prepare(const FunctionCallbackInfo<Value>& info)
-	{
-		auto queryObject = info[0].As<Object>();
-		auto callback = info[1].As<Object>();
+		auto queryId = info[0].As<Number>();
+		auto queryObject = info[1].As<Object>();
+		auto params = info[2].As<Array>();
+		auto callback = info[3].As<Object>();
 
 		auto connection = Unwrap<Connection>(info.This());
-		auto ret = connection->connectionBridge->Prepare(queryObject, callback);
+		auto ret = connection->connectionBridge->Query(queryId, queryObject, params, callback);
+		info.GetReturnValue().Set(ret);
+    }
+
+	void Connection::CallProcedure(const FunctionCallbackInfo<Value>& info)
+	{
+		// need to ensure the signature is changed (in js ?) to form (?) = call sproc (?, ? ... );
+		auto queryId = info[0].As<Number>();
+		auto queryObject = info[1].As<Object>();
+		auto params = info[2].As<Array>();
+		auto callback = info[3].As<Object>();
+
+		auto connection = Unwrap<Connection>(info.This());
+		auto ret = connection->connectionBridge->CallProcedure(queryId, queryObject, params, callback);
 		info.GetReturnValue().Set(ret);
 	}
 
-    void Connection::ReadColumn(const FunctionCallbackInfo<Value>& info)
-    {
-	   auto column = info[0].As<Number>();
-	   auto cb = info[1].As<Object>();
-	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->connectionBridge->ReadColumn(column, cb);
-	   info.GetReturnValue().Set(ret);
-    }
+	void Connection::Unbind(const FunctionCallbackInfo<Value>& info)
+	{
+		auto queryId = info[0].As<Number>();
+		auto connection = Unwrap<Connection>(info.This());
+		auto ret = connection->connectionBridge->UnbindParameters(queryId, info[1]);
+		info.GetReturnValue().Set(ret);
+	}
 
-    void Connection::ReadNextResult(const FunctionCallbackInfo<Value>& info)
-    {
-	   auto callback = info[0].As<Object>();
-	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->connectionBridge->ReadNextResult(callback);
-	   info.GetReturnValue().Set(ret);
-    }
+	void Connection::ReadRow(const FunctionCallbackInfo<Value>& info)
+	{
+		auto queryId = info[0].As<Number>();
+		auto cb = info[1].As<Object>();
+		auto connection = Unwrap<Connection>(info.This());
+		auto ret = connection->connectionBridge->ReadRow(queryId, cb);
+		info.GetReturnValue().Set(ret);
+	}
 
-    void Connection::ReadRowCount(const FunctionCallbackInfo<Value>& info)
-    {
-	   auto connection = Unwrap<Connection>(info.This());
-	   auto ret = connection->connectionBridge->ReadRowCount();
-	   info.GetReturnValue().Set(ret);
-    }
+	void Connection::ReadColumn(const FunctionCallbackInfo<Value>& info)
+	{
+		auto queryId = info[0].As<Number>();
+		auto column = info[1].As<Number>();
+		auto cb = info[2].As<Object>();
+		auto connection = Unwrap<Connection>(info.This());
+		auto ret = connection->connectionBridge->ReadColumn(queryId, column, cb);
+		info.GetReturnValue().Set(ret);
+	}
+
+	void Connection::ReadNextResult(const FunctionCallbackInfo<Value>& info)
+	{
+		auto queryId = info[0].As<Number>();
+		auto callback = info[1].As<Object>();
+		auto connection = Unwrap<Connection>(info.This());
+		auto ret = connection->connectionBridge->ReadNextResult(queryId, callback);
+		info.GetReturnValue().Set(ret);
+	}
+
+	void Connection::ReadRowCount(const FunctionCallbackInfo<Value>& info)
+	{
+		auto queryId = info[0].As<Number>();
+		auto connection = Unwrap<Connection>(info.This());
+		auto ret = connection->connectionBridge->ReadRowCount(queryId);
+		info.GetReturnValue().Set(ret);
+	}
 
     void Connection::Open(const FunctionCallbackInfo<Value>& info)
     {

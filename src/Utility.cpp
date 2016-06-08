@@ -21,7 +21,6 @@
 
 namespace mssql
 {
-	
 	using namespace v8;
 
 	bufferPoolChar_t::elements_t bufferPoolChar_t::elements_map;

@@ -1,11 +1,13 @@
 #include "stdafx.h"
-#include "OdbcOperation.h"
 #include "OdbcConnection.h"
+#include "ReadNextResultOperation.h"
 
 namespace mssql
 {
 	bool ReadNextResultOperation::TryInvokeOdbc()
 	{
+		fetchStatement();
+		if (statement == nullptr) return false;
 		preRowCount = statement->RowCount();
 		auto res = statement->TryReadNextResult();
 		postRowCount = statement->RowCount();

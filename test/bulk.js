@@ -82,7 +82,7 @@ function testBoilerPlate(params, doneFunction) {
 suite('bulk', function () {
 
     var c;
-    this.timeout(6000);
+    this.timeout(20000);
     var tm;
 
     /*

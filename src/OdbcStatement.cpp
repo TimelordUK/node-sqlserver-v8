@@ -19,6 +19,7 @@
 
 #include "stdafx.h"
 #include "OdbcStatement.h"
+#include "BoundDatumSet.h"
 #include "NodeColumns.h"
 
 #pragma intrinsic( memset )

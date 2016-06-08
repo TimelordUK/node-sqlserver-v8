@@ -26,21 +26,22 @@ namespace mssql {
 
     using namespace std;
  
+	class OdbcStatement;
+
     class Operation
     {
 	   friend class OperationManager;
 
     public:
-	   Operation() : persists(false), ID(-1)
+	   Operation() : persists(false), OperationID(-1)
 	   {
 	   }
 
 	   virtual ~Operation();
-
 	   virtual void InvokeBackground() = 0;
 	   virtual void CompleteForeground() = 0;
 	   bool persists;
-	   int ID;
+	   int OperationID;
 
     private:
 	   uv_work_t  work;
@@ -50,19 +51,21 @@ namespace mssql {
 
     class OperationManager
     {
-	   typedef map<size_t, shared_ptr<Operation>> map_perations_t;
+	   typedef map<size_t, shared_ptr<Operation>> map_operations_t;
+	   
 
     public:
 	   static bool Add(shared_ptr<Operation> operation_ptr);
 	   static void CheckinOperation(int id);
 	   static shared_ptr<Operation> GetOperation(int id)
 	   {
-		  map_perations_t::const_iterator itr = operations.find(id);
+		  map_operations_t::const_iterator itr = operations.find(id);
 		  return itr->second;
 	   }
 
     private:
-	   static map_perations_t operations;
+	   static map_operations_t operations;
+
 	   static size_t _id;
 	   static void OnBackground(uv_work_t* work);
 	   static void OnForeground(uv_work_t* work);

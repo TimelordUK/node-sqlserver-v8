@@ -38,19 +38,19 @@ namespace mssql
 		Handle<Value> BeginTransaction(Handle<Object> callback);
 		Handle<Value> Commit(Handle<Object> callback);
 		Handle<Value> Rollback(Handle<Object> callback);
-		Handle<Value> Query(Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback);
-		Handle<Value> Prepare(Handle<Object> queryObject, Handle<Object> callback);
-		Handle<Value> CallProcedure(Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback);
-		static Handle<Value> UnbindParameters(Handle<Value> val);
-		Handle<Value> ReadRow(Handle<Object> callback);
-		Handle<Integer> ReadRowCount(void) const;
-		Handle<Value> ReadNextResult(Handle<Object> callback);
-		Handle<Value> ReadColumn(Handle<Number> column, Handle<Object> callback);
+		Handle<Value> Query(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const;
+		Handle<Value> CallProcedure(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const;
+		static Handle<Value> UnbindParameters(Handle<Number> queryId, Handle<Value> val);
+		Handle<Value> ReadRow(Handle<Number> queryId, Handle<Object> callback) const;
+		Handle<Integer> ReadRowCount(Handle<Number> queryId) const;
+		Handle<Value> ReadNextResult(Handle<Number> queryId, Handle<Object> callback) const;
+		Handle<Value> ReadColumn(Handle<Number> queryId, Handle<Number> column, Handle<Object> callback) const;
 		static Local<Value> get(Local<Object> o, const char *v);
 		Handle<Value> Open(Handle<Object> connectionObject, Handle<Object> callback, Handle<Object> backpointer);
 
 	private:
 		shared_ptr<OdbcConnection> connection;
-		shared_ptr<OdbcStatement> statement;
+		typedef map<size_t, shared_ptr<OdbcStatement>> statementMap_t;
+		statementMap_t statements;
 	};
 }

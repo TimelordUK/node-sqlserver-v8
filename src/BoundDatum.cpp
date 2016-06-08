@@ -916,7 +916,8 @@ namespace mssql
 
 		case SQL_VARBINARY:
 		{
-			if (pp->IsNull() || (pp->IsObject() && node::Buffer::HasInstance(pp))) {
+			if (pp->IsNull() 
+				|| (pp->IsObject() && node::Buffer::HasInstance(pp))) {
 				bindVarBinary(pp);
 			}
 			else {

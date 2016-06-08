@@ -1,14 +1,16 @@
 #include "stdafx.h"
-#include "OdbcOperation.h"
 #include "OdbcConnection.h"
+#include "QueryOperation.h"
 
 namespace mssql
 {
-	QueryOperation::QueryOperation(shared_ptr<OdbcStatement> statement, const wstring& query, u_int id, u_int timeout, Handle<Object> callback) :
-		OdbcOperation(statement, callback), timeout(timeout), query(query),
+	QueryOperation::QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int queryId, u_int timeout, Handle<Object> callback) :
+		OdbcOperation(connection, callback),
+		timeout(timeout),
+		query(query),
 		output_param_count(0)
 	{
-		ID = id;
+		statementId = queryId;
 	}
 
 	bool QueryOperation::ParameterErrorToUserCallback(uint32_t param, const char* error)
@@ -52,6 +54,7 @@ namespace mssql
 
 	bool QueryOperation::TryInvokeOdbc()
 	{
+		statement = connection->statements->checkout(statementId);	
 		return statement->TryExecute(query, timeout, params);
 	}
 

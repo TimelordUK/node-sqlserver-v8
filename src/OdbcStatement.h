@@ -21,10 +21,12 @@
 
 #include "ResultSet.h"
 #include "CriticalSection.h"
-#include "OdbcOperation.h"
 
 namespace mssql
 {
+	class BoundDatum;
+	class BoundDatumSet;
+
 	using namespace std;
 
 	class OdbcStatement

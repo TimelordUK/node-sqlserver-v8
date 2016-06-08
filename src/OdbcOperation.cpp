@@ -32,14 +32,30 @@ namespace mssql
 	const int SQL_SERVER_2008_DEFAULT_DATETIME_PRECISION = 34;
 	const int SQL_SERVER_2008_DEFAULT_DATETIME_SCALE = 7;
 
+	OdbcOperation::~OdbcOperation()
+	{
+		callback.Reset();		
+	}
+
+	void OdbcOperation::fetchStatement()
+	{
+		statement = connection->statements->checkout(statementId);
+	}
+
 	void OdbcOperation::InvokeBackground()
 	{
 		failed = !TryInvokeOdbc();
 
 		if (failed) {
-			if (connection != nullptr)
+			if (connection != nullptr) {
 				failure = connection->LastError();
-			else failure = statement->LastError();
+			}
+			if (failure == nullptr && statement != nullptr) {
+				failure = statement->LastError();
+			}else
+			{
+				int x = 0;
+			}
 		}
 	}
 

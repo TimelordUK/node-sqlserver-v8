@@ -19,6 +19,7 @@
 
 #include "stdafx.h"
 #include "OdbcConnection.h"
+#include "OdbcStatementCache.h"
 #include "NodeColumns.h"
 
 #pragma intrinsic( memset )
@@ -65,12 +66,6 @@ namespace mssql
 		return true;
 	}
 
-	shared_ptr<OdbcStatement> OdbcConnection::CreateStatement()
-	{
-		auto statement =  make_shared<OdbcStatement>(connection);
-		return statement;
-	}
-
 	bool OdbcConnection::TryClose()
 	{
 		if (connectionState != Closed)  // fast fail before critical section
@@ -112,6 +107,7 @@ namespace mssql
 
 		if (!localConnection.Alloc(environment)) { RETURN_ODBC_ERROR(environment); }
 		this->connection = move(localConnection);
+		statements = make_shared<OdbcStatementCache>(connection);
 
 		ret = openTimeout(timeout);
 		CHECK_ODBC_ERROR(ret, connection);

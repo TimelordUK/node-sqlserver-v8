@@ -22,7 +22,7 @@
 #include "ResultSet.h"
 #include "CriticalSection.h"
 #include "OdbcOperation.h"
-#include "OdbcStatement.h"
+#include "OdbcStatementCache.h"
 #include <map>
 
 namespace mssql
@@ -35,7 +35,8 @@ namespace mssql
 		OdbcConnection()
 			:
 			error(nullptr),
-			connectionState(Closed)
+			connectionState(Closed),
+			statements(nullptr)
 		{
 		}
 
@@ -45,7 +46,7 @@ namespace mssql
 		bool TryOpen(const wstring& connectionString, int timeout);
 		shared_ptr<OdbcError> LastError(void) const { return error; }
 		bool TryClose();
-		shared_ptr<OdbcStatement> CreateStatement();
+		shared_ptr<OdbcStatementCache> statements;
 
 	private:
 		static OdbcEnvironmentHandle environment;

@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "Operation.h"
+#include "OdbcOperation.h"
 
 namespace mssql
 {
@@ -29,57 +29,19 @@ namespace mssql
 	class OdbcConnection;
 	class OdbcStatement;
 
-	class OdbcOperation : public Operation
+	class CollectOperation : public OdbcOperation
 	{
-	protected:
-
-		shared_ptr<OdbcConnection> connection;
-		Persistent<Function> callback;
-		Handle<Value> output_param;
-		Local<Object> cb;
-		shared_ptr<OdbcStatement> statement;
-		void fetchStatement();
-		int statementId;
-		
-	private:
-
-		bool failed;
-		shared_ptr<OdbcError> failure;
-
 	public:
-
-		OdbcOperation(u_int queryId, Local<Object> cb)
-			: 
-			connection(nullptr),
-			callback(Isolate::GetCurrent(), cb.As<Function>()),
-			cb(cb),
-			failed(false),
-			failure(nullptr)
+		CollectOperation(shared_ptr<OdbcConnection> connection)
+			: OdbcOperation(connection, Handle<Object>())
 		{
-			statementId = queryId;
-			nodeTypeFactory fact;
-			output_param = fact.null();
 		}
 
-		OdbcOperation(shared_ptr<OdbcConnection> connection, Local<Object> cb)
-			: connection(connection),
-			callback(Isolate::GetCurrent(), cb.As<Function>()),
-			cb(cb),
-			failed(false),
-			failure(nullptr)
-		{
-			statementId = -1;
-			nodeTypeFactory fact;
-			output_param = fact.null();
-		}
+		bool TryInvokeOdbc() override;
 
-		virtual ~OdbcOperation();
-		virtual bool TryInvokeOdbc() = 0;
-		virtual Local<Value> CreateCompletionArg() = 0;
+		Local<Value> CreateCompletionArg() override;
 
-		void InvokeBackground() override;
-		int Error(Local<Value> args[]) const;
-		int Success(Local<Value> args[]);
+		// override to not call a callback
 		void CompleteForeground() override;
 	};
 }
