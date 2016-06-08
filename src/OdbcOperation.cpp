@@ -21,17 +21,8 @@
 #include "OdbcOperation.h"
 #include "OdbcConnection.h"
 
-// undo these tokens to use numeric_limits below
-#undef min
-#undef max
-
 namespace mssql
 {
-	// default precision and scale for date/time parameters
-	// (This may be updated for older server since they don't have as high a precision)
-	const int SQL_SERVER_2008_DEFAULT_DATETIME_PRECISION = 34;
-	const int SQL_SERVER_2008_DEFAULT_DATETIME_SCALE = 7;
-
 	OdbcOperation::~OdbcOperation()
 	{
 		callback.Reset();		
@@ -52,9 +43,10 @@ namespace mssql
 			}
 			if (failure == nullptr && statement != nullptr) {
 				failure = statement->LastError();
-			}else
+			}
+			if (failure == nullptr)
 			{
-				int x = 0;
+				failure = make_shared<OdbcError>("unknown", "internal error", -1);
 			}
 		}
 	}
