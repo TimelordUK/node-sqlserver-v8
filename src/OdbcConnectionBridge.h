@@ -42,7 +42,6 @@ namespace mssql
 		Handle<Value> CallProcedure(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const;
 		static Handle<Value> UnbindParameters(Handle<Number> queryId, Handle<Value> val);
 		Handle<Value> ReadRow(Handle<Number> queryId, Handle<Object> callback) const;
-		Handle<Integer> ReadRowCount(Handle<Number> queryId) const;
 		Handle<Value> ReadNextResult(Handle<Number> queryId, Handle<Object> callback) const;
 		Handle<Value> ReadColumn(Handle<Number> queryId, Handle<Number> column, Handle<Object> callback) const;
 		static Local<Value> get(Local<Object> o, const char *v);
@@ -50,7 +49,5 @@ namespace mssql
 
 	private:
 		shared_ptr<OdbcConnection> connection;
-		typedef map<size_t, shared_ptr<OdbcStatement>> statementMap_t;
-		statementMap_t statements;
 	};
 }

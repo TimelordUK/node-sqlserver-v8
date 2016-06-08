@@ -33,7 +33,6 @@ namespace mssql
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "query", Query);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "readRow", ReadRow);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "readColumn", ReadColumn);
-	   NODE_SET_PROTOTYPE_METHOD(tpl, "readRowCount", ReadRowCount);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "beginTransaction", BeginTransaction);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "commit", Commit);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "rollback", Rollback);
@@ -171,14 +170,6 @@ namespace mssql
 		auto callback = info[1].As<Object>();
 		auto connection = Unwrap<Connection>(info.This());
 		auto ret = connection->connectionBridge->ReadNextResult(queryId, callback);
-		info.GetReturnValue().Set(ret);
-	}
-
-	void Connection::ReadRowCount(const FunctionCallbackInfo<Value>& info)
-	{
-		auto queryId = info[0].As<Number>();
-		auto connection = Unwrap<Connection>(info.This());
-		auto ret = connection->connectionBridge->ReadRowCount(queryId);
 		info.GetReturnValue().Set(ret);
 	}
 

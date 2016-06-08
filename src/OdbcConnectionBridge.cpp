@@ -118,19 +118,6 @@ namespace mssql
 		return fact.null();
 	}
 
-	Handle<Integer> OdbcConnectionBridge::ReadRowCount(Handle<Number> queryId) const
-	{
-		assert(connection);
-		nodeTypeFactory fact;
-
-		auto itr = statements.find(queryId->Int32Value());
-		if (itr != statements.end()) {
-			auto statement = itr->second;
-			return fact.newInteger(static_cast<int32_t>(statement->GetResultSet()->RowCount()));
-		}
-		return fact.newInt32(-1);
-	}
-
 	Handle<Value> OdbcConnectionBridge::ReadNextResult(Handle<Number> queryId, Handle<Object> callback) const
 	{
 		auto id = queryId->Int32Value();

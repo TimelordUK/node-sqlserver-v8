@@ -27,7 +27,6 @@ namespace mssql
 	using namespace v8;
 
 	class OdbcConnection;
-	class OdbcStatement;
 
 	class CollectOperation : public OdbcOperation
 	{

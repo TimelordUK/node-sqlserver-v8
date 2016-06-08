@@ -50,7 +50,6 @@ namespace mssql
 	   static void ReadRow(const FunctionCallbackInfo<Value>& info);
 	   static void ReadColumn(const FunctionCallbackInfo<Value>& info);
 	   static void ReadNextResult(const FunctionCallbackInfo<Value>& info);
-	   static void ReadRowCount(const FunctionCallbackInfo<Value>& info);
 
 	private:
 		static Persistent<Function> constructor;

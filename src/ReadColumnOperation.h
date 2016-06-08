@@ -19,7 +19,6 @@
 
 #pragma once
 
-#include "Operation.h"
 #include "OdbcOperation.h"
 
 namespace mssql
@@ -28,7 +27,6 @@ namespace mssql
 	using namespace v8;
 
 	class OdbcConnection;
-	class OdbcStatement;
 
 	class ReadColumnOperation : public OdbcOperation
 	{
