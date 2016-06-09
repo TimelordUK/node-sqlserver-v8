@@ -33,21 +33,26 @@ namespace mssql
 		statement = connection->statements->checkout(statementId);
 	}
 
+	void OdbcOperation::getFailure()
+	{
+		if (connection != nullptr) {
+			failure = connection->LastError();
+		}
+		if (failure == nullptr && statement != nullptr) {
+			failure = statement->LastError();
+		}
+		if (failure == nullptr)
+		{
+			failure = make_shared<OdbcError>("unknown", "internal error", -1);
+		}
+	}
+
 	void OdbcOperation::InvokeBackground()
 	{
 		failed = !TryInvokeOdbc();
 
 		if (failed) {
-			if (connection != nullptr) {
-				failure = connection->LastError();
-			}
-			if (failure == nullptr && statement != nullptr) {
-				failure = statement->LastError();
-			}
-			if (failure == nullptr)
-			{
-				failure = make_shared<OdbcError>("unknown", "internal error", -1);
-			}
+			getFailure();
 		}
 	}
 

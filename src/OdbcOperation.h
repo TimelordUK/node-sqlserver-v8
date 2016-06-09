@@ -77,6 +77,7 @@ namespace mssql
 		virtual bool TryInvokeOdbc() = 0;
 		virtual Local<Value> CreateCompletionArg() = 0;
 
+		void getFailure();
 		void InvokeBackground() override;
 		int Error(Local<Value> args[]) const;
 		int Success(Local<Value> args[]);
