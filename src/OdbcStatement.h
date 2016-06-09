@@ -33,7 +33,7 @@ namespace mssql
 	{
 	public:
 		OdbcStatement(OdbcConnectionHandle &c);
-		~OdbcStatement();
+		virtual ~OdbcStatement();
 		SQLLEN RowCount() const { return resultset != nullptr ? resultset->RowCount() : -1; }
 		shared_ptr<ResultSet> GetResultSet() const
 		{ return resultset; } 
@@ -44,12 +44,12 @@ namespace mssql
 		Handle<Value> GetColumnValue() const;
 		shared_ptr<OdbcError> LastError(void) const { return error; }
 
-		bool TryExecute(const wstring& query, u_int timeout, BoundDatumSet& paramIt);
+		virtual bool TryExecute(const wstring& query, u_int timeout, BoundDatumSet& paramIt);
 		bool TryReadRow();
 		bool TryReadColumn(int column);
 		bool TryReadNextResult();
 
-	private:
+	protected:
 		bool StartReadingResults();
 		SQLRETURN queryTimeout(int timeout);
 		bool d_Variant(int col);

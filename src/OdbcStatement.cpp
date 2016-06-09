@@ -21,31 +21,7 @@
 #include "OdbcStatement.h"
 #include "BoundDatumSet.h"
 #include "NodeColumns.h"
-
-#pragma intrinsic( memset )
-
-// convenient macro to set the error for the handle and return false
-#define RETURN_ODBC_ERROR( handle )                         \
-	           {                                                       \
-        error = handle.LastError(); \
-        handle.Free();                                      \
-        return false;                                       \
-	           }
-
-// boilerplate macro for checking for ODBC errors in this file
-#define CHECK_ODBC_ERROR( r, handle ) { if( !SQL_SUCCEEDED( r ) ) { RETURN_ODBC_ERROR( handle ); } }
-
-// boilerplate macro for checking if SQL_NO_DATA was returned for field data
-#define CHECK_ODBC_NO_DATA( r, handle ) {                                                                 \
-    if( r == SQL_NO_DATA ) {                                                                              \
-        error = make_shared<OdbcError>( OdbcError::NODE_SQL_NO_DATA.SqlState(), OdbcError::NODE_SQL_NO_DATA.Message(), \
-            OdbcError::NODE_SQL_NO_DATA.Code() );                                                         \
-        handle.Free();                                                                                    \
-        return false;                                                                                     \
-             } }
-
-// to use with numeric_limits below
-#undef max
+#include "OdbcHelper.h"
 
 namespace mssql
 {
@@ -69,7 +45,7 @@ namespace mssql
 	OdbcStatement::~OdbcStatement()
 	{
 		if (statement) {
-			statement.Free();	
+			statement.Free();
 		}
 		if (resultset != nullptr) {
 			resultset.reset();
@@ -77,9 +53,9 @@ namespace mssql
 	}
 
 	OdbcStatement::OdbcStatement(OdbcConnectionHandle &c)
-		:		
-		connection(c),		
-		error(nullptr),		
+		:
+		connection(c),
+		error(nullptr),
 		endOfResults(true),
 		resultset(nullptr)
 	{
@@ -285,7 +261,7 @@ namespace mssql
 
 		return true;
 	}
-	
+
 	bool OdbcStatement::dispatch(SQLSMALLINT t, int column)
 	{
 		bool res;
@@ -363,12 +339,12 @@ namespace mssql
 	}
 
 	bool OdbcStatement::d_Variant(int column)
-	{		
+	{
 		SQLLEN variantType;
 		SQLLEN iv;
 		char b;
 		//Figure out the length
-		auto ret = SQLGetData(statement, column + 1, SQL_C_BINARY, &b, 0, &iv); 
+		auto ret = SQLGetData(statement, column + 1, SQL_C_BINARY, &b, 0, &iv);
 		CHECK_ODBC_ERROR(ret, statement);
 		//Figure out the type
 		ret = SQLColAttribute(statement, column + 1, SQL_CA_SS_VARIANT_TYPE, nullptr, NULL, nullptr, &variantType);
@@ -396,7 +372,7 @@ namespace mssql
 
 		SQL_SS_TIMESTAMPOFFSET_STRUCT datetime;
 		// not necessary, but simple precaution
-		memset(&datetime, 0, sizeof(datetime));  	
+		memset(&datetime, 0, sizeof(datetime));
 		datetime.year = SQL_SERVER_DEFAULT_YEAR;
 		datetime.month = SQL_SERVER_DEFAULT_MONTH;
 		datetime.day = SQL_SERVER_DEFAULT_DAY;
