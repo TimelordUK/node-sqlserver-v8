@@ -7,14 +7,9 @@ namespace mssql
 	class BoundDatumSet
 	{
 	public:	
-		BoundDatumSet() : err(nullptr), first_error(0), output_param_count(-1)
-		{
-			
-		}
-
+		BoundDatumSet();
 		bool bind(Handle<Array> &node_params);
-		Local<Array> unbind();
-		
+		Local<Array> unbind();	
 		void clear() { bindings.clear(); }
 		size_t size() { return bindings.size(); }
 		vector<BoundDatum>::iterator begin() { return bindings.begin(); }

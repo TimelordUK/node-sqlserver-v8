@@ -3,6 +3,13 @@
 
 namespace mssql
 {
+	BoundDatumSet::BoundDatumSet() : 
+		err(nullptr), 
+		first_error(0), 
+		output_param_count(-1)
+	{
+	}
+
 	bool BoundDatumSet::bind(Handle<Array> &node_params)
 	{
 		uint32_t count = node_params->Length();

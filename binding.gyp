@@ -5,8 +5,11 @@
 
       'sources': [
         'src/Column.cpp',
+        'src/TimestampColumn.cpp',
         'src/Connection.cpp',
         'src/OdbcConnection.cpp',
+        'src/OdbcStatement.cpp',
+        'src/OdbcPreparedStatement.cpp',
         'src/OdbcError.cpp',
         'src/OdbcConnectionBridge.cpp',
         'src/Operation.cpp',
@@ -23,10 +26,10 @@
         'src/ReadNextResultOperation.cpp',
         'src/ReadRowOperation.cpp',
         'src/ResultSet.cpp',
-        'src/stdafx.cpp',
         'src/Utility.cpp',
-		'src/BoundDatum.cpp',
-		'src/BoundDatumSet.cpp'
+        'src/BoundDatum.cpp',
+        'src/BoundDatumSet.cpp',
+        'src/stdafx.cpp'
 		],
 
       'include_dirs': [
@@ -48,5 +51,3 @@
     }
   ]
 }
-
-

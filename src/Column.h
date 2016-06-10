@@ -19,18 +19,19 @@
 
 #pragma once
 
+#include <stdafx.h>
+#include <v8.h>
+
 namespace mssql
 {
-    using namespace std;
+	using namespace std;
+	using namespace v8;
 
-    class Column
-    {
-    public:
-	   virtual ~Column()
-	   {
-	   }
-
-	   virtual Handle<Value> ToValue() = 0;
-	   virtual bool More() const { return false; }
-    };    
+	class Column
+	{
+	public:
+		virtual ~Column();
+		virtual Handle<Value> ToValue() = 0;
+		virtual bool More() const { return false; }
+	};
 }

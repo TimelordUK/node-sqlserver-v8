@@ -124,6 +124,18 @@ namespace mssql
 		info.GetReturnValue().Set(ret);
     }
 
+	void Connection::Prepare(const FunctionCallbackInfo<Value>& info)
+	{
+		auto queryId = info[0].As<Number>();
+		auto queryObject = info[1].As<Object>();
+		auto params = info[2].As<Array>();
+		auto callback = info[3].As<Object>();
+
+		auto connection = Unwrap<Connection>(info.This());
+		auto ret = connection->connectionBridge->Query(queryId, queryObject, params, callback);
+		info.GetReturnValue().Set(ret);
+	}
+
 	void Connection::CallProcedure(const FunctionCallbackInfo<Value>& info)
 	{
 		// need to ensure the signature is changed (in js ?) to form (?) = call sproc (?, ? ... );

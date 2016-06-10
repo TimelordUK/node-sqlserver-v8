@@ -4,6 +4,11 @@
 
 namespace mssql
 {
+	CollectOperation::CollectOperation(shared_ptr<OdbcConnection> connection)
+		: OdbcOperation(connection, Handle<Object>())
+	{
+	}
+
 	bool CollectOperation::TryInvokeOdbc()
 	{
 		return connection->TryClose();

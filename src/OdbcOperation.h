@@ -48,30 +48,8 @@ namespace mssql
 
 	public:
 
-		OdbcOperation(u_int queryId, Local<Object> cb)
-			: 
-			connection(nullptr),
-			callback(Isolate::GetCurrent(), cb.As<Function>()),
-			cb(cb),
-			failed(false),
-			failure(nullptr)
-		{
-			statementId = queryId;
-			nodeTypeFactory fact;
-			output_param = fact.null();
-		}
-
-		OdbcOperation(shared_ptr<OdbcConnection> connection, Local<Object> cb)
-			: connection(connection),
-			callback(Isolate::GetCurrent(), cb.As<Function>()),
-			cb(cb),
-			failed(false),
-			failure(nullptr)
-		{
-			statementId = -1;
-			nodeTypeFactory fact;
-			output_param = fact.null();
-		}
+		OdbcOperation(u_int queryId, Local<Object> cb);	
+		OdbcOperation(shared_ptr<OdbcConnection> connection, Local<Object> cb);
 
 		virtual ~OdbcOperation();
 		virtual bool TryInvokeOdbc() = 0;

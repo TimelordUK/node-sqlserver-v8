@@ -17,6 +17,7 @@
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
 
+
 #include "OdbcConnectionBridge.h"
 #include "QueryOperation.h"
 #include "EndTranOperation.h"

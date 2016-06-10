@@ -31,13 +31,8 @@ namespace mssql
 	class BeginTranOperation : public OdbcOperation
 	{
 	public:
-		BeginTranOperation(shared_ptr<OdbcConnection> connection, Handle<Object> callback)
-			: OdbcOperation(connection, callback)
-		{
-		}
-
+		BeginTranOperation(shared_ptr<OdbcConnection> connection, Handle<Object> callback);
 		bool TryInvokeOdbc() override;
-
 		Local<Value> CreateCompletionArg() override;
 	};
 }

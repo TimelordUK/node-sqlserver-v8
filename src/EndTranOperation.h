@@ -33,14 +33,8 @@ namespace mssql
 		SQLSMALLINT completionType;
 
 	public:
-		EndTranOperation(shared_ptr<OdbcConnection> connection, SQLSMALLINT completionType, Handle<Object> callback)
-			: OdbcOperation(connection, callback),
-			completionType(completionType)
-		{
-		}
-
+		EndTranOperation(shared_ptr<OdbcConnection> connection, SQLSMALLINT completionType, Handle<Object> callback);
 		bool TryInvokeOdbc() override;
-
 		Local<Value> CreateCompletionArg() override;
 	};
 }

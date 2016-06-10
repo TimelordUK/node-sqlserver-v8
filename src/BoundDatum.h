@@ -3,6 +3,9 @@
 #undef min
 #undef max
 
+#include<v8.h>
+#include<sqlext.h>
+
 namespace mssql
 {
 	using namespace std;

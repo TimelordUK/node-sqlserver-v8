@@ -19,14 +19,16 @@
 
 #pragma once
 
-#include "Operation.h"
+#include <stdafx.h>
 #include "OdbcConnection.h"
-#include "OdbcOperation.h"
+#include "OperationManager.h"
 
 namespace mssql
 {
 	using namespace std;
 	using namespace v8;
+
+	class OdbcConnection;
 
 	class OdbcConnectionBridge
 	{

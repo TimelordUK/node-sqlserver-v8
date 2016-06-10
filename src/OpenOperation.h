@@ -35,22 +35,10 @@ namespace mssql
 		int timeout;
 
 	public:
-		OpenOperation(shared_ptr<OdbcConnection> connection, const wstring& connectionString, int timeout, Handle<Object> callback,
-			Handle<Object> backpointer)
-			: OdbcOperation(connection, callback),
-			connectionString(connectionString),
-			backpointer(Isolate::GetCurrent(), backpointer),
-			timeout(timeout)
-		{
-		}
-
-		virtual ~OpenOperation(void)
-		{
-			backpointer.Reset();
-		}
-
+		OpenOperation(shared_ptr<OdbcConnection> connection, const wstring& connectionString,
+			int timeout, Handle<Object> callback, Handle<Object> backpointer);	
+		virtual ~OpenOperation(void);
 		bool TryInvokeOdbc() override;
-
 		Local<Value> CreateCompletionArg() override;
 	};
 }

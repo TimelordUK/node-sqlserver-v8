@@ -46,28 +46,4 @@ namespace mssql {
     private:
 	   uv_work_t  work;
     };
-
-    /* need to think about threading with multiple active connections */
-
-    class OperationManager
-    {
-	   typedef map<size_t, shared_ptr<Operation>> map_operations_t;
-	   
-
-    public:
-	   static bool Add(shared_ptr<Operation> operation_ptr);
-	   static void CheckinOperation(int id);
-	   static shared_ptr<Operation> GetOperation(int id)
-	   {
-		  map_operations_t::const_iterator itr = operations.find(id);
-		  return itr->second;
-	   }
-
-    private:
-	   static map_operations_t operations;
-
-	   static size_t _id;
-	   static void OnBackground(uv_work_t* work);
-	   static void OnForeground(uv_work_t* work);
-    };
 }
