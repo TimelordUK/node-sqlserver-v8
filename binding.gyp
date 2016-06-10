@@ -13,6 +13,7 @@
         'src/OdbcError.cpp',
         'src/OdbcConnectionBridge.cpp',
         'src/Operation.cpp',
+        'src/OperationManager.cpp',
         'src/OdbcOperation.cpp',
         'src/BeginTranOperation.cpp',
         'src/CloseOperation.cpp',
