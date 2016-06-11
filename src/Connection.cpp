@@ -31,6 +31,7 @@ namespace mssql
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "close", Close);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "open", Open);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "query", Query);
+	   NODE_SET_PROTOTYPE_METHOD(tpl, "prepare", Prepare);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "readRow", ReadRow);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "readColumn", ReadColumn);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "beginTransaction", BeginTransaction);

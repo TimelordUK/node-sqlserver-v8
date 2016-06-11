@@ -57,8 +57,9 @@ namespace mssql
 		connection(c),
 		error(nullptr),
 		endOfResults(true),
-		resultset(nullptr),
-		statementId(statementId)
+		statementId(statementId),
+		prepared(false),
+		resultset(nullptr)
 	{
 		if (!statement)
 		{
@@ -218,6 +219,28 @@ namespace mssql
 			SQLSetStmtAttr(statement, SQL_ATTR_QUERY_TIMEOUT, to, SQL_IS_UINTEGER);
 			CHECK_ODBC_ERROR(ret, connection);
 		}
+		return true;
+	}
+
+	bool OdbcStatement::TryPrepare(const wstring& query, u_int timeout, BoundDatumSet& params)
+	{
+		SQLRETURN ret;
+		SQLWCHAR * sql_str = const_cast<wchar_t *>(query.c_str());
+		SQLSMALLINT numCols;
+
+		ret = SQLPrepare(statement, sql_str, static_cast<SQLINTEGER>(query.length()));
+		CHECK_ODBC_ERROR(ret, connection);
+
+		ret = SQLNumResultCols(statement, &numCols);
+		CHECK_ODBC_ERROR(ret, connection);
+		resultset = make_unique<ResultSet>(numCols);
+
+		for (int i = 0; i < numCols; i++) {
+			readNext(i);
+		}
+
+		resultset->endOfRows = true;
+		
 		return true;
 	}
 

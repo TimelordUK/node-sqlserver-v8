@@ -20,12 +20,6 @@ namespace mssql
 	bool PrepareOperation::TryInvokeOdbc()
 	{
 		statement = connection->statements->checkout(statementId);
-		return statement->TryExecute(query, timeout, params);
-	}
-
-	Local<Value> PrepareOperation::CreateCompletionArg()
-	{
-		output_param = UnbindParameters();
-		return statement->GetMetaValue();
+		return statement->TryPrepare(query, timeout, params);
 	}
 }

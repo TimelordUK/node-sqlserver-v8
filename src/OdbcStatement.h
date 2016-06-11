@@ -41,13 +41,17 @@ namespace mssql
 		int getStatementId() const
 		{ return statementId; }
 
+		bool isPrepared() const 
+		{ return prepared; }
+
 		Handle<Value> GetMetaValue() const;
 		Handle<Value> EndOfResults() const;
 		Handle<Value> EndOfRows() const;
 		Handle<Value> GetColumnValue() const;
 		shared_ptr<OdbcError> LastError(void) const { return error; }
 
-		virtual bool TryExecute(const wstring& query, u_int timeout, BoundDatumSet& paramIt);
+		bool TryPrepare(const wstring& query, u_int timeout, BoundDatumSet& paramIt);
+		bool TryExecute(const wstring& query, u_int timeout, BoundDatumSet& paramIt);
 		bool TryReadRow();
 		bool TryReadColumn(int column);
 		bool TryReadNextResult();
@@ -85,6 +89,7 @@ namespace mssql
 
 		bool endOfResults;
 		int statementId;
+		bool prepared;
 
 		// set binary true if a binary Buffer should be returned instead of a JS string
 
