@@ -26,14 +26,6 @@
 namespace mssql
 {
 	// internal constants
-	namespace {
-
-		// max characters within a (var)char field in SQL Server
-		const int SQL_SERVER_MAX_STRING_SIZE = 8000;
-
-		// default size to retrieve from a LOB field and we don't know the size
-		const int LOB_PACKET_SIZE = 8192;
-	}
 
 	size_t getSize(BoundDatumSet& params)
 	{

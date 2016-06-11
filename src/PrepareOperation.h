@@ -32,7 +32,6 @@ namespace mssql
 	{
 	public:
 		bool TryInvokeOdbc() override;
-		Local<Value> CreateCompletionArg() override;
 		PrepareOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int queryId, u_int timeout, Handle<Object> callback);
 	};
 }
