@@ -40,7 +40,7 @@ namespace mssql
 		shared_ptr<OdbcStatement> statement;
 		void fetchStatement();
 		int statementId;
-		
+
 	private:
 
 		bool failed;
@@ -48,7 +48,7 @@ namespace mssql
 
 	public:
 
-		OdbcOperation(u_int queryId, Local<Object> cb);	
+		OdbcOperation(u_int queryId, Local<Object> cb);
 		OdbcOperation(shared_ptr<OdbcConnection> connection, Local<Object> cb);
 
 		virtual ~OdbcOperation();

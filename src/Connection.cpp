@@ -132,7 +132,7 @@ namespace mssql
 		auto callback = info[3].As<Object>();
 
 		auto connection = Unwrap<Connection>(info.This());
-		auto ret = connection->connectionBridge->Query(queryId, queryObject, params, callback);
+		auto ret = connection->connectionBridge->Prepare(queryId, queryObject, params, callback);
 		info.GetReturnValue().Set(ret);
 	}
 

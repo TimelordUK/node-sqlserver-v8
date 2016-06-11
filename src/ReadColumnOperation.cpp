@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "OdbcConnection.h"
+#include "OdbcStatement.h"
 #include "ReadColumnOperation.h"
 
 namespace mssql

@@ -32,11 +32,14 @@ namespace mssql
 	class OdbcStatement
 	{
 	public:
-		OdbcStatement(OdbcConnectionHandle &c);
+		OdbcStatement(int statementId, OdbcConnectionHandle &c);
 		virtual ~OdbcStatement();
 		SQLLEN RowCount() const { return resultset != nullptr ? resultset->RowCount() : -1; }
 		shared_ptr<ResultSet> GetResultSet() const
 		{ return resultset; } 
+
+		int getStatementId() const
+		{ return statementId; }
 
 		Handle<Value> GetMetaValue() const;
 		Handle<Value> EndOfResults() const;
@@ -81,6 +84,7 @@ namespace mssql
 		shared_ptr<OdbcError> error;
 
 		bool endOfResults;
+		int statementId;
 
 		// set binary true if a binary Buffer should be returned instead of a JS string
 

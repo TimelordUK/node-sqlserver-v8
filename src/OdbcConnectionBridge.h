@@ -41,15 +41,16 @@ namespace mssql
 		Handle<Value> Commit(Handle<Object> callback);
 		Handle<Value> Rollback(Handle<Object> callback);
 		Handle<Value> Query(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const;
+		Handle<Value> Prepare(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const;
 		Handle<Value> CallProcedure(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const;
 		static Handle<Value> UnbindParameters(Handle<Number> queryId, Handle<Value> val);
 		Handle<Value> ReadRow(Handle<Number> queryId, Handle<Object> callback) const;
 		Handle<Value> ReadNextResult(Handle<Number> queryId, Handle<Object> callback) const;
-		Handle<Value> ReadColumn(Handle<Number> queryId, Handle<Number> column, Handle<Object> callback) const;
-		static Local<Value> get(Local<Object> o, const char *v);
+		Handle<Value> ReadColumn(Handle<Number> queryId, Handle<Number> column, Handle<Object> callback) const;	
 		Handle<Value> Open(Handle<Object> connectionObject, Handle<Object> callback, Handle<Object> backpointer);
 
 	private:
 		shared_ptr<OdbcConnection> connection;
+		static Local<Value> get(Local<Object> o, const char *v);
 	};
 }

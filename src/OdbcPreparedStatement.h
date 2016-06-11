@@ -24,10 +24,10 @@
 
 namespace mssql
 {
-	class OdbcPreparedStatement : OdbcStatement
+	class OdbcPreparedStatement : public OdbcStatement
 	{
 	public:
-		OdbcPreparedStatement(OdbcConnectionHandle &c);
+		OdbcPreparedStatement(int statementId, OdbcConnectionHandle &c);
 		virtual ~OdbcPreparedStatement();
 		bool TryExecute(const std::wstring& query, u_int timeout, BoundDatumSet& paramIt) override;
 	};

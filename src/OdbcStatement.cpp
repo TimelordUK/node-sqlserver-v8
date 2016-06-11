@@ -52,12 +52,13 @@ namespace mssql
 		}
 	}
 
-	OdbcStatement::OdbcStatement(OdbcConnectionHandle &c)
-		:
+	OdbcStatement::OdbcStatement(int statementId, OdbcConnectionHandle &c)
+		:	
 		connection(c),
 		error(nullptr),
 		endOfResults(true),
-		resultset(nullptr)
+		resultset(nullptr),
+		statementId(statementId)
 	{
 		if (!statement)
 		{

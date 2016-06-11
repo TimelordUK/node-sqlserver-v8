@@ -9,6 +9,7 @@
         'src/Connection.cpp',
         'src/OdbcConnection.cpp',
         'src/OdbcStatement.cpp',
+        'src/OdbcStatementCache.cpp',
         'src/OdbcPreparedStatement.cpp',
         'src/OdbcError.cpp',
         'src/OdbcConnectionBridge.cpp',

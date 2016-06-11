@@ -38,9 +38,7 @@ namespace mssql
 		Local<Array> UnbindParameters();
 		// called by BindParameters when an error occurs.  It passes a node.js error to the user's callback.
 		bool ParameterErrorToUserCallback(uint32_t param, const char* error);
-
 		bool TryInvokeOdbc() override;
-
 		Local<Value> CreateCompletionArg() override;
 
 	protected:

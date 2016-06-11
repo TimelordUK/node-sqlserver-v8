@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------------------------------------------------------------
-// File: OdbcConnection.cpp
+// File: OdbcPreparedStatement.cpp
 // Contents: Async calls to ODBC done in background thread
 // 
 // Copyright Microsoft Corporation and contributors
@@ -26,11 +26,12 @@ namespace mssql
 	{
 	}
 
-	OdbcPreparedStatement::OdbcPreparedStatement(OdbcConnectionHandle &c) : OdbcStatement(c)
+	OdbcPreparedStatement::OdbcPreparedStatement(int statementId, OdbcConnectionHandle &c) 
+		: OdbcStatement(statementId, c)
 	{
 	}
 
-	bool OdbcPreparedStatement::TryExecute(const wstring& query, u_int timeout, BoundDatumSet& params)
+	bool OdbcPreparedStatement::TryExecute(const wstring & query, u_int timeout, BoundDatumSet & params)
 	{
 		return StartReadingResults();
 	}

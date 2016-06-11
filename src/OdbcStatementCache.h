@@ -19,43 +19,31 @@
 
 #pragma once
 
-#include "OdbcStatement.h"
+#include "stdafx.h"
 #include <map>
+#include <OdbcConnection.h>
 
 namespace mssql
 {
 	using namespace std;
 
+	class OdbcStatement;
+
 	class OdbcStatementCache
 	{
 	public:		
-		OdbcStatementCache(OdbcConnectionHandle & connection) : connection(connection)
-		{		
-		}
+		OdbcStatementCache(OdbcConnectionHandle & connection);
+		shared_ptr<OdbcStatement> checkout(int statementId);
+		void checkin(int statementId);
 
-		shared_ptr<OdbcStatement> checkout(int statementId)
-		{
-			shared_ptr<OdbcStatement> statement;
-			auto itr = statements.find(statementId);
-			if (itr != statements.end()) {
-				statement = itr->second;
-			}
-			else {
-				statement = make_shared<OdbcStatement>(connection);
-				statements.insert(pair<size_t, shared_ptr<OdbcStatement>>(statementId, statement));
-			}
-						
-			return statement;
-		}
-
-		void checkin(int statementId)
-		{
-			statements.erase(statementId);
-		}
-		
 	private:
+		shared_ptr<OdbcStatement> find(int statementId);
+		shared_ptr<OdbcStatement> store(shared_ptr<OdbcStatement> st);
+
 		typedef map<size_t, shared_ptr<OdbcStatement>> map_statements_t;
+
 		map_statements_t statements;
+
 		OdbcConnectionHandle & connection;
 	};
 }

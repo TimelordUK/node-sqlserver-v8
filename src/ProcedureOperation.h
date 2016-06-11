@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------------------------------------------------------------
-// File: OdbcOperation.h
+// File: ProcedureOperation.h
 // Contents: ODBC Operation objects called on background thread
 // 
 // Copyright Microsoft Corporation and contributors

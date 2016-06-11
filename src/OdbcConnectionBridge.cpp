@@ -29,6 +29,7 @@
 #include "ReadNextResultOperation.h"
 #include "ReadColumnOperation.h"
 #include "CloseOperation.h"
+#include "PrepareOperation.h"
 
 namespace mssql
 {
@@ -79,6 +80,19 @@ namespace mssql
 		auto timeout = get(queryObject, "query_timeout")->Int32Value();
 		auto id = queryId->Int32Value();
 		auto operation = make_shared<QueryOperation>(connection, FromV8String(queryString), id, timeout, callback);
+		if (operation->BindParameters(params)) {
+			OperationManager::Add(operation);
+		}
+		nodeTypeFactory fact;
+		return fact.null();
+	}
+
+	Handle<Value> OdbcConnectionBridge::Prepare(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const
+	{
+		auto queryString = get(queryObject, "query_str")->ToString();
+		auto timeout = get(queryObject, "query_timeout")->Int32Value();
+		auto id = queryId->Int32Value();
+		auto operation = make_shared<PrepareOperation>(connection, FromV8String(queryString), id, timeout, callback);
 		if (operation->BindParameters(params)) {
 			OperationManager::Add(operation);
 		}

@@ -19,15 +19,18 @@
 
 #pragma once
 
+#include "stdafx.h"
 #include "ResultSet.h"
 #include "CriticalSection.h"
 #include "OdbcOperation.h"
-#include "OdbcStatementCache.h"
+
 #include <map>
 
 namespace mssql
 {
 	using namespace std;
+
+	class OdbcStatementCache;
 
 	class OdbcConnection
 	{
