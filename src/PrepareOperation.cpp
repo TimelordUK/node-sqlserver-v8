@@ -14,7 +14,6 @@ namespace mssql
 		Handle<Object> callback) :
 		QueryOperation(connection, query, id, timeout, callback)
 	{
-		persists = true;
 	}
 
 	bool PrepareOperation::TryInvokeOdbc()

@@ -13,6 +13,8 @@ namespace mssql
 		Handle<Object> callback) :
 		QueryOperation(connection, query, id, timeout, callback)
 	{
+		// the operation should no longer hold onto the param set, as
+		// they are contained within a statement.
 		persists = true;
 	}
 

@@ -3,6 +3,7 @@
 #include "OdbcStatement.h"
 #include "OdbcStatementCache.h"
 #include "QueryOperation.h"
+#include "BoundDatumSet.h"
 
 namespace mssql
 {
@@ -13,13 +14,14 @@ namespace mssql
 		output_param_count(0)
 	{
 		statementId = queryId;
+		params = make_shared<BoundDatumSet>();
 	}
 
-	bool QueryOperation::ParameterErrorToUserCallback(uint32_t param, const char* error)
+	bool QueryOperation::ParameterErrorToUserCallback(uint32_t param, const char* error) const
 	{
 		nodeTypeFactory fact;
 
-		params.clear();
+		params->clear();
 
 		stringstream full_error;
 		full_error << "IMNOD: [msnodesql] Parameter " << param + 1 << ": " << error;
@@ -38,20 +40,20 @@ namespace mssql
 		return false;
 	}
 
-	bool QueryOperation::BindParameters(Handle<Array> &node_params)
+	bool QueryOperation::BindParameters(Handle<Array> &node_params) const
 	{
-		auto res = params.bind(node_params);
+		auto res = params->bind(node_params);
 		if (!res)
 		{
-			ParameterErrorToUserCallback(params.first_error, params.err);
+			ParameterErrorToUserCallback(params->first_error, params->err);
 		}
 
 		return res;
 	}
 
-	Local<Array> QueryOperation::UnbindParameters()
+	Local<Array> QueryOperation::UnbindParameters() const
 	{
-		return params.unbind();
+		return statement->UnbindParams();
 	}
 
 	bool QueryOperation::TryInvokeOdbc()

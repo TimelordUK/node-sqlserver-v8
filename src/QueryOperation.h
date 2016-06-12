@@ -19,7 +19,6 @@
 
 #pragma once
 
-#include "BoundDatumSet.h"
 #include "OdbcOperation.h"
 
 namespace mssql
@@ -29,15 +28,16 @@ namespace mssql
 
 	class OdbcConnection;
 	class OdbcStatement;
+	class BoundDatumSet;
 
 	class QueryOperation : public OdbcOperation
 	{
 	public:
 		QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int queryId, u_int timeout, Handle<Object> callback);
-		bool BindParameters(Handle<Array> & node_params);
-		Local<Array> UnbindParameters();
+		bool BindParameters(Handle<Array> & node_params) const;
+		Local<Array> UnbindParameters() const;
 		// called by BindParameters when an error occurs.  It passes a node.js error to the user's callback.
-		bool ParameterErrorToUserCallback(uint32_t param, const char* error);
+		bool ParameterErrorToUserCallback(uint32_t param, const char* error) const;
 		bool TryInvokeOdbc() override;
 		Local<Value> CreateCompletionArg() override;
 
@@ -45,7 +45,7 @@ namespace mssql
 	
 		u_int timeout;
 		wstring query;
-		BoundDatumSet params;
+		shared_ptr<BoundDatumSet> params;
 		int output_param_count;
 	};
 }

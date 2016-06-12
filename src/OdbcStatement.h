@@ -44,14 +44,15 @@ namespace mssql
 		bool isPrepared() const 
 		{ return prepared; }
 
+		Local<Array> UnbindParams() const;
 		Handle<Value> GetMetaValue() const;
 		Handle<Value> EndOfResults() const;
 		Handle<Value> EndOfRows() const;
 		Handle<Value> GetColumnValue() const;
 		shared_ptr<OdbcError> LastError(void) const { return error; }
 
-		bool TryPrepare(const wstring& query, u_int timeout, BoundDatumSet& paramIt);
-		bool TryExecute(const wstring& query, u_int timeout, BoundDatumSet& paramIt);
+		bool TryPrepare(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> paramSet);
+		bool TryExecute(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> paramSet);
 		bool TryReadRow();
 		bool TryReadColumn(int column);
 		bool TryReadNextResult();
@@ -75,7 +76,7 @@ namespace mssql
 		bool Lob(SQLLEN display_size, int column);
 		static OdbcEnvironmentHandle environment;
 		bool dispatch(SQLSMALLINT t, int column);
-		bool BindParams(BoundDatumSet& params);
+		bool BindParams();
 		bool TryReadString(bool binary, int column);
 
 		OdbcConnectionHandle & connection;
@@ -94,5 +95,6 @@ namespace mssql
 		// set binary true if a binary Buffer should be returned instead of a JS string
 
 		shared_ptr<ResultSet> resultset;
+		shared_ptr<BoundDatumSet> params;
 	};
 }

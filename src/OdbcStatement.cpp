@@ -76,13 +76,14 @@ namespace mssql
 	}
 
 	// bind all the parameters in the array
-	bool OdbcStatement::BindParams(BoundDatumSet& params)
+	bool OdbcStatement::BindParams()
 	{
-		size_t size = getSize(params);
+		auto & ps = *params;
+		size_t size = getSize(ps);
 		if (size <= 0) return true;
 		SQLSetStmtAttr(statement, SQL_ATTR_PARAMSET_SIZE, reinterpret_cast<SQLPOINTER>(size), 0);
 		int current_param = 1;
-		for (auto itr = params.begin(); itr != params.end(); ++itr) {
+		for (auto itr = ps.begin(); itr != ps.end(); ++itr) {
 			auto & datum = *itr;
 			auto r = SQLBindParameter(statement, current_param, datum.param_type, datum.c_type, datum.sql_type, datum.param_size, datum.digits, datum.buffer, datum.buffer_len, datum.getIndVec().data());
 			CHECK_ODBC_ERROR(r, statement);
@@ -93,6 +94,11 @@ namespace mssql
 		}
 
 		return true;
+	}
+
+	Local<Array> OdbcStatement::UnbindParams() const
+	{
+		return params->unbind();
 	}
 
 	Handle<Value> OdbcStatement::GetMetaValue() const
@@ -214,10 +220,10 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::TryPrepare(const wstring& query, u_int timeout, BoundDatumSet& params)
+	bool OdbcStatement::TryPrepare(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> paramSet)
 	{
 		SQLRETURN ret;
-		SQLWCHAR * sql_str = const_cast<wchar_t *>(query.c_str());
+		SQLWCHAR * sql_str = const_cast<SQLWCHAR *>(query.c_str());
 		SQLSMALLINT numCols;
 
 		ret = SQLPrepare(statement, sql_str, static_cast<SQLINTEGER>(query.length()));
@@ -236,11 +242,11 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::TryExecute(const wstring& query, u_int timeout, BoundDatumSet& params)
+	bool OdbcStatement::TryExecute(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> paramSet)
 	{
 		// if the statement isn't already allocated
-
-		bool bound = BindParams(params);
+		params = paramSet;
+		bool bound = BindParams();
 		if (!bound) {
 			// error already set in BindParams
 			return false;
