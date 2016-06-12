@@ -21,27 +21,30 @@
 #include <map>
 #include <memory>
 #include <stdafx.h>
-#include <Operation.h>
 
 namespace mssql {
 
 	using namespace std;
 
-	class OdbcStatement;
+	class Operation;
 
 	/* need to think about threading with multiple active connections */
 
 	class OperationManager
 	{
-		typedef map<size_t, shared_ptr<Operation>> map_operations_t;
+		typedef map<size_t, shared_ptr<Operation>> map_perations_t;
 
 	public:
 		static bool Add(shared_ptr<Operation> operation_ptr);
-		static void CheckinOperation(int id);
-		static shared_ptr<Operation> GetOperation(int id);
+		static void CheckinOperation(size_t id);
+		static shared_ptr<Operation> GetOperation(int id)
+		{
+			map_perations_t::const_iterator itr = operations.find(id);
+			return itr->second;
+		}
 
 	private:
-		static map_operations_t operations;
+		static map_perations_t operations;
 		static size_t _id;
 		static void OnBackground(uv_work_t* work);
 		static void OnForeground(uv_work_t* work);

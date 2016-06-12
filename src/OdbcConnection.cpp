@@ -20,6 +20,7 @@
 #include "stdafx.h"
 #include "OdbcConnection.h"
 #include "OdbcStatementCache.h"
+#include "OperationManager.h"
 #include "NodeColumns.h"
 #include "OdbcHelper.h"
 
@@ -40,6 +41,18 @@ namespace mssql
 		if (!SQL_SUCCEEDED(ret)) { return false; }
 
 		return true;
+	}
+
+	OdbcConnection::OdbcConnection() :
+		error(nullptr),
+		connectionState(Closed),
+		statements(nullptr)		
+	{
+	}
+
+	OdbcConnection::~OdbcConnection()
+	{
+		//fprintf(stderr, "destruct OdbcConnection\n");
 	}
 
 	bool OdbcConnection::TryClose()

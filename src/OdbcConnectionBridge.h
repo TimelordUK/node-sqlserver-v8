@@ -21,7 +21,6 @@
 
 #include <stdafx.h>
 #include "OdbcConnection.h"
-#include "OperationManager.h"
 
 namespace mssql
 {
@@ -35,6 +34,7 @@ namespace mssql
 	public:
 
 		OdbcConnectionBridge();
+		~OdbcConnectionBridge();
 		Handle<Value> Close(Handle<Object> callback);
 		void Collect(void);
 		Handle<Value> BeginTransaction(Handle<Object> callback);
@@ -48,6 +48,7 @@ namespace mssql
 		Handle<Value> ReadNextResult(Handle<Number> queryId, Handle<Object> callback) const;
 		Handle<Value> ReadColumn(Handle<Number> queryId, Handle<Number> column, Handle<Object> callback) const;	
 		Handle<Value> Open(Handle<Object> connectionObject, Handle<Object> callback, Handle<Object> backpointer);
+		Handle<Value> FreeStatement(Handle<Number> queryId, Handle<Object> callback);
 
 	private:
 		shared_ptr<OdbcConnection> connection;

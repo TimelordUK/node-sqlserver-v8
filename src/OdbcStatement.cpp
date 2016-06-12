@@ -36,6 +36,7 @@ namespace mssql
 
 	OdbcStatement::~OdbcStatement()
 	{
+		//fprintf(stderr, "destruct OdbcStatement\n");
 		if (statement) {
 			statement.Free();
 		}
@@ -44,7 +45,7 @@ namespace mssql
 		}
 	}
 
-	OdbcStatement::OdbcStatement(int statementId, OdbcConnectionHandle &c)
+	OdbcStatement::OdbcStatement(size_t statementId, OdbcConnectionHandle &c)
 		:	
 		connection(c),
 		error(nullptr),

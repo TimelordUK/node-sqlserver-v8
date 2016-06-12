@@ -35,14 +35,8 @@ namespace mssql
 	class OdbcConnection
 	{
 	public:
-		OdbcConnection()
-			:
-			error(nullptr),
-			connectionState(Closed),
-			statements(nullptr)
-		{
-		}
-
+		OdbcConnection();
+		~OdbcConnection();
 		static bool InitializeEnvironment();
 		bool TryBeginTran();
 		bool TryEndTran(SQLSMALLINT completionType);

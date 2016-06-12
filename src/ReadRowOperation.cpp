@@ -8,6 +8,7 @@ namespace mssql
 	{
 		fetchStatement();
 		if (statement == nullptr) return false;
+		// fprintf(stderr, "invoke statement->TryReadRow() statementId = %d\n", statementId);
 		bool res = statement->TryReadRow();
 		return res;
 	}
@@ -15,7 +16,6 @@ namespace mssql
 	Local<Value> ReadRowOperation::CreateCompletionArg()
 	{
 		auto res = statement->EndOfRows();
-
 		return res;
 	}
 }

@@ -1,18 +1,12 @@
+#include "Operation.h"
 #include "OperationManager.h"
 #include <mutex>
 
 namespace mssql
 {
-	OperationManager::map_operations_t OperationManager::operations;
-	
+	map<size_t, shared_ptr<Operation>> OperationManager::operations;
 	size_t OperationManager::_id;
 	mutex g_i_mutex;
-
-	shared_ptr<Operation> OperationManager::GetOperation(int id)
-	{
-		map_operations_t::const_iterator itr = operations.find(id);
-		return itr->second;
-	}
 
 	bool OperationManager::Add(shared_ptr<Operation> operation_ptr)
 	{
@@ -36,7 +30,7 @@ namespace mssql
 		if (!operation->persists) CheckinOperation(operation->OperationID);
 	}
 
-	void OperationManager::CheckinOperation(int id)
+	void OperationManager::CheckinOperation(size_t id)
 	{
 		lock_guard<mutex> lock(g_i_mutex);
 		operations.erase(id);

@@ -33,7 +33,10 @@ namespace mssql {
 	   friend class OperationManager;
 
     public:
-	   Operation() : persists(false), OperationID(-1)
+	   Operation() : 
+		   persists(false), 
+		   OperationID(-1),
+		   mgr(nullptr)
 	   {
 	   }
 
@@ -41,9 +44,10 @@ namespace mssql {
 	   virtual void InvokeBackground() = 0;
 	   virtual void CompleteForeground() = 0;
 	   bool persists;
-	   int OperationID;
-
+	   size_t OperationID;
+	   OperationManager * mgr;
+	  
     private:
-	   uv_work_t  work;
+	   uv_work_t  work;	 
     };
 }

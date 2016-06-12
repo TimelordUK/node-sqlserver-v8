@@ -49,6 +49,7 @@ namespace mssql
 	public:
 
 		OdbcOperation(u_int queryId, Local<Object> cb);
+		OdbcOperation(shared_ptr<OdbcConnection> connection, u_int queryId, Local<Object>);
 		OdbcOperation(shared_ptr<OdbcConnection> connection, Local<Object> cb);
 
 		virtual ~OdbcOperation();

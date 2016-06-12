@@ -30,7 +30,22 @@ namespace mssql
 	{
 	}
 
-	shared_ptr<OdbcStatement> OdbcStatementCache::find(int statementId)
+	OdbcStatementCache::~OdbcStatementCache()
+	{
+		vector<size_t> ids;
+		//fprintf(stderr, "destruct OdbcStatementCache\n");
+		for (map_statements_t::const_iterator itr = statements.begin(); itr != statements.end(); ++itr) {
+			auto & r = *itr;
+			ids.insert(ids.begin(), r.first);
+		}
+
+		for_each(ids.begin(), ids.end(), [&](const size_t id) {
+			//fprintf(stderr, "destruct OdbcStatementCache - erase statement %llu\n", id);
+			statements.erase(id);
+		});
+	}
+
+	shared_ptr<OdbcStatement> OdbcStatementCache::find(size_t statementId)
 	{
 		shared_ptr<OdbcStatement> statement = nullptr;
 		auto itr = statements.find(statementId);
@@ -46,14 +61,14 @@ namespace mssql
 		return statement;
 	}
 
-	shared_ptr<OdbcStatement> OdbcStatementCache::checkout(int statementId)
+	shared_ptr<OdbcStatement> OdbcStatementCache::checkout(size_t statementId)
 	{
 		auto statement = find(statementId);
 		if (statement != nullptr) return statement;
 		return store(make_shared<OdbcStatement>(statementId, connection));
 	}
 
-	void OdbcStatementCache::checkin(int statementId)
+	void OdbcStatementCache::checkin(size_t statementId)
 	{
 		statements.erase(statementId);
 	}

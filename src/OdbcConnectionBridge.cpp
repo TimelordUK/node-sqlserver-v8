@@ -17,7 +17,6 @@
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
 
-
 #include "OdbcConnectionBridge.h"
 #include "QueryOperation.h"
 #include "EndTranOperation.h"
@@ -30,6 +29,8 @@
 #include "ReadColumnOperation.h"
 #include "CloseOperation.h"
 #include "PrepareOperation.h"
+#include "FreeStatementOperation.h"
+#include "OperationManager.h"
 
 namespace mssql
 {
@@ -41,9 +42,16 @@ namespace mssql
 		connection = make_shared<OdbcConnection>();
 	}
 
+	OdbcConnectionBridge::~OdbcConnectionBridge()
+	{
+		//fprintf(stderr, "destruct OdbcConnectionBridge\n");
+	}
+
 	Handle<Value> OdbcConnectionBridge::Close(Handle<Object> callback)
 	{
-		OperationManager::Add(make_shared<CloseOperation>(connection, callback));
+		auto op = make_shared<CloseOperation>(connection, callback);
+		OperationManager::Add(op);
+		//fprintf(stderr, "CloseOperation operationId=%llu\n", op->OperationID);
 		nodeTypeFactory fact;
 		return fact.null();
 	}
@@ -111,7 +119,7 @@ namespace mssql
 			OperationManager::Add(operation);
 		}
 		nodeTypeFactory fact;
-		return fact.newInteger(operation->OperationID);
+		return fact.newInt64(operation->OperationID);
 	}
 
 	Handle<Value> OdbcConnectionBridge::UnbindParameters(Handle<Number> queryId, Handle<Value> val)
@@ -123,6 +131,15 @@ namespace mssql
 		auto a2 = arr->Clone();
 		OperationManager::CheckinOperation(id);
 		return a2;
+	}
+
+	Handle<Value> OdbcConnectionBridge::FreeStatement(Handle<Number> queryId, Handle<Object> callback)
+	{
+		int id = queryId->Int32Value();
+		nodeTypeFactory fact;
+		OperationManager::Add(make_shared<FreeStatementOperation>(connection, id, callback));
+		
+		return fact.null();
 	}
 
 	Handle<Value> OdbcConnectionBridge::ReadRow(Handle<Number> queryId, Handle<Object> callback) const

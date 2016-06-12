@@ -112,6 +112,37 @@ suite('params', function () {
         });
     });
 
+    test('insert large string into max column using user binding WLongVarChar', function (test_done) {
+
+        String.prototype.repeat = function (num) {
+            return new Array(num + 1).join(this);
+        };
+
+        testBoilerPlate("test_large_insert", {"large_insert": "nvarchar(max) "},
+            function (done) {
+
+                var large_text = "A".repeat(10000);
+
+                c.query("INSERT INTO test_large_insert (large_insert) VALUES (?)", [sql.WLongVarChar(large_text)], function (e, r) {
+
+                    assert.ifError(e, "Error inserting large string");
+                    done();
+                })
+            },
+            function (done) {
+
+                c.query("SELECT large_insert FROM test_large_insert", function (e, r) {
+
+                    assert.ifError(e);
+
+                    assert(r[0].large_insert.length == 10000, "Incorrect length for large insert");
+
+                    done();
+                });
+            },
+            test_done);
+    });
+
     test('verify empty string is sent as empty string, not null', function(test_done) {
         sql.open(conn_str, function (err, conn) {
             conn.query("declare @s NVARCHAR(MAX) = ?; select @s as data", [''], function (err, res) {
@@ -690,38 +721,6 @@ suite('params', function () {
             },
             test_done);
     });
-
-    test('insert large string into max column using user binding WLongVarChar', function (test_done) {
-
-        String.prototype.repeat = function (num) {
-            return new Array(num + 1).join(this);
-        };
-
-        testBoilerPlate("test_large_insert", {"large_insert": "nvarchar(max) "},
-            function (done) {
-
-                var large_text = "A".repeat(10000);
-
-                c.query("INSERT INTO test_large_insert (large_insert) VALUES (?)", [sql.WLongVarChar(large_text)], function (e, r) {
-
-                    assert.ifError(e, "Error inserting large string");
-                    done();
-                })
-            },
-            function (done) {
-
-                c.query("SELECT large_insert FROM test_large_insert", function (e, r) {
-
-                    assert.ifError(e);
-
-                    assert(r[0].large_insert.length == 10000, "Incorrect length for large insert");
-
-                    done();
-                });
-            },
-            test_done);
-    });
-
 
     test('insert large string into max column', function (test_done) {
 

@@ -1,6 +1,4 @@
-query.js
 params.js
-bulk.js
 userbind.js
 querytimeout.js
 sproc.js
@@ -10,3 +8,5 @@ txn.js
 datatypes.js
 dates.js
 compoundqueries.js
+bulk.js
+query.js

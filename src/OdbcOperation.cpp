@@ -38,6 +38,18 @@ namespace mssql
 		output_param = fact.null();
 	}
 
+	OdbcOperation::OdbcOperation(shared_ptr<OdbcConnection> connection, u_int queryId, Local<Object> cb)
+		: connection(connection),
+		callback(Isolate::GetCurrent(), cb.As<Function>()),
+		cb(cb),
+		failed(false),
+		failure(nullptr)
+	{
+		statementId = queryId;
+		nodeTypeFactory fact;
+		output_param = fact.null();
+	}
+
 	OdbcOperation::OdbcOperation(shared_ptr<OdbcConnection> connection, Local<Object> cb)
 		: connection(connection),
 		callback(Isolate::GetCurrent(), cb.As<Function>()),

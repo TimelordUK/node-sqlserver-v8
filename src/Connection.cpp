@@ -40,6 +40,7 @@ namespace mssql
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "nextResult", ReadNextResult);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "callProcedure", CallProcedure);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "unbind", Unbind);
+	   NODE_SET_PROTOTYPE_METHOD(tpl, "freeStatement", FreeStatement);
     }
 
     void Connection::Initialize(Handle<Object> exports)
@@ -155,6 +156,15 @@ namespace mssql
 		auto queryId = info[0].As<Number>();
 		auto connection = Unwrap<Connection>(info.This());
 		auto ret = connection->connectionBridge->UnbindParameters(queryId, info[1]);
+		info.GetReturnValue().Set(ret);
+	}
+
+	void Connection::FreeStatement(const FunctionCallbackInfo<Value>& info)
+	{
+		auto queryId = info[0].As<Number>();		
+		auto callback = info[1].As<Object>();
+		auto connection = Unwrap<Connection>(info.This());
+		auto ret = connection->connectionBridge->FreeStatement(queryId, callback);
 		info.GetReturnValue().Set(ret);
 	}
 
