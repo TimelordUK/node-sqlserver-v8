@@ -7,7 +7,7 @@
 
 namespace mssql
 {
-	QueryOperation::QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, u_int queryId, u_int timeout, Handle<Object> callback) :
+	QueryOperation::QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, size_t queryId, u_int timeout, Handle<Object> callback) :
 		OdbcOperation(connection, callback),
 		timeout(timeout),
 		query(query),

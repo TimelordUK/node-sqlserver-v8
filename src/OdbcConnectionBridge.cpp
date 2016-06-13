@@ -86,7 +86,7 @@ namespace mssql
 	{
 		auto queryString = get(queryObject, "query_str")->ToString();
 		auto timeout = get(queryObject, "query_timeout")->Int32Value();
-		auto id = queryId->Int32Value();
+		auto id = queryId->IntegerValue();
 		auto operation = make_shared<QueryOperation>(connection, FromV8String(queryString), id, timeout, callback);
 		if (operation->BindParameters(params)) {
 			OperationManager::Add(operation);
@@ -99,7 +99,7 @@ namespace mssql
 	{
 		auto queryString = get(queryObject, "query_str")->ToString();
 		auto timeout = get(queryObject, "query_timeout")->Int32Value();
-		auto id = queryId->Int32Value();
+		auto id = queryId->IntegerValue();
 		auto operation = make_shared<PrepareOperation>(connection, FromV8String(queryString), id, timeout, callback);
 		if (operation->BindParameters(params)) {
 			OperationManager::Add(operation);
@@ -112,7 +112,7 @@ namespace mssql
 	{
 		auto queryString = get(queryObject, "query_str")->ToString();
 		auto timeout = get(queryObject, "query_timeout")->Int32Value();
-		auto id = queryId->Int32Value();
+		auto id = queryId->IntegerValue();
 		
 		auto operation = make_shared<ProcedureOperation>(connection, FromV8String(queryString), id, timeout, callback);
 		if (operation->BindParameters(params)) {
@@ -135,7 +135,7 @@ namespace mssql
 
 	Handle<Value> OdbcConnectionBridge::FreeStatement(Handle<Number> queryId, Handle<Object> callback)
 	{
-		int id = queryId->Int32Value();
+		int id = queryId->IntegerValue();
 		nodeTypeFactory fact;
 		OperationManager::Add(make_shared<FreeStatementOperation>(connection, id, callback));
 		
@@ -144,7 +144,7 @@ namespace mssql
 
 	Handle<Value> OdbcConnectionBridge::ReadRow(Handle<Number> queryId, Handle<Object> callback) const
 	{
-		auto id = queryId->Int32Value();
+		auto id = queryId->IntegerValue();
 		OperationManager::Add(make_shared<ReadRowOperation>(connection, id, callback));
 		nodeTypeFactory fact;
 		return fact.null();
@@ -152,7 +152,7 @@ namespace mssql
 
 	Handle<Value> OdbcConnectionBridge::ReadNextResult(Handle<Number> queryId, Handle<Object> callback) const
 	{
-		auto id = queryId->Int32Value();
+		auto id = queryId->IntegerValue();
 		OperationManager::Add(make_shared<ReadNextResultOperation>(connection, id, callback));
 		nodeTypeFactory fact;
 		return fact.null();
@@ -160,7 +160,7 @@ namespace mssql
 
 	Handle<Value> OdbcConnectionBridge::ReadColumn(Handle<Number> queryId, Handle<Number> column, Handle<Object> callback) const
 	{
-		auto id = queryId->Int32Value();
+		auto id = queryId->IntegerValue();
 		OperationManager::Add(make_shared<ReadColumnOperation>(connection, id, column->Int32Value(), callback));
 		nodeTypeFactory fact;
 		return fact.null();

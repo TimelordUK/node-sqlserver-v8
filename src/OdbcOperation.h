@@ -39,7 +39,7 @@ namespace mssql
 		Local<Object> cb;
 		shared_ptr<OdbcStatement> statement;
 		void fetchStatement();
-		int statementId;
+		size_t statementId;
 
 	private:
 
@@ -48,8 +48,8 @@ namespace mssql
 
 	public:
 
-		OdbcOperation(u_int queryId, Local<Object> cb);
-		OdbcOperation(shared_ptr<OdbcConnection> connection, u_int queryId, Local<Object>);
+		OdbcOperation(size_t queryId, Local<Object> cb);
+		OdbcOperation(shared_ptr<OdbcConnection> connection, size_t queryId, Local<Object>);
 		OdbcOperation(shared_ptr<OdbcConnection> connection, Local<Object> cb);
 
 		virtual ~OdbcOperation();

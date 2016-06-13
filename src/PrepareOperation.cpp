@@ -9,7 +9,7 @@ namespace mssql
 	PrepareOperation::PrepareOperation(
 		shared_ptr<OdbcConnection> connection,
 		const wstring& query,
-		u_int id,
+		size_t id,
 		u_int timeout,
 		Handle<Object> callback) :
 		QueryOperation(connection, query, id, timeout, callback)

@@ -34,7 +34,7 @@ namespace mssql
 
 	public:
 
-		ReadColumnOperation(shared_ptr<OdbcConnection> connection, u_int queryId, int column, Handle<Object> callback)
+		ReadColumnOperation(shared_ptr<OdbcConnection> connection, size_t queryId, int column, Handle<Object> callback)
 			: OdbcOperation(connection, callback),
 			column(column)
 		{

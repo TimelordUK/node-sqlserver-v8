@@ -25,7 +25,7 @@
 
 namespace mssql
 {
-	OdbcOperation::OdbcOperation(u_int queryId, Local<Object> cb)
+	OdbcOperation::OdbcOperation(size_t queryId, Local<Object> cb)
 		:
 		connection(nullptr),
 		callback(Isolate::GetCurrent(), cb.As<Function>()),
@@ -38,7 +38,7 @@ namespace mssql
 		output_param = fact.null();
 	}
 
-	OdbcOperation::OdbcOperation(shared_ptr<OdbcConnection> connection, u_int queryId, Local<Object> cb)
+	OdbcOperation::OdbcOperation(shared_ptr<OdbcConnection> connection, size_t queryId, Local<Object> cb)
 		: connection(connection),
 		callback(Isolate::GetCurrent(), cb.As<Function>()),
 		cb(cb),

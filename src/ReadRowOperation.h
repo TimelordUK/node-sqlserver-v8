@@ -32,7 +32,7 @@ namespace mssql
 	{
 	public:
 
-		ReadRowOperation(shared_ptr<OdbcConnection> connection, u_int queryId, Handle<Object> callback)
+		ReadRowOperation(shared_ptr<OdbcConnection> connection, size_t queryId, Handle<Object> callback)
 			: OdbcOperation(connection, callback)
 		{
 			statementId = queryId;

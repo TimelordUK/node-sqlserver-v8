@@ -248,33 +248,18 @@ suite('params', function () {
     });
 
     function toUTC(localDate) {
-        var utcDate = new Date(Date.UTC(localDate.getUTCFullYear(),
-            localDate.getUTCMonth(),
-            localDate.getUTCDate(),
-            localDate.getUTCHours(),
-            localDate.getUTCMinutes(),
-            0,
-            0));
+        var utcDate = new Date(
+            Date.UTC(
+                localDate.getUTCFullYear(),
+                localDate.getUTCMonth(),
+                localDate.getUTCDate(),
+                localDate.getUTCHours(),
+                0,
+                0,
+                0));
         return utcDate;
     }
-
-    test('verify getdate (date) to sql_variant', function(test_done) {
-        var smalldt = toUTC(new Date());
-        sql.open(conn_str, function (err, conn) {
-            conn.query("select cast(convert(date, ?) as sql_variant) as data", [smalldt], function (err, res) {
-                assert.ifError(err);
-                var date = res[0].data;
-                assert(date instanceof Date);
-                date = toUTC(date);
-
-                assert(smalldt.getYear() == date.getYear());
-                assert(smalldt.getMonth() == date.getMonth());
-                assert(smalldt.getDay() == date.getDay());
-                test_done();
-            });
-        });
-    });
-
+    
     test('verify getdate (datetime) to sql_variant', function(test_done) {
         var smalldt = toUTC(new Date());
         sql.open(conn_str, function (err, conn) {

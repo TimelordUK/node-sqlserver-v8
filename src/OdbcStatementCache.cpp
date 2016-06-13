@@ -34,10 +34,10 @@ namespace mssql
 	{
 		vector<size_t> ids;
 		//fprintf(stderr, "destruct OdbcStatementCache\n");
-		for (map_statements_t::const_iterator itr = statements.begin(); itr != statements.end(); ++itr) {
-			auto & r = *itr;
-			ids.insert(ids.begin(), r.first);
-		}
+
+		for_each(statements.begin(), statements.end(), [&](const auto & p) {
+			ids.insert(ids.begin(), p.first);
+		});
 
 		for_each(ids.begin(), ids.end(), [&](const size_t id) {
 			//fprintf(stderr, "destruct OdbcStatementCache - erase statement %llu\n", id);

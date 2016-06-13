@@ -84,6 +84,7 @@ namespace mssql
 		if (size <= 0) return true;
 		SQLSetStmtAttr(statement, SQL_ATTR_PARAMSET_SIZE, reinterpret_cast<SQLPOINTER>(size), 0);
 		int current_param = 1;
+
 		for (auto itr = ps.begin(); itr != ps.end(); ++itr) {
 			auto & datum = *itr;
 			auto r = SQLBindParameter(statement, current_param, datum.param_type, datum.c_type, datum.sql_type, datum.param_size, datum.digits, datum.buffer, datum.buffer_len, datum.getIndVec().data());

@@ -45,7 +45,6 @@ namespace mssql
 		typedef map<size_t, shared_ptr<OdbcStatement>> map_statements_t;
 
 		map_statements_t statements;
-
 		OdbcConnectionHandle & connection;
 	};
 }
