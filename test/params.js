@@ -259,14 +259,13 @@ suite('params', function () {
     }
 
     test('verify getdate (date) to sql_variant', function(test_done) {
-
+        var smalldt = toUTC(new Date());
         sql.open(conn_str, function (err, conn) {
-            conn.query("select cast(convert(date, getdate()) as sql_variant) as data", function (err, res) {
+            conn.query("select cast(convert(date, ?) as sql_variant) as data", [smalldt], function (err, res) {
                 assert.ifError(err);
                 var date = res[0].data;
                 assert(date instanceof Date);
                 date = toUTC(date);
-                var smalldt = toUTC(new Date());
 
                 assert(smalldt.getYear() == date.getYear());
                 assert(smalldt.getMonth() == date.getMonth());
@@ -277,14 +276,13 @@ suite('params', function () {
     });
 
     test('verify getdate (datetime) to sql_variant', function(test_done) {
-
+        var smalldt = toUTC(new Date());
         sql.open(conn_str, function (err, conn) {
-            conn.query("select getdate() as data;", function (err, res) {
+            conn.query("select cast(convert(datetime, ?) as sql_variant) as data", [smalldt], function (err, res) {
                 assert.ifError(err);
                 var date = res[0].data;
                 assert(date instanceof Date);
                 date = toUTC(date);
-                var smalldt = toUTC(new Date());
                 assert(smalldt.getYear() == date.getYear());
                 assert(smalldt.getMonth() == date.getMonth());
                 assert(smalldt.getDay() == date.getDay());
@@ -295,7 +293,7 @@ suite('params', function () {
 
     test('verify getdate to sql_variant', function(test_done) {
         sql.open(conn_str, function (err, conn) {
-            conn.query("select getdate() as data;", function (err, res) {
+            conn.query("select cast(getdate() as sql_variant) as data;", function (err, res) {
                 assert.ifError(err);
                 var date = res[0].data;
                 assert(date instanceof Date);

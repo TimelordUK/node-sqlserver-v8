@@ -1,3 +1,4 @@
+query.js
 params.js
 userbind.js
 querytimeout.js
@@ -9,4 +10,3 @@ datatypes.js
 dates.js
 compoundqueries.js
 bulk.js
-query.js
