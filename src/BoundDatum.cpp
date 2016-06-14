@@ -227,10 +227,11 @@ namespace mssql
 		auto arr = Local<Array>::Cast(p);
 		auto len = arr->Length();
 
+		auto size = sizeof(uint16_t);
 		indvec.resize(len);
 		uint16vec_ptr = make_shared<vector<uint16_t>>(len * strLen);
 		buffer = uint16vec_ptr->data();
-		buffer_len = strLen * sizeof(uint16_t);
+		buffer_len = strLen * size;
 		param_size = strLen;
 
 		auto itr = uint16vec_ptr->begin();
@@ -240,7 +241,7 @@ namespace mssql
 			auto elem = arr->Get(i);
 			if (!elem->IsNull()) {
 				auto str = arr->Get(i)->ToString();
-				auto width = str->Length() * sizeof(uint16_t);
+				auto width = str->Length() * size;
 				indvec[i] = width;
 				str->Write(&*itr, 0, strLen);
 			}
@@ -279,14 +280,15 @@ namespace mssql
 
 	void BoundDatum::bindBoolean(SQLLEN len)
 	{
-		buffer_len = len * sizeof(char);
+		auto size = sizeof(char);
+		buffer_len = len * size;
 		charvec_ptr = make_shared<vector<char>>(len);
 		indvec.resize(len);
 		js_type = JS_BOOLEAN;
 		c_type = SQL_C_BIT;
 		sql_type = SQL_BIT;
 		buffer = charvec_ptr->data();
-		param_size = sizeof(char);;
+		param_size = size;
 		digits = 0;
 	}
 
@@ -361,14 +363,15 @@ namespace mssql
 
 	void BoundDatum::bindInt32(SQLLEN len)
 	{
-		buffer_len = len * sizeof(int32_t);
+		auto size = sizeof(int32_t);
+		buffer_len = len * size;
 		int32vec_ptr = make_shared<vector<int32_t>>(len);
 		indvec.resize(len);
 		js_type = JS_INT;
 		c_type = SQL_C_SLONG;
 		sql_type = SQL_INTEGER;
 		buffer = int32vec_ptr->data();
-		param_size = sizeof(int32_t);
+		param_size = size;
 		digits = 0;
 	}
 
@@ -402,14 +405,15 @@ namespace mssql
 
 	void BoundDatum::bindUint32(SQLLEN len)
 	{
-		buffer_len = len * sizeof(uint32_t);
+		auto size = sizeof(uint32_t);
+		buffer_len = len * size;
 		uint32vec_ptr = make_shared<vector<uint32_t>>(len);
 		indvec.resize(len);
 		js_type = JS_UINT;
 		c_type = SQL_C_ULONG;
 		sql_type = SQL_BIGINT;
 		buffer = uint32vec_ptr->data();
-		param_size = sizeof(uint32_t);
+		param_size = size;
 		digits = 0;
 	}
 
@@ -581,14 +585,15 @@ namespace mssql
 
 	void BoundDatum::bindInteger(SQLLEN len)
 	{
+		auto size = sizeof(int64_t);
 		int64vec_ptr = make_shared<vector<int64_t>>(len);
 		indvec.resize(len);
 		js_type = JS_NUMBER;
 		c_type = SQL_C_SBIGINT;
 		sql_type = SQL_BIGINT;
 		buffer = int64vec_ptr->data();
-		buffer_len = sizeof(int64_t) * len;
-		param_size = sizeof(int64_t);
+		buffer_len = size * len;
+		param_size = size;
 		digits = 0;
 	}
 
@@ -634,14 +639,15 @@ namespace mssql
 
 	void BoundDatum::bindDouble(SQLLEN len)
 	{
+		auto size = sizeof(double);
 		doublevec_ptr = make_shared<vector<double>>(len);
 		indvec.resize(len);
 		js_type = JS_NUMBER;
 		c_type = SQL_C_DOUBLE;
 		sql_type = SQL_DOUBLE;
 		buffer = doublevec_ptr->data();
-		buffer_len = sizeof(double) * len;
-		param_size = sizeof(double);
+		buffer_len = size * len;
+		param_size = size;
 		digits = 0;
 	}
 
@@ -758,16 +764,55 @@ namespace mssql
 		return false;
 	}
 
+	bool isMoney(std::wstring & v)
+	{
+		bool res = v == L"numeric"
+			|| v == L"decimal"
+			|| v == L"smallmoney"
+			|| v == L"money"
+			|| v == L"float"
+			|| v == L"real";
+		return res;
+	}
+
+	bool isInt(const std::wstring & v)
+	{
+		bool res = v == L"smallint"
+			|| v == L"int"
+			|| v == L"tinyint";
+		return res;
+	}
+
+	bool isString(const std::wstring & v)
+	{
+		bool res = v == L"char"
+			|| v == L"text"
+			|| v == L"varchar";
+		return res;
+	}
+
+	bool isBit(const std::wstring & v)
+	{
+		bool res = v == L"bit";
+		return res;
+	}
+
+	bool isDate(const std::wstring & v)
+	{
+		bool res = v == L"date"
+			|| v == L"datetimeoffset"
+			|| v == L"datetime2"
+			|| v == L"smalldatetime"
+			|| v == L"datetime"
+			|| v == L"time";
+		return res;
+	}
+
 	bool SqlTypeSMapsToNumeric(Local<Value> p)
 	{
 		auto str = getH(p, "type_id");
 		auto v = FromV8String(str);
-		bool res = v == L"numeric" 
-			|| v == L"decimal" 
-			|| v == L"smallmoney" 
-			|| v == L"money" 
-			|| v == L"float" 
-			|| v == L"real";
+		bool res = isMoney(v);
 		return res;
 	}
 
@@ -783,9 +828,7 @@ namespace mssql
 	{
 		auto str = getH(p, "type_id");
 		auto v = FromV8String(str);
-		bool res = v == L"smallint" 
-			|| v == L"int" 
-			|| v == L"tinyint";
+		bool res = isInt(v);
 		return res;
 	}
 
@@ -793,9 +836,7 @@ namespace mssql
 	{
 		auto str = getH(p, "type_id");
 		auto v = FromV8String(str);
-		bool res = v == L"char" 
-			|| v == L"text" 
-			|| v == L"varchar";
+		bool res = isString(v);
 		return res;
 	}
 
@@ -803,7 +844,7 @@ namespace mssql
 	{
 		auto str = getH(p, "type_id");
 		auto v = FromV8String(str);
-		bool res = v == L"bit";
+		bool res = isBit(v);
 		return res;
 	}
 
@@ -811,12 +852,7 @@ namespace mssql
 	{
 		auto str = getH(p, "type_id");
 		auto v = FromV8String(str);
-		bool res = v == L"date" 
-			|| v == L"datetimeoffset" 
-			|| v == L"datetime2" 
-			|| v == L"smalldatetime" 
-			|| v == L"datetime" 
-			|| v == L"time";
+		bool res = isDate(v);
 		return res;
 	}
 
