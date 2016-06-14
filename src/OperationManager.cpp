@@ -27,7 +27,7 @@ namespace mssql
 	{
 		auto operation = static_cast<Operation*>(work->data);
 		operation->CompleteForeground();
-		if (!operation->persists) CheckinOperation(operation->OperationID);
+		CheckinOperation(operation->OperationID);
 	}
 
 	void OperationManager::CheckinOperation(size_t id)

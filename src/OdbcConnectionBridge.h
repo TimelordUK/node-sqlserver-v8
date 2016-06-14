@@ -43,7 +43,7 @@ namespace mssql
 		Handle<Value> Query(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const;
 		Handle<Value> Prepare(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const;
 		Handle<Value> CallProcedure(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const;
-		static Handle<Value> UnbindParameters(Handle<Number> queryId, Handle<Value> val);
+		Handle<Value> UnbindParameters(Handle<Number> queryId, Handle<Object> callback);
 		Handle<Value> ReadRow(Handle<Number> queryId, Handle<Object> callback) const;
 		Handle<Value> ReadNextResult(Handle<Number> queryId, Handle<Object> callback) const;
 		Handle<Value> ReadColumn(Handle<Number> queryId, Handle<Number> column, Handle<Object> callback) const;	

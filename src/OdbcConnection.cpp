@@ -44,9 +44,9 @@ namespace mssql
 	}
 
 	OdbcConnection::OdbcConnection() :
+		statements(nullptr),
 		error(nullptr),
-		connectionState(Closed),
-		statements(nullptr)		
+		connectionState(Closed)		
 	{
 	}
 

@@ -154,8 +154,9 @@ namespace mssql
 	void Connection::Unbind(const FunctionCallbackInfo<Value>& info)
 	{
 		auto queryId = info[0].As<Number>();
+		auto callback = info[1].As<Object>();
 		auto connection = Unwrap<Connection>(info.This());
-		auto ret = connection->connectionBridge->UnbindParameters(queryId, info[1]);
+		auto ret = connection->connectionBridge->UnbindParameters(queryId, callback);
 		info.GetReturnValue().Set(ret);
 	}
 

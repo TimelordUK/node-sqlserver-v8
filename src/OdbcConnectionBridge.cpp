@@ -31,6 +31,7 @@
 #include "PrepareOperation.h"
 #include "FreeStatementOperation.h"
 #include "OperationManager.h"
+#include "UnbindOperation.h"
 
 namespace mssql
 {
@@ -122,20 +123,17 @@ namespace mssql
 		return fact.newInt64(operation->OperationID);
 	}
 
-	Handle<Value> OdbcConnectionBridge::UnbindParameters(Handle<Number> queryId, Handle<Value> val)
+	Handle<Value> OdbcConnectionBridge::UnbindParameters(Handle<Number> queryId, Handle<Object> callback)
 	{
-		int id = val->Int32Value();
-		auto op = OperationManager::GetOperation(id);
-		auto po_ptr = static_cast<ProcedureOperation*>(op.get());
-		Local<Array> arr = po_ptr->UnbindParameters();
-		auto a2 = arr->Clone();
-		OperationManager::CheckinOperation(id);
-		return a2;
+		auto id = queryId->IntegerValue();	
+		OperationManager::Add(make_shared<UnbindOperation>(connection, id, callback));
+		nodeTypeFactory fact;
+		return fact.null();
 	}
 
 	Handle<Value> OdbcConnectionBridge::FreeStatement(Handle<Number> queryId, Handle<Object> callback)
 	{
-		int id = queryId->IntegerValue();
+		auto id = queryId->IntegerValue();
 		nodeTypeFactory fact;
 		OperationManager::Add(make_shared<FreeStatementOperation>(connection, id, callback));
 		

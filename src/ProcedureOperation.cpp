@@ -13,9 +13,6 @@ namespace mssql
 		Handle<Object> callback) :
 		QueryOperation(connection, query, id, timeout, callback)
 	{
-		// the operation should no longer hold onto the param set, as
-		// they are contained within a statement.
-		persists = true;
 	}
 
 	bool ProcedureOperation::TryInvokeOdbc()
@@ -26,7 +23,7 @@ namespace mssql
 
 	Local<Value> ProcedureOperation::CreateCompletionArg()
 	{
-		output_param = UnbindParameters();
+		nodeTypeFactory fact;
 		return statement->GetMetaValue();
 	}
 }

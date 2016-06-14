@@ -34,7 +34,6 @@ namespace mssql {
 
     public:
 	   Operation() : 
-		   persists(false), 
 		   OperationID(-1),
 		   mgr(nullptr)
 	   {
@@ -43,7 +42,7 @@ namespace mssql {
 	   virtual ~Operation();
 	   virtual void InvokeBackground() = 0;
 	   virtual void CompleteForeground() = 0;
-	   bool persists;
+
 	   size_t OperationID;
 	   OperationManager * mgr;
 	  
