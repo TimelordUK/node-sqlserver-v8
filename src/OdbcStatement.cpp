@@ -238,7 +238,7 @@ namespace mssql
 			readNext(i);
 		}
 
-		preparedStorage->bind(resultset);
+		preparedStorage->reserve(resultset);
 
 		resultset->endOfRows = true;
 		

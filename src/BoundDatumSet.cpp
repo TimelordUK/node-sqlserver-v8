@@ -10,7 +10,7 @@ namespace mssql
 	{
 	}
 
-	bool BoundDatumSet::bind(shared_ptr<ResultSet> set)
+	bool BoundDatumSet::reserve(shared_ptr<ResultSet> set)
 	{
 		for (uint32_t i = 0; i < set->GetColumns(); ++i) {
 			BoundDatum binding;
