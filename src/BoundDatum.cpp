@@ -124,7 +124,7 @@ namespace mssql
 
 		auto size = sizeof(uint16_t);
 		indvec.resize(arrayLen);
-		storage.uint16vec_ptr = make_shared<vector<uint16_t>>(arrayLen * maxStrLen);
+		storage.ReserveUint16(arrayLen * maxStrLen);
 		buffer = storage.uint16vec_ptr->data();
 		buffer_len = maxStrLen * size;
 		param_size = maxStrLen;
@@ -282,7 +282,7 @@ namespace mssql
 	{
 		auto size = sizeof(char);
 		buffer_len = len * size;
-		storage.charvec_ptr = make_shared<vector<char>>(len);
+		storage.ReserveChars(len);
 		indvec.resize(len);
 		js_type = JS_BOOLEAN;
 		c_type = SQL_C_BIT;
@@ -312,7 +312,7 @@ namespace mssql
 	{
 		definedPrecision = true;
 		buffer_len = len * sizeof(SQL_NUMERIC_STRUCT);
-		storage.numeric_ptr = make_shared<vector<SQL_NUMERIC_STRUCT>>(len);
+		storage.ReserveNumerics(len);
 		indvec.resize(len);
 		js_type = JS_NUMBER;
 		c_type = SQL_C_NUMERIC;
@@ -365,7 +365,7 @@ namespace mssql
 	{
 		auto size = sizeof(int32_t);
 		buffer_len = len * size;
-		storage.int32vec_ptr = make_shared<vector<int32_t>>(len);
+		storage.ReserveInt32(len);
 		indvec.resize(len);
 		js_type = JS_INT;
 		c_type = SQL_C_SLONG;
@@ -407,7 +407,7 @@ namespace mssql
 	{
 		auto size = sizeof(uint32_t);
 		buffer_len = len * size;
-		storage.uint32vec_ptr = make_shared<vector<uint32_t>>(len);
+		storage.ReserveUInt32(len);
 		indvec.resize(len);
 		js_type = JS_UINT;
 		c_type = SQL_C_ULONG;
@@ -505,7 +505,7 @@ namespace mssql
 	void BoundDatum::reserveTimeStamp(SQLLEN len)
 	{
 		buffer_len = len * sizeof(SQL_TIMESTAMP_STRUCT);
-		storage.timestampvec_ptr = make_shared<vector<SQL_TIMESTAMP_STRUCT>>(len);
+		storage.ReserveTimestamp(len);
 		indvec.resize(len);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC		
 		js_type = JS_DATE;
@@ -586,7 +586,7 @@ namespace mssql
 	void BoundDatum::reserveInteger(SQLLEN len)
 	{
 		auto size = sizeof(int64_t);
-		storage.int64vec_ptr = make_shared<vector<int64_t>>(len);
+		storage.ReserveInt64(len);
 		indvec.resize(len);
 		js_type = JS_NUMBER;
 		c_type = SQL_C_SBIGINT;
@@ -640,7 +640,7 @@ namespace mssql
 	void BoundDatum::reserveDouble(SQLLEN len)
 	{
 		auto size = sizeof(double);
-		storage.doublevec_ptr = make_shared<vector<double>>(len);
+		storage.ReserveDouble(len);
 		indvec.resize(len);
 		js_type = JS_NUMBER;
 		c_type = SQL_C_DOUBLE;
