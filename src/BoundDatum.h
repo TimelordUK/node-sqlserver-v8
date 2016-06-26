@@ -24,6 +24,80 @@ namespace mssql
 		vector<SQLLEN> & getIndVec() { return indvec; }
 		char *getErr() const { return err; }
 
+		class DatumStorage
+		{		
+		public:
+
+			typedef vector<uint16_t> uint16_t_vec_t;
+			typedef vector<char> char_vec_t;
+			typedef vector<int32_t> int32_vec_t;
+			typedef vector<uint32_t> uint32_vec_t;
+			typedef vector<int64_t> int64_vec_t;
+			typedef vector<double> double_vec_t;
+			typedef vector<SQL_SS_TIMESTAMPOFFSET_STRUCT> timestamp_offset_vec_t;
+			typedef vector<SQL_SS_TIME2_STRUCT> time2_struct_vec_t;
+			typedef vector<SQL_TIMESTAMP_STRUCT> timestamp_struct_vec_t;
+			typedef vector<SQL_DATE_STRUCT > date_struct_vec_t;
+			typedef vector<SQL_NUMERIC_STRUCT> numeric_struct_vec_t;
+
+			DatumStorage() :
+				charvec_ptr(nullptr),
+				uint16vec_ptr(nullptr),
+				int32vec_ptr(nullptr),
+				uint32vec_ptr(nullptr),
+				int64vec_ptr(nullptr),
+				doublevec_ptr(nullptr),
+				timestampoffsetvec_ptr(nullptr),
+				time2vec_ptr(nullptr),
+				timestampvec_ptr(nullptr),
+				datevec_ptr(nullptr),
+				numeric_ptr(nullptr)
+			{
+			}
+		
+			void ReassignStorage(DatumStorage &other)
+			{
+				doublevec_ptr = other.doublevec_ptr;
+				uint16vec_ptr = other.uint16vec_ptr;
+				int32vec_ptr = other.int32vec_ptr;
+				uint32vec_ptr = other.uint32vec_ptr;
+				int64vec_ptr = other.int64vec_ptr;
+				timestampoffsetvec_ptr = other.timestampoffsetvec_ptr;
+				datevec_ptr = other.datevec_ptr;
+				time2vec_ptr = other.time2vec_ptr;
+				timestampvec_ptr = other.timestampvec_ptr;
+				charvec_ptr = other.charvec_ptr;
+				numeric_ptr = other.numeric_ptr;
+			}
+
+			void ReserveNumerics(size_t len)
+			{
+				numeric_ptr = make_shared<vector<SQL_NUMERIC_STRUCT>>(len);
+			}
+
+			void ReserveChars(size_t len)
+			{
+				charvec_ptr = make_shared<vector<char>>(len);
+			}
+
+			void ReserveUint16(size_t len)
+			{
+				uint16vec_ptr = make_shared<uint16_t_vec_t>(len);
+			}
+
+			shared_ptr<int32_vec_t> int32vec_ptr;
+			shared_ptr<uint32_vec_t> uint32vec_ptr;
+			shared_ptr<int64_vec_t> int64vec_ptr;
+			shared_ptr<double_vec_t> doublevec_ptr;
+			shared_ptr<timestamp_offset_vec_t> timestampoffsetvec_ptr;
+			shared_ptr<time2_struct_vec_t> time2vec_ptr;
+			shared_ptr<timestamp_struct_vec_t> timestampvec_ptr;
+			shared_ptr<date_struct_vec_t> datevec_ptr;
+			shared_ptr<numeric_struct_vec_t> numeric_ptr;
+			shared_ptr<char_vec_t> charvec_ptr;
+			shared_ptr<uint16_t_vec_t> uint16vec_ptr;
+		};
+
 		BoundDatum(void) :
 			js_type(JS_UNKNOWN),
 			c_type(0),
@@ -34,37 +108,11 @@ namespace mssql
 			buffer_len(0),
 			param_type(SQL_PARAM_INPUT),
 			offset(0),
-			charvec_ptr(nullptr),
-			uint16vec_ptr(nullptr),
-			int32vec_ptr(nullptr),
-			uint32vec_ptr(nullptr),
-			int64vec_ptr(nullptr),
-			doublevec_ptr(nullptr),
-			timestampoffsetvec_ptr(nullptr),
-			time2vec_ptr(nullptr),
-			timestampvec_ptr(nullptr),
-			datevec_ptr(nullptr),
-			numeric_ptr(nullptr),
 			definedPrecision(false),
 			definedScale(false),
 			err(nullptr)
 		{
 			indvec = vector<SQLLEN>(1);
-		}
-
-		void ReassignStorage(BoundDatum&other)
-		{
-			doublevec_ptr = other.doublevec_ptr;
-			uint16vec_ptr = other.uint16vec_ptr;
-			int32vec_ptr = other.int32vec_ptr;
-			uint32vec_ptr = other.uint32vec_ptr;
-			int64vec_ptr = other.int64vec_ptr;
-			timestampoffsetvec_ptr = other.timestampoffsetvec_ptr;
-			datevec_ptr = other.datevec_ptr;
-			time2vec_ptr = other.time2vec_ptr;
-			timestampvec_ptr = other.timestampvec_ptr;
-			charvec_ptr = other.charvec_ptr;
-			numeric_ptr = other.numeric_ptr;
 		}
 
 		BoundDatum(BoundDatum&& other)
@@ -78,7 +126,7 @@ namespace mssql
 			buffer_len = other.buffer_len;
 			offset = other.offset;
 
-			ReassignStorage(other);
+			storage.ReassignStorage(other.storage);
 
 			indvec = other.indvec;
 			param_type = other.param_type;
@@ -111,19 +159,7 @@ namespace mssql
 
 	private:
 		vector<SQLLEN> indvec;
-
-		shared_ptr<vector<char>> charvec_ptr;
-		shared_ptr<vector<uint16_t>> uint16vec_ptr;
-		shared_ptr<vector<int32_t>> int32vec_ptr;
-		shared_ptr<vector<uint32_t>> uint32vec_ptr;
-		shared_ptr<vector<int64_t>> int64vec_ptr;
-		shared_ptr<vector<double>> doublevec_ptr;
-		shared_ptr<vector<SQL_SS_TIMESTAMPOFFSET_STRUCT>> timestampoffsetvec_ptr;
-		shared_ptr<vector<SQL_SS_TIME2_STRUCT>> time2vec_ptr;
-		shared_ptr<vector<SQL_TIMESTAMP_STRUCT>> timestampvec_ptr;
-		shared_ptr<vector<SQL_DATE_STRUCT >> datevec_ptr;
-		shared_ptr<vector<SQL_NUMERIC_STRUCT>> numeric_ptr;
-		
+		DatumStorage storage;
 		bool definedPrecision;
 		bool definedScale;
 
@@ -189,7 +225,6 @@ namespace mssql
 		void bindVarBinary(const Local<Value> & p);
 		void bindVarBinaryArray(const Local<Value> & p);
 		void reserveVarBinaryArray(size_t maxObjLen, size_t  arrayLen);
-
 
 		bool bindDatumType(Local<Value>& p);
 		bool bind(Local<Object> o, const char* if_str, uint16_t type);
