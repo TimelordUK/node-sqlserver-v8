@@ -51,11 +51,6 @@ namespace mssql
 		return res;
 	}
 
-	Local<Array> QueryOperation::UnbindParameters() const
-	{
-		return statement->UnbindParams();
-	}
-
 	bool QueryOperation::TryInvokeOdbc()
 	{
 		statement = connection->statements->checkout(statementId);	

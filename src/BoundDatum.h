@@ -131,7 +131,7 @@ namespace mssql
 
 		void bindNull(const Local<Value> & p);
 		void bindNullArray(const Local<Value> & p);
-		void bindNull(SQLLEN len);
+		void reserveNull(SQLLEN len);
 
 		void bindLongVarBinary(Local<Value> & p);
 		void bindVarBinary(Local<Value> & p);
@@ -139,47 +139,48 @@ namespace mssql
 		void bindWLongVarChar(const Local<Value> & p);
 		void bindWVarChar(const Local<Value> & p);
 		void bindWVarChar(const Local<Value>& p, int str_len);
-		void bindStringArray(const Local<Value> & p);
+		void reserveWVarCharArray(size_t maxStrLen, size_t  arrayLen);
+		void bindWVarCharArray(const Local<Value> & p);
 
 		void bindBoolean(const Local<Value> & p);
-		void bindBoolean(SQLLEN len);
+		void reserveBoolean(SQLLEN len);
 		void bindBooleanArray(const Local<Value> & p);
 
 		void bindSmallInt(const Local<Value> & p);
 		void bindTinyInt(const Local<Value> & p);
 		void bindNumeric(const Local<Value> & p);
-		void bindNumeric(SQLLEN len);
+		void reserveNumeric(SQLLEN len);
 
 		void bindInt32(const Local<Value> & p);
-		void bindInt32(SQLLEN len);
+		void reserveInt32(SQLLEN len);
 		void bindInt32Array(const Local<Value> & p);
 
 		void bindUint32(const Local<Value> & p);
-		void bindUint32(SQLLEN len);
+		void reserveUint32(SQLLEN len);
 		void bindUint32Array(const Local<Value> & p);
 
 		void bindInteger(const Local<Value>& p);
-		void bindInteger(SQLLEN len);
+		void reserveInteger(SQLLEN len);
 		void bindIntegerArray(const Local<Value> & p);
 
 		void bindFloat(const Local<Value> & p);
 		void bindReal(const Local<Value> & p);
 
 		void bindDouble(const Local<Value>& p);
-		void bindDouble(SQLLEN len);
+		void reserveDouble(SQLLEN len);
 		void bindDoubleArray(const Local<Value> & p);
 
 		void bindTime(const Local<Value> & p);
-		void bindTime(SQLLEN len);
+		void reserveTime(SQLLEN len);
 
 		void bindDate(const Local<Value> & p);
-		void bindDate(SQLLEN len);
+		void reserveDate(SQLLEN len);
 
 		void bindTimeStamp(const Local<Value> & p);
-		void bindTimeStamp(SQLLEN len);
+		void reserveTimeStamp(SQLLEN len);
 
 		void bindTimeStampOffset(const Local<Value> & p);
-		void bindTimeStampOffset(SQLLEN len);
+		void reserveTimeStampOffset(SQLLEN len);
 		void bindTimeStampOffsetArray(const Local<Value> & p);
 
 		void bindNumber(const Local<Value> & p);
@@ -187,6 +188,8 @@ namespace mssql
 
 		void bindVarBinary(const Local<Value> & p);
 		void bindVarBinaryArray(const Local<Value> & p);
+		void reserveVarBinaryArray(size_t maxObjLen, size_t  arrayLen);
+
 
 		bool bindDatumType(Local<Value>& p);
 		bool bind(Local<Object> o, const char* if_str, uint16_t type);
@@ -197,6 +200,7 @@ namespace mssql
 		void bindChar(const Local<Value> & pp);
 		void bindVarChar(const Local<Value> & pp);
 		void bindVarChar(const Local<Value> & p, int precision);
+		void reserveVarChar(const Local<Value> & p, int precision);
 		bool userBind(Local<Value> &p, Local<Value> &v);
 		void assignPrecision(Local<Object> &pv);
 

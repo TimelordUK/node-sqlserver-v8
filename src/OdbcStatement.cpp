@@ -54,13 +54,9 @@ namespace mssql
 		prepared(false),
 		resultset(nullptr)
 	{
-		if (!statement)
+		if (!statement.Alloc(connection))
 		{
-			// allocate it
-			if (!statement.Alloc(connection))
-			{
-				// todo: set error state.
-			}
+			// todo: set error state.
 		}
 	}
 
@@ -138,7 +134,8 @@ namespace mssql
 		wchar_t typeName[l];
 		SQLSMALLINT typeNameLen;
 		auto index = column + 1;
-		ret = SQLColAttribute(statement, index, SQL_DESC_TYPE_NAME, typeName, l * sizeof(wchar_t), &typeNameLen, nullptr);
+		const size_t width = sizeof(wchar_t);
+		ret = SQLColAttribute(statement, index, SQL_DESC_TYPE_NAME, typeName, l * width, &typeNameLen, nullptr);
 		CHECK_ODBC_ERROR(ret, statement);
 		current.dataTypeName = wstring(typeName, typeNameLen);
 
@@ -154,7 +151,7 @@ namespace mssql
 		{
 			wchar_t udtTypeName[l];
 			SQLSMALLINT udtTypeNameLen;
-			ret = SQLColAttribute(statement, index, SQL_CA_SS_UDT_TYPE_NAME, udtTypeName, l * sizeof(wchar_t), &udtTypeNameLen, nullptr);
+			ret = SQLColAttribute(statement, index, SQL_CA_SS_UDT_TYPE_NAME, udtTypeName, l * width, &udtTypeNameLen, nullptr);
 			CHECK_ODBC_ERROR(ret, statement);
 			current.udtTypeName = wstring(udtTypeName, udtTypeNameLen);
 		}
@@ -222,7 +219,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::TryPrepare(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> paramSet)
+	bool OdbcStatement::TryPrepare(const wstring & query, u_int timeout, shared_ptr<BoundDatumSet> paramSet)
 	{
 		SQLRETURN ret;
 		SQLWCHAR * sql_str = const_cast<SQLWCHAR *>(query.c_str());

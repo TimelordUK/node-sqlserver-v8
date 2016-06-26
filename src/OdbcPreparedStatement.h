@@ -29,6 +29,6 @@ namespace mssql
 	public:
 		OdbcPreparedStatement(int statementId, OdbcConnectionHandle &c);
 		virtual ~OdbcPreparedStatement();
-		bool TryExecute(const std::wstring& query, u_int timeout, BoundDatumSet& paramIt) override;
+		bool TryExecute(const std::wstring& query, u_int timeout, BoundDatumSet& paramIt);
 	};
 }

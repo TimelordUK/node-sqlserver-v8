@@ -49,7 +49,7 @@ namespace mssql
             column.reset();
         }
   
-        ColumnDefinition& GetMetadata(int column)
+        ColumnDefinition & GetMetadata(int column)
         {
             return metadata[column];
         }

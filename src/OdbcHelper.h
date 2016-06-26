@@ -19,9 +19,6 @@
 
 #pragma once
 
-#include "ResultSet.h"
-#include "CriticalSection.h"
-
 namespace mssql
 {
 #pragma intrinsic( memset )
