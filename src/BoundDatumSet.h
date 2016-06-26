@@ -1,5 +1,6 @@
 #pragma once
 #include "BoundDatum.h"
+#include "ResultSet.h"
 #include <vector>
 
 namespace mssql
@@ -8,6 +9,7 @@ namespace mssql
 	{
 	public:	
 		BoundDatumSet();
+		bool bind(shared_ptr<ResultSet> set);
 		bool bind(Handle<Array> &node_params);
 		Local<Array> unbind();	
 		void clear() { bindings.clear(); }

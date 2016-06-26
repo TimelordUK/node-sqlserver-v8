@@ -230,11 +230,15 @@ namespace mssql
 
 		ret = SQLNumResultCols(statement, &numCols);
 		CHECK_ODBC_ERROR(ret, connection);
+
+		preparedStorage = make_shared<BoundDatumSet>();
 		resultset = make_unique<ResultSet>(numCols);
 
 		for (int i = 0; i < numCols; i++) {
 			readNext(i);
 		}
+
+		preparedStorage->bind(resultset);
 
 		resultset->endOfRows = true;
 		

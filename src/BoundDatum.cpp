@@ -79,14 +79,14 @@ namespace mssql
 		bindVarChar(p, static_cast<int>(precision));
 	}
 
-	void BoundDatum::reserveVarChar(const Local<Value> & p, int precision)
+	void BoundDatum::reserveVarChar(size_t precision)
 	{
 		js_type = JS_STRING;
 		c_type = SQL_C_CHAR;
 		sql_type = SQL_VARCHAR;
 		digits = 0;
 		indvec[0] = SQL_NULL_DATA;
-		storage.ReserveChars(std::max(1, precision));
+		storage.ReserveChars(std::max(1, static_cast<int>(precision)));
 		auto * itr_p = storage.charvec_ptr->data();
 		buffer = itr_p;
 		buffer_len = precision;
@@ -95,7 +95,7 @@ namespace mssql
 
 	void BoundDatum::bindVarChar(const Local<Value> & p, int precision)
 	{
-		reserveVarChar(p, precision);
+		reserveVarChar(precision);
 		if (!p->IsNull()) {
 			auto str_param = p->ToString();
 			str_param->WriteUtf8(storage.charvec_ptr->data(), precision);
@@ -764,7 +764,7 @@ namespace mssql
 		return false;
 	}
 
-	bool isMoney(std::wstring & v)
+	bool isNumeric(std::wstring & v)
 	{
 		bool res = v == L"numeric"
 			|| v == L"decimal"
@@ -791,6 +791,12 @@ namespace mssql
 		return res;
 	}
 
+	bool isBinary(const std::wstring & v)
+	{
+		bool res = v == L"binary";
+		return res;
+	}
+
 	bool isBit(const std::wstring & v)
 	{
 		bool res = v == L"bit";
@@ -812,7 +818,7 @@ namespace mssql
 	{
 		auto str = getH(p, "type_id");
 		auto v = FromV8String(str);
-		bool res = isMoney(v);
+		bool res = isNumeric(v);
 		return res;
 	}
 
@@ -1177,6 +1183,80 @@ namespace mssql
 		auto & vec = *storage.timestampoffsetvec_ptr;
 		TimestampColumn tsc(vec[0]);
 		return tsc.ToValue();
+	}
+
+	void BoundDatum::reserveColumnType(SQLSMALLINT  type, size_t len)
+	{
+		bool res;
+		switch (type)
+		{
+		case SQL_SS_VARIANT:
+			reserveVarChar(len);
+			break;
+
+		case SQL_CHAR:
+		case SQL_VARCHAR:
+		case SQL_LONGVARCHAR:
+		case SQL_WCHAR:
+		case SQL_WVARCHAR:
+		case SQL_WLONGVARCHAR:
+		case SQL_SS_XML:
+		case SQL_GUID:
+			reserveVarChar(len);
+			break;
+
+		case SQL_BIT:
+			reserveBoolean(1);
+			break;
+
+		case SQL_SMALLINT:
+		case SQL_TINYINT:
+		case SQL_INTEGER:
+		case SQL_C_SLONG:
+		case SQL_C_SSHORT:
+		case SQL_C_STINYINT:
+		case SQL_C_ULONG:
+		case SQL_C_USHORT:
+		case SQL_C_UTINYINT:
+			reserveInteger(1);
+			break;
+
+		case SQL_DECIMAL:
+		case SQL_NUMERIC:
+		case SQL_REAL:
+		case SQL_FLOAT:
+		case SQL_DOUBLE:
+		case SQL_BIGINT:
+			reserveDouble(1);
+			break;
+
+		case SQL_BINARY:
+		case SQL_VARBINARY:
+		case SQL_LONGVARBINARY:
+		case SQL_SS_UDT:
+			reserveVarBinaryArray(len, 1);
+			break;
+
+		case SQL_TYPE_TIMESTAMP:
+		case SQL_TYPE_DATE:
+		case SQL_SS_TIMESTAMPOFFSET:
+			reserveTimeStampOffset(1);
+			break;
+
+		case SQL_TYPE_TIME:
+		case SQL_SS_TIME2:
+			reserveTime(1);
+			break;
+
+		case SQL_TIMESTAMP:
+		case SQL_DATETIME:
+			reserveTime(1);
+			break;
+
+		default:
+			reserveVarChar(len);
+			break;
+		}
 	}
 
 	Local<Value> BoundDatum::unbind() const

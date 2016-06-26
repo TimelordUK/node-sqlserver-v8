@@ -10,6 +10,17 @@ namespace mssql
 	{
 	}
 
+	bool BoundDatumSet::bind(shared_ptr<ResultSet> set)
+	{
+		for (uint32_t i = 0; i < set->GetColumns(); ++i) {
+			BoundDatum binding;
+			auto & def = set->GetMetadata(i);
+			binding.reserveColumnType(def.dataType, def.columnSize);
+			bindings.push_back(move(binding));
+		}
+		return true;
+	}
+
 	bool BoundDatumSet::bind(Handle<Array> &node_params)
 	{
 		uint32_t count = node_params->Length();

@@ -10,6 +10,8 @@ namespace mssql
 	class BoundDatum {
 	public:
 		bool bind(Local<Value> &p);
+		void reserveColumnType(SQLSMALLINT type, size_t len);
+
 		bool getDefinedPrecision() const {
 			return definedPrecision;
 		}
@@ -17,8 +19,11 @@ namespace mssql
 		bool getDefinedScale() const {
 			return definedScale;
 		}
+
 		Local<Value> unbind() const;
+		
 		vector<SQLLEN> & getIndVec() { return indvec; }
+		
 		char *getErr() const { return err; }
 
 		BoundDatum(void) :
@@ -158,9 +163,10 @@ namespace mssql
 		void bindChar(const Local<Value> & pp);
 		void bindVarChar(const Local<Value> & pp);
 		void bindVarChar(const Local<Value> & p, int precision);
-		void reserveVarChar(const Local<Value> & p, int precision);
+		void reserveVarChar(size_t precision);
 		bool userBind(Local<Value> &p, Local<Value> &v);
 		void assignPrecision(Local<Object> &pv);
+
 
 		static Handle<Value> unbindNull();
 		Handle<Value> unbindString() const;

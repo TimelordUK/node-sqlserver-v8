@@ -96,5 +96,6 @@ namespace mssql
 
 		shared_ptr<ResultSet> resultset;
 		shared_ptr<BoundDatumSet> params;
+		shared_ptr<BoundDatumSet> preparedStorage;		
 	};
 }
