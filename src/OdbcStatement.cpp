@@ -78,7 +78,8 @@ namespace mssql
 		auto & ps = *params;
 		size_t size = getSize(ps);
 		if (size <= 0) return true;
-		SQLSetStmtAttr(statement, SQL_ATTR_PARAMSET_SIZE, reinterpret_cast<SQLPOINTER>(size), 0);
+		auto ret = SQLSetStmtAttr(statement, SQL_ATTR_PARAMSET_SIZE, reinterpret_cast<SQLPOINTER>(size), 0);
+		CHECK_ODBC_ERROR(ret, statement);
 		int current_param = 1;
 
 		for (auto itr = ps.begin(); itr != ps.end(); ++itr) {
@@ -226,10 +227,10 @@ namespace mssql
 		SQLSMALLINT numCols;
 
 		ret = SQLPrepare(statement, sql_str, static_cast<SQLINTEGER>(query.length()));
-		CHECK_ODBC_ERROR(ret, connection);
+		CHECK_ODBC_ERROR(ret, statement);
 
 		ret = SQLNumResultCols(statement, &numCols);
-		CHECK_ODBC_ERROR(ret, connection);
+		CHECK_ODBC_ERROR(ret, statement);
 
 		preparedStorage = make_shared<BoundDatumSet>();
 		resultset = make_unique<ResultSet>(numCols);
@@ -240,14 +241,22 @@ namespace mssql
 
 		preparedStorage->reserve(resultset);
 
+		int i = 0;
+		for (auto itr = preparedStorage->begin(); itr != preparedStorage->end(); ++itr)
+		{
+			auto & datum = *itr;
+			ret = SQLBindCol(statement, i + 1, datum.c_type, datum.buffer, datum.param_size, datum.getIndVec().data());
+			CHECK_ODBC_ERROR(ret, statement);
+			++i;
+		}
+
 		resultset->endOfRows = true;
 		
 		return true;
 	}
 
-	bool OdbcStatement::TryExecute(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> paramSet)
+	bool OdbcStatement::TryExecuteDirect(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> paramSet)
 	{
-		// if the statement isn't already allocated
 		params = paramSet;
 		bool bound = BindParams();
 		if (!bound) {

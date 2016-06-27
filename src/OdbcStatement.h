@@ -52,7 +52,7 @@ namespace mssql
 		shared_ptr<OdbcError> LastError(void) const { return error; }
 
 		bool TryPrepare(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> paramSet);
-		bool TryExecute(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> paramSet);
+		bool TryExecuteDirect(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> paramSet);
 		bool TryReadRow();
 		bool TryReadColumn(int column);
 		bool TryReadNextResult();
