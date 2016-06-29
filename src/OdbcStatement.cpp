@@ -250,6 +250,13 @@ namespace mssql
 			++i;
 		}
 
+		params = paramSet;
+		bool bound = BindParams();
+		if (!bound) {
+			// error already set in BindParams
+			return false;
+		}
+
 		resultset->endOfRows = true;
 		
 		return true;
