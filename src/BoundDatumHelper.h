@@ -95,6 +95,40 @@ namespace mssql
 		shared_ptr<uint16_t_vec_t> uint16vec_ptr;
 	};
 
+	class bufferPoolChar_t
+	{
+	public:
+		typedef shared_ptr<DatumStorage::char_vec_t> shared_vec_ptr_t;
+		typedef map<int, shared_vec_ptr_t> elements_t;
+		static mutex g_i_mutex;
+
+		struct def
+		{
+			def() : id(-1) {}
+			def(int id, shared_vec_ptr_t p) : p(p), id(id) {}
+			shared_vec_ptr_t p;
+			int id;
+		};
+
+		static def accept(const shared_vec_ptr_t & sp)
+		{
+			lock_guard<mutex> lock(g_i_mutex);
+			int id = ++_id;
+			elements_map.insert(pair<int, shared_vec_ptr_t>(id, sp));
+			return def(id, sp);
+		}
+
+		static void remove(int id)
+		{
+			lock_guard<mutex> lock(g_i_mutex);
+			elements_map.erase(id);
+		}
+
+	private:
+		static elements_t elements_map;
+		static int _id;
+	};
+
 	class nodeTypeCounter
 	{
 	public:

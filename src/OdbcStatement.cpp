@@ -509,7 +509,6 @@ namespace mssql
 	bool OdbcStatement::d_Bit(int column)
 	{
 		shared_ptr<DatumStorage> storage;
-		shared_ptr<IntColumn> colVal;
 		if (prepared)
 		{
 			auto & datum = preparedStorage->atIndex(column);
@@ -535,7 +534,6 @@ namespace mssql
 	bool OdbcStatement::d_Decimal(int column)
 	{
 		shared_ptr<DatumStorage> storage;
-		shared_ptr<IntColumn> colVal;
 		if (prepared)
 		{
 			auto & datum = preparedStorage->atIndex(column);
@@ -561,18 +559,29 @@ namespace mssql
 
 	bool OdbcStatement::d_Binary(int column)
 	{
-		SQLLEN strLen_or_IndPtr;
+		shared_ptr<DatumStorage> storage;
 		bool more = false;
-		vector<char> buffer(2048);
-		SQLRETURN ret = SQLGetData(statement, column + 1, SQL_C_BINARY, buffer.data(), buffer.size(), &strLen_or_IndPtr);
-		CHECK_ODBC_ERROR(ret, statement);
-		if (strLen_or_IndPtr == SQL_NULL_DATA)
+		SQLLEN amount = 2048;
+		if (prepared)
 		{
-			resultset->SetColumn(make_shared<NullColumn>());
+			auto & datum = preparedStorage->atIndex(column);
+			storage = datum.getStorage();
+			auto & ind = datum.getIndVec();
+			amount = storage->charvec_ptr->size();
 		}
-		else
-		{
-			assert(strLen_or_IndPtr != SQL_NO_TOTAL); // per http://msdn.microsoft.com/en-us/library/windows/desktop/ms715441(v=vs.85).aspx
+		else {
+			storage = make_shared<DatumStorage>();
+			storage->ReserveChars(amount);
+			SQLLEN strLen_or_IndPtr;
+			SQLRETURN ret = SQLGetData(statement, column + 1, SQL_C_BINARY, storage->charvec_ptr->data(), amount, &strLen_or_IndPtr);
+			CHECK_ODBC_ERROR(ret, statement);
+			if (strLen_or_IndPtr == SQL_NULL_DATA)
+			{
+				resultset->SetColumn(make_shared<NullColumn>());
+				return true;
+			}
+			assert(strLen_or_IndPtr != SQL_NO_TOTAL);
+			// per http://msdn.microsoft.com/en-us/library/windows/desktop/ms715441(v=vs.85).aspx
 
 			SQLWCHAR SQLState[6];
 			SQLINTEGER nativeError;
@@ -584,18 +593,20 @@ namespace mssql
 				more = wcsncmp(SQLState, L"01004", 6) == 0;
 			}
 
-			auto amount = strLen_or_IndPtr;
+			amount = strLen_or_IndPtr;
 			if (more) {
-				amount = buffer.size();
+				amount = storage->charvec_ptr->size();
 			}
-
-			vector<char> trimmed(amount);
-			memcpy(trimmed.data(), buffer.data(), amount);
-			resultset->SetColumn(make_shared<BinaryColumn>(trimmed, more));
 		}
+		if (amount < storage->charvec_ptr->size())
+		{
+			storage->charvec_ptr->resize(amount);
+		}
+		resultset->SetColumn(make_shared<BinaryColumn>(storage->charvec_ptr, more));
+
 		return true;
 	}
-
+	
 	bool OdbcStatement::TryReadColumn(int column)
 	{
 		assert(column >= 0 && column < resultset->GetColumns());

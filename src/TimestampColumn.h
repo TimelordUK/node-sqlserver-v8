@@ -1,11 +1,10 @@
+#pragma once
+
 #include <v8.h>
 #include "Column.h"
+#include "Utility.h"
 #include <sql.h>
-
-#pragma once
 #include <sqlncli.h>
-
-#pragma once
 
 namespace mssql
 {

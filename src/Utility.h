@@ -23,7 +23,6 @@
 #include <map>
 #include <mutex>
 
-
 namespace mssql
 {
     using namespace std;
@@ -38,43 +37,6 @@ namespace mssql
 	void encodeNumericStruct(double v, int precision, int upscaleLimit, SQL_NUMERIC_STRUCT & numeric);
 
     string w2a(const wchar_t* input);
-
-    class bufferPoolChar_t
-    {
-    public:
-	   typedef vector<char> vec_t;
-	   typedef shared_ptr<vec_t> shared_vec_ptr_t;
-	   typedef map<int, shared_vec_ptr_t> elements_t;
-	   static mutex g_i_mutex;
-
-	   struct def
-	   {
-		  def() : id(-1) {}
-		  def(int id, shared_vec_ptr_t p) : p(p), id(id) {}
-		  shared_vec_ptr_t p;
-		  int id;
-	   };
-
-	   static def accept(const vec_t & src)
-	   {
-		  lock_guard<mutex> lock(g_i_mutex);
-		  vec_t b = move(src);
-		  auto sp = make_shared<vec_t>(b);
-		  int id = ++_id;
-		  elements_map.insert(pair<int, shared_vec_ptr_t>(id, sp));
-		  return def(id, sp);
-	   }
-
-	   static void remove(int id)
-	   {
-		  lock_guard<mutex> lock(g_i_mutex);
-		  elements_map.erase(id);
-	   }
-
-    private:
-	   static elements_t elements_map;
-	   static int _id;
-    };
 
     struct nodeTypeFactory
     {

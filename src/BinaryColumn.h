@@ -4,6 +4,7 @@
 #include <v8.h>
 #include "Column.h"
 #include <node_buffer.h>
+#include "BoundDatumHelper.h"
 
 namespace mssql
 {
@@ -13,7 +14,7 @@ namespace mssql
     {
     public:
 
-	   BinaryColumn(vector<char>& src, bool more)
+	   BinaryColumn(shared_ptr<DatumStorage::char_vec_t> src, bool more)
 		  : more(more)
 	   {
 		  d = bufferPoolChar_t::accept(src);
