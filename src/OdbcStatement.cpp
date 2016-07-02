@@ -245,7 +245,7 @@ namespace mssql
 		for (auto itr = preparedStorage->begin(); itr != preparedStorage->end(); ++itr)
 		{
 			auto & datum = *itr;
-			ret = SQLBindCol(statement, i + 1, datum.c_type, datum.buffer, datum.param_size, datum.getIndVec().data());
+			ret = SQLBindCol(statement, i + 1, datum.c_type, datum.buffer, datum.buffer_len, datum.getIndVec().data());
 			CHECK_ODBC_ERROR(ret, statement);
 			++i;
 		}
