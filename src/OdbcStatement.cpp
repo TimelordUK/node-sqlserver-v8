@@ -579,12 +579,12 @@ namespace mssql
 		SQLLEN value_len;
 		bool more;
 		SQLRETURN r;
-
+		auto storage = make_shared<DatumStorage>();
 		value_len = LOB_PACKET_SIZE + 1;
-		auto value = make_unique<StringColumn::StringValue>(value_len);
+		storage->ReserveUint16(value_len);
 		size_t size = sizeof(uint16_t);
 
-		r = SQLGetData(statement, column + 1, SQL_C_WCHAR, value->data(), value_len * size, &value_len);
+		r = SQLGetData(statement, column + 1, SQL_C_WCHAR, storage->uint16vec_ptr->data(), value_len * size, &value_len);
 
 		CHECK_ODBC_NO_DATA(r, statement);
 		CHECK_ODBC_ERROR(r, statement);
@@ -597,15 +597,15 @@ namespace mssql
 		// an unknown amount is left on the field so no total was returned
 		if (value_len == SQL_NO_TOTAL || value_len / size > LOB_PACKET_SIZE) {
 			more = true;
-			value->resize(LOB_PACKET_SIZE);
+			storage->uint16vec_ptr->resize(LOB_PACKET_SIZE);
 		}
 		else {
 			// value_len is in bytes
-			value->resize(value_len / size);
+			storage->uint16vec_ptr->resize(value_len / size);
 			more = false;
 		}
 
-		resultset->SetColumn(make_shared<StringColumn>(value, more));
+		resultset->SetColumn(make_shared<StringColumn>(storage, storage->uint16vec_ptr->size(), more));
 		return true;
 	}
 
