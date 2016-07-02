@@ -71,7 +71,7 @@ namespace mssql
 		bool d_Timestamp(int col);
 		bool d_Time(int col);
 		bool boundedString(SQLLEN display_size, int column);
-		bool reservedString(SQLLEN display_size, int column);
+		bool reservedString(SQLLEN display_size, int column) const;
 		void applyPrecision(const BoundDatum & datum, int current_param) const;
 		bool readColAttributes(ResultSet::ColumnDefinition& current, int column);
 		bool readNext(int column);

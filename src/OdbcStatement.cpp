@@ -609,10 +609,14 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::reservedString(SQLLEN display_size, int column)
+	bool OdbcStatement::reservedString(SQLLEN display_size, int column) const
 	{
 		auto & s = preparedStorage->atIndex(column);
-		auto value = make_shared<StringColumn>(s.getStorage());
+		auto & ind = s.getIndVec();
+		size_t size = sizeof(StringColumn::StringValue::value_type);
+		auto value_len = ind[0];;
+		value_len /= size;
+		auto value = make_shared<StringColumn>(s.getStorage(), value_len);
 		resultset->SetColumn(value);
 		return true;
 	}

@@ -20,7 +20,7 @@ namespace mssql
 
 	   typedef vector<uint16_t> StringValue;
 
-	   StringColumn(shared_ptr<DatumStorage> s) : more(false), storage(s)
+	   StringColumn(shared_ptr<DatumStorage> s, size_t size) : more(false), size(size), storage(s)
 	   {
 	   }
 
@@ -39,8 +39,8 @@ namespace mssql
 	   {
 		  nodeTypeFactory fact;
 		  auto ptr = storage != nullptr ? storage->uint16vec_ptr->data() : text->data();
-		  auto size = storage != nullptr ? storage->uint16vec_ptr->size() : text->size();
-		  auto s = fact.fromTwoByte(static_cast<const uint16_t*>(ptr), size);
+		  auto len = storage != nullptr ? size : text->size();
+		  auto s = fact.fromTwoByte(static_cast<const uint16_t*>(ptr), len);
 		  return s;
 	   }
 
@@ -53,6 +53,7 @@ namespace mssql
 
 	   unique_ptr<StringValue> text;
 	   shared_ptr<DatumStorage> storage;
+	   size_t size;
 	   bool more;
     };
 }
