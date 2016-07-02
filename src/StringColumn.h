@@ -24,6 +24,10 @@ namespace mssql
 	   {
 	   }
 
+	   StringColumn(shared_ptr<DatumStorage> s, size_t size, bool more) : more(more), size(size), storage(s)
+	   {
+	   }
+
 	   StringColumn(int size) : more(false), storage(nullptr)
 	   {
 		  text->resize(size);

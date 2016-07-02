@@ -582,7 +582,7 @@ namespace mssql
 
 		value_len = LOB_PACKET_SIZE + 1;
 		auto value = make_unique<StringColumn::StringValue>(value_len);
-		size_t size = sizeof(StringColumn::StringValue::value_type);
+		size_t size = sizeof(uint16_t);
 
 		r = SQLGetData(statement, column + 1, SQL_C_WCHAR, value->data(), value_len * size, &value_len);
 
@@ -613,7 +613,7 @@ namespace mssql
 	{
 		auto & s = preparedStorage->atIndex(column);
 		auto & ind = s.getIndVec();
-		size_t size = sizeof(StringColumn::StringValue::value_type);
+		size_t size = sizeof(uint16_t);
 		auto value_len = ind[0];;
 		value_len /= size;
 		auto value = make_shared<StringColumn>(s.getStorage(), value_len);
@@ -623,15 +623,15 @@ namespace mssql
 
 	bool OdbcStatement::boundedString(SQLLEN display_size, int column)
 	{
-		auto value = make_unique<StringColumn::StringValue>();
-		size_t size = sizeof(StringColumn::StringValue::value_type);
+		auto storage = make_shared<DatumStorage>();
+		size_t size = sizeof(uint16_t);
 		SQLLEN value_len = 0;
 		SQLRETURN r;
 
-		display_size++;                 // increment for null terminator
-		value->resize(display_size);
+		display_size++; 
+		storage->ReserveUint16(display_size); // increment for null terminator
 
-		r = SQLGetData(statement, column + 1, SQL_C_WCHAR, value->data(), display_size * size, &value_len);
+		r = SQLGetData(statement, column + 1, SQL_C_WCHAR, storage->uint16vec_ptr->data(), display_size * size, &value_len);
 		CHECK_ODBC_ERROR(r, statement);
 		CHECK_ODBC_NO_DATA(r, statement);
 
@@ -644,9 +644,9 @@ namespace mssql
 		value_len /= size;
 
 		assert(value_len >= 0 && value_len <= display_size - 1);
-		value->resize(value_len);
-
-		resultset->SetColumn(make_shared<StringColumn>(value, false));
+		storage->uint16vec_ptr->resize(value_len);
+		auto value = make_shared<StringColumn>(storage, value_len, false);
+		resultset->SetColumn(value);
 
 		return true;
 	}
