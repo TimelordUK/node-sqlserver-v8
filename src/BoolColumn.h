@@ -11,7 +11,7 @@ namespace mssql
 	class BoolColumn : public Column
 	{
 	public:
-		BoolColumn(bool value) : value(value) {}
+		BoolColumn(shared_ptr<DatumStorage> storage) : value((*storage->charvec_ptr)[0] != 0 ? true : false) {}
 
 		Handle<Value> ToValue() override
 		{

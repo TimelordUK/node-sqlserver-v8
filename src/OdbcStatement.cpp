@@ -508,18 +508,27 @@ namespace mssql
 
 	bool OdbcStatement::d_Bit(int column)
 	{
-		long val;
-		SQLLEN strLen_or_IndPtr;
-		SQLRETURN ret = SQLGetData(statement, column + 1, SQL_C_SLONG, &val, sizeof(val), &strLen_or_IndPtr);
-		CHECK_ODBC_ERROR(ret, statement);
-		if (strLen_or_IndPtr == SQL_NULL_DATA)
+		shared_ptr<DatumStorage> storage;
+		shared_ptr<IntColumn> colVal;
+		if (prepared)
 		{
-			resultset->SetColumn(make_shared<NullColumn>());
+			auto & datum = preparedStorage->atIndex(column);
+			storage = datum.getStorage();
 		}
-		else
-		{
-			resultset->SetColumn(make_shared<BoolColumn>(val != 0 ? true : false));
+		else {
+			storage = make_shared<DatumStorage>();
+			storage->ReserveChars(1);
+			SQLLEN strLen_or_IndPtr;
+			SQLRETURN ret = SQLGetData(statement, column + 1, SQL_C_BIT, storage->charvec_ptr->data(), sizeof(byte), &strLen_or_IndPtr);
+			CHECK_ODBC_ERROR(ret, statement);
+			if (strLen_or_IndPtr == SQL_NULL_DATA)
+			{
+				resultset->SetColumn(make_shared<NullColumn>());
+				return true;
+			}
 		}
+		resultset->SetColumn(make_shared<BoolColumn>(storage));
+
 		return true;
 	}
 
