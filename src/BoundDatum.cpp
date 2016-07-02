@@ -1187,7 +1187,6 @@ namespace mssql
 
 	void BoundDatum::reserveColumnType(SQLSMALLINT  type, size_t len)
 	{
-		bool res;
 		switch (type)
 		{
 		case SQL_SS_VARIANT:

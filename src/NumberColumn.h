@@ -2,6 +2,7 @@
 
 #include <v8.h>
 #include "Column.h"
+#include "BoundDatumHelper.h"
 
 namespace mssql
 {
@@ -10,7 +11,7 @@ namespace mssql
     class NumberColumn : public Column
     {
     public:
-	   NumberColumn(double value) : value(value) {}
+		NumberColumn(shared_ptr<DatumStorage> storage) : value((*storage->doublevec_ptr)[0]) {}
 
 	   Handle<Value> ToValue() override
 	   {
