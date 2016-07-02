@@ -105,6 +105,11 @@ namespace mssql
 		  return Integer::New(isolate, i);
 	   }
 
+	   Local<Integer> newLong(int64_t i) const
+	   {
+		   return Integer::New(isolate, i);
+	   }
+
 	   Local<Boolean> newBoolean(bool b) const
 	   {
 		  return Boolean::New(isolate, b);

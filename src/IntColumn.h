@@ -2,6 +2,7 @@
 
 #include <v8.h>
 #include "Column.h"
+#include "BoundDatumHelper.h"
 
 namespace mssql
 {
@@ -10,16 +11,16 @@ namespace mssql
     class IntColumn : public Column
     {
     public:
-	   IntColumn(long value) : value(value) {}
+	   IntColumn(shared_ptr<DatumStorage> storage) : value((*storage->int64vec_ptr)[0]) {}
 
 	   Handle<Value> ToValue() override
 	   {
 		  nodeTypeFactory fact;
-		  auto v = fact.newInteger(value);
+		  auto v = fact.newLong(value);
 		  return v;
 	   }
 
     private:
-	   int value;
+	   int64_t value;
     };
 }

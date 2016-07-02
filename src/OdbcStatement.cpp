@@ -475,18 +475,28 @@ namespace mssql
 
 	bool OdbcStatement::d_Integer(int column)
 	{
-		long val;
-		SQLLEN strLen_or_IndPtr;
-		SQLRETURN ret = SQLGetData(statement, column + 1, SQL_C_SLONG, &val, sizeof(val), &strLen_or_IndPtr);
-		CHECK_ODBC_ERROR(ret, statement);
-		if (strLen_or_IndPtr == SQL_NULL_DATA)
+		shared_ptr<DatumStorage> storage;
+		shared_ptr<IntColumn> colVal;
+		if (prepared)
 		{
-			resultset->SetColumn(make_shared<NullColumn>());
+			auto & datum = preparedStorage->atIndex(column);
+			storage = datum.getStorage();	
 		}
-		else
-		{
-			resultset->SetColumn(make_shared<IntColumn>(val));
+		else {
+			storage = make_shared<DatumStorage>();
+			storage->ReserveInt64(1);
+			SQLLEN strLen_or_IndPtr;
+			SQLRETURN ret = SQLGetData(statement, column + 1, SQL_C_SLONG, storage->int64vec_ptr->data(), sizeof(int64_t), &strLen_or_IndPtr);
+			CHECK_ODBC_ERROR(ret, statement);
+			if (strLen_or_IndPtr == SQL_NULL_DATA)
+			{
+				resultset->SetColumn(make_shared<NullColumn>());
+				return true;
+			}
 		}
+
+		resultset->SetColumn(make_shared<IntColumn>(storage));
+
 		return true;
 	}
 
@@ -611,12 +621,12 @@ namespace mssql
 
 	bool OdbcStatement::reservedString(SQLLEN display_size, int column) const
 	{
-		auto & s = preparedStorage->atIndex(column);
-		auto & ind = s.getIndVec();
+		auto & storage = preparedStorage->atIndex(column);
+		auto & ind = storage.getIndVec();
 		size_t size = sizeof(uint16_t);
 		auto value_len = ind[0];;
 		value_len /= size;
-		auto value = make_shared<StringColumn>(s.getStorage(), value_len);
+		auto value = make_shared<StringColumn>(storage.getStorage(), value_len);
 		resultset->SetColumn(value);
 		return true;
 	}
