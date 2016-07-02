@@ -19,6 +19,6 @@ namespace mssql
 	bool PrepareOperation::TryInvokeOdbc()
 	{
 		statement = connection->statements->checkout(statementId);
-		return statement->TryPrepare(query, timeout, params);
+		return statement->TryPrepare(query, timeout);
 	}
 }

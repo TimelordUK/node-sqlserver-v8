@@ -31,6 +31,7 @@ namespace mssql
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "close", Close);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "open", Open);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "query", Query);
+	   NODE_SET_PROTOTYPE_METHOD(tpl, "bindQuery", BindQuery);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "prepare", Prepare);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "readRow", ReadRow);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "readColumn", ReadColumn);
@@ -130,11 +131,21 @@ namespace mssql
 	{
 		auto queryId = info[0].As<Number>();
 		auto queryObject = info[1].As<Object>();
-		auto params = info[2].As<Array>();
-		auto callback = info[3].As<Object>();
+		auto callback = info[2].As<Object>();
 
 		auto connection = Unwrap<Connection>(info.This());
-		auto ret = connection->connectionBridge->Prepare(queryId, queryObject, params, callback);
+		auto ret = connection->connectionBridge->Prepare(queryId, queryObject, callback);
+		info.GetReturnValue().Set(ret);
+	}
+
+	void Connection::BindQuery(const FunctionCallbackInfo<Value>& info)
+	{
+		auto queryId = info[0].As<Number>();
+		auto params = info[1].As<Array>();
+		auto callback = info[2].As<Object>();
+
+		auto connection = Unwrap<Connection>(info.This());
+		auto ret = connection->connectionBridge->QueryPrepared(queryId, params, callback);
 		info.GetReturnValue().Set(ret);
 	}
 

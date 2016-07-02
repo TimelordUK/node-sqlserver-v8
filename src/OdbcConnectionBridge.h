@@ -41,7 +41,8 @@ namespace mssql
 		Handle<Value> Commit(Handle<Object> callback);
 		Handle<Value> Rollback(Handle<Object> callback);
 		Handle<Value> Query(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const;
-		Handle<Value> Prepare(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const;
+		Handle<Value> QueryPrepared(Handle<Number> queryId, Handle<Array> params, Handle<Object> callback) const;
+		Handle<Value> Prepare(Handle<Number> queryId, Handle<Object> queryObject, Handle<Object> callback) const;
 		Handle<Value> CallProcedure(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const;
 		Handle<Value> UnbindParameters(Handle<Number> queryId, Handle<Object> callback);
 		Handle<Value> ReadRow(Handle<Number> queryId, Handle<Object> callback) const;

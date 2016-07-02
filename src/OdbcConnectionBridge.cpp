@@ -30,6 +30,7 @@
 #include "CloseOperation.h"
 #include "PrepareOperation.h"
 #include "FreeStatementOperation.h"
+#include "QueryPreparedOperation.h"
 #include "OperationManager.h"
 #include "UnbindOperation.h"
 
@@ -96,15 +97,24 @@ namespace mssql
 		return fact.null();
 	}
 
-	Handle<Value> OdbcConnectionBridge::Prepare(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const
+	Handle<Value> OdbcConnectionBridge::QueryPrepared(Handle<Number> queryId, Handle<Array> params, Handle<Object> callback) const
+	{
+		auto id = queryId->IntegerValue();
+		auto operation = make_shared<QueryPreparedOperation>(connection, id, 0, callback);
+		if (operation->BindParameters(params)) {
+			OperationManager::Add(operation);
+		}
+		nodeTypeFactory fact;
+		return fact.null();
+	}
+
+	Handle<Value> OdbcConnectionBridge::Prepare(Handle<Number> queryId, Handle<Object> queryObject, Handle<Object> callback) const
 	{
 		auto queryString = get(queryObject, "query_str")->ToString();
 		auto timeout = get(queryObject, "query_timeout")->Int32Value();
 		auto id = queryId->IntegerValue();
 		auto operation = make_shared<PrepareOperation>(connection, FromV8String(queryString), id, timeout, callback);
-		if (operation->BindParameters(params)) {
-			OperationManager::Add(operation);
-		}
+		OperationManager::Add(operation);
 		nodeTypeFactory fact;
 		return fact.null();
 	}

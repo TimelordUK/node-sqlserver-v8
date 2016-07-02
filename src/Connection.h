@@ -46,6 +46,7 @@ namespace mssql
 	   static void Open(const FunctionCallbackInfo<Value>& info);
 	   static void Query(const FunctionCallbackInfo<Value>& info);
 	   static void Prepare(const FunctionCallbackInfo<Value>& info);
+	   static void BindQuery(const FunctionCallbackInfo<Value>& info);
 	   static void CallProcedure(const FunctionCallbackInfo<Value>& info);	  
 	   static void Unbind(const FunctionCallbackInfo<Value>& info);
 	   static void FreeStatement(const FunctionCallbackInfo<Value>& info);

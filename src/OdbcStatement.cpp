@@ -220,7 +220,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::TryPrepare(const wstring & query, u_int timeout, shared_ptr<BoundDatumSet> paramSet)
+	bool OdbcStatement::TryPrepare(const wstring & query, u_int timeout)
 	{
 		SQLRETURN ret;
 		SQLWCHAR * sql_str = const_cast<SQLWCHAR *>(query.c_str());
@@ -250,15 +250,26 @@ namespace mssql
 			++i;
 		}
 
+		resultset->endOfRows = true;
+		prepared = true;
+		
+		return true;
+	}
+
+	bool OdbcStatement::BindFetch(shared_ptr<BoundDatumSet> paramSet)
+	{
 		params = paramSet;
 		bool bound = BindParams();
 		if (!bound) {
 			// error already set in BindParams
 			return false;
 		}
+		auto ret = SQLExecute(statement);
+		CHECK_ODBC_ERROR(ret, statement);
 
-		resultset->endOfRows = true;
-		
+		ret = SQLRowCount(statement, &resultset->rowcount);
+		CHECK_ODBC_ERROR(ret, statement);
+
 		return true;
 	}
 
@@ -598,6 +609,14 @@ namespace mssql
 		return true;
 	}
 
+	bool OdbcStatement::reservedString(SQLLEN display_size, int column)
+	{
+		auto & s = preparedStorage->atIndex(column);
+		auto value = make_shared<StringColumn>(s.getStorage());
+		resultset->SetColumn(value);
+		return true;
+	}
+
 	bool OdbcStatement::boundedString(SQLLEN display_size, int column)
 	{
 		auto value = make_unique<StringColumn::StringValue>();
@@ -643,7 +662,7 @@ namespace mssql
 		}
 
 		if (display_size >= 1 && display_size <= SQL_SERVER_MAX_STRING_SIZE) {
-			return boundedString(display_size, column);
+			return prepared ? reservedString(display_size, column) : boundedString(display_size, column);
 		}
 
 		assert(false);

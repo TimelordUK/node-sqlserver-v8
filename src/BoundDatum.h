@@ -26,6 +26,8 @@ namespace mssql
 		
 		char *getErr() const { return err; }
 
+		shared_ptr<DatumStorage> getStorage() { return storage; }
+
 		BoundDatum(void) :
 			js_type(JS_UNKNOWN),
 			c_type(0),
@@ -41,6 +43,7 @@ namespace mssql
 			err(nullptr)
 		{
 			indvec = vector<SQLLEN>(1);
+			storage = make_shared<DatumStorage>();
 		}
 
 		BoundDatum(BoundDatum&& other)
@@ -54,7 +57,7 @@ namespace mssql
 			buffer_len = other.buffer_len;
 			offset = other.offset;
 
-			storage.ReassignStorage(other.storage);
+			storage = other.storage;
 
 			indvec = other.indvec;
 			param_type = other.param_type;
@@ -87,7 +90,7 @@ namespace mssql
 
 	private:
 		vector<SQLLEN> indvec;
-		DatumStorage storage;
+		shared_ptr<DatumStorage> storage;
 		bool definedPrecision;
 		bool definedScale;
 

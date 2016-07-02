@@ -42,19 +42,19 @@ namespace mssql
 		{
 		}
 
-		void ReassignStorage(DatumStorage &other)
+		void ReassignStorage(shared_ptr<DatumStorage> &other)
 		{
-			doublevec_ptr = other.doublevec_ptr;
-			uint16vec_ptr = other.uint16vec_ptr;
-			int32vec_ptr = other.int32vec_ptr;
-			uint32vec_ptr = other.uint32vec_ptr;
-			int64vec_ptr = other.int64vec_ptr;
-			timestampoffsetvec_ptr = other.timestampoffsetvec_ptr;
-			datevec_ptr = other.datevec_ptr;
-			time2vec_ptr = other.time2vec_ptr;
-			timestampvec_ptr = other.timestampvec_ptr;
-			charvec_ptr = other.charvec_ptr;
-			numeric_ptr = other.numeric_ptr;
+			doublevec_ptr = other->doublevec_ptr;
+			uint16vec_ptr = other->uint16vec_ptr;
+			int32vec_ptr = other->int32vec_ptr;
+			uint32vec_ptr = other->uint32vec_ptr;
+			int64vec_ptr = other->int64vec_ptr;
+			timestampoffsetvec_ptr = other->timestampoffsetvec_ptr;
+			datevec_ptr = other->datevec_ptr;
+			time2vec_ptr = other->time2vec_ptr;
+			timestampvec_ptr = other->timestampvec_ptr;
+			charvec_ptr = other->charvec_ptr;
+			numeric_ptr = other->numeric_ptr;
 		}
 
 		void ReserveNumerics(size_t len)

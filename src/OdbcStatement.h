@@ -51,7 +51,8 @@ namespace mssql
 		Handle<Value> GetColumnValue() const;
 		shared_ptr<OdbcError> LastError(void) const { return error; }
 
-		bool TryPrepare(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> paramSet);
+		bool TryPrepare(const wstring& query, u_int timeout);
+		bool BindFetch(shared_ptr<BoundDatumSet> paramSet);
 		bool TryExecuteDirect(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> paramSet);
 		bool TryReadRow();
 		bool TryReadColumn(int column);
@@ -70,6 +71,7 @@ namespace mssql
 		bool d_Timestamp(int col);
 		bool d_Time(int col);
 		bool boundedString(SQLLEN display_size, int column);
+		bool reservedString(SQLLEN display_size, int column);
 		void applyPrecision(const BoundDatum & datum, int current_param) const;
 		bool readColAttributes(ResultSet::ColumnDefinition& current, int column);
 		bool readNext(int column);
