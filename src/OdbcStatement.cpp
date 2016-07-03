@@ -729,7 +729,7 @@ namespace mssql
 		if (ret == SQL_NO_DATA)
 		{
 			endOfResults = true;
-			statement.Free();
+			if (!prepared) statement.Free();
 			return true;
 		}
 		CHECK_ODBC_ERROR(ret, statement);
