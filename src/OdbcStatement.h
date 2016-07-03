@@ -26,6 +26,7 @@ namespace mssql
 {
 	class BoundDatum;
 	class BoundDatumSet;
+	class DatumStorage;
 
 	using namespace std;
 
@@ -59,6 +60,10 @@ namespace mssql
 		bool TryReadNextResult();
 
 	protected:
+
+		bool getDataBinary(int column);
+		bool getDataDecimal(int column);
+
 		bool StartReadingResults();
 		SQLRETURN queryTimeout(int timeout);
 		bool d_Variant(int col);

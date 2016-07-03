@@ -550,6 +550,23 @@ namespace mssql
 		return true;
 	}
 
+	bool OdbcStatement::getDataDecimal(int column)
+	{
+		shared_ptr<DatumStorage> storage;
+		storage = make_shared<DatumStorage>();
+		storage->ReserveDouble(1);
+		SQLLEN strLen_or_IndPtr;
+		SQLRETURN ret = SQLGetData(statement, column + 1, SQL_C_DOUBLE, storage->doublevec_ptr->data(), sizeof(double), &strLen_or_IndPtr);
+		CHECK_ODBC_ERROR(ret, statement);
+		if (strLen_or_IndPtr == SQL_NULL_DATA)
+		{
+			resultset->SetColumn(make_shared<NullColumn>());
+			return true;
+		}
+		resultset->SetColumn(make_shared<NumberColumn>(storage));
+		return true;
+	}
+
 	bool OdbcStatement::d_Decimal(int column)
 	{
 		shared_ptr<DatumStorage> storage;
@@ -557,74 +574,65 @@ namespace mssql
 		{
 			auto & datum = preparedStorage->atIndex(column);
 			storage = datum.getStorage();
+			resultset->SetColumn(make_shared<NumberColumn>(storage));
+			return true;
 		}
-		else {
-			storage = make_shared<DatumStorage>();
-			storage->ReserveDouble(1);
-			SQLLEN strLen_or_IndPtr;
-			SQLRETURN ret = SQLGetData(statement, column + 1, SQL_C_DOUBLE, storage->doublevec_ptr->data(), sizeof(double), &strLen_or_IndPtr);
+		return getDataDecimal(column);
+	}
+
+	bool OdbcStatement::getDataBinary(int column)
+	{
+		shared_ptr<DatumStorage> storage;
+		storage = make_shared<DatumStorage>();
+		SQLLEN amount = 2048;
+		storage->ReserveChars(amount);
+		SQLLEN strLen_or_IndPtr;
+		bool more = false;
+		SQLRETURN ret = SQLGetData(statement, column + 1, SQL_C_BINARY, storage->charvec_ptr->data(), amount, &strLen_or_IndPtr);
+		CHECK_ODBC_ERROR(ret, statement);
+		if (strLen_or_IndPtr == SQL_NULL_DATA)
+		{
+			resultset->SetColumn(make_shared<NullColumn>());
+			return true;
+		}
+		assert(strLen_or_IndPtr != SQL_NO_TOTAL);
+		// per http://msdn.microsoft.com/en-us/library/windows/desktop/ms715441(v=vs.85).aspx
+
+		SQLWCHAR SQLState[6];
+		SQLINTEGER nativeError;
+		SQLSMALLINT textLength;
+		if (ret == SQL_SUCCESS_WITH_INFO)
+		{
+			ret = SQLGetDiagRec(SQL_HANDLE_STMT, statement, 1, SQLState, &nativeError, nullptr, 0, &textLength);
 			CHECK_ODBC_ERROR(ret, statement);
-			if (strLen_or_IndPtr == SQL_NULL_DATA)
-			{
-				resultset->SetColumn(make_shared<NullColumn>());
-				return true;
-			}		
+			more = wcsncmp(SQLState, L"01004", 6) == 0;
 		}
-		
-		resultset->SetColumn(make_shared<NumberColumn>(storage));
+
+		amount = strLen_or_IndPtr;
+		if (more) {
+			amount = storage->charvec_ptr->size();
+		}
+
+		resultset->SetColumn(make_shared<BinaryColumn>(storage, amount, more));
 
 		return true;
 	}
 
 	bool OdbcStatement::d_Binary(int column)
 	{
-		shared_ptr<DatumStorage> storage;
-		bool more = false;
-		SQLLEN amount = 2048;
 		if (prepared)
 		{
+			bool more = false;
+			SQLLEN amount;
 			auto & datum = preparedStorage->atIndex(column);
-			storage = datum.getStorage();
+			shared_ptr<DatumStorage> storage = datum.getStorage();
 			auto & ind = datum.getIndVec();
 			amount = ind[0];
+			resultset->SetColumn(make_shared<BinaryColumn>(storage, amount, more));
+			return true;
 		}
-		else {
-			storage = make_shared<DatumStorage>();
-			storage->ReserveChars(amount);
-			SQLLEN strLen_or_IndPtr;
-			SQLRETURN ret = SQLGetData(statement, column + 1, SQL_C_BINARY, storage->charvec_ptr->data(), amount, &strLen_or_IndPtr);
-			CHECK_ODBC_ERROR(ret, statement);
-			if (strLen_or_IndPtr == SQL_NULL_DATA)
-			{
-				resultset->SetColumn(make_shared<NullColumn>());
-				return true;
-			}
-			assert(strLen_or_IndPtr != SQL_NO_TOTAL);
-			// per http://msdn.microsoft.com/en-us/library/windows/desktop/ms715441(v=vs.85).aspx
 
-			SQLWCHAR SQLState[6];
-			SQLINTEGER nativeError;
-			SQLSMALLINT textLength;
-			if (ret == SQL_SUCCESS_WITH_INFO)
-			{
-				ret = SQLGetDiagRec(SQL_HANDLE_STMT, statement, 1, SQLState, &nativeError, nullptr, 0, &textLength);
-				CHECK_ODBC_ERROR(ret, statement);
-				more = wcsncmp(SQLState, L"01004", 6) == 0;
-			}
-
-			amount = strLen_or_IndPtr;
-			if (more) {
-				amount = storage->charvec_ptr->size();
-			}
-		}
-		/*
-		if (amount < static_cast<SQLLEN>(storage->charvec_ptr->capacity()))
-		{
-			storage->charvec_ptr->resize(amount);
-		}*/
-		resultset->SetColumn(make_shared<BinaryColumn>(storage, amount, more));
-
-		return true;
+		return getDataBinary(column);
 	}
 	
 	bool OdbcStatement::TryReadColumn(int column)
