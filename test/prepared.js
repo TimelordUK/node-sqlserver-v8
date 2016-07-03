@@ -139,7 +139,10 @@ suite('prepared', function () {
                 if (iteration < totalIterations) {
                     next(businessId, iterate);
                 }else {
-                    test_done();
+                    ps.free(function()
+                    {
+                        test_done();
+                    });
                 }
             }
 
