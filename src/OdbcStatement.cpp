@@ -439,19 +439,28 @@ namespace mssql
 
 	bool OdbcStatement::d_TimestampOffset(int column)
 	{
-		SQLLEN strLen_or_IndPtr;
-		SQL_SS_TIMESTAMPOFFSET_STRUCT datetime;
-		memset(&datetime, 0, sizeof(datetime));
-
-		auto ret = SQLGetData(statement, column + 1, SQL_C_DEFAULT, &datetime, sizeof(datetime), &strLen_or_IndPtr);
-		CHECK_ODBC_ERROR(ret, statement);
-		if (strLen_or_IndPtr == SQL_NULL_DATA)
+		shared_ptr<DatumStorage> storage;
+		shared_ptr<IntColumn> colVal;
+		if (prepared)
 		{
-			resultset->SetColumn(make_shared<NullColumn>());
-			return true; // break
+			auto & datum = preparedStorage->atIndex(column);
+			storage = datum.getStorage();
+		}
+		else {
+			storage = make_shared<DatumStorage>();
+			storage->ReserveTimestampOffset(1);
+			SQLLEN strLen_or_IndPtr;
+
+			auto ret = SQLGetData(statement, column + 1, SQL_C_DEFAULT, storage->timestampoffsetvec_ptr->data(), sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT), &strLen_or_IndPtr);
+			CHECK_ODBC_ERROR(ret, statement);
+			if (strLen_or_IndPtr == SQL_NULL_DATA)
+			{
+				resultset->SetColumn(make_shared<NullColumn>());
+				return true; // break
+			}
 		}
 
-		resultset->SetColumn(make_shared<TimestampColumn>(datetime));
+		resultset->SetColumn(make_shared<TimestampColumn>(storage));
 
 		return true;
 	}
@@ -567,7 +576,6 @@ namespace mssql
 			auto & datum = preparedStorage->atIndex(column);
 			storage = datum.getStorage();
 			auto & ind = datum.getIndVec();
-			//amount = storage->charvec_ptr->size();
 			amount = ind[0];
 		}
 		else {
@@ -599,7 +607,7 @@ namespace mssql
 				amount = storage->charvec_ptr->size();
 			}
 		}
-		if (amount < storage->charvec_ptr->capacity())
+		if (amount < static_cast<SQLLEN>(storage->charvec_ptr->capacity()))
 		{
 			storage->charvec_ptr->resize(amount);
 		}

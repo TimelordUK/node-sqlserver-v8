@@ -5,6 +5,7 @@
 #include "Utility.h"
 #include <sql.h>
 #include <sqlncli.h>
+#include "BoundDatumHelper.h"
 
 namespace mssql
 {
@@ -14,6 +15,12 @@ namespace mssql
 	class TimestampColumn : public Column
 	{
 	public:
+
+		TimestampColumn(shared_ptr<DatumStorage> storage)
+		{
+			auto & tso = (*storage->timestampoffsetvec_ptr)[0];
+			MillisecondsFromDate(tso);
+		}
 
 		TimestampColumn(SQL_SS_TIMESTAMPOFFSET_STRUCT const& timeStruct)
 		{

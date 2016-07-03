@@ -44,179 +44,37 @@ namespace mssql
 
 	   Isolate *isolate;
 
-	   nodeTypeFactory()
-	   {
-		  isolate = Isolate::GetCurrent();
-	   }
-
-	   Local<Number> newNumber(double d) const
-	   {
-		  return Number::New(isolate, d);
-	   }
-
-	   void scopedCallback(const Persistent<Function> & callback, int argc, Local<Value> args[]) const
-	   {
-		   auto cons = newCallbackFunction(callback);
-		   auto context = isolate->GetCurrentContext();
-		   auto global = context->Global();
-		   cons->Call(global, argc, args);
-	   }
-
-	   Local<Integer> newInteger(int32_t i) const
-	   {
-		  return Integer::New(isolate, i);
-	   }
-
-	   Local<Integer> newLong(int64_t i) const
-	   {
-		   return Integer::New(isolate, i);
-	   }
-
-	   Local<Boolean> newBoolean(bool b) const
-	   {
-		  return Boolean::New(isolate, b);
-	   }
-
-	   Local<Boolean> newBoolean(uint16_t n) const
-	   {
-		  return Boolean::New(isolate, n != 0 ? true : false);
-	   }
-
-	   Local<Integer> newInt32(int32_t i) const
-	   {
-		  return Int32::New(isolate, i);
-	   }
-
-	   Local<Number> newInt64(int64_t i) const
-	   {
-		  return Number::New(isolate, static_cast<double>(i));
-	   }
-
-	   Local<Object> newObject() const
-	   {
-		  return Object::New(isolate);
-	   }
-
-	   Local<Value> newNumber() const
-	   {
-		  return Object::New(isolate);
-	   }
-
-	   Local<Integer> newUint32(uint32_t n) const
-	   {
-		  return Integer::New(isolate, n);
-	   }
-
-	   Local<String> newString(const char *cstr) const
-	   {
-		  return String::NewFromUtf8(isolate, cstr);
-	   }
-
-	   Local<String> newString(const char *cstr, int size) const
-	   {
-		  return String::NewFromUtf8(isolate, cstr, String::NewStringType::kNormalString, size);
-	   }
-
-	   Local<Array> newArray() const
-	   {
-		  return Array::New(isolate);
-	   }
-
-	   Local<Array> newArray(int count) const
-	   {
-		  return Array::New(isolate, count);
-	   }
-
-	   Local<Value> newLocalValue(const Handle<Value> & v) const
-	   {
-		  return Local<Value>::New(isolate, v);
-	   }
-
-	   Local<Function> newCallbackFunction(const Persistent<Function> & callback) const
-	   {
-		  return Local<Function>::New(isolate, callback);
-	   }
-
-	   Local<FunctionTemplate> newTemplate(const FunctionCallback & callback) const
-	   {
-		  return FunctionTemplate::New(isolate, callback);
-	   }
-
-	   Local<Object> newObject(const Persistent <Object> & bp) const
-	   {
-		  return Local<Object>::New(isolate, bp);
-	   }
-
-	   Local<Value> fromTwoByte(const wchar_t* text) const
-	   {
-		  return String::NewFromTwoByte(isolate, reinterpret_cast<const uint16_t*>(text));
-	   }
-
-	   Local<Value> fromTwoByte(const uint16_t* text) const
-	   {
-		  return String::NewFromTwoByte(isolate, text);
-	   }
-
-	   Local<Value> fromTwoByte(const uint16_t* text, size_t size) const
-	   {
-		  return String::NewFromTwoByte(isolate, text, String::NewStringType::kNormalString, static_cast<int>(size));
-	   }
-
-	   Local<Value> newBuffer(int size) const
-	   {
-		   return node::Buffer::New(isolate, size)
-#ifdef NODE_GYP_V4 
-			   .ToLocalChecked()
-#endif
-			   ;
-	   }
-
-	   Local<Object> error(const stringstream &full_error) const
-	   {
-		  auto err = Local<Object>::Cast(Exception::Error(newString(full_error.str().c_str())));
-		  return err;
-	   }
-
-	   Local<Object> error(const char* full_error) const
-	   {
-		  auto err = Local<Object>::Cast(Exception::Error(newString(full_error)));
-		  return err;
-	   }
-
-	   Local<Value> newDate() const
-	   {
-		  auto dd = Date::New(isolate, 0.0);
-		  return dd;
-	   }
-
-	   Local<Value> newDate(double milliseconds, int32_t nanoseconds_delta) const
-	   {
-		  auto ns = String::NewFromUtf8(isolate, "nanosecondsDelta");
-		  auto n = Number::New(isolate, nanoseconds_delta / (NANOSECONDS_PER_MS * 1000.0));
-		  // include the properties for items in a DATETIMEOFFSET that are not included in a JS Date object
-		  auto dd = Date::New(isolate, milliseconds);
-		  dd->ToObject()->Set(ns, n);
-		  return dd;
-	   }
-
-	   Local<Value> global() const
-	   {
-		  return isolate->GetCurrentContext()->Global();
-	   }
-
-	   Handle<Primitive> null() const
-	   {
-		  return Null(isolate);
-	   }
-
-	   Handle<Primitive> undefined() const
-	   {
-		  return Undefined(isolate);
-	   }
-
-	   void throwError(const char * err) const
-	   {
-		  isolate->ThrowException(error(err));
-	   }
-    };
+	   nodeTypeFactory();
+	   Local<Number> newNumber(double d) const;
+	   void scopedCallback(const Persistent<Function> & callback, int argc, Local<Value> args[]) const;
+	   Local<Integer> newInteger(int32_t i) const;
+	   Local<Integer> newLong(int64_t i) const;
+	   Local<Boolean> newBoolean(bool b) const;
+	   Local<Boolean> newBoolean(uint16_t n) const;
+	   Local<Integer> newInt32(int32_t i) const;
+	   Local<Number> newInt64(int64_t i) const;
+	   Local<Object> newObject() const;
+	   Local<Value> newNumber() const;
+	   Local<Integer> newUint32(uint32_t n) const;
+	   Local<String> newString(const char *cstr) const;
+	   Local<String> newString(const char *cstr, int size) const;
+	   Local<Array> newArray() const;
+	   Local<Array> newArray(int count) const;
+	   Local<Value> newLocalValue(const Handle<Value> & v) const;
+	   Local<Function> newCallbackFunction(const Persistent<Function> & callback) const;
+	   Local<FunctionTemplate> newTemplate(const FunctionCallback & callback) const;
+	   Local<Object> newObject(const Persistent <Object> & bp) const;
+	   Local<Value> fromTwoByte(const wchar_t* text) const;
+	   Local<Value> fromTwoByte(const uint16_t* text) const;
+	   Local<Value> fromTwoByte(const uint16_t* text, size_t size) const;
+	   Local<Value> newBuffer(int size) const;
+	   Local<Object> error(const stringstream &full_error) const;
+	   Local<Object> error(const char* full_error) const;
+	   Local<Value> newDate() const;
+	   Local<Value> newDate(double milliseconds, int32_t nanoseconds_delta) const;
+	   Local<Value> global() const;
+	   Handle<Primitive> null() const;
+	   Handle<Primitive> undefined() const;
+	   void throwError(const char * err) const;
+	};
 }
