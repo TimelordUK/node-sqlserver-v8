@@ -471,7 +471,7 @@ namespace mssql
 	void BoundDatum::reserveTime(SQLLEN len)
 	{
 		buffer_len = len * sizeof(SQL_SS_TIME2_STRUCT);
-		storage->time2vec_ptr = make_shared<vector<SQL_SS_TIME2_STRUCT>>(len);
+		storage->Reservetime2(len);
 		indvec.resize(len);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC		
 		js_type = JS_DATE;
@@ -1236,8 +1236,6 @@ namespace mssql
 			reserveVarBinaryArray(len, 1);
 			break;
 
-		case SQL_TYPE_TIMESTAMP:
-		case SQL_TYPE_DATE:
 		case SQL_SS_TIMESTAMPOFFSET:
 			reserveTimeStampOffset(1);
 			break;
@@ -1249,7 +1247,9 @@ namespace mssql
 
 		case SQL_TIMESTAMP:
 		case SQL_DATETIME:
-			reserveTime(1);
+		case SQL_TYPE_TIMESTAMP:
+		case SQL_TYPE_DATE:
+			reserveTimeStamp(1);
 			break;
 
 		default:

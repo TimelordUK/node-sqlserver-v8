@@ -106,14 +106,14 @@ suite('prepared', function () {
                         assert.ifError(err);
                         var o1 = parsedJSON[id1 - 1];
                         var o2 = parsedJSON[id2 - 1];
-                        assert.deepEqual(res1[0], o1, "results didn't match");
-                        //assert.deepEqual(res2[0], o2, "results didn't match");
+                        assert.deepEqual(o1, res1[0], "results didn't match");
+                        assert.deepEqual(o2, res2[0], "results didn't match");
                         ps.free(onFree);
                     })
                 });
 
-                function onFree(err) {
-                    assert.ifError(err);
+                function onFree() {
+                    //assert.ifError(err);
                     done();
                 }
             });

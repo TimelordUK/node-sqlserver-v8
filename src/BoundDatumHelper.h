@@ -4,7 +4,6 @@
 #undef min
 #undef max
 
-//#include <TimestampColumn.h>
 #include <limits>
 
 namespace mssql
@@ -80,6 +79,10 @@ namespace mssql
 		void ReserveTimestamp(size_t len)
 		{
 			timestampvec_ptr = make_shared<timestamp_struct_vec_t>(len);
+		}
+
+		void Reservetime2(size_t len) {
+			time2vec_ptr = make_shared<time2_struct_vec_t>(len);
 		}
 
 		void ReserveTimestampOffset(size_t len)

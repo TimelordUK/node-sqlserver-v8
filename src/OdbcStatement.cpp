@@ -366,8 +366,6 @@ namespace mssql
 			res = d_Binary(column);
 			break;
 
-		case SQL_TYPE_TIMESTAMP:
-		case SQL_TYPE_DATE:
 		case SQL_SS_TIMESTAMPOFFSET:
 			res = d_TimestampOffset(column);
 			break;
@@ -379,6 +377,8 @@ namespace mssql
 
 		case SQL_TIMESTAMP:
 		case SQL_DATETIME:
+		case SQL_TYPE_TIMESTAMP:
+		case SQL_TYPE_DATE:
 			res = d_Timestamp(column);
 			break;
 
@@ -467,17 +467,27 @@ namespace mssql
 
 	bool OdbcStatement::d_Timestamp(int column)
 	{
-		TIMESTAMP_STRUCT ts;
-		SQLLEN strLen_or_IndPtr;
-		auto ret = SQLGetData(statement, column + 1, SQL_C_TIMESTAMP, &ts, sizeof(ts), &strLen_or_IndPtr);
-		CHECK_ODBC_ERROR(ret, statement);
-		if (strLen_or_IndPtr == SQL_NULL_DATA)
+		shared_ptr<DatumStorage> storage;
+		shared_ptr<IntColumn> colVal;
+		if (prepared)
 		{
-			resultset->SetColumn(make_shared<NullColumn>());
-			return true; // break
+			auto & datum = preparedStorage->atIndex(column);
+			storage = datum.getStorage();
+		}
+		else {
+			storage = make_shared<DatumStorage>();
+			storage->ReserveTimestamp(1);
+			SQLLEN strLen_or_IndPtr;
+			auto ret = SQLGetData(statement, column + 1, SQL_C_TIMESTAMP, storage->timestampvec_ptr->data(), sizeof(TIMESTAMP_STRUCT), &strLen_or_IndPtr);
+			CHECK_ODBC_ERROR(ret, statement);
+			if (strLen_or_IndPtr == SQL_NULL_DATA)
+			{
+				resultset->SetColumn(make_shared<NullColumn>());
+				return true; // break
+			}
 		}
 
-		resultset->SetColumn(make_shared<TimestampColumn>(ts));
+		resultset->SetColumn(make_shared<TimestampColumn>(storage));
 
 		return true;
 	}

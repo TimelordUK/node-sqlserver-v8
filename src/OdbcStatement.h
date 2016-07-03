@@ -69,6 +69,7 @@ namespace mssql
 		bool d_Binary(int col);
 		bool d_TimestampOffset(int col);
 		bool d_Timestamp(int col);
+		bool d_Timestamp2(int col);
 		bool d_Time(int col);
 		bool boundedString(SQLLEN display_size, int column);
 		bool reservedString(SQLLEN display_size, int column) const;
