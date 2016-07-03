@@ -2,88 +2,18 @@ var sql = require('../'),
     assert = require('assert'),
     async = require('async'),
     config = require('./test-config'),
-    fs = require('fs');
+    fs = require('fs'),
+    boiler = require('./boilerplate');
 
 var conn_str = config.conn_str;
-
-function testBoilerPlate(params, doneFunction) {
-
-    var name = params.name;
-    var type = params.type;
-
-    sql.open(conn_str, opened);
-
-    function opened(err, conn) {
-        assert.ifError(err);
-        function readFile(f, done) {
-            fs.readFile(f, 'utf8', function (err, data) {
-                if (err) {
-                    done(err);
-                } else
-                    done(data);
-            });
-        }
-
-        var sequence = [
-            function (async_done) {
-                var dropSql = "DROP TABLE " + name;
-                conn.query(dropSql, function () {
-                    async_done();
-                });
-            },
-
-            function (async_done) {
-                var folder = __dirname;
-                var file = folder + '/sql/' + name;
-                file += '.sql';
-
-                function inChunks(arr, callback) {
-                    var i = 0;
-                    conn.query(arr[i], next);
-                    function next(err, res) {
-                        assert.ifError(err);
-                        assert(res.length === 0);
-                        ++i;
-                        if (i < arr.length)
-                            conn.query(arr[i], next);
-                        else callback();
-                    }
-                }
-
-                // submit the SQL one chunk at a time to create table with constraints.
-                readFile(file, function (createSql) {
-                    createSql = createSql.replace(/<name>/g, name);
-                    createSql = createSql.replace(/<type>/g, type);
-                    var arr = createSql.split("GO");
-                    for (var i = 0; i < arr.length; ++i) {
-                        arr[i] = arr[i].replace(/^\s+|\s+$/g, '');
-                    }
-                    inChunks(arr, function () {
-                        async_done();
-                    });
-                });
-            },
-
-            function (async_done) {
-                var tm = conn.tableMgr();
-                tm.bind(name, function (bulkMgr) {
-                    assert(bulkMgr.columns.length > 0, "Error creating table");
-                    async_done();
-                });
-            }];
-
-        async.series(sequence,
-            function () {
-                doneFunction();
-            });
-    }
-}
 
 suite('bulk', function () {
 
     var c;
     this.timeout(20000);
     var tm;
+
+    var helper = boiler.TestHelper(sql, conn_str);
 
     /*
      var totalObjectsForInsert = 1000;
@@ -145,7 +75,7 @@ suite('bulk', function () {
 
         var table_name = "BulkTest";
 
-        testBoilerPlate({
+        helper.testBoilerPlate({
             name: table_name
         }, go);
 
@@ -176,20 +106,6 @@ suite('bulk', function () {
         }
     });
 
-    function getJSON() {
-        var folder = __dirname;
-        var fs = require('fs');
-        var parsedJSON = JSON.parse(fs.readFileSync(folder + '/employee.json', 'utf8'));
-
-        for (var i = 0; i < parsedJSON.length; ++i) {
-            parsedJSON[i].OrganizationNode = new Buffer(parsedJSON[i].OrganizationNode.data, 'utf8');
-            parsedJSON[i].BirthDate = new Date(parsedJSON[i].BirthDate);
-            parsedJSON[i].HireDate = new Date(parsedJSON[i].HireDate);
-            parsedJSON[i].ModifiedDate = new Date(parsedJSON[i].ModifiedDate);
-        }
-        return parsedJSON;
-    }
-
     function extractKey(parsedJSON, key) {
         var keys = [];
         parsedJSON.forEach(function (emp) {
@@ -205,7 +121,7 @@ suite('bulk', function () {
 
         var table_name = "Employee";
 
-        testBoilerPlate({
+        helper.testBoilerPlate({
             name: table_name
         }, go);
 
@@ -216,7 +132,7 @@ suite('bulk', function () {
 
         function test(bulkMgr) {
 
-            var parsedJSON = getJSON();
+            var parsedJSON = helper.getJSON();
             var keys = extractKey(parsedJSON, 'BusinessEntityID');
 
             bulkMgr.insertRows(parsedJSON, insertDone);
@@ -240,7 +156,7 @@ suite('bulk', function () {
 
         var table_name = "Employee";
 
-        testBoilerPlate({
+        helper.testBoilerPlate({
             name: table_name
         }, go);
 
@@ -256,7 +172,7 @@ suite('bulk', function () {
                 name : 'LoginID'
             });
 
-            var parsedJSON = getJSON();
+            var parsedJSON = helper.getJSON();
             var keys = extractKey(parsedJSON, 'LoginID');
 
             bulkMgr.insertRows(parsedJSON, insertDone);
@@ -283,7 +199,7 @@ suite('bulk', function () {
 
         var table_name = "Employee";
 
-        testBoilerPlate({
+        helper.testBoilerPlate({
             name: table_name
         }, go);
 
@@ -294,7 +210,7 @@ suite('bulk', function () {
 
         function test(bulkMgr) {
 
-            var parsedJSON = getJSON();
+            var parsedJSON = helper.getJSON();
             var keys = extractKey(parsedJSON, 'BusinessEntityID');
 
             bulkMgr.insertRows(parsedJSON, insertDone);
@@ -609,7 +525,7 @@ suite('bulk', function () {
 
         var table_name = "BulkTest";
 
-        testBoilerPlate({
+        helper.testBoilerPlate({
             name: table_name
         }, go);
 
@@ -650,7 +566,7 @@ suite('bulk', function () {
 
         var table_name = 'bulkColumn';
 
-        testBoilerPlate({
+        helper.testBoilerPlate({
             name: table_name,
             type: type
         }, go);

@@ -24,6 +24,7 @@
         'src/ProcedureOperation.cpp',
         'src/QueryOperation.cpp',
         'src/ReadColumnOperation.cpp',
+        'src/QueryPreparedOperation.cpp',
         'src/FreeStatementOperation.cpp',
         'src/ReadNextResultOperation.cpp',
         'src/ReadRowOperation.cpp',
