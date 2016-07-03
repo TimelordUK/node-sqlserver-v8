@@ -18,8 +18,8 @@ namespace mssql
 
 		TimestampColumn(shared_ptr<DatumStorage> storage)
 		{
-			auto & tso = (*storage->timestampoffsetvec_ptr)[0];
-			MillisecondsFromDate(tso);
+			auto & timeStruct = (*storage->timestampoffsetvec_ptr)[0];
+			MillisecondsFromDate(timeStruct);
 		}
 
 		TimestampColumn(SQL_SS_TIMESTAMPOFFSET_STRUCT const& timeStruct)

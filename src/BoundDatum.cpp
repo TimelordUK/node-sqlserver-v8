@@ -1201,7 +1201,7 @@ namespace mssql
 		case SQL_WLONGVARCHAR:
 		case SQL_SS_XML:
 		case SQL_GUID:
-			reserveWVarCharArray(len, 1);
+			reserveWVarCharArray(len + 1, 1);
 			break;
 
 		case SQL_BIT:
