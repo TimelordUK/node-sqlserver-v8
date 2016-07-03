@@ -97,16 +97,17 @@ suite('prepared', function () {
         function go() {
             employeePrepare(empSelectSQL(), function(ps) {
                 var meta = ps.getMeta();
-                var id1 = 1;
-                var id2 = 2;
+                var id1 = 2;
+                var id2 = 3;
                 assert(meta.length > 0);
                 ps.preparedQuery([id1], function (err, res1) {
                     assert.ifError(err);
                     ps.preparedQuery([id2], function (err, res2) {
                         assert.ifError(err);
                         var o1 = parsedJSON[id1 - 1];
-                        var o2 = parsedJSON[id2 - 1];
                         assert.deepEqual(o1, res1[0], "results didn't match");
+
+                        var o2 = parsedJSON[id2 - 1];
                         assert.deepEqual(o2, res2[0], "results didn't match");
                         ps.free(onFree);
                     })

@@ -617,11 +617,12 @@ namespace mssql
 				amount = storage->charvec_ptr->size();
 			}
 		}
+		/*
 		if (amount < static_cast<SQLLEN>(storage->charvec_ptr->capacity()))
 		{
 			storage->charvec_ptr->resize(amount);
-		}
-		resultset->SetColumn(make_shared<BinaryColumn>(storage->charvec_ptr, more));
+		}*/
+		resultset->SetColumn(make_shared<BinaryColumn>(storage, amount, more));
 
 		return true;
 	}

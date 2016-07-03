@@ -14,11 +14,12 @@ namespace mssql
     {
     public:
 
-	   BinaryColumn(shared_ptr<DatumStorage::char_vec_t> src, bool more)
-		  : more(more)
-	   {
-		  d = bufferPoolChar_t::accept(src);
-	   }
+		BinaryColumn(shared_ptr<DatumStorage> storage, size_t len, bool more)
+			: more(more)
+		{
+			auto clone = bufferPoolChar_t::clone(storage->charvec_ptr, len);
+			d = bufferPoolChar_t::accept(clone);
+		}
 
 	   Handle<Value> ToValue() override
 	   {

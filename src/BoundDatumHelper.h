@@ -118,6 +118,14 @@ namespace mssql
 			int id;
 		};
 
+		static shared_vec_ptr_t clone(shared_vec_ptr_t & sp, size_t len)
+		{
+			DatumStorage::char_vec_t &src = *sp;
+			shared_vec_ptr_t dest = make_shared<DatumStorage::char_vec_t>(len);
+			std::copy(src.begin(), src.begin() + len, dest->begin());
+			return dest;
+		}
+
 		static def accept(const shared_vec_ptr_t & sp)
 		{
 			lock_guard<mutex> lock(g_i_mutex);
