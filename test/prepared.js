@@ -57,11 +57,26 @@ suite('prepared', function () {
     var c;
     this.timeout(20000);
 
+    var table_name = "Employee";
+
+    function insert(test_done) {
+        var tm = c.tableMgr();
+        tm.bind(table_name, function(bulkMgr) {
+            bulkMgr.insertRows(parsedJSON, function() {
+                test_done();
+            });
+        });
+    }
+
     setup(function (test_done) {
         sql.open(conn_str, function (err, new_conn) {
             assert.ifError(err);
             c = new_conn;
-            test_done();
+            helper.testBoilerPlate({
+                name: table_name
+            }, function () {
+                insert(test_done);
+            });
         });
     });
 
@@ -81,43 +96,60 @@ suite('prepared', function () {
 
     test( 'SQL prepared with 2 selects with different params.', function( done ) {
 
-        var table_name = "Employee";
-
-        helper.testBoilerPlate({
-            name: table_name
-        }, insert);
-
-        function insert() {
-            var tm = c.tableMgr();
-            tm.bind(table_name, function(bulkMgr) {
-                bulkMgr.insertRows(parsedJSON, go);
-            });
-        }
-
-        function go() {
-            employeePrepare(empSelectSQL(), function(ps) {
-                var meta = ps.getMeta();
-                var id1 = 2;
-                var id2 = 3;
-                assert(meta.length > 0);
-                ps.preparedQuery([id1], function (err, res1) {
+        employeePrepare(empSelectSQL(), function (ps) {
+            var meta = ps.getMeta();
+            var id1 = 2;
+            var id2 = 3;
+            assert(meta.length > 0);
+            ps.preparedQuery([id1], function (err, res1) {
+                assert.ifError(err);
+                ps.preparedQuery([id2], function (err, res2) {
                     assert.ifError(err);
-                    ps.preparedQuery([id2], function (err, res2) {
-                        assert.ifError(err);
-                        var o1 = parsedJSON[id1 - 1];
-                        assert.deepEqual(o1, res1[0], "results didn't match");
+                    var o1 = parsedJSON[id1 - 1];
+                    assert.deepEqual(o1, res1[0], "results didn't match");
 
-                        var o2 = parsedJSON[id2 - 1];
-                        assert.deepEqual(o2, res2[0], "results didn't match");
-                        ps.free(onFree);
-                    })
-                });
-
-                function onFree() {
-                    //assert.ifError(err);
-                    done();
-                }
+                    var o2 = parsedJSON[id2 - 1];
+                    assert.deepEqual(o2, res2[0], "results didn't match");
+                    ps.free(onFree);
+                })
             });
-        }
+
+            function onFree() {
+                //assert.ifError(err);
+                done();
+            }
+        });
+    });
+
+    test( 'stress test SQL prepared with 500 invocations', function( test_done ) {
+
+        employeePrepare(empSelectSQL(), function (ps) {
+            var meta = ps.getMeta();
+            assert(meta.length > 0);
+            var businessId = 1;
+            var iteration = 0;
+            var totalIterations = 500;
+            var max = parsedJSON[parsedJSON.length - 1].BusinessEntityID;
+            next(businessId, iterate);
+
+            function iterate() {
+                businessId++;
+                if (businessId > max) businessId = 1;
+                ++iteration;
+                if (iteration < totalIterations) {
+                    next(businessId, iterate);
+                }else {
+                    test_done();
+                }
+            }
+
+            function next(businessId, done) {
+                ps.preparedQuery([businessId], function (err, res1) {
+                    assert.ifError(err);
+                    assert(res1[0].BusinessEntityID == businessId);
+                    done();
+                });
+            }
+        });
     });
 });
