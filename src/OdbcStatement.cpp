@@ -567,7 +567,8 @@ namespace mssql
 			auto & datum = preparedStorage->atIndex(column);
 			storage = datum.getStorage();
 			auto & ind = datum.getIndVec();
-			amount = storage->charvec_ptr->size();
+			//amount = storage->charvec_ptr->size();
+			amount = ind[0];
 		}
 		else {
 			storage = make_shared<DatumStorage>();
@@ -598,7 +599,7 @@ namespace mssql
 				amount = storage->charvec_ptr->size();
 			}
 		}
-		if (amount < storage->charvec_ptr->size())
+		if (amount < storage->charvec_ptr->capacity())
 		{
 			storage->charvec_ptr->resize(amount);
 		}
