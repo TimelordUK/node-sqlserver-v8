@@ -22,13 +22,57 @@ Based on node-sqlserver, this version will compile in Visual Studio 2013/2015 an
 
 Functionally the API should work exactly as the existing library. The existing unit tests pass based on Node 0.12 and also against Node 4.2.1.
 
-## Node 5.1.1
+## Node >= 5.12.0
 
-The library has been built against the latest Node 5.1 version.  The test cases pass OK.
+The library has been built against the latest Node 5 version.  The test cases pass OK.
 
-## Node 6.1.0
+## Node >= 6.2.2
 
-The library has been built against the latest Node 6.1 version.  The test cases pass OK, please take library for a spin. Note native libraries have been included, it should work out the box.
+The library has been built against the latest Node 6 version.  The test cases pass OK, please take library for a spin. Note native libraries have been included, it should work out the box.
+
+## Prepared Statements
+
+It is now possible to prepare one or more statements which can then be invoked
+over and over with different parameters.  There are a few examples in the prepared unit tests.
+please note that prepared statements remain open during their lifetime, so database resources are
+taken whilst the statement remains open.  They can be useful when there is a requirement to run
+the same SQL with different parameters many times.  This saves overhead from constantly submitting
+the same SQL to the server.
+
+    function employeePrepare(done) {
+
+    var query =
+        `SELECT [ModifiedDate]
+        ,[BusinessEntityID]
+        ,[OrganizationNode]
+        ,[ModifiedDate]
+        FROM [scratch].[dbo].[Employee]
+        WHERE BusinessEntityID = ?`;
+
+    // open connection
+    sql.open(connStr, function (err, conn) {
+        assert.ifError(err);
+        // prepare a statement which can be re-used
+        conn.prepare(query, function (e, ps) {
+            // called back with a prepared statement
+            console.log(ps.getMeta());
+            // prepared query meta data avaialble to view
+            assert.ifError(err);
+            // execute with expected paramater
+            ps.preparedQuery([1], function(err, fetched) {
+                console.log(fetched);
+                // can call again with new parameters.
+                // note - free the statement when no longer used,
+                // else resources will be leaked.
+                ps.free(function() {
+                    done();
+                })
+            });
+        });
+    });
+    }
+
+
 
 ## Connect Timeout
 
