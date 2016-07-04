@@ -122,8 +122,8 @@ suite('datatypes', function () {
             var rowWithNullData = 2;
             // test date = 2007-05-08 12:35:29.123
             var year = 2007;
-            var month = 05;
-            var day = 08;
+            var month = 5;
+            var day = 8;
             var hour = 12;
             var minute = 35;
             var second = 29.123;
@@ -166,7 +166,7 @@ suite('datatypes', function () {
             var day = 1;
             var hour = 12;
             var minute = 10;
-            var second = 05;
+            var second = 5;
             var nanosecond = 0;
             // Month in JS is 0-based, so expected will be month minus 1
             var js_date_expected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond);
@@ -207,7 +207,7 @@ suite('datatypes', function () {
             var day = 1;
             var hour = 12;
             var minute = 10;
-            var second = 05;
+            var second = 5;
             var nanosecond = 0;
             // Month in JS is 0-based, so expected will be month minus 1
             var js_date_expected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond);
