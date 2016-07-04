@@ -26,8 +26,7 @@ var sql = require('../'),
 
 function empSelectSQL() {
 
-    var s =
-        `SELECT [BusinessEntityID]
+    return `SELECT [BusinessEntityID]
      ,[NationalIDNumber]
      ,[LoginID]
      ,[OrganizationNode]
@@ -45,17 +44,12 @@ function empSelectSQL() {
      ,[ModifiedDate]
      FROM [scratch].[dbo].[Employee]
      WHERE BusinessEntityID = ?`;
-
-    return s;
 }
 
 function empDeleteSQL() {
 
-    var s =
-        `DELETE FROM [scratch].[dbo].[Employee]
+    return `DELETE FROM [scratch].[dbo].[Employee]
         WHERE BusinessEntityID = ?`;
-
-    return s;
 }
 
 suite('prepared', function () {
@@ -68,16 +62,9 @@ suite('prepared', function () {
 
     var table_name = "Employee";
     var prepared = {
-
+        select : null,
+        delete : null
     };
-    function insert(test_done) {
-        var tm = c.tableMgr();
-        tm.bind(table_name, function(bulkMgr) {
-            bulkMgr.insertRows(parsedJSON, function() {
-                test_done();
-            });
-        });
-    }
 
     var actions = [
 
@@ -119,7 +106,7 @@ suite('prepared', function () {
 
         // prepare a delete statement.
         function(async_done) {
-            employeePrepare(empSelectSQL(), function (ps) {
+            employeePrepare(empDeleteSQL(), function (ps) {
                 prepared.delete = ps;
                 async_done();
             })
@@ -153,7 +140,44 @@ suite('prepared', function () {
         });
     }
 
-    test( 'SQL prepared with 2 selects with different params.', function( done ) {
+    test( 'SQL use prepared statements to select a row, then delete it over each row.', function( test_done ) {
+
+        var select = prepared.select;
+        var meta = select.getMeta();
+        assert(meta.length > 0);
+        var remove = prepared.delete;
+        var max = parsedJSON[parsedJSON.length - 1].BusinessEntityID;
+        var businessId = 1;
+        next(businessId, iterate);
+
+        function iterate() {
+            businessId++;
+            if (businessId > max) check();
+            else next(businessId, iterate);
+        }
+
+        function check() {
+            c.query("select count(*) as rows from Employee", function(err, res) {
+                assert.ifError(err);
+                assert(res[0].rows == 0);
+                test_done();
+            });
+        }
+
+        function next(businessId, done) {
+            select.preparedQuery([businessId], function (err, res1) {
+                assert.ifError(err);
+                var fetched = parsedJSON[businessId - 1];
+                assert.deepEqual(fetched, res1[0], "results didn't match");
+                remove.preparedQuery([businessId], function (err) {
+                    assert.ifError(err);
+                    done();
+                })
+            });
+        }
+    });
+
+    test( 'SQL prepared with 2 selects with different params.', function( test_done ) {
 
         var select = prepared.select;
         var meta = select.getMeta();
@@ -169,7 +193,7 @@ suite('prepared', function () {
 
                 var o2 = parsedJSON[id2 - 1];
                 assert.deepEqual(o2, res2[0], "results didn't match");
-                done();
+                test_done();
             })
         });
     });
