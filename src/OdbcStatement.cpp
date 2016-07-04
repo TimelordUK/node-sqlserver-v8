@@ -302,6 +302,8 @@ namespace mssql
 	{
 		//column = 0; // reset
 
+		if (resultset == nullptr) return false;
+
 		auto ret = SQLFetch(statement);
 		if (ret == SQL_NO_DATA)
 		{

@@ -140,7 +140,7 @@ suite('prepared', function () {
         });
     }
 
-    test( 'SQL use prepared statements to select a row, then delete it over each row.', function( test_done ) {
+    test( 'use prepared statements to select a row, then delete it over each row.', function( test_done ) {
 
         var select = prepared.select;
         var meta = select.getMeta();
@@ -177,7 +177,7 @@ suite('prepared', function () {
         }
     });
 
-    test( 'SQL prepared with 2 selects with different params.', function( test_done ) {
+    test('use prepared statement twice with different params.', function( test_done ) {
 
         var select = prepared.select;
         var meta = select.getMeta();
@@ -198,7 +198,7 @@ suite('prepared', function () {
         });
     });
 
-    test( 'stress test SQL prepared with 500 invocations', function( test_done ) {
+    test( 'stress test prepared statement with 500 invocations cycling through primary key', function( test_done ) {
 
         var select = prepared.select;
         var meta = select.getMeta();
