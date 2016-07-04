@@ -63,6 +63,10 @@ namespace mssql
 
 		bool getDataBinary(int column);
 		bool getDataDecimal(int column);
+		bool getDataBit(int column);
+		bool getDataTimestamp(int column);
+		bool getDataLong(int column);
+		bool getDataTimestampOffset(int column);
 
 		bool StartReadingResults();
 		SQLRETURN queryTimeout(int timeout);

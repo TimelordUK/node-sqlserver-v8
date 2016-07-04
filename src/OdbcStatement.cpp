@@ -437,6 +437,24 @@ namespace mssql
 		return true;
 	}
 
+	bool OdbcStatement::getDataTimestampOffset(int column)
+	{
+		shared_ptr<DatumStorage> storage;
+		storage = make_shared<DatumStorage>();
+		storage->ReserveTimestampOffset(1);
+		SQLLEN strLen_or_IndPtr;
+
+		auto ret = SQLGetData(statement, column + 1, SQL_C_DEFAULT, storage->timestampoffsetvec_ptr->data(), sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT), &strLen_or_IndPtr);
+		CHECK_ODBC_ERROR(ret, statement);
+		if (strLen_or_IndPtr == SQL_NULL_DATA)
+		{
+			resultset->SetColumn(make_shared<NullColumn>());
+			return true; // break
+		}
+		resultset->SetColumn(make_shared<TimestampColumn>(storage));
+		return true;
+	}
+
 	bool OdbcStatement::d_TimestampOffset(int column)
 	{
 		shared_ptr<DatumStorage> storage;
@@ -445,23 +463,27 @@ namespace mssql
 		{
 			auto & datum = preparedStorage->atIndex(column);
 			storage = datum.getStorage();
+			resultset->SetColumn(make_shared<TimestampColumn>(storage));
+			return true;
 		}
-		else {
-			storage = make_shared<DatumStorage>();
-			storage->ReserveTimestampOffset(1);
-			SQLLEN strLen_or_IndPtr;
+		getDataTimestampOffset(column);
+		return true;
+	}
 
-			auto ret = SQLGetData(statement, column + 1, SQL_C_DEFAULT, storage->timestampoffsetvec_ptr->data(), sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT), &strLen_or_IndPtr);
-			CHECK_ODBC_ERROR(ret, statement);
-			if (strLen_or_IndPtr == SQL_NULL_DATA)
-			{
-				resultset->SetColumn(make_shared<NullColumn>());
-				return true; // break
-			}
+	bool OdbcStatement::getDataTimestamp(int column)
+	{
+		shared_ptr<DatumStorage> storage;
+		storage = make_shared<DatumStorage>();
+		storage->ReserveTimestamp(1);
+		SQLLEN strLen_or_IndPtr;
+		auto ret = SQLGetData(statement, column + 1, SQL_C_TIMESTAMP, storage->timestampvec_ptr->data(), sizeof(TIMESTAMP_STRUCT), &strLen_or_IndPtr);
+		CHECK_ODBC_ERROR(ret, statement);
+		if (strLen_or_IndPtr == SQL_NULL_DATA)
+		{
+			resultset->SetColumn(make_shared<NullColumn>());
+			return true; // break
 		}
-
 		resultset->SetColumn(make_shared<TimestampColumn>(storage));
-
 		return true;
 	}
 
@@ -473,22 +495,27 @@ namespace mssql
 		{
 			auto & datum = preparedStorage->atIndex(column);
 			storage = datum.getStorage();
+			resultset->SetColumn(make_shared<TimestampColumn>(storage));
+			return true;
 		}
-		else {
-			storage = make_shared<DatumStorage>();
-			storage->ReserveTimestamp(1);
-			SQLLEN strLen_or_IndPtr;
-			auto ret = SQLGetData(statement, column + 1, SQL_C_TIMESTAMP, storage->timestampvec_ptr->data(), sizeof(TIMESTAMP_STRUCT), &strLen_or_IndPtr);
-			CHECK_ODBC_ERROR(ret, statement);
-			if (strLen_or_IndPtr == SQL_NULL_DATA)
-			{
-				resultset->SetColumn(make_shared<NullColumn>());
-				return true; // break
-			}
+		getDataTimestamp(column);
+		return true;
+	}
+
+	bool OdbcStatement::getDataLong(int column)
+	{
+		shared_ptr<DatumStorage> storage;
+		storage = make_shared<DatumStorage>();
+		storage->ReserveInt64(1);
+		SQLLEN strLen_or_IndPtr;
+		SQLRETURN ret = SQLGetData(statement, column + 1, SQL_C_SLONG, storage->int64vec_ptr->data(), sizeof(int64_t), &strLen_or_IndPtr);
+		CHECK_ODBC_ERROR(ret, statement);
+		if (strLen_or_IndPtr == SQL_NULL_DATA)
+		{
+			resultset->SetColumn(make_shared<NullColumn>());
+			return true;
 		}
-
-		resultset->SetColumn(make_shared<TimestampColumn>(storage));
-
+		resultset->SetColumn(make_shared<IntColumn>(storage));
 		return true;
 	}
 
@@ -500,22 +527,10 @@ namespace mssql
 		{
 			auto & datum = preparedStorage->atIndex(column);
 			storage = datum.getStorage();	
+			resultset->SetColumn(make_shared<IntColumn>(storage));
+			return true;
 		}
-		else {
-			storage = make_shared<DatumStorage>();
-			storage->ReserveInt64(1);
-			SQLLEN strLen_or_IndPtr;
-			SQLRETURN ret = SQLGetData(statement, column + 1, SQL_C_SLONG, storage->int64vec_ptr->data(), sizeof(int64_t), &strLen_or_IndPtr);
-			CHECK_ODBC_ERROR(ret, statement);
-			if (strLen_or_IndPtr == SQL_NULL_DATA)
-			{
-				resultset->SetColumn(make_shared<NullColumn>());
-				return true;
-			}
-		}
-
-		resultset->SetColumn(make_shared<IntColumn>(storage));
-
+		getDataLong(column);
 		return true;
 	}
 
@@ -525,6 +540,23 @@ namespace mssql
 		return read;
 	}
 
+	bool OdbcStatement::getDataBit(int column)
+	{
+		shared_ptr<DatumStorage> storage;
+		storage = make_shared<DatumStorage>();
+		storage->ReserveChars(1);
+		SQLLEN strLen_or_IndPtr;
+		SQLRETURN ret = SQLGetData(statement, column + 1, SQL_C_BIT, storage->charvec_ptr->data(), sizeof(byte), &strLen_or_IndPtr);
+		CHECK_ODBC_ERROR(ret, statement);
+		if (strLen_or_IndPtr == SQL_NULL_DATA)
+		{
+			resultset->SetColumn(make_shared<NullColumn>());
+			return true;
+		}
+		resultset->SetColumn(make_shared<BoolColumn>(storage));
+		return true;
+	}
+
 	bool OdbcStatement::d_Bit(int column)
 	{
 		shared_ptr<DatumStorage> storage;
@@ -532,21 +564,10 @@ namespace mssql
 		{
 			auto & datum = preparedStorage->atIndex(column);
 			storage = datum.getStorage();
+			resultset->SetColumn(make_shared<BoolColumn>(storage));
+			return true;
 		}
-		else {
-			storage = make_shared<DatumStorage>();
-			storage->ReserveChars(1);
-			SQLLEN strLen_or_IndPtr;
-			SQLRETURN ret = SQLGetData(statement, column + 1, SQL_C_BIT, storage->charvec_ptr->data(), sizeof(byte), &strLen_or_IndPtr);
-			CHECK_ODBC_ERROR(ret, statement);
-			if (strLen_or_IndPtr == SQL_NULL_DATA)
-			{
-				resultset->SetColumn(make_shared<NullColumn>());
-				return true;
-			}
-		}
-		resultset->SetColumn(make_shared<BoolColumn>(storage));
-
+		getDataBit(column);
 		return true;
 	}
 
