@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------------------------------------------------------------
-// File: query.js
+// File: prepared.js
 // Contents: test suite for queries
 //
 // Copyright Microsoft Corporation
@@ -52,7 +52,28 @@ function empDeleteSQL() {
         WHERE BusinessEntityID = ?`;
 }
 
-suite('prepared', function () {
+function empNoParamsSQL() {
+
+    return `SELECT [BusinessEntityID]
+     ,[NationalIDNumber]
+     ,[LoginID]
+     ,[OrganizationNode]
+     ,[OrganizationLevel]
+     ,[JobTitle]
+     ,[BirthDate]
+     ,[MaritalStatus]
+     ,[Gender]
+     ,[HireDate]
+     ,[SalariedFlag]
+     ,[VacationHours]
+     ,[SickLeaveHours]
+     ,[CurrentFlag]
+     ,[rowguid]
+     ,[ModifiedDate]
+     FROM [scratch].[dbo].[Employee]`;
+}
+
+    suite('prepared', function () {
 
     var conn_str = config.conn_str;
     var helper = boiler.TestHelper(sql, conn_str);
@@ -63,7 +84,8 @@ suite('prepared', function () {
     var table_name = "Employee";
     var prepared = {
         select : null,
-        delete : null
+        delete : null,
+        scan: null
     };
 
     var actions = [
@@ -104,6 +126,14 @@ suite('prepared', function () {
             })
         },
 
+        // prepare a select all statement.
+        function(async_done) {
+            employeePrepare(empNoParamsSQL(), function (ps) {
+                prepared.scan = ps;
+                async_done();
+            })
+        },
+
         // prepare a delete statement.
         function(async_done) {
             employeePrepare(empDeleteSQL(), function (ps) {
@@ -139,6 +169,22 @@ suite('prepared', function () {
             done(ps);
         });
     }
+
+    test('use prepared statement twice with no parameters.', function( test_done ) {
+
+        var select = prepared.scan;
+        var meta = select.getMeta();
+        assert(meta.length > 0);
+        select.preparedQuery(function (err, res1) {
+            assert.ifError(err);
+            assert.deepEqual(parsedJSON, res1, "results didn't match");
+            select.preparedQuery(function (err, res2) {
+                assert.ifError(err);
+                assert.deepEqual(parsedJSON, res2, "results didn't match");
+                test_done();
+            })
+        });
+    });
 
     test( 'use prepared statements to select a row, then delete it over each row.', function( test_done ) {
 
