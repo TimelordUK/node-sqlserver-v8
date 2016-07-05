@@ -8,7 +8,7 @@ This version includes stored procedure support and bulk insert/delete/amend for 
 1. supports input/output parameters.
 2. captures return code from stored procedure.
 3. will obtain meta data describing parameters.
-4. compatibe with Node 0.12.x / 4.3.0 / 5.1.1 / 6.1.0
+4. compatibe with Node 0.12.x / 4.x.x / 5.x.x / 6.x.x
 5. includes 64 bit/ia32 precompiled libraries.
 6. npm install with npm install msnodesqlv8
 7. new features to be made available over coming months.
@@ -34,10 +34,11 @@ The library has been built against the latest Node 6 version.  The test cases pa
 
 It is now possible to prepare one or more statements which can then be invoked
 over and over with different parameters.  There are a few examples in the prepared unit tests.
-please note that prepared statements remain open during their lifetime, so database resources are
-taken whilst the statement remains open.  They can be useful when there is a requirement to run
-the same SQL with different parameters many times.  This saves overhead from constantly submitting
-the same SQL to the server.
+Please note that prepared statements must be closed as shown below when they are no longer required.
+Each prepared statement utilises server resources so the application should open and close appropriately.
+
+Prepared Statements can be useful when there is a requirement to run the same SQL with different
+parameters many times.  This saves overhead from constantly submitting the same SQL to the server.
 
     function employeePrepare(done) {
 
