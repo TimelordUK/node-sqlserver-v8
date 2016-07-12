@@ -1,8 +1,9 @@
 var fs = require('fs');
 
-function DemoSupport(native, conn_str) {
+function DemoSupport(native, cs) {
 
     var sql = native;
+    var conn_str = cs;
 
     function Assert() {
         function ifError(err) {
@@ -43,6 +44,40 @@ function DemoSupport(native, conn_str) {
         }
 
         this.series = series;
+    }
+
+    function ProcedureHelper() {
+
+        var async = new Async();
+        var assert = new Assert();
+
+        function createProcedure(procedureName, procedureSql, doneFunction) {
+
+            var sequence = [
+                function (async_done) {
+                    var createSql = "IF NOT EXISTS (SELECT *  FROM sys.objects WHERE type = 'P' AND name = '" + procedureName + "')";
+                    createSql += " EXEC ('CREATE PROCEDURE " + procedureName + " AS BEGIN SET nocount ON; END')";
+                    console.log(createSql);
+                    sql.query(conn_str, createSql, function () {
+                        async_done();
+                    });
+                },
+
+                function (async_done) {
+                    sql.query(conn_str, procedureSql,
+                        function (e) {
+                            assert.ifError(e, "Error creating procedure.");
+                            async_done();
+                        });
+                }
+            ];
+
+            async.series(sequence,
+                function () {
+                    doneFunction();
+                });
+        }
+        this.createProcedure = createProcedure;
     }
 
     function EmployeeHelper(native, cstr) {
@@ -268,6 +303,7 @@ function DemoSupport(native, conn_str) {
     this.Async = Async;
     this.Assert = Assert;
     this.EmployeeHelper = EmployeeHelper;
+    this.ProcedureHelper = ProcedureHelper;
 }
 
 exports.DemoSupport = DemoSupport;
