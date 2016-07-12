@@ -289,6 +289,8 @@ function table(done) {
 
         function(async_done) {
             var summary = bm.getSummary();
+            console.log(summary.select_signature);
+            console.log("prepare the above statement.");
             var select = summary.select_signature;
             conn.prepare(select, function(err, ps) {
                 assert.ifError(err);
@@ -301,6 +303,7 @@ function table(done) {
         },
 
         function(async_done) {
+            console.log("delete the records using bulk operation.");
             var keys = helper.extractKey(records, 'BusinessEntityID');
             bm.deleteRows(keys, function() {
                async_done();
