@@ -285,6 +285,21 @@ function table(done) {
             });
         },
 
+        // use the select signature to construct a prepared query.
+
+        function(async_done) {
+            var summary = bm.getSummary();
+            var select = summary.select_signature;
+            conn.prepare(select, function(err, ps) {
+                assert.ifError(err);
+                ps.preparedQuery([1], function(err, res) {
+                    assert.ifError(err);
+                    assert.check(res.length == 1);
+                    async_done();
+                });
+            });
+        },
+
         function(async_done) {
             var keys = helper.extractKey(records, 'BusinessEntityID');
             bm.deleteRows(keys, function() {
