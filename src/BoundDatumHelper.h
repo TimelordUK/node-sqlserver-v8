@@ -49,6 +49,7 @@ namespace mssql
 		void ReserveChars(size_t len)
 		{
 			charvec_ptr = make_shared<vector<char>>(len);
+			memset(charvec_ptr->data(), 0, charvec_ptr->capacity());
 		}
 
 		void ReserveUint16(size_t len)

@@ -1,3 +1,5 @@
+prepared.js
+bulk.js
 query.js
 params.js
 userbind.js
@@ -9,5 +11,3 @@ txn.js
 datatypes.js
 dates.js
 compoundqueries.js
-prepared.js
-bulk.js

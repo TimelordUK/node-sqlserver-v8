@@ -203,11 +203,11 @@ namespace mssql
 		c_type = SQL_C_BINARY;
 		sql_type = SQL_VARBINARY;
 		digits = 0;
-
+		auto size = sizeof(uint8_t);
 		storage->ReserveChars(arrayLen * maxObjLen);
 		indvec.resize(arrayLen);
 		buffer = storage->charvec_ptr->data();
-		buffer_len = maxObjLen;
+		buffer_len = maxObjLen * size;
 		param_size = maxObjLen;
 	}
 
@@ -232,8 +232,7 @@ namespace mssql
 		auto arrayLen = arr->Length();
 		size_t maxObjLen = getMaxObjectLen(p);
 		reserveVarBinaryArray(maxObjLen, arrayLen);
-		auto itr = storage->charvec_ptr->begin();
-
+		auto itr = storage->charvec_ptr->data();
 		for (uint32_t i = 0; i < arrayLen; ++i)
 		{
 			indvec[i] = SQL_NULL_DATA;
@@ -241,9 +240,9 @@ namespace mssql
 			if (!elem->IsNull()) {
 				auto o = elem->ToObject();
 				auto ptr = node::Buffer::Data(o);
-				auto width = node::Buffer::Length(o);
-				indvec[i] = width;
-				memcpy(&*itr, ptr, width);
+				auto objLen = node::Buffer::Length(o);
+				indvec[i] = objLen;
+				memcpy(&*itr, ptr, objLen);
 			}
 			itr += maxObjLen;
 		}
