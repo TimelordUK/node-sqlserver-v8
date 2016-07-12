@@ -24,8 +24,10 @@ var async = new support.Async();
 var demos = [
     // open connection, simple query and close.
     connection,
-    // show how prepared statements can be created.
-    preparedStatements
+    // prepared statements to repeat execute SQL with different params.
+    preparedStatements,
+    // use the table manager to bind to a table and interact with it.
+    table
 ];
 
 async.series(demos, function() {
@@ -117,7 +119,7 @@ function preparedStatements(done) {
 
         function(async_done) {
             console.log("preparing a select and delete statement.");
-            support.prepareEmployee(conn, function (prepared) {
+                support.prepareEmployee(conn, function (prepared) {
                 assert.check(prepared != null, "prepared statement object is null.");
                 assert.check(prepared.select != null, "prepared select is null");
                 assert.check(prepared.delete != null, "prepared delete is null");
@@ -193,7 +195,130 @@ function preparedStatements(done) {
     async.series(fns, function() {
         console.log("..... async completes. \n\n\n\n\n\n");
         done();
-    })
+    });
+}
+
+function table(done) {
+
+    var async = new support.Async();
+    var assert = new support.Assert();
+    var helper =  new support.EmployeeHelper(sql, conn_str);
+    var conn = null;
+    var table_name = "Employee";
+    var bm = null;
+    var records = helper.getJSON();
+
+    var fns = [
+
+        function (async_done) {
+            console.log("table begins ...... ");
+            async_done();
+        },
+
+        function (async_done) {
+            console.log("opening a connection ....");
+            sql.open(conn_str, function (err, new_conn) {
+                assert.ifError(err);
+                conn = new_conn;
+                assert.check(conn != null, "connection from open is null.");
+                console.log("... open");
+                async_done();
+            });
+        },
+
+        function (async_done) {
+            console.log("create an employee table.");
+            helper.dropCreateTable({
+                name : table_name
+            }, function () {
+                async_done();
+            });
+        },
+
+        function (async_done) {
+            var tm = conn.tableMgr();
+            console.log("bind to table " + table_name);
+            tm.bind(table_name, function(bulk) {
+                bm = bulk;
+                assert.check(bm != null, "no bulk manager returned.");
+                async_done();
+            })
+        },
+
+        function (async_done) {
+            console.log("bulk insert records.");
+            bm.insertRows(records, function() {
+                async_done();
+            });
+        },
+
+        function (async_done) {
+            console.log("check rows have been inserted.");
+            conn.query("select * from " + table_name, function(err, res) {
+                assert.ifError(err);
+                assert.check(res.length == records.length);
+                async_done();
+            });
+        },
+
+        function (async_done) {
+            console.log("update a column.");
+            var newDate = new Date("2015-01-01T00:00:00.000Z");
+            var modifications = [];
+            records.forEach(function(emp) {
+                emp.ModifiedDate = newDate;
+                modifications.push( {
+                    BusinessEntityID : emp.BusinessEntityID,
+                    ModifiedDate : newDate
+                });
+            });
+
+            var updateCols = [
+                {
+                    name: 'ModifiedDate'
+                }
+            ];
+
+            bm.setUpdateCols(updateCols);
+            bm.updateRows(modifications, function() {
+                async_done();
+            });
+        },
+
+        function(async_done) {
+            var keys = helper.extractKey(records, 'BusinessEntityID');
+            bm.deleteRows(keys, function() {
+               async_done();
+            });
+        },
+
+        function (async_done) {
+            console.log("check rows have been deleted.");
+            conn.query("select * from " + table_name, function(err, res) {
+                assert.ifError(err);
+                assert.check(res.length == 0);
+                async_done();
+            });
+        },
+
+        function (async_done) {
+            console.log("close connection.");
+            conn.close(function () {
+                async_done();
+            });
+        },
+
+        function(async_done) {
+            console.log("...... table ends.");
+            async_done();
+        }
+    ];
+
+    console.log("executing async set of functions .....");
+    async.series(fns, function () {
+        console.log("..... async completes. \n\n\n\n\n\n");
+        done();
+    });
 }
 
 function DemoSupport(conn_str) {
@@ -239,10 +364,21 @@ function DemoSupport(conn_str) {
         this.series = series;
     }
 
-    function TestHelper(native, cstr) {
+    function EmployeeHelper(native, cstr) {
 
         var conn_str = cstr;
         var sql = native;
+
+        function extractKey(parsedJSON, key) {
+            var keys = [];
+            parsedJSON.forEach(function (emp) {
+                var obj = {
+                };
+                obj[key] = emp[key];
+                keys.push(obj);
+            });
+            return keys;
+        }
 
         function dropCreateTable(params, doneFunction) {
 
@@ -250,79 +386,82 @@ function DemoSupport(conn_str) {
             var name = params.name;
             var type = params.type;
             var assert = new Assert();
-            sql.open(conn_str, opened);
+            var conn;
 
-            function opened(err, conn) {
-                assert.ifError(err);
-                function readFile(f, done) {
-                    console.log("reading " + f);
-                    fs.readFile(f, 'utf8', function (err, data) {
-                        if (err) {
-                            done(err);
-                        } else
-                            done(data);
+            function readFile(f, done) {
+                console.log("reading " + f);
+                fs.readFile(f, 'utf8', function (err, data) {
+                    if (err) {
+                        done(err);
+                    } else
+                        done(data);
+                });
+            }
+
+            var sequence = [
+
+                function (async_done) {
+                    sql.open(conn_str, function (err, new_con) {
+                        assert.ifError(err);
+                        conn = new_con;
+                        async_done();
+                    });
+                },
+
+                function (async_done) {
+                    var dropSql = "DROP TABLE " + name;
+                    console.log(dropSql);
+                    conn.query(dropSql, function () {
+                        async_done();
+                    });
+                },
+
+                function (async_done) {
+                    var folder = __dirname + '/test';
+                    var file = folder + '/sql/' + name;
+                    file += '.sql';
+
+                    function inChunks(arr, callback) {
+                        var i = 0;
+                        console.log(arr[i]);
+                        conn.query(arr[i], next);
+                        function next(err, res) {
+                            assert.ifError(err);
+                            assert.check(res.length === 0);
+                            ++i;
+                            if (i < arr.length) {
+                                console.log(arr[i]);
+                                conn.query(arr[i], next);
+                            }
+                            else callback();
+                        }
+                    }
+
+                    // submit the SQL one chunk at a time to create table with constraints.
+                    readFile(file, function (createSql) {
+                        createSql = createSql.replace(/<name>/g, name);
+                        createSql = createSql.replace(/<type>/g, type);
+                        var arr = createSql.split("GO");
+                        for (var i = 0; i < arr.length; ++i) {
+                            arr[i] = arr[i].replace(/^\s+|\s+$/g, '');
+                        }
+                        inChunks(arr, function () {
+                            async_done();
+                        });
+                    });
+                },
+
+                function(async_done) {
+                    conn.close(function() {
+                        async_done();
                     });
                 }
+            ];
 
-                var sequence = [
-
-                    function (async_done) {
-                        var dropSql = "DROP TABLE " + name;
-                        console.log(dropSql);
-                        conn.query(dropSql, function () {
-                            async_done();
-                        });
-                    },
-
-                    function (async_done) {
-                        var folder = __dirname + '/test';
-                        var file = folder + '/sql/' + name;
-                        file += '.sql';
-
-                        function inChunks(arr, callback) {
-                            var i = 0;
-                            console.log(arr[i]);
-                            conn.query(arr[i], next);
-                            function next(err, res) {
-                                assert.ifError(err);
-                                assert.check(res.length === 0);
-                                ++i;
-                                if (i < arr.length) {
-                                    console.log(arr[i]);
-                                    conn.query(arr[i], next);
-                                }
-                                else callback();
-                            }
-                        }
-
-                        // submit the SQL one chunk at a time to create table with constraints.
-                        readFile(file, function (createSql) {
-                            createSql = createSql.replace(/<name>/g, name);
-                            createSql = createSql.replace(/<type>/g, type);
-                            var arr = createSql.split("GO");
-                            for (var i = 0; i < arr.length; ++i) {
-                                arr[i] = arr[i].replace(/^\s+|\s+$/g, '');
-                            }
-                            inChunks(arr, function () {
-                                async_done();
-                            });
-                        });
-                    },
-
-                    function (async_done) {
-                        var tm = conn.tableMgr();
-                        console.log("bind to table " + name);
-                        tm.bind(name, function (bulkMgr) {
-                            assert.check(bulkMgr.columns.length > 0, "Error creating table");
-                            async_done();
-                        });
-                    }];
-
-                async.series(sequence,
-                    function () {
-                        doneFunction();
-                    });
-            }
+            async.series(sequence,
+                function () {
+                    doneFunction();
+                });
         }
 
         function getJSON() {
@@ -342,6 +481,7 @@ function DemoSupport(conn_str) {
 
         this.getJSON = getJSON;
         this.dropCreateTable = dropCreateTable;
+        this.extractKey = extractKey;
 
         return this;
     }
@@ -349,7 +489,7 @@ function DemoSupport(conn_str) {
     function prepareEmployee(conn, done) {
 
         var assert = new Assert();
-        var helper = new TestHelper(sql, conn_str);
+        var helper = new EmployeeHelper(sql, conn_str);
         var parsedJSON = helper.getJSON();
 
         function empSelectSQL() {
@@ -394,7 +534,7 @@ function DemoSupport(conn_str) {
             function (async_done) {
                 console.log("call utility function dropCreateTable ....");
                 helper.dropCreateTable({
-                    name: table_name
+                    name : table_name
                 }, function () {
                     console.log(".... dropCreateTable done.");
                     async_done();
@@ -446,5 +586,6 @@ function DemoSupport(conn_str) {
     this.prepareEmployee = prepareEmployee;
     this.Async = Async;
     this.Assert = Assert;
+    this.EmployeeHelper = EmployeeHelper;
 }
 
