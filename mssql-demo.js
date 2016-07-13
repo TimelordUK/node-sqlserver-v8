@@ -30,12 +30,92 @@ var demos = [
     // use the table manager to bind to a table and interact with it.
     table,
     // create and execute a stored procedure using pm.
-    procedure
+    procedure,
+    // query
+    query
 ];
 
 async.series(demos, function() {
-    console.log("demo has finished.")
+    console.log("demo has finished.");
 });
+
+function query(done) {
+
+    var async = new support.Async();
+    var assert = new support.Assert();
+    var conn = null;
+
+    var fns = [
+
+        function (async_done) {
+            console.log("query begins ...... ");
+            async_done();
+        },
+
+        function (async_done) {
+            console.log('execute an ad hoc query with temporary connection.');
+            var q = "declare @s NVARCHAR(MAX) = ?; select @s as s";
+            sql.query(conn_str, q, ['node is great'], function (err, res) {
+                assert.ifError(err);
+                console.log(res);
+                async_done();
+            });
+        },
+
+        function (async_done) {
+            console.log("opening a connection ....");
+            sql.open(conn_str, function (err, new_conn) {
+                assert.ifError(err);
+                conn = new_conn;
+                assert.check(conn != null, "connection from open is null.");
+                console.log("... open");
+                async_done();
+            });
+        },
+
+        function (async_done) {
+            console.log("use an open connection to call query()");
+            var s = "select top 1 id, name, type, crdate from sysobjects so where so.type='U'";
+            console.log(s);
+            conn.query(s, function (err, res) {
+                assert.ifError(err);
+                console.log("res.length = " + res.length);
+                console.log(res);
+                async_done();
+            })
+        },
+
+        function (async_done) {
+            console.log("use an open connection to call queryRaw()");
+            var s = "select top 1 id, name, type, crdate from sysobjects so where so.type='U'";
+            console.log(s);
+            conn.queryRaw(s, function (err, res) {
+                assert.ifError(err);
+                console.log("res.length = " + res.length);
+                console.log(res);
+                async_done();
+            })
+        },
+
+        function (async_done) {
+            console.log("close connection.");
+            conn.close(function () {
+                async_done();
+            });
+        },
+
+        function (async_done) {
+            console.log("...... query ends.");
+            async_done();
+        }
+    ];
+
+    console.log("executing async set of functions .....");
+    async.series(fns, function () {
+        console.log("..... async completes. \n\n\n\n\n\n");
+        done();
+    })
+}
 
 function procedure(done) {
 
@@ -89,6 +169,7 @@ function procedure(done) {
             pm.callproc(sp_name, [10, 5], function(err, results, output) {
                 assert.ifError(err);
                 var expected = [99, 15];
+                console.log(output);
                 assert.check(expected[0] == output[0], "results didn't match");
                 assert.check(expected[1] == output[1], "results didn't match");
                 async_done();
