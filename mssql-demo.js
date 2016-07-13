@@ -31,13 +31,95 @@ var demos = [
     table,
     // create and execute a stored procedure using pm.
     procedure,
-    // query
-    query
+    // query both ad hoc and via an open connection.
+    query,
+    // shows driver based events can be captured.
+    event
 ];
 
 async.series(demos, function() {
     console.log("demo has finished.");
 });
+
+function event(done) {
+
+    var async = new support.Async();
+    var assert = new support.Assert();
+    var conn = null;
+
+    var fns = [
+
+        function (async_done) {
+            console.log("event begins ...... ");
+            async_done();
+        },
+
+        function (async_done) {
+            console.log("opening a connection ....");
+            sql.open(conn_str, function (err, new_conn) {
+                assert.ifError(err);
+                conn = new_conn;
+                assert.check(conn != null, "connection from open is null.");
+                console.log("... open");
+                async_done();
+            });
+        },
+
+        function (async_done) {
+            console.log("listen to the events raised from the driver");
+            var s = "select top 1 id, name, type, crdate from sysobjects so where so.type='U'";
+            console.log(s);
+            var q = conn.query(s, function (err, res) {
+                assert.ifError(err);
+                console.log("res.length = " + res.length);
+                console.log(res);
+                async_done();
+            });
+
+            q.on('meta', function(meta) {
+                console.log('meta[0].name = ' + meta[0].name);
+            });
+
+            q.on('column', function(col) {
+                console.log('column = ' + col);
+            });
+
+            q.on('rowcount', function(count) {
+                console.log('rowcount = ' + count);
+            });
+
+            q.on('row', function(row) {
+                console.log('row = ' + row);
+            });
+
+            q.on('done', function() {
+                console.log('done');
+            });
+
+            q.on('error', function(err) {
+                console.log(err);
+            });
+        },
+
+        function (async_done) {
+            console.log("close connection.");
+            conn.close(function () {
+                async_done();
+            });
+        },
+
+        function (async_done) {
+            console.log("...... event ends.");
+            async_done();
+        }
+    ];
+
+    console.log("executing async set of functions .....");
+    async.series(fns, function () {
+        console.log("..... async completes. \n\n\n\n\n\n");
+        done();
+    })
+}
 
 function query(done) {
 
