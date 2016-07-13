@@ -17,7 +17,7 @@ var fs = require('fs');
  sqllocaldb info node
 */
 
-var conn_str = "Driver={SQL Server Native Client 11.0};Server= np:\\\\.\\pipe\\LOCALDB#2515B136\\tsql\\query;Database={scratch};Trusted_Connection=Yes;";
+var conn_str = "Driver={SQL Server Native Client 11.0};Server= np:\\\\.\\pipe\\LOCALDB#E9B74E99\\tsql\\query;Database={scratch};Trusted_Connection=Yes;";
 
 var support = new supp.DemoSupport(sql, conn_str);
 var async = new support.Async();
@@ -28,12 +28,92 @@ var demos = [
     // prepared statements to repeat execute SQL with different params.
     preparedStatements,
     // use the table manager to bind to a table and interact with it.
-    table
+    table,
+    // create and execute a stored procedure using pm.
+    procedure
 ];
 
 async.series(demos, function() {
     console.log("demo has finished.")
 });
+
+function procedure(done) {
+
+    var async = new support.Async();
+    var assert = new support.Assert();
+    var conn = null;
+
+    var sp_name = "test_sp_get_int_int";
+    var def = "alter PROCEDURE <name>"+
+        "(\n" +
+        "@num1 INT,\n" +
+        "@num2 INT,\n" +
+        "@num3 INT OUTPUT\n" +
+        "\n)" +
+        "AS\n" +
+        "BEGIN\n" +
+        "   SET @num3 = @num1 + @num2\n"+
+        "   RETURN 99;\n"+
+        "END\n";
+
+    var fns = [
+
+        function(async_done) {
+            console.log("procedure begins ...... ");
+            async_done();
+        },
+
+        function(async_done) {
+            console.log("opening a connection ....");
+            sql.open(conn_str, function (err, new_conn) {
+                assert.ifError(err);
+                conn = new_conn;
+                assert.check(conn != null, "connection from open is null.");
+                console.log("... open");
+                async_done();
+            });
+        },
+
+        function (async_done) {
+            def = def.replace(/<name>/g, sp_name);
+            console.log("create a procedure " + sp_name);
+            console.log(def);
+            var ph = new support.ProcedureHelper();
+            ph.createProcedure(sp_name, def, function() {
+                async_done();
+            })
+        },
+        
+        function(async_done) {
+            var pm = conn.procedureMgr();
+            pm.callproc(sp_name, [10, 5], function(err, results, output) {
+                assert.ifError(err);
+                var expected = [99, 15];
+                assert.check(expected[0] == output[0], "results didn't match");
+                assert.check(expected[1] == output[1], "results didn't match");
+                async_done();
+            });
+        },
+
+        function (async_done) {
+            console.log("close connection.");
+            conn.close(function () {
+                async_done();
+            });
+        },
+
+        function(async_done) {
+            console.log("...... procedure ends.");
+            async_done();
+        }
+    ];
+
+    console.log("executing async set of functions .....");
+    async.series(fns, function() {
+        console.log("..... async completes. \n\n\n\n\n\n");
+        done();
+    })
+}
 
 function connection(done) {
 
