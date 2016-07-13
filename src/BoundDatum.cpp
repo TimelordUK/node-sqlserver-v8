@@ -901,7 +901,7 @@ namespace mssql
 
 	bool BoundDatum::procBind(Local<Value> &p, Local<Value> &v)
 	{
-		auto isOutput = v->ToInt32();
+		auto isOutput = v->ToInteger();
 
 		Local<Value> pval;
 		int size;
