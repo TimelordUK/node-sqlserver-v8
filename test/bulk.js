@@ -272,13 +272,24 @@ suite('bulk', function () {
     }
 
 
-
+    var arr = [];
     function varbinaryTest(batchSize, selectAfterInsert, test_done) {
-        var arr = [];
-        var str = '';
+
+        var strings = [
+            'one',
+            'two',
+            'three',
+            'four',
+            'five',
+            'six',
+            'seven',
+            'eight',
+            'nine',
+            'ten'
+        ];
+
         for (var i = 0; i < 10; ++i) {
-            str = str + i;
-            arr.push(new Buffer(str))
+            arr.push(new Buffer(strings[i]))
         }
 
         var params = {
