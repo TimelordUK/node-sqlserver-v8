@@ -26,7 +26,7 @@ var demos = [
     // open connection, simple query and close.
     connection,
     // prepared statements to repeat execute SQL with different params.
-    preparedStatements,
+    prepared,
     // use the table manager to bind to a table and interact with it.
     table,
     // create and execute a stored procedure using pm.
@@ -177,6 +177,20 @@ function query(done) {
                 console.log(res);
                 async_done();
             })
+        },
+
+        function (async_done) {
+            console.log('use timeout to place limit on how long to wait for query.');
+            var queryObj = {
+                query_str: "waitfor delay \'00:00:10\';",
+                query_timeout: 2
+            };
+
+            conn.query(queryObj, function (err, res) {
+                assert.check(err != null);
+                assert.check(err.message.indexOf('Query timeout expired') > 0)
+                async_done();
+            });
         },
 
         function (async_done) {
@@ -333,7 +347,7 @@ function connection(done) {
     })
 }
 
-function preparedStatements(done) {
+function prepared(done) {
 
 // create and populate table - fetch prepared statements to select and delete records for employee table.
 // use the prepared statements to select and delete rows.
@@ -346,7 +360,7 @@ function preparedStatements(done) {
     var fns = [
 
         function(async_done) {
-            console.log("preparedStatements begins ...... ");
+            console.log("prepared begins ...... ");
             async_done();
         },
 
@@ -430,7 +444,7 @@ function preparedStatements(done) {
         },
 
         function(async_done) {
-            console.log("...... preparedStatements ends.");
+            console.log("...... prepared ends.");
             async_done();
         }
     ];
