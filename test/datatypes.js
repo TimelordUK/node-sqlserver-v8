@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------------------------------------------------------
 // File: datatypes.js
 // Contents: test suite for verifying the driver can use SQL Server Datatypes
-// 
+//
 // Copyright Microsoft Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,13 +16,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
-
 var sql = require('../');
 var assert = require('assert');
 var config = require('./test-config');
 var commonTestFns = require('./CommonTestFunctions');
-var async = require('async');
 var util = require('util');
+var supp = require('../demo-support');
 
 suite('datatypes', function () {
         var c;
@@ -30,6 +29,8 @@ suite('datatypes', function () {
         var testname = 'not set yet';
         this.timeout(45000);
         var conn_str = config.conn_str;
+        var support = new supp.DemoSupport(sql, conn_str);
+        var async = new support.Async();
 
         setup(function (test_done) {
 
@@ -133,23 +134,34 @@ suite('datatypes', function () {
             // Month in JS is 0-based, so expected will be month minus 1
             var js_date_expected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond);
 
-            async.series
-            ([
+            var fns = [
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function() {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function() {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, null, async_done);
+                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, null, function() {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, done);
+                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
+                        async_done();
+                    });
                 }
-            ]);  // end of async.series()
-        });   // end of test(
+            ];
 
+            async.series
+            (fns, function () {
+                done();
+            });  // end of async.series()
+        });   // end of test(
 
         testname = 'test 003_a - insert valid data into time(7) via TSQL, fetch as date';
         test(testname, function (done) {
@@ -173,22 +185,34 @@ suite('datatypes', function () {
             var testdata2Expected = "12:10:05.1234567";
             var testdata2TsqlInsert = "'" + testdata2Expected + "'";
 
-            async.series
-            ([
+            var fns = [
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, done);
+                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
+                        async_done();
+                    });
                 }
-            ]);
+            ];
+
+            async.series
+            (fns, function () {
+                done();
+            });
         });  // end of test()
 
 
@@ -214,21 +238,33 @@ suite('datatypes', function () {
             var testdata2Expected = "12:10:05.1234567";
             var testdata2TsqlInsert = "'" + testdata2Expected + "'";
 
-            async.series([
-
+            var fns =
+            [
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, done);
+                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
+                        async_done();
+                    });
                 }
-            ]);  // end of async.series()
+            ];
+
+            async.series(fns, function () {
+                done();
+            });  // end of async.series()
         }); // end of test()
 
         testname = 'test 004_a - insert valid data into datetime2(7) via TSQL, fetch as date';
@@ -253,21 +289,34 @@ suite('datatypes', function () {
             var testdata2Expected = "2001-04-10 10:12:59.1234567";
             var testdata2TsqlInsert = "'" + testdata2Expected + "'";
 
-            async.series([
-                function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
-                },
-                function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
-                },
-                function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
-                },
-                function (async_done) {
-                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, done);
-                }
-            ]);  // end of async.series()
-        }); // end of test()
+            var fns =
+                [
+                    function (async_done) {
+                        commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function () {
+                            async_done();
+                        });
+                    },
+                    function (async_done) {
+                        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                            async_done();
+                        });
+                    },
+                    function (async_done) {
+                        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                            async_done();
+                        });
+                    },
+                    function (async_done) {
+                        commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
+                            async_done();
+                        });
+                    }
+                ];
+
+            async.series(fns, function () {
+                done();
+            });  // end of async.series()
+        });
 
         testname = 'test 004_b - insert valid data into datetime2(0) via TSQL, fetch as date';
         test(testname, function (done) {
@@ -291,20 +340,34 @@ suite('datatypes', function () {
             var testdata2Expected = "2001-04-10 10:12:59.1234567";
             var testdata2TsqlInsert = "'" + testdata2Expected + "'";
 
-            async.series([
+            var fns = [
+
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, done);
+                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
+                        async_done();
+                    });
                 }
-            ]);  // end of async.series()
+            ];
+
+            async.series
+            (fns, function () {
+                done();
+            });
         }); // end of test()
 
         testname = 'test 005_a - insert valid data into datetimeoffset(7) via TSQL, fetch as date';
@@ -336,20 +399,34 @@ suite('datatypes', function () {
             var testdata2Expected = "2001-04-10 10:12:59.1234567 +" + offsetHours + ":" + offsetMinutes;
             var testdata2TsqlInsert = "'" + testdata2Expected + "'";
 
-            async.series([
+            var fns = [
+
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, done);
+                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
+                        async_done();
+                    });
                 }
-            ]);  // end of async.series()
+            ];
+
+            async.series
+            (fns, function () {
+                done();
+            });
         }); // end of test()
 
         testname = 'test 005_b - insert valid data into datetimeoffset(0) via TSQL, fetch as date';
@@ -381,21 +458,34 @@ suite('datatypes', function () {
             var testdata2Expected = "2001-04-10 10:12:59.1234567 +" + offsetHours + ":" + offsetMinutes;
             var testdata2TsqlInsert = "'" + testdata2Expected + "'";
 
-            async.series([
+            var fns = [
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, done);
+                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
+                        async_done();
+                    });
                 }
-            ]);  // end of async.series()
+            ];
+
+            async.series
+            (fns, function () {
+                done();
+            });
         }); // end of test()
 
         testname = 'test 006_a - insert valid data into datetimeoffset(7) via TSQL, fetch as date UTC';
@@ -426,21 +516,34 @@ suite('datatypes', function () {
             var testdata2Expected = "2001-04-10 10:12:59.1234567 +" + offsetHours + ":" + offsetMinutes;
             var testdata2TsqlInsert = "'" + testdata2Expected + "'";
 
-            async.series([
+            var fns = [
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, done);
+                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
+                        async_done();
+                    });
                 }
-            ]);  // end of async.series()
+            ];
+
+            async.series
+            (fns, function () {
+                done();
+            });
         }); // end of test()
 
         testname = 'test 007 - insert valid data into date via TSQL, fetch as date';
@@ -464,20 +567,34 @@ suite('datatypes', function () {
             var testdata2TsqlInsert = "'" + testdata2Expected + "'";
             var js_date_expected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond);
 
-            async.series([
+            var fns = [
+
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                        async_done();
+                    });
                 },
                 function (async_done) {
-                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, done);
+                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
+                        async_done();
+                    });
                 }
-            ]);  // end of async.series()
+            ];
+
+            async.series
+            (fns, function () {
+                done();
+            });
         }); // end of test()
 
         testname = 'test 008 - insert null into varchar(max) via TSQL, fetch as text';
@@ -1716,4 +1833,3 @@ suite('datatypes', function () {
         });
     }
 )
-;

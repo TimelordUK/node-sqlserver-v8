@@ -1,5 +1,4 @@
 var Mocha = require('mocha');
-var assert = require('assert');
 
 runTest();
 
@@ -9,10 +8,10 @@ function runTest() {
 
     var mocha = new Mocha(
         {
-            ui: 'tdd'
+            ui : 'tdd'
         });
 
-    mocha.addFile('test/compoundqueries.js');
+    mocha.addFile('test/txn.js');
 
     mocha.run(function (failures) {
         process.on('uncaughtException', function (err) {

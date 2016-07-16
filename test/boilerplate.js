@@ -3,14 +3,17 @@
  */
 var
     assert = require('assert'),
-    async = require('async'),
     config = require('./test-config'),
+    supp = require('../demo-support'),
     fs = require('fs');
 
 function TestHelper(native, cstr) {
 
     var conn_str = cstr;
     var sql = native;
+    var support = new supp.DemoSupport(sql, cstr);
+    var async = new support.Async();
+
 
     function testBoilerPlate(params, doneFunction) {
 

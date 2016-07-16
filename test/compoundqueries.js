@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------------------------------------------------------
 // File: compoundqueries.js
 // Contents: test suite for verifying support of batched queries for mssql node.js driver
-// 
+//
 // Copyright Microsoft Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,7 @@ var sql = require('../');
 var assert = require( 'assert' );
 var config = require( './test-config' );
 var commonTestFns = require('./CommonTestFunctions');
-var async = require('async');
+var supp = require('../demo-support');
 var util = require( 'util' );
 
 suite('compoundqueries', function () {
@@ -29,7 +29,10 @@ suite('compoundqueries', function () {
     var tablename = "compoundqueries_table";
     var testname = 'not set yet';
 
+
     var conn_str = config.conn_str;
+    var support = new supp.DemoSupport(sql, conn_str);
+    var async = new support.Async();
 
     setup(function (test_done) {
 
@@ -142,45 +145,57 @@ suite('compoundqueries', function () {
 
         var expected1 = {
             meta:
-    [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-    { name: testcolumnname, size: testcolumnsize, nullable: true, type: testcolumnclienttype, sqlType: testcolumnsqltype }],
+                [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
+                    { name: testcolumnname, size: testcolumnsize, nullable: true, type: testcolumnclienttype, sqlType: testcolumnsqltype }],
             rows:
-    [[1, null],
-    [2, testdata2Expected]]
+                [[1, null],
+                    [2, testdata2Expected]]
         };
 
         var expected2 = {
             meta:
-    null,
+                null,
             rowcount:
-    -1
+                -1
         };
 
         var expected3 = {
             meta:
-    [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-    { name: testcolumnname, size: testcolumnsize, nullable: true, type: testcolumnclienttype, sqlType: testcolumnsqltype }],
+                [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
+                    { name: testcolumnname, size: testcolumnsize, nullable: true, type: testcolumnclienttype, sqlType: testcolumnsqltype }],
             rows:
-    [[1, null],
-    [2, testdata2Expected],
-    [3, null]]
+                [[1, null],
+                    [2, testdata2Expected],
+                    [3, null]]
         };
 
-        async.series([
+        var fns =
+            [
+                function (async_done) {
+                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function() {
+                        async_done();
+                    });
+                },
+                function (async_done) {
+                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function() {
+                        async_done();
+                    });
+                },
+                function (async_done) {
+                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                        async_done();
+                    });
+                },
+                function (async_done) {
+                    commonTestFns.compoundQueryTSQL(c, tsql, expected1, expected2, expected3, testname, function() {
+                        async_done();
+                    });
+                }
+            ];
 
-    function (async_done) {
-        commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
-    },
-    function (async_done) {
-        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
-    },
-    function (async_done) {
-        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
-    },
-    function (async_done) {
-        commonTestFns.compoundQueryTSQL(c, tsql, expected1, expected2, expected3, testname, done);
-    }
-        ]);  // end of async.series()
+        async.series(fns, function() {
+            done();
+        });  // end of async.series()
     }); // end of test()
 
     testname = 'test 002 - batched query: SELECT....; PRINT ....; SELECT....;';
@@ -197,35 +212,46 @@ suite('compoundqueries', function () {
 
         var expected1 = {
             meta:
-    [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-    { name: testcolumnname, size: testcolumnsize, nullable: true, type: testcolumnclienttype, sqlType: testcolumnsqltype }],
+                [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
+                    { name: testcolumnname, size: testcolumnsize, nullable: true, type: testcolumnclienttype, sqlType: testcolumnsqltype }],
             rows:
-    [[1, null],
-    [2, testdata2Expected]]
+                [[1, null],
+                    [2, testdata2Expected]]
         };
 
         var expected2 = {
             meta:
-    null,
+                null,
             rowcount:
-    -1
+                -1
         };
 
-        async.series([
+        var fns = [
+            function (async_done) {
+                commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function() {
+                    async_done();
+                });
+            },
+            function (async_done) {
+                commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                    async_done();
+                });
+            },
+            function (async_done) {
+                commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                    async_done();
+                });
+            },
+            function (async_done) {
+                commonTestFns.compoundQueryTSQL(c, tsql, expected1, expected2, expected1, testname, function () {
+                    async_done();
+                });
+            }
+        ];
 
-    function (async_done) {
-        commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
-    },
-    function (async_done) {
-        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
-    },
-    function (async_done) {
-        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
-    },
-    function (async_done) {
-        commonTestFns.compoundQueryTSQL(c, tsql, expected1, expected2, expected1, testname, done);
-    }
-        ]);  // end of async.series()
+        async.series(fns, function () {
+            done();
+        });  // end of async.series()
     }); // end of test()
 
     testname = 'test 003 - batched query: SELECT....; SELECT (with no results) ....; SELECT....;';
@@ -242,36 +268,48 @@ suite('compoundqueries', function () {
 
         var expected1 = {
             meta:
-    [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-    { name: testcolumnname, size: testcolumnsize, nullable: true, type: testcolumnclienttype, sqlType: testcolumnsqltype }],
+                [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
+                    { name: testcolumnname, size: testcolumnsize, nullable: true, type: testcolumnclienttype, sqlType: testcolumnsqltype }],
             rows:
-    [[1, null],
-    [2, testdata2Expected]]
+                [[1, null],
+                    [2, testdata2Expected]]
         };
 
         var expected2 = {
             meta:
-    [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-    { name: testcolumnname, size: testcolumnsize, nullable: true, type: testcolumnclienttype, sqlType: testcolumnsqltype }],
+                [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
+                    { name: testcolumnname, size: testcolumnsize, nullable: true, type: testcolumnclienttype, sqlType: testcolumnsqltype }],
             rows:
-    []
+                []
         };
 
-        async.series([
+        var fns = [
 
-    function (async_done) {
-        commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
-    },
-    function (async_done) {
-        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
-    },
-    function (async_done) {
-        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
-    },
-    function (async_done) {
-        commonTestFns.compoundQueryTSQL(c, tsql, expected1, expected2, expected1, testname, done);
-    }
-        ]);  // end of async.series()
+            function (async_done) {
+                commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function() {
+                    async_done();
+                });
+            },
+            function (async_done) {
+                commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                    async_done();
+                });
+            },
+            function (async_done) {
+                commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                    async_done();
+                });
+            },
+            function (async_done) {
+                commonTestFns.compoundQueryTSQL(c, tsql, expected1, expected2, expected1, testname, function () {
+                    async_done();
+                });
+            }
+        ];
+
+        async.series(fns, function () {
+            done();
+        });  // end of async.series()
     }); // end of test()
 
     testname = 'test 004 - batched query: SELECT....; INSERT (invalid...should fail) ....; SELECT....;';
@@ -289,38 +327,50 @@ suite('compoundqueries', function () {
 
         var expected1 = {
             meta:
-    [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-    { name: testcolumnname, size: testcolumnsize, nullable: true, type: testcolumnclienttype, sqlType: testcolumnsqltype }],
+                [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
+                    { name: testcolumnname, size: testcolumnsize, nullable: true, type: testcolumnclienttype, sqlType: testcolumnsqltype }],
             rows:
-    [[1, null],
-    [2, testdata2Expected]]
+                [[1, null],
+                    [2, testdata2Expected]]
         };
 
         var expected2 = {
             meta:
-    [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-    { name: testcolumnname, size: testcolumnsize, nullable: true, type: testcolumnclienttype, sqlType: testcolumnsqltype }],
+                [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
+                    { name: testcolumnname, size: testcolumnsize, nullable: true, type: testcolumnclienttype, sqlType: testcolumnsqltype }],
             rows:
-    []
+                []
         };
         var expectedError = new Error( "[Microsoft][" + config.driver + "][SQL Server]Invalid object name '" + invalidtablename + "'." );
         expectedError.sqlstate = '42S02';
         expectedError.code = 208;
 
-        async.series([
+        var fns =
+        [
+            function (async_done) {
+                commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function() {
+                    async_done();
+                });
+            },
+            function (async_done) {
+                commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                    async_done();
+                });
+            },
+            function (async_done) {
+                commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                    async_done();
+                });
+            },
+            function (async_done) {
+                commonTestFns.invalidQueryTSQL(c, tsql, expectedError, testname, function () {
+                    async_done();
+                });
+            }
+        ];
 
-    function (async_done) {
-        commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
-    },
-    function (async_done) {
-        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
-    },
-    function (async_done) {
-        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
-    },
-    function (async_done) {
-        commonTestFns.invalidQueryTSQL(c, tsql, expectedError, testname, done);
-    }
-        ]);  // end of async.series()
+        async.series(fns, function () {
+            done();
+        });  // end of async.series()
     }); // end of test()
 });
