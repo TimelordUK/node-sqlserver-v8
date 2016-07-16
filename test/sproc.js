@@ -1,56 +1,54 @@
 var sql = require('../');
 var assert = require('assert');
-var async = require('async');
+var supp = require('../demo-support');
 var config = require('./test-config');
 
 var conn_str = config.conn_str;
 
-function testBoilerPlate(proc_name, proc_sql, doneFunction) {
-
-    var sequence = [
-
-        function (async_done) {
-            var dropQuery = "IF NOT EXISTS (SELECT *  FROM sys.objects WHERE type = 'P' AND name = '" + proc_name + "')";
-            dropQuery += " EXEC ('create procedure " + proc_name + " as begin set nocount on; end')";
-            sql.query(conn_str, dropQuery, function () {
-                async_done();
-            });
-        },
-
-        function (async_done) {
-            sql.query(conn_str, proc_sql,
-                function (e) {
-                    assert.ifError(e, "Error creating proc");
-                    async_done();
-                });
-        }];
-
-    async.series(sequence,
-        function () {
-            doneFunction();
-        });
-}
-
 suite('sproc', function () {
-
-    var c;
+    var support = new supp.DemoSupport(sql, conn_str);
+    var async = new support.Async();
+    var theConnection;
     this.timeout(45000);
 
+    function testBoilerPlate(proc_name, proc_sql, doneFunction) {
+
+        var sequence = [
+
+            function (async_done) {
+                var dropQuery = "IF NOT EXISTS (SELECT *  FROM sys.objects WHERE type = 'P' AND name = '" + proc_name + "')";
+                dropQuery += " EXEC ('create procedure " + proc_name + " as begin set nocount on; end')";
+                theConnection.query(dropQuery, function (err) {
+                    assert.ifError(err);
+                    async_done();
+                });
+            },
+
+            function (async_done) {
+                theConnection.query(proc_sql,
+                    function (e) {
+                        assert.ifError(e, "Error creating proc");
+                        async_done();
+                    });
+            }
+        ];
+
+        async.series(sequence,
+            function () {
+                doneFunction();
+            });
+    }
+
     setup(function (test_done) {
-
         sql.open(conn_str, function (err, new_conn) {
-
             assert.ifError(err);
-
-            c = new_conn;
-
+            theConnection = new_conn;
             test_done();
         });
     });
 
     teardown(function (done) {
-
-        c.close(function (err) {
+        theConnection.close(function (err) {
             assert.ifError(err);
             done();
         });
@@ -74,7 +72,7 @@ suite('sproc', function () {
         testBoilerPlate(sp_name, def, go);
 
         function go() {
-            var pm = c.procedureMgr();
+            var pm = theConnection.procedureMgr();
             pm.setTimeout(2);
             pm.callproc(sp_name, ['0:0:5'], function(err, results, output) {
                 assert(err != null);
@@ -102,7 +100,7 @@ suite('sproc', function () {
         testBoilerPlate(sp_name, def, go);
 
         function go() {
-            var pm = c.procedureMgr();
+            var pm = theConnection.procedureMgr();
             pm.setTimeout(5);
             pm.callproc(sp_name, ['0:0:2'], function(err, results, output) {
                 assert.ifError(err);
@@ -127,7 +125,7 @@ suite('sproc', function () {
         testBoilerPlate(sp_name, def, go);
 
         function go() {
-            var pm = c.procedureMgr();
+            var pm = theConnection.procedureMgr();
             pm.callproc(sp_name, ["US of A!"], function(err, results, output) {
                 var expected = [8];
                 assert.deepEqual(output, expected, "results didn't match");
@@ -158,7 +156,7 @@ suite('sproc', function () {
         testBoilerPlate(sp_name, def, go);
 
         function go() {
-            var pm = c.procedureMgr();
+            var pm = theConnection.procedureMgr();
             pm.callproc(sp_name, ["US of A!"], function(err, results, output) {
                 var expected = [8];
                 assert.deepEqual(output, expected, "results didn't match");
@@ -189,7 +187,7 @@ suite('sproc', function () {
         testBoilerPlate(sp_name, def, go);
 
         function go() {
-            var pm = c.procedureMgr();
+            var pm = theConnection.procedureMgr();
             pm.callproc(sp_name, [1], function(err, results, output) {
                 var expected = [99, 'name', 'company'];
                 assert.deepEqual(output, expected, "results didn't match");
@@ -219,7 +217,7 @@ suite('sproc', function () {
         testBoilerPlate(sp_name, def, go);
 
         function go() {
-            var pm = c.procedureMgr();
+            var pm = theConnection.procedureMgr();
             pm.callproc(sp_name, [10, 5], function(err, results, output) {
                 var expected = [99, 15];
                 assert.deepEqual(output, expected, "results didn't match");
@@ -227,9 +225,6 @@ suite('sproc', function () {
             });
         }
     });
-
-
-
 });
 
 
