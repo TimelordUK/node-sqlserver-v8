@@ -1,86 +1,108 @@
 var sql = require('../'),
     assert = require('assert'),
-    async = require('async'),
+    supp = require('../demo-support'),
     config = require('./test-config'),
     fs = require('fs');
-
-var conn_str = config.conn_str;
 
 suite('userbind', function () {
 
     this.timeout(20 * 1000);
+    var conn_str = config.conn_str;
+    var support = new supp.DemoSupport(sql, conn_str);
+    var async = new support.Async();
+
+    var conn;
 
     setup(function (test_done) {
-        test_done();
-    });
-
-    teardown(function (done) {
-        done();
-    });
-
-    var open = function (done) {
-        sql.open(conn_str, function (err, conn) {
+        sql.open(conn_str, function (err, co) {
             if (err) {
                 console.error(err);
                 process.exit();
             }
-            done(conn);
+            conn = co;
+            test_done();
         });
-    };
+    });
+
+    teardown(function (done) {
+        conn.close(function() {
+            done();
+        });
+    });
 
     function testUserBind(params, cb) {
 
-        open(function (conn) {
+        var allres = [];
+        var skip = false;
+        var error = null;
+        var results = null;
 
-            var allres = [];
+        var sequence = [
 
-            var sequence = [
-
-                function (async_done) {
-                    conn.query(params.query, [params.setter(params.min)], function (err, res) {
-                        if (err) {
-                            cb(err, res);
-                        }
+            function (async_done) {
+                conn.query(params.query, [params.setter(params.min)], function (err, res) {
+                    error = err;
+                    results = res;
+                    if (err) {
+                        skip = true;
+                        async_done();
+                    } else {
                         allres.push(res[0]);
                         async_done();
-                    });
-                },
+                    }
+                });
+            },
 
-                function (async_done) {
-                    conn.query(params.query, [params.setter(params.max)], function (err, res) {
-                        if (err) {
-                            cb(err, res);
-                        }
+            function (async_done) {
+                if (skip) {
+                    async_done();
+                    return;
+                }
+                conn.query(params.query, [params.setter(params.max)], function (err, res) {
+                    error = err;
+                    results = res;
+                    if (err) {
+                        skip = true;
+                        async_done();
+                    } else {
                         allres.push(res[0]);
                         async_done();
-                    });
-                },
+                    }
+                });
+            },
 
-                function (async_done) {
-                    if (params.hasOwnProperty('test_null')) {
-                        if (!params.test_null) {
+            function (async_done) {
+                if (skip) {
+                    async_done();
+                    return;
+                }
+                if (params.hasOwnProperty('test_null')) {
+                    if (!params.test_null) {
+                        async_done();
+                    }
+                } else {
+                    conn.query(params.query, [params.setter(null)], function (err, res) {
+                        error = err;
+                        results = res;
+                        if (err) {
                             async_done();
-                        }
-                    }else {
-                        conn.query(params.query, [params.setter(null)], function (err, res) {
-                            if (err) {
-                                cb(err, res);
-                            }
+                        } else {
                             allres.push(res[0]);
                             async_done();
-                        });
-                    }
-                },
+                        }
+                    });
+                }
+            },
 
-                function (async_done) {
-                    async_done();
-                }];
+            function (async_done) {
+                async_done();
+            }
+        ];
 
-            async.series(sequence,
-                function () {
-                    cb(null, allres);
-                });
-        });
+        async.series(sequence,
+            function () {
+                cb(error, allres);
+            });
     }
 
     function compare(params, res) {
@@ -105,6 +127,22 @@ suite('userbind', function () {
 
         assert.deepEqual(res, expected);
     }
+
+    test('user bind DateTime2 to sql type datetime2(7) - with scale set too low, should error', function (test_done) {
+        var now = new Date();
+        var params = {
+            query : 'declare @v DATETIME2(7) = ?; select @v as v',
+            min : now,
+            max : now,
+            setter: function (v) {
+                return sql.DateTime2(v, 1); // set scale too low
+            }
+        };
+        testUserBind(params, function (err, res) {
+            assert.ok(err.message.indexOf('Fractional second precision exceeds the scale specified') > 0);
+            test_done();
+        });
+    });
 
     test('user bind WLongVarChar to NVARCHAR(MAX)', function (test_done) {
 
@@ -261,21 +299,6 @@ suite('userbind', function () {
         });
     });
 
-    test('user bind DateTime2 to sql type datetime2(7) - with scale set too low, should error', function (test_done) {
-        var now = new Date();
-        var params = {
-            query: 'declare @v DATETIME2(7) = ?; select @v as v',
-            min: now,
-            max: now,
-            setter: function (v) {
-                return sql.DateTime2(v, 1); // set scale too low
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ok(err.message.indexOf('Fractional second precision exceeds the scale specified') > 0);
-            test_done();
-        });
-    });
 
     test('user bind DateTime to sql type datetime2(7)', function (test_done) {
         var now = new Date();

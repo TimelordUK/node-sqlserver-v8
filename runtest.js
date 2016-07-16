@@ -11,7 +11,7 @@ function runTest() {
             ui : 'tdd'
         });
 
-    mocha.addFile('test/txn.js');
+    mocha.addFile('test/dates.js');
 
     mocha.run(function (failures) {
         process.on('uncaughtException', function (err) {
