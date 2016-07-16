@@ -20,7 +20,7 @@
 var sql = require('../');
 var assert = require('assert');
 var config = require('./test-config');
-var async = require('async');
+var supp = require('../demo-support');
 var util = require('util');
 
 // Need to change this to false when parameters are supported
@@ -61,6 +61,9 @@ function getTimezoneOffsetInHours(year, month, day) {
 
 //    Create table for test data
 function createTable(Connection, TableName, ColumnName, TestType, done) {
+
+    var support = new supp.DemoSupport(sql, "");
+    var async = new support.Async();
 
     var actions = [
         function (async_done) {
