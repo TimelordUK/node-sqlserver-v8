@@ -19,69 +19,14 @@
 
 var sql = require('../');
 var assert = require('assert');
-var async = require('async');
+var supp = require('../demo-support');
 var config = require('./test-config');
 
 var conn_str = config.conn_str;
 
-function testBoilerPlate(tableName, tableFields, insertFunction, verifyFunction, doneFunction) {
-
-    var tableFieldsSql = " (id int identity, ";
-
-    for (var field in tableFields) {
-        if (tableFields.hasOwnProperty(field))
-            tableFieldsSql += field + ' ' + tableFields[field] + ',';
-    }
-    tableFieldsSql = tableFieldsSql.substr(0, tableFieldsSql.length - 1);
-    tableFieldsSql += ')';
-
-    var sequence = [
-
-        function (async_done) {
-            var dropQuery = "DROP TABLE " + tableName;
-            sql.query(conn_str, dropQuery, function () {
-                async_done();
-            });
-        },
-
-        function (async_done) {
-            var createQuery = "CREATE TABLE " + tableName + tableFieldsSql;
-            sql.query(conn_str, createQuery,
-                function (e) {
-                    assert.ifError(e, "Error creating table");
-                    async_done();
-                });
-        },
-
-        function (async_done) {
-
-            var clusteredIndexSql = ["CREATE CLUSTERED INDEX IX_", tableName, " ON ", tableName, " (id)"].join("");
-            sql.query(conn_str, clusteredIndexSql,
-                function (e, r) {
-                    assert.ifError(e, "Error creating index");
-                    async_done();
-                });
-        },
-
-        function (async_done) {
-            insertFunction(async_done);
-        },
-
-        function (async_done) {
-            verifyFunction(function () {
-                async_done();
-            });
-        }];
-
-    async.series(sequence,
-        function () {
-            doneFunction();
-        });
-}
-
 suite('params', function () {
 
-    var c;
+    var theConnection;
     this.timeout(45000);
     var localDate = new Date();
     var utcDate = new Date(Date.UTC(localDate.getUTCFullYear(),
@@ -92,21 +37,74 @@ suite('params', function () {
         localDate.getUTCSeconds(),
         localDate.getUTCMilliseconds()));
 
+    function testBoilerPlate(tableName, tableFields, insertFunction, verifyFunction, doneFunction) {
+
+        var tableFieldsSql = " (id int identity, ";
+
+        for (var field in tableFields) {
+            if (tableFields.hasOwnProperty(field))
+                tableFieldsSql += field + ' ' + tableFields[field] + ',';
+        }
+        tableFieldsSql = tableFieldsSql.substr(0, tableFieldsSql.length - 1);
+        tableFieldsSql += ')';
+
+        var sequence = [
+
+            function (async_done) {
+                var dropQuery = "DROP TABLE " + tableName;
+                sql.query(conn_str, dropQuery, function () {
+                    async_done();
+                });
+            },
+
+            function (async_done) {
+                var createQuery = "CREATE TABLE " + tableName + tableFieldsSql;
+                sql.query(conn_str, createQuery,
+                    function (e) {
+                        assert.ifError(e, "Error creating table");
+                        async_done();
+                    });
+            },
+
+            function (async_done) {
+
+                var clusteredIndexSql = ["CREATE CLUSTERED INDEX IX_", tableName, " ON ", tableName, " (id)"].join("");
+                sql.query(conn_str, clusteredIndexSql,
+                    function (e, r) {
+                        assert.ifError(e, "Error creating index");
+                        async_done();
+                    });
+            },
+
+            function (async_done) {
+                insertFunction(async_done);
+            },
+
+            function (async_done) {
+                verifyFunction(function () {
+                    async_done();
+                });
+            }];
+
+        async.series(sequence,
+            function () {
+                doneFunction();
+            });
+    }
+    var support = new supp.DemoSupport(sql, conn_str);
+    var async = new support.Async();
+
     setup(function (test_done) {
-
         sql.open(conn_str, function (err, new_conn) {
-
             assert.ifError(err);
-
-            c = new_conn;
+            theConnection = new_conn;
 
             test_done();
         });
     });
 
     teardown(function (done) {
-
-        c.close(function (err) {
+        theConnection.close(function (err) {
             assert.ifError(err);
             done();
         });
@@ -123,7 +121,7 @@ suite('params', function () {
 
                 var large_text = "A".repeat(10000);
 
-                c.query("INSERT INTO test_large_insert (large_insert) VALUES (?)", [sql.WLongVarChar(large_text)], function (e, r) {
+                theConnection.query("INSERT INTO test_large_insert (large_insert) VALUES (?)", [sql.WLongVarChar(large_text)], function (e, r) {
 
                     assert.ifError(e, "Error inserting large string");
                     done();
@@ -131,7 +129,7 @@ suite('params', function () {
             },
             function (done) {
 
-                c.query("SELECT large_insert FROM test_large_insert", function (e, r) {
+                theConnection.query("SELECT large_insert FROM test_large_insert", function (e, r) {
 
                     assert.ifError(e);
 
@@ -144,106 +142,90 @@ suite('params', function () {
     });
 
     test('verify empty string is sent as empty string, not null', function(test_done) {
-        sql.open(conn_str, function (err, conn) {
-            conn.query("declare @s NVARCHAR(MAX) = ?; select @s as data", [''], function (err, res) {
-                assert.ifError(err);
-                var expected = [{
-                    data: ''
-                }];
-                assert.deepEqual(expected, res);
-                test_done();
-            });
+        theConnection.query("declare @s NVARCHAR(MAX) = ?; select @s as data", [''], function (err, res) {
+            assert.ifError(err);
+            var expected = [{
+                data: ''
+            }];
+            assert.deepEqual(expected, res);
+            test_done();
         });
     });
 
     test('verify null string is sent as null, not empty string', function(test_done) {
-        sql.open(conn_str, function (err, conn) {
-            conn.query("declare @s NVARCHAR(MAX) = ?; select @s as data", [null], function (err, res) {
-                assert.ifError(err);
-                var expected = [{
-                    data: null
-                }];
-                assert.deepEqual(expected, res);
-                test_done();
-            });
+        theConnection.query("declare @s NVARCHAR(MAX) = ?; select @s as data", [null], function (err, res) {
+            assert.ifError(err);
+            var expected = [{
+                data: null
+            }];
+            assert.deepEqual(expected, res);
+            test_done();
         });
     });
 
     test('verify single char string param', function(test_done) {
-        sql.open(conn_str, function (err, conn) {
-            conn.query("declare @s NVARCHAR(MAX) = ?; select @s as data", ['p'], function (err, res) {
-                assert.ifError(err);
-                var expected = [{
-                    data: 'p'
-                }];
-                assert.deepEqual(expected, res);
-                test_done();
-            });
+        theConnection.query("declare @s NVARCHAR(MAX) = ?; select @s as data", ['p'], function (err, res) {
+            assert.ifError(err);
+            var expected = [{
+                data: 'p'
+            }];
+            assert.deepEqual(expected, res);
+            test_done();
         });
     });
 
     test('verify bool (true) to sql_variant', function(test_done) {
-        sql.open(conn_str, function (err, conn) {
-            conn.query("select cast(CAST('TRUE' as bit) as sql_variant) as data;", function (err, res) {
-                assert.ifError(err);
-                var expected = [{
-                    data: true
-                }];
-                assert.deepEqual(expected, res);
-                test_done();
-            });
+        theConnection.query("select cast(CAST('TRUE' as bit) as sql_variant) as data;", function (err, res) {
+            assert.ifError(err);
+            var expected = [{
+                data: true
+            }];
+            assert.deepEqual(expected, res);
+            test_done();
         });
     });
 
     test('verify bool (false) to sql_variant', function(test_done) {
-        sql.open(conn_str, function (err, conn) {
-            conn.query("select cast(CAST('FALSE' as bit) as sql_variant) as data;", function (err, res) {
-                assert.ifError(err);
-                var expected = [{
-                    data: false
-                }];
-                assert.deepEqual(expected, res);
-                test_done();
-            });
+        theConnection.query("select cast(CAST('FALSE' as bit) as sql_variant) as data;", function (err, res) {
+            assert.ifError(err);
+            var expected = [{
+                data: false
+            }];
+            assert.deepEqual(expected, res);
+            test_done();
         });
     });
 
     test('verify varchar to sql_variant', function(test_done) {
-        sql.open(conn_str, function (err, conn) {
-            conn.query("select cast('hello' as sql_variant) as data;", function (err, res) {
-                assert.ifError(err);
-                var expected = [{
-                    data: 'hello'
-                }];
-                assert.deepEqual(expected, res);
-                test_done();
-            });
+        theConnection.query("select cast('hello' as sql_variant) as data;", function (err, res) {
+            assert.ifError(err);
+            var expected = [{
+                data: 'hello'
+            }];
+            assert.deepEqual(expected, res);
+            test_done();
         });
     });
 
     test('verify numeric decimal to sql_variant', function(test_done) {
-        sql.open(conn_str, function (err, conn) {
-            conn.query("select cast(11.77 as sql_variant) as data;", function (err, res) {
-                assert.ifError(err);
-                var expected = [{
-                    data: 11.77
-                }];
-                assert.deepEqual(expected, res);
-                test_done();
-            });
+        theConnection.query("select cast(11.77 as sql_variant) as data;", function (err, res) {
+            assert.ifError(err);
+            var expected = [{
+                data: 11.77
+            }];
+            assert.deepEqual(expected, res);
+            test_done();
         });
     });
 
     test('verify int to sql_variant', function(test_done) {
-        sql.open(conn_str, function (err, conn) {
-            conn.query("select cast(10000 as sql_variant) as data;", function (err, res) {
-                assert.ifError(err);
-                var expected = [{
-                    data: 10000
-                }];
-                assert.deepEqual(expected, res);
-                test_done();
-            });
+        theConnection.query("select cast(10000 as sql_variant) as data;", function (err, res) {
+            assert.ifError(err);
+            var expected = [{
+                data: 10000
+            }];
+            assert.deepEqual(expected, res);
+            test_done();
         });
     });
 
@@ -262,28 +244,24 @@ suite('params', function () {
     
     test('verify getdate (datetime) to sql_variant', function(test_done) {
         var smalldt = toUTC(new Date());
-        sql.open(conn_str, function (err, conn) {
-            conn.query("select cast(convert(datetime, ?) as sql_variant) as data", [smalldt], function (err, res) {
-                assert.ifError(err);
-                var date = res[0].data;
-                assert(date instanceof Date);
-                date = toUTC(date);
-                assert(smalldt.getYear() == date.getYear());
-                assert(smalldt.getMonth() == date.getMonth());
-                assert(smalldt.getDay() == date.getDay());
-                test_done();
-            });
+        theConnection.query("select cast(convert(datetime, ?) as sql_variant) as data", [smalldt], function (err, res) {
+            assert.ifError(err);
+            var date = res[0].data;
+            assert(date instanceof Date);
+            date = toUTC(date);
+            assert(smalldt.getYear() == date.getYear());
+            assert(smalldt.getMonth() == date.getMonth());
+            assert(smalldt.getDay() == date.getDay());
+            test_done();
         });
     });
 
     test('verify getdate to sql_variant', function(test_done) {
-        sql.open(conn_str, function (err, conn) {
-            conn.query("select cast(getdate() as sql_variant) as data;", function (err, res) {
-                assert.ifError(err);
-                var date = res[0].data;
-                assert(date instanceof Date);
-                test_done();
-            });
+        theConnection.query("select cast(getdate() as sql_variant) as data;", function (err, res) {
+            assert.ifError(err);
+            var date = res[0].data;
+            assert(date instanceof Date);
+            test_done();
         });
     });
 
@@ -294,14 +272,14 @@ suite('params', function () {
             {"null_test": "varchar(1)"},
             function (done) {
 
-                c.queryRaw("INSERT INTO null_param_test (null_test) VALUES (?)", [null], function (e) {
+                theConnection.queryRaw("INSERT INTO null_param_test (null_test) VALUES (?)", [null], function (e) {
                     assert.ifError(e);
                     done();
                 });
             },
             function (done) {
 
-                c.queryRaw("SELECT null_test FROM null_param_test", function (e, r) {
+                theConnection.queryRaw("SELECT null_test FROM null_param_test", function (e, r) {
 
                     assert.ifError(e);
                     var expected = {
@@ -319,13 +297,13 @@ suite('params', function () {
 
         var sequence = [
             function (async_done) {
-                c.queryRaw("INSERT INTO invalid_numbers_test (f) VALUES (?)", [Number.POSITIVE_INFINITY], function (e) {
+                theConnection.queryRaw("INSERT INTO invalid_numbers_test (f) VALUES (?)", [Number.POSITIVE_INFINITY], function (e) {
                     assert(e == "Error: IMNOD: [msnodesql] Parameter 1: Invalid number parameter");
                     async_done();
                 })
             },
             function (async_done) {
-                c.queryRaw("INSERT INTO invalid_numbers_test (f) VALUES (?)", [Number.NEGATIVE_INFINITY], function (e) {
+                theConnection.queryRaw("INSERT INTO invalid_numbers_test (f) VALUES (?)", [Number.NEGATIVE_INFINITY], function (e) {
                     assert(e == "Error: IMNOD: [msnodesql] Parameter 1: Invalid number parameter");
                     async_done();
                 })
@@ -356,14 +334,14 @@ suite('params', function () {
             {"string_test": "nvarchar(100)"},
             function (done) {
 
-                c.queryRaw("INSERT INTO string_param_test (string_test) VALUES (?)", ['This is a test'], function (e) {
+                theConnection.queryRaw("INSERT INTO string_param_test (string_test) VALUES (?)", ['This is a test'], function (e) {
                     assert.ifError(e);
                     done();
                 });
             },
             function (done) {
 
-                c.queryRaw("SELECT string_test FROM string_param_test", function (e, r) {
+                theConnection.queryRaw("SELECT string_test FROM string_param_test", function (e, r) {
 
                     assert.ifError(e);
                     var expected = {
@@ -384,14 +362,14 @@ suite('params', function () {
         ("bool_param_test",
             {"bool_test": "bit"},
             function (done) {
-                c.queryRaw("INSERT INTO bool_param_test (bool_test) VALUES (?)", [true], function (e) {
+                theConnection.queryRaw("INSERT INTO bool_param_test (bool_test) VALUES (?)", [true], function (e) {
                     assert.ifError(e);
                     done();
                 });
             },
             function (done) {
 
-                c.queryRaw("SELECT bool_test FROM bool_param_test", function (e, r) {
+                theConnection.queryRaw("SELECT bool_test FROM bool_param_test", function (e, r) {
 
                     assert.ifError(e);
                     var expected = {
@@ -409,14 +387,14 @@ suite('params', function () {
 
         testBoilerPlate("int_param_test", {"int_test": "int"},
             function (done) {
-                c.queryRaw("INSERT INTO int_param_test (int_test) VALUES (?)", [0x7fffffff], function (e) {
+                theConnection.queryRaw("INSERT INTO int_param_test (int_test) VALUES (?)", [0x7fffffff], function (e) {
                     assert.ifError(e);
                     done();
                 });
             },
             function (done) {
 
-                c.queryRaw("SELECT int_test FROM int_param_test", function (e, r) {
+                theConnection.queryRaw("SELECT int_test FROM int_param_test", function (e, r) {
 
                     assert.ifError(e);
                     var expected = {
@@ -434,14 +412,14 @@ suite('params', function () {
 
         testBoilerPlate("int_param_test", {"int_test": "int"},
             function (done) {
-                c.queryRaw("INSERT INTO int_param_test (int_test) VALUES (?)", [-0x80000000], function (e, r) {
+                theConnection.queryRaw("INSERT INTO int_param_test (int_test) VALUES (?)", [-0x80000000], function (e, r) {
                     assert.ifError(e);
                     done();
                 });
             },
             function (done) {
 
-                c.queryRaw("SELECT int_test FROM int_param_test", function (e, r) {
+                theConnection.queryRaw("SELECT int_test FROM int_param_test", function (e, r) {
 
                     assert.ifError(e);
                     var expected = {
@@ -459,14 +437,14 @@ suite('params', function () {
 
         testBoilerPlate("bigint_param_test", {"bigint_test": "bigint"},
             function (done) {
-                c.queryRaw("INSERT INTO bigint_param_test (bigint_test) VALUES (?)", [0x80000000], function (e, r) {
+                theConnection.queryRaw("INSERT INTO bigint_param_test (bigint_test) VALUES (?)", [0x80000000], function (e, r) {
                     assert.ifError(e);
                     done();
                 });
             },
             function (done) {
 
-                c.queryRaw("SELECT bigint_test FROM bigint_param_test", function (e, r) {
+                theConnection.queryRaw("SELECT bigint_test FROM bigint_param_test", function (e, r) {
 
                     assert.ifError(e);
                     var expected = {
@@ -484,14 +462,14 @@ suite('params', function () {
 
         testBoilerPlate("bigint_param_test", {"bigint_test": "bigint"},
             function (done) {
-                c.queryRaw("INSERT INTO bigint_param_test (bigint_test) VALUES (?)", [0x4fffffffffffffff], function (e) {
+                theConnection.queryRaw("INSERT INTO bigint_param_test (bigint_test) VALUES (?)", [0x4fffffffffffffff], function (e) {
                     assert.ifError(e);
                     done();
                 });
             },
             function (done) {
 
-                c.queryRaw("SELECT bigint_test FROM bigint_param_test", function (e, r) {
+                theConnection.queryRaw("SELECT bigint_test FROM bigint_param_test", function (e, r) {
 
                     assert.ifError(e);
                     var expected = {
@@ -509,7 +487,7 @@ suite('params', function () {
 
         testBoilerPlate("decimal_param_test", {"decimal_test": "decimal(18,7)"},
             function (done) {
-                c.queryRaw("INSERT INTO decimal_param_test (decimal_test) VALUES (?)", [3.141593],
+                theConnection.queryRaw("INSERT INTO decimal_param_test (decimal_test) VALUES (?)", [3.141593],
                     function (e, r) {
                         assert.ifError(e);
                         done();
@@ -517,7 +495,7 @@ suite('params', function () {
             },
             function (done) {
 
-                c.queryRaw("SELECT decimal_test FROM decimal_param_test", function (e, r) {
+                theConnection.queryRaw("SELECT decimal_test FROM decimal_param_test", function (e, r) {
 
                     assert.ifError(e);
                     var expected = {
@@ -541,7 +519,7 @@ suite('params', function () {
 
         testBoilerPlate("decimal_as_bigint_param_test", {"decimal_bigint": "bigint"},
             function (done) {
-                c.queryRaw("INSERT INTO decimal_as_bigint_param_test (decimal_bigint) VALUES (?)", [123456789.0],
+                theConnection.queryRaw("INSERT INTO decimal_as_bigint_param_test (decimal_bigint) VALUES (?)", [123456789.0],
                     function (e, r) {
                         assert.ifError(e);
                         done();
@@ -549,7 +527,7 @@ suite('params', function () {
             },
             function (done) {
 
-                c.queryRaw("SELECT decimal_bigint FROM decimal_as_bigint_param_test", function (e, r) {
+                theConnection.queryRaw("SELECT decimal_bigint FROM decimal_as_bigint_param_test", function (e, r) {
 
                     assert.ifError(e);
                     var expected = {
@@ -572,7 +550,7 @@ suite('params', function () {
 
         testBoilerPlate("date_param_test", {"date_test": "datetimeoffset"},
             function (done) {
-                c.queryRaw("INSERT INTO date_param_test (date_test) VALUES (?)", [utcDate],
+                theConnection.queryRaw("INSERT INTO date_param_test (date_test) VALUES (?)", [utcDate],
                     function (e, r) {
                         assert.ifError(e);
                         done();
@@ -580,7 +558,7 @@ suite('params', function () {
             },
             function (done) {
 
-                c.queryRaw("SELECT date_test FROM date_param_test", function (e, r) {
+                theConnection.queryRaw("SELECT date_test FROM date_param_test", function (e, r) {
 
                     assert.ifError(e);
 
@@ -606,7 +584,7 @@ suite('params', function () {
         testBoilerPlate("datetime_test", {"datetime_test": "datetime"},
             function (done) {
 
-                c.queryRaw("INSERT INTO datetime_test (datetime_test) VALUES (?)", [utcDate], function (e, r) {
+                theConnection.queryRaw("INSERT INTO datetime_test (datetime_test) VALUES (?)", [utcDate], function (e, r) {
 
                     assert.ifError(e);
                     assert(r.rowcount == 1);
@@ -617,7 +595,7 @@ suite('params', function () {
             function (done) {
 
 
-                c.queryRaw("SELECT * FROM datetime_test", function (e, r) {
+                theConnection.queryRaw("SELECT * FROM datetime_test", function (e, r) {
 
                     assert.ifError(e);
                     assert(r.rows[0][0], utcDate);
@@ -634,7 +612,7 @@ suite('params', function () {
         testBoilerPlate("emptystring_test", {"emptystring_test": "nvarchar(1)"},
             function (done) {
 
-                c.queryRaw("INSERT INTO emptystring_test (emptystring_test) VALUES (?)", [''], function (e, r) {
+                theConnection.queryRaw("INSERT INTO emptystring_test (emptystring_test) VALUES (?)", [''], function (e, r) {
 
                     assert.ifError(e);
                     assert(r.rowcount == 1);
@@ -644,7 +622,7 @@ suite('params', function () {
             },
             function (done) {
 
-                c.queryRaw("SELECT * FROM emptystring_test", function (e, r) {
+                theConnection.queryRaw("SELECT * FROM emptystring_test", function (e, r) {
 
                     assert.ifError(e);
                     assert(r.rows[0][0], '');
@@ -656,16 +634,16 @@ suite('params', function () {
     });
 
     test('insert min and max number values', function (test_done) {
-
         testBoilerPlate(
             "minmax_test",
             {"f": "float"},
-            function (done) {
-                async.series([
 
+            function (done) {
+                var fns =
+                [
                     function (async_done) {
 
-                        c.queryRaw("INSERT INTO minmax_test (f) VALUES (?)", [Number.MAX_VALUE],
+                        theConnection.queryRaw("INSERT INTO minmax_test (f) VALUES (?)", [Number.MAX_VALUE],
                             function (e, r) {
 
                                 assert.ifError(e);
@@ -675,30 +653,28 @@ suite('params', function () {
                     },
                     function (async_done) {
 
-                        c.queryRaw("INSERT INTO minmax_test (f) VALUES (?)", [-Number.MAX_VALUE],
+                        theConnection.queryRaw("INSERT INTO minmax_test (f) VALUES (?)", [-Number.MAX_VALUE],
                             function (e, r) {
-
                                 assert.ifError(e);
-
                                 async_done();
-                                done();
                             });
                     }
-                ]);
+                ];
+
+                async.series(fns, function () {
+                    done();
+                });
             },
+
             function (done) {
-
-                c.queryRaw("SELECT f FROM minmax_test", function (e, r) {
-
+                theConnection.queryRaw("SELECT f FROM minmax_test", function (e, r) {
                     assert.ifError(e);
 
                     var expected = {
                         meta: [{name: 'f', size: 53, nullable: true, type: 'number', sqlType: 'float'}],
                         rows: [[1.7976931348623157e+308], [-1.7976931348623157e+308]]
                     };
-
                     assert.deepEqual(r, expected, "minmax results don't match");
-
                     done();
                 });
             },
@@ -716,7 +692,7 @@ suite('params', function () {
 
                 var large_text = "A".repeat(10000);
 
-                c.query("INSERT INTO test_large_insert (large_insert) VALUES (?)", [large_text], function (e, r) {
+                theConnection.query("INSERT INTO test_large_insert (large_insert) VALUES (?)", [large_text], function (e, r) {
 
                     assert.ifError(e, "Error inserting large string");
                     done();
@@ -724,7 +700,7 @@ suite('params', function () {
             },
             function (done) {
 
-                c.query("SELECT large_insert FROM test_large_insert", function (e, r) {
+                theConnection.query("SELECT large_insert FROM test_large_insert", function (e, r) {
 
                     assert.ifError(e);
 
@@ -751,7 +727,7 @@ suite('params', function () {
 
             function (done) {
 
-                c.queryRaw("INSERT INTO datetime_test (datetime_test) VALUES (?)", [utcDate], function (e, r) {
+                theConnection.queryRaw("INSERT INTO datetime_test (datetime_test) VALUES (?)", [utcDate], function (e, r) {
 
                     assert.ifError(e);
                     assert(r.rowcount == 1);
@@ -761,7 +737,7 @@ suite('params', function () {
             },
             function (done) {
 
-                c.queryRaw("SELECT * FROM datetime_test", function (e, r) {
+                theConnection.queryRaw("SELECT * FROM datetime_test", function (e, r) {
 
                     assert.ifError(e);
                     assert(r.rows[0][0], utcDate);
@@ -787,7 +763,7 @@ suite('params', function () {
 
             function (done) {
 
-                c.queryRaw("INSERT INTO datetime_test (datetime_test) VALUES (?)", [utcDate], function (e, r) {
+                theConnection.queryRaw("INSERT INTO datetime_test (datetime_test) VALUES (?)", [utcDate], function (e, r) {
 
                     assert.ifError(e);
                     assert(r.rowcount == 1);
@@ -797,7 +773,7 @@ suite('params', function () {
             },
             function (done) {
 
-                c.queryRaw("SELECT datetime_test FROM datetime_test", function (e, r) {
+                theConnection.queryRaw("SELECT datetime_test FROM datetime_test", function (e, r) {
 
                     assert.ifError(e);
                     assert.equal(r.rows[0][0].valueOf(), utcDate.valueOf());
