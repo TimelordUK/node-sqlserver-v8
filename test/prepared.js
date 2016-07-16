@@ -78,7 +78,7 @@ function empNoParamsSQL() {
     var conn_str = config.conn_str;
     var helper = boiler.TestHelper(sql, conn_str);
     var parsedJSON = helper.getJSON();
-    var c;
+    var theConnection;
     this.timeout(20000);
     var support = new supp.DemoSupport(sql, conn_str);
     var async = new support.Async();
@@ -91,12 +91,11 @@ function empNoParamsSQL() {
     };
 
     var actions = [
-
         // open a connection.
         function (async_done) {
             sql.open(conn_str, function (err, new_conn) {
                 assert.ifError(err);
-                c = new_conn;
+                theConnection = new_conn;
                 async_done();
             });
         },
@@ -112,7 +111,7 @@ function empNoParamsSQL() {
 
         // insert test set using bulk insert
         function (async_done) {
-            var tm = c.tableMgr();
+            var tm = theConnection.tableMgr();
             tm.bind(table_name, function(bulkMgr) {
                 bulkMgr.insertRows(parsedJSON, function() {
                     async_done();
@@ -158,7 +157,7 @@ function empNoParamsSQL() {
         });
 
         function close() {
-            c.close(function (err) {
+            theConnection.close(function (err) {
                 assert.ifError(err);
                 done();
             });
@@ -166,7 +165,7 @@ function empNoParamsSQL() {
     });
 
     function employeePrepare(query, done) {
-        c.prepare(query, function (err, ps) {
+        theConnection.prepare(query, function (err, ps) {
             assert.ifError(err);
             done(ps);
         });
@@ -205,7 +204,7 @@ function empNoParamsSQL() {
         }
 
         function check() {
-            c.query("select count(*) as rows from Employee", function(err, res) {
+            theConnection.query("select count(*) as rows from Employee", function(err, res) {
                 assert.ifError(err);
                 assert(res[0].rows == 0);
                 test_done();

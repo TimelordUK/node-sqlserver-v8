@@ -11,21 +11,18 @@ suite('userbind', function () {
     var support = new supp.DemoSupport(sql, conn_str);
     var async = new support.Async();
 
-    var conn;
+    var theConnection;
 
     setup(function (test_done) {
         sql.open(conn_str, function (err, co) {
-            if (err) {
-                console.error(err);
-                process.exit();
-            }
-            conn = co;
+            assert.ifError(err);
+            theConnection = co;
             test_done();
         });
     });
 
     teardown(function (done) {
-        conn.close(function() {
+        theConnection.close(function() {
             done();
         });
     });
@@ -40,7 +37,7 @@ suite('userbind', function () {
         var sequence = [
 
             function (async_done) {
-                conn.query(params.query, [params.setter(params.min)], function (err, res) {
+                theConnection.query(params.query, [params.setter(params.min)], function (err, res) {
                     error = err;
                     results = res;
                     if (err) {
@@ -58,7 +55,7 @@ suite('userbind', function () {
                     async_done();
                     return;
                 }
-                conn.query(params.query, [params.setter(params.max)], function (err, res) {
+                theConnection.query(params.query, [params.setter(params.max)], function (err, res) {
                     error = err;
                     results = res;
                     if (err) {
@@ -81,10 +78,11 @@ suite('userbind', function () {
                         async_done();
                     }
                 } else {
-                    conn.query(params.query, [params.setter(null)], function (err, res) {
+                    theConnection.query(params.query, [params.setter(null)], function (err, res) {
                         error = err;
                         results = res;
                         if (err) {
+                            error = err;
                             async_done();
                         } else {
                             allres.push(res[0]);
@@ -92,10 +90,6 @@ suite('userbind', function () {
                         }
                     });
                 }
-            },
-
-            function (async_done) {
-                async_done();
             }
         ];
 

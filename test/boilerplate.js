@@ -14,78 +14,80 @@ function TestHelper(native, cstr) {
     var support = new supp.DemoSupport(sql, cstr);
     var async = new support.Async();
 
-
     function testBoilerPlate(params, doneFunction) {
 
         var name = params.name;
         var type = params.type;
+        var conn;
 
-        sql.open(conn_str, opened);
-
-        function opened(err, conn) {
-            assert.ifError(err);
-            function readFile(f, done) {
-                fs.readFile(f, 'utf8', function (err, data) {
-                    if (err) {
-                        done(err);
-                    } else
-                        done(data);
-                });
-            }
-
-            var sequence = [
-                function (async_done) {
-                    var dropSql = "DROP TABLE " + name;
-                    conn.query(dropSql, function () {
-                        async_done();
-                    });
-                },
-
-                function (async_done) {
-                    var folder = __dirname;
-                    var file = folder + '/sql/' + name;
-                    file += '.sql';
-
-                    function inChunks(arr, callback) {
-                        var i = 0;
-                        conn.query(arr[i], next);
-                        function next(err, res) {
-                            assert.ifError(err);
-                            assert(res.length === 0);
-                            ++i;
-                            if (i < arr.length)
-                                conn.query(arr[i], next);
-                            else callback();
-                        }
-                    }
-
-                    // submit the SQL one chunk at a time to create table with constraints.
-                    readFile(file, function (createSql) {
-                        createSql = createSql.replace(/<name>/g, name);
-                        createSql = createSql.replace(/<type>/g, type);
-                        var arr = createSql.split("GO");
-                        for (var i = 0; i < arr.length; ++i) {
-                            arr[i] = arr[i].replace(/^\s+|\s+$/g, '');
-                        }
-                        inChunks(arr, function () {
-                            async_done();
-                        });
-                    });
-                },
-
-                function (async_done) {
-                    var tm = conn.tableMgr();
-                    tm.bind(name, function (bulkMgr) {
-                        assert(bulkMgr.columns.length > 0, "Error creating table");
-                        async_done();
-                    });
-                }];
-
-            async.series(sequence,
-                function () {
-                    doneFunction();
-                });
+        function readFile(f, done) {
+            fs.readFile(f, 'utf8', function (err, data) {
+                if (err) {
+                    done(err);
+                } else
+                    done(data);
+            });
         }
+
+        var sequence = [
+
+            function (async_done) {
+                sql.open(conn_str, function (err, c) {
+                    assert.ifError(err);
+                    conn = c;
+                    async_done();
+                });
+            },
+
+            function (async_done) {
+                var dropSql = "DROP TABLE " + name;
+                conn.query(dropSql, function () {
+                    async_done();
+                });
+            },
+
+            function (async_done) {
+                var folder = __dirname;
+                var file = folder + '/sql/' + name;
+                file += '.sql';
+
+                function inChunks(arr, callback) {
+                    var i = 0;
+                    conn.query(arr[i], next);
+                    function next(err, res) {
+                        assert.ifError(err);
+                        assert(res.length === 0);
+                        ++i;
+                        if (i < arr.length)
+                            conn.query(arr[i], next);
+                        else callback();
+                    }
+                }
+
+                // submit the SQL one chunk at a time to create table with constraints.
+                readFile(file, function (createSql) {
+                    createSql = createSql.replace(/<name>/g, name);
+                    createSql = createSql.replace(/<type>/g, type);
+                    var arr = createSql.split("GO");
+                    for (var i = 0; i < arr.length; ++i) {
+                        arr[i] = arr[i].replace(/^\s+|\s+$/g, '');
+                    }
+                    inChunks(arr, function () {
+                        async_done();
+                    });
+                });
+            },
+            function (async_done) {
+                conn.close(function () {
+                    async_done();
+                })
+            },
+        ];
+
+        async.series(sequence,
+            function () {
+                doneFunction();
+            });
     }
 
     function getJSON() {

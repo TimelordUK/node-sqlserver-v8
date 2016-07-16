@@ -4,7 +4,6 @@ var sql = require('../'),
     config = require('./test-config'),
     fs = require('fs');
 
-
 suite('concurrent', function () {
 
     var theConnection;

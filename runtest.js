@@ -11,7 +11,7 @@ function runTest() {
             ui : 'tdd'
         });
 
-    mocha.addFile('test/concurrent.js');
+    mocha.addFile('test/bulk.js');
 
     mocha.run(function (failures) {
         process.on('uncaughtException', function (err) {

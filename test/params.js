@@ -15,17 +15,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//---------------------------------------------------------------------------------------------------------------------------------
-
+//--------------------------------------------------------------------------------------------------------------------------------
+//
 var sql = require('../');
 var assert = require('assert');
 var supp = require('../demo-support');
 var config = require('./test-config');
 
-var conn_str = config.conn_str;
-
 suite('params', function () {
-
+    var conn_str = config.conn_str;
     var theConnection;
     this.timeout(45000);
     var localDate = new Date();
@@ -786,184 +784,146 @@ suite('params', function () {
     // verify fix for a bug that would return the wrong day when a datetimeoffset was inserted where the date
     // was before 1/1/1970 and the time was midnight.
     test('verify dates with midnight time', function (test_done) {
-        sql.open(conn_str, function (err, conn) {
 
-            assert.ifError(err);
+        var midnightDate = new Date(Date.parse("2030-08-13T00:00:00.000Z"));
 
-            var midnightDate = new Date(Date.parse("2030-08-13T00:00:00.000Z"));
-
-            testBoilerPlate('midnight_date_test', {'midnight_date_test': 'datetimeoffset(3)'},
-
-                function (done) {
-
-                    var insertQuery = "INSERT INTO midnight_date_test (midnight_date_test) VALUES (?);";
-                    conn.queryRaw(insertQuery, [midnightDate], function (e) {
-
-                        assert.ifError(e);
-                        done();
-                    });
-                },
-                // test valid dates
-                function (done) {
-
-                    conn.queryRaw("SELECT midnight_date_test FROM midnight_date_test", function (e, r) {
-
-                        assert.ifError(e);
-
-                        var expectedDates = [];
-                        var expectedDate = midnightDate;
-                        expectedDates.push([expectedDate]);
-                        var expectedResults = {
-                            meta: [{
-                                name: 'midnight_date_test',
-                                size: 30,
-                                nullable: true,
-                                type: 'date',
-                                sqlType: 'datetimeoffset'
-                            }],
-                            rows: expectedDates
-                        };
-                        assert.deepEqual(expectedResults.meta, r.meta);
-                        assert(r.rows.length == 1);
-                        for (var row in r.rows) {
-                            for (var d in row) {
-                                assert.deepEqual(expectedResults.rows[row][d], r.rows[row][d]);
-                            }
+        testBoilerPlate('midnight_date_test', {'midnight_date_test': 'datetimeoffset(3)'},
+            function (done) {
+                var insertQuery = "INSERT INTO midnight_date_test (midnight_date_test) VALUES (?);";
+                theConnection.queryRaw(insertQuery, [midnightDate], function (e) {
+                    assert.ifError(e);
+                    done();
+                });
+            },
+            // test valid dates
+            function (done) {
+                theConnection.queryRaw("SELECT midnight_date_test FROM midnight_date_test", function (e, r) {
+                    assert.ifError(e);
+                    var expectedDates = [];
+                    var expectedDate = midnightDate;
+                    expectedDates.push([expectedDate]);
+                    var expectedResults = {
+                        meta: [{
+                            name: 'midnight_date_test',
+                            size: 30,
+                            nullable: true,
+                            type: 'date',
+                            sqlType: 'datetimeoffset'
+                        }],
+                        rows: expectedDates
+                    };
+                    assert.deepEqual(expectedResults.meta, r.meta);
+                    assert(r.rows.length == 1);
+                    for (var row in r.rows) {
+                        for (var d in row) {
+                            assert.deepEqual(expectedResults.rows[row][d], r.rows[row][d]);
                         }
-                        done();
-                    })
-                },
-                test_done);
-        });
+                    }
+                    done();
+                })
+            },
+            test_done);
     });
 
     test('verify bug fix for last day of the year error', function (test_done) {
-        sql.open(conn_str, function (err, conn) {
 
-            assert.ifError(err);
+        var eoyDate = new Date(Date.parse("1960-12-31T11:12:13.000Z"));
 
-            var eoyDate = new Date(Date.parse("1960-12-31T11:12:13.000Z"));
+        testBoilerPlate('eoy_date_test', {'eoy_date_test': 'datetimeoffset(3)'},
+            function (done) {
+                var insertQuery = "INSERT INTO eoy_date_test (eoy_date_test) VALUES (?);";
+                theConnection.queryRaw(insertQuery, [eoyDate], function (e) {
+                    assert.ifError(e);
+                    done();
+                });
+            },
 
-            testBoilerPlate('eoy_date_test', {'eoy_date_test': 'datetimeoffset(3)'},
-
-                function (done) {
-
-                    var insertQuery = "INSERT INTO eoy_date_test (eoy_date_test) VALUES (?);";
-                    conn.queryRaw(insertQuery, [eoyDate], function (e) {
-
-                        assert.ifError(e);
-                        done();
-                    });
-                },
-                // test valid dates
-                function (done) {
-
-                    conn.queryRaw("SELECT eoy_date_test FROM eoy_date_test", function (e, r) {
-
-                        assert.ifError(e);
-
-                        var expectedDates = [];
-                        var expectedDate = eoyDate;
-                        expectedDates.push([expectedDate]);
-                        var expectedResults = {
-                            meta: [{
-                                name: 'eoy_date_test',
-                                size: 30,
-                                nullable: true,
-                                type: 'date',
-                                sqlType: 'datetimeoffset'
-                            }],
-                            rows: expectedDates
-                        };
-                        assert.deepEqual(expectedResults.meta, r.meta);
-                        assert(r.rows.length == 1);
-                        for (var row in r.rows) {
-                            for (var d in row) {
-                                assert.deepEqual(expectedResults.rows[row][d], r.rows[row][d]);
-                            }
+            // test valid dates
+            function (done) {
+                theConnection.queryRaw("SELECT eoy_date_test FROM eoy_date_test", function (e, r) {
+                    assert.ifError(e);
+                    var expectedDates = [];
+                    var expectedDate = eoyDate;
+                    expectedDates.push([expectedDate]);
+                    var expectedResults = {
+                        meta: [{
+                            name: 'eoy_date_test',
+                            size: 30,
+                            nullable: true,
+                            type: 'date',
+                            sqlType: 'datetimeoffset'
+                        }],
+                        rows: expectedDates
+                    };
+                    assert.deepEqual(expectedResults.meta, r.meta);
+                    assert(r.rows.length == 1);
+                    for (var row in r.rows) {
+                        for (var d in row) {
+                            assert.deepEqual(expectedResults.rows[row][d], r.rows[row][d]);
                         }
-                        done();
-                    })
-                },
-                test_done);
-        });
+                    }
+                    done();
+                })
+            },
+            test_done);
     });
 
     test('verify Buffer objects as input parameters', function (test_done) {
+        var b = new Buffer('0102030405060708090a', 'hex');
+        testBoilerPlate(
+            'buffer_param_test',
+            {'buffer_param': 'varbinary(100)'},
 
-        sql.open(conn_str, function (err, conn) {
-
-            assert.ifError(err);
-            var b = new Buffer('0102030405060708090a', 'hex');
-
-            testBoilerPlate(
-                'buffer_param_test',
-                {'buffer_param': 'varbinary(100)'},
-
-                function (done) {
-                    conn.queryRaw("INSERT INTO buffer_param_test (buffer_param) VALUES (?)", [b], function (e, r) {
-                        assert.ifError(e);
-                        done();
-                    });
-                },
-                function (done) {
-                    conn.queryRaw("SELECT buffer_param FROM buffer_param_test WHERE buffer_param = ?", [b], function (e, r) {
-                        assert.ifError(e);
-                        assert(r.rows.length = 1);
-                        assert.deepEqual(r.rows[0][0], b);
-                        done();
-                    });
-                },
-                test_done);
-        });
+            function (done) {
+                theConnection.queryRaw("INSERT INTO buffer_param_test (buffer_param) VALUES (?)", [b], function (e, r) {
+                    assert.ifError(e);
+                    done();
+                });
+            },
+            function (done) {
+                theConnection.queryRaw("SELECT buffer_param FROM buffer_param_test WHERE buffer_param = ?", [b], function (e, r) {
+                    assert.ifError(e);
+                    assert(r.rows.length = 1);
+                    assert.deepEqual(r.rows[0][0], b);
+                    done();
+                });
+            },
+            test_done);
     });
 
     test('verify buffer longer than column causes error', function (test_done) {
-
-        sql.open(conn_str, function (err, conn) {
-
-            assert.ifError(err);
-            var b = new Buffer('0102030405060708090a', 'hex');
-
-            testBoilerPlate('buffer_param_test', {'buffer_param': 'varbinary(5)'},
-
-                function (done) {
-                    conn.queryRaw("INSERT INTO buffer_param_test (buffer_param) VALUES (?)", [b], function (e, r) {
-                        var expectedError = new Error('[Microsoft][SQL Server Native Client 11.0][SQL Server]String or binary data would be truncated.');
-                        expectedError.sqlstate = "22001";
-                        expectedError.code = 8152;
-                        assert.deepEqual(e, expectedError);
-                        done();
-                    });
-                },
-                function (done) {
+        var b = new Buffer('0102030405060708090a', 'hex');
+        testBoilerPlate('buffer_param_test', {'buffer_param': 'varbinary(5)'},
+            function (done) {
+                theConnection.queryRaw("INSERT INTO buffer_param_test (buffer_param) VALUES (?)", [b], function (e, r) {
+                    var expectedError = new Error('[Microsoft][SQL Server Native Client 11.0][SQL Server]String or binary data would be truncated.');
+                    expectedError.sqlstate = "22001";
+                    expectedError.code = 8152;
+                    assert.deepEqual(e, expectedError);
                     done();
-                },
-                test_done);
-        });
+                });
+            },
+            function (done) {
+                done();
+            },
+            test_done);
     });
 
     test('verify that non-Buffer object parameter returns an error', function (test_done) {
-
-        sql.open(conn_str, function (err, conn) {
-
-            assert.ifError(err);
-            var o = {field1: 'value1', field2: -1};
-
-            testBoilerPlate
-                ('non_buffer_object',
-                {'object_col': 'varbinary(100)'},
-                function (async_done) {
-                    conn.queryRaw("INSERT INTO non_buffer_object (object_col) VALUES (?)", [o], function (e, r) {
-                        assert(e == "Error: IMNOD: [msnodesql] Parameter 1: Invalid parameter type");
-                        async_done();
-                    });
-                },
-                function (done) {
-                    done();
-                },
-                test_done);
-        });
+        var o = {field1: 'value1', field2: -1};
+        testBoilerPlate
+        ('non_buffer_object',
+            {'object_col': 'varbinary(100)'},
+            function (async_done) {
+                theConnection.queryRaw("INSERT INTO non_buffer_object (object_col) VALUES (?)", [o], function (e, r) {
+                    assert(e == "Error: IMNOD: [msnodesql] Parameter 1: Invalid parameter type");
+                    async_done();
+                });
+            },
+            function (done) {
+                done();
+            },
+            test_done);
     });
 
     /*
@@ -981,26 +941,22 @@ suite('params', function () {
     });*/
 
     test('bind a null to binary using sqlTypes.asVarBinary(null)', function(test_done) {
-        sql.open(conn_str, function(err, conn) {
-            conn.query("declare @bin binary(4) = ?; select @bin as bin", [sql.VarBinary(null)], function (err, res) {
-                var expected = [ {
-                    'bin' : null
-                }];
-                assert.deepEqual(expected, res);
-                test_done();
-            });
+        theConnection.query("declare @bin binary(4) = ?; select @bin as bin", [sql.VarBinary(null)], function (err, res) {
+            var expected = [{
+                'bin': null
+            }];
+            assert.deepEqual(expected, res);
+            test_done();
         });
     });
 
     test('bind a Buffer([0,1,2,3])] to binary', function(test_done) {
-        sql.open(conn_str, function(err, conn) {
-            conn.query("declare @bin binary(4) = ?; select @bin as bin", [new Buffer([0,1,2,3])], function (err, res) {
-                var expected = [ {
-                    'bin' : new Buffer([0, 1, 2, 3])
-                }];
-                assert.deepEqual(expected, res);
-                test_done();
-            });
+        theConnection.query("declare @bin binary(4) = ?; select @bin as bin", [new Buffer([0, 1, 2, 3])], function (err, res) {
+            var expected = [{
+                'bin': new Buffer([0, 1, 2, 3])
+            }];
+            assert.deepEqual(expected, res);
+            test_done();
         });
     });
 });
