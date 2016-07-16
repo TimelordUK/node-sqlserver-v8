@@ -98,7 +98,6 @@ suite('params', function () {
         sql.open(conn_str, function (err, new_conn) {
             assert.ifError(err);
             theConnection = new_conn;
-
             test_done();
         });
     });

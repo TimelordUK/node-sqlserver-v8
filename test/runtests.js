@@ -37,7 +37,6 @@ if (pathExistsSync('./testlist.txt')) {
 }
 
 var files = fileContent.split('\n');
-
 var args = (process.ARGV || process.argv);
 args.push('-u');
 args.push('tdd');

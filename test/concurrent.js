@@ -1,36 +1,41 @@
 var sql = require('../'),
     assert = require('assert'),
-    async = require('async'),
+    supp = require('../demo-support'),
     config = require('./test-config'),
     fs = require('fs');
 
-var conn_str = config.conn_str;
 
 suite('concurrent', function () {
 
-    var c;
+    var theConnection;
     this.timeout(20 * 1000);
+    var support = new supp.DemoSupport(sql, conn_str);
+    var async = new support.Async();
+    var conn_str = config.conn_str;
 
     setup(function (test_done) {
-        test_done();
+        sql.open(conn_str, function (err, conn) {
+            theConnection = conn;
+            assert.ifError(err);
+            assert.ifError(err);
+            test_done();
+        });
     });
 
     teardown(function (done) {
-        done();
+        theConnection.close(function () {
+            done();
+        })
     });
 
     var open = function (done) {
         sql.open(conn_str, function (err, conn) {
-            if (err) {
-                console.error(err);
-                process.exit();
-            }
-            ;
+            assert.ifError(err);
             done(conn);
         });
     };
 
-    test('check for blocked calls to api with event emission', function(test_done){
+    test('check for blocked calls to api with event emission', function (test_done) {
 
         var delays = [];
         var start = Date.now();
@@ -50,21 +55,19 @@ suite('concurrent', function () {
             }
         }
 
-        open(function(conn1) {
-            var req = conn1.query("waitfor delay \'00:00:02\';");
-            req.on('done', function() {
-                pushTest('a');
-                process.nextTick(function() {
-                    pushTest('b');
-                });
-                setImmediate(function() {
-                    pushTest('d');
-                });
-                process.nextTick(function() {
-                    pushTest('c');
-                });
-            })
-        });
+        var req = theConnection.query("waitfor delay \'00:00:02\';");
+        req.on('done', function () {
+            pushTest('a');
+            process.nextTick(function () {
+                pushTest('b');
+            });
+            setImmediate(function () {
+                pushTest('d');
+            });
+            process.nextTick(function () {
+                pushTest('c');
+            });
+        })
     });
 
     test('open connections in sequence and prove distinct connection objects created', function (test_done) {
@@ -73,13 +76,10 @@ suite('concurrent', function () {
 
         open(function (conn1) {
             connections.push(conn1);
-
             open(function (conn2) {
                 connections.push(conn2);
-
                 open(function (conn3) {
                     connections.push(conn3);
-
                     done();
                 });
             });
@@ -95,92 +95,98 @@ suite('concurrent', function () {
             assert(c0.id != c1.id);
             assert(c1.id != c2.id);
 
-            test_done();
+            var clean = [
+                function (async_done) {
+                    c0.close(function() {
+                        async_done();
+                    })
+                },
+                function (async_done) {
+                    c1.close(function() {
+                        async_done();
+                    })
+                },
+                function (async_done) {
+                    c2.close(function() {
+                        async_done();
+                    })
+                },
+            ];
+
+            async.series(clean, function() {
+                test_done();
+            });
         }
     });
 
     test('check for blocked calls to api', function (test_done) {
 
-        open(function (conn1) {
+        var seq = [];
+        var delays = [];
+        var start = Date.now();
+        var expected = ['a', 'b', 'c', 'd', 'e'];
 
-            var seq = [];
-            var delays = [];
-            var start = Date.now();
-            var expected = ['a', 'b', 'c', 'd', 'e'];
-
-            function test() {
+        function pushTest(c) {
+            seq.push(c);
+            delays.push(Date.now() - start);
+            if (seq.length === expected.length) {
                 assert.deepEqual(expected, seq);
                 test_done();
             }
+        }
 
-            function pushTest(c) {
-                seq.push(c);
-                delays.push(Date.now() - start);
-                if (seq.length === expected.length) {
-                    test();
-                }
-            }
+        pushTest('a');
+        process.nextTick(function () {
+            pushTest('c');
+        });
 
-            pushTest('a');
-            process.nextTick(function () {
-                pushTest('c');
-            });
+        theConnection.query("waitfor delay \'00:00:02\';", function (res) {
+            pushTest('e');
+        });
 
-            conn1.query("waitfor delay \'00:00:02\';", function (res) {
-                pushTest('e');
-            });
-
-            pushTest('b');
-            process.nextTick(function () {
-                pushTest('d');
-            });
+        pushTest('b');
+        process.nextTick(function () {
+            pushTest('d');
         });
     });
 
     test('check for blocked calls to api with nested query', function (test_done) {
 
-        open(function (conn1) {
+        var seq = [];
+        var delays = [];
+        var start = Date.now();
+        var expected = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
 
-            var seq = [];
-            var delays = [];
-            var start = Date.now();
-            var expected = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
-
-            function test() {
+        function pushTest(c) {
+            seq.push(c);
+            delays.push(Date.now() - start);
+            if (seq.length === expected.length) {
                 assert.deepEqual(expected, seq);
                 test_done();
             }
+        }
 
-            function pushTest(c) {
-                seq.push(c);
-                delays.push(Date.now() - start);
-                if (seq.length === expected.length) {
-                    test();
-                }
-            }
-
-            pushTest('a');
+        pushTest('a');
+        process.nextTick(function () {
+            pushTest('c');
+        });
+        theConnection.query("waitfor delay \'00:00:02\';", [], function (res) {
+            pushTest('e');
+            pushTest('f');
             process.nextTick(function () {
-                pushTest('c');
+                pushTest('h');
             });
-            conn1.query("waitfor delay \'00:00:02\';", [], function (res) {
-                pushTest('e');
-                pushTest('f');
-                process.nextTick(function () {
-                    pushTest('h');
-                });
-                conn1.query("waitfor delay \'00:00:02\';", [], function (res) {
-                    pushTest('j');
-                });
-                pushTest('g');
-                process.nextTick(function () {
-                    pushTest('i');
-                });
+            theConnection.query("waitfor delay \'00:00:02\';", [], function (res) {
+                pushTest('j');
             });
-            pushTest('b');
+            pushTest('g');
             process.nextTick(function () {
-                pushTest('d');
+                pushTest('i');
             });
+        });
+        pushTest('b');
+        process.nextTick(function () {
+            pushTest('d');
         });
     });
 
@@ -214,7 +220,27 @@ suite('concurrent', function () {
             assert(c0.id != c1.id);
             assert(c1.id != c2.id);
 
-            test_done();
+            var clean = [
+                function (async_done) {
+                    c0.close(function() {
+                        async_done();
+                    })
+                },
+                function (async_done) {
+                    c1.close(function() {
+                        async_done();
+                    })
+                },
+                function (async_done) {
+                    c2.close(function() {
+                        async_done();
+                    })
+                },
+            ];
+
+            async.series(clean, function() {
+                test_done();
+            });
         }
     });
 
@@ -223,25 +249,38 @@ suite('concurrent', function () {
         var spid1;
         var spid2;
 
-        sql.open(conn_str, function (err, conn1) {
-            assert.ifError(err);
-
-            sql.open(conn_str, function (err, conn2) {
-                assert.ifError(err);
-
-                conn1.query("select @@SPID as id, CURRENT_USER as name", function (err, res) {
+        open(function (c1) {
+            open(function (c2) {
+                c1.query("select @@SPID as id, CURRENT_USER as name", function (err, res) {
                     assert.ifError(err);
                     assert(res.length == 1);
                     spid1 = res[0]['id'];
                     assert(spid1 != null);
 
-                    conn2.query("select @@SPID as id, CURRENT_USER as name", function (err, res) {
+                    c2.query("select @@SPID as id, CURRENT_USER as name", function (err, res) {
                         assert.ifError(err);
                         assert(res.length == 1);
                         spid2 = res[0]['id'];
                         assert(spid2 != null);
                         assert(spid1 != spid2);
-                        test_done();
+
+                        var clean = [
+
+                            function (async_done) {
+                                c1.close(function () {
+                                    async_done();
+                                })
+                            },
+                            function (async_done) {
+                                c2.close(function () {
+                                    async_done();
+                                })
+                            },
+                        ];
+
+                        async.series(clean, function () {
+                            test_done();
+                        });
                     });
                 });
             });

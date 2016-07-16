@@ -3,29 +3,28 @@ var assert = require('assert');
 var supp = require('../demo-support');
 var config = require('./test-config');
 
-var conn_str = config.conn_str;
-
 suite('sproc', function () {
     var support = new supp.DemoSupport(sql, conn_str);
     var async = new support.Async();
     var theConnection;
     this.timeout(45000);
+    var conn_str = config.conn_str;
 
-    function testBoilerPlate(proc_name, proc_sql, doneFunction) {
+    function testBoilerPlate(procName, procSql, doneFunction) {
 
         var sequence = [
 
             function (async_done) {
-                var dropQuery = "IF NOT EXISTS (SELECT *  FROM sys.objects WHERE type = 'P' AND name = '" + proc_name + "')";
-                dropQuery += " EXEC ('create procedure " + proc_name + " as begin set nocount on; end')";
-                theConnection.query(dropQuery, function (err) {
+                var createQuery = "IF NOT EXISTS (SELECT *  FROM sys.objects WHERE type = 'P' AND name = '" + procName + "')";
+                createQuery += " EXEC ('create procedure " + procName + " AS BEGIN SET nocount ON; END')";
+                theConnection.query(createQuery, function (err) {
                     assert.ifError(err);
                     async_done();
                 });
             },
 
             function (async_done) {
-                theConnection.query(proc_sql,
+                theConnection.query(procSql,
                     function (e) {
                         assert.ifError(e, "Error creating proc");
                         async_done();
@@ -74,9 +73,9 @@ suite('sproc', function () {
         function go() {
             var pm = theConnection.procedureMgr();
             pm.setTimeout(2);
-            pm.callproc(sp_name, ['0:0:5'], function(err, results, output) {
+            pm.callproc(sp_name, ['0:0:5'], function(err) {
                 assert(err != null);
-                assert(err.message.indexOf('Query timeout expired') > 0)
+                assert(err.message.indexOf('Query timeout expired') > 0);
                 test_done();
             });
         }
@@ -102,7 +101,7 @@ suite('sproc', function () {
         function go() {
             var pm = theConnection.procedureMgr();
             pm.setTimeout(5);
-            pm.callproc(sp_name, ['0:0:2'], function(err, results, output) {
+            pm.callproc(sp_name, ['0:0:2'], function(err) {
                 assert.ifError(err);
                 test_done();
             });
@@ -183,7 +182,6 @@ suite('sproc', function () {
             "END\n";
 
         def = def.replace(/<name>/g, sp_name);
-
         testBoilerPlate(sp_name, def, go);
 
         function go() {

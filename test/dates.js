@@ -18,7 +18,6 @@
 //---------------------------------------------------------------------------------------------------------------------------------
 
 var sql = require('../');
-
 var assert = require('assert');
 var supp = require('../demo-support');
 var config = require('./test-config');
