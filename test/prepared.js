@@ -17,9 +17,9 @@
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
 
-var sql = require('../'),
+var supp = require('../demo-support'),
+    sql = require('../'),
     assert = require('assert'),
-    async = require('async'),
     config = require('./test-config'),
     fs = require('fs'),
     boiler = require('./boilerplate');
@@ -80,6 +80,8 @@ function empNoParamsSQL() {
     var parsedJSON = helper.getJSON();
     var c;
     this.timeout(20000);
+    var support = new supp.DemoSupport(sql, conn_str);
+    var async = new support.Async();
 
     var table_name = "Employee";
     var prepared = {

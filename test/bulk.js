@@ -1,6 +1,6 @@
 var sql = require('../'),
+    supp = require('../demo-support'),
     assert = require('assert'),
-    async = require('async'),
     config = require('./test-config'),
     fs = require('fs'),
     boiler = require('./boilerplate');
@@ -9,21 +9,14 @@ var conn_str = config.conn_str;
 
 suite('bulk', function () {
 
-    var c;
+    var theConnection;
     this.timeout(20000);
     var tm;
 
-    var helper = boiler.TestHelper(sql, conn_str);
-
-    /*
-     var totalObjectsForInsert = 1000;
-     var test1BatchSize = 1;
-     var test2BatchSize = 1000;
-     */
-
-    var totalObjectsForInsert = 200;
+    var totalObjectsForInsert = 10;
     var test1BatchSize = 1;
-    var test2BatchSize = 200;
+    var test2BatchSize = 10;
+    var helper = boiler.TestHelper(sql, conn_str);
 
     setup(function (test_done) {
 
@@ -31,26 +24,47 @@ suite('bulk', function () {
 
             assert.ifError(err);
 
-            c = new_conn;
+            theConnection = new_conn;
 
             test_done();
         });
     });
 
     teardown(function (done) {
-
-        c.close(function (err) {
+        theConnection.close(function (err) {
             assert.ifError(err);
             done();
         });
     });
 
+    test('bulk insert/update/select int column of signed batchSize ' + test2BatchSize, function (test_done) {
+        signedTest(test2BatchSize, true, true, function() {
+            test_done();
+        });
+    });
+
+    test('bulk insert/select varbinary column batchSize ' + test1BatchSize, function (test_done) {
+        varbinaryTest(test1BatchSize, true, function() {
+            test_done();
+        });
+    });
+
+    test('bulk insert/select varbinary column batchSize ' + test2BatchSize, function (test_done) {
+        varbinaryTest(test2BatchSize, true, function() {
+            test_done();
+        });
+    });
+
     test('bulk insert/select null column of datetime batchSize ' + test2BatchSize, function (test_done) {
-        nullTest(test2BatchSize, false, test_done);
+        nullTest(test2BatchSize, false, function() {
+            test_done();
+        });
     });
 
     test('bulk insert/select null column of datetime batchSize ' + test1BatchSize, function (test_done) {
-        nullTest(test1BatchSize, false, test_done);
+        nullTest(test1BatchSize, false, function() {
+            test_done();
+        });
     });
 
     test('bulk insert simple multi-column object - default a nullable column ' + test2BatchSize, function (test_done) {
@@ -80,7 +94,7 @@ suite('bulk', function () {
         }, go);
 
         function go() {
-            var tm = c.tableMgr();
+            var tm = theConnection.tableMgr();
             tm.bind(table_name, test);
         }
 
@@ -94,7 +108,7 @@ suite('bulk', function () {
                 assert.ifError(err);
                 assert(res.length == 0);
                 var s = "select count(*) as count from " + table_name;
-                c.query(s, function (err, results) {
+                theConnection.query(s, function (err, results) {
                     var expected = [{
                         count: batch
                     }];
@@ -126,7 +140,7 @@ suite('bulk', function () {
         }, go);
 
         function go() {
-            var tm = c.tableMgr();
+            var tm = theConnection.tableMgr();
             tm.bind(table_name, test);
         }
 
@@ -161,7 +175,7 @@ suite('bulk', function () {
         }, go);
 
         function go() {
-            var tm = c.tableMgr();
+            var tm = theConnection.tableMgr();
             tm.bind(table_name, test);
         }
 
@@ -204,7 +218,7 @@ suite('bulk', function () {
         }, go);
 
         function go() {
-            var tm = c.tableMgr();
+            var tm = theConnection.tableMgr();
             tm.bind(table_name, test);
         }
 
@@ -268,52 +282,10 @@ suite('bulk', function () {
             batchSize: batchSize
         };
 
-        simpleColumnBulkTest(params, test_done)
+        simpleColumnBulkTest(params, function() {
+            test_done();
+        })
     }
-
-
-    var arr = [];
-    function varbinaryTest(batchSize, selectAfterInsert, test_done) {
-
-        var strings = [
-            'one',
-            'two',
-            'three',
-            'four',
-            'five',
-            'six',
-            'seven',
-            'eight',
-            'nine',
-            'ten'
-        ];
-
-        for (var i = 0; i < 10; ++i) {
-            arr.push(new Buffer(strings[i]))
-        }
-
-        var params = {
-            columnType: 'varbinary(100)',
-            buildFunction: function (i) {
-                var idx = i % 10;
-                return arr[idx];
-            },
-            updateFunction: null,
-            check: selectAfterInsert,
-            deleteAfterTest: false,
-            batchSize: batchSize
-        };
-
-        simpleColumnBulkTest(params, test_done)
-    }
-
-    test('bulk insert/select varbinary column batchSize ' + test1BatchSize, function (test_done) {
-        varbinaryTest(test1BatchSize, true, test_done);
-    });
-
-    test('bulk insert/select varbinary column batchSize ' + test2BatchSize, function (test_done) {
-        varbinaryTest(test2BatchSize, true, test_done);
-    });
 
     function dateTest(batchSize, selectAfterInsert, test_done) {
         var dt = new Date('2002-02-06T00:00:00.000Z');
@@ -336,11 +308,15 @@ suite('bulk', function () {
     }
 
     test('bulk insert/select datetime column batchSize ' + test1BatchSize, function (test_done) {
-        dateTest(test1BatchSize, true, test_done);
+        dateTest(test1BatchSize, true, function() {
+            test_done();
+        });
     });
 
     test('bulk insert/select datetime column batchSize ' + test2BatchSize, function (test_done) {
-        dateTest(test2BatchSize, true, test_done);
+        dateTest(test2BatchSize, true, function() {
+            test_done();
+        });
     });
 
     function signedTest(batchSize, selectAfterInsert, runUpdateFunction, test_done) {
@@ -358,20 +334,23 @@ suite('bulk', function () {
             batchSize: batchSize
         };
 
-        simpleColumnBulkTest(params, test_done)
+        simpleColumnBulkTest(params, function() {
+            test_done();
+        })
     }
 
     test('bulk insert/select int column of signed batchSize ' + test1BatchSize, function (test_done) {
-        signedTest(test1BatchSize, true, false, test_done);
+        signedTest(test1BatchSize, true, false, function() {
+            test_done();
+        });
     });
 
     test('bulk insert/select int column of signed batchSize ' + test2BatchSize, function (test_done) {
-        signedTest(test2BatchSize, true, false, test_done);
+        signedTest(test2BatchSize, true, false, function() {
+            test_done();
+        });
     });
 
-    test('bulk insert/update/select int column of signed batchSize ' + test2BatchSize, function (test_done) {
-        signedTest(test2BatchSize, true, true, test_done);
-    });
 
     function unsignedTest(batchSize, selectAfterInsert, runUpdateFunction, test_done) {
 
@@ -388,19 +367,27 @@ suite('bulk', function () {
             batchSize: batchSize
         };
 
-        simpleColumnBulkTest(params, test_done)
+        simpleColumnBulkTest(params, function() {
+            test_done();
+        })
     }
 
     test('bulk insert/select int column of unsigned batchSize ' + test1BatchSize, function (test_done) {
-        unsignedTest(test1BatchSize, true, false, test_done);
+        unsignedTest(test1BatchSize, true, false, function() {
+            test_done();
+        });
     });
 
     test('bulk insert/select int column of unsigned batchSize ' + test2BatchSize, function (test_done) {
-        unsignedTest(test2BatchSize, true, false, test_done);
+        unsignedTest(test2BatchSize, true, false, function() {
+            test_done();
+        });
     });
 
     test('bulk insert/select/update int column of unsigned batchSize ' + test2BatchSize, function (test_done) {
-        unsignedTest(test2BatchSize, true, true, test_done);
+        unsignedTest(test2BatchSize, true, true, function() {
+            test_done();
+        });
     });
 
     function bitTest(batchSize, selectAfterInsert, runUpdateFunction, test_done) {
@@ -418,19 +405,27 @@ suite('bulk', function () {
             batchSize: batchSize
         };
 
-        simpleColumnBulkTest(params, test_done)
+        simpleColumnBulkTest(params, function() {
+            test_done();
+        })
     }
 
     test('bulk insert/select bit column batchSize ' + test1BatchSize, function (test_done) {
-        bitTest(test1BatchSize, true, false, test_done);
+        bitTest(test1BatchSize, true, false, function() {
+            test_done();
+        });
     });
 
     test('bulk insert/select bit column ' + test2BatchSize, function (test_done) {
-        bitTest(test2BatchSize, true, false, test_done);
+        bitTest(test2BatchSize, true, false, function() {
+            test_done();
+        });
     });
 
     test('bulk insert/update/select bit column ' + test2BatchSize, function (test_done) {
-        bitTest(test2BatchSize, true, true, test_done);
+        bitTest(test2BatchSize, true, true, function() {
+            test_done();
+        });
     });
 
     function decimalTest(batchSize, selectAfterInsert, deleteAfterTest, runUpdateFunction, test_done) {
@@ -541,7 +536,7 @@ suite('bulk', function () {
         }, go);
 
         function go() {
-            var tm = c.tableMgr();
+            var tm = theConnection.tableMgr();
             tm.bind(table_name, test);
         }
 
@@ -554,7 +549,7 @@ suite('bulk', function () {
                 assert.ifError(err);
                 assert(res.length == 0);
                 var s = "select count(*) as count from " + table_name;
-                c.query(s, function (err, results) {
+                theConnection.query(s, function (err, results) {
                     var expected = [{
                         count: batch
                     }];
@@ -566,7 +561,8 @@ suite('bulk', function () {
         }
     });
 
-    function simpleColumnBulkTest(params, test_done) {
+
+    function simpleColumnBulkTest(params, complete_fn) {
 
         var type = params.columnType;
         var buildFunction = params.buildFunction;
@@ -576,16 +572,6 @@ suite('bulk', function () {
         var deleteAfterTest = params.deleteAfterTest;
 
         var table_name = 'bulkColumn';
-
-        helper.testBoilerPlate({
-            name: table_name,
-            type: type
-        }, go);
-
-        function go() {
-            tm = c.tableMgr();
-            tm.bind(table_name, test);
-        }
 
         function buildTestObjects(batch, functionToRun) {
             var arr = [];
@@ -601,77 +587,163 @@ suite('bulk', function () {
             return arr;
         }
 
-        function test(bulkMgr) {
-            bulkMgr.setBatchSize(batchSize);
-            var batch = totalObjectsForInsert;
-            var vec = buildTestObjects(batch, buildFunction);
-            bulkMgr.insertRows(vec, insertDone);
+        var support = new supp.DemoSupport(sql, conn_str);
+        var async = new support.Async();
+        var batch = totalObjectsForInsert;
+        var toUpdate;
+        var toInsert = buildTestObjects(batch, buildFunction);
+        if (updateFunction != null) toUpdate = buildTestObjects(batch, updateFunction);
+        var skip = false;
+        var bulkMgr;
 
-            function insertDone(err, res) {
-                assert.ifError(err);
-                assert(res.length == 0);
+        var fns = [
+
+            function(async_done) {
+                helper.testBoilerPlate({
+                    name : table_name,
+                    type : type
+                }, function() {
+                    async_done();
+                });
+            },
+
+            function(async_done) {
+                tm = theConnection.tableMgr();
+                tm.bind(table_name, function(bm) {
+                    bulkMgr = bm;
+                    async_done();
+                })
+            },
+
+            function (async_done) {
+                bulkMgr.setBatchSize(batchSize);
+                bulkMgr.insertRows(toInsert, function (err, res) {
+                    assert.ifError(err);
+                    async_done();
+                });
+            },
+
+            function (async_done) {
                 var s = "select count(*) as count from " + table_name;
-                c.query(s, function (err, results) {
+                theConnection.query(s, function (err, results) {
                     var expected = [{
                         count: batch
                     }];
                     assert.ifError(err);
                     assert.deepEqual(results, expected, "results didn't match");
-
-                    // if an updater was provided now run it.
-
-                    if (updateFunction != null) {
-                        var update = buildTestObjects(batch, updateFunction);
-                        bulkMgr.updateRows(update, function (err, res) {
-                            assert.ifError(err);
-                            assert(res.length == 0);
-                            if (check) checkCompare(update, test_done);
-                            else test_done();
-                        });
-                    }
-                    else if (check) checkCompare(vec, test_done);
-                    else test_done();
+                    async_done();
                 });
-            }
+            },
 
-            function checkCompare(expected, checkComplete) {
+            function (async_done) {
+                if (updateFunction == null) {
+                    skip = true;
+                    async_done();
+                }else {
+                    bulkMgr.updateRows(toUpdate, function (err, res) {
+                        assert.ifError(err);
+                        assert(res.length == 0);
+                        async_done();
+                    });
+                }
+            },
+
+            function (async_done) {
+                if (skip) {
+                    async_done();
+                    return;
+                }
+                if (!check) {
+                    skip = true;
+                    async_done();
+                    return;
+                }
                 var fetch = [];
-                for (var i = 0; i < expected.length; ++i) {
+                for (var i = 0; i < toUpdate.length; ++i) {
                     fetch.push({
-                        pkid: i
+                        pkid : i
                     })
                 }
                 bulkMgr.selectRows(fetch, function (err, results) {
                     assert.ifError(err);
-                    assert.deepEqual(results, expected, "results didn't match");
-                    if (deleteAfterTest) {
-                        deleteRows(results);
-                    } else {
-                        checkComplete();
-                    }
+                    assert.deepEqual(results, toUpdate, "results didn't match");
+                    async_done();
                 });
+            },
 
-                function deleteRows(results) {
-                    bulkMgr.deleteRows(results, function (err, res) {
-                        assert.ifError(err);
-                        assert(res.length == 0);
-                        checkDeleted();
-                    })
+            function (async_done) {
+                if (skip) {
+                    async_done();
+                    return;
                 }
+                if (deleteAfterTest == null) {
+                    skip = true;
+                    async_done();
+                    return;
+                }
+                bulkMgr.deleteRows(toInsert, function (err, res) {
+                    assert.ifError(err);
+                    assert(res.length == 0);
+                    async_done();
+                })
+            },
 
-                function checkDeleted() {
-                    var s = "select count(*) as count from " + table_name;
-                    c.query(s, function (err, results) {
-                        var expected = [{
-                            count: 0
-                        }];
-                        assert.ifError(err);
-                        assert.deepEqual(results, expected, "results didn't match");
-                        checkComplete();
-                    });
+            function (async_done) {
+                if (skip) {
+                    async_done();
+                    return;
                 }
+                var s = "select count(*) as count from " + table_name;
+                theConnection.query(s, function (err, results) {
+                    var expected = [{
+                        count: 0
+                    }];
+                    assert.ifError(err);
+                    assert.deepEqual(results, expected, "results didn't match");
+                    async_done();
+                });
             }
+        ];
+
+        async.series(fns, function () {
+            complete_fn();
+        });
+
+    }
+
+    var arr = [];
+    function varbinaryTest(batchSize, selectAfterInsert, test_done) {
+
+        var strings = [
+            'one',
+            'two',
+            'three',
+            'four',
+            'five',
+            'six',
+            'seven',
+            'eight',
+            'nine',
+            'ten'
+        ];
+
+        for (var i = 0; i < 10; ++i) {
+            arr.push(new Buffer(strings[i]))
         }
+
+        var params = {
+            columnType: 'varbinary(10)',
+            buildFunction: function (i) {
+                var idx = i % 10;
+                return arr[idx];
+            },
+            updateFunction : null,
+            check : selectAfterInsert,
+            deleteAfterTest : false,
+            batchSize: batchSize
+        };
+
+        simpleColumnBulkTest(params, test_done)
     }
 
 

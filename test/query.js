@@ -20,15 +20,15 @@
 var sql = require('../');
 
 var buffer=require('buffer');
-
 var assert = require( 'assert' );
-var async = require( 'async' );
-
+var supp = require('../demo-support');
 var config = require( './test-config' );
 
 suite('query', function () {
 
     var conn_str = config.conn_str;
+    var support = new supp.DemoSupport(sql, conn_str);
+    var async = new support.Async();
 
     test( 'query with errors', function( done ) {
 
@@ -39,8 +39,7 @@ suite('query', function () {
             var  expectedError = new Error( "[Microsoft][" + config.driver + "][SQL Server]Unclosed quotation mark after the character string 'm with NOBODY'." );
             expectedError.sqlstate = '42000';
             expectedError.code = 105;
-
-            async.series( [
+            var fns = [
 
                 function( async_done ) {
 
@@ -65,11 +64,14 @@ suite('query', function () {
                             assert( e instanceof Error );
                             assert.deepEqual( e, expectedError, "Unexpected error returned" );
                             async_done();
-                            done();
                         });
                     });
                 }
-            ]);
+            ];
+
+            async.series(fns , function() {
+                done();
+            });
         });
     });
 
@@ -217,7 +219,7 @@ suite('query', function () {
             expectedError.sqlstate = '42000';
             expectedError.code = 105;
 
-            async.series( [
+            var fns = [
 
                 function( async_done ) {
 
@@ -242,11 +244,14 @@ suite('query', function () {
                             assert( e instanceof Error );
                             assert.deepEqual( e, expectedError, "Unexpected error returned" );
                             async_done();
-                            done();
                         });
                     });
                 }
-            ]);
+            ];
+
+            async.series(fns, function() {
+                done();
+            } );
         });
     });
 
@@ -345,36 +350,37 @@ suite('query', function () {
     test( 'verify empty results retrieved properly', function( test_done ) {
 
         sql.open( conn_str, function( err, conn ) {
+    var fns = [
+    function( async_done ) {
+        conn.queryRaw( "drop table test_sql_no_data", function( err ) {
+            async_done();
+        });
+    },
+    function (async_done) {
+        conn.queryRaw("create table test_sql_no_data (id int identity, name varchar(20))", function (err) {
+            assert.ifError(err);
+            async_done();
+        });
+    },
+    function (async_done) {
+        conn.queryRaw("create clustered index index_nodata on test_sql_no_data (id)", function (err) {
+            assert.ifError(err);
+            async_done();
+        });
+    },
+    function (async_done) {
+        conn.queryRaw( "delete from test_sql_no_data where 1=0", function( err, results ) {
 
-          async.series([
-            function( async_done ) {
-              conn.queryRaw( "drop table test_sql_no_data", function( err ) {
-                async_done();
-              });
-            },
-            function (async_done) {
-                conn.queryRaw("create table test_sql_no_data (id int identity, name varchar(20))", function (err) {
-                    assert.ifError(err);
-                    async_done();
-                });
-            },
-            function (async_done) {
-                conn.queryRaw("create clustered index index_nodata on test_sql_no_data (id)", function (err) {
-                    assert.ifError(err);
-                    async_done();
-                });
-            },
-            function (async_done) {
-              conn.queryRaw( "delete from test_sql_no_data where 1=0", function( err, results ) {
-
-                assert.ifError( err );
-                var expectedResults = { meta: null, rowcount: 0 }
-                assert.deepEqual( results, expectedResults );
-                async_done();
-                test_done();
-              });
-            }
-            ]);
+            assert.ifError( err );
+            var expectedResults = { meta: null, rowcount: 0 }
+            assert.deepEqual( results, expectedResults );
+            async_done();
+        });
+    }
+];
+          async.series(fns, function() {
+              test_done();
+          });
         });
     });
 
@@ -386,7 +392,7 @@ suite('query', function () {
 
             var embedded_null = String.fromCharCode( 65, 66, 67, 68, 0, 69, 70 );
 
-            async.series([
+            var fns = [
                 function( async_done ) {
 
                     c.queryRaw( "DROP TABLE null_in_string_test", function( e ) { async_done(); } );
@@ -394,31 +400,31 @@ suite('query', function () {
 
                 function( async_done ) {
 
-                    c.queryRaw( "CREATE TABLE null_in_string_test (id int IDENTITY, null_in_string varchar(100) NOT NULL)", 
-                                function( e ) {
+                    c.queryRaw( "CREATE TABLE null_in_string_test (id int IDENTITY, null_in_string varchar(100) NOT NULL)",
+                        function( e ) {
 
-                                    assert.ifError( e );
+                            assert.ifError( e );
 
-                                    async_done();
-                                });
+                            async_done();
+                        });
                 },
                 function (async_done) {
 
                     c.queryRaw("CREATE CLUSTERED INDEX ix_null_in_string_test ON null_in_string_Test (id)", function (err) {
-        
+
                         assert.ifError(err);
                         async_done();
                     });
                 },
                 function( async_done ) {
 
-                    c.queryRaw( "INSERT INTO null_in_string_test (null_in_string) VALUES (?)", [ embedded_null ], 
-                                function( e, r ) {
+                    c.queryRaw( "INSERT INTO null_in_string_test (null_in_string) VALUES (?)", [ embedded_null ],
+                        function( e, r ) {
 
-                                    assert.ifError( e );
+                            assert.ifError( e );
 
-                                    async_done();
-                                });
+                            async_done();
+                        });
                 },
 
                 function( async_done ) {
@@ -430,10 +436,13 @@ suite('query', function () {
                         assert( r.rows[0] == embedded_null );
 
                         async_done();
-                        test_done();
                     });
                 },
-            ]);
+            ];
+
+            async.series(fns, function() {
+                test_done();
+            });
         });
     });
 
@@ -650,60 +659,61 @@ suite('query', function () {
     });
 
     test( 'verify metadata is retrieved for udt/geography types', function( test_done ) {
+    var fns = [
 
-        async.series( [
+    function( async_done ) {
 
-            function( async_done ) {
+        sql.query( conn_str, "DROP TABLE spatial_test", function( e, r ) { async_done(); });
+    },
+    function( async_done ) {
 
-                sql.query( conn_str, "DROP TABLE spatial_test", function( e, r ) { async_done(); });
-            },
-            function( async_done ) {
+        sql.query( conn_str, "CREATE TABLE spatial_test ( id int IDENTITY (1,1), GeogCol1 geography, GeogCol2 AS GeogCol1.STAsText() )", function( e, r ) {
 
-                sql.query( conn_str, "CREATE TABLE spatial_test ( id int IDENTITY (1,1), GeogCol1 geography, GeogCol2 AS GeogCol1.STAsText() )", function( e, r ) {
+            assert.ifError( e );
+            async_done();
+        });
+    },
+    function( async_done ) {
+        sql.query( conn_str, "INSERT INTO spatial_test (GeogCol1) VALUES (geography::STGeomFromText('LINESTRING(-122.360 47.656, -122.343 47.656 )', 4326))", function( e, r ) {
 
-                    assert.ifError( e );
-                    async_done();
-                });
-            },
-            function( async_done ) {
-                sql.query( conn_str, "INSERT INTO spatial_test (GeogCol1) VALUES (geography::STGeomFromText('LINESTRING(-122.360 47.656, -122.343 47.656 )', 4326))", function( e, r ) {
+            assert.ifError( e );
+            async_done();
+        });
+    },
+    function( async_done ) {
+        sql.query( conn_str, "INSERT INTO spatial_test (GeogCol1) VALUES (geography::STGeomFromText('POLYGON((-122.358 47.653 , -122.348 47.649, -122.348 47.658, -122.358 47.658, -122.358 47.653))', 4326))", function( e, r ) {
 
-                    assert.ifError( e );
-                    async_done();
-                });
-            },
-            function( async_done ) {
-                sql.query( conn_str, "INSERT INTO spatial_test (GeogCol1) VALUES (geography::STGeomFromText('POLYGON((-122.358 47.653 , -122.348 47.649, -122.348 47.658, -122.358 47.658, -122.358 47.653))', 4326))", function( e, r ) {
+            assert.ifError( e );
+            async_done();
+        });
+    },
+    function( async_done ) {
+        sql.queryRaw( conn_str, "SELECT GeogCol1 FROM spatial_test", function( e, r ) {
 
-                    assert.ifError( e );
-                    async_done();
-                });
-            },
-            function( async_done ) {
-                sql.queryRaw( conn_str, "SELECT GeogCol1 FROM spatial_test", function( e, r ) {
+            assert.ifError( e );
 
-                    assert.ifError( e );
+            var expectedResults = {
+                meta:
+                    [ { name: 'GeogCol1',
+                        size: 0,
+                        nullable: true,
+                        type: 'binary',
+                        sqlType: 'udt',
+                        udtType: 'geography' } ],
+                rows:
+                    [ [ new Buffer( 'e610000001148716d9cef7d34740d7a3703d0a975ec08716d9cef7d34740cba145b6f3955ec0', 'hex' ) ],
+                        [ new Buffer( 'e6100000010405000000dd24068195d34740f4fdd478e9965ec0508d976e12d3474083c0caa145965ec04e62105839d4474083c0caa145965ec04e62105839d44740f4fdd478e9965ec0dd24068195d34740f4fdd478e9965ec001000000020000000001000000ffffffff0000000003', 'hex' ) ]
+                    ]
+            };
 
-                    var expectedResults = { 
-                        meta:
-                           [ { name: 'GeogCol1',
-                               size: 0,
-                               nullable: true,
-                               type: 'binary',
-                               sqlType: 'udt',
-                               udtType: 'geography' } ],
-                        rows:
-                           [ [ new Buffer( 'e610000001148716d9cef7d34740d7a3703d0a975ec08716d9cef7d34740cba145b6f3955ec0', 'hex' ) ],
-                             [ new Buffer( 'e6100000010405000000dd24068195d34740f4fdd478e9965ec0508d976e12d3474083c0caa145965ec04e62105839d4474083c0caa145965ec04e62105839d44740f4fdd478e9965ec0dd24068195d34740f4fdd478e9965ec001000000020000000001000000ffffffff0000000003', 'hex' ) ]
-                            ]
-                    };
+            assert.deepEqual( r, expectedResults, "udt results don't match" );
 
-                    assert.deepEqual( r, expectedResults, "udt results don't match" );
-
-                    async_done();
-                    test_done();
-                });
-            }
-        ]);
+            async_done();
+        });
+    }
+];
+        async.series(fns, function() {
+            test_done();
+        } );
     });
 });
