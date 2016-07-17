@@ -102,8 +102,6 @@ function DemoSupport(native) {
 
     var sql = native;
 
-
-
     function Assert() {
         function ifError(err) {
             if (err) {
@@ -145,18 +143,22 @@ function DemoSupport(native) {
         this.series = series;
     }
 
-    function ProcedureHelper() {
+    function ProcedureHelper(conn) {
 
+        var conn_str = conn;
         var async = new Async();
         var assert = new Assert();
+        var verbose = true;
 
         function createProcedure(procedureName, procedureSql, doneFunction) {
+
+            procedureSql = procedureSql.replace(/<name>/g, procedureName);
 
             var sequence = [
                 function (async_done) {
                     var createSql = "IF NOT EXISTS (SELECT *  FROM sys.objects WHERE type = 'P' AND name = '" + procedureName + "')";
                     createSql += " EXEC ('CREATE PROCEDURE " + procedureName + " AS BEGIN SET nocount ON; END')";
-                    console.log(createSql);
+                    if (verbose) console.log(createSql);
                     sql.query(conn_str, createSql, function () {
                         async_done();
                     });
@@ -177,7 +179,12 @@ function DemoSupport(native) {
                 });
         }
 
+        function setVerbose(v) {
+            verbose = v;
+        }
+
         this.createProcedure = createProcedure;
+        this.setVerbose = setVerbose;
     }
 
     function EmployeeHelper(native, cstr) {
