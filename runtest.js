@@ -1,25 +1,46 @@
 var Mocha = require('mocha');
+var demo = require('./demo-support');
 
 runTest();
 
-// set connection string in test-config.js
-
 function runTest() {
+    var argv = require('minimist')(process.argv.slice(2));
+    console.log(argv);
 
-    var mocha = new Mocha(
-        {
-            ui : 'tdd'
-        });
+    var toRun;
+    if (argv.hasOwnProperty('t')) {
+        toRun = argv['t'];
+    }
 
-    mocha.addFile('test/bulk.js');
+    if (!Array.isArray(toRun)) {
+        toRun = [toRun];
+    }
 
-    mocha.run(function (failures) {
-        process.on('uncaughtException', function (err) {
-            console.log(err);
-        });
-
-        process.on('exit', function () {
-            process.exit(failures);
-        });
+    run(toRun, function(e) {
+        console.log(e);
+        process.exit(e);
     });
+
+    function run(files, done) {
+
+        var mocha = new Mocha(
+            {
+                ui : 'tdd'
+            }
+        );
+
+        files.forEach(function(f) {
+            mocha.addFile('test/' + f);
+        });
+
+        mocha.run(function (failures) {
+            process.on('uncaughtException', function (err) {
+                console.log(err);
+            });
+
+            process.on('exit', function () {
+                done(failures);
+            });
+        });
+    }
 }

@@ -19,24 +19,36 @@
 
 var sql = require('../');
 
-var buffer=require('buffer');
+var buffer = require('buffer');
 var assert = require( 'assert' );
 var supp = require('../demo-support');
-var config = require( './test-config' );
 
 suite('query', function () {
 
-    var conn_str = config.conn_str;
-    var support = new supp.DemoSupport(sql, conn_str);
-    var async = new support.Async();
+    var conn_str;
     var theConnection;
+    var support;
+    var async;
+    var helper;
+    var driver;
+    var database;
+
+    this.timeout(20000);
 
     setup(function (test_done) {
-        sql.open(conn_str, function (err, conn) {
-            theConnection = conn;
-            assert.ifError(err);
-            assert.ifError(err);
-            test_done();
+        supp.GlobalConn.init(sql, function (co) {
+            conn_str = co.conn_str;
+            support = co.support;
+            async = co.async;
+            helper = co.helper;
+            driver = co.driver;
+            database = co.database;
+            helper.setVerbose(false);
+            sql.open(conn_str, function (err, conn) {
+                theConnection = conn;
+                assert.ifError(err);
+                test_done();
+            });
         });
     });
 
@@ -46,9 +58,200 @@ suite('query', function () {
         })
     });
 
+    test('test function parameter validation', function (test_done) {
+
+        // test the module level open, query and queryRaw functions
+
+        var fns =
+            [
+                function(async_done) {
+                    thrown = false;
+                    try {
+                        sql.query(conn_str, function () {
+                            return 5;
+                        });
+                    }
+                    catch (e) {
+                        thrown = true;
+                        assert.equal(e.toString(), "Error: [msnodesql] Invalid query string passed to function query. Type should be string.", "Improper error returned");
+                    }
+                    assert(thrown == true);
+                    async_done();
+                },
+
+                function(async_done) {
+                    thrown = false;
+                    try {
+                        sql.queryRaw(conn_str, ["This", "is", "a", "test"]);
+                    }
+                    catch (e) {
+                        thrown = true;
+                        assert.equal(e.toString(), "Error: [msnodesql] Invalid query string passed to function queryRaw. Type should be string.", "Improper error returned");
+                    }
+                    assert(thrown == true);
+                    async_done();
+                },
+
+                function(async_done) {
+                    thrown = false;
+                    try {
+                        sql.queryRaw(["This", "is", "a", "test"], "SELECT 1");
+                    }
+                    catch (e) {
+                        thrown = true;
+                        assert.equal(e.toString(), "Error: [msnodesql] Invalid connection string passed to function queryRaw. Type should be string.", "Improper error returned");
+                    }
+                    assert(thrown == true);
+                    async_done();
+                },
+
+                function(async_done) {
+                    thrown = false;
+                    // test the module level open, query and queryRaw functions
+                    try {
+                        sql.open(conn_str, 5);
+                    }
+                    catch (e) {
+                        thrown = true;
+                        assert.equal(e.toString(), "Error: [msnodesql] Invalid callback passed to function open. Type should be function.", "Improper error returned");
+                    }
+                    assert(thrown = true);
+                    async_done();
+                },
+
+                function(async_done) {
+                    var thrown = false;
+                    try {
+                        sql.open(1, "SELECT 1");
+                    }
+                    catch (e) {
+                        thrown = true;
+                        assert.equal(e.toString(), "Error: [msnodesql] Invalid connection string passed to function open. Type should be string.", "Improper error returned");
+                    }
+                    assert(thrown == true);
+                    async_done();
+                },
+
+                function(async_done) {
+                    thrown = false;
+                    try {
+                        sql.query(function () {
+                            return 1;
+                        }, "SELECT 1");
+                    }
+                    catch (e) {
+                        thrown = true;
+                        assert.equal(e.toString(), "Error: [msnodesql] Invalid connection string passed to function query. Type should be string.", "Improper error returned");
+                    }
+                    assert(thrown = true);
+                    async_done();
+                },
+
+                function (async_done) {
+                    sql.queryRaw(conn_str, "SELECT 1", function (e, r) {
+                        assert.ifError(e);
+                        async_done();
+                    });
+                },
+
+                function (async_done) {
+                    sql.queryRaw(conn_str, "SELECT 1", [], function (e, r) {
+                        assert.ifError(e);
+                        async_done();
+                    });
+                },
+
+                function (async_done) {
+                    sql.queryRaw(conn_str, "SELECT 1", null, function (e, r) {
+                        assert.ifError(e);
+                        async_done();
+                    });
+                },
+
+                function (async_done) {
+                    stmt = sql.queryRaw(conn_str, "SELECT 1", []);
+                    stmt.on('error', function (e) {
+                        assert.ifError(e);
+                    });
+                    stmt.on('closed', function (e) {
+                        async_done();
+                    });
+                },
+
+                function (async_done) {
+                    stmt = sql.queryRaw(conn_str, "SELECT 1", null);
+                    stmt.on('error', function (e) {
+                        assert.ifError(e);
+                    });
+                    stmt.on('closed', function (e) {
+                        async_done();
+                    });
+                },
+
+                function (async_done) {
+                    thrown = false
+                    try {
+                        sql.queryRaw(conn_str, "SELECT 1", 1);
+                    }
+                    catch (e) {
+                        thrown = true;
+                        assert.equal(e.toString(), "Error: [msnodesql] Invalid parameter(s) passed to function query or queryRaw.", "Improper error returned");
+                    }
+                    assert(thrown == true);
+                    async_done();
+                },
+
+                function (async_done) {
+                    thrown = false;
+                    try {
+                        sql.queryRaw(conn_str, "SELECT 1", {a: 1, b: "2"}, function (a) {
+                        });
+                    }
+                    catch (e) {
+                        thrown = true;
+                        assert.equal(e.toString(), "Error: [msnodesql] Invalid parameter(s) passed to function query or queryRaw.", "Improper error returned");
+                    }
+                    assert(thrown == true);
+                    async_done();
+                },
+
+                function (async_done) {
+                    thrown = false;
+                    try {
+                        theConnection.query(1);
+                    }
+                    catch (e) {
+                        thrown = true;
+                        assert.equal(e.toString(), "Error: [msnodesql] Invalid query string passed to function query. Type should be string.", "Improper error returned");
+                    }
+                    assert(thrown == true);
+                    async_done();
+                },
+
+                function (async_done) {
+                    thrown = false;
+                    try {
+                        theConnection.queryRaw(function () {
+                            return 1;
+                        });
+                    }
+                    catch (e) {
+                        thrown = true;
+                        assert.equal(e.toString(), "Error: [msnodesql] Invalid query string passed to function queryRaw. Type should be string.", "Improper error returned");
+                    }
+                    assert(thrown == true);
+                    async_done();
+                }
+            ];
+
+        async.series(fns, function () {
+            test_done();
+        })
+    });
+
     test('query with errors', function (done) {
 
-        var expectedError = new Error("[Microsoft][" + config.driver + "][SQL Server]Unclosed quotation mark after the character string 'm with NOBODY'.");
+        var expectedError = new Error("[Microsoft][" + driver + "][SQL Server]Unclosed quotation mark after the character string 'm with NOBODY'.");
         expectedError.sqlstate = '42000';
         expectedError.code = 105;
         var fns = [
@@ -197,7 +400,7 @@ suite('query', function () {
 
     test('query with errors', function (done) {
 
-        var expectedError = new Error("[Microsoft][" + config.driver + "][SQL Server]Unclosed quotation mark after the character string 'm with NOBODY'.");
+        var expectedError = new Error("[Microsoft][" + driver + "][SQL Server]Unclosed quotation mark after the character string 'm with NOBODY'.");
         expectedError.sqlstate = '42000';
         expectedError.code = 105;
 
@@ -474,7 +677,7 @@ suite('query', function () {
     test('test login failure', function (done) {
         // construct a connection string that will fail due to
         // the database not existing
-        var badConnection = conn_str.replace('Database={' + config.database + '}', 'Database={DNE}');
+        var badConnection = conn_str.replace('Database={' + database + '}', 'Database={DNE}');
 
         sql.query(badConnection, 'SELECT 1 as X', function (err, results) {
             // verify we get the expected error when the login fails
@@ -485,204 +688,236 @@ suite('query', function () {
     });
 
     test('test function parameter validation', function (test_done) {
-
-        // test the module level open, query and queryRaw functions
         var thrown = false;
-        try {
 
-            sql.open(1, "SELECT 1");
-        }
-        catch (e) {
+        var fns = [
+            function (async_done) {
+                // test the module level open, query and queryRaw functions
+                try {
+                    sql.open(1, "SELECT 1");
+                }
+                catch (e) {
+                    thrown = true;
+                    assert.equal(e.toString(), "Error: [msnodesql] Invalid connection string passed to function open. Type should be string.", "Improper error returned");
+                }
+                assert(thrown == true);
+                async_done();
+            },
 
-            thrown = true;
-            assert.equal(e.toString(), "Error: [msnodesql] Invalid connection string passed to function open. Type should be string.", "Improper error returned");
-        }
-        assert(thrown == true);
+            function (async_done) {
+                thrown = false;
+                try {
+                    sql.query(function () {
+                        return 1;
+                    }, "SELECT 1");
+                }
+                catch (e) {
+                    thrown = true;
+                    assert.equal(e.toString(), "Error: [msnodesql] Invalid connection string passed to function query. Type should be string.", "Improper error returned");
+                }
+                assert(thrown = true);
+                async_done();
+            },
 
-        thrown = false;
-        try {
+            function (async_done) {
+                thrown = false;
+                try {
+                    sql.queryRaw(["This", "is", "a", "test"], "SELECT 1");
+                }
+                catch (e) {
 
-            sql.query(function () {
-                return 1;
-            }, "SELECT 1");
-        }
-        catch (e) {
+                    thrown = true;
+                    assert.equal(e.toString(), "Error: [msnodesql] Invalid connection string passed to function queryRaw. Type should be string.", "Improper error returned");
+                }
+                assert(thrown == true);
+                async_done();
+            },
 
-            thrown = true;
-            assert.equal(e.toString(), "Error: [msnodesql] Invalid connection string passed to function query. Type should be string.", "Improper error returned");
-        }
-        assert(thrown = true);
+            function (async_done) {
+                thrown = false;
+                // test the module level open, query and queryRaw functions
+                try {
+                    sql.open(conn_str, 5);
+                }
+                catch (e) {
+                    thrown = true;
+                    assert.equal(e.toString(), "Error: [msnodesql] Invalid callback passed to function open. Type should be function.", "Improper error returned");
+                }
+                assert(thrown = true);
+                async_done();
+            },
 
-        thrown = false;
-        try {
+            function (async_done) {
+                thrown = false;
+                try {
+                    sql.query(conn_str, function () {
+                        return 5;
+                    });
+                }
+                catch (e) {
+                    thrown = true;
+                    assert.equal(e.toString(), "Error: [msnodesql] Invalid query string passed to function query. Type should be string.", "Improper error returned");
+                }
+                assert(thrown == true);
+                async_done();
+            },
 
-            sql.queryRaw(["This", "is", "a", "test"], "SELECT 1");
-        }
-        catch (e) {
+            function (async_done) {
+                thrown = false;
+                try {
+                    sql.queryRaw(conn_str, ["This", "is", "a", "test"]);
+                }
+                catch (e) {
 
-            thrown = true;
-            assert.equal(e.toString(), "Error: [msnodesql] Invalid connection string passed to function queryRaw. Type should be string.", "Improper error returned");
-        }
-        assert(thrown == true);
+                    thrown = true;
+                    assert.equal(e.toString(), "Error: [msnodesql] Invalid query string passed to function queryRaw. Type should be string.", "Improper error returned");
+                }
+                assert(thrown == true);
+                async_done();
+            },
 
-        thrown = false;
-        // test the module level open, query and queryRaw functions
-        try {
+            function (async_done) {
+                var stmt = sql.queryRaw(conn_str, "SELECT 1");
+                stmt.on('error', function (e) {
+                    assert.ifError(e);
+                });
+                stmt.on('closed', function () {
+                    async_done();
+                });
+            },
 
-            sql.open(conn_str, 5);
-        }
-        catch (e) {
+            function (async_done) {
+                sql.queryRaw(conn_str, "SELECT 1", function (e, r) {
+                    assert.ifError(e);
+                    async_done();
+                });
+            },
 
-            thrown = true;
-            assert.equal(e.toString(), "Error: [msnodesql] Invalid callback passed to function open. Type should be function.", "Improper error returned");
-        }
-        assert(thrown = true);
+            function (async_done) {
+                sql.queryRaw(conn_str, "SELECT 1", [], function (e, r) {
+                    assert.ifError(e);
+                    async_done();
+                });
+            },
 
-        thrown = false;
-        try {
+            function (async_done) {
+                sql.queryRaw(conn_str, "SELECT 1", null, function (e, r) {
+                    assert.ifError(e);
+                    async_done();
+                });
+            },
 
-            sql.query(conn_str, function () {
-                return 5;
-            });
-        }
-        catch (e) {
+            function (async_done) {
+                stmt = sql.queryRaw(conn_str, "SELECT 1", []);
+                stmt.on('error', function (e) {
+                    assert.ifError(e);
+                });
+                stmt.on('closed', function () {
+                    async_done();
+                })
+            },
 
-            thrown = true;
-            assert.equal(e.toString(), "Error: [msnodesql] Invalid query string passed to function query. Type should be string.", "Improper error returned");
-        }
-        assert(thrown == true);
+            function (async_done) {
+                stmt = sql.queryRaw(conn_str, "SELECT 1", null);
+                stmt.on('error', function (e) {
+                    assert.ifError(e);
+                });
+                stmt.on('closed', function () {
+                    async_done();
+                })
+            },
 
-        thrown = false;
-        try {
+            function (async_done) {
+                thrown = false
+                try {
+                    sql.queryRaw(conn_str, "SELECT 1", 1);
+                }
+                catch (e) {
+                    thrown = true;
+                    assert.equal(e.toString(), "Error: [msnodesql] Invalid parameter(s) passed to function query or queryRaw.", "Improper error returned");
+                }
+                assert(thrown == true);
+                async_done();
+            },
 
-            sql.queryRaw(conn_str, ["This", "is", "a", "test"]);
-        }
-        catch (e) {
+            function (async_done) {
+                thrown = false;
+                try {
+                    sql.queryRaw(conn_str, "SELECT 1", {a: 1, b: "2"}, function (a) {
+                    });
+                }
+                catch (e) {
+                    thrown = true;
+                    assert.equal(e.toString(), "Error: [msnodesql] Invalid parameter(s) passed to function query or queryRaw.", "Improper error returned");
+                }
+                assert(thrown == true);
+                async_done();
+            },
 
-            thrown = true;
-            assert.equal(e.toString(), "Error: [msnodesql] Invalid query string passed to function queryRaw. Type should be string.", "Improper error returned");
-        }
-        assert(thrown == true);
+            function (async_done) {
+                thrown = false;
+                try {
+                    theConnection.query(1);
+                }
+                catch (e) {
+                    thrown = true;
+                    assert.equal(e.toString(), "Error: [msnodesql] Invalid query string passed to function query. Type should be string.", "Improper error returned");
+                }
+                assert(thrown == true);
+                async_done();
+            },
 
-        var stmt = sql.queryRaw(conn_str, "SELECT 1");
-        stmt.on('error', function (e) {
-            assert.ifError(e);
-        });
+            function (async_done) {
+                thrown = false;
+                try {
+                    theConnection.queryRaw(function () {
+                        return 1;
+                    });
+                }
+                catch (e) {
+                    thrown = true;
+                    assert.equal(e.toString(), "Error: [msnodesql] Invalid query string passed to function queryRaw. Type should be string.", "Improper error returned");
+                    async_done();
+                }
+                assert(thrown == true);
+            }
+        ];
 
-        sql.queryRaw(conn_str, "SELECT 1", function (e, r) {
-
-            assert.ifError(e);
-        });
-
-        sql.queryRaw(conn_str, "SELECT 1", [], function (e, r) {
-
-            assert.ifError(e);
-        });
-
-        sql.queryRaw(conn_str, "SELECT 1", null, function (e, r) {
-
-            assert.ifError(e);
-        });
-
-        stmt = sql.queryRaw(conn_str, "SELECT 1", []);
-        stmt.on('error', function (e) {
-            assert.ifError(e);
-        });
-
-        stmt = sql.queryRaw(conn_str, "SELECT 1", null);
-        stmt.on('error', function (e) {
-            assert.ifError(e);
-        });
-
-        thrown = false
-        try {
-
-            sql.queryRaw(conn_str, "SELECT 1", 1);
-
-        }
-        catch (e) {
-
-            thrown = true;
-            assert.equal(e.toString(), "Error: [msnodesql] Invalid parameter(s) passed to function query or queryRaw.", "Improper error returned");
-        }
-        assert(thrown == true);
-
-        thrown = false;
-        try {
-
-            sql.queryRaw(conn_str, "SELECT 1", {a: 1, b: "2"}, function (a) {
-            });
-
-        }
-        catch (e) {
-
-            thrown = true;
-            assert.equal(e.toString(), "Error: [msnodesql] Invalid parameter(s) passed to function query or queryRaw.", "Improper error returned");
-        }
-        assert(thrown == true);
-
-        thrown = false;
-        try {
-            theConnection.query(1);
-        }
-        catch (e) {
-
-            thrown = true;
-            assert.equal(e.toString(), "Error: [msnodesql] Invalid query string passed to function query. Type should be string.", "Improper error returned");
-        }
-        assert(thrown == true);
-
-        thrown = false;
-        try {
-            theConnection.queryRaw(function () {
-                return 1;
-            });
-        }
-        catch (e) {
-
-            thrown = true;
-            assert.equal(e.toString(), "Error: [msnodesql] Invalid query string passed to function queryRaw. Type should be string.", "Improper error returned");
+        async.series(fns, function() {
             test_done();
-        }
-        assert(thrown == true);
+        })
     });
 
     test('verify metadata is retrieved for udt/geography types', function (test_done) {
         var fns = [
 
             function (async_done) {
-
-                sql.query(conn_str, "DROP TABLE spatial_test", function (e, r) {
+                theConnection.query("DROP TABLE spatial_test", function (e, r) {
                     async_done();
                 });
             },
             function (async_done) {
-
-                sql.query(conn_str, "CREATE TABLE spatial_test ( id int IDENTITY (1,1), GeogCol1 geography, GeogCol2 AS GeogCol1.STAsText() )", function (e, r) {
-
+                theConnection.query("CREATE TABLE spatial_test ( id int IDENTITY (1,1), GeogCol1 geography, GeogCol2 AS GeogCol1.STAsText() )", function (e, r) {
                     assert.ifError(e);
                     async_done();
                 });
             },
             function (async_done) {
-                sql.query(conn_str, "INSERT INTO spatial_test (GeogCol1) VALUES (geography::STGeomFromText('LINESTRING(-122.360 47.656, -122.343 47.656 )', 4326))", function (e, r) {
-
+                theConnection.query("INSERT INTO spatial_test (GeogCol1) VALUES (geography::STGeomFromText('LINESTRING(-122.360 47.656, -122.343 47.656 )', 4326))",
+                    function (e, r) {
                     assert.ifError(e);
                     async_done();
                 });
             },
             function (async_done) {
-                sql.query(conn_str, "INSERT INTO spatial_test (GeogCol1) VALUES (geography::STGeomFromText('POLYGON((-122.358 47.653 , -122.348 47.649, -122.348 47.658, -122.358 47.658, -122.358 47.653))', 4326))", function (e, r) {
-
+                theConnection.query("INSERT INTO spatial_test (GeogCol1) VALUES (geography::STGeomFromText('POLYGON((-122.358 47.653 , -122.348 47.649, -122.348 47.658, -122.358 47.658, -122.358 47.653))', 4326))", function (e, r) {
                     assert.ifError(e);
                     async_done();
                 });
             },
             function (async_done) {
-                sql.queryRaw(conn_str, "SELECT GeogCol1 FROM spatial_test", function (e, r) {
-
+                theConnection.queryRaw("SELECT GeogCol1 FROM spatial_test", function (e, r) {
                     assert.ifError(e);
-
                     var expectedResults = {
                         meta: [{
                             name: 'GeogCol1',
@@ -696,9 +931,7 @@ suite('query', function () {
                             [new Buffer('e6100000010405000000dd24068195d34740f4fdd478e9965ec0508d976e12d3474083c0caa145965ec04e62105839d4474083c0caa145965ec04e62105839d44740f4fdd478e9965ec0dd24068195d34740f4fdd478e9965ec001000000020000000001000000ffffffff0000000003', 'hex')]
                         ]
                     };
-
                     assert.deepEqual(r, expectedResults, "udt results don't match");
-
                     async_done();
                 });
             }

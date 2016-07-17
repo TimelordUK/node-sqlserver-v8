@@ -25,27 +25,29 @@ var supp = require('../demo-support');
 var util = require( 'util' );
 
 suite('compoundqueries', function () {
-    var c;
+    var theConnection;
     var tablename = "compoundqueries_table";
     var testname = 'not set yet';
-
 
     var conn_str = config.conn_str;
     var support = new supp.DemoSupport(sql, conn_str);
     var async = new support.Async();
 
     setup(function (test_done) {
-
         commonTestFns.debugComments("\ncalling sql.open(...) with conn_str= \" " + conn_str + "\" \n");
         sql.open(conn_str, function (err, new_conn) {
             assert.ifError(err);
-            c = new_conn;
+            theConnection = new_conn;
             test_done();
         });
     });
 
     teardown(function (done) {
-        c.close(function (err) { assert.ifError(err); done(); });
+        theConnection.close(function (err) {
+                assert.ifError(err);
+                done();
+            }
+        );
     });
 
     test('check row count emission is as expected for compound queries 1 insert', function(test_done) {
@@ -59,7 +61,7 @@ suite('compoundqueries', function () {
         ];
 
         var batch = cmd.join(';');
-        var q = c.query(batch, function(err, res) {
+        var q = theConnection.query(batch, function(err, res) {
             assert.ifError(err);
         });
 
@@ -86,7 +88,7 @@ suite('compoundqueries', function () {
         ];
 
         var batch = cmd.join(';');
-        var q = c.query(batch, function(err, res) {
+        var q = theConnection.query(batch, function(err, res) {
             assert.ifError(err);
         });
 
@@ -118,7 +120,7 @@ suite('compoundqueries', function () {
         ];
 
         var batch = cmd.join(';');
-        var q = c.query(batch, function(err, res) {
+        var q = theConnection.query(batch, function(err, res) {
             assert.ifError(err);
         });
 
@@ -172,22 +174,22 @@ suite('compoundqueries', function () {
         var fns =
             [
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function() {
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function() {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function() {
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function() {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.compoundQueryTSQL(c, tsql, expected1, expected2, expected3, testname, function() {
+                    commonTestFns.compoundQueryTSQL(theConnection, tsql, expected1, expected2, expected3, testname, function() {
                         async_done();
                     });
                 }
@@ -228,22 +230,22 @@ suite('compoundqueries', function () {
 
         var fns = [
             function (async_done) {
-                commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function() {
+                commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function() {
                     async_done();
                 });
             },
             function (async_done) {
-                commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
                     async_done();
                 });
             },
             function (async_done) {
-                commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
                     async_done();
                 });
             },
             function (async_done) {
-                commonTestFns.compoundQueryTSQL(c, tsql, expected1, expected2, expected1, testname, function () {
+                commonTestFns.compoundQueryTSQL(theConnection, tsql, expected1, expected2, expected1, testname, function () {
                     async_done();
                 });
             }
@@ -286,22 +288,22 @@ suite('compoundqueries', function () {
         var fns = [
 
             function (async_done) {
-                commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function() {
+                commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function() {
                     async_done();
                 });
             },
             function (async_done) {
-                commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
                     async_done();
                 });
             },
             function (async_done) {
-                commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
                     async_done();
                 });
             },
             function (async_done) {
-                commonTestFns.compoundQueryTSQL(c, tsql, expected1, expected2, expected1, testname, function () {
+                commonTestFns.compoundQueryTSQL(theConnection, tsql, expected1, expected2, expected1, testname, function () {
                     async_done();
                 });
             }
@@ -348,22 +350,22 @@ suite('compoundqueries', function () {
         var fns =
         [
             function (async_done) {
-                commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function() {
+                commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function() {
                     async_done();
                 });
             },
             function (async_done) {
-                commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
                     async_done();
                 });
             },
             function (async_done) {
-                commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
                     async_done();
                 });
             },
             function (async_done) {
-                commonTestFns.invalidQueryTSQL(c, tsql, expectedError, testname, function () {
+                commonTestFns.invalidQueryTSQL(theConnection, tsql, expectedError, testname, function () {
                     async_done();
                 });
             }

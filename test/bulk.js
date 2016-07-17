@@ -1,33 +1,34 @@
 var sql = require('../'),
     supp = require('../demo-support'),
     assert = require('assert'),
-    config = require('./test-config'),
-    fs = require('fs'),
-    boiler = require('./boilerplate');
-
-var conn_str = config.conn_str;
+    fs = require('fs');
 
 suite('bulk', function () {
 
     var theConnection;
     this.timeout(20000);
     var tm;
-
+    var conn_str;
     var totalObjectsForInsert = 10;
     var test1BatchSize = 1;
     var test2BatchSize = 10;
-    var helper = boiler.TestHelper(sql, conn_str);
+    var support;
+    var async;
+    var helper;
 
     setup(function (test_done) {
-
-        sql.open(conn_str, function (err, new_conn) {
-
-            assert.ifError(err);
-
-            theConnection = new_conn;
-
-            test_done();
-        });
+        supp.GlobalConn.init(sql, function(co) {
+            conn_str = co.conn_str;
+            support = co.support;
+            async = co.async;
+            helper =  co.helper;
+            helper.setVerbose(false);
+            sql.open(conn_str, function (err, new_conn) {
+                assert.ifError(err);
+                theConnection = new_conn;
+                test_done();
+            });
+        })
     });
 
     teardown(function (done) {
@@ -88,198 +89,226 @@ suite('bulk', function () {
         }
 
         var table_name = "BulkTest";
+        var bulkMgr;
+        var vec = buildTest(totalObjectsForInsert);
 
-        helper.testBoilerPlate({
-            name: table_name
-        }, go);
+        var fns = [
+            function(async_done) {
+                helper.dropCreateTable({
+                    name: table_name
+                }, function() {
+                    async_done();
+                })
+            },
 
-        function go() {
-            var tm = theConnection.tableMgr();
-            tm.bind(table_name, test);
-        }
+            function(async_done) {
+                var tm = theConnection.tableMgr();
+                tm.bind(table_name, function(bm) {
+                    bulkMgr = bm;
+                    async_done();
+                });
+            },
 
-        function test(bulkMgr) {
-            var batch = totalObjectsForInsert;
-            var vec = buildTest(batch);
-            bulkMgr.setBatchSize(totalObjectsForInsert);
-            bulkMgr.insertRows(vec, insertDone);
-
-            function insertDone(err, res) {
-                assert.ifError(err);
-                assert(res.length == 0);
-                var s = "select count(*) as count from " + table_name;
-                theConnection.query(s, function (err, results) {
-                    var expected = [{
-                        count: batch
-                    }];
+            function(async_done) {
+                bulkMgr.setBatchSize(totalObjectsForInsert);
+                bulkMgr.insertRows(vec, function(err, res) {
                     assert.ifError(err);
-                    assert.deepEqual(results, expected, "results didn't match");
-                    test_done();
+                    assert(res.length == 0);
+                    async_done();
                 });
             }
-        }
-    });
+        ];
 
-    function extractKey(parsedJSON, key) {
-        var keys = [];
-        parsedJSON.forEach(function (emp) {
-            var obj = {
-            };
-            obj[key] = emp[key];
-            keys.push(obj);
-        });
-        return keys;
-    }
+        async.series(fns, function() {
+            test_done();
+        })
+    });
 
      test('employee complex json object array bulk operations', function (test_done) {
 
-        var table_name = "Employee";
+         var table_name = "Employee";
+         var parsedJSON;
 
-        helper.testBoilerPlate({
-            name: table_name
-        }, go);
+         var bulkMgr;
+         var fns = [
 
-        function go() {
-            var tm = theConnection.tableMgr();
-            tm.bind(table_name, test);
-        }
+             function (async_done) {
+                 helper.dropCreateTable({
+                     name : table_name
+                 }, function () {
+                     async_done();
+                 });
+             },
 
-        function test(bulkMgr) {
+             function (async_done) {
+                 bindInsert(table_name, function (bm, selected) {
+                     bulkMgr = bm;
+                     parsedJSON = selected;
+                     async_done();
+                 })
+             }
+         ];
 
-            var parsedJSON = helper.getJSON();
-            var keys = extractKey(parsedJSON, 'BusinessEntityID');
+         async.series(fns, function() {
+             test_done();
+         })
+     });
 
-            bulkMgr.insertRows(parsedJSON, insertDone);
+    function bindInsert(table_name, done) {
+        var bulkMgr;
+        var parsedJSON = helper.getJSON();
+        var keys = helper.extractKey(parsedJSON, 'BusinessEntityID');
+        var selected;
 
-            function insertDone(err, res) {
-                assert.ifError(err);
-                assert(res.length == 0);
-                bulkMgr.selectRows(keys, bulkDone);
-            }
+        var fns = [
+            function (async_done) {
+                var tm = theConnection.tableMgr();
+                tm.bind(table_name, function (bulk) {
+                    bulkMgr = bulk;
+                    async_done();
+                })
+            },
 
-            function bulkDone(err, results) {
-                assert.ifError(err);
-                assert(results.length === parsedJSON.length);
-                assert.deepEqual(results, parsedJSON, "results didn't match");
-                test_done();
-            }
-        }
-    });
+            function (async_done) {
+                bulkMgr.insertRows(parsedJSON, function () {
+                    async_done();
+                });
+            },
+
+            function (async_done) {
+                bulkMgr.selectRows(keys, function (err, results) {
+                    assert.ifError(err);
+                    assert(results.length === parsedJSON.length);
+                    assert.deepEqual(results, parsedJSON, "results didn't match");
+                    selected = results;
+                    async_done();
+                });
+            },
+        ];
+
+        async.series(fns, function() {
+            done(bulkMgr, selected);
+        })
+    }
 
     test('employee insert/select with non primary key', function (test_done) {
 
         var table_name = "Employee";
+        var parsedJSON;
+        var whereCols = [
+            {
+                name: 'LoginID'
+            }
+        ];
 
-        helper.testBoilerPlate({
-            name: table_name
-        }, go);
+        var bulkMgr;
+        var fns = [
 
-        function go() {
-            var tm = theConnection.tableMgr();
-            tm.bind(table_name, test);
-        }
+            function(async_done) {
+                helper.dropCreateTable({
+                    name: table_name
+                }, function() {
+                    async_done();
+                });
+            },
 
-        function test(bulkMgr) {
+            function(async_done) {
+                bindInsert(table_name,  function(bm, selected) {
+                    bulkMgr = bm;
+                    parsedJSON = selected;
+                    async_done();
+                })
+            },
 
-            var whereCols = [];
-            whereCols.push({
-                name : 'LoginID'
-            });
-
-            var parsedJSON = helper.getJSON();
-            var keys = extractKey(parsedJSON, 'LoginID');
-
-            bulkMgr.insertRows(parsedJSON, insertDone);
-
-            function insertDone(err, res) {
-                assert.ifError(err);
-                assert(res.length == 0);
+            function (async_done) {
+                var keys = helper.extractKey(parsedJSON, 'LoginID');
                 bulkMgr.setWhereCols(whereCols);
-                bulkMgr.selectRows(keys, bulkDone);
-            }
+                bulkMgr.selectRows(keys, function (err, results) {
+                    assert.ifError(err);
+                    assert(results.length === parsedJSON.length);
+                    assert.deepEqual(results, parsedJSON, "results didn't match");
+                    async_done();
+                });
+            },
+        ];
 
-            function bulkDone(err, results) {
-                assert.ifError(err);
-                assert(results.length === parsedJSON.length);
-                assert.deepEqual(results, parsedJSON, "results didn't match");
-                var summary = bulkMgr.getSummary();
-                bulkMgr.setWhereCols(summary.primaryColumns);
-                test_done();
-            }
-        }
+        async.series(fns, function() {
+            test_done();
+        })
     });
 
     test('employee insert - update a single column', function (test_done) {
 
         var table_name = "Employee";
+        var parsedJSON;
+        var updateCols = [];
 
-        helper.testBoilerPlate({
-            name: table_name
-        }, go);
+        updateCols.push({
+            name : 'ModifiedDate'
+        });
+        var newDate = new Date("2015-01-01T00:00:00.000Z");
+        var modifications = [];
 
-        function go() {
-            var tm = theConnection.tableMgr();
-            tm.bind(table_name, test);
-        }
+        var bulkMgr;
+        var fns = [
 
-        function test(bulkMgr) {
+            function (async_done) {
+                helper.dropCreateTable({
+                    name: table_name
+                }, function () {
+                    async_done();
+                });
+            },
 
-            var parsedJSON = helper.getJSON();
-            var keys = extractKey(parsedJSON, 'BusinessEntityID');
+            function (async_done) {
+                bindInsert(table_name, function (bm, selected) {
+                    bulkMgr = bm;
+                    parsedJSON = selected;
+                    async_done();
+                })
+            },
 
-            bulkMgr.insertRows(parsedJSON, insertDone);
-
-            function insertDone(err, res) {
-                assert.ifError(err);
-                assert(res.length == 0);
-
-                var newDate = new Date("2015-01-01T00:00:00.000Z");
-                var modifications = [];
-                parsedJSON.forEach(function(emp) {
+            function (async_done) {
+                parsedJSON.forEach(function (emp) {
                     emp.ModifiedDate = newDate;
-                    modifications.push( {
-                        BusinessEntityID : emp.BusinessEntityID,
-                        ModifiedDate : newDate
+                    modifications.push({
+                        BusinessEntityID: emp.BusinessEntityID,
+                        ModifiedDate: newDate
                     });
                 });
-
-                var updateCols = [];
-                updateCols.push({
-                    name : 'ModifiedDate'
-                });
-
                 bulkMgr.setUpdateCols(updateCols);
-                bulkMgr.updateRows(modifications, updateDone);
-            }
+                bulkMgr.updateRows(modifications, function () {
+                    async_done();
+                });
+            },
 
-            function updateDone(err, res) {
-                assert.ifError(err);
-                assert(res.length == 0);
-                bulkMgr.selectRows(keys, bulkDone);
-                var summary = bulkMgr.getSummary();
-                bulkMgr.setUpdateCols(summary.assignableColumns);
+            function (async_done) {
+                var keys = helper.extractKey(parsedJSON, 'BusinessEntityID');
+                bulkMgr.selectRows(keys, function (err, results) {
+                    assert.ifError(err);
+                    assert(results.length === parsedJSON.length);
+                    assert.deepEqual(results, parsedJSON, "results didn't match");
+                    async_done();
+                });
             }
+        ];
 
-            function bulkDone(err, results) {
-                assert.ifError(err);
-                assert(results.length === parsedJSON.length);
-                assert.deepEqual(results, parsedJSON, "results didn't match");
-                test_done();
-            }
-        }
+        async.series(fns, function () {
+            test_done();
+        })
     });
 
     function nullTest(batchSize, selectAfterInsert, test_done) {
 
         var params = {
-            columnType: 'datetime',
+            columnType : 'datetime',
             buildFunction: function () {
                 return null;
             },
-            updateFunction: null,
-            check: selectAfterInsert,
-            deleteAfterTest: false,
-            batchSize: batchSize
+            updateFunction : null,
+            check : selectAfterInsert,
+            deleteAfterTest : false,
+            batchSize : batchSize
         };
 
         simpleColumnBulkTest(params, function() {
@@ -508,7 +537,6 @@ suite('bulk', function () {
         varcharTest(test2BatchSize, true, true, true, test_done);
     });
 
-
     test('bulk insert simple multi-column object in batches ' + test2BatchSize, function (test_done) {
 
         function buildTest(count) {
@@ -531,7 +559,7 @@ suite('bulk', function () {
 
         var table_name = "BulkTest";
 
-        helper.testBoilerPlate({
+        helper.dropCreateTable({
             name: table_name
         }, go);
 
@@ -561,7 +589,6 @@ suite('bulk', function () {
         }
     });
 
-
     function simpleColumnBulkTest(params, complete_fn) {
 
         var type = params.columnType;
@@ -587,8 +614,6 @@ suite('bulk', function () {
             return arr;
         }
 
-        var support = new supp.DemoSupport(sql, conn_str);
-        var async = new support.Async();
         var batch = totalObjectsForInsert;
         var toUpdate;
         var toInsert = buildTestObjects(batch, buildFunction);
@@ -599,7 +624,7 @@ suite('bulk', function () {
         var fns = [
 
             function(async_done) {
-                helper.testBoilerPlate({
+                helper.dropCreateTable({
                     name : table_name,
                     type : type
                 }, function() {
@@ -617,7 +642,7 @@ suite('bulk', function () {
 
             function (async_done) {
                 bulkMgr.setBatchSize(batchSize);
-                bulkMgr.insertRows(toInsert, function (err, res) {
+                bulkMgr.insertRows(toInsert, function (err) {
                     assert.ifError(err);
                     async_done();
                 });
@@ -708,7 +733,6 @@ suite('bulk', function () {
         async.series(fns, function () {
             complete_fn();
         });
-
     }
 
     var arr = [];
@@ -740,14 +764,11 @@ suite('bulk', function () {
             updateFunction : null,
             check : selectAfterInsert,
             deleteAfterTest : false,
-            batchSize: batchSize
+            batchSize : batchSize
         };
 
         simpleColumnBulkTest(params, test_done)
     }
-
-
-
 });
 
 

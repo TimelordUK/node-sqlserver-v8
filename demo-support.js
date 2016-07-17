@@ -1,9 +1,108 @@
 var fs = require('fs');
 
-function DemoSupport(native, cs) {
+var GlobalConn = (function() {
+
+    var conn_str = "set global connection here";
+
+    function getSqlLocalDbPipe(done) {
+        var childProcess = require("child_process");
+        var oldSpawn = childProcess.spawn;
+
+        function mySpawn() {
+            //console.log('spawn called');
+            //console.log(arguments);
+            return oldSpawn.apply(this, arguments);
+        }
+
+        childProcess.spawn = mySpawn;
+
+        function esc(a) {
+            var ss = a.replace(/\\/g, "\\\\")
+                .replace(/\$/g, "\\$")
+                .replace(/'/g, "\\'")
+                .replace(/"/g, "\\\"");
+            return ss;
+        }
+
+        function extract(a) {
+            a = a.trim();
+            var idx = a.indexOf('np:');
+            if (idx > 0) {
+                a = a.substr(idx);
+            }
+            return a;
+        }
+
+        var child = childProcess.spawn('sqllocaldb', ['info', 'node']);
+        child.stdout.on('data', function (data) {
+            var str = data.toString();
+            var arr = str.split('\r');
+            arr.forEach(function (a) {
+                var idx = a.indexOf('np:');
+                if (idx > 0) {
+                    var pipe = extract(a);
+                    setImmediate(function () {
+                        done(pipe)
+                    });
+                }
+            });
+            //Here is where the output goes
+        });
+        child.stderr.on('data', function (data) {
+            console.log('stderr: ' + data);
+            //Here is where the error output goes
+        });
+        child.on('close', function (code) {
+            //console.log('closing code: ' + code);
+            //Here you can get the exit code of the script
+        });
+        child.on('error', function (code) {
+            console.log('closing code: ' + code);
+            process.exit();
+            //Here you can get the exit code of the script
+        });
+    }
+
+    var driver = "SQL Server Native Client 11.0";
+    var database = "scratch";
+
+    function getLocalConnStr(done) {
+        getSqlLocalDbPipe(function (pipe) {
+            conn = "Driver={" + driver + "};Server=" + pipe + ";Database={" + database + "};Trusted_Connection=Yes;";
+            done(conn);
+        });
+    }
+
+    function init(sql, done) {
+        var ds = new DemoSupport();
+        getLocalConnStr(function (cs) {
+            var ret = {
+                driver : driver,
+                database : database,
+                conn_str : cs,
+                support : new DemoSupport(sql, cs),
+                async : new ds.Async(),
+                helper : new ds.EmployeeHelper(sql, cs),
+            };
+            done(ret);
+        })
+    }
+
+    function getConnStr() {
+        return conn_str;
+    }
+
+    return {
+        init : init,
+        getConnStr : getConnStr
+    };
+})();
+
+function DemoSupport(native) {
 
     var sql = native;
-    var conn_str = cs;
+
+
 
     function Assert() {
         function ifError(err) {
@@ -77,6 +176,7 @@ function DemoSupport(native, cs) {
                     doneFunction();
                 });
         }
+
         this.createProcedure = createProcedure;
     }
 
@@ -84,12 +184,16 @@ function DemoSupport(native, cs) {
 
         var conn_str = cstr;
         var sql = native;
+        var verbose = true;
+
+        function setVerbose(v) {
+            verbose = v;
+        }
 
         function extractKey(parsedJSON, key) {
             var keys = [];
             parsedJSON.forEach(function (emp) {
-                var obj = {
-                };
+                var obj = {};
                 obj[key] = emp[key];
                 keys.push(obj);
             });
@@ -101,11 +205,14 @@ function DemoSupport(native, cs) {
             var async = new Async();
             var name = params.name;
             var type = params.type;
+            var insert = false;
+            if (params.hasOwnProperty("insert"))
+                insert = params.insert;
             var assert = new Assert();
             var conn;
 
             function readFile(f, done) {
-                console.log("reading " + f);
+                if (verbose) console.log("reading " + f);
                 fs.readFile(f, 'utf8', function (err, data) {
                     if (err) {
                         done(err);
@@ -126,7 +233,7 @@ function DemoSupport(native, cs) {
 
                 function (async_done) {
                     var dropSql = "DROP TABLE " + name;
-                    console.log(dropSql);
+                    if (verbose) console.log(dropSql);
                     conn.query(dropSql, function () {
                         async_done();
                     });
@@ -139,15 +246,17 @@ function DemoSupport(native, cs) {
 
                     function inChunks(arr, callback) {
                         var i = 0;
-                        console.log(arr[i]);
+                        if (verbose) console.log(arr[i]);
                         conn.query(arr[i], next);
                         function next(err, res) {
                             assert.ifError(err);
                             assert.check(res.length === 0);
                             ++i;
                             if (i < arr.length) {
-                                console.log(arr[i]);
-                                conn.query(arr[i], next);
+                                if (verbose) console.log(arr[i]);
+                                conn.query(arr[i], function (err, res) {
+                                    next(err, res);
+                                });
                             }
                             else callback();
                         }
@@ -167,8 +276,14 @@ function DemoSupport(native, cs) {
                     });
                 },
 
-                function(async_done) {
-                    conn.close(function() {
+                function (async_done) {
+                    if (!insert) {
+                        async_done();
+                    }
+                },
+
+                function (async_done) {
+                    conn.close(function () {
                         async_done();
                     });
                 }
@@ -198,6 +313,7 @@ function DemoSupport(native, cs) {
         this.getJSON = getJSON;
         this.dropCreateTable = dropCreateTable;
         this.extractKey = extractKey;
+        this.setVerbose = setVerbose;
 
         return this;
     }
@@ -238,8 +354,8 @@ function DemoSupport(native, cs) {
 
         var table_name = "Employee";
         var prepared = {
-            select : null,
-            delete : null
+            select: null,
+            delete: null
         };
 
         var actions = [
@@ -250,7 +366,7 @@ function DemoSupport(native, cs) {
             function (async_done) {
                 console.log("call utility function dropCreateTable ....");
                 helper.dropCreateTable({
-                    name : table_name
+                    name: table_name
                 }, function () {
                     console.log(".... dropCreateTable done.");
                     async_done();
@@ -299,6 +415,7 @@ function DemoSupport(native, cs) {
                 done(prepared);
             });
     }
+
     this.prepareEmployee = prepareEmployee;
     this.Async = Async;
     this.Assert = Assert;
@@ -307,3 +424,4 @@ function DemoSupport(native, cs) {
 }
 
 exports.DemoSupport = DemoSupport;
+module.exports.GlobalConn = GlobalConn;
