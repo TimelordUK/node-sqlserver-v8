@@ -24,7 +24,7 @@ var util = require('util');
 var supp = require('../demo-support');
 
 suite('datatypes', function () {
-        var c;
+        var theConnection;
         var tablename = "types_table";
         var testname = 'not set yet';
         this.timeout(45000);
@@ -33,14 +33,10 @@ suite('datatypes', function () {
         var async = new support.Async();
 
         setup(function (test_done) {
-
             commonTestFns.debugComments("\ncalling sql.open(...) with conn_str= \" " + conn_str + "\" \n");
             sql.open(conn_str, function (err, new_conn) {
-
                 assert.ifError(err);
-
-                c = new_conn;
-
+                theConnection = new_conn;
                 test_done();
             });
         });
@@ -78,28 +74,28 @@ suite('datatypes', function () {
                 [
                     function (async_done) {
                         //console.log("createTable");
-                        commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function () {
+                        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
                             //console.log("run");
                             async_done();
                         });
                     },
                     function (async_done) {
                         //console.log("insertDataTSQL");
-                        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, null, function () {
+                        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, null, function () {
                             //console.log("run");
                             async_done();
                         });
                     },
                     function (async_done) {
                         //console.log("insertDataTSQL");
-                        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
                             //console.log("run");
                             async_done();
                         });
                     },
                     function (async_done) {
                         //console.log("verifyData_Datetime");
-                        commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
+                        commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
                             //console.log("run");
                             async_done();
                         });
@@ -136,22 +132,22 @@ suite('datatypes', function () {
 
             var fns = [
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function() {
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function() {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function() {
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function() {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, null, function() {
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, null, function() {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
+                    commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
                         async_done();
                     });
                 }
@@ -188,22 +184,22 @@ suite('datatypes', function () {
             var fns = [
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function () {
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
+                    commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
                         async_done();
                     });
                 }
@@ -241,22 +237,22 @@ suite('datatypes', function () {
             var fns =
             [
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function () {
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
+                    commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
                         async_done();
                     });
                 }
@@ -292,22 +288,22 @@ suite('datatypes', function () {
             var fns =
                 [
                     function (async_done) {
-                        commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function () {
+                        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
                             async_done();
                         });
                     },
                     function (async_done) {
-                        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
                             async_done();
                         });
                     },
                     function (async_done) {
-                        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
                             async_done();
                         });
                     },
                     function (async_done) {
-                        commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
+                        commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
                             async_done();
                         });
                     }
@@ -343,22 +339,22 @@ suite('datatypes', function () {
             var fns = [
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function () {
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
+                    commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
                         async_done();
                     });
                 }
@@ -402,22 +398,22 @@ suite('datatypes', function () {
             var fns = [
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function () {
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
+                    commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
                         async_done();
                     });
                 }
@@ -461,22 +457,22 @@ suite('datatypes', function () {
             var fns = [
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function () {
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
+                    commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
                         async_done();
                     });
                 }
@@ -519,22 +515,22 @@ suite('datatypes', function () {
             var fns = [
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function () {
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
+                    commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
                         async_done();
                     });
                 }
@@ -570,22 +566,22 @@ suite('datatypes', function () {
             var fns = [
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, function () {
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, function () {
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, function () {
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    commonTestFns.verifyData_Datetime(c, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
+                    commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, js_date_expected, testname, function () {
                         async_done();
                     });
                 }
@@ -624,16 +620,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 },
             ]);  // end of async.series()
             // end of test():
@@ -669,16 +665,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 }
             ]);  // end of async.series()
             // end of test():
@@ -714,16 +710,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 },
             ]);  // end of async.series()
             // end of test():
@@ -758,16 +754,16 @@ suite('datatypes', function () {
             else {
                 async.series([
                     function (async_done) {
-                        commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                     },
                     function (async_done) {
-                        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                     },
                     function (async_done) {
-                        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                     },
                     function (async_done) {
-                        commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                        commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                     }
                 ]);  // end of async.series()
             }
@@ -800,16 +796,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 }
             ]);  // end of async.series()
             // end of test():
@@ -841,16 +837,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 }
             ]);  // end of async.series()
             // end of test():
@@ -882,16 +878,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 },
             ]);  // end of async.series()
             // end of test():
@@ -927,16 +923,16 @@ suite('datatypes', function () {
                 async.series([
 
                     function (async_done) {
-                        commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                     },
                     function (async_done) {
-                        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                     },
                     function (async_done) {
-                        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                     },
                     function (async_done) {
-                        commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                        commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                     }
                 ]);  // end of async.series()
             }
@@ -969,16 +965,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 }
             ]);  // end of async.series()
             // end of test():
@@ -1016,16 +1012,16 @@ suite('datatypes', function () {
             else {
                 async.series([
                     function (async_done) {
-                        commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                     },
                     function (async_done) {
-                        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                     },
                     function (async_done) {
-                        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                     },
                     function (async_done) {
-                        commonTestFns.invalidQueryTSQL(c, tsql, expectedError, testname, done);
+                        commonTestFns.invalidQueryTSQL(theConnection, tsql, expectedError, testname, done);
                         //                commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
                     }
                 ]);  // end of async.series()
@@ -1060,16 +1056,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 },
             ]);  // end of async.series()
             // end of test():
@@ -1102,16 +1098,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 },
             ]);  // end of async.series()
             // end of test():
@@ -1143,16 +1139,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 }
             ]);  // end of async.series()
             // end of test():
@@ -1185,16 +1181,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 },
             ]);  // end of async.series()
             // end of test():
@@ -1226,16 +1222,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 }
             ]);  // end of async.series()
             // end of test():
@@ -1269,16 +1265,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 }
             ]);  // end of async.series()
             // end of test():
@@ -1312,16 +1308,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 }
             ]);  // end of async.series()
             // end of test():
@@ -1353,16 +1349,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 }
             ]);  // end of async.series()
             // end of test():
@@ -1395,16 +1391,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 }
             ]);  // end of async.series()
             // end of test():
@@ -1439,16 +1435,16 @@ suite('datatypes', function () {
             else {
                 async.series([
                     function (async_done) {
-                        commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                     },
                     function (async_done) {
-                        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                     },
                     function (async_done) {
-                        commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                     },
                     function (async_done) {
-                        commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                        commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                     }
                 ]);  // end of async.series()
             }
@@ -1482,16 +1478,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 }
             ]);  // end of async.series()
             // end of test():
@@ -1524,16 +1520,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 },
             ]);  // end of async.series()
             // end of test():
@@ -1566,16 +1562,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 },
             ]);  // end of async.series()
             // end of test():
@@ -1607,16 +1603,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 }
             ]);  // end of async.series()
             // end of test():
@@ -1649,16 +1645,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 },
             ]);  // end of async.series()
             // end of test():
@@ -1691,16 +1687,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 }
             ]);  // end of async.series()
             // end of test():
@@ -1733,16 +1729,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 }
             ]);  // end of async.series()
             // end of test():
@@ -1774,16 +1770,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 }
             ]);  // end of async.series()
             // end of test():
@@ -1818,16 +1814,16 @@ suite('datatypes', function () {
             async.series([
 
                 function (async_done) {
-                    commonTestFns.createTable(c, tablename, testcolumnname, testcolumntype, async_done);
+                    commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata1TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.insertDataTSQL(c, tablename, testcolumnname, testdata2TsqlInsert, async_done);
+                    commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, async_done);
                 },
                 function (async_done) {
-                    commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
+                    commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done);
                 }
             ]);
         });

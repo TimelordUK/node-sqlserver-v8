@@ -20,9 +20,7 @@
 var supp = require('../demo-support'),
     sql = require('../'),
     assert = require('assert'),
-    config = require('./test-config'),
-    fs = require('fs'),
-    boiler = require('./boilerplate');
+    fs = require('fs');
 
 function empSelectSQL() {
 
@@ -73,23 +71,20 @@ function empNoParamsSQL() {
      FROM [scratch].[dbo].[Employee]`;
 }
 
-    suite('prepared', function () {
+suite('prepared', function () {
 
-    var conn_str = config.conn_str;
-    var helper = boiler.TestHelper(sql, conn_str);
-    var parsedJSON = helper.getJSON();
+    var conn_str;
     var theConnection;
+    var support;
+    var async;
+    var helper;
+    var driver;
+    var database;
+    var procedureHelper;
+    var prepared;
+    var parsedJSON;
+
     this.timeout(20000);
-    var support = new supp.DemoSupport(sql, conn_str);
-    var async = new support.Async();
-
-    var table_name = "Employee";
-    var prepared = {
-        select : null,
-        delete : null,
-        scan: null
-    };
-
     var actions = [
         // open a connection.
         function (async_done) {
@@ -102,7 +97,7 @@ function empNoParamsSQL() {
 
         // drop / create an Employee table.
         function (async_done) {
-            helper.testBoilerPlate({
+            helper.dropCreateTable({
                 name: table_name
             }, function () {
                 async_done();
@@ -112,15 +107,15 @@ function empNoParamsSQL() {
         // insert test set using bulk insert
         function (async_done) {
             var tm = theConnection.tableMgr();
-            tm.bind(table_name, function(bulkMgr) {
-                bulkMgr.insertRows(parsedJSON, function() {
+            tm.bind(table_name, function (bulkMgr) {
+                bulkMgr.insertRows(parsedJSON, function () {
                     async_done();
                 });
             });
         },
 
         // prepare a select statement.
-        function(async_done) {
+        function (async_done) {
             employeePrepare(empSelectSQL(), function (ps) {
                 prepared.select = ps;
                 async_done();
@@ -128,7 +123,7 @@ function empNoParamsSQL() {
         },
 
         // prepare a select all statement.
-        function(async_done) {
+        function (async_done) {
             employeePrepare(empNoParamsSQL(), function (ps) {
                 prepared.scan = ps;
                 async_done();
@@ -136,7 +131,7 @@ function empNoParamsSQL() {
         },
 
         // prepare a delete statement.
-        function(async_done) {
+        function (async_done) {
             employeePrepare(empDeleteSQL(), function (ps) {
                 prepared.delete = ps;
                 async_done();
@@ -144,24 +139,58 @@ function empNoParamsSQL() {
         }
     ];
 
+    var table_name = "Employee";
+
     setup(function (test_done) {
-        async.series(actions,
-            function () {
-                test_done();
-            });
+
+        prepared = {
+            select: null,
+            delete: null,
+            scan: null
+        };
+
+        supp.GlobalConn.init(sql, function (co) {
+            conn_str = co.conn_str;
+            support = co.support;
+            procedureHelper = new support.ProcedureHelper(conn_str);
+            procedureHelper.setVerbose(false);
+            async = co.async;
+            helper = co.helper;
+            driver = co.driver;
+            database = co.database;
+            helper.setVerbose(false);
+            parsedJSON = helper.getJSON();
+            async.series(actions,
+                function () {
+                    test_done();
+                });
+        });
     });
 
     teardown(function (done) {
-        prepared.select.free(function() {
-            prepared.delete.free(close);
-        });
 
-        function close() {
-            theConnection.close(function (err) {
-                assert.ifError(err);
-                done();
-            });
-        }
+        var fns = [
+            function (async_done) {
+                prepared.select.free(function () {
+                    async_done();
+                });
+            },
+            function (async_done) {
+                prepared.delete.free(function () {
+                    async_done();
+                });
+            },
+            function (async_done) {
+                theConnection.close(function (err) {
+                    assert.ifError(err);
+                    async_done();
+                });
+            }
+        ];
+
+        async.series(fns, function () {
+            done();
+        })
     });
 
     function employeePrepare(query, done) {
@@ -171,8 +200,7 @@ function empNoParamsSQL() {
         });
     }
 
-    test('use prepared statement twice with no parameters.', function( test_done ) {
-
+    test('use prepared statement twice with no parameters.', function (test_done) {
         var select = prepared.scan;
         var meta = select.getMeta();
         assert(meta.length > 0);
@@ -187,7 +215,7 @@ function empNoParamsSQL() {
         });
     });
 
-    test( 'use prepared statements to select a row, then delete it over each row.', function( test_done ) {
+    test('use prepared statements to select a row, then delete it over each row.', function (test_done) {
 
         var select = prepared.select;
         var meta = select.getMeta();
@@ -204,7 +232,7 @@ function empNoParamsSQL() {
         }
 
         function check() {
-            theConnection.query("select count(*) as rows from Employee", function(err, res) {
+            theConnection.query("select count(*) as rows from Employee", function (err, res) {
                 assert.ifError(err);
                 assert(res[0].rows == 0);
                 test_done();
@@ -224,7 +252,7 @@ function empNoParamsSQL() {
         }
     });
 
-    test('use prepared statement twice with different params.', function( test_done ) {
+    test('use prepared statement twice with different params.', function (test_done) {
 
         var select = prepared.select;
         var meta = select.getMeta();
@@ -245,7 +273,7 @@ function empNoParamsSQL() {
         });
     });
 
-    test( 'stress test prepared statement with 500 invocations cycling through primary key', function( test_done ) {
+    test('stress test prepared statement with 500 invocations cycling through primary key', function (test_done) {
 
         var select = prepared.select;
         var meta = select.getMeta();
