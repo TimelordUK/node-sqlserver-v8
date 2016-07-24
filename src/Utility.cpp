@@ -24,10 +24,6 @@ namespace mssql
 {
 	using namespace v8;
 
-	bufferPoolChar_t::elements_t bufferPoolChar_t::elements_map;
-	int bufferPoolChar_t::_id = 0;
-	mutex bufferPoolChar_t::g_i_mutex;
-
 	wstring FromV8String(Handle<String> input)
 	{
 		wstring result;

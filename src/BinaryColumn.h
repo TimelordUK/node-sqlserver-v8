@@ -13,17 +13,14 @@ namespace mssql
     class BinaryColumn : public Column
     {
     public:
-
-		BinaryColumn(shared_ptr<DatumStorage> storage, size_t len, bool more)
-			: more(more)
+		BinaryColumn(shared_ptr<DatumStorage> storage, size_t l, bool more)
+			: len(l), raw(clone(storage->charvec_ptr, l)), more(more)
 		{
-			auto clone = bufferPoolChar_t::clone(storage->charvec_ptr, len);
-			d = bufferPoolChar_t::accept(clone);
 		}
 
 	   Handle<Value> ToValue() override
 	   {
-		   return node::Buffer::New(Isolate::GetCurrent(), d.p->data(), d.p->size(), deleteBuffer, &d.id)
+		   return node::Buffer::New(Isolate::GetCurrent(), raw, len, deleteBuffer, raw)
 #ifdef NODE_GYP_V4 
 			   .ToLocalChecked()
 #endif
@@ -35,14 +32,23 @@ namespace mssql
 		  return more;
 	   }
 
-	   static void deleteBuffer(char* ptr, void* hint)
-	   {
-		  int id = *static_cast<int*>(hint);
-		  bufferPoolChar_t::remove(id);
-	   }
-
     private:
-	   bufferPoolChar_t::def d;
-	   bool more;
+
+		static char *clone(shared_ptr<DatumStorage::char_vec_t> sp, size_t len)
+		{
+			char *dest = new char[len];
+			memcpy(dest, sp->data(), len);
+			return dest;
+		}
+
+		static void deleteBuffer(char* ptr, void* hint)
+		{
+			//fprintf(stderr, "delete ptr %p\n", hint);
+			delete[] hint;
+		}
+
+		size_t len;
+		char *raw;
+	    bool more;
     };
 }
