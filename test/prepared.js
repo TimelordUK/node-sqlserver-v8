@@ -18,7 +18,6 @@
 //---------------------------------------------------------------------------------------------------------------------------------
 
 var supp = require('../demo-support'),
-    sql = require('../'),
     assert = require('assert'),
     fs = require('fs');
 
@@ -83,8 +82,9 @@ suite('prepared', function () {
     var procedureHelper;
     var prepared;
     var parsedJSON;
+    var sql = global.native_sql;
+    this.timeout(10000);
 
-    this.timeout(20000);
     var actions = [
         // open a connection.
         function (async_done) {
@@ -252,27 +252,6 @@ suite('prepared', function () {
         }
     });
 
-    test('use prepared statement twice with different params.', function (test_done) {
-
-        var select = prepared.select;
-        var meta = select.getMeta();
-        var id1 = 2;
-        var id2 = 3;
-        assert(meta.length > 0);
-        select.preparedQuery([id1], function (err, res1) {
-            assert.ifError(err);
-            select.preparedQuery([id2], function (err, res2) {
-                assert.ifError(err);
-                var o1 = parsedJSON[id1 - 1];
-                assert.deepEqual(o1, res1[0], "results didn't match");
-
-                var o2 = parsedJSON[id2 - 1];
-                assert.deepEqual(o2, res2[0], "results didn't match");
-                test_done();
-            })
-        });
-    });
-
     test('stress test prepared statement with 500 invocations cycling through primary key', function (test_done) {
 
         var select = prepared.select;
@@ -296,11 +275,33 @@ suite('prepared', function () {
         }
 
         function next(businessId, done) {
-            select.preparedQuery([businessId], function (err, res1) {
-                assert.ifError(err);
-                assert(res1[0].BusinessEntityID == businessId);
-                done();
-            });
+            select.preparedQuery([businessId],
+                function (err, res1) {
+                    assert.ifError(err);
+                    assert(res1[0].BusinessEntityID == businessId);
+                    done();
+                });
         }
+    });
+
+    test('use prepared statement twice with different params.', function (test_done) {
+
+        var select = prepared.select;
+        var meta = select.getMeta();
+        var id1 = 2;
+        var id2 = 3;
+        assert(meta.length > 0);
+        select.preparedQuery([id1], function (err, res1) {
+            assert.ifError(err);
+            select.preparedQuery([id2], function (err, res2) {
+                assert.ifError(err);
+                var o1 = parsedJSON[id1 - 1];
+                assert.deepEqual(o1, res1[0], "results didn't match");
+
+                var o2 = parsedJSON[id2 - 1];
+                assert.deepEqual(o2, res2[0], "results didn't match");
+                test_done();
+            })
+        });
     });
 });

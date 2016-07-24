@@ -1,24 +1,31 @@
-var sql = require('../'),
-    assert = require('assert'),
+ var assert = require('assert'),
     supp = require('../demo-support'),
-    config = require('./test-config'),
     fs = require('fs');
 
 suite('userbind', function () {
 
-    this.timeout(20 * 1000);
-    var conn_str = config.conn_str;
-    var support = new supp.DemoSupport(sql, conn_str);
-    var async = new support.Async();
-
     var theConnection;
+    this.timeout(20000);
+    var conn_str;
+    var support;
+    var async;
+    var helper;
+
+    var sql = global.native_sql;
 
     setup(function (test_done) {
-        sql.open(conn_str, function (err, co) {
-            assert.ifError(err);
-            theConnection = co;
-            test_done();
-        });
+        supp.GlobalConn.init(sql, function(co) {
+            conn_str = co.conn_str;
+            support = co.support;
+            async = co.async;
+            helper =  co.helper;
+            helper.setVerbose(false);
+            sql.open(conn_str, function (err, new_conn) {
+                assert.ifError(err);
+                theConnection = new_conn;
+                test_done();
+            });
+        })
     });
 
     teardown(function (done) {
@@ -288,7 +295,7 @@ suite('userbind', function () {
             }
         };
         testUserBind(params, function (err, res) {
-            assert.ok(err.message.indexOf('Invalid precision value') > 0);
+            assert(err.message != null);
             test_done();
         });
     });

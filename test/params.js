@@ -17,7 +17,7 @@
 // limitations under the License.
 //--------------------------------------------------------------------------------------------------------------------------------
 //
-var sql = require('../');
+
 var assert = require('assert');
 var supp = require('../demo-support');
 
@@ -38,6 +38,7 @@ suite('params', function () {
     var support;
     var async;
     var helper;
+    var sql = global.native_sql;
 
     setup(function (test_done) {
         supp.GlobalConn.init(sql, function(co) {

@@ -1,5 +1,4 @@
-var sql = require('../'),
-    supp = require('../demo-support'),
+var supp = require('../demo-support'),
     assert = require('assert'),
     fs = require('fs');
 
@@ -15,6 +14,8 @@ suite('bulk', function () {
     var support;
     var async;
     var helper;
+
+    var sql = global.native_sql;
 
     setup(function (test_done) {
         supp.GlobalConn.init(sql, function(co) {

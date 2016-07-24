@@ -54,5 +54,6 @@ namespace mssql
 	private:
 		shared_ptr<OdbcConnection> connection;
 		static Local<Value> get(Local<Object> o, const char *v);
+		
 	};
 }

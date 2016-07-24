@@ -6,7 +6,6 @@ namespace mssql
 {
 	bool UnbindOperation::TryInvokeOdbc()
 	{
-		fetchStatement();
 		if (statement == nullptr) return false;	
 		return true;
 	}

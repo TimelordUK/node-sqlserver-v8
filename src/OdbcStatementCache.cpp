@@ -24,7 +24,7 @@ namespace mssql
 {
 	using namespace std;
 
-	OdbcStatementCache::OdbcStatementCache(OdbcConnectionHandle & connection) 
+	OdbcStatementCache::OdbcStatementCache(shared_ptr<OdbcConnectionHandle>  connection) 
 		: 
 		connection(connection)
 	{
@@ -32,15 +32,19 @@ namespace mssql
 
 	OdbcStatementCache::~OdbcStatementCache()
 	{
+	}
+
+	void OdbcStatementCache::clear()
+	{
 		vector<size_t> ids;
-		//fprintf(stderr, "destruct OdbcStatementCache\n");
+		// fprintf(stderr, "destruct OdbcStatementCache\n");
 
 		for_each(statements.begin(), statements.end(), [&](const auto & p) {
 			ids.insert(ids.begin(), p.first);
 		});
 
 		for_each(ids.begin(), ids.end(), [&](const size_t id) {
-			//fprintf(stderr, "destruct OdbcStatementCache - erase statement %llu\n", id);
+			// fprintf(stderr, "destruct OdbcStatementCache - erase statement %llu\n", id);
 			statements.erase(id);
 		});
 	}

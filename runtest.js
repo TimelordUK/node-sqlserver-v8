@@ -1,5 +1,6 @@
 var Mocha = require('mocha');
 var demo = require('./demo-support');
+var sql = require('node-sqlserver-v8');
 
 runTest();
 
@@ -28,6 +29,14 @@ function runTest() {
                 ui : 'tdd'
             }
         );
+
+        mocha.suite.on('pre-require', function(g, b, c) {
+            g.native_sql = sql;
+        });
+
+        mocha.suite.on('require', function(a, b, c) {
+
+        });
 
         files.forEach(function(f) {
             mocha.addFile('test/' + f);

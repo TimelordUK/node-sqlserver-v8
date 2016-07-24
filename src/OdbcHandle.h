@@ -19,96 +19,26 @@
 
 #pragma once
 
+#include "stdafx.h"
+
 namespace mssql
 {
     using namespace std;
 
-    template<SQLSMALLINT HandleType>
-    class    OdbcHandle
+    class OdbcHandle
     {
     public:
-
-        OdbcHandle( void ) : handle(nullptr)
-        {
-        }
-
-        OdbcHandle(OdbcHandle&& orig) : handle(orig.handle)
-        { 
-            orig.handle = SQL_NULL_HANDLE;
-        }
-
-        ~OdbcHandle()
-        {
-            Free();
-        }
-
-        OdbcHandle& operator=(OdbcHandle&& orig)
-        {
-            handle = orig.handle;
-
-            orig.handle = SQL_NULL_HANDLE;
-
-            return *this;
-        }
-
-        bool Alloc()
-        {
-            assert(handle == SQL_NULL_HANDLE);
-            SQLRETURN ret = SQLAllocHandle( HandleType, nullptr, &handle );
-            if (!SQL_SUCCEEDED(ret))
-            {
-                return false;
-            }
-            return true;
-        }
-
-        template<SQLSMALLINT ParentType>
-        bool Alloc(const OdbcHandle<ParentType>& parent)
-        {
-            assert(handle == SQL_NULL_HANDLE);
-            SQLRETURN ret = SQLAllocHandle( HandleType, parent, &handle );
-            if (!SQL_SUCCEEDED(ret))
-            {
-                return false;
-            }
-            return true;
-        }
-
-        void Free()
-        {
-            if (handle != nullptr)
-            {
-                SQLFreeHandle( HandleType, handle );
-                handle = nullptr;
-            }
-        }
-
-        operator SQLHANDLE() const { return handle; }
-
-        operator bool() const { return handle != nullptr; }
-
-        shared_ptr<OdbcError> LastError( void ) const
-        {
-            vector<wchar_t> buffer;
-
-            SQLWCHAR wszSqlState[6];
-            SQLINTEGER nativeError;
-            SQLSMALLINT actual;
-
-            SQLRETURN ret = SQLGetDiagRec(HandleType, handle, 1, wszSqlState, &nativeError, nullptr, 0, &actual);
-            assert( ret != SQL_INVALID_HANDLE );
-            assert( ret != SQL_NO_DATA );
-            assert( SQL_SUCCEEDED( ret ));
-
-            buffer.resize(actual+1);
-            ret = SQLGetDiagRec(HandleType, handle, 1, wszSqlState, &nativeError, &buffer[0], actual + 1, &actual);
-            assert( SQL_SUCCEEDED( ret ));
-
-            string sqlstate = w2a(wszSqlState);
-            string message = w2a(buffer.data());
-            return make_shared<OdbcError>( sqlstate.c_str(), message.c_str(), nativeError );
-        }
-
+		SQLSMALLINT HandleType;
+		OdbcHandle(SQLSMALLINT ht);
+		~OdbcHandle();
+		bool Alloc();
+		bool Alloc(const OdbcHandle parent);
+		void Free();
+		SQLHANDLE get() const;
+		operator SQLHANDLE() const { return handle; }
+		operator bool() const { return handle != nullptr; }
+		shared_ptr<OdbcError> LastError(void) const;
+      
     private:
 
         void operator=(const OdbcHandle& orig) 
@@ -119,7 +49,27 @@ namespace mssql
         SQLHANDLE handle;
     };
 
-    typedef OdbcHandle<SQL_HANDLE_ENV> OdbcEnvironmentHandle;
-    typedef OdbcHandle<SQL_HANDLE_DBC> OdbcConnectionHandle;
-    typedef OdbcHandle<SQL_HANDLE_STMT> OdbcStatementHandle;
+	class OdbcEnvironmentHandle : public OdbcHandle
+	{
+	public:
+		OdbcEnvironmentHandle() : OdbcHandle(SQL_HANDLE_ENV)
+		{	
+		}
+	};
+
+	class OdbcConnectionHandle : public OdbcHandle
+	{
+	public:
+		OdbcConnectionHandle() : OdbcHandle(SQL_HANDLE_DBC)
+		{
+		}
+	};
+
+	class OdbcStatementHandle : public OdbcHandle
+	{
+	public:
+		OdbcStatementHandle() : OdbcHandle(SQL_HANDLE_STMT)
+		{
+		}
+	};	
 }

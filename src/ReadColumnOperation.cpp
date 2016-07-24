@@ -6,7 +6,6 @@ namespace mssql
 {
 	bool ReadColumnOperation::TryInvokeOdbc()
 	{
-		fetchStatement();
 		if (statement == nullptr) return false;
 		return statement->TryReadColumn(column);
 	}

@@ -30,11 +30,8 @@ namespace mssql
     class Connection :node::ObjectWrap
     {
     public:
-	   Connection()
-		  : connectionBridge(make_unique<OdbcConnectionBridge>())
-	   {
-	   }
 
+		Connection();
 	   virtual ~Connection();
 
 	   static void Initialize(Handle<Object> target);

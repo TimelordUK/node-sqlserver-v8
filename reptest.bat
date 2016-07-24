@@ -1,5 +1,9 @@
 echo start > ./test.txt
 for /L %%n in (1,1,100) do (
-	node runtest.js -t prepared.js -t params.js -t querytimeout.js -t connect.js -t bulk.js -t query.js -t sproc.js >> ./test.txt 2>&1
+
+rem FOR %%A IN (prepared.js params.js query.js querytimeout.js connect.js bulk.js sproc.js prepared.js userbind.js) DO (
+rem         node runtest.js -t %%A >> ./test.txt 2>&1
+rem    )
+    node runtest -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t sproc.js -t userbind.js -t prepared.js
 	echo "next " >> ./test.txt 2>&1
 )

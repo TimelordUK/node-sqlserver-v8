@@ -28,6 +28,7 @@ namespace mssql
 	OdbcOperation::OdbcOperation(size_t queryId, Local<Object> cb)
 		:
 		connection(nullptr),
+		statement(nullptr),
 		callback(Isolate::GetCurrent(), cb.As<Function>()),
 		cb(cb),
 		failed(false),
@@ -39,7 +40,9 @@ namespace mssql
 	}
 
 	OdbcOperation::OdbcOperation(shared_ptr<OdbcConnection> connection, size_t queryId, Local<Object> cb)
-		: connection(connection),
+		: 
+		connection(connection),
+		statement(nullptr),
 		callback(Isolate::GetCurrent(), cb.As<Function>()),
 		cb(cb),
 		failed(false),
@@ -51,7 +54,9 @@ namespace mssql
 	}
 
 	OdbcOperation::OdbcOperation(shared_ptr<OdbcConnection> connection, Local<Object> cb)
-		: connection(connection),
+		:
+		connection(connection),
+		statement(nullptr),
 		callback(Isolate::GetCurrent(), cb.As<Function>()),
 		cb(cb),
 		failed(false),
@@ -64,7 +69,7 @@ namespace mssql
 
 	OdbcOperation::~OdbcOperation()
 	{
-		callback.Reset();		
+		callback.Reset();
 	}
 
 	void OdbcOperation::fetchStatement()

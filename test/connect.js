@@ -16,7 +16,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
-var sql = require('../');
+
 var assert = require('assert');
 var supp = require('../demo-support');
 
@@ -29,6 +29,7 @@ suite('open', function () {
     var driver;
     var database;
     var procedureHelper;
+    var sql = global.native_sql;
 
     this.timeout(20000);
 

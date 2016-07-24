@@ -17,8 +17,6 @@
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
 
-var sql = require('../');
-
 var buffer = require('buffer');
 var assert = require( 'assert' );
 var supp = require('../demo-support');
@@ -34,6 +32,7 @@ suite('query', function () {
     var database;
 
     this.timeout(20000);
+    var sql = global.native_sql;
 
     setup(function (test_done) {
         supp.GlobalConn.init(sql, function (co) {
@@ -309,10 +308,9 @@ suite('query', function () {
 
     test('simple query of types like var%', function (done) {
         var like = 'var%';
-        sql.query(conn_str, "SELECT name FROM sys.types WHERE name LIKE ?", [like], function (err, results) {
+        theConnection.query("SELECT name FROM sys.types WHERE name LIKE ?", [like], function (err, results) {
             assert.ifError(err);
             for (var row = 0; row < results.length; ++row) {
-
                 assert(results[row].name.substr(0, 3) == 'var');
             }
             done();
@@ -325,7 +323,7 @@ suite('query', function () {
         var current_row = 0;
         var meta_expected = [{name: 'name', size: 128, nullable: false, type: 'text', sqlType: 'nvarchar'}];
 
-        var stmt = sql.query(conn_str, 'select name FROM sys.types WHERE name LIKE ?', [like]);
+        var stmt = theConnection.query('select name FROM sys.types WHERE name LIKE ?', [like]);
 
         stmt.on('meta', function (meta) {
             assert.deepEqual(meta, meta_expected);
@@ -438,13 +436,10 @@ suite('query', function () {
         var moreShouldBe = true;
         var called = 0;
 
-        sql.queryRaw(conn_str, "SELECT 1 as X, 'ABC', 0x0123456789abcdef; SELECT 2 AS Y, 'DEF', 0xfedcba9876543210",
+        theConnection.queryRaw("SELECT 1 as X, 'ABC', 0x0123456789abcdef; SELECT 2 AS Y, 'DEF', 0xfedcba9876543210",
             function (err, results, more) {
-
                 assert.ifError(err);
-
                 assert.equal(more, moreShouldBe);
-
                 ++called;
 
                 if (more) {
@@ -473,7 +468,6 @@ suite('query', function () {
                     };
 
                     assert.deepEqual(results, expected, "Result 2 does not match expected");
-
                     assert(called == 2);
                     done();
                 }
@@ -482,7 +476,7 @@ suite('query', function () {
 
     test('multiple results from query in events', function (done) {
 
-        var r = sql.queryRaw(conn_str, "SELECT 1 as X, 'ABC', 0x0123456789abcdef; SELECT 2 AS Y, 'DEF', 0xfedcba9876543210");
+        var r = theConnection.queryRaw("SELECT 1 as X, 'ABC', 0x0123456789abcdef; SELECT 2 AS Y, 'DEF', 0xfedcba9876543210");
 
         var expected = [[{name: 'X', size: 10, nullable: false, type: 'number', sqlType: 'int'},
             {name: '', size: 3, nullable: false, type: 'text', sqlType: 'varchar'},
@@ -528,11 +522,9 @@ suite('query', function () {
 
     test('boolean return value from query', function (done) {
 
-        var r = sql.queryRaw(conn_str, "SELECT CONVERT(bit, 1) AS bit_true, CONVERT(bit, 0) AS bit_false",
+        var r = theConnection.queryRaw("SELECT CONVERT(bit, 1) AS bit_true, CONVERT(bit, 0) AS bit_false",
             function (err, results) {
-
                 assert.ifError(err);
-
                 var expected = {
                     meta: [{name: 'bit_true', size: 1, nullable: true, type: 'boolean', sqlType: 'bit'},
                         {name: 'bit_false', size: 1, nullable: true, type: 'boolean', sqlType: 'bit'}],
@@ -541,7 +533,6 @@ suite('query', function () {
                 assert.deepEqual(results, expected, "Results didn't match");
                 done();
             });
-
     });
 
     test('verify empty results retrieved properly', function (test_done) {
@@ -628,23 +619,18 @@ suite('query', function () {
 
         String.prototype.repeat = function (num) {
             return new Array(num + 1).join(this);
-        }
+        };
 
-        sql.query(conn_str, "SELECT REPLICATE('A', 8000) AS 'NONLOB String'", function (e, r) {
-
+        theConnection.query("SELECT REPLICATE('A', 8000) AS 'NONLOB String'", function (e, r) {
             assert.ifError(e);
-
             assert(r[0]['NONLOB String'] == 'A'.repeat(8000));
             test_done();
         });
     });
 
     test('test retrieving an empty string', function (test_done) {
-
-        sql.query(conn_str, "SELECT '' AS 'Empty String'", function (e, r) {
-
+        theConnection.query("SELECT '' AS 'Empty String'", function (e, r) {
             assert.ifError(e);
-
             assert(r[0]['Empty String'] == '');
             test_done();
         });
@@ -655,7 +641,7 @@ suite('query', function () {
         var moreCount = 0;
         var totalLength = 0;
 
-        var stmt = sql.query(conn_str, "SELECT REPLICATE(CAST('B' AS varchar(max)), 20000) AS 'LOB String'");
+        var stmt = theConnection.query("SELECT REPLICATE(CAST('B' AS varchar(max)), 20000) AS 'LOB String'");
 
         stmt.on('column', function (c, d, m) {
             assert(c == 0);

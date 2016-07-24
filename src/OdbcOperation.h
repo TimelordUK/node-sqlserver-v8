@@ -33,11 +33,13 @@ namespace mssql
 	{
 	protected:
 
+		friend OdbcConnection;
+
 		shared_ptr<OdbcConnection> connection;
+		shared_ptr<OdbcStatement> statement;
 		Persistent<Function> callback;
 		Handle<Value> output_param;
 		Local<Object> cb;
-		shared_ptr<OdbcStatement> statement;
 		void fetchStatement();
 		size_t statementId;
 

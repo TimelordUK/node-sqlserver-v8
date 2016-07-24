@@ -26,6 +26,11 @@ namespace mssql
 
     Persistent<Function> Connection::constructor;
 
+	Connection::Connection()
+		: connectionBridge(make_unique<OdbcConnectionBridge>())
+	{
+	}
+
     void Connection::api(Local<FunctionTemplate> & tpl)
     {
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "close", Close);
@@ -69,7 +74,7 @@ namespace mssql
     Connection::~Connection(void)
     {
 	   // close the connection now since the object is being collected
-		connectionBridge->Collect();
+		//connectionBridge->Collect();
     }
 
     void Connection::Close(const FunctionCallbackInfo<Value>& info)

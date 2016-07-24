@@ -6,7 +6,6 @@ namespace mssql
 {
 	bool ReadNextResultOperation::TryInvokeOdbc()
 	{
-		fetchStatement();
 		if (statement == nullptr) return false;
 		preRowCount = statement->RowCount();
 		auto res = statement->TryReadNextResult();

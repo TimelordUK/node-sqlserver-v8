@@ -32,21 +32,24 @@ namespace mssql {
 
 	class OperationManager
 	{
-		typedef map<size_t, shared_ptr<Operation>> map_perations_t;
+		typedef map<size_t, shared_ptr<Operation>> map_operations_t;
 
 	public:
-		static bool Add(shared_ptr<Operation> operation_ptr);
-		static void CheckinOperation(size_t id);
-		static shared_ptr<Operation> GetOperation(int id)
+		OperationManager();
+		~OperationManager();
+		bool Add(shared_ptr<Operation> operation_ptr);
+		void CheckinOperation(size_t id);
+		shared_ptr<Operation> GetOperation(int id)
 		{
-			map_perations_t::const_iterator itr = operations.find(id);
+			map_operations_t::const_iterator itr = operations.find(id);
 			return itr->second;
 		}
 
 	private:
-		static map_perations_t operations;
-		static size_t _id;
+		map_operations_t operations;
+		ssize_t _id;
 		static void OnBackground(uv_work_t* work);
 		static void OnForeground(uv_work_t* work);
+		mutex g_i_mutex;
 	};
 }

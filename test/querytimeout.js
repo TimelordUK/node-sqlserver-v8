@@ -1,11 +1,12 @@
-var sql = require('../'),
-    assert = require('assert'),
+
+var  assert = require('assert'),
     supp = require('../demo-support'),
     fs = require('fs');
 
 suite('querytimeout', function () {
 
     this.timeout(20 * 1000);
+    var sql = global.native_sql;
 
     var theConnection;
     var conn_str;

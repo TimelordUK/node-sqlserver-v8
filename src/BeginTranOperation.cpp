@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "OdbcConnection.h"
 #include "BeginTranOperation.h"
 

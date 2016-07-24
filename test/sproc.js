@@ -1,4 +1,4 @@
-var sql = require('../');
+
 var assert = require('assert');
 var supp = require('../demo-support');
 
@@ -12,6 +12,7 @@ suite('sproc', function () {
     var driver;
     var database;
     var procedureHelper;
+    var sql = global.native_sql;
 
     this.timeout(20000);
 

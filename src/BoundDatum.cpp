@@ -1,8 +1,14 @@
-#include "stdafx.h"
-#include "BoundDatum.h"
+
 #include <TimestampColumn.h>
 #include <limits>
 #include <algorithm>
+#include <v8.h>
+#include <uv.h>
+#include <node.h>
+#include <node_buffer.h>
+#include <sqlucode.h>
+#include <windows.h>	// for critical section until xplatform
+#include "BoundDatum.h"
 
 namespace mssql
 {

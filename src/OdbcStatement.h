@@ -33,7 +33,7 @@ namespace mssql
 	class OdbcStatement
 	{
 	public:
-		OdbcStatement(size_t statementId, OdbcConnectionHandle &c);
+		OdbcStatement(size_t statementId, shared_ptr<OdbcConnectionHandle> c);
 		virtual ~OdbcStatement();
 		SQLLEN RowCount() const { return resultset != nullptr ? resultset->RowCount() : -1; }
 		shared_ptr<ResultSet> GetResultSet() const
@@ -50,6 +50,7 @@ namespace mssql
 		Handle<Value> EndOfResults() const;
 		Handle<Value> EndOfRows() const;
 		Handle<Value> GetColumnValue() const;
+
 		shared_ptr<OdbcError> LastError(void) const { return error; }
 
 		bool TryPrepare(const wstring& query, u_int timeout);
@@ -59,7 +60,7 @@ namespace mssql
 		bool TryReadColumn(int column);
 		bool TryReadNextResult();
 
-	protected:
+	private:
 
 		bool getDataBinary(int column);
 		bool getDataDecimal(int column);
@@ -88,11 +89,14 @@ namespace mssql
 		bool Lob(SQLLEN display_size, int column);
 		static OdbcEnvironmentHandle environment;
 		bool dispatch(SQLSMALLINT t, int column);
-		bool BindParams();
+		bool BindParams(shared_ptr<BoundDatumSet>);
 		bool TryReadString(bool binary, int column);
 
-		OdbcConnectionHandle & connection;
-		OdbcStatementHandle statement;
+		bool ReturnOdbcError();
+		bool CheckOdbcError(SQLRETURN ret);
+
+		shared_ptr<OdbcConnectionHandle> connection;
+		shared_ptr<OdbcStatementHandle> statement;
 		CriticalSection closeCriticalSection;
 
 		// any error that occurs when a Try* function returns false is stored here
@@ -107,7 +111,7 @@ namespace mssql
 		// set binary true if a binary Buffer should be returned instead of a JS string
 
 		shared_ptr<ResultSet> resultset;
-		shared_ptr<BoundDatumSet> params;
+		shared_ptr<BoundDatumSet> boundParamsSet;
 		shared_ptr<BoundDatumSet> preparedStorage;		
 	};
 }

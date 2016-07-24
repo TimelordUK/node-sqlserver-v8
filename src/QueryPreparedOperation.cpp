@@ -51,7 +51,6 @@ namespace mssql
 
 	bool QueryPreparedOperation::TryInvokeOdbc()
 	{
-		fetchStatement();
 		if (statement == nullptr) return false;
 		return statement->BindFetch(params);
 	}

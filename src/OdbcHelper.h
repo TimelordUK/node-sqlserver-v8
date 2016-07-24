@@ -23,16 +23,6 @@ namespace mssql
 {
 #pragma intrinsic( memset )
 
-	// convenient macro to set the error for the handle and return false
-#define RETURN_ODBC_ERROR( handle )                         \
-	           {                                                       \
-        error = handle.LastError(); \
-        handle.Free();                                      \
-        return false;                                       \
-	           }
-
-	// boilerplate macro for checking for ODBC errors in this file
-#define CHECK_ODBC_ERROR( r, handle ) { if( !SQL_SUCCEEDED( r ) ) { RETURN_ODBC_ERROR( handle ); } }
 
 	// boilerplate macro for checking if SQL_NO_DATA was returned for field data
 #define CHECK_ODBC_NO_DATA( r, handle ) {                                                                 \

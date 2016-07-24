@@ -33,9 +33,8 @@ namespace mssql {
 	   friend class OperationManager;
 
     public:
-	   Operation() : 
-		   OperationID(-1),
-		   mgr(nullptr)
+	   Operation() :
+		   OperationID(-1)
 	   {
 	   }
 
@@ -44,7 +43,7 @@ namespace mssql {
 	   virtual void CompleteForeground() = 0;
 
 	   size_t OperationID;
-	   OperationManager * mgr;
+	   shared_ptr<OperationManager> mgr;
 	  
     private:
 	   uv_work_t  work;	 

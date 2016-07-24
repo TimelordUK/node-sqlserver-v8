@@ -39,17 +39,22 @@ namespace mssql
 		~OdbcConnection();
 		static bool InitializeEnvironment();
 		bool TryBeginTran();
+		void send(shared_ptr<OdbcOperation> op) const;
 		bool TryEndTran(SQLSMALLINT completionType);
 		bool TryOpen(const wstring& connectionString, int timeout);
 		shared_ptr<OdbcError> LastError(void) const { return error; }
 		bool TryClose();
 		shared_ptr<OdbcStatementCache> statements;
+		shared_ptr<OperationManager> ops;
 
 	private:
+		bool ReturnOdbcError();
+		bool CheckOdbcError(SQLRETURN ret);
+
 		static OdbcEnvironmentHandle environment;
 		SQLRETURN openTimeout(int timeout);
 		
-		OdbcConnectionHandle connection;
+		shared_ptr<OdbcConnectionHandle> connection;
 		CriticalSection closeCriticalSection;
 
 		// any error that occurs when a Try* function returns false is stored here
