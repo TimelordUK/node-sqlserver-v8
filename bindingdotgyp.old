@@ -4,6 +4,7 @@
       'target_name': 'sqlserverv8',
 
       'sources': [
+        'src/OdbcHandle.cpp',
         'src/Column.cpp',
         'src/TimestampColumn.cpp',
         'src/Connection.cpp',
