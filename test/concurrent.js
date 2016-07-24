@@ -1,30 +1,37 @@
-var sql = require('../'),
-    assert = require('assert'),
+var assert = require('assert'),
     supp = require('../demo-support'),
-    config = require('./test-config'),
     fs = require('fs');
 
 suite('concurrent', function () {
 
     var theConnection;
-    this.timeout(20 * 1000);
-    var support = new supp.DemoSupport(sql, conn_str);
-    var async = new support.Async();
-    var conn_str = config.conn_str;
+    this.timeout(20000);
+    var conn_str;
+    var support;
+    var async;
+    var helper;
+
+    var sql = global.native_sql;
 
     setup(function (test_done) {
-        sql.open(conn_str, function (err, conn) {
-            theConnection = conn;
-            assert.ifError(err);
-            assert.ifError(err);
-            test_done();
-        });
+        supp.GlobalConn.init(sql, function(co) {
+            conn_str = co.conn_str;
+            support = co.support;
+            async = co.async;
+            helper =  co.helper;
+            helper.setVerbose(false);
+            sql.open(conn_str, function (err, new_conn) {
+                assert.ifError(err);
+                theConnection = new_conn;
+                test_done();
+            });
+        })
     });
 
     teardown(function (done) {
-        theConnection.close(function () {
+        theConnection.close(function() {
             done();
-        })
+        });
     });
 
     var open = function (done) {

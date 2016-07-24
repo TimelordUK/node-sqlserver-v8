@@ -16,39 +16,46 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
-var sql = require('../');
 var assert = require('assert');
-var config = require('./test-config');
 var commonTestFns = require('./CommonTestFunctions');
 var util = require('util');
 var supp = require('../demo-support');
 
 suite('datatypes', function () {
-        var theConnection;
-        var tablename = "types_table";
-        var testname = 'not set yet';
-        this.timeout(45000);
-        var conn_str = config.conn_str;
-        var support = new supp.DemoSupport(sql, conn_str);
-        var async = new support.Async();
+    var tablename = "types_table";
+    var testname = 'not set yet';
 
-        setup(function (test_done) {
-            commonTestFns.debugComments("\ncalling sql.open(...) with conn_str= \" " + conn_str + "\" \n");
+    var theConnection;
+    this.timeout(20000);
+    var conn_str;
+    var support;
+    var async;
+    var helper;
+    var driver;
+
+    var sql = global.native_sql;
+
+    setup(function (test_done) {
+        supp.GlobalConn.init(sql, function(co) {
+            conn_str = co.conn_str;
+            driver = co.driver;
+            support = co.support;
+            async = co.async;
+            helper =  co.helper;
+            helper.setVerbose(false);
             sql.open(conn_str, function (err, new_conn) {
                 assert.ifError(err);
                 theConnection = new_conn;
                 test_done();
             });
+        })
+    });
+
+    teardown(function (done) {
+        theConnection.close(function() {
+            done();
         });
-
-        /*
-         teardown(function (done) {
-
-         c.close(function (err) {
-         assert.ifError(err);
-         done();
-         });
-         });*/
+    });
 
         testname = 'test 001 - verify functionality of data type \'smalldatetime\', fetch as date';
         test(testname, function (done) {
@@ -1004,7 +1011,7 @@ suite('datatypes', function () {
                     [2, testdata2Expected]]
             };
             var tsql = "SELECT * FROM types_table ORDER BY id";
-            var expectedError = "[Microsoft][" + config.driver + "][SQL Server]Arithmetic overflow";
+            var expectedError = "[Microsoft][" + driver + "][SQL Server]Arithmetic overflow";
 
             if (commonTestFns.SKIP_FAILING_HANGING_TEST_CASES == true) {
                 done();

@@ -17,30 +17,39 @@
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
 
-var sql = require('../');
 var assert = require( 'assert' );
 var supp = require('../demo-support');
-var config = require( './test-config' );
-
-var conn_str = config.conn_str;
 
 suite( 'txn', function() {
 
-    var conn;
-    var support = new supp.DemoSupport(sql, conn_str);
-    var async = new support.Async();
+    var theConnection;
+    this.timeout(20000);
+    var conn_str;
+    var support;
+    var async;
+    var helper;
+    var driver;
+
+    var sql = global.native_sql;
 
     setup(function (test_done) {
-        sql.open( conn_str, function( err, new_conn ) {
-            assert.ifError( err );
-            conn = new_conn;
-            test_done();
-        });
+        supp.GlobalConn.init(sql, function(co) {
+            conn_str = co.conn_str;
+            driver = co.driver;
+            support = co.support;
+            async = co.async;
+            helper =  co.helper;
+            helper.setVerbose(false);
+            sql.open(conn_str, function (err, new_conn) {
+                assert.ifError(err);
+                theConnection = new_conn;
+                test_done();
+            });
+        })
     });
 
-    teardown( function(done) {
-        conn.close( function( err ) {
-            assert.ifError( err );
+    teardown(function (done) {
+        theConnection.close(function() {
             done();
         });
     });
@@ -70,7 +79,7 @@ suite( 'txn', function() {
                 });
             },
             function (async_done) {
-                conn.queryRaw("create clustered index index_txn on test_txn (id)", function (err) {
+                theConnection.queryRaw("create clustered index index_txn on test_txn (id)", function (err) {
                     assert.ifError(err);
                     async_done();
                 });
@@ -84,18 +93,16 @@ suite( 'txn', function() {
 
     test('begin a transaction and rollback with no query', function( done ) {
 
-        conn.beginTransaction( function( err ) { assert.ifError( err ); });
-
-        conn.rollback( function( err ) { assert.ifError( err ); done(); });
+        theConnection.beginTransaction( function( err ) { assert.ifError( err ); });
+        theConnection.rollback( function( err ) { assert.ifError( err ); done(); });
     });
 
     test('begin a transaction and rollback with no query and no callback', function( done ) {
 
         try {
 
-            conn.beginTransaction();
-
-            conn.rollback( function( err ) {
+            theConnection.beginTransaction();
+            theConnection.rollback( function( err ) {
                 assert.ifError( err );
                 done();
             });
@@ -111,34 +118,34 @@ suite( 'txn', function() {
         var fns = [
 
             function (async_done) {
-                conn.beginTransaction(function (err) {
+                theConnection.beginTransaction(function (err) {
                     assert.ifError(err);
                     async_done();
                 });
             },
 
             function (async_done) {
-                conn.queryRaw("INSERT INTO test_txn (name) VALUES ('Anne')", function (err, results) {
+                theConnection.queryRaw("INSERT INTO test_txn (name) VALUES ('Anne')", function (err, results) {
                     assert.ifError(err);
                     assert.deepEqual(results, {meta: null, rowcount: 1}, "Insert results don't match");
                     async_done();
                 });
             },
             function (async_done) {
-                conn.queryRaw("INSERT INTO test_txn (name) VALUES ('Bob')", function (err, results) {
+                theConnection.queryRaw("INSERT INTO test_txn (name) VALUES ('Bob')", function (err, results) {
                     assert.ifError(err);
                     assert.deepEqual(results, {meta: null, rowcount: 1}, "Insert results don't match");
                     async_done();
                 });
             },
             function (async_done) {
-                conn.commit(function (err) {
+                theConnection.commit(function (err) {
                     assert.ifError(err);
                     async_done();
                 });
             },
             function (async_done) {
-                conn.queryRaw("select * from test_txn", function (err, results) {
+                theConnection.queryRaw("select * from test_txn", function (err, results) {
                     assert.ifError(err);
 
                     // verify results
@@ -169,33 +176,33 @@ suite( 'txn', function() {
         var fns = [
 
             function (async_done) {
-                conn.beginTransaction(function (err) {
+                theConnection.beginTransaction(function (err) {
                     assert.ifError(err);
                     async_done();
                 });
             },
             function (async_done) {
-                conn.queryRaw("INSERT INTO test_txn (name) VALUES ('Carl')", function (err, results) {
-                    assert.ifError(err);
-                    assert.deepEqual(results, {meta: null, rowcount: 1}, "Insert results don't match");
-                    async_done();
-                });
-            },
-            function (async_done) {
-                conn.queryRaw("INSERT INTO test_txn (name) VALUES ('Dana')", function (err, results) {
+                theConnection.queryRaw("INSERT INTO test_txn (name) VALUES ('Carl')", function (err, results) {
                     assert.ifError(err);
                     assert.deepEqual(results, {meta: null, rowcount: 1}, "Insert results don't match");
                     async_done();
                 });
             },
             function (async_done) {
-                conn.rollback(function (err) {
+                theConnection.queryRaw("INSERT INTO test_txn (name) VALUES ('Dana')", function (err, results) {
+                    assert.ifError(err);
+                    assert.deepEqual(results, {meta: null, rowcount: 1}, "Insert results don't match");
+                    async_done();
+                });
+            },
+            function (async_done) {
+                theConnection.rollback(function (err) {
                     assert.ifError(err);
                     async_done();
                 });
             },
             function (async_done) {
-                conn.queryRaw("select * from test_txn", function (err, results) {
+                theConnection.queryRaw("select * from test_txn", function (err, results) {
                     assert.ifError(err);
 
                     // verify results
@@ -227,24 +234,24 @@ suite( 'txn', function() {
         var fns = [
 
             function (async_done) {
-                conn.beginTransaction(function (err) {
+                theConnection.beginTransaction(function (err) {
                     assert.ifError(err);
                     async_done();
                 });
             },
 
             function (async_done) {
-                var q = conn.queryRaw("INSERT INTO test_txn (naem) VALUES ('Carl')");
+                var q = theConnection.queryRaw("INSERT INTO test_txn (naem) VALUES ('Carl')");
                 // events are emitted before callbacks are called currently
                 q.on('error', function (err) {
 
-                    var expected = new Error("[Microsoft][" + config.driver + "][SQL Server]Unclosed quotation mark after the character string 'm with STUPID'.");
+                    var expected = new Error("[Microsoft][" + driver + "][SQL Server]Unclosed quotation mark after the character string 'm with STUPID'.");
                     expected.sqlstate = '42S22';
                     expected.code = 207;
 
                     assert.deepEqual(err, expected, "Transaction should have caused an error");
 
-                    conn.rollback(function (err) {
+                    theConnection.rollback(function (err) {
                         assert.ifError(err);
                         async_done();
                     });
@@ -252,7 +259,8 @@ suite( 'txn', function() {
             },
 
             function (async_done) {
-                conn.queryRaw("select * from test_txn", function (err, results) {
+                theConnection.queryRaw("select * from test_txn", function (err, results) {
+                    assert.ifError(err);
                     assert.ifError(err);
 
                     // verify results
@@ -281,23 +289,23 @@ suite( 'txn', function() {
 
     test('begin a transaction and commit (with no async support)', function( test_done ) {
 
-        conn.beginTransaction( function( err ) {
+        theConnection.beginTransaction( function( err ) {
             assert.ifError( err );
         });
 
-        conn.queryRaw( "INSERT INTO test_txn (name) VALUES ('Anne')", function( err, results ) {
+        theConnection.queryRaw( "INSERT INTO test_txn (name) VALUES ('Anne')", function( err, results ) {
             assert.ifError( err );
         });
 
-        conn.queryRaw( "INSERT INTO test_txn (name) VALUES ('Bob')", function( err, results ) {
+        theConnection.queryRaw( "INSERT INTO test_txn (name) VALUES ('Bob')", function( err, results ) {
             assert.ifError( err );
         });
 
-        conn.commit( function( err ) {
+        theConnection.commit( function( err ) {
             assert.ifError( err );
         });
 
-        conn.queryRaw( "select * from test_txn", function( err, results ) {
+        theConnection.queryRaw( "select * from test_txn", function( err, results ) {
             assert.ifError( err );
 
             // verify results
