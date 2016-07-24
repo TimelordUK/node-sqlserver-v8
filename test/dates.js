@@ -17,29 +17,39 @@
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
 
-var sql = require('../');
 var assert = require('assert');
 var supp = require('../demo-support');
-var config = require('./test-config');
 
 suite('date tests', function () {
 
-    var conn_str = config.conn_str;
-    var conn;
-    var support = new supp.DemoSupport(sql, conn_str);
-    var async = new support.Async();
+    var theConnection;
+    this.timeout(20000);
+    var tm;
+    var conn_str;
+    var support;
+    var async;
+    var helper;
+
+    var sql = global.native_sql;
 
     setup(function (test_done) {
-        sql.open( conn_str, function( err, new_conn ) {
-            assert.ifError( err );
-            conn = new_conn;
-            test_done();
-        });
+        supp.GlobalConn.init(sql, function(co) {
+            conn_str = co.conn_str;
+            support = co.support;
+            async = co.async;
+            helper =  co.helper;
+            helper.setVerbose(false);
+            sql.open(conn_str, function (err, new_conn) {
+                assert.ifError(err);
+                theConnection = new_conn;
+                test_done();
+            });
+        })
     });
 
-    teardown( function(done) {
-        conn.close( function( err ) {
-            assert.ifError( err );
+    teardown(function (done) {
+        theConnection.close(function (err) {
+            assert.ifError(err);
             done();
         });
     });
@@ -47,18 +57,19 @@ suite('date tests', function () {
     // this test simply verifies dates round trip.  It doesn't try to verify illegal dates vs. legal dates.
     // SQL Server is assumed to be only returning valid times and dates.
     test('date retrieval verification', function (test_done) {
+
         var testDates = ["1-1-1970", "12-31-1969", "2-29-1904", "2-29-2000"];
 
         var fns = [
             function (async_done) {
 
-                conn.queryRaw("DROP TABLE date_test", function (e) {
+                theConnection.queryRaw("DROP TABLE date_test", function (e) {
                     async_done();
                 });
             },
             function (async_done) {
 
-                conn.queryRaw("CREATE TABLE date_test (id int identity, test_date date)", function (e) {
+                theConnection.queryRaw("CREATE TABLE date_test (id int identity, test_date date)", function (e) {
 
                     assert.ifError(e);
                     async_done();
@@ -66,7 +77,7 @@ suite('date tests', function () {
             },
             function (async_done) {
 
-                conn.queryRaw("CREATE CLUSTERED INDEX IX_date_test ON date_test(id)", function (e) {
+                theConnection.queryRaw("CREATE CLUSTERED INDEX IX_date_test ON date_test(id)", function (e) {
 
                     assert.ifError(e);
                     async_done();
@@ -80,7 +91,7 @@ suite('date tests', function () {
                 }
                 insertQuery = insertQuery.substr(0, insertQuery.length - 1);
                 insertQuery += ";";
-                conn.queryRaw(insertQuery, function (e) {
+                theConnection.queryRaw(insertQuery, function (e) {
 
                     assert.ifError(e);
                     async_done();
@@ -89,7 +100,7 @@ suite('date tests', function () {
             // test valid dates
             function (async_done) {
 
-                conn.queryRaw("SELECT test_date FROM date_test", function (e, r) {
+                theConnection.queryRaw("SELECT test_date FROM date_test", function (e, r) {
 
                     assert.ifError(e);
 
@@ -121,7 +132,7 @@ suite('date tests', function () {
     });
 
     test('test timezone offset correctly offsets js date type', function (test_done) {
-        conn.query("select convert(datetimeoffset(7), '2014-02-14 22:59:59.9999999 +05:00') as dto1, convert(datetimeoffset(7), '2014-02-14 17:59:59.9999999 +00:00') as dto2", function (err, res) {
+        theConnection.query("select convert(datetimeoffset(7), '2014-02-14 22:59:59.9999999 +05:00') as dto1, convert(datetimeoffset(7), '2014-02-14 17:59:59.9999999 +00:00') as dto2", function (err, res) {
             var dto1 = res['dto1'];
             var dto2 = res['dto2'];
             assert(dto1 === dto2);
@@ -145,14 +156,14 @@ suite('date tests', function () {
         var fns = [
             function (async_done) {
 
-                conn.queryRaw("DROP TABLE date_diff_test", function (e) {
+                theConnection.queryRaw("DROP TABLE date_diff_test", function (e) {
                     async_done();
                 });
             },
 
             function (async_done) {
 
-                conn.queryRaw("CREATE TABLE date_diff_test (id int identity, date1 datetime2, date2 datetime2)", function (e) {
+                theConnection.queryRaw("CREATE TABLE date_diff_test (id int identity, date1 datetime2, date2 datetime2)", function (e) {
 
                     assert.ifError(e);
                     async_done();
@@ -161,7 +172,7 @@ suite('date tests', function () {
 
             function (async_done) {
 
-                conn.queryRaw("CREATE CLUSTERED INDEX IX_date_diff_test ON date_diff_test(id)", function (e) {
+                theConnection.queryRaw("CREATE CLUSTERED INDEX IX_date_diff_test ON date_diff_test(id)", function (e) {
 
                     assert.ifError(e);
                     async_done();
@@ -176,7 +187,7 @@ suite('date tests', function () {
                 }
                 insertQuery = insertQuery.substr(0, insertQuery.length - 1);
                 insertQuery = insertQuery + ";";
-                conn.queryRaw(insertQuery, function (e) {
+                theConnection.queryRaw(insertQuery, function (e) {
 
                     assert.ifError(e);
                     async_done();
@@ -186,7 +197,7 @@ suite('date tests', function () {
             // test valid dates
             function (async_done) {
 
-                conn.queryRaw("SELECT date1, date2 FROM date_diff_test ORDER BY id", function (e, r) {
+                theConnection.queryRaw("SELECT date1, date2 FROM date_diff_test ORDER BY id", function (e, r) {
 
                     assert.ifError(e);
 
@@ -216,18 +227,18 @@ suite('date tests', function () {
         var fns =
         [
             function (async_done) {
-                conn.queryRaw("DROP TABLE time_test", function (e) {
+                theConnection.queryRaw("DROP TABLE time_test", function (e) {
                     async_done();
                 });
             },
             function (async_done) {
-                conn.queryRaw("CREATE TABLE time_test (id int identity, test_time time, test_datetime2 datetime2, test_datetimeoffset datetimeoffset)", function (e) {
+                theConnection.queryRaw("CREATE TABLE time_test (id int identity, test_time time, test_datetime2 datetime2, test_datetimeoffset datetimeoffset)", function (e) {
                     assert.ifError(e);
                     async_done();
                 });
             },
             function (async_done) {
-                conn.queryRaw("CREATE CLUSTERED INDEX IX_time_test ON time_test(id)", function (e) {
+                theConnection.queryRaw("CREATE CLUSTERED INDEX IX_time_test ON time_test(id)", function (e) {
                     assert.ifError(e);
                     async_done();
                 });
@@ -245,7 +256,7 @@ suite('date tests', function () {
                 query = query.substr(0, query.length - 1);
                 query += ";";
 
-                conn.queryRaw(query, function (e, r) {
+                theConnection.queryRaw(query, function (e, r) {
 
                     assert.ifError(e);
                     async_done();
@@ -255,7 +266,7 @@ suite('date tests', function () {
 
                 var expectedHour = -1;
 
-                var stmt = conn.queryRaw("SELECT test_time FROM time_test ORDER BY id");
+                var stmt = theConnection.queryRaw("SELECT test_time FROM time_test ORDER BY id");
 
                 stmt.on('error', function (e) {
                     assert.ifError(e);
@@ -274,7 +285,7 @@ suite('date tests', function () {
                 });
             },
             function (async_done) {
-                conn.queryRaw("TRUNCATE TABLE time_test", function (e, r) {
+                theConnection.queryRaw("TRUNCATE TABLE time_test", function (e, r) {
                     assert.ifError(e);
                     async_done();
                 });
@@ -292,7 +303,7 @@ suite('date tests', function () {
                 query = query.substr(0, query.length - 1);
                 query += ";";
 
-                conn.queryRaw(query, function (e, r) {
+                theConnection.queryRaw(query, function (e, r) {
 
                     assert.ifError(e);
                     async_done();
@@ -302,7 +313,7 @@ suite('date tests', function () {
 
                 var expectedMinute = -1;
 
-                var stmt = conn.queryRaw("SELECT test_time FROM time_test ORDER BY id");
+                var stmt = theConnection.queryRaw("SELECT test_time FROM time_test ORDER BY id");
 
                 stmt.on('error', function (e) {
                     assert.ifError(e);
@@ -322,7 +333,7 @@ suite('date tests', function () {
             },
             function (async_done) {
 
-                conn.queryRaw("TRUNCATE TABLE time_test", function (e, r) {
+                theConnection.queryRaw("TRUNCATE TABLE time_test", function (e, r) {
 
                     assert.ifError(e);
                     async_done();
@@ -341,7 +352,7 @@ suite('date tests', function () {
                 query = query.substr(0, query.length - 1);
                 query += ";";
 
-                conn.queryRaw(query, function (e, r) {
+                theConnection.queryRaw(query, function (e, r) {
 
                     assert.ifError(e);
                     async_done();
@@ -351,7 +362,7 @@ suite('date tests', function () {
 
                 var expectedSecond = -1;
 
-                var stmt = conn.queryRaw("SELECT test_time FROM time_test ORDER BY id");
+                var stmt = theConnection.queryRaw("SELECT test_time FROM time_test ORDER BY id");
 
                 stmt.on('error', function (e) {
                     assert.ifError(e);
@@ -371,7 +382,7 @@ suite('date tests', function () {
             },
             function (async_done) {
 
-                conn.queryRaw("TRUNCATE TABLE time_test", function (e, r) {
+                theConnection.queryRaw("TRUNCATE TABLE time_test", function (e, r) {
 
                     assert.ifError(e);
                     async_done();
@@ -392,7 +403,7 @@ suite('date tests', function () {
                 query = query.substr(0, query.length - 1);
                 query += ";";
 
-                conn.queryRaw(query, function (e, r) {
+                theConnection.queryRaw(query, function (e, r) {
 
                     assert.ifError(e);
                     async_done();
@@ -402,7 +413,7 @@ suite('date tests', function () {
 
                 var msCount = -1;
 
-                var stmt = conn.queryRaw("SELECT test_time FROM time_test ORDER BY id");
+                var stmt = theConnection.queryRaw("SELECT test_time FROM time_test ORDER BY id");
 
                 stmt.on('error', function (e) {
                     assert.ifError(e);
@@ -422,7 +433,7 @@ suite('date tests', function () {
             },
             function (async_done) {
 
-                conn.queryRaw("TRUNCATE TABLE time_test", function (e, r) {
+                theConnection.queryRaw("TRUNCATE TABLE time_test", function (e, r) {
 
                     assert.ifError(e);
                     async_done();
@@ -442,7 +453,7 @@ suite('date tests', function () {
                 query = query.substr(0, query.length - 1);
                 query += ";";
 
-                conn.queryRaw(query, function (e, r) {
+                theConnection.queryRaw(query, function (e, r) {
 
                     assert.ifError(e);
                     async_done();
@@ -452,7 +463,7 @@ suite('date tests', function () {
 
                 var nsCount = -1;
 
-                var stmt = conn.queryRaw("SELECT test_time FROM time_test ORDER BY id");
+                var stmt = theConnection.queryRaw("SELECT test_time FROM time_test ORDER BY id");
 
                 stmt.on('error', function (e) {
                     assert.ifError(e);
@@ -494,18 +505,18 @@ suite('date tests', function () {
         var fns =
             [
                 function (async_done) {
-                    conn.queryRaw("DROP TABLE datetimeoffset_test", function (e) {
+                    theConnection.queryRaw("DROP TABLE datetimeoffset_test", function (e) {
                         async_done();
                     });
                 },
                 function (async_done) {
-                    conn.query("CREATE TABLE datetimeoffset_test (id int identity, test_datetimeoffset datetimeoffset)", function (e) {
+                    theConnection.query("CREATE TABLE datetimeoffset_test (id int identity, test_datetimeoffset datetimeoffset)", function (e) {
                         assert.ifError(e);
                         async_done();
                     });
                 },
                 function (async_done) {
-                    conn.queryRaw("CREATE CLUSTERED INDEX IX_datetimeoffset_test ON datetimeoffset_test(id)", function (e) {
+                    theConnection.queryRaw("CREATE CLUSTERED INDEX IX_datetimeoffset_test ON datetimeoffset_test(id)", function (e) {
                         assert.ifError(e);
                         async_done();
                     });
@@ -523,14 +534,14 @@ suite('date tests', function () {
                     query = query.substr(0, query.length - 1);
                     query += ";";
 
-                    conn.queryRaw(query, function (e, r) {
+                    theConnection.queryRaw(query, function (e, r) {
 
                         assert.ifError(e);
                         async_done();
                     });
                 },
                 function (async_done) {
-                    var stmt = conn.queryRaw("SELECT test_datetimeoffset FROM datetimeoffset_test ORDER BY id");
+                    var stmt = theConnection.queryRaw("SELECT test_datetimeoffset FROM datetimeoffset_test ORDER BY id");
                     var tz = -13;
 
                     stmt.on('error', function (e) {

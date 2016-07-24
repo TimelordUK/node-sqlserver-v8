@@ -130,11 +130,12 @@ suite('userbind', function () {
     }
 
     test('user bind DateTime2 to sql type datetime2(7) - with scale set too low, should error', function (test_done) {
-        var now = new Date();
+        var jsonDate = "2011-05-26T07:56:00.123Z";
+        var then = new Date(jsonDate);
         var params = {
             query : 'declare @v DATETIME2(7) = ?; select @v as v',
-            min : now,
-            max : now,
+            min : then,
+            max : then,
             setter: function (v) {
                 return sql.DateTime2(v, 1); // set scale too low
             }

@@ -4,6 +4,7 @@ for /L %%n in (1,1,100) do (
 rem FOR %%A IN (prepared.js params.js query.js querytimeout.js connect.js bulk.js sproc.js prepared.js userbind.js) DO (
 rem         node runtest.js -t %%A >> ./test.txt 2>&1
 rem    )
-    node runtest -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t sproc.js -t userbind.js -t prepared.js
+    node runtest -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t sproc.js -t prepared.js -t userbind.js -t dates.js >> ./test.txt 2>&1
+    rem node runtest -t userbind.js >> ./test.txt 2>&1
 	echo "next " >> ./test.txt 2>&1
 )
