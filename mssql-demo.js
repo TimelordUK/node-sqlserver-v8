@@ -17,10 +17,21 @@ var fs = require('fs');
  sqllocaldb info node
 */
 
-var conn_str = "Driver={SQL Server Native Client 11.0};Server= np:\\\\.\\pipe\\LOCALDB#E9B74E99\\tsql\\query;Database={scratch};Trusted_Connection=Yes;";
+var test_conn_str = "Driver={SQL Server Native Client 11.0};Server= np:\\\\.\\pipe\\LOCALDB#8765A478\\tsql\\query;Database={scratch};Trusted_Connection=Yes;";
 
-var support = new supp.DemoSupport(sql, conn_str);
-var async = new support.Async();
+// if you have a sqllocaldb running with instance called "node" and db "scratch" then
+// this will be used automatically.  To use another connection string for test
+// uncomment below.
+
+var conn_str;
+
+var support;
+var async;
+var helper;
+var driver;
+var database;
+var procedureHelper;
+var parsedJSON;
 
 var demos = [
     // open connection, simple query and close.
@@ -37,9 +48,25 @@ var demos = [
     event
 ];
 
-async.series(demos, function() {
-    console.log("demo has finished.");
-});
+supp.GlobalConn.init(sql, function (co) {
+    conn_str = co.conn_str;
+    support = co.support;
+    procedureHelper = new support.ProcedureHelper(conn_str);
+    procedureHelper.setVerbose(false);
+    async = co.async;
+    helper = co.helper;
+    driver = co.driver;
+    database = co.database;
+    parsedJSON = helper.getJSON();
+
+    console.log(conn_str);
+    async.series(demos, function() {
+        console.log("demo has finished.");
+    });
+}
+// to override an auto discovered sqllocaldb str assign above and uncomment below.
+// , test_conn_str
+);
 
 function event(done) {
 
@@ -186,9 +213,9 @@ function query(done) {
                 query_timeout: 2
             };
 
-            conn.query(queryObj, function (err, res) {
+            conn.query(queryObj, function (err) {
                 assert.check(err != null);
-                assert.check(err.message.indexOf('Query timeout expired') > 0)
+                assert.check(err.message.indexOf('Query timeout expired') > 0);
                 async_done();
             });
         },
@@ -254,8 +281,7 @@ function procedure(done) {
             def = def.replace(/<name>/g, sp_name);
             console.log("create a procedure " + sp_name);
             console.log(def);
-            var ph = new support.ProcedureHelper();
-            ph.createProcedure(sp_name, def, function() {
+            procedureHelper.createProcedure(sp_name, def, function() {
                 async_done();
             })
         },
@@ -347,6 +373,34 @@ function connection(done) {
     })
 }
 
+function empSelectSQL() {
+
+    return `SELECT [BusinessEntityID]
+     ,[NationalIDNumber]
+     ,[LoginID]
+     ,[OrganizationNode]
+     ,[OrganizationLevel]
+     ,[JobTitle]
+     ,[BirthDate]
+     ,[MaritalStatus]
+     ,[Gender]
+     ,[HireDate]
+     ,[SalariedFlag]
+     ,[VacationHours]
+     ,[SickLeaveHours]
+     ,[CurrentFlag]
+     ,[rowguid]
+     ,[ModifiedDate]
+     FROM [scratch].[dbo].[Employee]
+     WHERE BusinessEntityID = ?`;
+}
+
+function empDeleteSQL() {
+
+    return `DELETE FROM [scratch].[dbo].[Employee]
+        WHERE BusinessEntityID = ?`;
+}
+
 function prepared(done) {
 
 // create and populate table - fetch prepared statements to select and delete records for employee table.
@@ -355,8 +409,23 @@ function prepared(done) {
 
     var async = new support.Async();
     var assert = new support.Assert();
-    var statements = null;
+
+    var statements = {
+        select : null,
+        delete : null,
+    };
+
+    var table_name = "Employee";
+
     var conn = null;
+
+    function employeePrepare(query, done) {
+        conn.prepare(query, function (err, ps) {
+            assert.ifError(err);
+            done(ps);
+        });
+    }
+
     var fns = [
 
         function(async_done) {
@@ -375,15 +444,49 @@ function prepared(done) {
             });
         },
 
-        function(async_done) {
-            console.log("preparing a select and delete statement.");
-                support.prepareEmployee(conn, function (prepared) {
-                assert.check(prepared != null, "prepared statement object is null.");
-                assert.check(prepared.select != null, "prepared select is null");
-                assert.check(prepared.delete != null, "prepared delete is null");
-                statements = prepared;
+        // drop / create an Employee table.
+        function (async_done) {
+            helper.dropCreateTable({
+                name: table_name
+            }, function () {
                 async_done();
             });
+        },
+
+        // insert test set using bulk insert
+        function (async_done) {
+            var tm = conn.tableMgr();
+            tm.bind(table_name, function (bulkMgr) {
+                bulkMgr.insertRows(parsedJSON, function () {
+                    async_done();
+                });
+            });
+        },
+
+        // prepare a select statement.
+        function (async_done) {
+            console.log("preparing a select statement.");
+            employeePrepare(empSelectSQL(), function (ps) {
+                statements.select = ps;
+                async_done();
+            })
+        },
+
+        // prepare a delete statement.
+        function (async_done) {
+            console.log("preparing a delete statement.");
+            employeePrepare(empDeleteSQL(), function (ps) {
+                statements.delete = ps;
+                async_done();
+            })
+        },
+
+        function(async_done) {
+            console.log("check statements.");
+            assert.check(statements != null, "prepared statement object is null.");
+            assert.check(statements.select != null, "prepared select is null");
+            assert.check(statements.delete != null, "prepared delete is null");
+            async_done();
         },
 
         function(async_done) {

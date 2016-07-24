@@ -73,19 +73,32 @@ var GlobalConn = (function() {
         });
     }
 
-    function init(sql, done) {
+    function init(sql, done, candidate_conn_str) {
         var ds = new DemoSupport();
-        getLocalConnStr(function (cs) {
+
+        if (candidate_conn_str == null) {
+            getLocalConnStr(function (cs) {
+                var ret = {
+                    driver: driver,
+                    database: database,
+                    conn_str: cs,
+                    support: new DemoSupport(sql, cs),
+                    async: new ds.Async(),
+                    helper: new ds.EmployeeHelper(sql, cs),
+                };
+                done(ret);
+            })
+        }else {
             var ret = {
-                driver : driver,
-                database : database,
-                conn_str : cs,
-                support : new DemoSupport(sql, cs),
-                async : new ds.Async(),
-                helper : new ds.EmployeeHelper(sql, cs),
+                driver: driver,
+                database: database,
+                conn_str: candidate_conn_str,
+                support: new DemoSupport(sql, candidate_conn_str),
+                async: new ds.Async(),
+                helper: new ds.EmployeeHelper(sql, candidate_conn_str),
             };
             done(ret);
-        })
+        }
     }
 
     function getConnStr() {
