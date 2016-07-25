@@ -77,6 +77,5 @@
   },
   "directories": {},
   "dependencies": {
-    "node-sqlserver-v8": "latest"
   }
 }
