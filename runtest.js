@@ -1,6 +1,6 @@
 var Mocha = require('mocha');
 var demo = require('./demo-support');
-var sql = require('node-sqlserver-v8');
+var sql = require('msnodesqlv8');
 
 runTest();
 

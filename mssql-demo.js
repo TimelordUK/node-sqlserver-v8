@@ -1,7 +1,7 @@
 
 // require the module so it can be used in your node JS code.
 
-var sql = require('node-sqlserver-v8');
+var sql = require('msnodesqlv8');
 var supp = require('./demo-support');
 var fs = require('fs');
 
