@@ -12,7 +12,7 @@
       "name": "Stephen James"
     }
   ],
-  "version": "0.2.1",
+  "version": "0.2.2",
   "keywords": [
     "sql",
     "prepared",
@@ -76,6 +76,5 @@
     "tarball": "http://registry.npmjs.org/msnodesqlv8/-/msnodesqlv8-0.1.35.tgz"
   },
   "directories": {},
-  "dependencies": {
-  }
+  "dependencies": {}
 }
