@@ -14,13 +14,11 @@ echo %cmd%
 echo %arch%
 
 if "%cmd%"=="node" (
-    echo "NODE BRACH"
     FOR /F "delims=" %%i IN ('node -v') DO set node_ver=%%i
     echo "node %node_ver%"
     call node-gyp clean configure build --verbose --arch=%arch%
     copy build\Release\sqlserverv8.node lib\bin\sqlserverv8.node.%node_ver%.%arch%.node
 ) else (
-        echo "ELSE BRACH"
         if "%cmd%"=="electron" (
         FOR /F "delims=" %%i IN ('node_modules\.bin\electron.cmd --version') DO set electron_ver=%%i
         echo "electron %electron_ver%"
