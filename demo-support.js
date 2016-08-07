@@ -16,14 +16,6 @@ var GlobalConn = (function() {
 
         childProcess.spawn = mySpawn;
 
-        function esc(a) {
-            var ss = a.replace(/\\/g, "\\\\")
-                .replace(/\$/g, "\\$")
-                .replace(/'/g, "\\'")
-                .replace(/"/g, "\\\"");
-            return ss;
-        }
-
         function extract(a) {
             a = a.trim();
             var idx = a.indexOf('np:');
@@ -68,7 +60,7 @@ var GlobalConn = (function() {
 
     function getLocalConnStr(done) {
         getSqlLocalDbPipe(function (pipe) {
-            conn = "Driver={" + driver + "};Server=" + pipe + ";Database={" + database + "};Trusted_Connection=Yes;";
+            var conn = "Driver={" + driver + "}; Server=" + pipe + "; Database={" + database + "}; Trusted_Connection=Yes;";
             done(conn);
         });
     }
@@ -90,12 +82,12 @@ var GlobalConn = (function() {
             })
         }else {
             var ret = {
-                driver: driver,
-                database: database,
-                conn_str: candidate_conn_str,
-                support: new DemoSupport(sql, candidate_conn_str),
-                async: new ds.Async(),
-                helper: new ds.EmployeeHelper(sql, candidate_conn_str),
+                driver : driver,
+                database : database,
+                conn_str : candidate_conn_str,
+                support : new DemoSupport(sql, candidate_conn_str),
+                async : new ds.Async(),
+                helper : new ds.EmployeeHelper(sql, candidate_conn_str),
             };
             done(ret);
         }
@@ -226,8 +218,9 @@ function DemoSupport(native) {
             var name = params.name;
             var type = params.type;
             var insert = false;
-            if (params.hasOwnProperty("insert"))
+            if (params.hasOwnProperty("insert")) { //noinspection JSUnresolvedVariable
                 insert = params.insert;
+            }
             var assert = new Assert();
             var conn;
 
@@ -338,105 +331,6 @@ function DemoSupport(native) {
         return this;
     }
 
-    function prepareEmployee(conn, done) {
-
-        var assert = new Assert();
-        var helper = new EmployeeHelper(sql, conn_str);
-        var parsedJSON = helper.getJSON();
-
-        function empSelectSQL() {
-
-            return `SELECT [BusinessEntityID]
-     ,[NationalIDNumber]
-     ,[LoginID]
-     ,[OrganizationNode]
-     ,[OrganizationLevel]
-     ,[JobTitle]
-     ,[BirthDate]
-     ,[MaritalStatus]
-     ,[Gender]
-     ,[HireDate]
-     ,[SalariedFlag]
-     ,[VacationHours]
-     ,[SickLeaveHours]
-     ,[CurrentFlag]
-     ,[rowguid]
-     ,[ModifiedDate]
-     FROM [scratch].[dbo].[Employee]
-     WHERE BusinessEntityID = ?`;
-        }
-
-        function empDeleteSQL() {
-
-            return `DELETE FROM [scratch].[dbo].[Employee]
-        WHERE BusinessEntityID = ?`;
-        }
-
-        var table_name = "Employee";
-        var prepared = {
-            select: null,
-            delete: null
-        };
-
-        var actions = [
-
-            // open a connection.
-
-            // drop / create an Employee table.
-            function (async_done) {
-                console.log("call utility function dropCreateTable ....");
-                helper.dropCreateTable({
-                    name: table_name
-                }, function () {
-                    console.log(".... dropCreateTable done.");
-                    async_done();
-                });
-            },
-
-            // insert test set using bulk insert
-            function (async_done) {
-                var tm = conn.tableMgr();
-                tm.bind(table_name, function (bulkMgr) {
-                    console.log("insertRows " + parsedJSON.length);
-                    bulkMgr.insertRows(parsedJSON, function () {
-                        async_done();
-                    });
-                });
-            },
-
-            // prepare a select statement.
-            function (async_done) {
-                employeePrepare(empSelectSQL(), function (ps) {
-                    prepared.select = ps;
-                    async_done();
-                })
-            },
-
-            // prepare a delete statement.
-            function (async_done) {
-                employeePrepare(empDeleteSQL(), function (ps) {
-                    prepared.delete = ps;
-                    async_done();
-                })
-            }
-        ];
-
-        function employeePrepare(query, done) {
-            console.log("prepare statement " + query);
-            conn.prepare(query, function (err, ps) {
-                assert.ifError(err);
-                done(ps);
-            });
-        }
-
-        var async = new Async();
-        async.series(actions,
-            function () {
-                done(prepared);
-            });
-    }
-
-    this.prepareEmployee = prepareEmployee;
     this.Async = Async;
     this.Assert = Assert;
     this.EmployeeHelper = EmployeeHelper;

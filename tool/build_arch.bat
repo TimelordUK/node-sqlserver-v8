@@ -1,0 +1,30 @@
+set path=%path%;%~dp0
+set cmd=%1
+set arch=%2
+
+if "%cmd%"=="" (
+    set cmd="node"
+)
+
+if "%arch%"=="" (
+    set arch="x64"
+)
+
+echo %cmd%
+echo %arch%
+
+if "%cmd%"=="node" (
+    echo "NODE BRACH"
+    FOR /F "delims=" %%i IN ('node -v') DO set node_ver=%%i
+    echo "node %node_ver%"
+    call node-gyp clean configure build --verbose --arch=%arch%
+    copy build\Release\sqlserverv8.node lib\bin\sqlserverv8.node.%node_ver%.%arch%.node
+) else (
+        echo "ELSE BRACH"
+        if "%cmd%"=="electron" (
+        FOR /F "delims=" %%i IN ('node_modules\.bin\electron.cmd --version') DO set electron_ver=%%i
+        echo "electron %electron_ver%"
+        call node-gyp rebuild --target=%electron_ver% --dist-url=https://atom.io/download/atom-shell --verbose --arch=%arch%
+        copy build\Release\sqlserverv8.node lib\bin\sqlserverv8.electron.%electron_ver%.%arch%.node
+    )
+)

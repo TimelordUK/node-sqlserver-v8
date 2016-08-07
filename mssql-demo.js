@@ -17,7 +17,7 @@ var fs = require('fs');
  sqllocaldb info node
 */
 
-var test_conn_str = "Driver={SQL Server Native Client 11.0};Server= np:\\\\.\\pipe\\LOCALDB#8765A478\\tsql\\query;Database={scratch};Trusted_Connection=Yes;";
+// var test_conn_str = "Driver={SQL Server Native Client 11.0};Server= np:\\\\.\\pipe\\LOCALDB#8765A478\\tsql\\query;Database={scratch};Trusted_Connection=Yes;";
 
 // if you have a sqllocaldb running with instance called "node" and db "scratch" then
 // this will be used automatically.  To use another connection string for test
@@ -563,7 +563,7 @@ function table(done) {
 
     var async = new support.Async();
     var assert = new support.Assert();
-    var helper =  new support.EmployeeHelper(sql, conn_str);
+    var helper = new support.EmployeeHelper(sql, conn_str);
     var conn = null;
     var table_name = "Employee";
     var bm = null;
@@ -590,7 +590,7 @@ function table(done) {
         function (async_done) {
             console.log("create an employee table.");
             helper.dropCreateTable({
-                name : table_name
+                name: table_name
             }, function () {
                 async_done();
             });
@@ -599,7 +599,7 @@ function table(done) {
         function (async_done) {
             var tm = conn.tableMgr();
             console.log("bind to table " + table_name);
-            tm.bind(table_name, function(bulk) {
+            tm.bind(table_name, function (bulk) {
                 bm = bulk;
                 assert.check(bm != null, "no bulk manager returned.");
                 async_done();
@@ -608,14 +608,14 @@ function table(done) {
 
         function (async_done) {
             console.log("bulk insert records.");
-            bm.insertRows(records, function() {
+            bm.insertRows(records, function () {
                 async_done();
             });
         },
 
         function (async_done) {
             console.log("check rows have been inserted.");
-            conn.query("select * from " + table_name, function(err, res) {
+            conn.query("select * from " + table_name, function (err, res) {
                 assert.ifError(err);
                 assert.check(res.length == records.length);
                 async_done();
@@ -626,11 +626,11 @@ function table(done) {
             console.log("update a column.");
             var newDate = new Date("2015-01-01T00:00:00.000Z");
             var modifications = [];
-            records.forEach(function(emp) {
+            records.forEach(function (emp) {
                 emp.ModifiedDate = newDate;
-                modifications.push( {
-                    BusinessEntityID : emp.BusinessEntityID,
-                    ModifiedDate : newDate
+                modifications.push({
+                    BusinessEntityID: emp.BusinessEntityID,
+                    ModifiedDate: newDate
                 });
             });
 
@@ -641,21 +641,21 @@ function table(done) {
             ];
 
             bm.setUpdateCols(updateCols);
-            bm.updateRows(modifications, function() {
+            bm.updateRows(modifications, function () {
                 async_done();
             });
         },
 
         // use the select signature to construct a prepared query.
 
-        function(async_done) {
+        function (async_done) {
             var summary = bm.getSummary();
             console.log(summary.select_signature);
             console.log("prepare the above statement.");
             var select = summary.select_signature;
-            conn.prepare(select, function(err, ps) {
+            conn.prepare(select, function (err, ps) {
                 assert.ifError(err);
-                ps.preparedQuery([1], function(err, res) {
+                ps.preparedQuery([1], function (err, res) {
                     assert.ifError(err);
                     assert.check(res.length == 1);
                     async_done();
@@ -663,17 +663,17 @@ function table(done) {
             });
         },
 
-        function(async_done) {
+        function (async_done) {
             console.log("delete the records using bulk operation.");
             var keys = helper.extractKey(records, 'BusinessEntityID');
-            bm.deleteRows(keys, function() {
-               async_done();
+            bm.deleteRows(keys, function () {
+                async_done();
             });
         },
 
         function (async_done) {
             console.log("check rows have been deleted.");
-            conn.query("select * from " + table_name, function(err, res) {
+            conn.query("select * from " + table_name, function (err, res) {
                 assert.ifError(err);
                 assert.check(res.length == 0);
                 async_done();
@@ -687,7 +687,7 @@ function table(done) {
             });
         },
 
-        function(async_done) {
+        function (async_done) {
             console.log("...... table ends.");
             async_done();
         }
