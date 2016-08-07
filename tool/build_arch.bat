@@ -2,6 +2,9 @@ set path=%path%;%~dp0
 set cmd=%1
 set arch=%2
 
+FOR /F "delims=" %%i IN ('node -v') DO set node_ver=%%i
+echo "node %node_ver%"
+
 if "%cmd%"=="" (
     set cmd="node"
 )
@@ -14,8 +17,6 @@ echo %cmd%
 echo %arch%
 
 if "%cmd%"=="node" (
-    FOR /F "delims=" %%i IN ('node -v') DO set node_ver=%%i
-    echo "node %node_ver%"
     call node-gyp clean configure build --verbose --arch=%arch%
     copy build\Release\sqlserverv8.node lib\bin\sqlserverv8.node.%node_ver%.%arch%.node
 ) else (
