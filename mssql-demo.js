@@ -131,7 +131,7 @@ function event(done) {
         function (async_done) {
             console.log("close connection.");
             conn.close(function () {
-                async_done();
+                async_done()
             });
         },
 
