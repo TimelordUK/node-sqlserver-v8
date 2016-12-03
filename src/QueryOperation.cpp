@@ -13,7 +13,7 @@ namespace mssql
 		query(query),
 		output_param_count(0)
 	{
-		statementId = queryId;
+		statementId = static_cast<long>(queryId);
 		params = make_shared<BoundDatumSet>();
 	}
 

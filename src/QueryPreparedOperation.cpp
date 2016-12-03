@@ -11,7 +11,7 @@ namespace mssql
 		timeout(timeout),
 		output_param_count(0)
 	{
-		statementId = queryId;
+		statementId = static_cast<long>(queryId);
 		params = make_shared<BoundDatumSet>();
 	}
 

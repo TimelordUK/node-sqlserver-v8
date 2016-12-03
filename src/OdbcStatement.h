@@ -33,13 +33,13 @@ namespace mssql
 	class OdbcStatement
 	{
 	public:
-		OdbcStatement(size_t statementId, shared_ptr<OdbcConnectionHandle> c);
+		OdbcStatement(long statementId, shared_ptr<OdbcConnectionHandle> c);
 		virtual ~OdbcStatement();
 		SQLLEN RowCount() const { return resultset != nullptr ? resultset->RowCount() : -1; }
 		shared_ptr<ResultSet> GetResultSet() const
 		{ return resultset; } 
 
-		size_t getStatementId() const
+		long getStatementId() const
 		{ return statementId; }
 
 		bool isPrepared() const 
@@ -105,7 +105,7 @@ namespace mssql
 		shared_ptr<OdbcError> error;
 
 		bool endOfResults;
-		size_t statementId;
+		long statementId;
 		bool prepared;
 
 		// set binary true if a binary Buffer should be returned instead of a JS string

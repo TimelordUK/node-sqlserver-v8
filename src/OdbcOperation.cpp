@@ -34,7 +34,7 @@ namespace mssql
 		failed(false),
 		failure(nullptr)
 	{
-		statementId = queryId;
+		statementId = static_cast<long>(queryId);
 		nodeTypeFactory fact;
 		output_param = fact.null();
 	}
@@ -48,7 +48,7 @@ namespace mssql
 		failed(false),
 		failure(nullptr)
 	{
-		statementId = queryId;
+		statementId = static_cast<long>(queryId);
 		nodeTypeFactory fact;
 		output_param = fact.null();
 	}
@@ -79,13 +79,13 @@ namespace mssql
 
 	void OdbcOperation::getFailure()
 	{
-		if (connection != nullptr) {
+		if (connection) {
 			failure = connection->LastError();
 		}
-		if (failure == nullptr && statement != nullptr) {
+		if (!failure && statement) {
 			failure = statement->LastError();
 		}
-		if (failure == nullptr)
+		if (!failure)
 		{
 			failure = make_shared<OdbcError>("unknown", "internal error", -1);
 		}
@@ -107,7 +107,7 @@ namespace mssql
 		err->Set(fact.newString("sqlstate"), fact.newString(failure->SqlState()));
 		err->Set(fact.newString("code"), fact.newInteger(failure->Code()));
 		args[0] = err;
-		int argc = 1;
+		auto argc = 1;
 		return argc;
 	}
 
@@ -120,7 +120,7 @@ namespace mssql
 		args[1] = fact.newLocalValue(arg);
 		int c = output_param->IsNull() ? 0 : output_param.As<Array>()->Length();
 		if (c > 0) args[2] = output_param;
-		int argc = c == 0 ? 2 : 3;
+		auto argc = c == 0 ? 2 : 3;
 		return argc;
 	}
 

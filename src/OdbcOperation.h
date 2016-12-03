@@ -41,7 +41,7 @@ namespace mssql
 		Handle<Value> output_param;
 		Local<Object> cb;
 		void fetchStatement();
-		size_t statementId;
+		long statementId;
 
 	private:
 

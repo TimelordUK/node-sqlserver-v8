@@ -14,7 +14,7 @@ namespace mssql
 	{
 		//fprintf(stderr, "invoke TryClose statementId = %d operationId = %llu\n",
 		//	statementId,
-	//		OperationID );
+		//	OperationID );
 		return connection->TryClose();
 	}
 

@@ -31,7 +31,7 @@ namespace mssql
 	{
 		// fprintf(stderr, ">> InitializeEnvironment\n\n");
 
-		SQLRETURN ret = SQLSetEnvAttr(nullptr, SQL_ATTR_CONNECTION_POOLING, reinterpret_cast<SQLPOINTER>(SQL_CP_ONE_PER_HENV), 0);
+		auto ret = SQLSetEnvAttr(nullptr, SQL_ATTR_CONNECTION_POOLING, reinterpret_cast<SQLPOINTER>(SQL_CP_ONE_PER_HENV), 0);
 		if (!SQL_SUCCEEDED(ret)) { return false; }
 
 		if (!environment.Alloc()) { return false; }
@@ -62,13 +62,13 @@ namespace mssql
 	bool OdbcConnection::TryClose()
 	{
 		if (connectionState != Closed)  // fast fail before critical section
-		{
-			statements->clear();
+		{			
 			ScopedCriticalSectionLock critSecLock(closeCriticalSection);
+			//fprintf(stderr, "TryClose - %llu\n", statements->size());
+			statements->clear();
 			if (connectionState != Closed)
 			{
 				SQLDisconnect(*connection);
-				//connection->Free();
 				connectionState = Closed;
 			}
 		}
@@ -98,7 +98,7 @@ namespace mssql
 		SQLRETURN ret;
 		if (timeout > 0)
 		{
-			SQLPOINTER to = reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout));
+			auto to = reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout));
 			ret = SQLSetConnectAttr(*connection, SQL_ATTR_CONNECTION_TIMEOUT, to, 0);
 			if (!CheckOdbcError(ret)) return false;
 
@@ -118,18 +118,17 @@ namespace mssql
 	
 		if (!connection->Alloc(environment)) {
 			error = environment.LastError();
-			fprintf(stderr, "RETURN_ODBC_ERROR - free environment handle\n\n");
+			//fprintf(stderr, "RETURN_ODBC_ERROR - free environment handle\n\n");
 			environment.Free();
 			return false;
 		}
-
-		
+	
 		statements = make_shared<OdbcStatementCache>(connection);
 
 		ret = openTimeout(timeout);
 		if (!CheckOdbcError(ret)) return false;
-		SQLWCHAR * conn_str = const_cast<wchar_t *>(connectionString.c_str());
-		SQLSMALLINT len = static_cast<SQLSMALLINT>(connectionString.length());
+		auto * conn_str = const_cast<wchar_t *>(connectionString.c_str());
+		auto len = static_cast<SQLSMALLINT>(connectionString.length());
 		ret = SQLDriverConnect(*connection, nullptr, conn_str, len, nullptr, 0, nullptr, SQL_DRIVER_NOPROMPT);
 		if (!CheckOdbcError(ret)) return false;
 
@@ -140,7 +139,7 @@ namespace mssql
 	bool OdbcConnection::TryBeginTran(void)
 	{
 		// turn off autocommit
-		SQLPOINTER acoff = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_OFF);
+		auto acoff = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_OFF);
 		auto ret = SQLSetConnectAttr(*connection, SQL_ATTR_AUTOCOMMIT, acoff, SQL_IS_UINTEGER);
 		if (!CheckOdbcError(ret)) return false;
 
@@ -149,18 +148,19 @@ namespace mssql
 	
 	void OdbcConnection::send(shared_ptr<OdbcOperation> op) const
 	{
+		//fprintf(stderr, "OdbcConnection send\n");
 		op->fetchStatement();
-		if (op->statement != nullptr) {
-			op->mgr = ops;
-			ops->Add(op);
-		}
+		//fprintf(stderr, "OdbcConnection fetched\n");
+		//fprintf(stderr, "OdbcConnection statement %p\n", op->statement.get());
+		op->mgr = ops;
+		ops->Add(op);
 	}
 
 	bool OdbcConnection::TryEndTran(SQLSMALLINT completionType)
 	{
 		auto ret = SQLEndTran(SQL_HANDLE_DBC, *connection, completionType);
 		if (!CheckOdbcError(ret)) return false;
-		SQLPOINTER acon = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_ON);
+		auto acon = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_ON);
 		// put the connection back into auto commit mode
 		ret = SQLSetConnectAttr(*connection, SQL_ATTR_AUTOCOMMIT, acon, SQL_IS_UINTEGER);
 		if (!CheckOdbcError(ret)) return false;

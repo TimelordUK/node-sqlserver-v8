@@ -30,28 +30,30 @@ namespace mssql
 	size_t getSize(BoundDatumSet& params)
 	{
 		auto f = params.begin();
-		size_t size = f != params.end() ? f->getIndVec().size() : 0;
+		auto size = f != params.end() ? f->getIndVec().size() : 0;
 		return size;
 	}
 
 	OdbcStatement::~OdbcStatement()
 	{
-		//fprintf(stderr, "destruct OdbcStatement ID = %llu\n ", getStatementId());
+		auto id = getStatementId();
+		//fprintf(stderr, "destruct OdbcStatement ID = %ld\n ", id);
 		//if (statement) {
 		//	statement->Free();
 		//}
 	}
 
-	OdbcStatement::OdbcStatement(size_t statementId, shared_ptr<OdbcConnectionHandle> c)
+	OdbcStatement::OdbcStatement(long statementId, shared_ptr<OdbcConnectionHandle> c)
 		:	
 		connection(c),
 		error(nullptr),
 		endOfResults(true),
-		statementId(statementId),
+		statementId(static_cast<long>(statementId)),
 		prepared(false),
 		resultset(nullptr),
 		boundParamsSet(nullptr)
 	{
+		//fprintf(stderr, "OdbcStatement::OdbcStatement OdbcStatement ID = %ld\n ", statementId);
 		statement = make_shared<OdbcStatementHandle>();
 		if (!statement->Alloc(*connection))
 		{
@@ -134,7 +136,7 @@ namespace mssql
 
 	bool OdbcStatement::ReturnOdbcError()
 	{
-		if (statement == nullptr) return false;
+		if (!statement) return false;
 		error = statement->LastError();
 		//fprintf(stderr, "%s\n", error->Message());
 		// fprintf(stderr, "RETURN_ODBC_ERROR - free statement handle\n\n");
@@ -259,7 +261,7 @@ namespace mssql
 		preparedStorage = make_shared<BoundDatumSet>();
 		resultset = make_unique<ResultSet>(numCols);
 
-		for (int i = 0; i < numCols; i++) {
+		for (auto i = 0; i < numCols; i++) {
 			readNext(i);
 		}
 
@@ -305,7 +307,7 @@ namespace mssql
 		}
 
 		endOfResults = true;     // reset 
-		SQLRETURN ret = queryTimeout(timeout);
+		auto ret = queryTimeout(timeout);
 		if (!CheckOdbcError(ret)) return false;
 
 		SQLWCHAR * sql_str = const_cast<wchar_t *>(query.c_str());

@@ -22,8 +22,12 @@
 
 namespace mssql
 {
-	OdbcHandle::OdbcHandle(SQLSMALLINT ht) : HandleType(ht), handle(nullptr)
+	OdbcHandle::OdbcHandle(SQLSMALLINT ht) 
+		: 
+		HandleType(ht), 
+		handle(nullptr)
 	{
+		//fprintf(stderr, "OdbcHandle::OdbcHandle %i\n", HandleType);
 	}
 
 	OdbcHandle::~OdbcHandle()
@@ -34,9 +38,10 @@ namespace mssql
 	bool OdbcHandle::Alloc()
 	{
 		assert(handle == SQL_NULL_HANDLE);
-		SQLRETURN ret = SQLAllocHandle(HandleType, nullptr, &handle);
+		auto ret = SQLAllocHandle(HandleType, nullptr, &handle);
 		if (!SQL_SUCCEEDED(ret))
 		{
+			handle = nullptr;
 			return false;
 		}
 		return true;
@@ -45,9 +50,11 @@ namespace mssql
 	bool OdbcHandle::Alloc(const OdbcHandle parent)
 	{
 		assert(handle == SQL_NULL_HANDLE);
-		SQLRETURN ret = SQLAllocHandle(HandleType, parent, &handle);
+		auto ret = SQLAllocHandle(HandleType, parent, &handle);
+		//fprintf(stderr, "Alloc OdbcHandle %i %p\n", HandleType, handle);
 		if (!SQL_SUCCEEDED(ret))
 		{
+			handle = nullptr;
 			return false;
 		}
 		return true;
@@ -56,9 +63,10 @@ namespace mssql
 	void OdbcHandle::Free()
 	{
 		if (handle != nullptr)
-		{
-			handle = nullptr;
+		{	
+			//fprintf(stderr, "destruct OdbcHandle %i %p\n", HandleType, handle);
 			SQLFreeHandle(HandleType, handle);
+			handle = nullptr;
 		}
 	}
 
@@ -75,7 +83,7 @@ namespace mssql
 		SQLINTEGER nativeError;
 		SQLSMALLINT actual;
 
-		SQLRETURN ret = SQLGetDiagRec(HandleType, handle, 1, wszSqlState, &nativeError, nullptr, 0, &actual);
+		auto ret = SQLGetDiagRec(HandleType, handle, 1, wszSqlState, &nativeError, nullptr, 0, &actual);
 		assert(ret != SQL_INVALID_HANDLE);
 		assert(ret != SQL_NO_DATA);
 		assert(SQL_SUCCEEDED(ret));
@@ -84,8 +92,8 @@ namespace mssql
 		ret = SQLGetDiagRec(HandleType, handle, 1, wszSqlState, &nativeError, &buffer[0], actual + 1, &actual);
 		assert(SQL_SUCCEEDED(ret));
 
-		string sqlstate = w2a(wszSqlState);
-		string message = w2a(buffer.data());
+		auto sqlstate = w2a(wszSqlState);
+		auto message = w2a(buffer.data());
 		return make_shared<OdbcError>(sqlstate.c_str(), message.c_str(), nativeError);
 	}
 }

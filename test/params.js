@@ -119,6 +119,25 @@ suite('params', function () {
             });
     }
 
+    test('verify buffer longer than column causes error', function (test_done) {
+        var b = new Buffer('0102030405060708090a', 'hex');
+        testBoilerPlate('buffer_param_test', {'buffer_param': 'varbinary(5)'},
+            function (done) {
+                theConnection.queryRaw("INSERT INTO buffer_param_test (buffer_param) VALUES (?)", [b], function (e, r) {
+                    var expectedError = new Error('[Microsoft][SQL Server Native Client 11.0][SQL Server]String or binary data would be truncated.');
+                    expectedError.sqlstate = "22001";
+                    expectedError.code = 8152;
+                    assert.deepEqual(e, expectedError);
+                    done();
+                });
+            },
+            function (done) {
+                done();
+            },
+            function () {
+                test_done();
+            });
+    });
 
     test('insert large string into max column using user binding WLongVarChar', function (test_done) {
 
@@ -905,25 +924,7 @@ suite('params', function () {
             });
     });
 
-    test('verify buffer longer than column causes error', function (test_done) {
-        var b = new Buffer('0102030405060708090a', 'hex');
-        testBoilerPlate('buffer_param_test', {'buffer_param': 'varbinary(5)'},
-            function (done) {
-                theConnection.queryRaw("INSERT INTO buffer_param_test (buffer_param) VALUES (?)", [b], function (e, r) {
-                    var expectedError = new Error('[Microsoft][SQL Server Native Client 11.0][SQL Server]String or binary data would be truncated.');
-                    expectedError.sqlstate = "22001";
-                    expectedError.code = 8152;
-                    assert.deepEqual(e, expectedError);
-                    done();
-                });
-            },
-            function (done) {
-                done();
-            },
-            function () {
-                test_done();
-            });
-    });
+
 
     test('verify that non-Buffer object parameter returns an error', function (test_done) {
         var o = {field1: 'value1', field2: -1};

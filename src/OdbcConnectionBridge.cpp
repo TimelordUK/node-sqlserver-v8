@@ -149,7 +149,7 @@ namespace mssql
 
 	Handle<Value> OdbcConnectionBridge::FreeStatement(Handle<Number> queryId, Handle<Object> callback)
 	{
-		auto id = queryId->IntegerValue();
+		auto id = static_cast<long>(queryId->IntegerValue());
 		nodeTypeFactory fact;
 		auto op = make_shared<FreeStatementOperation>(connection, id, callback);
 		connection->statements->checkin(id);	

@@ -36,20 +36,20 @@ namespace mssql
 
 	void OdbcStatementCache::clear()
 	{
-		vector<size_t> ids;
+		vector<long> ids;
 		// fprintf(stderr, "destruct OdbcStatementCache\n");
 
 		for_each(statements.begin(), statements.end(), [&](const auto & p) {
 			ids.insert(ids.begin(), p.first);
 		});
 
-		for_each(ids.begin(), ids.end(), [&](const size_t id) {
+		for_each(ids.begin(), ids.end(), [&](const long id) {
 			// fprintf(stderr, "destruct OdbcStatementCache - erase statement %llu\n", id);
 			statements.erase(id);
 		});
 	}
 
-	shared_ptr<OdbcStatement> OdbcStatementCache::find(size_t statementId)
+	shared_ptr<OdbcStatement> OdbcStatementCache::find(long statementId)
 	{
 		shared_ptr<OdbcStatement> statement = nullptr;
 		auto itr = statements.find(statementId);
@@ -61,18 +61,23 @@ namespace mssql
 
 	shared_ptr<OdbcStatement> OdbcStatementCache::store(shared_ptr<OdbcStatement> statement)
 	{
-		statements.insert(pair<size_t, shared_ptr<OdbcStatement>>(statement->getStatementId(), statement));
+		statements.insert(pair<long, shared_ptr<OdbcStatement>>(statement->getStatementId(), statement));
 		return statement;
 	}
 
-	shared_ptr<OdbcStatement> OdbcStatementCache::checkout(size_t statementId)
+	shared_ptr<OdbcStatement> OdbcStatementCache::checkout(long statementId)
 	{
+		if (statementId < 0)
+		{
+			//fprintf(stderr, "dont fetch id %ld\n", statementId);
+			return nullptr;
+		}
 		auto statement = find(statementId);
-		if (statement != nullptr) return statement;
+		if (statement) return statement;
 		return store(make_shared<OdbcStatement>(statementId, connection));
 	}
 
-	void OdbcStatementCache::checkin(size_t statementId)
+	void OdbcStatementCache::checkin(long statementId)
 	{
 		statements.erase(statementId);
 	}
