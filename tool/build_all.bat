@@ -1,17 +1,17 @@
 set path=%path%;%~dp0
-rmdir "C:\Program Files\nodejs"
-mklink /D "C:\Program Files\nodejs" "C:\Program Files\nodejs.6.x64"
+
+call switch-ver 7
+call build.bat
+
+call switch-ver 6
 call build.bat
 call build-electron.bat
 
-rmdir "C:\Program Files\nodejs"
-mklink /D "C:\Program Files\nodejs" "C:\Program Files\nodejs.5.x64"
+call switch-ver 5
 call build.bat
 
-rmdir "C:\Program Files\nodejs"
-mklink /D "C:\Program Files\nodejs" "C:\Program Files\nodejs.4.x64"
+call switch-ver 4
 call build.bat
 
-rmdir "C:\Program Files\nodejs"
-mklink /D "C:\Program Files\nodejs" "C:\Program Files\nodejs.0.x64"
+call switch-ver 0
 call build.bat
