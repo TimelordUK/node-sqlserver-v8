@@ -41,7 +41,7 @@
         'src',
       ],
 
-     'defines': [ 'NODE_GYP_V4'],
+     'defines': [ 'gtNODE_GYP_V4'],
 
       'conditions': [
         [ 'OS=="win"', {
