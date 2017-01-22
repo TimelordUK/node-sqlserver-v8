@@ -81,8 +81,36 @@ export module MsNodeSqlDriverModule {
     export interface v8BulkSelectCb { (err: string, rows: Array<any>): void
     }
 
+    export interface v8TableColumn {
+        table_catalog: string
+        table_schema: string
+        table_name: string
+        name: string
+        type: string
+        max_length: number
+        precision: number
+        scale: number
+        is_nullable: boolean
+        is_computed: boolean
+        is_identity: boolean
+        object_id: number
+        is_primary_key: boolean
+        is_foreign_key: 0
+    }
+
+    export interface v8BulkMgrSummary
+    {
+        insert_signature : string
+        where_columns:Array<v8TableColumn>
+        update_columns:Array<v8TableColumn>
+        select_signature : string
+        delete_signature : string
+        update_signature : string
+        columns:Array<v8TableColumn>
+    }
+
     export interface v8BulkMgr {
-        getSummary(): any
+        getSummary(): v8BulkMgrSummary
         selectRows(cols: Array<any>, cb: v8BulkSelectCb): void
         insertRows(rows: Array<any>, cb: v8StatusCb): void
         deleteRows(rows: Array<any>, cb: v8StatusCb): void
