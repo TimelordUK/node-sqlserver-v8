@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "lib/dist/",
-    "sourceRoot": "ts/",
+    "sourceRoot": "/",
     "target": "es6",
     "module": "commonjs",
     "noImplicitAny": true,

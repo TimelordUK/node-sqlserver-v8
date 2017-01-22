@@ -1,7 +1,9 @@
 /**
  * Created by Stephen on 1/22/2017.
  */
-import {MsNodeSqlDriverModule} from './SqlDriverModule'
+import {MsNodeSqlDriverModule} from './MsNodeSqlDriverModule'
+let sql = require('msnodesqlv8');
+
 
 export module MsNodeSqlDriverV8 {
     import v8Connection = MsNodeSqlDriverModule.v8Connection;
@@ -58,7 +60,7 @@ export module MsNodeSqlDriverV8 {
     export class Sql {
         public open(connStr: string, timeout: number = 0): Promise<Connection> {
             return new Promise((resolve, reject) => {
-                MsNodeSqlDriverModule.sqlv8.open({
+                sql.open({
                     conn_str: connStr,
                     conn_timeout: timeout
                 }, (err: string, c: any) => {
