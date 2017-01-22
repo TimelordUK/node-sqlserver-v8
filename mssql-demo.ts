@@ -46,10 +46,29 @@ let demos = [
     event
 ];
 
+interface Employee {
+    BusinessEntityID: number
+    NationalIDNumber: string
+    LoginID: string
+    OrganizationNode: any
+    OrganizationLevel: number,
+    JobTitle: string,
+    BirthDate: string,
+    MaritalStatus: string,
+    Gender: string,
+    HireDate: string,
+    SalariedFlag: boolean,
+    VacationHours: number,
+    SickLeaveHours: number,
+    CurrentFlag: boolean,
+    rowguid: string,
+    ModifiedDate: string
+}
+
 let support: any = null;
 let procedureHelper: any = null;
 let helper: any = null;
-let parsedJSON: Array<any> = null;
+let parsedJSON: Array<Employee> = null;
 
 supp.GlobalConn.init(sql, function (co: any) {
         conn_str = co.conn_str;
