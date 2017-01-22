@@ -103,6 +103,4 @@ export module MsNodeSqlDriverModule {
         done,
         error
     }
-
-
 }

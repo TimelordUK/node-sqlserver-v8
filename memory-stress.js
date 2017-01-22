@@ -8,11 +8,11 @@ msnodesqlv8.open('Driver={SQL Server Native Client 11.0};Server=np:\\\\.\\pipe\\
         throw err;
     }
     setInterval(() => {
-    conn.queryRaw('select 1+1', (err, results) => {
-        if (err) {
-            throw err;
-        }
-        console.log(results);
-});
-}, 100);
+        conn.queryRaw('select 1+1', (err, results) => {
+            if (err) {
+                throw err;
+            }
+            console.log(results);
+        });
+    }, 100);
 });

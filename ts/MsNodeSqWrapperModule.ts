@@ -3,8 +3,7 @@
  */
 import {MsNodeSqlDriverModule} from './SqlDriverModule'
 
-export module MsNodeSqlDriverV8
-{
+export module MsNodeSqlDriverV8 {
     import v8Connection = MsNodeSqlDriverModule.v8Connection;
     import RawData = MsNodeSqlDriverModule.RawData;
 
