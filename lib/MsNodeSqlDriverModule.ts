@@ -62,7 +62,7 @@ export module MsNodeSqlDriverModule {
         rows: Array<Array<any>>
     }
 
-    export interface v8BindCb { (cb: v8BulkMgr): void
+    export interface v8BindCb { (cb: v8BulkTableMgr): void
     }
     export interface v8OpenCb { (err: string, connection: v8Connection): void
     }
@@ -79,6 +79,8 @@ export module MsNodeSqlDriverModule {
     export interface v8EventCb { (data: any): void
     }
     export interface v8BulkSelectCb { (err: string, rows: Array<any>): void
+    }
+    export interface v8DescribeProcedureCb { (description?: v8ProcedureSummary): void
     }
 
     export interface v8TableColumn {
@@ -109,7 +111,7 @@ export module MsNodeSqlDriverModule {
         columns:Array<v8TableColumn>
     }
 
-    export interface v8BulkMgr {
+    export interface v8BulkTableMgr {
         getSummary(): v8BulkMgrSummary
         selectRows(cols: Array<any>, cb: v8BulkSelectCb): void
         insertRows(rows: Array<any>, cb: v8StatusCb): void
@@ -120,8 +122,28 @@ export module MsNodeSqlDriverModule {
         setUpdateCols(cols: Array<any>): void
     }
 
+    export interface v8ProcedureParam
+    {
+        is_output : boolean
+        name:string
+        type_id:string
+        max_length : number
+        order : number
+        update_signature : string
+        collation:any
+        val:any
+    }
+
+    export interface v8ProcedureSummary
+    {
+        signature : string
+        summary:string
+        params:Array<v8ProcedureParam>
+    }
+
     export interface v8ProcedureManager {
         callproc(name: string, params?: Array<any>, cb?: v8CallProcedureCb): void
+        describe(name:string, cb?:v8DescribeProcedureCb) : void
         setTimeout(timeout: number): void
     }
 

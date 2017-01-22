@@ -4,7 +4,7 @@ import {MsNodeSqlDriverModule} from './lib/MsNodeSqlDriverModule'
 import v8Connection = MsNodeSqlDriverModule.v8Connection;
 import v8PreparedStatement = MsNodeSqlDriverModule.v8PreparedStatement;
 import v8BindCb = MsNodeSqlDriverModule.v8BindCb;
-import v8BulkMgr = MsNodeSqlDriverModule.v8BulkMgr;
+import v8BulkMgr = MsNodeSqlDriverModule.v8BulkTableMgr;
 
 export const sql: MsNodeSqlDriverModule.v8driver = require('msnodesqlv8');
 
@@ -72,8 +72,7 @@ supp.GlobalConn.init(sql, function (co: any) {
 function event(done: Function): void {
 
     let async = new support.Async();
-    let assert = new support.Assert();
-    let Assert = assert.Assert;
+    let Assert = new support.Assert();
     let conn: v8Connection = null;
 
     let fns: Array<Function> = [
@@ -153,8 +152,8 @@ function event(done: Function): void {
 function query(done: Function) {
 
     let async = new support.Async();
-    let assert = new support.Assert();
-    let Assert = assert.Assert;
+    let Assert = new support.Assert();
+
     let conn: v8Connection = null;
 
     let fns = [
@@ -246,8 +245,8 @@ function query(done: Function) {
 function procedure(done: Function) {
 
     let async = new support.Async();
-    let assert = new support.Assert();
-    let Assert = assert.Assert;
+    let Assert = new support.Assert();
+
     let conn: v8Connection = null;
 
     let sp_name = "test_sp_get_int_int";
@@ -303,6 +302,16 @@ function procedure(done: Function) {
         },
 
         function (async_done: Function) {
+            let pm = conn.procedureMgr();
+            console.log("describe procedure.");
+            pm.describe(sp_name, summary => {
+                let s = JSON.stringify(summary, null, 2);
+                console.log(s);
+                async_done();
+            });
+        },
+
+        function (async_done: Function) {
             console.log("close connection.");
             conn.close(function () {
                 async_done();
@@ -325,8 +334,8 @@ function procedure(done: Function) {
 function connection(done: Function) {
 
     let async = new support.Async();
-    let ass = new support.Assert();
-    let Assert = ass.Assert;
+    let Assert = new support.Assert();
+
     let conn: v8Connection = null;
 
     let fns = [
@@ -413,8 +422,8 @@ function prepared(done: Function) {
 // free the statements and indicate this part of the demo has finished.
 
     let async = new support.Async();
-    let assert = new support.Assert();
-    let Assert = assert.Assert();
+    let Assert = new support.Assert();
+
 
     let statements: {selectStatement: v8PreparedStatement; deleteStatement: v8PreparedStatement} = {
         selectStatement: null,
@@ -568,13 +577,13 @@ function prepared(done: Function) {
 function table(done: Function) {
 
     let async = new support.Async();
-    let assert = new support.Assert();
-    let Assert = assert.Assert;
+    let Assert = new support.Assert();
     let helper = new support.EmployeeHelper(sql, conn_str);
     let conn: v8Connection = null;
     let table_name = "Employee";
     let bm: v8BulkMgr = null;
     let records = helper.getJSON();
+
 
     let fns = [
 
@@ -657,6 +666,8 @@ function table(done: Function) {
 
         function (async_done: Function) {
             let summary = bm.getSummary();
+            let s = JSON.stringify(summary, null, 2);
+            console.log(s);
             console.log(summary.select_signature);
             console.log("prepare the above statement.");
             let select: string = summary.select_signature;

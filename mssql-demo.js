@@ -223,6 +223,15 @@ function procedure(done) {
             });
         },
         function (async_done) {
+            let pm = conn.procedureMgr();
+            console.log("describe procedure.");
+            pm.describe(sp_name, summary => {
+                let s = JSON.stringify(summary, null, 2);
+                console.log(s);
+                async_done();
+            });
+        },
+        function (async_done) {
             console.log("close connection.");
             conn.close(function () {
                 async_done();
@@ -312,7 +321,6 @@ function empDeleteSQL() {
 function prepared(done) {
     let async = new support.Async();
     let Assert = new support.Assert();
-
     let statements = {
         selectStatement: null,
         deleteStatement: null,
@@ -515,6 +523,8 @@ function table(done) {
         },
         function (async_done) {
             let summary = bm.getSummary();
+            let s = JSON.stringify(summary, null, 2);
+            console.log(s);
             console.log(summary.select_signature);
             console.log("prepare the above statement.");
             let select = summary.select_signature;
