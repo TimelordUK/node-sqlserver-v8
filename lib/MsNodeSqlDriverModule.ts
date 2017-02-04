@@ -18,6 +18,7 @@ export module MsNodeSqlDriverModule {
     }
 
     export interface v8Connection {
+        id:number;
         close(cb: v8StatusCb): void
         query(sql: string, cb?: v8QueryCb): v8Query
         query(sql: string, params?: any[], cb?: v8QueryCb): v8Query
@@ -37,6 +38,7 @@ export module MsNodeSqlDriverModule {
 
     export interface v8Query {
         on(name: string, cb: v8EventCb): void
+        on(name: string, cb: v8EventColumnCb): void
     }
 
     export interface v8ConnectDescription {
@@ -57,7 +59,7 @@ export module MsNodeSqlDriverModule {
         type: string
     }
 
-    export interface RawData {
+    export interface v8RawData {
         meta: v8Meta[]
         rows: Array<any[]>
     }
@@ -70,13 +72,15 @@ export module MsNodeSqlDriverModule {
     }
     export interface v8CallProcedureCb { (err?: string, results?: any, rows?: any[]): void
     }
-    export interface v8QueryRawCb { (err?: string, raw?: RawData, more?: boolean): void
+    export interface v8QueryRawCb { (err?: string, raw?: v8RawData, more?: boolean): void
     }
     export interface v8StatusCb { (err?: string): void
     }
     export interface v8PrepareCb { (err?: string, statement?: v8PreparedStatement): void
     }
     export interface v8EventCb { (data: any): void
+    }
+    export interface v8EventColumnCb { (colIndex: number, data:any, more:boolean): void
     }
     export interface v8BulkSelectCb { (err: string, rows: any[]): void
     }

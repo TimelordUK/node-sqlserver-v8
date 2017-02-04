@@ -6,25 +6,25 @@ let sql = require('msnodesqlv8');
 
 export module MsNodeSqlWrapperModule {
     import v8Connection = MsNodeSqlDriverModule.v8Connection;
-    import RawData = MsNodeSqlDriverModule.RawData;
     import v8Query = MsNodeSqlDriverModule.v8Query;
+    import v8Meta = MsNodeSqlDriverModule.v8Meta;
+    import v8EventColumnCb = MsNodeSqlDriverModule.v8EventColumnCb;
+    import v8RawData = MsNodeSqlDriverModule.v8RawData;
 
-    export interface queryCb { (cb: any): void
+    export interface queryCb<T> { (v: T): void
     }
 
-    class QueryOptions {
+    export class QueryOptions {
         public driverTimeoutMs: number;
         public wrapperTimeoutMs: number;
 
-        public onMeta: queryCb;
-        public onColumn: queryCb;
-        public onRowCount: queryCb;
-        public onRow: queryCb;
-        public onDone: queryCb;
-        public onError: queryCb;
-        public onClosed: queryCb;
-
-        public raw: boolean;
+        public onMeta: queryCb<v8Meta>;
+        public onColumn: v8EventColumnCb;
+        public onRowCount: queryCb<number>;
+        public onRow: queryCb<number>;
+        public onDone: queryCb<any>;
+        public onError: queryCb<string>;
+        public onClosed: queryCb<any>;
 
         public subscribing(): boolean {
             return this.onMeta != null
@@ -47,19 +47,59 @@ export module MsNodeSqlWrapperModule {
         public static closed = 'closed';
     }
 
-    class Dictionary<T> {
-        container : { [id: string] : T; } = {};
+    export interface dictIteratorCb<T> { (key: string, val : T): void
+    }
 
-        count() : number
-        {
+    export class Dictionary<T> {
+
+        container: {[id: string]: T;} = {};
+
+        public count(): number {
             let keys = Object.keys(this.container);
             return keys.length;
+            }
+
+        public values(): T[] {
+            let va: T[] = [];
+            let keys = Object.keys(this.container);
+            keys.forEach(k => va.push(this.container[k]));
+            return va;
+        }
+
+        public keys() : string[] {
+            return Object.keys(this.container);
+        }
+
+        public containsKey(key: string): boolean {
+            return this.container[key] != null;
+        }
+
+        public add(key: string, v: T): void {
+            if (this.containsKey(key)) throw new Error(`duplicate key ${key}`);
+            this.container[key] = v;
+        }
+
+        public remove(key:string) : void
+        {
+            delete this.container[key];
+        }
+
+        public get(key: string): T {
+            return this.container[key];
+        }
+
+        public forEach(cb : dictIteratorCb<T>) {
+            Object.keys(this.container).forEach((k:string) => cb(k, this.container[k]));
         }
     }
 
     export class Connection {
 
         constructor(public legacy_conn: v8Connection) {
+        }
+        public id() : string
+        {
+            return this.legacy_conn.id.toString();
         }
 
         static defaultOptions: QueryOptions = new QueryOptions();
@@ -70,16 +110,16 @@ export module MsNodeSqlWrapperModule {
                 query.on(QueryEvent.meta, (m) => options.onMeta(m));
             }
             if (options.onColumn != null) {
-                query.on(QueryEvent.column, (m) => options.onColumn(m));
+                query.on(QueryEvent.column, (c,d,m) => options.onColumn(c,d,m));
             }
             if (options.onRowCount != null) {
-                query.on(QueryEvent.rowCount, (m) => options.onColumn(m));
+                query.on(QueryEvent.rowCount, (m) => options.onRowCount(m));
             }
             if (options.onRow != null) {
-                query.on(QueryEvent.row, (m) => options.onColumn(m));
+                query.on(QueryEvent.row, (m) => options.onRow(m));
             }
             if (options.onDone != null) {
-                query.on(QueryEvent.done, (m) => options.onColumn(m));
+                query.on(QueryEvent.done, (m) => options.onDone(m));
             }
             if (options.onError != null) {
                 query.on(QueryEvent.error, (m) => options.onError(m));
@@ -89,7 +129,7 @@ export module MsNodeSqlWrapperModule {
             }
         }
 
-        public query(sql: string, options?: QueryOptions): Promise<any[]> {
+        private runQuery<T>(sql: string, method:Function, options?: QueryOptions): Promise<T> {
             return new Promise((resolve, reject) => {
                 if (options == null) options = Connection.defaultOptions;
                 if (this.legacy_conn == null) reject('no native connection.');
@@ -111,7 +151,7 @@ export module MsNodeSqlWrapperModule {
                     }
                 };
                 let timeout = options.driverTimeoutMs > 0 ? options.driverTimeoutMs / 1000 : 0;
-                let method: Function = options.raw ? this.legacy_conn.queryRaw : this.legacy_conn.query;
+
                 let q: v8Query = method({
                     query_str: sql,
                     query_timeout: timeout
@@ -122,6 +162,14 @@ export module MsNodeSqlWrapperModule {
 
                 if (options.subscribing()) this.subscribe(q, options);
             });
+        }
+
+        public query(sql: string, options?: QueryOptions) : Promise<any[]> {
+            return this.runQuery<any[]>(sql, this.legacy_conn.query, options);
+        }
+
+        public queryRaw(sql: string, options?: QueryOptions) : Promise<v8RawData> {
+            return this.runQuery<any[]>(sql, this.legacy_conn.queryRaw, options);
         }
 
         public close(): Promise<any> {
@@ -136,6 +184,8 @@ export module MsNodeSqlWrapperModule {
 
     export class Sql {
 
+        connections : Dictionary<Connection> = new Dictionary<Connection>();
+
         constructor() {
         }
 
@@ -144,10 +194,15 @@ export module MsNodeSqlWrapperModule {
                 sql.open({
                     conn_str: connStr,
                     conn_timeout: timeout
-                }, (err: string, c: any) => {
+                }, (err: string, legacy: any) => {
                     if (err) {
                         reject(err);
-                    } else resolve(new Connection(c));
+                    } else {
+                        let connection = new Connection(legacy);
+                        let id :string = connection.id();
+                        this.connections.add(id, connection);
+                        resolve(connection);
+                    }
                 });
             });
         }
