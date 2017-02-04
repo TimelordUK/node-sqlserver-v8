@@ -8,28 +8,28 @@ export module MsNodeSqlDriverModule {
         open(description: v8ConnectDescription, cb: v8OpenCb): void
         open(conn_str: string, cb: v8OpenCb): void
         query(conn_str: string, sql: string, cb?: v8QueryCb): v8Query
-        query(conn_str: string, sql: string, params?: Array<any>, cb?: v8QueryCb): v8Query
+        query(conn_str: string, sql: string, params?: any[], cb?: v8QueryCb): v8Query
         query(conn_str: string, description: v8QueryDescription, cb?: v8QueryCb): v8Query
-        query(conn_str: string, description: v8QueryDescription, params?: Array<any>, cb?: v8QueryCb): v8Query
+        query(conn_str: string, description: v8QueryDescription, params?: any[], cb?: v8QueryCb): v8Query
         queryRaw(conn_str: string, description: v8QueryDescription, cb: v8QueryRawCb): v8Query
-        queryRaw(conn_str: string, description: v8QueryDescription, params?: Array<any>, cb?: v8QueryRawCb): v8Query
-        queryRaw(conn_str: string, sql: string, params?: Array<any>, cb?: v8QueryRawCb): v8Query
+        queryRaw(conn_str: string, description: v8QueryDescription, params?: any[], cb?: v8QueryRawCb): v8Query
+        queryRaw(conn_str: string, sql: string, params?: any[], cb?: v8QueryRawCb): v8Query
         queryRaw(conn_str: string, sql: string, cb: v8QueryRawCb): v8Query
     }
 
     export interface v8Connection {
         close(cb: v8StatusCb): void
         query(sql: string, cb?: v8QueryCb): v8Query
-        query(sql: string, params?: Array<any>, cb?: v8QueryCb): v8Query
+        query(sql: string, params?: any[], cb?: v8QueryCb): v8Query
         query(description: v8QueryDescription, cb?: v8QueryCb): v8Query
-        query(description: v8QueryDescription, params?: Array<any>, cb?: v8QueryCb): v8Query
+        query(description: v8QueryDescription, params?: any[], cb?: v8QueryCb): v8Query
         queryRaw(description: v8QueryDescription, cb: v8QueryRawCb): v8Query
-        queryRaw(description: v8QueryDescription, params?: Array<any>, cb?: v8QueryRawCb): v8Query
-        queryRaw(sql: string, params?: Array<any>, cb?: v8QueryRawCb): v8Query
+        queryRaw(description: v8QueryDescription, params?: any[], cb?: v8QueryRawCb): v8Query
+        queryRaw(sql: string, params?: any[], cb?: v8QueryRawCb): v8Query
         queryRaw(sql: string, cb: v8QueryRawCb): v8Query
-        beginTransaction(cb: v8StatusCb): void
-        commit(cb: v8StatusCb): void
-        rollback(cb: v8StatusCb): void
+        beginTransaction(cb?: v8StatusCb): void
+        commit(cb?: v8StatusCb): void
+        rollback(cb?: v8StatusCb): void
         procedureMgr(): v8ProcedureManager
         tableMgr(): v8TableManager
         prepare(sql: string, cb: v8PrepareCb): void
@@ -58,17 +58,17 @@ export module MsNodeSqlDriverModule {
     }
 
     export interface RawData {
-        meta: Array<v8Meta>
-        rows: Array<Array<any>>
+        meta: v8Meta[]
+        rows: Array<any[]>
     }
 
     export interface v8BindCb { (cb: v8BulkTableMgr): void
     }
     export interface v8OpenCb { (err: string, connection: v8Connection): void
     }
-    export interface v8QueryCb { (err?: string, rows?: Array<any>, more?: boolean): void
+    export interface v8QueryCb { (err?: string, rows?: any[], more?: boolean): void
     }
-    export interface v8CallProcedureCb { (err?: string, results?: any, rows?: Array<any>): void
+    export interface v8CallProcedureCb { (err?: string, results?: any, rows?: any[]): void
     }
     export interface v8QueryRawCb { (err?: string, raw?: RawData, more?: boolean): void
     }
@@ -78,7 +78,7 @@ export module MsNodeSqlDriverModule {
     }
     export interface v8EventCb { (data: any): void
     }
-    export interface v8BulkSelectCb { (err: string, rows: Array<any>): void
+    export interface v8BulkSelectCb { (err: string, rows: any[]): void
     }
     export interface v8DescribeProcedureCb { (description?: v8ProcedureSummary): void
     }
@@ -100,50 +100,47 @@ export module MsNodeSqlDriverModule {
         is_foreign_key: 0
     }
 
-    export interface v8BulkMgrSummary
-    {
-        insert_signature : string
-        where_columns:Array<v8TableColumn>
-        update_columns:Array<v8TableColumn>
-        select_signature : string
-        delete_signature : string
-        update_signature : string
-        columns:Array<v8TableColumn>
+    export interface v8BulkMgrSummary {
+        insert_signature: string
+        where_columns: v8TableColumn[]
+        update_columns: v8TableColumn[]
+        select_signature: string
+        delete_signature: string
+        update_signature: string
+        columns: v8TableColumn[]
     }
 
     export interface v8BulkTableMgr {
         getSummary(): v8BulkMgrSummary
-        selectRows(cols: Array<any>, cb: v8BulkSelectCb): void
-        insertRows(rows: Array<any>, cb: v8StatusCb): void
-        deleteRows(rows: Array<any>, cb: v8StatusCb): void
-        updateRows(rows: Array<any>, cb: v8StatusCb): void
+        selectRows(cols: any[], cb: v8BulkSelectCb): void
+        insertRows(rows: any[], cb: v8StatusCb): void
+        deleteRows(rows: any[], cb: v8StatusCb): void
+        updateRows(rows: any[], cb: v8StatusCb): void
         setBatchSize(size: number): void
-        setWhereCols(cols: Array<any>): void
-        setUpdateCols(cols: Array<any>): void
+        setWhereCols(cols: any[]): void
+        setUpdateCols(cols: any[]): void
     }
 
-    export interface v8ProcedureParam
-    {
-        is_output : boolean
-        name:string
-        type_id:string
-        max_length : number
-        order : number
-        update_signature : string
-        collation:any
-        val:any
+    export interface v8ProcedureParam {
+        is_output: boolean
+        name: string
+        type_id: string
+        max_length: number
+        order: number
+        update_signature: string
+        collation: any
+        val: any
     }
 
-    export interface v8ProcedureSummary
-    {
-        signature : string
-        summary:string
-        params:Array<v8ProcedureParam>
+    export interface v8ProcedureSummary {
+        signature: string
+        summary: string
+        params: v8ProcedureParam[]
     }
 
     export interface v8ProcedureManager {
-        callproc(name: string, params?: Array<any>, cb?: v8CallProcedureCb): void
-        describe(name:string, cb?:v8DescribeProcedureCb) : void
+        callproc(name: string, params?: any[], cb?: v8CallProcedureCb): void
+        describe(name: string, cb?: v8DescribeProcedureCb): void
         setTimeout(timeout: number): void
     }
 
@@ -152,11 +149,11 @@ export module MsNodeSqlDriverModule {
     }
 
     export interface v8PreparedStatement {
-        preparedQuery(params?: Array<any>, cb ?: v8QueryCb): void
+        preparedQuery(params?: any[], cb ?: v8QueryCb): void
         free(cb: v8StatusCb): void
         getSignature(): string
         getId(): number
-        getMeta(): Array<v8Meta>
+        getMeta(): v8Meta[]
     }
 
     export enum v8Events {

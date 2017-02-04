@@ -1,12 +1,13 @@
 // require the module so it can be used in your node JS code.
 
-import {MsNodeSqlDriverModule} from './lib/MsNodeSqlDriverModule'
-import v8Connection = MsNodeSqlDriverModule.v8Connection;
-import v8PreparedStatement = MsNodeSqlDriverModule.v8PreparedStatement;
-import v8BindCb = MsNodeSqlDriverModule.v8BindCb;
-import v8BulkMgr = MsNodeSqlDriverModule.v8BulkTableMgr;
+import {MsNodeSqlDriverModule as v8} from './lib/MsNodeSqlDriverModule'
 
-export const sql: MsNodeSqlDriverModule.v8driver = require('msnodesqlv8');
+import v8Connection = v8.v8Connection;
+import v8PreparedStatement = v8.v8PreparedStatement;
+import v8BindCb = v8.v8BindCb;
+import v8BulkMgr = v8.v8BulkTableMgr;
+
+export const sql: v8.v8driver = require('msnodesqlv8');
 
 let fs = require('fs');
 let supp = require('./demo-support');
