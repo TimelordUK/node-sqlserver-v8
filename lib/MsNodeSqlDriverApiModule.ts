@@ -70,7 +70,7 @@ export module MsNodeSqlDriverApiModule {
     }
     export interface v8QueryCb { (err?: string, rows?: any[], more?: boolean): void
     }
-    export interface v8CallProcedureCb { (err?: string, results?: any[], rows?: any[]): void
+    export interface v8CallProcedureCb { (err?: string, rows?: any[], more?: boolean, outputParams?:any[]): void
     }
     export interface v8QueryRawCb { (err?: string, raw?: v8RawData, more?: boolean): void
     }
@@ -143,7 +143,7 @@ export module MsNodeSqlDriverApiModule {
     }
 
     export interface v8ProcedureManager {
-        callproc(name: string, params?: any[], cb?: v8CallProcedureCb): void
+        callproc(name: string, params?: any[], cb?: v8CallProcedureCb): v8Query
         describe(name: string, cb?: v8DescribeProcedureCb): void
         setTimeout(timeout: number): void
     }

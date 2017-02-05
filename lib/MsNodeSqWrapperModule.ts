@@ -25,9 +25,9 @@ export module MsNodeSqlWrapperModule {
         _driverTimeoutMs: number;
         _wrapperTimeoutMs : number;
         _sql : string;
-        _proc : string;
-        _params:any[];
-        _aggregate : boolean;
+        _procedure : string;
+
+        _inputParams:any[];
         _rawFormat : boolean;
 
         _onMeta: queryCb<v8Meta>;
@@ -42,28 +42,23 @@ export module MsNodeSqlWrapperModule {
 
         public sql(s:string) : SqlCommand{
             this._sql = s;
-            this._proc = null;
+            this._procedure = null;
             return this;
         }
 
         public params(v:any[]) : SqlCommand{
-            this._params = v;
+            this._inputParams = v;
             return this;
         }
 
-        public proc(s:string) : SqlCommand{
-            this._proc = s;
+        public procedure(s:string) : SqlCommand{
+            this._procedure = s;
             this._sql = null;
             return this;
         }
 
         public rawFormat() : SqlCommand{
             this._rawFormat = true;
-            return this;
-        }
-
-        public aggregate() : SqlCommand{
-            this._aggregate = true;
             return this;
         }
 
@@ -156,12 +151,25 @@ export module MsNodeSqlWrapperModule {
                 || this._onClosed != null
         }
 
+        private execProcedure(resolve:Function, reject:Function, res :CommandResponse) : void {
+            let timeout = this._driverTimeoutMs > 0 ? this._driverTimeoutMs / 1000 : 0;
+            let pm = this.connection.legacy_conn.procedureMgr();
+            pm.setTimeout(timeout);
+            this._query = pm.callproc(this._procedure, this._inputParams, (err?: string, rows?: any[], more?: boolean, outputParams?:any[]) => {
+                res.error = err;
+                if (err) reject(res);
+                res.aggregate(rows);
+                res.outputParams = outputParams;
+                if (!more) resolve(res);
+            });
+        }
+
         private execQuery(resolve:Function, reject:Function, res :CommandResponse) : void {
             let timeout = this._driverTimeoutMs > 0 ? this._driverTimeoutMs / 1000 : 0;
             this._query = this.connection.legacy_conn.query({
                 query_str: this._sql,
                 query_timeout: timeout
-            }, this._params, (err: string, rows: any[], more: boolean) => {
+            }, this._inputParams, (err: string, rows: any[], more: boolean) => {
                 res.error = err;
                 if (err) reject(res);
                 res.aggregate(rows);
@@ -174,7 +182,7 @@ export module MsNodeSqlWrapperModule {
             this._query = this.connection.legacy_conn.queryRaw({
                 query_str: this._sql,
                 query_timeout: timeout
-            }, this._params, (err?: string, rawData?: v8RawData, more?: boolean) => {
+            }, this._inputParams, (err?: string, rawData?: v8RawData, more?: boolean) => {
                 res.error = err;
                 if (err) reject(res);
                 res.aggregateRaw(rawData);
@@ -193,12 +201,18 @@ export module MsNodeSqlWrapperModule {
                     });
                 }
 
-                if (this._sql != null) {
+                if (this._procedure != null) {
+                    this.execProcedure(resolve, reject, res);
+                }
+                else if (this._sql != null) {
                     if (!this._rawFormat) {
                         this.execQuery(resolve, reject, res);
                     }else {
                         this.execQueryRaw(resolve, reject, res);
                     }
+                }else {
+                    res.error = `both sql and procedure are null`;
+                    reject(res);
                 }
 
                 if (this.subscribing()) {
@@ -222,18 +236,19 @@ export module MsNodeSqlWrapperModule {
                 rd.meta = raw.meta;
                 rd.rows = [];
             }
-            raw.rows.forEach(row=>rd.rows.push(row));
+            raw.rows.forEach(row => rd.rows.push(row));
         }
 
         public aggregate(rows:any[]) {
-            if (this.objects == null) {
-                this.objects =[];
+            if (this.asObjects == null) {
+                this.asObjects =[];
             }
-            rows.forEach(r=>this.objects.push(r));
+            rows.forEach(r=>this.asObjects.push(r));
         }
 
         public error:string;
-        public objects : any[];
+        public asObjects : any[];
+        public outputParams : any[];
         public rawData : v8RawData;
     }
 

@@ -24,10 +24,12 @@ sql.open(url).then(c => {
         console.log(`onRowCount: ${count}`);
     }).onRow(r => {
         console.log(`onRow: row = ${JSON.stringify(r, null, 2)}`);
-    }).rawFormat().Execute().then((res : CommandResponse) => {
+    }).onDone(() => {
+        console.log(`onDone:`);
+    }).rawFormat().Execute().then((res: CommandResponse) => {
         console.log('==============================')
         console.log(JSON.stringify(res, null, 2));
-    }).catch((e : CommandResponse)=> {
+    }).catch((e: CommandResponse) => {
         console.log(e.error);
     });
 }).catch(e => {
