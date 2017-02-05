@@ -6,6 +6,7 @@ import v8Connection = v8.v8Connection;
 import v8PreparedStatement = v8.v8PreparedStatement;
 import v8BindCb = v8.v8BindCb;
 import v8BulkMgr = v8.v8BulkTableMgr;
+import v8Error = v8.v8Error;
 
 export const sql: v8.v8driver = require('msnodesqlv8');
 
@@ -104,7 +105,7 @@ function event(done: Function): void {
 
         function (async_done: Function) {
             console.log("opening a connection ....");
-            sql.open(conn_str, (err: string, new_conn: v8Connection) => {
+            sql.open(conn_str, (err: v8Error, new_conn: v8Connection) => {
                 Assert.ifError(err);
                 conn = new_conn;
                 Assert.check(conn != null, "connection from open is null.");
@@ -117,7 +118,7 @@ function event(done: Function): void {
             console.log("listen to the events raised from the driver");
             let s = "select top 1 id, name, type, crdate from sysobjects so where so.type='U'";
             console.log(s);
-            let q = conn.query(s, (err: string, res: Array<any>) => {
+            let q = conn.query(s, (err: v8Error, res: Array<any>) => {
                 Assert.ifError(err);
                 console.log("res.length = " + res.length);
                 console.log(res);
@@ -311,7 +312,7 @@ function procedure(done: Function) {
 
         function (async_done: Function) {
             let pm = conn.procedureMgr();
-            pm.callproc(sp_name, [10, 5], (err: string, results: any, output: Array<any>) => {
+            pm.callproc(sp_name, [10, 5], (err: v8Error, results: any, output: Array<any>) => {
                 Assert.ifError(err);
                 let expected = [99, 15];
                 console.log(output);
@@ -437,8 +438,8 @@ function empDeleteSQL() {
 
 function prepared(done: Function) {
 
-// create and populate table - fetch prepared statements to select and delete records for employee table.
-// use the prepared statements to select and delete rows.
+// create and populate table - fetch prepared statements to select and free records for employee table.
+// use the prepared statements to select and free rows.
 // free the statements and indicate this part of the demo has finished.
 
     let async = new support.Async();
@@ -507,9 +508,9 @@ function prepared(done: Function) {
             })
         },
 
-        // prepare a delete statement.
+        // prepare a free statement.
         function (async_done: Function) {
-            console.log("preparing a delete statement.");
+            console.log("preparing a free statement.");
             employeePrepare(empDeleteSQL(), (ps: v8PreparedStatement) => {
                 statements.deleteStatement = ps;
                 async_done();
@@ -520,7 +521,7 @@ function prepared(done: Function) {
             console.log("check statements.");
             Assert.check(statements != null, "prepared statement object is null.");
             Assert.check(statements.selectStatement != null, "prepared select is null");
-            Assert.check(statements.deleteStatement != null, "prepared delete is null");
+            Assert.check(statements.deleteStatement != null, "prepared free is null");
             async_done();
         },
 
@@ -548,7 +549,7 @@ function prepared(done: Function) {
 
         function (async_done: Function) {
             let id = 5;
-            console.log("use prepared statement to delete " + id);
+            console.log("use prepared statement to free " + id);
             statements.deleteStatement.preparedQuery([id], err => {
                 Assert.ifError(err);
                 async_done();
@@ -691,7 +692,7 @@ function table(done: Function) {
             console.log(summary.select_signature);
             console.log("prepare the above statement.");
             let select: string = summary.select_signature;
-            conn.prepare(select, (err: string, ps: v8PreparedStatement) => {
+            conn.prepare(select, (err: v8Error, ps: v8PreparedStatement) => {
                 Assert.ifError(err);
                 ps.preparedQuery([1], (err, res) => {
                     Assert.ifError(err);
@@ -702,7 +703,7 @@ function table(done: Function) {
         },
 
         function (async_done: Function) {
-            console.log("delete the records using bulk operation.");
+            console.log("free the records using bulk operation.");
             let keys = helper.extractKey(records, 'BusinessEntityID');
             bm.deleteRows(keys, () => {
                 async_done();

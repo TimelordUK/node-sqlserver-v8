@@ -76,7 +76,7 @@ suite('concurrent', function () {
         })
     });
 
-    test('open connections in sequence and prove distinct connection asObjects created', function (test_done) {
+    test('open connections in sequence and prove distinct connection objects created', function (test_done) {
 
         var connections = [];
 
@@ -196,7 +196,7 @@ suite('concurrent', function () {
         });
     });
 
-    test('open connections simultaneously and prove distinct connection asObjects created', function (test_done) {
+    test('open connections simultaneously and prove distinct connection objects created', function (test_done) {
 
         var connections = [];
 

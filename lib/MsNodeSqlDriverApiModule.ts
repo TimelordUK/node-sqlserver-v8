@@ -59,6 +59,13 @@ export module MsNodeSqlDriverApiModule {
         type: string
     }
 
+    export interface v8Error
+    {
+        message:string
+        sqlstate: string
+        code: number
+    }
+
     export interface v8RawData {
         meta: v8Meta[]
         rows: Array<any[]>
@@ -66,23 +73,23 @@ export module MsNodeSqlDriverApiModule {
 
     export interface v8BindCb { (cb: v8BulkTableMgr): void
     }
-    export interface v8OpenCb { (err: string, connection: v8Connection): void
+    export interface v8OpenCb { (err: v8Error, connection: v8Connection): void
     }
-    export interface v8QueryCb { (err?: string, rows?: any[], more?: boolean): void
+    export interface v8QueryCb { (err?: v8Error, rows?: any[], more?: boolean): void
     }
-    export interface v8CallProcedureCb { (err?: string, rows?: any[], more?: boolean, outputParams?:any[]): void
+    export interface v8CallProcedureCb { (err?: v8Error, rows?: any[], outputParams?:any[]): void
     }
-    export interface v8QueryRawCb { (err?: string, raw?: v8RawData, more?: boolean): void
+    export interface v8QueryRawCb { (err?: v8Error, raw?: v8RawData, more?: boolean): void
     }
-    export interface v8StatusCb { (err?: string): void
+    export interface v8StatusCb { (err?: v8Error): void
     }
-    export interface v8PrepareCb { (err?: string, statement?: v8PreparedStatement): void
+    export interface v8PrepareCb { (err?: v8Error, statement?: v8PreparedStatement): void
     }
     export interface v8EventCb { (data: any): void
     }
     export interface v8EventColumnCb { (colIndex: number, data:any, more:boolean): void
     }
-    export interface v8BulkSelectCb { (err: string, rows: any[]): void
+    export interface v8BulkSelectCb { (err: v8Error, rows: any[]): void
     }
     export interface v8DescribeProcedureCb { (description?: v8ProcedureSummary): void
     }

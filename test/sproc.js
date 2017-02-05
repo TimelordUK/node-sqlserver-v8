@@ -120,7 +120,7 @@ suite('sproc', function () {
         var def = "alter PROCEDURE <name> @param VARCHAR(50) \n"
             + " AS \n"
             + " BEGIN \n"
-            + "     SELECT name, type, type_desc  FROM sys.asObjects WHERE type = 'P' AND name = '<name>'"
+            + "     SELECT name, type, type_desc  FROM sys.objects WHERE type = 'P' AND name = '<name>'"
             + "     RETURN LEN(@param); \n"
             + " END \n";
 

@@ -898,7 +898,7 @@ suite('params', function () {
             });
     });
 
-    test('verify Buffer asObjects as input parameters', function (test_done) {
+    test('verify Buffer objects as input parameters', function (test_done) {
         var b = new Buffer('0102030405060708090a', 'hex');
         testBoilerPlate(
             'buffer_param_test',
