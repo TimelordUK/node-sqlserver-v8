@@ -79,6 +79,6 @@
   },
   "directories": {},
   "dependencies": {
-    "@types/node": "^7.0.0"
+    "@types/node": "^7.0.5"
   }
 }
