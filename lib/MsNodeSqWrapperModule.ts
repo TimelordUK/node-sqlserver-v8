@@ -1,51 +1,210 @@
 /**
  * Created by Stephen on 1/22/2017.
  */
-import {MsNodeSqlDriverModule} from './MsNodeSqlDriverModule'
+import {MsNodeSqlDriverApiModule as v8api} from './MsNodeSqlDriverApiModule'
 let sql = require('msnodesqlv8');
 
 export module MsNodeSqlWrapperModule {
 
-    import v8Connection = MsNodeSqlDriverModule.v8Connection;
-    import v8Query = MsNodeSqlDriverModule.v8Query;
-    import v8Meta = MsNodeSqlDriverModule.v8Meta;
-    import v8EventColumnCb = MsNodeSqlDriverModule.v8EventColumnCb;
-    import v8RawData = MsNodeSqlDriverModule.v8RawData;
+    import v8Connection = v8api.v8Connection;
+    import v8Query = v8api.v8Query;
+    import v8Meta = v8api.v8Meta;
+    import v8EventColumnCb = v8api.v8EventColumnCb;
+    import v8RawData = v8api.v8RawData;
+    import v8QueryEvent = v8api.v8QueryEvent;
 
     export interface queryCb<T> { (v: T): void
     }
 
-    export class QueryOptions {
-        public driverTimeoutMs: number;
-        public wrapperTimeoutMs: number;
+    export class SqlCommand
+    {
+        constructor(public connection : Connection) {}
 
-        public onMeta: queryCb<v8Meta>;
-        public onColumn: v8EventColumnCb;
-        public onRowCount: queryCb<number>;
-        public onRow: queryCb<number>;
-        public onDone: queryCb<any>;
-        public onError: queryCb<string>;
-        public onClosed: queryCb<string>;
+        _driverTimeoutMs: number;
+        _wrapperTimeoutMs : number;
+        _sql : string;
+        _proc : string;
+        _params:any[];
+        _aggregate : boolean;
+        _raw : boolean;
+
+        _onMeta: queryCb<v8Meta>;
+        _onColumn: v8EventColumnCb;
+        _onRowCount: queryCb<number>;
+        _onRow: queryCb<number>;
+        _onDone: queryCb<any>;
+        _onError: queryCb<string>;
+        _onClosed: queryCb<string>;
+
+        _query: v8Query;
+
+        public sql(s:string) : SqlCommand{
+            this._sql = s;
+            this._proc = null;
+            return this;
+        }
+
+        public params(v:any[]) : SqlCommand{
+            this._params = v;
+            return this;
+        }
+
+        public proc(s:string) : SqlCommand{
+            this._proc = s;
+            this._sql = null;
+            return this;
+        }
+
+        public raw() : SqlCommand{
+            this._raw = true;
+            return this;
+        }
+
+        public aggregate() : SqlCommand{
+            this._aggregate = true;
+            return this;
+        }
+
+        public wrapperTimeoutMs(to:number) : SqlCommand{
+            this._wrapperTimeoutMs = to;
+            return this;
+        }
+
+        public driverTimeoutMs(to:number) : SqlCommand{
+            this._driverTimeoutMs = to;
+            return this;
+        }
+
+        public onMeta(cb : queryCb<v8Meta>) : SqlCommand
+        {
+            this._onMeta = cb;
+            return this;
+        }
+
+        public onColumn(cb : v8EventColumnCb) : SqlCommand
+        {
+            this._onColumn = cb;
+            return this;
+        }
+
+        public onRowCount(cb : queryCb<number>) : SqlCommand
+        {
+            this._onRowCount = cb;
+            return this;
+        }
+
+        public onRow(cb : queryCb<number>) : SqlCommand
+        {
+            this._onRow = cb;
+            return this;
+        }
+
+        public onDone(cb : queryCb<any>) : SqlCommand
+        {
+            this._onDone = cb;
+            return this;
+        }
+
+        public onError(cb : queryCb<string>) : SqlCommand
+        {
+            this._onError = cb;
+            return this;
+        }
+
+        public onClosed(cb : queryCb<string>) : SqlCommand
+        {
+            this._onClosed = cb;
+            return this;
+        }
+
+        private subscribe(): void {
+
+            let query = this._query;
+
+            if (this._onMeta != null) {
+                query.on(v8QueryEvent.meta, m => this._onMeta(m));
+            }
+            if (this._onColumn != null) {
+                query.on(v8QueryEvent.column, (c, d, m) => this._onColumn(c,d,m));
+            }
+            if (this._onRowCount != null) {
+                query.on(v8QueryEvent.rowCount, m => this._onRowCount(m));
+            }
+            if (this._onRow != null) {
+                query.on(v8QueryEvent.row, m => this._onRow(m));
+            }
+            if (this._onDone != null) {
+                query.on(v8QueryEvent.done, m => this._onDone(m));
+            }
+            if (this._onError != null) {
+                query.on(v8QueryEvent.error, m => this._onError(m));
+            }
+            if (this._onClosed != null) {
+                query.on(v8QueryEvent.closed, m => this._onClosed(m));
+            }
+        }
 
         public subscribing(): boolean {
-            return this.onMeta != null
-                || this.onColumn != null
-                || this.onRowCount != null
-                || this.onRow != null
-                || this.onDone != null
-                || this.onError != null
-                || this.onClosed != null
+            return this._onMeta != null
+                || this._onColumn != null
+                || this._onRowCount != null
+                || this._onRow != null
+                || this._onDone != null
+                || this._onError != null
+                || this._onClosed != null
+        }
+
+        public Execute() : Promise<CommandResponse> {
+            return new Promise((resolve, reject) => {
+                let res = new CommandResponse();
+                let to = this._wrapperTimeoutMs;
+                if (to > 0) {
+                    setTimeout(to, () => {
+                        res.error = `wrapper timeout ${to} expired.`;
+                        reject(res);
+                    });
+                }
+
+                if (this._sql) {
+                    let timeout = this._driverTimeoutMs > 0 ? this._driverTimeoutMs / 1000 : 0;
+                    this._query = this.connection.legacy_conn.query({
+                        query_str: this._sql,
+                        query_timeout: timeout
+                    }, this._params, (err: string, rows: any[], more: boolean) => {
+                        res.error = err;
+                        if (err) reject(res);
+                        res.aggregate(rows);
+                       if (!more) resolve(res);
+                    });
+                }
+
+                if (this.subscribing()) {
+                   this.subscribe()
+                }
+            })
         }
     }
 
-    export class QueryEvent {
-        public static meta = 'meta';
-        public static column = 'column';
-        public static rowCount = 'rowCount';
-        public static row = 'row';
-        public static done = 'done';
-        public static error = 'error';
-        public static closed = 'closed';
+    export class RawData implements v8RawData{
+        public meta: v8Meta[];
+        public rows: Array<any[]>;
+    }
+
+    export class CommandResponse
+    {
+        public aggregateRaw(raw:v8RawData) {
+        }
+
+        public aggregate(rows:any[]) {
+            if (this.objects == null) {
+                this.objects =[];
+            }
+            rows.forEach(r=>this.objects.push(r));
+        }
+
+        public error:string;
+        public objects : any[];
+        public rawData : v8RawData;
     }
 
     export interface dictIteratorCb<T> { (key: string, val : T): void
@@ -103,74 +262,8 @@ export module MsNodeSqlWrapperModule {
             return this.legacy_conn.id.toString();
         }
 
-        static defaultOptions: QueryOptions = new QueryOptions();
-
-        private subscribe(query: v8Query, options: QueryOptions): void {
-
-            if (options.onMeta != null) {
-                query.on(QueryEvent.meta, m => options.onMeta(m));
-            }
-            if (options.onColumn != null) {
-                query.on(QueryEvent.column, (c,d,m) => options.onColumn(c,d,m));
-            }
-            if (options.onRowCount != null) {
-                query.on(QueryEvent.rowCount, m => options.onRowCount(m));
-            }
-            if (options.onRow != null) {
-                query.on(QueryEvent.row, m => options.onRow(m));
-            }
-            if (options.onDone != null) {
-                query.on(QueryEvent.done, m => options.onDone(m));
-            }
-            if (options.onError != null) {
-                query.on(QueryEvent.error, m => options.onError(m));
-            }
-            if (options.onClosed != null) {
-                query.on(QueryEvent.closed, m => options.onClosed(m));
-            }
-        }
-
-        private runQuery<T>(sql: string, params:any[], method:Function, options?: QueryOptions): Promise<T> {
-            return new Promise((resolve, reject) => {
-                if (options == null) options = Connection.defaultOptions;
-                if (this.legacy_conn == null) reject('no native connection.');
-                if (options.wrapperTimeoutMs > 0) {
-                    setTimeout(options.wrapperTimeoutMs, () => {
-                        reject(`wrapper timeout ${options.wrapperTimeoutMs} expired.`);
-                    });
-                }
-                let all: any[] = [];
-                let batch = 0;
-                let next = (rows: any[], more: boolean) => {
-                    batch++;
-                    if (!more) {
-                        let res = batch == 1 ? rows : all;
-                        resolve(res);
-                    }
-                    else {
-                        rows.forEach(r => all.push(r));
-                    }
-                };
-                let timeout = options.driverTimeoutMs > 0 ? options.driverTimeoutMs / 1000 : 0;
-
-                let q: v8Query = method({
-                    query_str: sql,
-                    query_timeout: timeout
-                }, params, (err: string, rows: any[], more: boolean) => {
-                    if (err) reject(err);
-                    else next(rows, more);
-                });
-
-                if (options.subscribing()) this.subscribe(q, options);
-            });
-        }
-
-        public query(sql: string, params?:any[], options?: QueryOptions) : Promise<any[]> {
-            return this.runQuery<any[]>(sql, params, this.legacy_conn.query, options);
-        }
-
-        public queryRaw(sql: string,  params?:any[], options?: QueryOptions) : Promise<v8RawData> {
-            return this.runQuery<v8RawData>(sql,params, this.legacy_conn.queryRaw, options);
+        public Command() : SqlCommand {
+            return new SqlCommand(this);
         }
 
         public close(): Promise<any> {

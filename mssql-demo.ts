@@ -1,6 +1,6 @@
 // require the module so it can be used in your node JS code.
 
-import {MsNodeSqlDriverModule as v8} from './lib/MsNodeSqlDriverModule'
+import {MsNodeSqlDriverApiModule as v8} from './lib/MsNodeSqlDriverApiModule'
 
 import v8Connection = v8.v8Connection;
 import v8PreparedStatement = v8.v8PreparedStatement;

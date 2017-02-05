@@ -2,7 +2,7 @@
  * Created by admin on 19/01/2017.
  */
 
-export module MsNodeSqlDriverModule {
+export module MsNodeSqlDriverApiModule {
 
     export interface v8driver {
         open(description: v8ConnectDescription, cb: v8OpenCb): void
@@ -70,7 +70,7 @@ export module MsNodeSqlDriverModule {
     }
     export interface v8QueryCb { (err?: string, rows?: any[], more?: boolean): void
     }
-    export interface v8CallProcedureCb { (err?: string, results?: any, rows?: any[]): void
+    export interface v8CallProcedureCb { (err?: string, results?: any[], rows?: any[]): void
     }
     export interface v8QueryRawCb { (err?: string, raw?: v8RawData, more?: boolean): void
     }
@@ -160,12 +160,14 @@ export module MsNodeSqlDriverModule {
         getMeta(): v8Meta[]
     }
 
-    export enum v8Events {
-        meta,
-        column,
-        rowCount,
-        row,
-        done,
-        error
+    export abstract class v8QueryEvent {
+        public static meta = 'meta';
+        public static column = 'column';
+        public static rowCount = 'rowCount';
+        public static row = 'row';
+        public static done = 'done';
+        public static error = 'error';
+        public static closed = 'closed';
     }
+
 }
