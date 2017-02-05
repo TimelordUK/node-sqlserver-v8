@@ -291,7 +291,7 @@ suite('query', function () {
         });
     });
 
-    test('simple raw query', function (done) {
+    test('simple rawFormat query', function (done) {
         theConnection.queryRaw("SELECT 1 as X, 'ABC', 0x0123456789abcdef ", function (err, results) {
             assert.ifError(err);
             var buffer = new Buffer('0123456789abcdef', 'hex');
@@ -301,7 +301,7 @@ suite('query', function () {
                     {name: '', size: 8, nullable: false, type: 'binary', sqlType: 'varbinary'}],
                 rows: [[1, 'ABC', buffer]]
             };
-            assert.deepEqual(results, expected, "raw results didn't match");
+            assert.deepEqual(results, expected, "rawFormat results didn't match");
             done();
         });
     });

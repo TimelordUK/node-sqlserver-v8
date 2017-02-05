@@ -24,9 +24,9 @@ sql.open(url).then(c => {
         console.log(`onRowCount: ${count}`);
     }).onRow(r => {
         console.log(`onRow: row = ${JSON.stringify(r, null, 2)}`);
-    }).Execute().then((res : CommandResponse) => {
+    }).rawFormat().Execute().then((res : CommandResponse) => {
         console.log('==============================')
-        console.log(JSON.stringify(res.objects, null, 2));
+        console.log(JSON.stringify(res, null, 2));
     }).catch((e : CommandResponse)=> {
         console.log(e.error);
     });
