@@ -154,6 +154,19 @@ export module MsNodeSqlWrapperModule {
                 || this._onClosed != null
         }
 
+        private execQuery(resolve:Function, reject:Function, res :CommandResponse) : void {
+            let timeout = this._driverTimeoutMs > 0 ? this._driverTimeoutMs / 1000 : 0;
+            this._query = this.connection.legacy_conn.query({
+                query_str: this._sql,
+                query_timeout: timeout
+            }, this._params, (err: string, rows: any[], more: boolean) => {
+                res.error = err;
+                if (err) reject(res);
+                res.aggregate(rows);
+                if (!more) resolve(res);
+            });
+        }
+
         public Execute() : Promise<CommandResponse> {
             return new Promise((resolve, reject) => {
                 let res = new CommandResponse();
@@ -166,16 +179,7 @@ export module MsNodeSqlWrapperModule {
                 }
 
                 if (this._sql) {
-                    let timeout = this._driverTimeoutMs > 0 ? this._driverTimeoutMs / 1000 : 0;
-                    this._query = this.connection.legacy_conn.query({
-                        query_str: this._sql,
-                        query_timeout: timeout
-                    }, this._params, (err: string, rows: any[], more: boolean) => {
-                        res.error = err;
-                        if (err) reject(res);
-                        res.aggregate(rows);
-                       if (!more) resolve(res);
-                    });
+                    this.execQuery(resolve, reject, res);
                 }
 
                 if (this.subscribing()) {
@@ -193,6 +197,13 @@ export module MsNodeSqlWrapperModule {
     export class CommandResponse
     {
         public aggregateRaw(raw:v8RawData) {
+            let rd = this.rawData;
+            if (rd == null) {
+                this.rawData = rd = new RawData();
+                rd.meta = raw.meta;
+                rd.rows = [];
+            }
+            raw.rows.forEach(r=>rd.rows.push(r));
         }
 
         public aggregate(rows:any[]) {
@@ -257,6 +268,7 @@ export module MsNodeSqlWrapperModule {
 
         constructor(public legacy_conn: v8Connection) {
         }
+
         public id() : string
         {
             return this.legacy_conn.id.toString();
@@ -276,9 +288,12 @@ export module MsNodeSqlWrapperModule {
         }
     }
 
-    export class Sql {
-
+    export class ConnectionPool
+    {
         connections : Dictionary<Connection> = new Dictionary<Connection>();
+    }
+
+    export class Sql {
 
         constructor() {
         }
@@ -293,8 +308,6 @@ export module MsNodeSqlWrapperModule {
                         reject(err);
                     } else {
                         let connection = new Connection(legacy);
-                        let id :string = connection.id();
-                        this.connections.add(id, connection);
                         resolve(connection);
                     }
                 });

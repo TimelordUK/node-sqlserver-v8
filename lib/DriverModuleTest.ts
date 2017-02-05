@@ -17,14 +17,15 @@ sql.open(url).then(c => {
     command.sql('select 1+1 as v, GETDATE() as d');
 
     command.onMeta((meta: v8Meta) => {
-        console.log('onMeta = ' + JSON.stringify(meta, null, 2));
+        console.log(`onMeta: ${JSON.stringify(meta, null, 2)}`);
     }).onColumn((col, data, more) => {
-        console.log('onColumn = ' + JSON.stringify(data, null, 2));
+        console.log(`onColumn: more = ${more} data = ${JSON.stringify(data, null, 2)}`);
     }).onRowCount(count => {
-        console.log('onRowCount = ' + count);
+        console.log(`onRowCount: ${count}`);
     }).onRow(r => {
-        console.log('onRow = ' + JSON.stringify(r, null, 2));
-    }).Execute().then((res : CommandResponse)=> {
+        console.log(`onRow: row = ${JSON.stringify(r, null, 2)}`);
+    }).Execute().then((res : CommandResponse) => {
+        console.log('==============================')
         console.log(JSON.stringify(res.objects, null, 2));
     }).catch((e : CommandResponse)=> {
         console.log(e.error);
