@@ -14,7 +14,7 @@ export module MsNodeSqlWrapperModule {
     import v8Error = v8api.v8Error;
     import v8PreparedStatement = v8api.v8PreparedStatement;
 
-    const sql: v8api.v8driver = require('msnodesqlv8');
+    export const legacyDriver: v8api.v8driver = require('msnodesqlv8');
 
     export class SqlModuleWrapperError implements v8Error {
         constructor(public message: string) {
@@ -74,6 +74,14 @@ export module MsNodeSqlWrapperModule {
 
         public params(v: any[]): SqlCommand {
             this._inputParams = v;
+            return this;
+        }
+
+        public param(v: any): SqlCommand {
+            if (this._inputParams == null) {
+                this._inputParams = [];
+            }
+            this._inputParams.push(v);
             return this;
         }
 
@@ -182,7 +190,7 @@ export module MsNodeSqlWrapperModule {
                 || this._onClosed != null
         }
 
-        private execProcedure(resolve: Function, reject: Function, res: CommandResponse): void {
+        private execProcedure(resolve: Function, reject: Function, res: SqlCommandResponse): void {
             let timeout = this._driverTimeoutMs > 0 ? this._driverTimeoutMs / 1000 : 0;
             let pm = this.connection.legacy_conn.procedureMgr();
             pm.setTimeout(timeout);
@@ -199,7 +207,7 @@ export module MsNodeSqlWrapperModule {
             });
         }
 
-        private execQuery(resolve: Function, reject: Function, res: CommandResponse): void {
+        private execQuery(resolve: Function, reject: Function, res: SqlCommandResponse): void {
             let timeout = this._driverTimeoutMs > 0 ? this._driverTimeoutMs / 1000 : 0;
             this._query = this.connection.legacy_conn.query({
                 query_str: this._sql,
@@ -215,7 +223,7 @@ export module MsNodeSqlWrapperModule {
             });
         }
 
-        private execQueryRaw(resolve: Function, reject: Function, res: CommandResponse): void {
+        private execQueryRaw(resolve: Function, reject: Function, res: SqlCommandResponse): void {
             let timeout = this._driverTimeoutMs > 0 ? this._driverTimeoutMs / 1000 : 0;
             this._query = this.connection.legacy_conn.queryRaw({
                 query_str: this._sql,
@@ -231,7 +239,7 @@ export module MsNodeSqlWrapperModule {
             });
         }
 
-        private execPrepared(resolve: Function, reject: Function, res: CommandResponse): void {
+        private execPrepared(resolve: Function, reject: Function, res: SqlCommandResponse): void {
             this._preparedStatement.preparedQuery(
                 this._inputParams, (err: v8Error, rows: any[], more: boolean) => {
                     if (err) {
@@ -287,7 +295,7 @@ export module MsNodeSqlWrapperModule {
             });
         }
 
-        private dispatchCommandType(resolve: Function, reject: Function, res: CommandResponse): void {
+        private dispatchCommandType(resolve: Function, reject: Function, res: SqlCommandResponse): void {
             switch (this.commandType) {
 
                 case SqlCommandType.QueryObjectFormat: {
@@ -322,10 +330,10 @@ export module MsNodeSqlWrapperModule {
             }
         }
 
-        public execute(): Promise<CommandResponse> {
+        public execute(): Promise<SqlCommandResponse> {
 
             return new Promise((resolve, reject) => {
-                let res = new CommandResponse();
+                let res = new SqlCommandResponse();
                 let to = this._wrapperTimeoutMs;
                 if (to > 0) {
                     setTimeout(to, () => {
@@ -350,7 +358,7 @@ export module MsNodeSqlWrapperModule {
         public rows: Array<any[]>;
     }
 
-    export class CommandResponse {
+    export class SqlCommandResponse {
 
         public aggregateRaw(raw: v8RawData) {
             let rd = this.rawData;
@@ -502,13 +510,33 @@ export module MsNodeSqlWrapperModule {
 
     export class Sql {
 
-        constructor() {
+        constructor(public connStr: string) {
         }
 
-        public open(connStr: string, timeout: number = 0): Promise<Connection> {
+        public execute(sql:string, raw:boolean = false) : Promise<SqlCommandResponse> {
             return new Promise((resolve, reject) => {
-                sql.open({
-                    conn_str: connStr,
+                this.open().then( (connection : Connection) => {
+                    let command = new SqlCommand(connection).sql(sql);
+                    if (raw) command = command.rawFormat();
+                    command.execute().then(res=> {
+                        connection.close().then(() => {
+                            resolve(res);
+                        }).catch(e=>{
+                            reject(e);
+                        });
+                    }).catch(e=> {
+                        reject(e);
+                    })
+                }).catch(e=> {
+                    reject(e);
+                });
+            });
+        }
+
+        public open(timeout: number = 0): Promise<Connection> {
+            return new Promise((resolve, reject) => {
+                legacyDriver.open({
+                    conn_str: this.connStr,
                     conn_timeout: timeout
                 }, (err: v8Error, legacy: any) => {
                     if (err) {
