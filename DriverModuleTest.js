@@ -25,9 +25,12 @@ class WrapperTest {
         });
     }
     exec(done) {
-        this.storedProcedure().then(() => {
-            this.eventSubscribe().then(() => done()).
-                catch(e => {
+        this.execute().then(() => {
+            this.storedProcedure().then(() => {
+                this.eventSubscribe().then(() => done()).catch(e => {
+                    console.log(JSON.stringify(e, null, 2));
+                });
+            }).catch(e => {
                 console.log(JSON.stringify(e, null, 2));
             });
         }).catch(e => {
@@ -49,7 +52,8 @@ class WrapperTest {
             "END\n";
         return new Promise((resolve, reject) => {
             this.sqlWrapper.open().then(c => {
-                if (this.debug) console.log('opened');
+                if (this.debug)
+                    console.log('opened');
                 let command = c.getCommand();
                 let inst = this;
                 this.procedureHelper.createProcedure(sp_name, def, function () {
@@ -73,10 +77,25 @@ class WrapperTest {
             });
         });
     }
+    execute() {
+        return new Promise((resolve, reject) => {
+            this.sqlWrapper.execute(`select 1+1 as v, convert(DATETIME, '2017-02-06') as d`).then(res => {
+                let expected = [
+                    {
+                        "v": 2,
+                        "d": new Date(Date.parse("Feb 06, 2017"))
+                    }
+                ];
+                assert.deepEqual(res.asObjects, expected, "results didn't match");
+                resolve();
+            }).catch(e => reject(e));
+        });
+    }
     eventSubscribe() {
         return new Promise((resolve, reject) => {
             this.sqlWrapper.open().then(c => {
-                if (this.debug) console.log('opened');
+                if (this.debug)
+                    console.log('opened');
                 let command = c.getCommand();
                 command.sql(`select 1+1 as v, convert(DATETIME, '2017-02-06') as d`);
                 let h = new eventHits();

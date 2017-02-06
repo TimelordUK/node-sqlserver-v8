@@ -24,18 +24,18 @@ class eventHits {
 
 class WrapperTest {
 
-    conn_str:string;
-    support:any;
-    procedureHelper:any;
-    helper:any;
-    parsedJSON:any;
-    sqlWrapper:MsNodeSqlWrapperModule.Sql;
-    legacy:v8driver = MsNodeSqlWrapperModule.legacyDriver;
+    conn_str: string;
+    support: any;
+    procedureHelper: any;
+    helper: any;
+    parsedJSON: any;
+    sqlWrapper: MsNodeSqlWrapperModule.Sql;
+    legacy: v8driver = MsNodeSqlWrapperModule.legacyDriver;
 
-    constructor(public debug:boolean = false) {
+    constructor(public debug: boolean = false) {
     }
 
-    public run(done:Function) {
+    public run(done: Function) {
         supp.GlobalConn.init(this.legacy, (co: any) => {
                 this.conn_str = co.conn_str;
                 this.sqlWrapper = new MsNodeSqlWrapperModule.Sql(this.conn_str);
@@ -51,22 +51,25 @@ class WrapperTest {
         );
     }
 
-    private exec(done:Function) : void {
-        this.storedProcedure().then(()=> {
-            this.eventSubscribe().then(() => done()).
-            catch(e=> {
-                console.log(JSON.stringify(e,null,2));
+    private exec(done: Function): void {
+        this.execute().then(() => {
+            this.storedProcedure().then(() => {
+                this.eventSubscribe().then(() => done()).catch(e => {
+                    console.log(JSON.stringify(e, null, 2));
+                });
+            }).catch(e => {
+                console.log(JSON.stringify(e, null, 2));
             });
-        }).catch(e=> {
-            console.log(JSON.stringify(e,null,2));
+        }).catch(e => {
+            console.log(JSON.stringify(e, null, 2));
         });
     }
 
-    storedProcedure() : Promise<any> {
+    storedProcedure(): Promise<any> {
 
         let sp_name = "test_sp_get_int_int";
 
-        let def = "alter PROCEDURE <name>"+
+        let def = "alter PROCEDURE <name>" +
             "(\n" +
             "@num1 INT,\n" +
             "@num2 INT,\n" +
@@ -74,13 +77,13 @@ class WrapperTest {
             "\n)" +
             "AS\n" +
             "BEGIN\n" +
-            "   SET @num3 = @num1 + @num2\n"+
-            "   RETURN 99;\n"+
+            "   SET @num3 = @num1 + @num2\n" +
+            "   RETURN 99;\n" +
             "END\n";
 
         return new Promise((resolve, reject) => {
             this.sqlWrapper.open().then(c => {
-                console.log('opened');
+                if (this.debug) console.log('opened');
                 let command = c.getCommand();
                 let inst = this;
                 this.procedureHelper.createProcedure(sp_name, def, function () {
@@ -102,10 +105,25 @@ class WrapperTest {
         });
     }
 
-    eventSubscribe() : Promise<any>{
+    execute(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.sqlWrapper.execute(`select 1+1 as v, convert(DATETIME, '2017-02-06') as d`).then(res => {
+                let expected = [
+                    {
+                        "v": 2,
+                        "d": new Date(Date.parse("Feb 06, 2017"))
+                    }
+                ];
+                assert.deepEqual(res.asObjects, expected, "results didn't match");
+                resolve();
+            }).catch(e=>reject(e));
+        });
+    }
+
+    eventSubscribe(): Promise<any> {
         return new Promise((resolve, reject) => {
             this.sqlWrapper.open().then(c => {
-                console.log('opened');
+                if (this.debug) console.log('opened');
                 let command = c.getCommand();
                 command.sql(`select 1+1 as v, convert(DATETIME, '2017-02-06') as d`);
 
@@ -121,7 +139,7 @@ class WrapperTest {
                     {
                         "size": 23,
                         "name": "d",
-                        "nullable": false,
+                        "nullable": true,
                         "type": "date",
                         "sqlType": "datetime"
                     }
@@ -154,7 +172,7 @@ class WrapperTest {
                     let expected = [
                         {
                             "v": 2,
-                            "d": "2017-06-06T00:00:00.000Z"
+                            "d": new Date(Date.parse("Feb 06, 2017"))
                         }
                     ];
                     assert.deepEqual(res.asObjects, expected, "results didn't match");
@@ -173,7 +191,7 @@ class WrapperTest {
 
 let wt = new WrapperTest(
 );
-wt.run(()=> {
+wt.run(() => {
     console.log('done.');
 });
 
