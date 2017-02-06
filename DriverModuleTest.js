@@ -8,6 +8,29 @@ class WrapperTest {
     constructor(debug = false) {
         this.debug = debug;
         this.legacy = MsNodeSqWrapperModule_1.MsNodeSqlWrapperModule.legacyDriver;
+        this.testSelect = `select 1+1 as v, convert(DATETIME, '2017-02-06') as d`;
+        this.expectedRows = [
+            {
+                "v": 2,
+                "d": new Date(Date.parse("Feb 06, 2017"))
+            }
+        ];
+        this.expectedMeta = [
+            {
+                "size": 10,
+                "name": "v",
+                "nullable": true,
+                "type": "number",
+                "sqlType": "int"
+            },
+            {
+                "size": 23,
+                "name": "d",
+                "nullable": true,
+                "type": "date",
+                "sqlType": "datetime"
+            }
+        ];
     }
     run(done) {
         supp.GlobalConn.init(this.legacy, (co) => {
@@ -16,7 +39,6 @@ class WrapperTest {
             this.support = co.support;
             this.procedureHelper = new this.support.ProcedureHelper(this.conn_str);
             this.procedureHelper.setVerbose(false);
-            let async = co.async;
             this.helper = co.helper;
             this.parsedJSON = this.helper.getJSON();
             if (this.debug)
@@ -27,7 +49,9 @@ class WrapperTest {
     exec(done) {
         this.execute().then(() => {
             this.storedProcedure().then(() => {
-                this.eventSubscribe().then(() => done()).catch(e => {
+                this.eventSubscribe().then(() => {
+                    done();
+                }).catch(e => {
                     console.log(JSON.stringify(e, null, 2));
                 });
             }).catch(e => {
@@ -79,47 +103,24 @@ class WrapperTest {
     }
     execute() {
         return new Promise((resolve, reject) => {
-            this.sqlWrapper.execute(`select 1+1 as v, convert(DATETIME, '2017-02-06') as d`).then(res => {
-                let expected = [
-                    {
-                        "v": 2,
-                        "d": new Date(Date.parse("Feb 06, 2017"))
-                    }
-                ];
-                assert.deepEqual(res.asObjects, expected, "results didn't match");
+            this.sqlWrapper.execute(this.testSelect).then(res => {
+                assert.deepEqual(res.asObjects, this.expectedRows, "results didn't match");
                 resolve();
             }).catch(e => reject(e));
         });
     }
     eventSubscribe() {
         return new Promise((resolve, reject) => {
-            this.sqlWrapper.open().then(c => {
-                if (this.debug)
-                    console.log('opened');
+            this.sqlWrapper.open()
+                .then(c => {
                 let command = c.getCommand();
-                command.sql(`select 1+1 as v, convert(DATETIME, '2017-02-06') as d`);
+                command.sql(this.testSelect);
                 let h = new eventHits();
-                let expectedMeta = [
-                    {
-                        "size": 10,
-                        "name": "v",
-                        "nullable": true,
-                        "type": "number",
-                        "sqlType": "int"
-                    },
-                    {
-                        "size": 23,
-                        "name": "d",
-                        "nullable": true,
-                        "type": "date",
-                        "sqlType": "datetime"
-                    }
-                ];
                 command.onMeta((meta) => {
                     if (this.debug)
                         console.log(`onMeta: ${JSON.stringify(meta, null, 2)}`);
                     h.onMeta++;
-                    assert.deepEqual(expectedMeta, meta, "results didn't match");
+                    assert.deepEqual(this.expectedMeta, meta, "results didn't match");
                 }).onColumn((col, data, more) => {
                     if (this.debug)
                         console.log(`onColumn: more = ${more} data = ${JSON.stringify(data, null, 2)}`);
@@ -149,13 +150,8 @@ class WrapperTest {
                         console.log('==============================');
                     if (this.debug)
                         console.log(JSON.stringify(res, null, 2));
-                    let expected = [
-                        {
-                            "v": 2,
-                            "d": new Date(Date.parse("Feb 06, 2017"))
-                        }
-                    ];
-                    assert.deepEqual(res.asObjects, expected, "results didn't match");
+                    assert.deepEqual(res.asObjects, this.expectedRows, "results didn't match");
+                    resolve();
                 }).catch((e) => {
                     h.onError++;
                     if (this.debug)

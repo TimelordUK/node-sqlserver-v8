@@ -35,6 +35,30 @@ class WrapperTest {
     constructor(public debug: boolean = false) {
     }
 
+    testSelect: string = `select 1+1 as v, convert(DATETIME, '2017-02-06') as d`;
+    expectedRows:any = [
+    {
+        "v": 2,
+        "d": new Date(Date.parse("Feb 06, 2017"))
+    }
+];
+    expectedMeta = [
+        {
+            "size": 10,
+            "name": "v",
+            "nullable": true,
+            "type": "number",
+            "sqlType": "int"
+        },
+        {
+            "size": 23,
+            "name": "d",
+            "nullable": true,
+            "type": "date",
+            "sqlType": "datetime"
+        }
+    ];
+
     public run(done: Function) {
         supp.GlobalConn.init(this.legacy, (co: any) => {
                 this.conn_str = co.conn_str;
@@ -42,7 +66,6 @@ class WrapperTest {
                 this.support = co.support;
                 this.procedureHelper = new this.support.ProcedureHelper(this.conn_str);
                 this.procedureHelper.setVerbose(false);
-                let async = co.async;
                 this.helper = co.helper;
                 this.parsedJSON = this.helper.getJSON();
                 if (this.debug) console.log(this.conn_str);
@@ -54,7 +77,9 @@ class WrapperTest {
     private exec(done: Function): void {
         this.execute().then(() => {
             this.storedProcedure().then(() => {
-                this.eventSubscribe().then(() => done()).catch(e => {
+                this.eventSubscribe().then(() => {
+                    done();
+                }).catch(e => {
                     console.log(JSON.stringify(e, null, 2));
                 });
             }).catch(e => {
@@ -65,7 +90,7 @@ class WrapperTest {
         });
     }
 
-    storedProcedure(): Promise<any> {
+    private storedProcedure(): Promise<any> {
 
         let sp_name = "test_sp_get_int_int";
 
@@ -105,83 +130,57 @@ class WrapperTest {
         });
     }
 
-    execute(): Promise<any> {
+    private execute(): Promise<any> {
         return new Promise((resolve, reject) => {
-            this.sqlWrapper.execute(`select 1+1 as v, convert(DATETIME, '2017-02-06') as d`).then(res => {
-                let expected = [
-                    {
-                        "v": 2,
-                        "d": new Date(Date.parse("Feb 06, 2017"))
-                    }
-                ];
-                assert.deepEqual(res.asObjects, expected, "results didn't match");
+            this.sqlWrapper.execute(this.testSelect).then(res => {
+                assert.deepEqual(res.asObjects, this.expectedRows, "results didn't match");
                 resolve();
-            }).catch(e=>reject(e));
+            }).catch(e => reject(e));
         });
     }
 
-    eventSubscribe(): Promise<any> {
+    private eventSubscribe(): Promise<any> {
         return new Promise((resolve, reject) => {
-            this.sqlWrapper.open().then(c => {
-                if (this.debug) console.log('opened');
-                let command = c.getCommand();
-                command.sql(`select 1+1 as v, convert(DATETIME, '2017-02-06') as d`);
+            this.sqlWrapper.open()
+                .then(c => {
+                    let command = c.getCommand();
+                    command.sql(this.testSelect);
 
-                let h = new eventHits();
-                let expectedMeta = [
-                    {
-                        "size": 10,
-                        "name": "v",
-                        "nullable": true,
-                        "type": "number",
-                        "sqlType": "int"
-                    },
-                    {
-                        "size": 23,
-                        "name": "d",
-                        "nullable": true,
-                        "type": "date",
-                        "sqlType": "datetime"
-                    }
-                ];
-                command.onMeta((meta: v8Meta) => {
-                    if (this.debug) console.log(`onMeta: ${JSON.stringify(meta, null, 2)}`);
-                    h.onMeta++;
-                    assert.deepEqual(expectedMeta, meta, "results didn't match");
-                }).onColumn((col, data, more) => {
-                    if (this.debug) console.log(`onColumn: more = ${more} data = ${JSON.stringify(data, null, 2)}`);
-                    h.onColumn++;
-                }).onRowCount(count => {
-                    if (this.debug) console.log(`onRowCount: ${count}`);
-                    h.onRowCount++;
-                }).onRow(r => {
-                    if (this.debug) console.log(`onRow: row = ${JSON.stringify(r, null, 2)}`);
-                    h.onRow++;
-                }).onDone(() => {
-                    if (this.debug) console.log(`onDone:`);
-                    h.onDone++;
-                }).onClosed(() => {
-                    if (this.debug) console.log(`onClose:`);
-                    h.onClosed++;
-                }).onError((e: any) => {
-                    if (this.debug) console.log(`onError: e = ${JSON.stringify(e, null, 2)}`);
-                    h.onError++;
-                }).execute().then((res: CommandResponse) => {
-                    if (this.debug) console.log('==============================');
-                    if (this.debug) console.log(JSON.stringify(res, null, 2));
-                    let expected = [
-                        {
-                            "v": 2,
-                            "d": new Date(Date.parse("Feb 06, 2017"))
-                        }
-                    ];
-                    assert.deepEqual(res.asObjects, expected, "results didn't match");
-                }).catch((e: CommandResponse) => {
-                    h.onError++;
-                    if (this.debug) console.log(JSON.stringify(e, null, 2));
-                    reject(e);
-                });
-            }).catch(e => {
+                    let h = new eventHits();
+
+                    command.onMeta((meta: v8Meta) => {
+                        if (this.debug) console.log(`onMeta: ${JSON.stringify(meta, null, 2)}`);
+                        h.onMeta++;
+                        assert.deepEqual(this.expectedMeta, meta, "results didn't match");
+                    }).onColumn((col, data, more) => {
+                        if (this.debug) console.log(`onColumn: more = ${more} data = ${JSON.stringify(data, null, 2)}`);
+                        h.onColumn++;
+                    }).onRowCount(count => {
+                        if (this.debug) console.log(`onRowCount: ${count}`);
+                        h.onRowCount++;
+                    }).onRow(r => {
+                        if (this.debug) console.log(`onRow: row = ${JSON.stringify(r, null, 2)}`);
+                        h.onRow++;
+                    }).onDone(() => {
+                        if (this.debug) console.log(`onDone:`);
+                        h.onDone++;
+                    }).onClosed(() => {
+                        if (this.debug) console.log(`onClose:`);
+                        h.onClosed++;
+                    }).onError((e: any) => {
+                        if (this.debug) console.log(`onError: e = ${JSON.stringify(e, null, 2)}`);
+                        h.onError++;
+                    }).execute().then((res: CommandResponse) => {
+                        if (this.debug) console.log('==============================');
+                        if (this.debug) console.log(JSON.stringify(res, null, 2));
+                        assert.deepEqual(res.asObjects, this.expectedRows, "results didn't match");
+                        resolve();
+                    }).catch((e: CommandResponse) => {
+                        h.onError++;
+                        if (this.debug) console.log(JSON.stringify(e, null, 2));
+                        reject(e);
+                    });
+                }).catch(e => {
                 console.log(e);
                 reject(e);
             });
