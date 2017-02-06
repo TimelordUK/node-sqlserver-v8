@@ -79,6 +79,7 @@
   },
   "directories": {},
   "dependencies": {
+    "@types/electron": "^1.4.31",
     "@types/node": "^7.0.5"
   }
 }
