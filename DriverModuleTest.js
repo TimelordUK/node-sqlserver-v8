@@ -32,20 +32,6 @@ class WrapperTest {
             }
         ];
     }
-    run(done) {
-        supp.GlobalConn.init(this.legacy, (co) => {
-            this.conn_str = co.conn_str;
-            this.sqlWrapper = new MsNodeSqWrapperModule_1.MsNodeSqlWrapperModule.Sql(this.conn_str);
-            this.support = co.support;
-            this.procedureHelper = new this.support.ProcedureHelper(this.conn_str);
-            this.procedureHelper.setVerbose(false);
-            this.helper = co.helper;
-            this.parsedJSON = this.helper.getJSON();
-            if (this.debug)
-                console.log(this.conn_str);
-            this.exec(done);
-        });
-    }
     exec(done) {
         this.execute().then(() => {
             this.storedProcedure().then(() => {
@@ -59,6 +45,20 @@ class WrapperTest {
             });
         }).catch(e => {
             console.log(JSON.stringify(e, null, 2));
+        });
+    }
+    run(done) {
+        supp.GlobalConn.init(this.legacy, (co) => {
+            this.conn_str = co.conn_str;
+            this.sqlWrapper = new MsNodeSqWrapperModule_1.MsNodeSqlWrapperModule.Sql(this.conn_str);
+            this.support = co.support;
+            this.procedureHelper = new this.support.ProcedureHelper(this.conn_str);
+            this.procedureHelper.setVerbose(false);
+            this.helper = co.helper;
+            this.parsedJSON = this.helper.getJSON();
+            if (this.debug)
+                console.log(this.conn_str);
+            this.exec(done);
         });
     }
     storedProcedure() {

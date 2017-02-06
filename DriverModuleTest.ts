@@ -3,8 +3,8 @@
  */
 
 import {MsNodeSqlWrapperModule} from './lib/MsNodeSqWrapperModule'
-import v8Meta = MsNodeSqlDriverApiModule.v8Meta;
 import {MsNodeSqlDriverApiModule} from "./lib/MsNodeSqlDriverApiModule";
+import v8Meta = MsNodeSqlDriverApiModule.v8Meta;
 import v8RawData = MsNodeSqlDriverApiModule.v8RawData;
 import CommandResponse = MsNodeSqlWrapperModule.SqlCommandResponse;
 import v8driver = MsNodeSqlDriverApiModule.v8driver;
@@ -60,21 +60,6 @@ class WrapperTest {
         }
     ];
 
-    public run(done: Function) {
-        supp.GlobalConn.init(this.legacy, (co: any) => {
-                this.conn_str = co.conn_str;
-                this.sqlWrapper = new MsNodeSqlWrapperModule.Sql(this.conn_str);
-                this.support = co.support;
-                this.procedureHelper = new this.support.ProcedureHelper(this.conn_str);
-                this.procedureHelper.setVerbose(false);
-                this.helper = co.helper;
-                this.parsedJSON = this.helper.getJSON();
-                if (this.debug) console.log(this.conn_str);
-                this.exec(done);
-            }
-        );
-    }
-
     private exec(done: Function): void {
         this.execute().then(() => {
             this.storedProcedure().then(() => {
@@ -89,6 +74,21 @@ class WrapperTest {
         }).catch(e => {
             console.log(JSON.stringify(e, null, 2));
         });
+    }
+
+    public run(done: Function) {
+        supp.GlobalConn.init(this.legacy, (co: any) => {
+                this.conn_str = co.conn_str;
+                this.sqlWrapper = new MsNodeSqlWrapperModule.Sql(this.conn_str);
+                this.support = co.support;
+                this.procedureHelper = new this.support.ProcedureHelper(this.conn_str);
+                this.procedureHelper.setVerbose(false);
+                this.helper = co.helper;
+                this.parsedJSON = this.helper.getJSON();
+                if (this.debug) console.log(this.conn_str);
+                this.exec(done);
+            }
+        );
     }
 
     private storedProcedure(): Promise<any> {
