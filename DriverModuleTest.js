@@ -111,54 +111,56 @@ class WrapperTest {
     }
     eventSubscribe() {
         return new Promise((resolve, reject) => {
-            this.sqlWrapper.open()
-                .then(c => {
+            let inst = this;
+            function runTest(c) {
                 let command = c.getCommand();
-                command.sql(this.testSelect);
+                command.sql(inst.testSelect);
                 let h = new eventHits();
                 command.onMeta((meta) => {
-                    if (this.debug)
+                    if (inst.debug)
                         console.log(`onMeta: ${JSON.stringify(meta, null, 2)}`);
                     h.onMeta++;
-                    assert.deepEqual(this.expectedMeta, meta, "results didn't match");
+                    assert.deepEqual(inst.expectedMeta, meta, "results didn't match");
                 }).onColumn((col, data, more) => {
-                    if (this.debug)
+                    if (inst.debug)
                         console.log(`onColumn: more = ${more} data = ${JSON.stringify(data, null, 2)}`);
                     h.onColumn++;
                 }).onRowCount(count => {
-                    if (this.debug)
+                    if (inst.debug)
                         console.log(`onRowCount: ${count}`);
                     h.onRowCount++;
                 }).onRow(r => {
-                    if (this.debug)
+                    if (inst.debug)
                         console.log(`onRow: row = ${JSON.stringify(r, null, 2)}`);
                     h.onRow++;
                 }).onDone(() => {
-                    if (this.debug)
+                    if (inst.debug)
                         console.log(`onDone:`);
                     h.onDone++;
                 }).onClosed(() => {
-                    if (this.debug)
+                    if (inst.debug)
                         console.log(`onClose:`);
                     h.onClosed++;
                 }).onError((e) => {
-                    if (this.debug)
+                    if (inst.debug)
                         console.log(`onError: e = ${JSON.stringify(e, null, 2)}`);
                     h.onError++;
                 }).execute().then((res) => {
-                    if (this.debug)
+                    if (inst.debug)
                         console.log('==============================');
-                    if (this.debug)
+                    if (inst.debug)
                         console.log(JSON.stringify(res, null, 2));
-                    assert.deepEqual(res.asObjects, this.expectedRows, "results didn't match");
+                    assert.deepEqual(res.asObjects, inst.expectedRows, "results didn't match");
                     resolve();
                 }).catch((e) => {
                     h.onError++;
-                    if (this.debug)
+                    if (inst.debug)
                         console.log(JSON.stringify(e, null, 2));
                     reject(e);
                 });
-            }).catch(e => {
+            }
+            this.sqlWrapper.open()
+                .then(c => runTest(c)).catch(e => {
                 console.log(e);
                 reject(e);
             });
