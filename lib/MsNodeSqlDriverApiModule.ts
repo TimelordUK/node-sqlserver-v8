@@ -15,6 +15,38 @@ export module MsNodeSqlDriverApiModule {
         queryRaw(conn_str: string, description: v8QueryDescription, params?: any[], cb?: v8QueryRawCb): v8Query
         queryRaw(conn_str: string, sql: string, params?: any[], cb?: v8QueryRawCb): v8Query
         queryRaw(conn_str: string, sql: string, cb: v8QueryRawCb): v8Query
+        Bit(v:number): any;
+        BigInt(v:number): any;
+        Int(v:number): any;
+        TinyInt(v:number): any;
+        SmallInt(v:number): any;
+        Float(v:number): any;
+        Numeric(v:number): any;
+        Money(v:number): any;
+        SmallMoney(v:number): any;
+        Decimal(v:number): any;
+        Double(v:number): any;
+        Real(v:number): any;
+        WVarChar(v:String) : any;
+        Char(v:String) : any;
+        VarChar(v:String) : any;
+        NChar(v:String) : any;
+        NVarChar(v:String) : any;
+        Text(v:String) : any;
+        NText(v:String) : any;
+        Xml(v:String) : any;
+        WLongVarChar(v:string) : any;
+        UniqueIdentifier(v:String) : any;
+        VarBinary(v:any) : any;
+        LongVarBinary(v:any) : any;
+        Image(v:any) : any;
+        Time(v:Date) : any;
+        Date(v:Date) : any;
+        DateTime(v:Date) : any;
+        DateTime2(v:Date) : any;
+        DateRound(v:Date) : any;
+        SmallDateTime(v:Date) : any;
+        DateTimeOffset(v:Date) : any;
     }
 
     export interface v8Connection {

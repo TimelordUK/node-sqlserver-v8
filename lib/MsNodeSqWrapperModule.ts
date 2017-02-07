@@ -39,7 +39,7 @@ export module MsNodeSqlWrapperModule {
 
     export class SqlCommand {
 
-        constructor(public connection: Connection, id ?: string, public commandType: SqlCommandType = SqlCommandType.QueryObjectFormat) {
+        constructor(public connection: Connection, public id ?: string, public commandType: SqlCommandType = SqlCommandType.QueryObjectFormat) {
         }
 
         _driverTimeoutMs: number;
@@ -513,12 +513,12 @@ export module MsNodeSqlWrapperModule {
         constructor(public connStr: string) {
         }
 
-        public execute(sql:string, raw:boolean = false) : Promise<SqlCommandResponse> {
+        public execute(sql:string, params:any = [], raw:boolean = false) : Promise<SqlCommandResponse> {
             return new Promise((resolve, reject) => {
                 this.open().then( (connection : Connection) => {
                     let command = new SqlCommand(connection).sql(sql);
                     if (raw) command = command.rawFormat();
-                    command.execute().then(res=> {
+                    command.params(params).execute().then(res=> {
                         connection.close().then(() => {
                             resolve(res);
                         }).catch(e=>{
