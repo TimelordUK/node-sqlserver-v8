@@ -254,14 +254,15 @@ export module MsNodeSqlWrapperModule {
 
         public freePrepared(): Promise<SqlCommand> {
             return new Promise((resolve, reject) => {
+                let inst = this;
                 if (this.commandType != SqlCommandType.PreparedStatement) {
                     reject(new SqlModuleWrapperError('freePrepared must be called on prepared command.'));
                     return;
                 }
                 this._preparedStatement.free(() => {
-                    this._preparedStatement = null;
-                    this.commandType = SqlCommandType.None;
-                    resolve(this);
+                    inst._preparedStatement = null;
+                    inst.commandType = SqlCommandType.None;
+                    resolve(inst);
                 })
             });
         }
@@ -282,14 +283,15 @@ export module MsNodeSqlWrapperModule {
                 }
                 this.commandType = SqlCommandType.PreparingStatement;
                 this.unsubscribe();
+                let inst = this;
                 this.connection.legacy_conn.prepare(this._sql, (err?: v8Error, statement?: v8PreparedStatement) => {
-                    if (err != null) {
+                    if (err) {
                         reject(err);
-                        this.commandType = SqlCommandType.None;
+                        inst.commandType = SqlCommandType.None;
                     } else {
-                        this._preparedStatement = statement;
-                        this.commandType = SqlCommandType.PreparedStatement;
-                        resolve(this);
+                        inst._preparedStatement = statement;
+                        inst.commandType = SqlCommandType.PreparedStatement;
+                        resolve(inst);
                     }
                 })
             });
@@ -516,9 +518,9 @@ export module MsNodeSqlWrapperModule {
         public execute(sql:string, params:any = [], raw:boolean = false) : Promise<SqlCommandResponse> {
             return new Promise((resolve, reject) => {
                 this.open().then( (connection : Connection) => {
-                    let command = new SqlCommand(connection).sql(sql);
+                    let command = new SqlCommand(connection);
                     if (raw) command = command.rawFormat();
-                    command.params(params).execute().then(res=> {
+                    command.sql(sql).params(params).execute().then(res=> {
                         connection.close().then(() => {
                             resolve(res);
                         }).catch(e=>{

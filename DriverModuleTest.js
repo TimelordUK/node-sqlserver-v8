@@ -2,12 +2,19 @@
 const MsNodeSqWrapperModule_1 = require('./lib/MsNodeSqWrapperModule');
 let assert = require('assert');
 let supp = require('./demo-support');
+let ASQ = require('asynquence-contrib');
 class eventHits {
 }
 class WrapperTest {
-    constructor(debug = false) {
+    constructor(debug) {
         this.debug = debug;
         this.legacy = MsNodeSqWrapperModule_1.MsNodeSqlWrapperModule.legacyDriver;
+        this.expectedPrepared = [
+            {
+                "len": 4
+            }
+        ];
+        this.testPrepare = `select len(convert(varchar, ?)) as len`;
         this.testSelect = `select 1+1 as v, convert(DATETIME, '2017-02-06') as d`;
         this.expectedRows = [
             {
@@ -33,18 +40,27 @@ class WrapperTest {
         ];
     }
     exec(done) {
-        this.execute().then(() => {
-            this.storedProcedure().then(() => {
-                this.eventSubscribe().then(() => {
-                    done();
-                }).catch(e => {
-                    console.log(JSON.stringify(e, null, 2));
-                });
-            }).catch(e => {
-                console.log(JSON.stringify(e, null, 2));
-            });
-        }).catch(e => {
-            console.log(JSON.stringify(e, null, 2));
+        ASQ().promise(this.prepare())
+            .then((done) => {
+            console.log('prepare completes. next....');
+            done();
+        }).promise(this.execute())
+            .then((done) => {
+            console.log('execute completes next....');
+            done();
+        })
+            .promise(this.storedProcedure())
+            .then((done) => {
+            console.log('storedProcedure completes next....');
+            done();
+        })
+            .promise(this.eventSubscribe())
+            .then((done) => {
+            console.log('eventSubscribe completes next....');
+            done();
+        })
+            .then(() => {
+            done();
         });
     }
     run(done) {
@@ -98,6 +114,42 @@ class WrapperTest {
                         reject(e);
                     });
                 });
+            });
+        });
+    }
+    prepare() {
+        return new Promise((resolve, reject) => {
+            ASQ()
+                .then((done) => {
+                this.sqlWrapper.open().then(connection => {
+                    done(connection);
+                });
+            })
+                .then(((done, connection) => {
+                connection.getCommand().sql(this.testPrepare).prepare().then(command => {
+                    done(connection, command);
+                });
+            }))
+                .then(((done, connection, command) => {
+                command.params([1000]).execute().then(res => {
+                    assert.deepEqual(res.asObjects, this.expectedPrepared, "results didn't match");
+                    done(connection, command);
+                });
+            }))
+                .then(((done, connection, command) => {
+                command.freePrepared().then(() => {
+                    done(connection);
+                });
+            }))
+                .then(((done, connection) => {
+                connection.close().then(() => {
+                    done();
+                });
+            }))
+                .then(() => {
+                resolve();
+            }).or((e) => {
+                reject(e);
             });
         });
     }
@@ -167,7 +219,7 @@ class WrapperTest {
         });
     }
 }
-let wt = new WrapperTest();
+let wt = new WrapperTest(false);
 wt.run(() => {
     console.log('done.');
 });

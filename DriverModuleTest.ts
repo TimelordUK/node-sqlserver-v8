@@ -9,9 +9,12 @@ import v8RawData = MsNodeSqlDriverApiModule.v8RawData;
 import CommandResponse = MsNodeSqlWrapperModule.SqlCommandResponse;
 import v8driver = MsNodeSqlDriverApiModule.v8driver;
 import Connection = MsNodeSqlWrapperModule.Connection;
+import SqlCommand = MsNodeSqlWrapperModule.SqlCommand;
+import SqlCommandResponse = MsNodeSqlWrapperModule.SqlCommandResponse;
 
 let assert = require('assert');
 let supp = require('./demo-support');
+let ASQ = require('asynquence-contrib');
 
 class eventHits {
     public onMeta: number;
@@ -33,16 +36,23 @@ class WrapperTest {
     sqlWrapper: MsNodeSqlWrapperModule.Sql;
     legacy: v8driver = MsNodeSqlWrapperModule.legacyDriver;
 
-    constructor(public debug: boolean = false) {
+    constructor(public debug: boolean) {
     }
 
+    expectedPrepared: any = [
+        {
+            "len": 4
+        }
+    ];
+
+    testPrepare: string = `select len(convert(varchar, ?)) as len`;
     testSelect: string = `select 1+1 as v, convert(DATETIME, '2017-02-06') as d`;
-    expectedRows:any = [
-    {
-        "v": 2,
-        "d": new Date(Date.parse("Feb 06, 2017"))
-    }
-];
+    expectedRows: any = [
+        {
+            "v": 2,
+            "d": new Date(Date.parse("Feb 06, 2017"))
+        }
+    ];
     expectedMeta = [
         {
             "size": 10,
@@ -61,19 +71,37 @@ class WrapperTest {
     ];
 
     private exec(done: Function): void {
-        this.execute().then(() => {
-            this.storedProcedure().then(() => {
-                this.eventSubscribe().then(() => {
+
+        ASQ().promise(this.prepare())
+            .then(
+                (done: Function) => {
+                    console.log('prepare completes. next....');
                     done();
-                }).catch(e => {
-                    console.log(JSON.stringify(e, null, 2));
-                });
-            }).catch(e => {
-                console.log(JSON.stringify(e, null, 2));
+                }
+            ).promise(this.execute())
+            .then(
+                (done: Function) => {
+                    console.log('execute completes next....');
+                    done();
+                }
+            )
+            .promise(this.storedProcedure())
+            .then(
+                (done: Function) => {
+                    console.log('storedProcedure completes next....');
+                    done();
+                }
+            )
+            .promise(this.eventSubscribe())
+            .then(
+                (done: Function) => {
+                    console.log('eventSubscribe completes next....');
+                    done();
+                }
+            )
+            .then(() => {
+                done();
             });
-        }).catch(e => {
-            console.log(JSON.stringify(e, null, 2));
-        });
     }
 
     public run(done: Function) {
@@ -131,6 +159,43 @@ class WrapperTest {
         });
     }
 
+    private prepare(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            ASQ()
+                .then((done: Function) => {
+                    this.sqlWrapper.open().then(connection => {
+                        done(connection);
+                    })
+                })
+                .then(((done: Function, connection: Connection) => {
+                    connection.getCommand().sql(this.testPrepare).prepare().then(command => {
+                        done(connection, command);
+                    })
+                }))
+                .then(((done: Function, connection: Connection, command: SqlCommand) => {
+                    command.params([1000]).execute().then(res => {
+                        assert.deepEqual(res.asObjects, this.expectedPrepared, "results didn't match");
+                        done(connection, command);
+                    })
+                }))
+                .then(((done: Function, connection: Connection, command: SqlCommand) => {
+                    command.freePrepared().then(() => {
+                        done(connection);
+                    })
+                }))
+                .then(((done: Function, connection: Connection) => {
+                    connection.close().then(() => {
+                        done();
+                    })
+                }))
+                .then(() => {
+                    resolve();
+                }).or((e: any) => {
+                reject(e);
+            });
+        });
+    }
+
     private execute(): Promise<any> {
         return new Promise((resolve, reject) => {
             this.sqlWrapper.execute(this.testSelect).then(res => {
@@ -143,7 +208,8 @@ class WrapperTest {
     private eventSubscribe(): Promise<any> {
         return new Promise((resolve, reject) => {
             let inst = this;
-            function runTest(c:Connection) {
+
+            function runTest(c: Connection) {
                 let command = c.getCommand();
                 command.sql(inst.testSelect);
                 let h = new eventHits();
@@ -181,6 +247,7 @@ class WrapperTest {
                     reject(e);
                 });
             }
+
             this.sqlWrapper.open()
                 .then(c => runTest(c)).catch(e => {
                 console.log(e);
@@ -190,8 +257,7 @@ class WrapperTest {
     }
 }
 
-let wt = new WrapperTest(
-);
+let wt = new WrapperTest(false);
 wt.run(() => {
     console.log('done.');
 });
