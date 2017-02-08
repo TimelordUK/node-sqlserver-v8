@@ -763,7 +763,7 @@ namespace mssql
 
 	bool isNumeric(std::wstring & v)
 	{
-		bool res = v == L"numeric"
+		auto res = v == L"numeric"
 			|| v == L"decimal"
 			|| v == L"smallmoney"
 			|| v == L"money"
@@ -774,15 +774,16 @@ namespace mssql
 
 	bool isInt(const std::wstring & v)
 	{
-		bool res = v == L"smallint"
+		auto res = v == L"smallint"
 			|| v == L"int"
+			|| v == L"bigint"
 			|| v == L"tinyint";
 		return res;
 	}
 
 	bool isString(const std::wstring & v)
 	{
-		bool res = v == L"char"
+		auto res = v == L"char"
 			|| v == L"text"
 			|| v == L"varchar";
 		return res;
@@ -790,19 +791,19 @@ namespace mssql
 
 	bool isBinary(const std::wstring & v)
 	{
-		bool res = v == L"binary";
+		auto res = v == L"binary";
 		return res;
 	}
 
 	bool isBit(const std::wstring & v)
 	{
-		bool res = v == L"bit";
+		auto res = v == L"bit";
 		return res;
 	}
 
 	bool isDate(const std::wstring & v)
 	{
-		bool res = v == L"date"
+		auto res = v == L"date"
 			|| v == L"datetimeoffset"
 			|| v == L"datetime2"
 			|| v == L"smalldatetime"
@@ -815,7 +816,7 @@ namespace mssql
 	{
 		auto str = getH(p, "type_id");
 		auto v = FromV8String(str);
-		bool res = isNumeric(v);
+		auto res = isNumeric(v);
 		return res;
 	}
 
@@ -823,7 +824,7 @@ namespace mssql
 	{
 		auto str = getH(p, "type_id");
 		auto v = FromV8String(str);
-		bool res = v == L"sbigint";
+		auto res = v == L"sbigint";
 		return res;
 	}
 
@@ -831,7 +832,7 @@ namespace mssql
 	{
 		auto str = getH(p, "type_id");
 		auto v = FromV8String(str);
-		bool res = isInt(v);
+		auto res = isInt(v);
 		return res;
 	}
 
@@ -839,7 +840,7 @@ namespace mssql
 	{
 		auto str = getH(p, "type_id");
 		auto v = FromV8String(str);
-		bool res = isString(v);
+		auto res = isString(v);
 		return res;
 	}
 
@@ -847,7 +848,7 @@ namespace mssql
 	{
 		auto str = getH(p, "type_id");
 		auto v = FromV8String(str);
-		bool res = isBit(v);
+		auto res = isBit(v);
 		return res;
 	}
 
@@ -855,7 +856,7 @@ namespace mssql
 	{
 		auto str = getH(p, "type_id");
 		auto v = FromV8String(str);
-		bool res = isDate(v);
+		auto res = isDate(v);
 		return res;
 	}
 

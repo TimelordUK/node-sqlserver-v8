@@ -103,22 +103,18 @@ class WrapperTest {
         }
     ];
 
-    /*
-     .promise(this.storedProcedure(this.getIntIntProcedure, [1, 2], [99, 3]))
-     .then(
-     (done: Function) => {
-     console.log(`storedProcedure ${this.getIntIntProcedure.def} completes. next....`);
-     done();
-     }
-     )
-     */
-
     private exec(done: Function): void {
 
         ASQ().promise(this.storedProcedure(this.bigIntProcedure, [1234567890], [0, 1234567890]))
             .then(
                 (done: Function) => {
-                    console.log(`storedProcedure ${this.bigIntProcedure.def} completes. next....`);
+                    console.log(`storedProcedure ${this.bigIntProcedure.name} completes. next....`);
+                    done();
+                }
+            ).promise(this.storedProcedure(this.getIntIntProcedure, [1, 2], [99, 3]))
+            .then(
+                (done: Function) => {
+                    console.log(`storedProcedure ${this.getIntIntProcedure.name} completes. next....`);
                     done();
                 }
             ).promise(this.execute())
