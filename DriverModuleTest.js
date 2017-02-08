@@ -15,7 +15,7 @@ class WrapperTest {
     constructor(debug) {
         this.debug = debug;
         this.legacy = MsNodeSqWrapperModule_1.MsNodeSqlWrapperModule.legacyDriver;
-        this.getIntIntProc = new StoredProcedureDef('test_sp_get_int_int', "alter PROCEDURE <name>" +
+        this.getIntIntProcedure = new StoredProcedureDef('test_sp_get_int_int', "alter PROCEDURE <name>" +
             `(
     @num1 INT,
     @num2 INT,
@@ -26,6 +26,16 @@ class WrapperTest {
        SET @num3 = @num1 + @num2
        RETURN 99;
     END`);
+        this.bigIntProcedure = new StoredProcedureDef('bigint_test', "alter PROCEDURE <name>" +
+            `(
+            @a bigint = 0,
+            @b bigint = 0 output
+         )
+        AS
+        BEGIN
+            set @b = @a
+            select @b as b
+        END`);
         this.expectedPrepared = [
             {
                 "len": 4
@@ -57,9 +67,9 @@ class WrapperTest {
         ];
     }
     exec(done) {
-        ASQ().promise(this.storedProcedure(this.getIntIntProc, [1, 2], [99, 3]))
+        ASQ().promise(this.storedProcedure(this.bigIntProcedure, [1234567890], [0, 1234567890]))
             .then((done) => {
-            console.log('storedProcedure completes. next....');
+            console.log(`storedProcedure ${this.bigIntProcedure.def} completes. next....`);
             done();
         }).promise(this.execute())
             .then((done) => {
@@ -78,6 +88,8 @@ class WrapperTest {
         })
             .then(() => {
             done();
+        }).or((e) => {
+            console.log(e);
         });
     }
     run(done) {
@@ -100,6 +112,8 @@ class WrapperTest {
                 .then((done) => {
                 this.sqlWrapper.open().then(connection => {
                     done(connection);
+                }).catch((e) => {
+                    reject(e);
                 });
             })
                 .then((done, connection) => {
@@ -111,11 +125,15 @@ class WrapperTest {
                 connection.getCommand().procedure(procedureDef.name).params(params).execute().then(res => {
                     assert.deepEqual(res.outputParams, expected, "results didn't match");
                     done(connection);
+                }).catch((e) => {
+                    reject(e);
                 });
             })
                 .then((done, connection) => {
                 connection.close().then(() => {
                     done();
+                }).catch((e) => {
+                    reject(e);
                 });
             })
                 .then(() => {
@@ -131,27 +149,37 @@ class WrapperTest {
                 .then((done) => {
                 this.sqlWrapper.open().then(connection => {
                     done(connection);
+                }).catch((e) => {
+                    reject(e);
                 });
             })
                 .then((done, connection) => {
                 connection.getCommand().sql(this.testPrepare).prepare().then(command => {
                     done(connection, command);
+                }).catch((e) => {
+                    reject(e);
                 });
             })
                 .then((done, connection, command) => {
                 command.params([1000]).execute().then(res => {
                     assert.deepEqual(res.asObjects, this.expectedPrepared, "results didn't match");
                     done(connection, command);
+                }).catch((e) => {
+                    reject(e);
                 });
             })
                 .then((done, connection, command) => {
                 command.freePrepared().then(() => {
                     done(connection);
+                }).catch((e) => {
+                    reject(e);
                 });
             })
                 .then((done, connection) => {
                 connection.close().then(() => {
                     done();
+                }).catch((e) => {
+                    reject(e);
                 });
             })
                 .then(() => {

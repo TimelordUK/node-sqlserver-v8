@@ -42,7 +42,7 @@ class WrapperTest {
     sqlWrapper: MsNodeSqlWrapperModule.Sql;
     legacy: v8driver = MsNodeSqlWrapperModule.legacyDriver;
 
-    getIntIntProc = new StoredProcedureDef(
+    getIntIntProcedure = new StoredProcedureDef(
         'test_sp_get_int_int',
         "alter PROCEDURE <name>" +
         `(
@@ -55,6 +55,19 @@ class WrapperTest {
        SET @num3 = @num1 + @num2
        RETURN 99;
     END`);
+
+    bigIntProcedure = new StoredProcedureDef(
+        'bigint_test',
+        "alter PROCEDURE <name>" +
+        `(
+            @a bigint = 0,
+            @b bigint = 0 output
+         )
+        AS
+        BEGIN
+            set @b = @a
+            select @b as b
+        END`);
 
     constructor(public debug: boolean) {
     }
@@ -90,12 +103,22 @@ class WrapperTest {
         }
     ];
 
+    /*
+     .promise(this.storedProcedure(this.getIntIntProcedure, [1, 2], [99, 3]))
+     .then(
+     (done: Function) => {
+     console.log(`storedProcedure ${this.getIntIntProcedure.def} completes. next....`);
+     done();
+     }
+     )
+     */
+
     private exec(done: Function): void {
 
-        ASQ().promise(this.storedProcedure(this.getIntIntProc, [1, 2], [99, 3]))
+        ASQ().promise(this.storedProcedure(this.bigIntProcedure, [1234567890], [0, 1234567890]))
             .then(
                 (done: Function) => {
-                    console.log('storedProcedure completes. next....');
+                    console.log(`storedProcedure ${this.bigIntProcedure.def} completes. next....`);
                     done();
                 }
             ).promise(this.execute())
@@ -121,7 +144,9 @@ class WrapperTest {
             )
             .then(() => {
                 done();
-            });
+            }).or( (e:any)=> {
+                console.log(e);
+        });
     }
 
     public run(done: Function) {
@@ -145,23 +170,29 @@ class WrapperTest {
                 .then((done: Function) => {
                     this.sqlWrapper.open().then(connection => {
                         done(connection);
-                    })
+                    }).catch((e:any)=> {
+                        reject(e);
+                    });
                 })
                 .then((done: Function, connection: Connection) => {
                     this.procedureHelper.createProcedure(procedureDef.name, procedureDef.def, function () {
                         done(connection)
-                    });
+                    })
                 })
                 .then((done: Function, connection: Connection) => {
                     connection.getCommand().procedure(procedureDef.name).params(params).execute().then(res => {
                         assert.deepEqual(res.outputParams, expected, "results didn't match");
                         done(connection);
+                    }).catch((e:any)=> {
+                        reject(e);
                     });
                 })
                 .then((done: Function, connection: Connection) => {
                     connection.close().then(() => {
                         done();
-                    })
+                    }).catch((e:any)=> {
+                        reject(e);
+                    });
                 })
                 .then(() => {
                     resolve();
@@ -177,27 +208,37 @@ class WrapperTest {
                 .then((done: Function) => {
                     this.sqlWrapper.open().then(connection => {
                         done(connection);
+                    }).catch((e:any)=> {
+                        reject(e);
                     })
                 })
                 .then((done: Function, connection: Connection) => {
                     connection.getCommand().sql(this.testPrepare).prepare().then(command => {
                         done(connection, command);
+                    }).catch((e:any)=> {
+                        reject(e);
                     })
                 })
                 .then((done: Function, connection: Connection, command: SqlCommand) => {
                     command.params([1000]).execute().then(res => {
                         assert.deepEqual(res.asObjects, this.expectedPrepared, "results didn't match");
                         done(connection, command);
+                    }).catch((e:any)=> {
+                        reject(e);
                     })
                 })
                 .then((done: Function, connection: Connection, command: SqlCommand) => {
                     command.freePrepared().then(() => {
                         done(connection);
+                    }).catch((e:any)=> {
+                        reject(e);
                     })
                 })
                 .then((done: Function, connection: Connection) => {
                     connection.close().then(() => {
                         done();
+                    }).catch((e:any)=> {
+                        reject(e);
                     })
                 })
                 .then(() => {

@@ -161,7 +161,7 @@ function DemoSupport(native) {
 
             var sequence = [
                 function (async_done) {
-                    var createSql = "IF NOT EXISTS (SELECT *  FROM sys.asObjects WHERE type = 'P' AND name = '" + procedureName + "')";
+                    var createSql = "IF NOT EXISTS (SELECT *  FROM sys.objects WHERE type = 'P' AND name = '" + procedureName + "')";
                     createSql += " EXEC ('CREATE PROCEDURE " + procedureName + " AS BEGIN SET nocount ON; END')";
                     if (verbose) console.log(createSql);
                     sql.query(conn_str, createSql, function () {
