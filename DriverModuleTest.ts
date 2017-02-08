@@ -26,6 +26,12 @@ class eventHits {
     public onError: number;
 }
 
+class StoredProcedureDef {
+    constructor(public name: string, public def: string) {
+
+    }
+}
+
 class WrapperTest {
 
     conn_str: string;
@@ -35,6 +41,20 @@ class WrapperTest {
     parsedJSON: any;
     sqlWrapper: MsNodeSqlWrapperModule.Sql;
     legacy: v8driver = MsNodeSqlWrapperModule.legacyDriver;
+
+    getIntIntProc = new StoredProcedureDef(
+        'test_sp_get_int_int',
+        "alter PROCEDURE <name>" +
+        `(
+    @num1 INT,
+    @num2 INT,
+    @num3 INT OUTPUT
+    )
+    AS
+    BEGIN
+       SET @num3 = @num1 + @num2
+       RETURN 99;
+    END`);
 
     constructor(public debug: boolean) {
     }
@@ -72,10 +92,10 @@ class WrapperTest {
 
     private exec(done: Function): void {
 
-        ASQ().promise(this.prepare())
+        ASQ().promise(this.storedProcedure(this.getIntIntProc, [1, 2], [99, 3]))
             .then(
                 (done: Function) => {
-                    console.log('prepare completes. next....');
+                    console.log('storedProcedure completes. next....');
                     done();
                 }
             ).promise(this.execute())
@@ -85,10 +105,10 @@ class WrapperTest {
                     done();
                 }
             )
-            .promise(this.storedProcedure())
+            .promise(this.prepare())
             .then(
                 (done: Function) => {
-                    console.log('storedProcedure completes next....');
+                    console.log('prepare completes next....');
                     done();
                 }
             )
@@ -119,42 +139,34 @@ class WrapperTest {
         );
     }
 
-    private storedProcedure(): Promise<any> {
-
-        let sp_name = "test_sp_get_int_int";
-
-        let def = "alter PROCEDURE <name>" +
-            "(\n" +
-            "@num1 INT,\n" +
-            "@num2 INT,\n" +
-            "@num3 INT OUTPUT\n" +
-            "\n)" +
-            "AS\n" +
-            "BEGIN\n" +
-            "   SET @num3 = @num1 + @num2\n" +
-            "   RETURN 99;\n" +
-            "END\n";
-
+    private storedProcedure(procedureDef: StoredProcedureDef, params: any, expected: any[]): Promise<any> {
         return new Promise((resolve, reject) => {
-            this.sqlWrapper.open().then(c => {
-                if (this.debug) console.log('opened');
-                let command = c.getCommand();
-                let inst = this;
-                this.procedureHelper.createProcedure(sp_name, def, function () {
-                    command.procedure('test_sp_get_int_int').params([1, 2]).execute().then(res => {
-                        let expected = [99, 3];
-                        assert.deepEqual(res.outputParams, expected, "results didn't match");
-                        if (inst.debug) console.log('==============================');
-                        if (inst.debug) console.log(JSON.stringify(res, null, 2));
-                        c.close().then(() => {
-                            if (inst.debug) console.log('closed - finished.');
-                            resolve();
-                        });
-                    }).catch((e: any) => {
-                        console.log(JSON.stringify(e, null, 2));
-                        reject(e);
+            ASQ()
+                .then((done: Function) => {
+                    this.sqlWrapper.open().then(connection => {
+                        done(connection);
+                    })
+                })
+                .then((done: Function, connection: Connection) => {
+                    this.procedureHelper.createProcedure(procedureDef.name, procedureDef.def, function () {
+                        done(connection)
                     });
-                });
+                })
+                .then((done: Function, connection: Connection) => {
+                    connection.getCommand().procedure(procedureDef.name).params(params).execute().then(res => {
+                        assert.deepEqual(res.outputParams, expected, "results didn't match");
+                        done(connection);
+                    });
+                })
+                .then((done: Function, connection: Connection) => {
+                    connection.close().then(() => {
+                        done();
+                    })
+                })
+                .then(() => {
+                    resolve();
+                }).or((e: any) => {
+                reject(e);
             });
         });
     }
@@ -167,27 +179,27 @@ class WrapperTest {
                         done(connection);
                     })
                 })
-                .then(((done: Function, connection: Connection) => {
+                .then((done: Function, connection: Connection) => {
                     connection.getCommand().sql(this.testPrepare).prepare().then(command => {
                         done(connection, command);
                     })
-                }))
-                .then(((done: Function, connection: Connection, command: SqlCommand) => {
+                })
+                .then((done: Function, connection: Connection, command: SqlCommand) => {
                     command.params([1000]).execute().then(res => {
                         assert.deepEqual(res.asObjects, this.expectedPrepared, "results didn't match");
                         done(connection, command);
                     })
-                }))
-                .then(((done: Function, connection: Connection, command: SqlCommand) => {
+                })
+                .then((done: Function, connection: Connection, command: SqlCommand) => {
                     command.freePrepared().then(() => {
                         done(connection);
                     })
-                }))
-                .then(((done: Function, connection: Connection) => {
+                })
+                .then((done: Function, connection: Connection) => {
                     connection.close().then(() => {
                         done();
                     })
-                }))
+                })
                 .then(() => {
                     resolve();
                 }).or((e: any) => {

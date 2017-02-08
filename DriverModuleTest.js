@@ -5,10 +5,27 @@ let supp = require('./demo-support');
 let ASQ = require('asynquence-contrib');
 class eventHits {
 }
+class StoredProcedureDef {
+    constructor(name, def) {
+        this.name = name;
+        this.def = def;
+    }
+}
 class WrapperTest {
     constructor(debug) {
         this.debug = debug;
         this.legacy = MsNodeSqWrapperModule_1.MsNodeSqlWrapperModule.legacyDriver;
+        this.getIntIntProc = new StoredProcedureDef('test_sp_get_int_int', "alter PROCEDURE <name>" +
+            `(
+    @num1 INT,
+    @num2 INT,
+    @num3 INT OUTPUT
+    )
+    AS
+    BEGIN
+       SET @num3 = @num1 + @num2
+       RETURN 99;
+    END`);
         this.expectedPrepared = [
             {
                 "len": 4
@@ -40,18 +57,18 @@ class WrapperTest {
         ];
     }
     exec(done) {
-        ASQ().promise(this.prepare())
+        ASQ().promise(this.storedProcedure(this.getIntIntProc, [1, 2], [99, 3]))
             .then((done) => {
-            console.log('prepare completes. next....');
+            console.log('storedProcedure completes. next....');
             done();
         }).promise(this.execute())
             .then((done) => {
             console.log('execute completes next....');
             done();
         })
-            .promise(this.storedProcedure())
+            .promise(this.prepare())
             .then((done) => {
-            console.log('storedProcedure completes next....');
+            console.log('prepare completes next....');
             done();
         })
             .promise(this.eventSubscribe())
@@ -77,43 +94,34 @@ class WrapperTest {
             this.exec(done);
         });
     }
-    storedProcedure() {
-        let sp_name = "test_sp_get_int_int";
-        let def = "alter PROCEDURE <name>" +
-            "(\n" +
-            "@num1 INT,\n" +
-            "@num2 INT,\n" +
-            "@num3 INT OUTPUT\n" +
-            "\n)" +
-            "AS\n" +
-            "BEGIN\n" +
-            "   SET @num3 = @num1 + @num2\n" +
-            "   RETURN 99;\n" +
-            "END\n";
+    storedProcedure(procedureDef, params, expected) {
         return new Promise((resolve, reject) => {
-            this.sqlWrapper.open().then(c => {
-                if (this.debug)
-                    console.log('opened');
-                let command = c.getCommand();
-                let inst = this;
-                this.procedureHelper.createProcedure(sp_name, def, function () {
-                    command.procedure('test_sp_get_int_int').params([1, 2]).execute().then(res => {
-                        let expected = [99, 3];
-                        assert.deepEqual(res.outputParams, expected, "results didn't match");
-                        if (inst.debug)
-                            console.log('==============================');
-                        if (inst.debug)
-                            console.log(JSON.stringify(res, null, 2));
-                        c.close().then(() => {
-                            if (inst.debug)
-                                console.log('closed - finished.');
-                            resolve();
-                        });
-                    }).catch((e) => {
-                        console.log(JSON.stringify(e, null, 2));
-                        reject(e);
-                    });
+            ASQ()
+                .then((done) => {
+                this.sqlWrapper.open().then(connection => {
+                    done(connection);
                 });
+            })
+                .then((done, connection) => {
+                this.procedureHelper.createProcedure(procedureDef.name, procedureDef.def, function () {
+                    done(connection);
+                });
+            })
+                .then((done, connection) => {
+                connection.getCommand().procedure(procedureDef.name).params(params).execute().then(res => {
+                    assert.deepEqual(res.outputParams, expected, "results didn't match");
+                    done(connection);
+                });
+            })
+                .then((done, connection) => {
+                connection.close().then(() => {
+                    done();
+                });
+            })
+                .then(() => {
+                resolve();
+            }).or((e) => {
+                reject(e);
             });
         });
     }
@@ -125,27 +133,27 @@ class WrapperTest {
                     done(connection);
                 });
             })
-                .then(((done, connection) => {
+                .then((done, connection) => {
                 connection.getCommand().sql(this.testPrepare).prepare().then(command => {
                     done(connection, command);
                 });
-            }))
-                .then(((done, connection, command) => {
+            })
+                .then((done, connection, command) => {
                 command.params([1000]).execute().then(res => {
                     assert.deepEqual(res.asObjects, this.expectedPrepared, "results didn't match");
                     done(connection, command);
                 });
-            }))
-                .then(((done, connection, command) => {
+            })
+                .then((done, connection, command) => {
                 command.freePrepared().then(() => {
                     done(connection);
                 });
-            }))
-                .then(((done, connection) => {
+            })
+                .then((done, connection) => {
                 connection.close().then(() => {
                     done();
                 });
-            }))
+            })
                 .then(() => {
                 resolve();
             }).or((e) => {
