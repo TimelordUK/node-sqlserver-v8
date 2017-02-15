@@ -36,6 +36,13 @@ class WrapperTest {
             set @b = @a
             select @b as b
         END`);
+        this.raiseErrorProcedure = new StoredProcedureDef('test_error', "alter PROCEDURE <name>" +
+            `
+            as 
+            begin
+	            RAISERROR ('error', 16, 1);
+            end
+`);
         this.expectedPrepared = [
             {
                 "len": 4
@@ -67,30 +74,21 @@ class WrapperTest {
         ];
     }
     exec(done) {
-        ASQ().promise(this.storedProcedure(this.bigIntProcedure, [1234567890], [0, 1234567890]))
-            .then((done) => {
-            console.log(`storedProcedure ${this.bigIntProcedure.name} completes. next....`);
-            done();
-        }).promise(this.storedProcedure(this.getIntIntProcedure, [1, 2], [99, 3]))
-            .then((done) => {
-            console.log(`storedProcedure ${this.getIntIntProcedure.name} completes. next....`);
-            done();
-        }).promise(this.execute())
-            .then((done) => {
+        let inst = this;
+        ASQ().runner(function* () {
+            yield inst.storedProcedureStress.apply(inst, [inst.raiseErrorProcedure, []]);
+            console.log(`storedProcedure ${inst.raiseErrorProcedure.name} completes. next....`);
+            yield inst.storedProcedure.apply(inst, [inst.bigIntProcedure, [1234567890], [0, 1234567890]]);
+            console.log(`storedProcedure ${inst.bigIntProcedure.name} completes. next....`);
+            yield inst.storedProcedure.apply(inst, [inst.getIntIntProcedure, [1, 2], [99, 3]]);
+            console.log(`storedProcedure ${inst.getIntIntProcedure.name} completes. next....`);
+            yield inst.execute.apply(inst);
             console.log('execute completes next....');
-            done();
-        })
-            .promise(this.prepare())
-            .then((done) => {
+            yield inst.prepare.apply(inst);
             console.log('prepare completes next....');
-            done();
-        })
-            .promise(this.eventSubscribe())
-            .then((done) => {
+            yield inst.eventSubscribe.apply(inst);
             console.log('eventSubscribe completes next....');
-            done();
-        })
-            .then(() => {
+        }).val(() => {
             done();
         }).or((e) => {
             console.log(e);
@@ -110,37 +108,52 @@ class WrapperTest {
             this.exec(done);
         });
     }
+    createProcedureDef(procedureDef) {
+        return new Promise((resolve, reject) => {
+            this.procedureHelper.createProcedure(procedureDef.name, procedureDef.def, function (e) {
+                if (e)
+                    reject(e);
+                else
+                    resolve();
+            });
+        });
+    }
+    storedProcedureStress(procedureDef, params) {
+        let inst = this;
+        return new Promise((resolve, reject) => {
+            ASQ().runner(function* () {
+                let connection = yield inst.sqlWrapper.open();
+                let array = [];
+                yield inst.createProcedureDef(procedureDef);
+                let count = 100;
+                for (let i = 0; i < count; i++) {
+                    array.push(i);
+                }
+                let raised = 0;
+                let promises = array.map(() => {
+                    let command = connection.getCommand().procedure(procedureDef.name).params(params);
+                    return command.execute().catch((err) => {
+                        console.log(`[${raised}] ${JSON.stringify(err, null, 2)}`);
+                        ++raised;
+                    });
+                });
+                Promise.all(promises).then(() => {
+                    resolve();
+                }).catch((e) => {
+                    reject(e);
+                });
+            });
+        });
+    }
     storedProcedure(procedureDef, params, expected) {
         return new Promise((resolve, reject) => {
-            ASQ()
-                .then((done) => {
-                this.sqlWrapper.open().then(connection => {
-                    done(connection);
-                }).catch((e) => {
-                    reject(e);
-                });
-            })
-                .then((done, connection) => {
-                this.procedureHelper.createProcedure(procedureDef.name, procedureDef.def, function () {
-                    done(connection);
-                });
-            })
-                .then((done, connection) => {
-                connection.getCommand().procedure(procedureDef.name).params(params).execute().then(res => {
-                    assert.deepEqual(res.outputParams, expected, "results didn't match");
-                    done(connection);
-                }).catch((e) => {
-                    reject(e);
-                });
-            })
-                .then((done, connection) => {
-                connection.close().then(() => {
-                    done();
-                }).catch((e) => {
-                    reject(e);
-                });
-            })
-                .then(() => {
+            let inst = this;
+            ASQ().runner(function* () {
+                let connection = yield inst.sqlWrapper.open();
+                yield inst.createProcedureDef.apply(inst, [procedureDef]);
+                let res = yield connection.getCommand().procedure(procedureDef.name).params(params).execute();
+                assert.deepEqual(res.outputParams, expected, "results didn't match");
+                yield connection.close();
                 resolve();
             }).or((e) => {
                 reject(e);
@@ -148,45 +161,16 @@ class WrapperTest {
         });
     }
     prepare() {
+        let inst = this;
         return new Promise((resolve, reject) => {
-            ASQ()
-                .then((done) => {
-                this.sqlWrapper.open().then(connection => {
-                    done(connection);
-                }).catch((e) => {
-                    reject(e);
-                });
-            })
-                .then((done, connection) => {
-                connection.getCommand().sql(this.testPrepare).prepare().then(command => {
-                    done(connection, command);
-                }).catch((e) => {
-                    reject(e);
-                });
-            })
-                .then((done, connection, command) => {
-                command.params([1000]).execute().then(res => {
-                    assert.deepEqual(res.asObjects, this.expectedPrepared, "results didn't match");
-                    done(connection, command);
-                }).catch((e) => {
-                    reject(e);
-                });
-            })
-                .then((done, connection, command) => {
-                command.freePrepared().then(() => {
-                    done(connection);
-                }).catch((e) => {
-                    reject(e);
-                });
-            })
-                .then((done, connection) => {
-                connection.close().then(() => {
-                    done();
-                }).catch((e) => {
-                    reject(e);
-                });
-            })
-                .then(() => {
+            ASQ().runner(function* () {
+                let connection = yield inst.sqlWrapper.open();
+                let command = connection.getCommand().sql(inst.testPrepare);
+                command = yield command.prepare();
+                let res = yield command.params([1000]).execute();
+                assert.deepEqual(res.asObjects, inst.expectedPrepared, "results didn't match");
+                yield command.freePrepared();
+                yield connection.close();
                 resolve();
             }).or((e) => {
                 reject(e);
