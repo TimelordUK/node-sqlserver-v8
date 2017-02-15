@@ -72,7 +72,7 @@ class WrapperTest {
     raiseErrorProcedure = new StoredProcedureDef(
         'test_error',
         "alter PROCEDURE <name>" +
-            `
+        `
             as 
             begin
 	            RAISERROR ('error', 16, 1);
@@ -113,7 +113,7 @@ class WrapperTest {
         }
     ];
 
-    private exec(done:Function) : void {
+    private exec(done: Function): void {
         let inst = this;
         ASQ().runner(function*() {
             yield inst.storedProcedureStress.apply(inst, [inst.raiseErrorProcedure, []]);
@@ -128,9 +128,9 @@ class WrapperTest {
             console.log('prepare completes next....');
             yield inst.eventSubscribe.apply(inst);
             console.log('eventSubscribe completes next....');
-        }).val(()=> {
+        }).val(() => {
             done();
-        }).or((e:any) => {
+        }).or((e: any) => {
             console.log(e);
         });
     }
@@ -150,30 +150,30 @@ class WrapperTest {
         );
     }
 
-    private createProcedureDef(procedureDef:StoredProcedureDef) : Promise<any> {
-        return new Promise((resolve,reject) => {
-            this.procedureHelper.createProcedure(procedureDef.name, procedureDef.def, function (e:any) {
+    private createProcedureDef(procedureDef: StoredProcedureDef): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.procedureHelper.createProcedure(procedureDef.name, procedureDef.def, function (e: any) {
                 if (e) reject(e);
                 else resolve()
             });
         });
     }
 
-    private storedProcedureStress(procedureDef:StoredProcedureDef, params:any) : Promise<any> {
+    private storedProcedureStress(procedureDef: StoredProcedureDef, params: any): Promise<any> {
         let inst = this;
         return new Promise((resolve, reject) => {
             ASQ().runner(function*() {
                 let connection = yield inst.sqlWrapper.open();
-                let array:any = [];
+                let array: any = [];
 
                 yield inst.createProcedureDef(procedureDef);
                 let count = 100;
-                for (let i=0; i<count; i++){
+                for (let i = 0; i < count; i++) {
                     array.push(i);
                 }
 
                 let raised = 0;
-                let promises = array.map(()=> {
+                let promises = array.map(() => {
                     let command = connection.getCommand().procedure(procedureDef.name).params(params);
                     // test should raise an error, or just don't exist at all
                     return command.execute().catch((err: any) => {
@@ -181,12 +181,11 @@ class WrapperTest {
                         ++raised;
                     });
                 });
-
-                Promise.all(promises).then( ()=> {
-                    resolve();
-                }).catch((e:any)=> {
-                    reject(e);
-                });
+                yield Promise.all(promises);
+            }).val(() => {
+                resolve();
+            }).or((e: any) => {
+                reject(e);
             });
         });
     }
@@ -201,7 +200,7 @@ class WrapperTest {
                 assert.deepEqual(res.outputParams, expected, "results didn't match");
                 yield connection.close();
                 resolve();
-            }).or((e:any) => {
+            }).or((e: any) => {
                 reject(e);
             });
         });

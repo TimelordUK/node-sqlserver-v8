@@ -137,11 +137,11 @@ class WrapperTest {
                         ++raised;
                     });
                 });
-                Promise.all(promises).then(() => {
-                    resolve();
-                }).catch((e) => {
-                    reject(e);
-                });
+                yield Promise.all(promises);
+            }).val(() => {
+                resolve();
+            }).or((e) => {
+                reject(e);
             });
         });
     }
