@@ -109,7 +109,7 @@ namespace mssql
 		bool prepared;
 
 		// set binary true if a binary Buffer should be returned instead of a JS string
-
+		vector<shared_ptr<OdbcError>> errors;
 		shared_ptr<ResultSet> resultset;
 		shared_ptr<BoundDatumSet> boundParamsSet;
 		shared_ptr<BoundDatumSet> preparedStorage;		

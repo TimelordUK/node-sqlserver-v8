@@ -20,6 +20,7 @@
 #pragma once
 
 #include "stdafx.h"
+#include <vector>
 
 namespace mssql
 {
@@ -37,7 +38,7 @@ namespace mssql
 		SQLHANDLE get() const;
 		operator SQLHANDLE() const { return handle; }
 		operator bool() const { return handle != nullptr; }
-		shared_ptr<OdbcError> LastError(void) const;
+		vector<shared_ptr<OdbcError> > ReadErrors() const;
       
     private:
 

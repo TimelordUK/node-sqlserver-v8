@@ -106,8 +106,19 @@ namespace mssql
 		auto err = fact.error(failure->Message());
 		err->Set(fact.newString("sqlstate"), fact.newString(failure->SqlState()));
 		err->Set(fact.newString("code"), fact.newInteger(failure->Code()));
+		
+		bool more;
+		if (statement)
+		{
+			more = !statement->GetResultSet()->EndOfRows();
+		}else
+		{
+			more = false;
+		}
 		args[0] = err;
-		auto argc = 1;
+		args[1] = fact.newArray();
+		args[2] = fact.newBoolean(more);
+		auto argc = 3;
 		return argc;
 	}
 

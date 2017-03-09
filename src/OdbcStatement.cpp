@@ -36,7 +36,7 @@ namespace mssql
 
 	OdbcStatement::~OdbcStatement()
 	{
-		auto id = getStatementId();
+		//auto id = getStatementId();
 		//fprintf(stderr, "destruct OdbcStatement ID = %ld\n ", id);
 		//if (statement) {
 		//	statement->Free();
@@ -78,16 +78,16 @@ namespace mssql
 	{
 		auto & ps = *params;
 		//fprintf(stderr, "BindParams\n");
-		size_t size = getSize(ps);
+		auto size = getSize(ps);
 		if (size <= 0) return true;
 		auto ret = SQLSetStmtAttr(*statement, SQL_ATTR_PARAMSET_SIZE, reinterpret_cast<SQLPOINTER>(size), 0);
 		if (!CheckOdbcError(ret)) return false;
-		int current_param = 1;
+		auto current_param = 1;
 
 		for (auto itr = ps.begin(); itr != ps.end(); ++itr) {
 			auto & datum = *itr;
 			auto r = SQLBindParameter(*statement, current_param, datum.param_type, datum.c_type, datum.sql_type, datum.param_size, datum.digits, datum.buffer, datum.buffer_len, datum.getIndVec().data());
-			if (!CheckOdbcError(ret)) return false;
+			if (!CheckOdbcError(r)) return false;
 			if (datum.getDefinedPrecision()) {
 				applyPrecision(datum, current_param);
 			}
@@ -137,7 +137,12 @@ namespace mssql
 	bool OdbcStatement::ReturnOdbcError()
 	{
 		if (!statement) return false;
-		error = statement->LastError();
+		errors = statement->ReadErrors();
+		error = nullptr;
+		if (errors.size() > 0)
+		{
+			error = errors.at(0);
+		}
 		//fprintf(stderr, "%s\n", error->Message());
 		// fprintf(stderr, "RETURN_ODBC_ERROR - free statement handle\n\n");
 		return false;
@@ -160,7 +165,7 @@ namespace mssql
 		wchar_t typeName[l];
 		SQLSMALLINT typeNameLen;
 		auto index = column + 1;
-		const size_t width = sizeof(wchar_t);
+		const auto width = sizeof(wchar_t);
 		ret = SQLColAttribute(*statement, index, SQL_DESC_TYPE_NAME, typeName, l * width, &typeNameLen, nullptr);
 		if (!CheckOdbcError(ret)) return false;
 		
@@ -214,10 +219,10 @@ namespace mssql
 	bool OdbcStatement::StartReadingResults()
 	{
 		SQLSMALLINT columns;
-		SQLRETURN ret = SQLNumResultCols(*statement, &columns);
+		auto ret = SQLNumResultCols(*statement, &columns);
 		if (!CheckOdbcError(ret)) return false;
 
-		int column = 0;
+		auto column = 0;
 		resultset = make_unique<ResultSet>(columns);
 
 		while (column < resultset->GetColumns())
@@ -237,7 +242,7 @@ namespace mssql
 	{
 		SQLRETURN ret;
 		if (timeout > 0) {
-			SQLPOINTER to = reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout));
+			auto to = reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout));
 			ret = SQLSetStmtAttr(*statement, SQL_QUERY_TIMEOUT, to, SQL_IS_UINTEGER);
 			if (!CheckOdbcError(ret)) return false;
 			SQLSetStmtAttr(*statement, SQL_ATTR_QUERY_TIMEOUT, to, SQL_IS_UINTEGER);
@@ -249,7 +254,7 @@ namespace mssql
 	bool OdbcStatement::TryPrepare(const wstring & query, u_int timeout)
 	{
 		SQLRETURN ret;
-		SQLWCHAR * sql_str = const_cast<SQLWCHAR *>(query.c_str());
+		auto * sql_str = const_cast<SQLWCHAR *>(query.c_str());
 		SQLSMALLINT numCols;
 
 		ret = SQLPrepare(*statement, sql_str, static_cast<SQLINTEGER>(query.length()));
@@ -267,7 +272,7 @@ namespace mssql
 
 		preparedStorage->reserve(resultset);
 
-		int i = 0;
+		auto i = 0;
 		for (auto itr = preparedStorage->begin(); itr != preparedStorage->end(); ++itr)
 		{
 			auto & datum = *itr;
@@ -284,7 +289,7 @@ namespace mssql
 
 	bool OdbcStatement::BindFetch(shared_ptr<BoundDatumSet> paramSet)
 	{
-		bool bound = BindParams(paramSet);
+		auto bound = BindParams(paramSet);
 		if (!bound) {
 			// error already set in BindParams
 			return false;
@@ -300,7 +305,7 @@ namespace mssql
 
 	bool OdbcStatement::TryExecuteDirect(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> paramSet)
 	{
-		bool bound = BindParams(paramSet);
+		auto bound = BindParams(paramSet);
 		if (!bound) {
 			// error already set in BindParams
 			return false;
@@ -309,14 +314,31 @@ namespace mssql
 		endOfResults = true;     // reset 
 		auto ret = queryTimeout(timeout);
 		if (!CheckOdbcError(ret)) return false;
-
-		SQLWCHAR * sql_str = const_cast<wchar_t *>(query.c_str());
+		auto * sql_str = const_cast<wchar_t *>(query.c_str());
 		ret = SQLExecDirect(*statement, sql_str, SQL_NTS);
-		if (ret != SQL_NO_DATA && !SQL_SUCCEEDED(ret))
+		if ( 
+			(ret == SQL_SUCCESS_WITH_INFO) || 
+			(ret != SQL_NO_DATA && !SQL_SUCCEEDED(ret)))
 		{
-			resultset = make_unique<ResultSet>(0);
-			resultset->endOfRows = true;
-			if (!CheckOdbcError(ret)) return false;
+			ReturnOdbcError();			
+			boundParamsSet = paramSet;
+			auto saved_errors = errors;	
+			auto res = StartReadingResults();
+			errors = saved_errors;
+			error = nullptr;
+			if (errors.size() > 0)
+			{
+				error = errors.at(0);
+			}
+			if (res)
+			{
+				resultset->endOfRows = false;
+			} else {
+				resultset = make_unique<ResultSet>(0);
+				resultset->endOfRows = true;
+			}
+
+			return false;
 		}
 		boundParamsSet = paramSet;
 		return StartReadingResults();
@@ -537,7 +559,7 @@ namespace mssql
 		storage = make_shared<DatumStorage>();
 		storage->ReserveInt64(1);
 		SQLLEN strLen_or_IndPtr;
-		SQLRETURN ret = SQLGetData(*statement, column + 1, SQL_C_SLONG, storage->int64vec_ptr->data(), sizeof(int64_t), &strLen_or_IndPtr);
+		auto ret = SQLGetData(*statement, column + 1, SQL_C_SLONG, storage->int64vec_ptr->data(), sizeof(int64_t), &strLen_or_IndPtr);
 		if (!CheckOdbcError(ret)) return false;
 		if (strLen_or_IndPtr == SQL_NULL_DATA)
 		{
@@ -565,7 +587,7 @@ namespace mssql
 
 	bool OdbcStatement::d_String(int column)
 	{
-		bool read = TryReadString(false, column);
+		auto read = TryReadString(false, column);
 		return read;
 	}
 
@@ -575,7 +597,7 @@ namespace mssql
 		storage = make_shared<DatumStorage>();
 		storage->ReserveChars(1);
 		SQLLEN strLen_or_IndPtr;
-		SQLRETURN ret = SQLGetData(*statement, column + 1, SQL_C_BIT, storage->charvec_ptr->data(), sizeof(byte), &strLen_or_IndPtr);
+		auto ret = SQLGetData(*statement, column + 1, SQL_C_BIT, storage->charvec_ptr->data(), sizeof(byte), &strLen_or_IndPtr);
 		if (!CheckOdbcError(ret)) return false;
 		if (strLen_or_IndPtr == SQL_NULL_DATA)
 		{
@@ -606,7 +628,7 @@ namespace mssql
 		storage = make_shared<DatumStorage>();
 		storage->ReserveDouble(1);
 		SQLLEN strLen_or_IndPtr;
-		SQLRETURN ret = SQLGetData(*statement, column + 1, SQL_C_DOUBLE, storage->doublevec_ptr->data(), sizeof(double), &strLen_or_IndPtr);
+		auto ret = SQLGetData(*statement, column + 1, SQL_C_DOUBLE, storage->doublevec_ptr->data(), sizeof(double), &strLen_or_IndPtr);
 		if (!CheckOdbcError(ret)) return false;
 		if (strLen_or_IndPtr == SQL_NULL_DATA)
 		{
@@ -637,8 +659,8 @@ namespace mssql
 		SQLLEN amount = 2048;
 		storage->ReserveChars(amount);
 		SQLLEN strLen_or_IndPtr;
-		bool more = false;
-		SQLRETURN ret = SQLGetData(*statement, column + 1, SQL_C_BINARY, storage->charvec_ptr->data(), amount, &strLen_or_IndPtr);
+		auto more = false;
+		auto ret = SQLGetData(*statement, column + 1, SQL_C_BINARY, storage->charvec_ptr->data(), amount, &strLen_or_IndPtr);
 		if (!CheckOdbcError(ret)) return false;
 		if (strLen_or_IndPtr == SQL_NULL_DATA)
 		{
@@ -672,10 +694,10 @@ namespace mssql
 	{
 		if (prepared)
 		{
-			bool more = false;
+			auto more = false;
 			SQLLEN amount;
 			auto & datum = preparedStorage->atIndex(column);
-			shared_ptr<DatumStorage> storage = datum.getStorage();
+			auto storage = datum.getStorage();
 			auto & ind = datum.getIndVec();
 			amount = ind[0];
 			resultset->SetColumn(make_shared<BinaryColumn>(storage, amount, more));
@@ -701,7 +723,7 @@ namespace mssql
 		auto storage = make_shared<DatumStorage>();
 		value_len = LOB_PACKET_SIZE + 1;
 		storage->ReserveUint16(value_len);
-		size_t size = sizeof(uint16_t);
+		auto size = sizeof(uint16_t);
 
 		r = SQLGetData(*statement, column + 1, SQL_C_WCHAR, storage->uint16vec_ptr->data(), value_len * size, &value_len);
 
@@ -732,7 +754,7 @@ namespace mssql
 	{
 		auto & storage = preparedStorage->atIndex(column);
 		auto & ind = storage.getIndVec();
-		size_t size = sizeof(uint16_t);
+		auto size = sizeof(uint16_t);
 		auto value_len = ind[0];;
 		value_len /= size;
 		auto value = make_shared<StringColumn>(storage.getStorage(), value_len);
@@ -743,7 +765,7 @@ namespace mssql
 	bool OdbcStatement::boundedString(SQLLEN display_size, int column)
 	{
 		auto storage = make_shared<DatumStorage>();
-		size_t size = sizeof(uint16_t);
+		auto size = sizeof(uint16_t);
 		SQLLEN value_len = 0;
 		SQLRETURN r;
 
@@ -774,7 +796,7 @@ namespace mssql
 	{
 		SQLLEN display_size = 0;
 
-		SQLRETURN r = SQLColAttribute(*statement, column + 1, SQL_DESC_DISPLAY_SIZE, nullptr, 0, nullptr, &display_size);
+		auto r = SQLColAttribute(*statement, column + 1, SQL_DESC_DISPLAY_SIZE, nullptr, 0, nullptr, &display_size);
 		if (!CheckOdbcError(r)) return false;
 
 		// when a field type is LOB, we read a packet at time and pass that back.

@@ -23,8 +23,8 @@ namespace mssql
 
 	bool BoundDatumSet::bind(Handle<Array> &node_params)
 	{
-		uint32_t count = node_params->Length();
-		bool res = true;
+		auto count = node_params->Length();
+		auto res = true;
 		output_param_count = 0;
 		if (count > 0) {
 			for (uint32_t i = 0; i < count; ++i) {
@@ -58,7 +58,7 @@ namespace mssql
 	{
 		nodeTypeFactory fact;
 		auto arr = fact.newArray(output_param_count);
-		int i = 0;
+		auto i = 0;
 
 		std::for_each(bindings.begin(), bindings.end(), [&](BoundDatum& param) mutable
 		{

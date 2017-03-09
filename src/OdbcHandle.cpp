@@ -75,25 +75,26 @@ namespace mssql
 		return handle;
 	} 
 
-	shared_ptr<OdbcError> OdbcHandle::LastError(void) const
+	vector<shared_ptr<OdbcError>> OdbcHandle::ReadErrors() const
 	{
-		vector<wchar_t> buffer;
+		vector<shared_ptr<OdbcError>> errors;
+		shared_ptr<OdbcError> last;
 
-		SQLWCHAR wszSqlState[6];
-		SQLINTEGER nativeError;
-		SQLSMALLINT actual;
+		SQLSMALLINT   i, MsgLen;
+		SQLRETURN      rc2;
+		SQLINTEGER    NativeError;
+		SQLWCHAR        Msg[SQL_MAX_MESSAGE_LENGTH];
+		SQLWCHAR SqlState[6];
 
-		auto ret = SQLGetDiagRec(HandleType, handle, 1, wszSqlState, &nativeError, nullptr, 0, &actual);
-		assert(ret != SQL_INVALID_HANDLE);
-		assert(ret != SQL_NO_DATA);
-		assert(SQL_SUCCEEDED(ret));
-
-		buffer.resize(actual + 1);
-		ret = SQLGetDiagRec(HandleType, handle, 1, wszSqlState, &nativeError, &buffer[0], actual + 1, &actual);
-		assert(SQL_SUCCEEDED(ret));
-
-		auto sqlstate = w2a(wszSqlState);
-		auto message = w2a(buffer.data());
-		return make_shared<OdbcError>(sqlstate.c_str(), message.c_str(), nativeError);
+		// Get the status records.  
+		i = 1;
+		while ((rc2 = SQLGetDiagRec(HandleType, handle, i, SqlState, &NativeError, Msg, sizeof(Msg), &MsgLen)) != SQL_NO_DATA) {
+			i++;
+			auto sqlstate = w2a(SqlState);
+			auto message = w2a(Msg);
+			last = make_shared<OdbcError>(sqlstate.c_str(), message.c_str(), NativeError);
+			errors.push_back(last);
+		}
+		return  errors;
 	}
 }

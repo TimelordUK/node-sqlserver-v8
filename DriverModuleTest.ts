@@ -103,6 +103,7 @@ class WrapperTest {
             "nullable": true,
             "type": "number",
             "sqlType": "int"
+
         },
         {
             "size": 23,

@@ -61,6 +61,7 @@ namespace mssql
 		// and may be retrieved via the Error function below.
 
 		shared_ptr<OdbcError> error;
+		vector<shared_ptr<OdbcError>> errors;
 		enum ConnectionStates
 		{
 			Closed,
