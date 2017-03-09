@@ -3,7 +3,7 @@
  */
 const msnodesqlv8 = require('msnodesqlv8');
 
-msnodesqlv8.open('Driver={SQL Server Native Client 11.0};Server=np:\\\\.\\pipe\\LOCALDB#22236B93\\tsql\\query;Trusted_Connection=yes;', (err, conn) => {
+msnodesqlv8.open('Driver={SQL Server Native Client 11.0};Server=np:\\\\.\\pipe\\LOCALDB#374B0D71\\tsql\\query;Trusted_Connection=yes;', (err, conn) => {
     if (err) {
         throw err;
     }
