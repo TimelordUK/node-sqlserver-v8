@@ -3,12 +3,12 @@
  */
 const msnodesqlv8 = require('msnodesqlv8');
 
-msnodesqlv8.open('Driver={SQL Server Native Client 11.0};Server=np:\\\\.\\pipe\\LOCALDB#C4B04326\\tsql\\query;Trusted_Connection=yes;', (err, conn) => {
+msnodesqlv8.open('Driver={SQL Server Native Client 11.0};Server=np:\\\\.\\pipe\\LOCALDB#374B0D71\\tsql\\query;Trusted_Connection=yes;', (err, conn) => {
     if (err) {
         throw err;
     }
     setInterval(() => {
-        let query = `RAISERROR('User JS Error', 14, 1);SELECT 1+1;`;
+        let query = `RAISERROR('User JS Error', 9, 1);SELECT 1+1;`;
 
         conn.queryRaw(query, (err, results, more) => {
             console.log(">> queryRaw");
