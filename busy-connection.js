@@ -7,8 +7,9 @@ msnodesqlv8.open('Driver={SQL Server Native Client 11.0};Server=np:\\\\.\\pipe\\
     if (err) {
         throw err;
     }
+    let x = 1;
     setInterval(() => {
-        let query = `RAISERROR('User JS Error', 9, 1);SELECT 1+1;`;
+        let query = `RAISERROR('User JS Error', 9, 1);SELECT ${x}+${x};`;
 
         conn.queryRaw(query, (err, results, more) => {
             console.log(">> queryRaw");
@@ -19,6 +20,7 @@ msnodesqlv8.open('Driver={SQL Server Native Client 11.0};Server=np:\\\\.\\pipe\\
                 console.log(">> queryRaw2");
                 console.log(e);
                 console.log(JSON.stringify(r, null, 2));
+                ++x;
                 console.log("<< queryRaw2");
             });
             console.log("<< queryRaw");
