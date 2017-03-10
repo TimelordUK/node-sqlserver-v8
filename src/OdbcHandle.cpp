@@ -19,6 +19,8 @@
 
 #include "OdbcHandle.h"
 #include "stdafx.h"
+#include <locale>
+#include <codecvt>
 
 namespace mssql
 {
@@ -75,10 +77,9 @@ namespace mssql
 		return handle;
 	} 
 
-	vector<shared_ptr<OdbcError>> OdbcHandle::ReadErrors() const
+	shared_ptr<OdbcError> OdbcHandle::ReadErrors() const
 	{
-		vector<shared_ptr<OdbcError>> errors;
-		shared_ptr<OdbcError> last;
+		shared_ptr<OdbcError> first;
 
 		SQLSMALLINT   i, MsgLen;
 		SQLRETURN      rc2;
@@ -89,12 +90,20 @@ namespace mssql
 		// Get the status records.  
 		i = 1;
 		while ((rc2 = SQLGetDiagRec(HandleType, handle, i, SqlState, &NativeError, Msg, sizeof(Msg), &MsgLen)) != SQL_NO_DATA) {
+			
+			wstring sqlstate(SqlState);
+			wstring message(Msg);
+
+			//setup converter
+			using convert_type = codecvt_utf8<wchar_t>;
+			wstring_convert<convert_type, wchar_t> converter;
+			//use converter (.to_bytes: wstr->str, .from_bytes: str->wstr)
+			auto c_state = converter.to_bytes(sqlstate);
+			auto c_msg = converter.to_bytes(message);
+			auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), NativeError);
+			if (i == 1) first = last;
 			i++;
-			auto sqlstate = w2a(SqlState);
-			auto message = w2a(Msg);
-			last = make_shared<OdbcError>(sqlstate.c_str(), message.c_str(), NativeError);
-			errors.push_back(last);
 		}
-		return  errors;
+		return  first;
 	}
 }

@@ -78,11 +78,7 @@ namespace mssql
 
 	bool OdbcConnection::ReturnOdbcError()
 	{
-		errors = connection->ReadErrors();
-		if (errors.size() > 0)
-		{
-			error = errors.at(0);
-		}
+		error = connection->ReadErrors();
 		// fprintf(stderr, "RETURN_ODBC_ERROR - free connection handle\n\n");
 		TryClose();
 		return false;
@@ -121,11 +117,7 @@ namespace mssql
 		this->connection = make_shared<OdbcConnectionHandle>();
 	
 		if (!connection->Alloc(environment)) {
-			errors = environment.ReadErrors();
-			if (errors.size() > 0)
-			{
-				error = errors.at(0);
-			}
+			error = environment.ReadErrors();
 			//fprintf(stderr, "RETURN_ODBC_ERROR - free environment handle\n\n");
 			environment.Free();
 			return false;

@@ -137,12 +137,7 @@ namespace mssql
 	bool OdbcStatement::ReturnOdbcError()
 	{
 		if (!statement) return false;
-		errors = statement->ReadErrors();
-		error = nullptr;
-		if (errors.size() > 0)
-		{
-			error = errors.at(0);
-		}
+		error = statement->ReadErrors();
 		//fprintf(stderr, "%s\n", error->Message());
 		// fprintf(stderr, "RETURN_ODBC_ERROR - free statement handle\n\n");
 		return false;
@@ -316,24 +311,20 @@ namespace mssql
 		if (!CheckOdbcError(ret)) return false;
 		auto * sql_str = const_cast<wchar_t *>(query.c_str());
 		ret = SQLExecDirect(*statement, sql_str, SQL_NTS);
-		if ( 
-			(ret == SQL_SUCCESS_WITH_INFO) || 
+		if (
+			(ret == SQL_SUCCESS_WITH_INFO) ||
 			(ret != SQL_NO_DATA && !SQL_SUCCEEDED(ret)))
 		{
-			ReturnOdbcError();			
+			ReturnOdbcError();
 			boundParamsSet = paramSet;
-			auto saved_errors = errors;	
+			auto saved_errors = error;
 			auto res = StartReadingResults();
-			errors = saved_errors;
-			error = nullptr;
-			if (errors.size() > 0)
-			{
-				error = errors.at(0);
-			}
+			error = saved_errors;
 			if (res)
 			{
 				resultset->endOfRows = false;
-			} else {
+			}
+			else {
 				resultset = make_unique<ResultSet>(0);
 				resultset->endOfRows = true;
 			}
