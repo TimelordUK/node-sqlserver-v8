@@ -107,14 +107,13 @@ namespace mssql
 		err->Set(fact.newString("sqlstate"), fact.newString(failure->SqlState()));
 		err->Set(fact.newString("code"), fact.newInteger(failure->Code()));
 		
-		bool more;
+		auto more  = false;
 		if (statement)
 		{
-			more = !statement->GetResultSet()->EndOfRows();
-		}else
-		{
-			more = false;
+			auto rs = statement->GetResultSet();
+			if (rs) more = !rs->EndOfRows();
 		}
+
 		args[0] = err;
 		args[1] = fact.newArray();
 		args[2] = fact.newBoolean(more);
