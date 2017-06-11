@@ -81,14 +81,14 @@ namespace mssql
 	{
 		shared_ptr<OdbcError> first;
 
-		SQLSMALLINT   i, MsgLen;
+		SQLSMALLINT MsgLen;
 		SQLRETURN      rc2;
 		SQLINTEGER    NativeError;
 		SQLWCHAR        Msg[SQL_MAX_MESSAGE_LENGTH];
 		SQLWCHAR SqlState[6];
 
 		// Get the status records.  
-		i = 1;
+		SQLSMALLINT i = 1;
 		while ((rc2 = SQLGetDiagRec(HandleType, handle, i, SqlState, &NativeError, Msg, sizeof(Msg), &MsgLen)) != SQL_NO_DATA) {
 			
 			wstring sqlstate(SqlState);

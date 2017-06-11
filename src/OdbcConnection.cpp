@@ -95,11 +95,10 @@ namespace mssql
 
 	SQLRETURN OdbcConnection::openTimeout(int timeout)
 	{
-		SQLRETURN ret;
 		if (timeout > 0)
 		{
 			auto to = reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout));
-			ret = SQLSetConnectAttr(*connection, SQL_ATTR_CONNECTION_TIMEOUT, to, 0);
+			auto ret = SQLSetConnectAttr(*connection, SQL_ATTR_CONNECTION_TIMEOUT, to, 0);
 			if (!CheckOdbcError(ret)) return false;
 
 			ret = SQLSetConnectAttr(*connection, SQL_ATTR_LOGIN_TIMEOUT, to, 0);
@@ -110,8 +109,6 @@ namespace mssql
 
 	bool OdbcConnection::TryOpen(const wstring& connectionString, int timeout)
 	{
-		SQLRETURN ret;
-
 		assert(connectionState == Closed);
 
 		this->connection = make_shared<OdbcConnectionHandle>();
@@ -125,7 +122,7 @@ namespace mssql
 	
 		statements = make_shared<OdbcStatementCache>(connection);
 
-		ret = openTimeout(timeout);
+		auto ret = openTimeout(timeout);
 		if (!CheckOdbcError(ret)) return false;
 		auto * conn_str = const_cast<wchar_t *>(connectionString.c_str());
 		auto len = static_cast<SQLSMALLINT>(connectionString.length());

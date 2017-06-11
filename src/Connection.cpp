@@ -51,7 +51,7 @@ namespace mssql
 
     void Connection::Initialize(Handle<Object> exports)
     {
-	   bool initialized = OdbcConnection::InitializeEnvironment();
+	    auto initialized = OdbcConnection::InitializeEnvironment();
 	   nodeTypeFactory fact;
 	   auto connection = fact.newString("Connection");
 	   if (!initialized) {

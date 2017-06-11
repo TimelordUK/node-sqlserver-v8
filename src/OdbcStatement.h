@@ -47,6 +47,7 @@ namespace mssql
 
 		Local<Array> UnbindParams() const;
 		Handle<Value> GetMetaValue() const;
+		bool  endOfResults() const;
 		Handle<Value> EndOfResults() const;
 		Handle<Value> EndOfRows() const;
 		Handle<Value> GetColumnValue() const;
@@ -104,7 +105,7 @@ namespace mssql
 
 		shared_ptr<OdbcError> error;
 
-		bool endOfResults;
+		bool _endOfResults;
 		long statementId;
 		bool prepared;
 

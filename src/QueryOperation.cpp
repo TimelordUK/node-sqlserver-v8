@@ -33,7 +33,7 @@ namespace mssql
 
 		Local<Value> args[1];
 		args[0] = err;
-		int argc = 1;
+		auto argc = 1;
 
 		fact.scopedCallback(callback, argc, args);
 

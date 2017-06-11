@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.sql = require('msnodesqlv8');
 let fs = require('fs');
 let supp = require('./demo-support');

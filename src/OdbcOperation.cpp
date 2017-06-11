@@ -140,9 +140,8 @@ namespace mssql
 		HandleScope scope(isolate);
 		nodeTypeFactory fact;
 		if (callback.IsEmpty()) return;
-		int argc;
 		Local<Value> args[3];
-		argc = failed ? Error(args) : Success(args);
+		auto argc = failed ? Error(args) : Success(args);
 		auto cons = fact.newCallbackFunction(callback);		
 		auto context = isolate->GetCurrentContext();
 		auto global = context->Global();

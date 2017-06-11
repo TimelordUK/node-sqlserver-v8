@@ -66,6 +66,7 @@ export module MsNodeSqlDriverApiModule {
         procedureMgr(): v8ProcedureManager
         tableMgr(): v8TableManager
         prepare(sql: string, cb: v8PrepareCb): void
+        setFilterNonCriticalErrors(flag:boolean):void
     }
 
     export interface v8Query {

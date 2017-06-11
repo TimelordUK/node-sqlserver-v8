@@ -1,5 +1,6 @@
 "use strict";
-const MsNodeSqWrapperModule_1 = require('./lib/MsNodeSqWrapperModule');
+Object.defineProperty(exports, "__esModule", { value: true });
+const MsNodeSqWrapperModule_1 = require("./lib/MsNodeSqWrapperModule");
 let assert = require('assert');
 let supp = require('./demo-support');
 let ASQ = require('asynquence-contrib');
