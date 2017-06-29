@@ -5,6 +5,11 @@ let fs = require('fs');
 let supp = require('./demo-support');
 let conn_str;
 let demos = [
+    connection,
+    prepared,
+    table,
+    procedure,
+    query,
     event
 ];
 let support = null;
@@ -54,22 +59,22 @@ function event(done) {
                 async_done();
             });
             q.on('meta', (meta) => {
-                console.log('meta[0].name = ' + meta[0].name);
+                console.log('event: meta[0].name = ' + meta[0].name);
             });
             q.on('column', (col) => {
-                console.log('column = ' + col);
+                console.log('event: column = ' + col);
             });
             q.on('submitted', (q, params) => {
-                console.log('submitted query = ' + JSON.stringify(q));
+                console.log('event: submitted query = ' + JSON.stringify(q));
             });
             q.on('rowcount', (count) => {
-                console.log('rowcount = ' + count);
+                console.log('event: rowcount = ' + count);
             });
             q.on('row', (row) => {
-                console.log('row = ' + row);
+                console.log('event: row = ' + row);
             });
             q.on('done', () => {
-                console.log('done');
+                console.log('event: done');
             });
             q.on('error', (err) => {
                 console.log(err);
