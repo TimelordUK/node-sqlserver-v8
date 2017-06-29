@@ -35,6 +35,7 @@ let conn_str: string;
 
 let demos = [
     // open connection, simple query and close.
+    /*
     connection,
     // prepared statements to repeat execute SQL with different params.
     prepared,
@@ -44,7 +45,7 @@ let demos = [
     procedure,
     // query both ad hoc and via an open connection.
     query,
-    // shows driver based events can be captured.
+    // shows driver based events can be captured.*/
     event
 ];
 
@@ -131,6 +132,10 @@ function event(done: Function): void {
 
             q.on('column', (col: any) => {
                 console.log('column = ' + col);
+            });
+
+            q.on('submitted', (q: string, params:any[]) => {
+                console.log('submitted query = ' + JSON.stringify(q));
             });
 
             q.on('rowcount', (count: any) => {

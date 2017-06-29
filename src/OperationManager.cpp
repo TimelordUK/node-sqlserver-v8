@@ -20,7 +20,7 @@ namespace mssql
 		operations.insert(pair<size_t, shared_ptr<Operation>>(operation_ptr->OperationID, operation_ptr));
 		operation_ptr->work.data = operation_ptr.get();
 		
-		int result = uv_queue_work(uv_default_loop(), &operation_ptr->work, OnBackground, reinterpret_cast<uv_after_work_cb>(OnForeground));
+		auto result = uv_queue_work(uv_default_loop(), &operation_ptr->work, OnBackground, reinterpret_cast<uv_after_work_cb>(OnForeground));
 		if (result != 0)
 		{
 			return false;

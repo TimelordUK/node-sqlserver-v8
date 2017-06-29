@@ -1,7 +1,7 @@
 /**
  * Created by Stephen on 1/22/2017.
  */
-import {MsNodeSqlDriverApiModule as v8api} from './MsNodeSqlDriverApiModule'
+import {MsNodeSqlDriverApiModule, MsNodeSqlDriverApiModule as v8api} from './MsNodeSqlDriverApiModule'
 
 export module MsNodeSqlWrapperModule {
 
@@ -13,6 +13,7 @@ export module MsNodeSqlWrapperModule {
     import v8QueryEvent = v8api.v8QueryEvent;
     import v8Error = v8api.v8Error;
     import v8PreparedStatement = v8api.v8PreparedStatement;
+    import v8SubmittedEventCb = MsNodeSqlDriverApiModule.v8SubmittedEventCb;
 
     export const legacyDriver: v8api.v8driver = require('msnodesqlv8');
 
@@ -54,6 +55,7 @@ export module MsNodeSqlWrapperModule {
         _onRowCount: queryCb<number>;
         _onRow: queryCb<number>;
         _onDone: queryCb<any>;
+        _onSubmitted: queryCb<any>;
         _onError: queryCb<string>;
         _onClosed: queryCb<string>;
 
@@ -133,6 +135,11 @@ export module MsNodeSqlWrapperModule {
             return this;
         }
 
+        public onSubmitted(cb: queryCb<any>): SqlCommand {
+            this._onSubmitted = cb;
+            return this;
+        }
+
         public onError(cb: queryCb<string>): SqlCommand {
             this._onError = cb;
             return this;
@@ -158,16 +165,16 @@ export module MsNodeSqlWrapperModule {
             let query = this._query;
 
             if (this._onMeta != null) {
-                query.on(v8QueryEvent.meta, m => this._onMeta(m));
+                query.on(v8QueryEvent.meta, (m:any) => this._onMeta(m));
             }
             if (this._onColumn != null) {
-                query.on(v8QueryEvent.column, (c, d, m) => this._onColumn(c, d, m));
+                query.on(v8QueryEvent.column, (c:any, d:any, m:any) => this._onColumn(c, d, m));
             }
             if (this._onRowCount != null) {
-                query.on(v8QueryEvent.rowCount, m => this._onRowCount(m));
+                query.on(v8QueryEvent.rowCount, (m:any) => this._onRowCount(m));
             }
             if (this._onRow != null) {
-                query.on(v8QueryEvent.row, m => this._onRow(m));
+                query.on(v8QueryEvent.row, (m:any) => this._onRow(m));
             }
             if (this._onDone != null) {
                 query.on(v8QueryEvent.done, m => this._onDone(m));
@@ -178,10 +185,14 @@ export module MsNodeSqlWrapperModule {
             if (this._onClosed != null) {
                 query.on(v8QueryEvent.closed, m => this._onClosed(m));
             }
+            if (this._onSubmitted != null) {
+                query.on(v8QueryEvent.submitted, m => this._onSubmitted(m));
+            }
         }
 
         public subscribing(): boolean {
             return this._onMeta != null
+                || this._onSubmitted != null
                 || this._onColumn != null
                 || this._onRowCount != null
                 || this._onRow != null
@@ -250,6 +261,20 @@ export module MsNodeSqlWrapperModule {
                         if (!more) resolve(res);
                     }
                 });
+        }
+
+        public cancel(): Promise<SqlCommand> {
+            return new Promise((resolve, reject) => {
+                let inst = this;
+                if (!this._query) {
+                    reject(new SqlModuleWrapperError('can only cancel a submitted query.'));
+                    return;
+                }
+                this._query.cancelQuery(err => {
+                    if (!err) reject(new SqlModuleWrapperError(`failed to cancel: ${err.message}`));
+                    resolve(inst);
+                })
+            });
         }
 
         public freePrepared(): Promise<SqlCommand> {

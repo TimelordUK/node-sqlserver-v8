@@ -47,6 +47,7 @@ namespace mssql
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "callProcedure", CallProcedure);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "unbind", Unbind);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "freeStatement", FreeStatement);
+	   NODE_SET_PROTOTYPE_METHOD(tpl, "cancelQuery", CancelStatement);
     }
 
     void Connection::Initialize(Handle<Object> exports)
@@ -71,7 +72,7 @@ namespace mssql
 	   exports->Set(connection, fn);
     }
 
-    Connection::~Connection(void)
+    Connection::~Connection()
     {
 	   // close the connection now since the object is being collected
 		//connectionBridge->Collect();
@@ -222,6 +223,16 @@ namespace mssql
 	   auto ret = connection->connectionBridge->Open(connectionObject, callback, info.This());
 	   info.GetReturnValue().Set(ret);
     }
+
+	void Connection::CancelStatement(const FunctionCallbackInfo<Value>& info)
+	{
+		auto queryId = info[0].As<Number>();
+		auto callback = info[1].As<Object>();
+		auto connection = Unwrap<Connection>(info.This());
+		
+		auto ret = connection->connectionBridge->Cancel(queryId, callback);
+		info.GetReturnValue().Set(ret);
+	}
 }
 
 NODE_MODULE(sqlserver, mssql::Connection::Initialize)

@@ -214,6 +214,10 @@ class WrapperTest {
                     if (inst.debug)
                         console.log(`onDone:`);
                     h.onDone++;
+                }).onSubmitted((s) => {
+                    if (inst.debug)
+                        console.log(`onSubmitted: ${JSON.stringify(s)}`);
+                    h.onSubmitted++;
                 }).onClosed(() => {
                     if (inst.debug)
                         console.log(`onClose:`);
@@ -244,7 +248,7 @@ class WrapperTest {
         });
     }
 }
-let wt = new WrapperTest(false);
+let wt = new WrapperTest(true);
 wt.run(() => {
     console.log('done.');
 });

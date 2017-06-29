@@ -41,6 +41,7 @@ namespace mssql
 		//if (statement) {
 		//	statement->Free();
 		//}
+		_statementState = STATEMENT_CLOSED;
 	}
 
 	OdbcStatement::OdbcStatement(long statementId, shared_ptr<OdbcConnectionHandle> c)
@@ -48,8 +49,9 @@ namespace mssql
 		connection(c),
 		error(nullptr),
 		_endOfResults(true),
-		statementId(static_cast<long>(statementId)),
-		prepared(false),
+		_statementId(static_cast<long>(statementId)),
+		_prepared(false),
+		_cancelRequested(false),
 		resultset(nullptr),
 		boundParamsSet(nullptr)
 	{
@@ -71,6 +73,14 @@ namespace mssql
 		SQLSetDescField(hdesc, current_param, SQL_DESC_PRECISION, reinterpret_cast<SQLPOINTER>(datum.param_size), 0);
 		SQLSetDescField(hdesc, current_param, SQL_DESC_SCALE, reinterpret_cast<SQLPOINTER>(datum.digits), 0);
 		SQLSetDescField(hdesc, current_param, SQL_DESC_DATA_PTR, static_cast<SQLPOINTER>(datum.buffer), 0);
+	}
+
+	// this will show on a different thread to the current executing query.
+	bool OdbcStatement::cancel()
+	{
+		lock_guard<mutex> lock(g_i_mutex);
+		_cancelRequested = true;
+		return true;
 	}
 
 	// bind all the parameters in the array
@@ -155,6 +165,7 @@ namespace mssql
 	{
 		if (!SQL_SUCCEEDED(ret))
 		{
+			_statementState = STATEMENT_ERROR;
 			return ReturnOdbcError();
 		}
 		return true;
@@ -263,7 +274,7 @@ namespace mssql
 		ret = SQLNumResultCols(*statement, &numCols);
 		if (!CheckOdbcError(ret)) return false;
 
-		preparedStorage = make_shared<BoundDatumSet>();
+		_preparedStorage = make_shared<BoundDatumSet>();
 		resultset = make_unique<ResultSet>(numCols);
 
 		for (auto i = 0; i < numCols; i++)
@@ -271,10 +282,10 @@ namespace mssql
 			readNext(i);
 		}
 
-		preparedStorage->reserve(resultset);
+		_preparedStorage->reserve(resultset);
 
 		auto i = 0;
-		for (auto itr = preparedStorage->begin(); itr != preparedStorage->end(); ++itr)
+		for (auto itr = _preparedStorage->begin(); itr != _preparedStorage->end(); ++itr)
 		{
 			auto& datum = *itr;
 			ret = SQLBindCol(*statement, i + 1, datum.c_type, datum.buffer, datum.buffer_len, datum.getIndVec().data());
@@ -283,9 +294,44 @@ namespace mssql
 		}
 
 		resultset->endOfRows = true;
-		prepared = true;
+		_prepared = true;
+
+		_statementState = STATEMENT_PREPARED;
 
 		return true;
+	}
+
+	SQLRETURN OdbcStatement::PollCheck(SQLRETURN ret, bool direct)
+	{
+		if (ret == SQL_STILL_EXECUTING)
+		{
+			while (true)
+			{
+				if (direct) {
+					ret = SQLExecDirect(*statement, reinterpret_cast<SQLWCHAR*>(""), SQL_NTS);
+				}
+				else {
+					ret = SQLExecute(*statement);
+				}
+
+				bool submitCancel;
+				if (ret != SQL_STILL_EXECUTING) {
+					break;
+				}
+
+				Sleep(1); // wait 1 MS			
+				{
+					lock_guard<mutex> lock(g_i_mutex);
+					submitCancel = _cancelRequested;
+				}
+
+				if (submitCancel)
+				{
+					cancelHandle();
+				}
+			}
+		}
+		return ret;
 	}
 
 	bool OdbcStatement::BindFetch(shared_ptr<BoundDatumSet> paramSet)
@@ -296,7 +342,10 @@ namespace mssql
 			// error already set in BindParams
 			return false;
 		}
+		SQLSetStmtAttr(*statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
 		auto ret = SQLExecute(*statement);
+		ret = PollCheck(ret, false);
+		
 		if (!CheckOdbcError(ret)) return false;
 
 		ret = SQLRowCount(*statement, &resultset->rowcount);
@@ -305,8 +354,27 @@ namespace mssql
 		return true;
 	}
 
+	void OdbcStatement::cancelHandle()
+	{
+		SQLINTEGER NativeError = -1;
+		auto c_state = "CANCEL";
+		auto c_msg = "Error: [msnodesql] Operation canceled.";
+		error2 = make_shared<OdbcError>(c_state, c_msg, NativeError);
+		auto hnd = *statement;
+		auto ret2 = SQLCancelHandle(hnd.HandleType, hnd.get());
+		if (!CheckOdbcError(ret2)) {
+			fprintf(stderr, "cancel req failed state %d %ld \n", _statementState, _statementId);
+		}
+		{
+			lock_guard<mutex> lock(g_i_mutex);
+			_cancelRequested = false;
+		}
+	}
+
 	bool OdbcStatement::TryExecuteDirect(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> paramSet)
 	{
+		SQLRETURN ret;
+
 		auto bound = BindParams(paramSet);
 		if (!bound)
 		{
@@ -315,10 +383,15 @@ namespace mssql
 		}
 
 		_endOfResults = true; // reset 
-		auto ret = queryTimeout(timeout);
+		ret = queryTimeout(timeout);
 		if (!CheckOdbcError(ret)) return false;
+
 		auto* sql_str = const_cast<wchar_t *>(query.c_str());
+		_statementState = STATEMENT_SUBMITTED;
+		SQLSetStmtAttr(*statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
 		ret = SQLExecDirect(*statement, sql_str, SQL_NTS);
+		ret = PollCheck(ret, true);
+
 		if (
 			(ret == SQL_SUCCESS_WITH_INFO) ||
 			(ret != SQL_NO_DATA && !SQL_SUCCEEDED(ret)))
@@ -359,6 +432,7 @@ namespace mssql
 			resultset->endOfRows = true;
 			return true;
 		}
+		_statementState = STATEMENT_FETCHING;
 		resultset->endOfRows = false;
 		if (!CheckOdbcError(ret)) return false;
 
@@ -508,9 +582,9 @@ namespace mssql
 	bool OdbcStatement::d_TimestampOffset(int column)
 	{
 		shared_ptr<IntColumn> colVal;
-		if (prepared)
+		if (_prepared)
 		{
-			auto& datum = preparedStorage->atIndex(column);
+			auto& datum = _preparedStorage->atIndex(column);
 			auto storage = datum.getStorage();
 			resultset->SetColumn(make_shared<TimestampColumn>(storage));
 			return true;
@@ -538,9 +612,9 @@ namespace mssql
 	bool OdbcStatement::d_Timestamp(int column)
 	{
 		shared_ptr<IntColumn> colVal;
-		if (prepared)
+		if (_prepared)
 		{
-			auto& datum = preparedStorage->atIndex(column);
+			auto& datum = _preparedStorage->atIndex(column);
 			auto storage = datum.getStorage();
 			resultset->SetColumn(make_shared<TimestampColumn>(storage));
 			return true;
@@ -568,9 +642,9 @@ namespace mssql
 	bool OdbcStatement::d_Integer(int column)
 	{
 		shared_ptr<IntColumn> colVal;
-		if (prepared)
+		if (_prepared)
 		{
-			auto& datum = preparedStorage->atIndex(column);
+			auto& datum = _preparedStorage->atIndex(column);
 			auto storage = datum.getStorage();
 			resultset->SetColumn(make_shared<IntColumn>(storage));
 			return true;
@@ -603,9 +677,9 @@ namespace mssql
 
 	bool OdbcStatement::d_Bit(int column)
 	{
-		if (prepared)
+		if (_prepared)
 		{
-			auto& datum = preparedStorage->atIndex(column);
+			auto& datum = _preparedStorage->atIndex(column);
 			auto storage = datum.getStorage();
 			resultset->SetColumn(make_shared<BoolColumn>(storage));
 			return true;
@@ -632,9 +706,9 @@ namespace mssql
 
 	bool OdbcStatement::d_Decimal(int column)
 	{
-		if (prepared)
+		if (_prepared)
 		{
-			auto& datum = preparedStorage->atIndex(column);
+			auto& datum = _preparedStorage->atIndex(column);
 			auto storage = datum.getStorage();
 			resultset->SetColumn(make_shared<NumberColumn>(storage));
 			return true;
@@ -682,10 +756,10 @@ namespace mssql
 
 	bool OdbcStatement::d_Binary(int column)
 	{
-		if (prepared)
+		if (_prepared)
 		{
 			auto more = false;
-			auto& datum = preparedStorage->atIndex(column);
+			auto& datum = _preparedStorage->atIndex(column);
 			auto storage = datum.getStorage();
 			auto& ind = datum.getIndVec();
 			SQLLEN amount = ind[0];
@@ -742,7 +816,7 @@ namespace mssql
 
 	bool OdbcStatement::reservedString(SQLLEN display_size, int column) const
 	{
-		auto& storage = preparedStorage->atIndex(column);
+		auto& storage = _preparedStorage->atIndex(column);
 		auto& ind = storage.getIndVec();
 		auto size = sizeof(uint16_t);
 		auto value_len = ind[0];
@@ -799,7 +873,7 @@ namespace mssql
 
 		if (display_size >= 1 && display_size <= SQL_SERVER_MAX_STRING_SIZE)
 		{
-			return prepared ? reservedString(display_size, column) : boundedString(display_size, column);
+			return _prepared ? reservedString(display_size, column) : boundedString(display_size, column);
 		}
 
 		assert(false);
@@ -811,13 +885,23 @@ namespace mssql
 	{
 		//fprintf(stderr, "TryReadNextResult\n");
 		//fprintf(stderr, "TryReadNextResult ID = %llu\n ", getStatementId());
+		auto state = _statementState;
+		if (state == STATEMENT_CANCELLED)
+		{
+			//fprintf(stderr, "TryReadNextResult - cancel mode.\n");
+			resultset->endOfRows = true;
+			_endOfResults = true;
+			_statementState = STATEMENT_ERROR;
+			return false;
+		}
+
 		auto ret = SQLMoreResults(*statement);
 
 		if (ret == SQL_NO_DATA)
 		{
 			//fprintf(stderr, "SQL_NO_DATA\n");
 			_endOfResults = true;
-			if (prepared)
+			if (_prepared)
 			{
 				SQLCloseCursor(*statement);
 			}

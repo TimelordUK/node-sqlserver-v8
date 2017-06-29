@@ -74,7 +74,7 @@ suite('query', function () {
                         thrown = true;
                         assert.equal(e.toString(), "Error: [msnodesql] Invalid query string passed to function query. Type should be string.", "Improper error returned");
                     }
-                    assert(thrown == true);
+                    assert(thrown === true);
                     async_done();
                 },
 
@@ -87,7 +87,7 @@ suite('query', function () {
                         thrown = true;
                         assert.equal(e.toString(), "Error: [msnodesql] Invalid query string passed to function queryRaw. Type should be string.", "Improper error returned");
                     }
-                    assert(thrown == true);
+                    assert(thrown === true);
                     async_done();
                 },
 
@@ -100,7 +100,7 @@ suite('query', function () {
                         thrown = true;
                         assert.equal(e.toString(), "Error: [msnodesql] Invalid connection string passed to function queryRaw. Type should be string.", "Improper error returned");
                     }
-                    assert(thrown == true);
+                    assert(thrown === true);
                     async_done();
                 },
 
@@ -127,7 +127,7 @@ suite('query', function () {
                         thrown = true;
                         assert.equal(e.toString(), "Error: [msnodesql] Invalid connection string passed to function open. Type should be string.", "Improper error returned");
                     }
-                    assert(thrown == true);
+                    assert(thrown === true);
                     async_done();
                 },
 

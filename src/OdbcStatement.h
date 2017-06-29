@@ -33,6 +33,21 @@ namespace mssql
 	class OdbcStatement
 	{
 	public:
+
+		enum OdbcStatementState
+		{
+			STATEMENT_CREATED,
+			STATEMENT_PREPARED,
+			STATEMENT_SUBMITTED,
+			STATEMENT_FETCHING,
+			STATEMENT_CANCELLED,
+			STATEMENT_ERROR,
+			STATEMENT_CLOSED
+		};
+
+		bool created() { return  _statementState == STATEMENT_CREATED; }
+		bool cancel();
+		
 		OdbcStatement(long statementId, shared_ptr<OdbcConnectionHandle> c);
 		virtual ~OdbcStatement();
 		SQLLEN RowCount() const { return resultset != nullptr ? resultset->RowCount() : -1; }
@@ -40,10 +55,10 @@ namespace mssql
 		{ return resultset; } 
 
 		long getStatementId() const
-		{ return statementId; }
+		{ return _statementId; }
 
 		bool isPrepared() const 
-		{ return prepared; }
+		{ return _prepared; }
 
 		Local<Array> UnbindParams() const;
 		Handle<Value> GetMetaValue() const;
@@ -52,11 +67,17 @@ namespace mssql
 		Handle<Value> EndOfRows() const;
 		Handle<Value> GetColumnValue() const;
 
-		shared_ptr<OdbcError> LastError(void) const { return error; }
+		shared_ptr<OdbcError> LastError(void) const
+		{
+			if (error) return error;
+			return error2;
+		}
 
+		SQLRETURN PollCheck(SQLRETURN ret, bool direct);
 		bool TryPrepare(const wstring& query, u_int timeout);
 		bool BindFetch(shared_ptr<BoundDatumSet> paramSet);
 		bool TryExecuteDirect(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> paramSet);
+		void cancelHandle();
 		bool TryReadRow();
 		bool TryReadColumn(int column);
 		bool TryReadNextResult();
@@ -80,7 +101,6 @@ namespace mssql
 		bool d_Binary(int col);
 		bool d_TimestampOffset(int col);
 		bool d_Timestamp(int col);
-		bool d_Timestamp2(int col);
 		bool d_Time(int col);
 		bool boundedString(SQLLEN display_size, int column);
 		bool reservedString(SQLLEN display_size, int column) const;
@@ -95,24 +115,31 @@ namespace mssql
 
 		bool ReturnOdbcError();
 		bool CheckOdbcError(SQLRETURN ret);
+		
 
 		shared_ptr<OdbcConnectionHandle> connection;
 		shared_ptr<OdbcStatementHandle> statement;
-		CriticalSection closeCriticalSection;
+		//CriticalSection closeCriticalSection;
 
 		// any error that occurs when a Try* function returns false is stored here
 		// and may be retrieved via the Error function below.
 
 		shared_ptr<OdbcError> error;
+		shared_ptr<OdbcError> error2;
 
 		bool _endOfResults;
-		long statementId;
-		bool prepared;
+		long _statementId;
+		bool _prepared;
+		bool _cancelRequested;
+
+		OdbcStatementState _statementState = STATEMENT_CREATED;
 
 		// set binary true if a binary Buffer should be returned instead of a JS string
 	
 		shared_ptr<ResultSet> resultset;
 		shared_ptr<BoundDatumSet> boundParamsSet;
-		shared_ptr<BoundDatumSet> preparedStorage;		
+		shared_ptr<BoundDatumSet> _preparedStorage;	
+		
+		mutex g_i_mutex;
 	};
 }

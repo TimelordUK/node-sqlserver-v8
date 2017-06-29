@@ -20,6 +20,7 @@
         'src/CloseOperation.cpp',
         'src/CollectOperation.cpp',
         'src/EndTranOperation.cpp',
+        'src/CancelOperation.cpp',
         'src/OpenOperation.cpp',
         'src/PrepareOperation.cpp',
         'src/ProcedureOperation.cpp',

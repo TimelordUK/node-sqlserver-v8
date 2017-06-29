@@ -23,6 +23,7 @@ class eventHits {
     public onRow: number;
     public onDone: number;
     public onClosed: number;
+    public onSubmitted: number;
     public onError: number;
 }
 
@@ -260,6 +261,9 @@ class WrapperTest {
                 }).onDone(() => {
                     if (inst.debug) console.log(`onDone:`);
                     h.onDone++;
+                }).onSubmitted((s:any) => {
+                    if (inst.debug) console.log(`onSubmitted: ${JSON.stringify(s)}`);
+                    h.onSubmitted++;
                 }).onClosed(() => {
                     if (inst.debug) console.log(`onClose:`);
                     h.onClosed++;
@@ -287,7 +291,7 @@ class WrapperTest {
     }
 }
 
-let wt = new WrapperTest(false);
+let wt = new WrapperTest(true);
 wt.run(() => {
     console.log('done.');
 });

@@ -32,26 +32,28 @@ namespace mssql
     public:
 
 		Connection();
-	   virtual ~Connection();
+		virtual ~Connection();
 
 	   static void Initialize(Handle<Object> target);
-	   static void New(const FunctionCallbackInfo<Value>& info);
-	   static void Close(const FunctionCallbackInfo<Value>& info);
-	   static void BeginTransaction(const FunctionCallbackInfo<Value>& info);
-	   static void Commit(const FunctionCallbackInfo<Value>& info);
-	   static void Rollback(const FunctionCallbackInfo<Value>& info);
-	   static void Open(const FunctionCallbackInfo<Value>& info);
-	   static void Query(const FunctionCallbackInfo<Value>& info);
-	   static void Prepare(const FunctionCallbackInfo<Value>& info);
-	   static void BindQuery(const FunctionCallbackInfo<Value>& info);
-	   static void CallProcedure(const FunctionCallbackInfo<Value>& info);	  
-	   static void Unbind(const FunctionCallbackInfo<Value>& info);
-	   static void FreeStatement(const FunctionCallbackInfo<Value>& info);
-	   static void ReadRow(const FunctionCallbackInfo<Value>& info);
-	   static void ReadColumn(const FunctionCallbackInfo<Value>& info);
-	   static void ReadNextResult(const FunctionCallbackInfo<Value>& info);
 
 	private:
+		static void New(const FunctionCallbackInfo<Value>& info);
+		static void Close(const FunctionCallbackInfo<Value>& info);
+		static void BeginTransaction(const FunctionCallbackInfo<Value>& info);
+		static void Commit(const FunctionCallbackInfo<Value>& info);
+		static void Rollback(const FunctionCallbackInfo<Value>& info);
+		static void Open(const FunctionCallbackInfo<Value>& info);
+		static void Query(const FunctionCallbackInfo<Value>& info);
+		static void Prepare(const FunctionCallbackInfo<Value>& info);
+		static void BindQuery(const FunctionCallbackInfo<Value>& info);
+		static void CallProcedure(const FunctionCallbackInfo<Value>& info);
+		static void Unbind(const FunctionCallbackInfo<Value>& info);
+		static void FreeStatement(const FunctionCallbackInfo<Value>& info);
+		static void ReadRow(const FunctionCallbackInfo<Value>& info);
+		static void CancelStatement(const FunctionCallbackInfo<Value>& info);
+		static void ReadColumn(const FunctionCallbackInfo<Value>& info);
+		static void ReadNextResult(const FunctionCallbackInfo<Value>& info);
+
 		static Persistent<Function> constructor;
 		static void api(Local<FunctionTemplate>& tpl);
 		unique_ptr<OdbcConnectionBridge> connectionBridge;

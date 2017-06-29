@@ -6,6 +6,40 @@ let argv = require('minimist')(process.argv.slice(2));
 let support = null;
 let procedureHelper = null;
 let helper = null;
+const getConnectionsSql = `SELECT 
+DB_NAME(dbid) as DBName,
+    COUNT(dbid) as NumberOfConnections,
+    loginame as LoginName
+FROM
+sys.sysprocesses
+WHERE
+dbid > 0
+and DB_NAME(dbid) = 'scratch'
+GROUP BY
+dbid, loginame`;
+class Connection {
+    run(conn_str, argv) {
+        let delay = argv.delay || 5000;
+        console.log(`${conn_str}`);
+        setInterval(() => {
+            exports.sql.open(conn_str, (err, conn) => {
+                if (err) {
+                    throw err;
+                }
+                conn.query("select @@SPID as id, CURRENT_USER as name", (err, res) => {
+                    let sp = res[0]['id'];
+                    console.log(`open[${sp}]:  ${conn_str}`);
+                    conn.query(getConnectionsSql, (err, res) => {
+                        let count = res[0]['NumberOfConnections'];
+                        conn.close(() => {
+                            console.log(`close[${sp}]: NumberOfConnections = ${count}`);
+                        });
+                    });
+                });
+            });
+        }, delay);
+    }
+}
 class RaiseErrors {
     run(conn_str, argv) {
         let delay = argv.delay || 5000;
@@ -160,6 +194,9 @@ switch (argv.t) {
     case "errors":
         test = new RaiseErrors();
         break;
+    case "connection":
+        test = new Connection();
+        break;
     default:
         console.log(`test ${test} is not valid.`);
         break;
@@ -170,6 +207,7 @@ supp.GlobalConn.init(exports.sql, (co) => {
     procedureHelper = new support.ProcedureHelper(conn_str);
     procedureHelper.setVerbose(false);
     helper = co.helper;
-    test.run(conn_str, argv);
+    if (test != null)
+        test.run(conn_str, argv);
 });
 //# sourceMappingURL=edge-case.js.map

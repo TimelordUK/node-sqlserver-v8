@@ -65,13 +65,16 @@ export module MsNodeSqlDriverApiModule {
         rollback(cb?: v8StatusCb): void
         procedureMgr(): v8ProcedureManager
         tableMgr(): v8TableManager
+        cancelQuery(cb?: v8StatusCb): void
         prepare(sql: string, cb: v8PrepareCb): void
         setFilterNonCriticalErrors(flag:boolean):void
     }
 
     export interface v8Query {
+        on(name: string, cb: v8SubmittedEventCb): void
         on(name: string, cb: v8EventCb): void
         on(name: string, cb: v8EventColumnCb): void
+        cancelQuery(cb?: v8StatusCb): void
     }
 
     export interface v8ConnectDescription {
@@ -119,6 +122,8 @@ export module MsNodeSqlDriverApiModule {
     export interface v8PrepareCb { (err?: v8Error, statement?: v8PreparedStatement): void
     }
     export interface v8EventCb { (data: any): void
+    }
+    export interface v8SubmittedEventCb { (sql: string, params:any[]): void
     }
     export interface v8EventColumnCb { (colIndex: number, data:any, more:boolean): void
     }
@@ -208,6 +213,6 @@ export module MsNodeSqlDriverApiModule {
         public static done = 'done';
         public static error = 'error';
         public static closed = 'closed';
+        public static submitted = 'submitted';
     }
-
 }

@@ -5,11 +5,6 @@ let fs = require('fs');
 let supp = require('./demo-support');
 let conn_str;
 let demos = [
-    connection,
-    prepared,
-    table,
-    procedure,
-    query,
     event
 ];
 let support = null;
@@ -63,6 +58,9 @@ function event(done) {
             });
             q.on('column', (col) => {
                 console.log('column = ' + col);
+            });
+            q.on('submitted', (q, params) => {
+                console.log('submitted query = ' + JSON.stringify(q));
             });
             q.on('rowcount', (count) => {
                 console.log('rowcount = ' + count);

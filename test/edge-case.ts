@@ -20,6 +20,43 @@ export interface SimpleTest
     run(conn_str:string, argv:any) : void;
 }
 
+const getConnectionsSql:string = `SELECT 
+DB_NAME(dbid) as DBName,
+    COUNT(dbid) as NumberOfConnections,
+    loginame as LoginName
+FROM
+sys.sysprocesses
+WHERE
+dbid > 0
+and DB_NAME(dbid) = 'scratch'
+GROUP BY
+dbid, loginame`;
+
+class Connection implements SimpleTest
+{
+    public run(conn_str:string, argv :any): void {
+        let delay : number = argv.delay || 5000;
+            console.log(`${conn_str}`);
+            setInterval( () => {
+                sql.open(conn_str, (err, conn) => {
+                    if (err) {
+                        throw err;
+                    }
+                    conn.query("select @@SPID as id, CURRENT_USER as name", (err, res) => {
+                        let sp = res[0]['id'];
+                        console.log(`open[${sp}]:  ${conn_str}`);
+                        conn.query(getConnectionsSql, (err, res) => {
+                            let count = res[0]['NumberOfConnections'];
+                            conn.close(() => {
+                                console.log(`close[${sp}]: NumberOfConnections = ${count}`);
+                            });
+                        });
+                    });
+                });
+        }, delay);
+    }
+}
+
 class RaiseErrors implements SimpleTest {
 
     public run(conn_str:string, argv :any): void {
@@ -196,6 +233,10 @@ switch (argv.t) {
         test = new RaiseErrors();
         break;
 
+    case "connection":
+        test = new Connection();
+        break;
+
     default:
         console.log(`test ${test} is not valid.`);
         break;
@@ -207,6 +248,7 @@ supp.GlobalConn.init(sql, (co: any) => {
         procedureHelper = new support.ProcedureHelper(conn_str);
         procedureHelper.setVerbose(false);
         helper = co.helper;
-        test.run(conn_str, argv);
+        if (test != null)
+            test.run(conn_str, argv);
     }
 );

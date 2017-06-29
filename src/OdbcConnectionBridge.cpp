@@ -28,6 +28,7 @@
 #include "ReadNextResultOperation.h"
 #include "ReadColumnOperation.h"
 #include "CloseOperation.h"
+#include "CancelOperation.h"
 #include "PrepareOperation.h"
 #include "FreeStatementOperation.h"
 #include "QueryPreparedOperation.h"
@@ -142,6 +143,16 @@ namespace mssql
 	{
 		auto id = queryId->IntegerValue();	
 		auto op = make_shared<UnbindOperation>(connection, id, callback);
+		connection->send(op);
+		nodeTypeFactory fact;
+		return fact.null();
+	}
+
+	Handle<Value> OdbcConnectionBridge::Cancel(Handle<Number> queryId, Handle<Object> callback)
+	{
+		auto id = queryId->IntegerValue();
+		//fprintf(stderr, "cancel %lld", id);
+		auto op = make_shared<CancelOperation>(connection, id, callback);
 		connection->send(op);
 		nodeTypeFactory fact;
 		return fact.null();
