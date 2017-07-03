@@ -48,6 +48,7 @@ namespace mssql
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "unbind", Unbind);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "freeStatement", FreeStatement);
 	   NODE_SET_PROTOTYPE_METHOD(tpl, "cancelQuery", CancelStatement);
+	   NODE_SET_PROTOTYPE_METHOD(tpl, "pollingMode", PollingMode);
     }
 
     void Connection::Initialize(Handle<Object> exports)
@@ -231,6 +232,17 @@ namespace mssql
 		auto connection = Unwrap<Connection>(info.This());
 		
 		auto ret = connection->connectionBridge->Cancel(queryId, callback);
+		info.GetReturnValue().Set(ret);
+	}
+
+	void Connection::PollingMode(const FunctionCallbackInfo<Value>& info)
+	{
+		auto queryId = info[0].As<Number>();
+		auto mode = info[1].As<Boolean>();
+		auto callback = info[2].As<Object>();
+		auto connection = Unwrap<Connection>(info.This());
+
+		auto ret = connection->connectionBridge->PollingMode(queryId, mode, callback);
 		info.GetReturnValue().Set(ret);
 	}
 }

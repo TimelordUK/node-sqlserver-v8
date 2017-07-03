@@ -35,6 +35,7 @@
 #include "OperationManager.h"
 #include "UnbindOperation.h"
 #include "OdbcStatementCache.h"
+#include "PollingModeOperation.h"
 
 namespace mssql
 {
@@ -94,8 +95,9 @@ namespace mssql
 	{
 		auto queryString = get(queryObject, "query_str")->ToString();
 		auto timeout = get(queryObject, "query_timeout")->Int32Value();
+		auto polling = get(queryObject, "query_polling")->BooleanValue();
 		auto id = queryId->IntegerValue();
-		auto operation = make_shared<QueryOperation>(connection, FromV8String(queryString), id, timeout, callback);
+		auto operation = make_shared<QueryOperation>(connection, FromV8String(queryString), id, polling, timeout, callback);
 		if (operation->BindParameters(params)) {
 			connection->send(operation);
 		}
@@ -118,8 +120,9 @@ namespace mssql
 	{
 		auto queryString = get(queryObject, "query_str")->ToString();
 		auto timeout = get(queryObject, "query_timeout")->Int32Value();
+		auto polling = get(queryObject, "query_polling")->BooleanValue();
 		auto id = queryId->IntegerValue();
-		auto operation = make_shared<PrepareOperation>(connection, FromV8String(queryString), id, timeout, callback);
+		auto operation = make_shared<PrepareOperation>(connection, FromV8String(queryString), id, polling, timeout, callback);
 		connection->send(operation);
 		nodeTypeFactory fact;
 		return fact.null();
@@ -129,9 +132,10 @@ namespace mssql
 	{
 		auto queryString = get(queryObject, "query_str")->ToString();
 		auto timeout = get(queryObject, "query_timeout")->Int32Value();
+		auto polling = get(queryObject, "query_polling")->BooleanValue();
 		auto id = queryId->IntegerValue();
 		
-		auto operation = make_shared<ProcedureOperation>(connection, FromV8String(queryString), id, timeout, callback);
+		auto operation = make_shared<ProcedureOperation>(connection, FromV8String(queryString), id, polling, timeout, callback);
 		if (operation->BindParameters(params)) {
 			connection->send(operation);
 		}
@@ -153,6 +157,17 @@ namespace mssql
 		auto id = queryId->IntegerValue();
 		//fprintf(stderr, "cancel %lld", id);
 		auto op = make_shared<CancelOperation>(connection, id, callback);
+		connection->send(op);
+		nodeTypeFactory fact;
+		return fact.null();
+	}
+
+	Handle<Value> OdbcConnectionBridge::PollingMode(Handle<Number> queryId, Handle<Boolean> mode, Handle<Object> callback)
+	{
+		auto id = queryId->IntegerValue();
+		auto polling = mode->BooleanValue();
+		
+		auto op = make_shared<PollingModeOperation>(connection, id, polling, callback);
 		connection->send(op);
 		nodeTypeFactory fact;
 		return fact.null();

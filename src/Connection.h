@@ -53,7 +53,8 @@ namespace mssql
 		static void CancelStatement(const FunctionCallbackInfo<Value>& info);
 		static void ReadColumn(const FunctionCallbackInfo<Value>& info);
 		static void ReadNextResult(const FunctionCallbackInfo<Value>& info);
-
+		static void PollingMode(const FunctionCallbackInfo<Value>& info);
+		
 		static Persistent<Function> constructor;
 		static void api(Local<FunctionTemplate>& tpl);
 		unique_ptr<OdbcConnectionBridge> connectionBridge;

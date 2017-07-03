@@ -7,8 +7,9 @@
 
 namespace mssql
 {
-	QueryOperation::QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, size_t queryId, u_int timeout, Handle<Object> callback) :
+	QueryOperation::QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, size_t queryId, bool polling, u_int timeout, Handle<Object> callback) :
 		OdbcOperation(connection, callback),
+	    polling(polling),
 		timeout(timeout),
 		query(query),
 		output_param_count(0)
@@ -54,6 +55,7 @@ namespace mssql
 	bool QueryOperation::TryInvokeOdbc()
 	{
 		statement = connection->statements->checkout(statementId);	
+		statement->setPolling(polling);
 		return statement->TryExecuteDirect(query, timeout, params);
 	}
 

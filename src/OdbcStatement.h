@@ -66,6 +66,7 @@ namespace mssql
 		Handle<Value> EndOfResults() const;
 		Handle<Value> EndOfRows() const;
 		Handle<Value> GetColumnValue() const;
+		bool setPolling(bool mode);
 
 		shared_ptr<OdbcError> LastError(void) const
 		{
@@ -73,7 +74,7 @@ namespace mssql
 			return error2;
 		}
 
-		SQLRETURN PollCheck(SQLRETURN ret, bool direct);
+		
 		bool TryPrepare(const wstring& query, u_int timeout);
 		bool BindFetch(shared_ptr<BoundDatumSet> paramSet);
 		bool TryExecuteDirect(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> paramSet);
@@ -83,7 +84,7 @@ namespace mssql
 		bool TryReadNextResult();
 
 	private:
-
+		SQLRETURN PollCheck(SQLRETURN ret, bool direct);
 		bool getDataBinary(int column);
 		bool getDataDecimal(int column);
 		bool getDataBit(int column);
@@ -131,6 +132,7 @@ namespace mssql
 		long _statementId;
 		bool _prepared;
 		bool _cancelRequested;
+		bool _pollingEnabled;
 
 		OdbcStatementState _statementState = STATEMENT_CREATED;
 

@@ -10,9 +10,10 @@ namespace mssql
 		shared_ptr<OdbcConnection> connection,
 		const wstring& query,
 		size_t id,
+		bool polling,
 		u_int timeout,
 		Handle<Object> callback) :
-		QueryOperation(connection, query, id, timeout, callback)
+		QueryOperation(connection, query, id, polling, timeout, callback)
 	{
 	}
 
@@ -20,6 +21,7 @@ namespace mssql
 	{
 		statement = connection->statements->checkout(statementId);
 		if (statement == nullptr) return false;
+		statement->setPolling(polling);
 		return statement->TryPrepare(query, timeout);
 	}
 }

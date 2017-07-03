@@ -46,6 +46,7 @@ namespace mssql
 		Handle<Value> CallProcedure(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const;
 		Handle<Value> UnbindParameters(Handle<Number> queryId, Handle<Object> callback);
 		Handle<Value> Cancel(Handle<Number> queryId, Handle<Object> callback);
+		Handle<Value> PollingMode(Handle<Number> queryId, Handle<Boolean> mode, Handle<Object> callback);
 		Handle<Value> ReadRow(Handle<Number> queryId, Handle<Object> callback) const;
 		Handle<Value> ReadNextResult(Handle<Number> queryId, Handle<Object> callback) const;
 		Handle<Value> ReadColumn(Handle<Number> queryId, Handle<Number> column, Handle<Object> callback) const;	

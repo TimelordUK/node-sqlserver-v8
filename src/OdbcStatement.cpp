@@ -52,6 +52,7 @@ namespace mssql
 		_statementId(static_cast<long>(statementId)),
 		_prepared(false),
 		_cancelRequested(false),
+		_pollingEnabled(false),
 		resultset(nullptr),
 		boundParamsSet(nullptr)
 	{
@@ -79,7 +80,21 @@ namespace mssql
 	bool OdbcStatement::cancel()
 	{
 		lock_guard<mutex> lock(g_i_mutex);
-		_cancelRequested = true;
+		if (_pollingEnabled) {
+			_cancelRequested = true;
+			return true;
+		}
+		SQLINTEGER NativeError = -1;
+		auto c_state = "CANCEL";
+		auto c_msg = "Error: [msnodesql] cancel only supported for statements where polling is enabled.";
+		error = make_shared<OdbcError>(c_state, c_msg, NativeError);
+		return false;
+	}
+
+	bool OdbcStatement::setPolling(bool mode)
+	{
+		lock_guard<mutex> lock(g_i_mutex);
+		_pollingEnabled = mode;
 		return true;
 	}
 
@@ -336,15 +351,24 @@ namespace mssql
 
 	bool OdbcStatement::BindFetch(shared_ptr<BoundDatumSet> paramSet)
 	{
+		bool pollingMode;
+		{
+			lock_guard<mutex> lock(g_i_mutex);
+			pollingMode = _pollingEnabled;
+		}
 		auto bound = BindParams(paramSet);
 		if (!bound)
 		{
 			// error already set in BindParams
 			return false;
 		}
-		SQLSetStmtAttr(*statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
+		if (pollingMode) {
+			SQLSetStmtAttr(*statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
+		}
 		auto ret = SQLExecute(*statement);
-		ret = PollCheck(ret, false);
+		if (pollingMode) {
+			ret = PollCheck(ret, false);
+		}
 		
 		if (!CheckOdbcError(ret)) return false;
 
@@ -381,16 +405,24 @@ namespace mssql
 			// error already set in BindParams
 			return false;
 		}
-
+		bool pollingMode;
+		{
+			lock_guard<mutex> lock(g_i_mutex);
+			pollingMode = _pollingEnabled;
+		}
 		_endOfResults = true; // reset 
 		ret = queryTimeout(timeout);
 		if (!CheckOdbcError(ret)) return false;
 
 		auto* sql_str = const_cast<wchar_t *>(query.c_str());
 		_statementState = STATEMENT_SUBMITTED;
-		SQLSetStmtAttr(*statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
+		if (pollingMode) {
+			SQLSetStmtAttr(*statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
+		}
 		ret = SQLExecDirect(*statement, sql_str, SQL_NTS);
-		ret = PollCheck(ret, true);
+		if (pollingMode) {
+			ret = PollCheck(ret, true);
+		}
 
 		if (
 			(ret == SQL_SUCCESS_WITH_INFO) ||
