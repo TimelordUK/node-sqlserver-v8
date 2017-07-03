@@ -23,6 +23,7 @@
         'src/CancelOperation.cpp',
         'src/OpenOperation.cpp',
         'src/PrepareOperation.cpp',
+        'src/PollingModeOperation.cpp',
         'src/ProcedureOperation.cpp',
         'src/QueryOperation.cpp',
         'src/ReadColumnOperation.cpp',
