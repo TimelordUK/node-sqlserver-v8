@@ -47,6 +47,8 @@ export module MsNodeSqlDriverApiModule {
         DateRound(v:Date) : any;
         SmallDateTime(v:Date) : any;
         DateTimeOffset(v:Date) : any;
+        PollingQuery(s:string) : any;
+        TimeoutQuery(s:string, to:number) : any;
     }
 
     export interface v8Connection {
@@ -84,7 +86,8 @@ export module MsNodeSqlDriverApiModule {
 
     export interface v8QueryDescription {
         query_str: string,
-        query_timeout: number
+        query_timeout: number,
+        query_polling: boolean
     }
 
     export interface v8Meta {
