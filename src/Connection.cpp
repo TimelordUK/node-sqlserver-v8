@@ -238,11 +238,14 @@ namespace mssql
 	void Connection::PollingMode(const FunctionCallbackInfo<Value>& info)
 	{
 		auto queryId = info[0].As<Number>();
-		auto mode = info[1].As<Boolean>();
+		auto v1 = info[1].As<Number>();
 		auto callback = info[2].As<Object>();
 		auto connection = Unwrap<Connection>(info.This());
+		nodeTypeFactory fact;
+		auto i32 = v1->Int32Value();
+		auto b1 = fact.newBoolean(i32 > 0);
 
-		auto ret = connection->connectionBridge->PollingMode(queryId, mode, callback);
+		auto ret = connection->connectionBridge->PollingMode(queryId, b1, callback);
 		info.GetReturnValue().Set(ret);
 	}
 }

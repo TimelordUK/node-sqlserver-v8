@@ -66,6 +66,19 @@ suite('querycancel', function () {
         });
     });
 
+    test('cancel single waitfor on non polling query - expect cancel error and query to complete', function (test_done) {
+
+        var q = theConnection.query("waitfor delay \'00:00:3\';", function (err) {
+            assert(!err);
+            test_done();
+        });
+
+        theConnection.cancelQuery(q, function (err) {
+            assert(err);
+            assert(err.message.indexOf('only supported') > 0);
+        });
+    });
+
     test('cancel single waitfor using notifier - expect Operation canceled', function (test_done) {
 
         var q = theConnection.query(sql.PollingQuery("waitfor delay \'00:00:20\';"), function (err) {
@@ -232,7 +245,6 @@ suite('querycancel', function () {
         })
     });
 
-    /*
     test('cancel a call to proc that waits for delay of input param.', function (test_done) {
 
         var sp_name = "test_spwait_for";
@@ -255,6 +267,7 @@ suite('querycancel', function () {
 
             function (async_done) {
                 var pm = theConnection.procedureMgr();
+                pm.setPolling(true);
                 var q = pm.callproc(sp_name, ['0:0:20'], function (err) {
                     assert(err);
                     assert(err.message.indexOf('Operation canceled') > 0);
@@ -271,7 +284,6 @@ suite('querycancel', function () {
         async.series(fns, function () {
             test_done();
         })
-    });*/
-
+    });
 });
 
