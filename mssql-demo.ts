@@ -1,12 +1,15 @@
 // require the module so it can be used in your node JS code.
 
-import {MsNodeSqlDriverApiModule as v8} from './lib/MsNodeSqlDriverApiModule'
+import {MsNodeSqlDriverApiModule, MsNodeSqlDriverApiModule as v8} from './lib/MsNodeSqlDriverApiModule'
 
 import v8Connection = v8.v8Connection;
-import v8PreparedStatement = v8.v8PreparedStatement;
 import v8BindCb = v8.v8BindCb;
 import v8BulkMgr = v8.v8BulkTableMgr;
 import v8Error = v8.v8Error;
+import v8QueryDescription = MsNodeSqlDriverApiModule.v8QueryDescription;
+import v8StatusCb = MsNodeSqlDriverApiModule.v8StatusCb;
+import v8Query = MsNodeSqlDriverApiModule.v8Query;
+import v8PreparedStatement = MsNodeSqlDriverApiModule.v8PreparedStatement;
 
 export const sql: v8.v8driver = require('msnodesqlv8');
 
@@ -17,9 +20,7 @@ let supp = require('./demo-support');
  This demo assumes a SQL server database is available.  Modify the connection string below
  appropriately.  Note, for testing sqllocaldb can be very useful - here a sql server
  database can be run from the command line.
-
  for example :-
-
  sqllocaldb create node
  sqllocaldb start node
  sqllocaldb info node
@@ -45,7 +46,9 @@ let demos = [
     // query both ad hoc and via an open connection.
     query,
     // shows driver based events can be captured.
-    event
+    event,
+    // cancel a long running query
+    cancel
 ];
 
 interface Employee {
@@ -235,7 +238,7 @@ function query(done: Function) {
 
         function (async_done: Function) {
             console.log('use timeout to place limit on how long to wait for query.');
-            let queryObj = {
+            let queryObj :v8QueryDescription = {
                 query_str: "waitfor delay \'00:00:10\';",
                 query_timeout: 2
             };
@@ -642,7 +645,7 @@ function table(done: Function) {
             console.log("bind to table " + table_name);
             tm.bind(table_name, (bulk: v8BulkMgr) => {
                 bm = bulk;
-                Assert.check(bm != null, "no bulk manager returned.");
+                Assert.check(bm, "no bulk manager returned.");
                 async_done();
             })
         },
@@ -741,4 +744,147 @@ function table(done: Function) {
         console.log("..... async completes. \n\n\n\n\n\n");
         done();
     });
+}
+
+function cancel(done: Function): void {
+
+    let async = new support.Async();
+    let Assert = new support.Assert();
+    let conn: v8Connection = null;
+
+    let fns: Array<Function> = [
+
+        function (async_done: Function) {
+            console.log("cancel begins ...... ");
+            async_done();
+        },
+
+        function (async_done: Function) {
+            console.log("opening a connection ....");
+            sql.open(conn_str, (err: v8Error, new_conn: v8Connection) => {
+                Assert.ifError(err);
+                conn = new_conn;
+                Assert.check(conn, "connection from open is null.");
+                console.log("... open");
+                async_done();
+            });
+        },
+
+        function (async_done: Function) {
+            console.log("use an open connection to call query(), then cancel it");
+            let q :v8Query = conn.query(sql.PollingQuery("waitfor delay \'00:00:20\';"), err => {
+                Assert.check(err.message.indexOf('Operation canceled') > 0);
+                async_done();
+            });
+
+            conn.cancelQuery(q,  err => {
+                Assert.ifError(err);
+            });
+        },
+
+        function (async_done: Function) {
+            console.log("cancel using query identifier.");
+            let q: v8Query = conn.query(sql.PollingQuery("waitfor delay \'00:00:20\';"), function (err) {
+                Assert.check(err.message.indexOf('Operation canceled') > 0);
+                async_done();
+            });
+
+            q.cancelQuery( err => {
+                Assert.ifError(err);
+            });
+        },
+
+        function (async_done:Function) {
+            console.log("cancel a prepared statement.");
+            let s = "waitfor delay ?;";
+            let prepared:v8PreparedStatement;
+
+            let fns :Function[] = [
+                function (async_done:Function) {
+                    conn.prepare(sql.PollingQuery(s), (err:v8Error, pq:v8PreparedStatement) => {
+                        Assert.check(!err);
+                        prepared = pq;
+                        async_done();
+                    });
+                },
+
+                function (async_done:Function) {
+                    let q:v8Query = prepared.preparedQuery(['00:00:20'], (err:v8Error, d:any) => {
+                        Assert.check(err.message.indexOf('Operation canceled') > 0);
+                        async_done();
+                    });
+
+                    q.on('submitted', function () {
+                        q.cancelQuery((e:v8Error) => {
+                            Assert.ifError(e);
+                        });
+                    });
+                }
+            ];
+
+            async.series(fns, () => {
+                async_done();
+            })
+        },
+
+        function(async_done:Function) {
+            console.log("cancel a stored proc.");
+
+            let sp_name = "test_spwait_for";
+
+            let def = "alter PROCEDURE <name>" +
+                "(\n" +
+                "@timeout datetime" +
+                "\n)" +
+                "AS\n" +
+                "BEGIN\n" +
+                "waitfor delay @timeout;" +
+                "END\n";
+
+            let fns: Function[] = [
+                function (async_done: Function) {
+                    procedureHelper.createProcedure(sp_name, def, function () {
+                        async_done();
+                    });
+                },
+
+                function (async_done: Function) {
+                    let pm = conn.procedureMgr();
+                    pm.setPolling(true);
+                    let q:v8Query = pm.callproc(sp_name, ['0:0:20'], function (err) {
+                        Assert.check(err);
+                        Assert.check(err.message.indexOf('Operation canceled') > 0);
+                        async_done();
+                    });
+                    q.on('submitted', function () {
+                        q.cancelQuery(function (err) {
+                            Assert.check(!err);
+                        });
+                    });
+                }
+            ];
+
+            async.series(fns, function () {
+                async_done();
+            });
+        },
+
+        function (async_done: Function) {
+            console.log("close connection.");
+            conn.close(() => {
+                async_done()
+            });
+        },
+
+        function (async_done: Function) {
+            console.log("...... cancel ends.");
+            async_done();
+        }
+    ];
+
+    console.log("executing async set of functions .....");
+    async.series(fns, () => {
+        console.log("..... async completes. \n\n\n\n\n\n");
+        done();
+    })
 }

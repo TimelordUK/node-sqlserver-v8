@@ -10,7 +10,8 @@ let demos = [
     table,
     procedure,
     query,
-    event
+    event,
+    cancel
 ];
 let support = null;
 let procedureHelper = null;
@@ -486,7 +487,7 @@ function table(done) {
             console.log("bind to table " + table_name);
             tm.bind(table_name, (bulk) => {
                 bm = bulk;
-                Assert.check(bm != null, "no bulk manager returned.");
+                Assert.check(bm, "no bulk manager returned.");
                 async_done();
             });
         },
@@ -564,6 +565,126 @@ function table(done) {
         },
         function (async_done) {
             console.log("...... table ends.");
+            async_done();
+        }
+    ];
+    console.log("executing async set of functions .....");
+    async.series(fns, () => {
+        console.log("..... async completes. \n\n\n\n\n\n");
+        done();
+    });
+}
+function cancel(done) {
+    let async = new support.Async();
+    let Assert = new support.Assert();
+    let conn = null;
+    let fns = [
+        function (async_done) {
+            console.log("cancel begins ...... ");
+            async_done();
+        },
+        function (async_done) {
+            console.log("opening a connection ....");
+            exports.sql.open(conn_str, (err, new_conn) => {
+                Assert.ifError(err);
+                conn = new_conn;
+                Assert.check(conn, "connection from open is null.");
+                console.log("... open");
+                async_done();
+            });
+        },
+        function (async_done) {
+            console.log("use an open connection to call query(), then cancel it");
+            let q = conn.query(exports.sql.PollingQuery("waitfor delay \'00:00:20\';"), err => {
+                Assert.check(err.message.indexOf('Operation canceled') > 0);
+                async_done();
+            });
+            conn.cancelQuery(q, err => {
+                Assert.ifError(err);
+            });
+        },
+        function (async_done) {
+            console.log("cancel using query identifier.");
+            let q = conn.query(exports.sql.PollingQuery("waitfor delay \'00:00:20\';"), function (err) {
+                Assert.check(err.message.indexOf('Operation canceled') > 0);
+                async_done();
+            });
+            q.cancelQuery(err => {
+                Assert.ifError(err);
+            });
+        },
+        function (async_done) {
+            console.log("cancel a prepared statement.");
+            let s = "waitfor delay ?;";
+            let prepared;
+            let fns = [
+                function (async_done) {
+                    conn.prepare(exports.sql.PollingQuery(s), (err, pq) => {
+                        Assert.check(!err);
+                        prepared = pq;
+                        async_done();
+                    });
+                },
+                function (async_done) {
+                    let q = prepared.preparedQuery(['00:00:20'], (err, d) => {
+                        Assert.check(err.message.indexOf('Operation canceled') > 0);
+                        async_done();
+                    });
+                    q.on('submitted', function () {
+                        q.cancelQuery((e) => {
+                            Assert.ifError(e);
+                        });
+                    });
+                }
+            ];
+            async.series(fns, () => {
+                async_done();
+            });
+        },
+        function (async_done) {
+            console.log("cancel a stored proc.");
+            let sp_name = "test_spwait_for";
+            let def = "alter PROCEDURE <name>" +
+                "(\n" +
+                "@timeout datetime" +
+                "\n)" +
+                "AS\n" +
+                "BEGIN\n" +
+                "waitfor delay @timeout;" +
+                "END\n";
+            let fns = [
+                function (async_done) {
+                    procedureHelper.createProcedure(sp_name, def, function () {
+                        async_done();
+                    });
+                },
+                function (async_done) {
+                    let pm = conn.procedureMgr();
+                    pm.setPolling(true);
+                    let q = pm.callproc(sp_name, ['0:0:20'], function (err) {
+                        Assert.check(err);
+                        Assert.check(err.message.indexOf('Operation canceled') > 0);
+                        async_done();
+                    });
+                    q.on('submitted', function () {
+                        q.cancelQuery(function (err) {
+                            Assert.check(!err);
+                        });
+                    });
+                }
+            ];
+            async.series(fns, function () {
+                async_done();
+            });
+        },
+        function (async_done) {
+            console.log("close connection.");
+            conn.close(() => {
+                async_done();
+            });
+        },
+        function (async_done) {
+            console.log("...... cancel ends.");
             async_done();
         }
     ];

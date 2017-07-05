@@ -47,8 +47,8 @@ export module MsNodeSqlDriverApiModule {
         DateRound(v:Date) : any;
         SmallDateTime(v:Date) : any;
         DateTimeOffset(v:Date) : any;
-        PollingQuery(s:string) : any;
-        TimeoutQuery(s:string, to:number) : any;
+        PollingQuery(s:string) : v8QueryDescription;
+        TimeoutQuery(s:string, to:number) : v8QueryDescription;
     }
 
     export interface v8Connection {
@@ -67,8 +67,9 @@ export module MsNodeSqlDriverApiModule {
         rollback(cb?: v8StatusCb): void
         procedureMgr(): v8ProcedureManager
         tableMgr(): v8TableManager
-        cancelQuery(cb?: v8StatusCb): void
+        cancelQuery(q: v8Query, cb?: v8StatusCb): void
         prepare(sql: string, cb: v8PrepareCb): void
+        prepare(description: v8QueryDescription, cb: v8PrepareCb): void
         setFilterNonCriticalErrors(flag:boolean):void
     }
 
@@ -76,7 +77,7 @@ export module MsNodeSqlDriverApiModule {
         on(name: string, cb: v8SubmittedEventCb): void
         on(name: string, cb: v8EventCb): void
         on(name: string, cb: v8EventColumnCb): void
-        cancelQuery(cb?: v8StatusCb): void
+        cancelQuery(qcb?: v8StatusCb): void
     }
 
     export interface v8ConnectDescription {
@@ -86,8 +87,8 @@ export module MsNodeSqlDriverApiModule {
 
     export interface v8QueryDescription {
         query_str: string,
-        query_timeout: number,
-        query_polling: boolean
+        query_timeout?: number,
+        query_polling?: boolean
     }
 
     export interface v8Meta {
@@ -194,6 +195,7 @@ export module MsNodeSqlDriverApiModule {
         callproc(name: string, params?: any[], cb?: v8CallProcedureCb): v8Query
         describe(name: string, cb?: v8DescribeProcedureCb): void
         setTimeout(timeout: number): void
+        setPolling(poll:boolean):void;
     }
 
     export interface v8TableManager {
@@ -201,7 +203,7 @@ export module MsNodeSqlDriverApiModule {
     }
 
     export interface v8PreparedStatement {
-        preparedQuery(params?: any[], cb ?: v8QueryCb): void
+        preparedQuery(params?: any[], cb ?: v8QueryCb): v8Query
         free(cb: v8StatusCb): void
         getSignature(): string
         getId(): number
