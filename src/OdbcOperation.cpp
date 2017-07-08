@@ -110,14 +110,14 @@ namespace mssql
 		auto more  = false;
 		if (statement)
 		{
-			auto rs = statement->GetResultSet();
+			const auto rs = statement->GetResultSet();
 			if (rs) more = !rs->EndOfRows();
 		}
 
 		args[0] = err;
 		args[1] = fact.newArray();
 		args[2] = fact.newBoolean(more);
-		auto argc = 3;
+		const auto argc = 3;
 		return argc;
 	}
 
@@ -126,11 +126,11 @@ namespace mssql
 		nodeTypeFactory fact;
 
 		args[0] = fact.newLocalValue(fact.newBoolean(false));
-		auto arg = CreateCompletionArg();
+		const auto arg = CreateCompletionArg();
 		args[1] = fact.newLocalValue(arg);
-		int c = output_param->IsNull() ? 0 : output_param.As<Array>()->Length();
+		const int c = output_param->IsNull() ? 0 : output_param.As<Array>()->Length();
 		if (c > 0) args[2] = output_param;
-		auto argc = c == 0 ? 2 : 3;
+		const auto argc = c == 0 ? 2 : 3;
 		return argc;
 	}
 
@@ -141,10 +141,10 @@ namespace mssql
 		nodeTypeFactory fact;
 		if (callback.IsEmpty()) return;
 		Local<Value> args[3];
-		auto argc = failed ? Error(args) : Success(args);
+		const auto argc = failed ? Error(args) : Success(args);
 		auto cons = fact.newCallbackFunction(callback);		
 		auto context = isolate->GetCurrentContext();
-		auto global = context->Global();
+		const auto global = context->Global();
 		cons->Call(global, argc, args);
 	}
 }

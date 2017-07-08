@@ -8,13 +8,13 @@ namespace mssql
 	{
 		if (statement == nullptr) return false;
 		// fprintf(stderr, "invoke statement->TryReadRow() statementId = %d\n", statementId);
-		bool res = statement->TryReadRow();
+		const auto res = statement->TryReadRow();
 		return res;
 	}
 
 	Local<Value> ReadRowOperation::CreateCompletionArg()
 	{
-		auto res = statement->EndOfRows();
+		const auto res = statement->EndOfRows();
 		return res;
 	}
 }

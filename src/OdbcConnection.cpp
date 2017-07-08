@@ -97,7 +97,7 @@ namespace mssql
 	{
 		if (timeout > 0)
 		{
-			auto to = reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout));
+			const auto to = reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout));
 			auto ret = SQLSetConnectAttr(*connection, SQL_ATTR_CONNECTION_TIMEOUT, to, 0);
 			if (!CheckOdbcError(ret)) return false;
 
@@ -136,8 +136,8 @@ namespace mssql
 	bool OdbcConnection::TryBeginTran(void)
 	{
 		// turn off autocommit
-		auto acoff = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_OFF);
-		auto ret = SQLSetConnectAttr(*connection, SQL_ATTR_AUTOCOMMIT, acoff, SQL_IS_UINTEGER);
+		const auto acoff = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_OFF);
+		const auto ret = SQLSetConnectAttr(*connection, SQL_ATTR_AUTOCOMMIT, acoff, SQL_IS_UINTEGER);
 		if (!CheckOdbcError(ret)) return false;
 
 		return true;

@@ -8,7 +8,7 @@ namespace mssql
 	{
 		if (statement == nullptr) return false;
 		preRowCount = statement->RowCount();
-		auto res = statement->TryReadNextResult();
+		const auto res = statement->TryReadNextResult();
 		postRowCount = statement->RowCount();
 		return res;
 	}

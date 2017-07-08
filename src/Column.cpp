@@ -17,7 +17,6 @@
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
 
-#include "stdafx.h"
 #include "NodeColumns.h"
 
 namespace mssql {

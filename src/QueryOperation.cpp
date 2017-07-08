@@ -7,14 +7,14 @@
 
 namespace mssql
 {
-	QueryOperation::QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, size_t queryId, bool polling, u_int timeout, Handle<Object> callback) :
+	QueryOperation::QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, size_t query_id, bool polling, u_int timeout, Handle<Object> callback) :
 		OdbcOperation(connection, callback),
 	    polling(polling),
 		timeout(timeout),
 		query(query),
 		output_param_count(0)
 	{
-		statementId = static_cast<long>(queryId);
+		statementId = static_cast<long>(query_id);
 		params = make_shared<BoundDatumSet>();
 	}
 
@@ -28,13 +28,13 @@ namespace mssql
 		full_error << "IMNOD: [msnodesql] Parameter " << param + 1 << ": " << error;
 
 		auto err = fact.error(full_error);
-		auto imn = fact.newString("IMNOD");
+		const auto imn = fact.newString("IMNOD");
 		err->Set(fact.newString("sqlstate"), imn);
 		err->Set(fact.newString("code"), fact.newInteger(-1));
 
 		Local<Value> args[1];
 		args[0] = err;
-		auto argc = 1;
+		const auto argc = 1;
 
 		fact.scopedCallback(callback, argc, args);
 
@@ -43,7 +43,7 @@ namespace mssql
 
 	bool QueryOperation::BindParameters(Handle<Array> &node_params) const
 	{
-		auto res = params->bind(node_params);
+		const auto res = params->bind(node_params);
 		if (!res)
 		{
 			ParameterErrorToUserCallback(params->first_error, params->err);

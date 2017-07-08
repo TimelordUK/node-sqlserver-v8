@@ -52,7 +52,7 @@ namespace mssql
 	shared_ptr<OdbcStatement> OdbcStatementCache::find(long statementId)
 	{
 		shared_ptr<OdbcStatement> statement = nullptr;
-		auto itr = statements.find(statementId);
+		const auto itr = statements.find(statementId);
 		if (itr != statements.end()) {
 			statement = itr->second;
 		}

@@ -24,9 +24,9 @@ namespace mssql
 {
     using namespace v8;
 
-    static const wchar_t* mapType(SQLSMALLINT datatype)
+    static const wchar_t* map_type(SQLSMALLINT datatype)
     {
-	   const wchar_t* typeName;
+	   const wchar_t* type_name;
 
 	   switch (datatype)
 	   {
@@ -38,10 +38,10 @@ namespace mssql
 	   case SQL_WLONGVARCHAR:
 	   case SQL_GUID:
 	   case SQL_SS_XML:
-		  typeName = L"text";
+		  type_name = L"text";
 		  break;
 	   case SQL_BIT:
-		  typeName = L"boolean";
+		  type_name = L"boolean";
 		  break;
 	   case SQL_SMALLINT:
 	   case SQL_TINYINT:
@@ -52,36 +52,35 @@ namespace mssql
 	   case SQL_FLOAT:
 	   case SQL_DOUBLE:
 	   case SQL_BIGINT:
-		  typeName = L"number";
+		  type_name = L"number";
 		  break;
 	   case SQL_TYPE_TIME:
 	   case SQL_SS_TIME2:
 	   case SQL_TYPE_TIMESTAMP:
 	   case SQL_TYPE_DATE:
 	   case SQL_SS_TIMESTAMPOFFSET:
-		  typeName = L"date";
+		  type_name = L"date";
 		  break;
 	   case SQL_BINARY:
 	   case SQL_VARBINARY:
 	   case SQL_LONGVARBINARY:
 	   case SQL_SS_UDT:
-		  typeName = L"binary";
+		  type_name = L"binary";
 		  break;
 	   default:
-		  typeName = L"text";
+		  type_name = L"text";
 		  break;
 	   }
-	   return typeName;
+	   return type_name;
     }
 
 	Local<Object> ResultSet::getEntry(nodeTypeFactory & fact, const ColumnDefinition & definition)  {
-
-		auto typeName = mapType(definition.dataType);
+		const auto type_name = map_type(definition.dataType);
 		auto entry = fact.newObject();
 		entry->Set(fact.fromTwoByte(L"size"), fact.newInteger(static_cast<int32_t>(definition.columnSize)));
 		entry->Set(fact.fromTwoByte(L"name"), fact.fromTwoByte(definition.name.c_str()));
 		entry->Set(fact.fromTwoByte(L"nullable"), fact.newBoolean(definition.nullable != 0));  
-		entry->Set(fact.fromTwoByte(L"type"), fact.fromTwoByte(typeName));
+		entry->Set(fact.fromTwoByte(L"type"), fact.fromTwoByte(type_name));
 		entry->Set(fact.fromTwoByte(L"sqlType"), fact.fromTwoByte(definition.dataTypeName.c_str()));
 		if (definition.dataType == SQL_SS_UDT) {
 			entry->Set(fact.fromTwoByte(L"udtType"), fact.fromTwoByte(definition.udtTypeName.c_str()));

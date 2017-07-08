@@ -25,13 +25,13 @@ namespace mssql
 		full_error << "IMNOD: [msnodesql] Parameter " << param + 1 << ": " << error;
 
 		auto err = fact.error(full_error);
-		auto imn = fact.newString("IMNOD");
+		const auto imn = fact.newString("IMNOD");
 		err->Set(fact.newString("sqlstate"), imn);
 		err->Set(fact.newString("code"), fact.newInteger(-1));
 
 		Local<Value> args[1];
 		args[0] = err;
-		int argc = 1;
+		const auto argc = 1;
 
 		fact.scopedCallback(callback, argc, args);
 
@@ -40,7 +40,7 @@ namespace mssql
 
 	bool QueryPreparedOperation::BindParameters(Handle<Array> &node_params) const
 	{
-		auto res = params->bind(node_params);
+		const auto res = params->bind(node_params);
 		if (!res)
 		{
 			ParameterErrorToUserCallback(params->first_error, params->err);

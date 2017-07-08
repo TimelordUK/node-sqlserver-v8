@@ -24,10 +24,10 @@ namespace mssql {
 
 	namespace {
 
-		const int64_t MS_PER_SECOND = static_cast<int64_t>(1e3);
-		const int64_t MS_PER_MINUTE = 60 * MS_PER_SECOND;
-		const int64_t MS_PER_HOUR = 60 * MS_PER_MINUTE;
-		const int64_t MS_PER_DAY = 24 * MS_PER_HOUR;
+		const int64_t ms_per_second = static_cast<int64_t>(1e3);
+		const int64_t ms_per_minute = 60 * ms_per_second;
+		const int64_t ms_per_hour = 60 * ms_per_minute;
+		const int64_t ms_per_day = 24 * ms_per_hour;
 
 		bool is_leap_year(int64_t year)
 		{
@@ -41,10 +41,8 @@ namespace mssql {
 		// table derived from ECMA 262 15.9.1.4
 		static const double days_in_months[] = { 0.0, 31.0, 59.0, 90.0, 120.0, 151.0, 181.0, 212.0, 243.0, 273.0, 304.0, 334.0 };
 
-		double days;
-
 		// calculate the number of days to the start of the year
-		days = 365.0 * (y - 1970.0) + floor((y - 1969.0) / 4.0) - floor((y - 1901.0) / 100.0) + floor((y - 1601.0) / 400.0);
+		auto days = 365.0 * (y - 1970.0) + floor((y - 1969.0) / 4.0) - floor((y - 1901.0) / 100.0) + floor((y - 1601.0) / 400.0);
 
 		// add in the number of days from the month
 		days += days_in_months[m - 1];
@@ -62,32 +60,32 @@ namespace mssql {
 
 	void TimestampColumn::MillisecondsFromDate(TIMESTAMP_STRUCT const & ts)
 	{
-		SQL_SS_TIMESTAMPOFFSET_STRUCT timeStruct;
-		timeStruct.year = ts.year;
-		timeStruct.month = ts.month;
-		timeStruct.day = ts.day;
-		timeStruct.hour = ts.hour;
-		timeStruct.minute = ts.minute;
-		timeStruct.second = ts.second;
-		timeStruct.fraction = ts.fraction;
-		timeStruct.timezone_hour = 0;
-		timeStruct.timezone_minute = 0;
-		MillisecondsFromDate(timeStruct);
+		SQL_SS_TIMESTAMPOFFSET_STRUCT time_struct;
+		time_struct.year = ts.year;
+		time_struct.month = ts.month;
+		time_struct.day = ts.day;
+		time_struct.hour = ts.hour;
+		time_struct.minute = ts.minute;
+		time_struct.second = ts.second;
+		time_struct.fraction = ts.fraction;
+		time_struct.timezone_hour = 0;
+		time_struct.timezone_minute = 0;
+		MillisecondsFromDate(time_struct);
 	}
 
 	// derived from ECMA 262 15.9
 	void TimestampColumn::MillisecondsFromDate(SQL_SS_TIMESTAMPOFFSET_STRUCT const& timeStruct)
 	{
-		double ms = DaysSinceEpoch(timeStruct.year, timeStruct.month, timeStruct.day);
-		ms *= MS_PER_DAY;
+		auto ms = DaysSinceEpoch(timeStruct.year, timeStruct.month, timeStruct.day);
+		ms *= ms_per_day;
 
 		// add in the hour, day minute, second and millisecond
-		ms += timeStruct.hour * MS_PER_HOUR + timeStruct.minute * MS_PER_MINUTE + timeStruct.second * MS_PER_SECOND;
+		ms += timeStruct.hour * ms_per_hour + timeStruct.minute * ms_per_minute + timeStruct.second * ms_per_second;
 		ms += timeStruct.fraction / NANOSECONDS_PER_MS;    // fraction is in nanoseconds
 
 														   // handle timezone adjustment to UTC
-		ms -= timeStruct.timezone_hour * MS_PER_HOUR;
-		ms -= timeStruct.timezone_minute * MS_PER_MINUTE;
+		ms -= timeStruct.timezone_hour * ms_per_hour;
+		ms -= timeStruct.timezone_minute * ms_per_minute;
 
 		milliseconds = ms;
 
@@ -142,19 +140,19 @@ namespace mssql {
 		static const int64_t days_in_months[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 		static const int64_t leap_days_in_months[] = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
-		int64_t const* start_days = days_in_months;
+		auto start_days = days_in_months;
 
 		// calculate the number of days elapsed (normalized from the beginning of supported datetime)
-		int64_t day = static_cast<int64_t>(milliseconds) / MS_PER_DAY;
+		auto day = static_cast<int64_t>(milliseconds) / ms_per_day;
 		// calculate time portion of the timestamp
-		int64_t time = static_cast<int64_t>(milliseconds) % MS_PER_DAY;
+		auto time = static_cast<int64_t>(milliseconds) % ms_per_day;
 		if (time < 0) {
-			time = MS_PER_DAY + time;
+			time = ms_per_day + time;
 			--day;
 		}
 
 		// how many leap years have passed since that time?
-		int64_t year = YearFromDay(day);
+		const auto year = YearFromDay(day);
 
 		if (is_leap_year(year)) {
 			start_days = leap_days_in_months;
@@ -174,9 +172,9 @@ namespace mssql {
 		date.day = static_cast<SQLUSMALLINT>(day + 1);
 
 		// SQL Server has 100 nanosecond resolution, so we adjust the milliseconds to high bits
-		date.hour = static_cast<SQLUSMALLINT>(time / MS_PER_HOUR);
-		date.minute = static_cast<SQLUSMALLINT>((time % MS_PER_HOUR) / MS_PER_MINUTE);
-		date.second = (time % MS_PER_MINUTE) / MS_PER_SECOND;
+		date.hour = static_cast<SQLUSMALLINT>(time / ms_per_hour);
+		date.minute = static_cast<SQLUSMALLINT>((time % ms_per_hour) / ms_per_minute);
+		date.second = (time % ms_per_minute) / ms_per_second;
 		date.fraction = (time % 1000) * NANOSECONDS_PER_MS;
 		date.timezone_hour = offset_minutes / 60;
 		date.timezone_minute = offset_minutes % 60;

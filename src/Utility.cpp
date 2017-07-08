@@ -27,15 +27,15 @@ namespace mssql
 	wstring FromV8String(Handle<String> input)
 	{
 		wstring result;
-		const int bufferLength = 256;
-		uint16_t buffer[bufferLength];
-		int length = input->Length();
+		const auto buffer_length = 256;
+		uint16_t buffer[buffer_length];
+		const auto length = input->Length();
 		result.reserve(length);
-		int read = 0;
+		auto read = 0;
 		while (read < length)
 		{
-			int toread = min(bufferLength, length - read);
-			int actual = input->Write(buffer, read, toread);
+			const auto toread = min(buffer_length, length - read);
+			const auto actual = input->Write(buffer, read, toread);
 			result.append(reinterpret_cast<const wchar_t*>(buffer), actual);
 			read += actual;
 		}
@@ -46,7 +46,7 @@ namespace mssql
 	string w2a(const wchar_t* input)
 	{
 		vector<char> messageBuffer;
-		int length = ::WideCharToMultiByte(CP_UTF8, 0, input, -1, nullptr, 0, nullptr, nullptr);
+		const auto length = ::WideCharToMultiByte(CP_UTF8, 0, input, -1, nullptr, 0, nullptr, nullptr);
 		if (length > 0)
 		{
 			// length includes null terminator
@@ -56,7 +56,7 @@ namespace mssql
 		return string(messageBuffer.data());
 	}
 
-	int char2int(char input)
+	int char2_int(char input)
 	{
 		if (input >= '0' && input <= '9')
 			return input - '0';
@@ -70,12 +70,12 @@ namespace mssql
 	// This function assumes src to be a zero terminated sanitized string with
 	// an even number of [0-9a-f] characters, and target to be sufficiently large
 
-	int hex2bin(const char* src, char* target)
+	int hex2_bin(const char* src, char* target)
 	{
-		int len = 0;
+		auto len = 0;
 		while (*src && src[1])
 		{
-			*(target++) = char2int(*src) * 16 + char2int(src[1]);
+			*(target++) = char2_int(*src) * 16 + char2_int(src[1]);
 			src += 2;
 			++len;
 		}
@@ -84,9 +84,9 @@ namespace mssql
 
 	double round(double val, int dp)
 	{
-		double raised = pow(10, dp);
-		double temp = val * raised;
-		double rounded = floor(temp);
+		const auto raised = pow(10, dp);
+		const auto temp = val * raised;
+		auto rounded = floor(temp);
 
 		if (temp - rounded >= .5) {
 			rounded = ceil(temp);
@@ -109,15 +109,14 @@ namespace mssql
 	}
 
 	void encodeNumericStruct(double v, int precision, int upscaleLimit, SQL_NUMERIC_STRUCT & numeric) {
-
-		double encode = fabs(v);
+		auto encode = fabs(v);
 		double intpart;
-		int scale = 0;
+		auto scale = 0;
 		char hex[SQL_MAX_NUMERIC_LEN];
 
 		if (upscaleLimit <= 0) upscaleLimit = SQL_MAX_NUMERIC_LEN;
 
-		double dmod = modf(encode, &intpart);
+		auto dmod = modf(encode, &intpart);
 		while (scale < upscaleLimit && dmod != 0.0)
 		{
 			++scale;
@@ -125,14 +124,14 @@ namespace mssql
 			dmod = modf(encode, &intpart);
 		}
 
-		auto ull = static_cast<unsigned long long>(encode);
+		const auto ull = static_cast<unsigned long long>(encode);
 		memset(numeric.val, 0, SQL_MAX_NUMERIC_LEN);
 		memset(hex, 0, SQL_MAX_NUMERIC_LEN);
 		auto ss = hexify(ull);
 		if (ss.size() % 2 == 1) ss = "0" + ss;
-		auto len = hex2bin(ss.c_str(), hex);
-		int j = 0;
-		for (int i = len - 1; i >= 0; --i)
+		const auto len = hex2_bin(ss.c_str(), hex);
+		auto j = 0;
+		for (auto i = len - 1; i >= 0; --i)
 		{
 			numeric.val[j++] = hex[i];
 		}
@@ -157,7 +156,7 @@ namespace mssql
 	{
 		auto cons = newCallbackFunction(callback);
 		auto context = isolate->GetCurrentContext();
-		auto global = context->Global();
+		const auto global = context->Global();
 		cons->Call(global, argc, args);
 	}
 
@@ -272,28 +271,28 @@ namespace mssql
 
 	Local<Object> nodeTypeFactory::error(const stringstream &full_error) const
 	{
-		auto err = Local<Object>::Cast(Exception::Error(newString(full_error.str().c_str())));
+		const auto err = Local<Object>::Cast(Exception::Error(newString(full_error.str().c_str())));
 		return err;
 	}
 
 	Local<Object> nodeTypeFactory::error(const char* full_error) const
 	{
-		auto err = Local<Object>::Cast(Exception::Error(newString(full_error)));
+		const auto err = Local<Object>::Cast(Exception::Error(newString(full_error)));
 		return err;
 	}
 
 	Local<Value> nodeTypeFactory::newDate() const
 	{
-		auto dd = Date::New(isolate, 0.0);
+		const auto dd = Date::New(isolate, 0.0);
 		return dd;
 	}
 
 	Local<Value> nodeTypeFactory::newDate(double milliseconds, int32_t nanoseconds_delta) const
 	{
-		auto ns = String::NewFromUtf8(isolate, "nanosecondsDelta");
-		auto n = Number::New(isolate, nanoseconds_delta / (NANOSECONDS_PER_MS * 1000.0));
+		const auto ns = String::NewFromUtf8(isolate, "nanosecondsDelta");
+		const auto n = Number::New(isolate, nanoseconds_delta / (NANOSECONDS_PER_MS * 1000.0));
 		// include the properties for items in a DATETIMEOFFSET that are not included in a JS Date object
-		auto dd = Date::New(isolate, milliseconds);
+		const auto dd = Date::New(isolate, milliseconds);
 		dd->ToObject()->Set(ns, n);
 		return dd;
 	}

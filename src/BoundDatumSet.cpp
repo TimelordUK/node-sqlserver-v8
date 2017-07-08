@@ -57,7 +57,7 @@ namespace mssql
 	Local<Array> BoundDatumSet::unbind()
 	{
 		nodeTypeFactory fact;
-		auto arr = fact.newArray(output_param_count);
+		const auto arr = fact.newArray(output_param_count);
 		auto i = 0;
 
 		std::for_each(bindings.begin(), bindings.end(), [&](BoundDatum& param) mutable

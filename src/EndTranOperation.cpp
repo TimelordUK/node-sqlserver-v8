@@ -5,9 +5,9 @@
 namespace mssql
 {
 	EndTranOperation::EndTranOperation(shared_ptr<OdbcConnection> connection, 
-		SQLSMALLINT completionType, Handle<Object> callback)
+		SQLSMALLINT completion_type, Handle<Object> callback)
 		: OdbcOperation(connection, callback),
-		completionType(completionType)
+		completionType(completion_type)
 	{
 	}
 
