@@ -7,11 +7,11 @@ namespace mssql
 	bool ReadColumnOperation::TryInvokeOdbc()
 	{
 		if (statement == nullptr) return false;
-		return statement->TryReadColumn(column);
+		return statement->try_read_column(column);
 	}
 
 	Local<Value> ReadColumnOperation::CreateCompletionArg()
 	{
-		return statement->GetColumnValue();
+		return statement->get_column_value();
 	}
 }

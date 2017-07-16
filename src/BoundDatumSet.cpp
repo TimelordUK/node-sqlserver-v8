@@ -15,7 +15,7 @@ namespace mssql
 		for (uint32_t i = 0; i < set->GetColumns(); ++i) {
 			BoundDatum binding;
 			auto & def = set->GetMetadata(i);
-			binding.reserveColumnType(def.dataType, def.columnSize);
+			binding.reserve_column_type(def.dataType, def.columnSize);
 			bindings.push_back(move(binding));
 		}
 		return true;

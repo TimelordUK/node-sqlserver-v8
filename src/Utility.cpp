@@ -108,16 +108,16 @@ namespace mssql
 		return string(res.rbegin(), res.rend());
 	}
 
-	void encodeNumericStruct(double v, int precision, int upscaleLimit, SQL_NUMERIC_STRUCT & numeric) {
+	void encodeNumericStruct(double v, int precision, int upscale_limit, SQL_NUMERIC_STRUCT & numeric) {
 		auto encode = fabs(v);
 		double intpart;
 		auto scale = 0;
 		char hex[SQL_MAX_NUMERIC_LEN];
 
-		if (upscaleLimit <= 0) upscaleLimit = SQL_MAX_NUMERIC_LEN;
+		if (upscale_limit <= 0) upscale_limit = SQL_MAX_NUMERIC_LEN;
 
 		auto dmod = modf(encode, &intpart);
-		while (scale < upscaleLimit && dmod != 0.0)
+		while (scale < upscale_limit && dmod != 0.0)
 		{
 			++scale;
 			encode = encode * 10;
@@ -138,7 +138,7 @@ namespace mssql
 
 		numeric.sign = v >= 0.0 ? 1 : 0;
 		numeric.precision = precision > 0 ? precision : static_cast<SQLCHAR>(log10(encode) + 1);
-		numeric.scale = min(upscaleLimit, scale);
+		numeric.scale = min(upscale_limit, scale);
 	}
 
 

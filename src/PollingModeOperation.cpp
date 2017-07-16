@@ -10,7 +10,7 @@ namespace mssql
 		if (statement == nullptr) {
 			return false;
 		}
-		return statement->setPolling(_polling);
+		return statement->set_polling(_polling);
 	}
 
 	Local<Value> PollingModeOperation::CreateCompletionArg()

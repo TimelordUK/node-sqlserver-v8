@@ -42,6 +42,48 @@ suite('sproc', function () {
         });
     });
 
+    test('get proc and call  - should not error', function (test_done) {
+
+        var sp_name = "test_sp_get_int_int";
+
+        var def = "alter PROCEDURE <name>"+
+            "(\n" +
+            "@num1 INT,\n" +
+            "@num2 INT,\n" +
+            "@num3 INT OUTPUT\n" +
+            "\n)" +
+            "AS\n" +
+            "BEGIN\n" +
+            "   SET @num3 = @num1 + @num2\n"+
+            "   RETURN 99;\n"+
+            "END\n";
+
+        var fns = [
+            function (async_done) {
+                procedureHelper.createProcedure(sp_name, def, function () {
+                    async_done();
+                });
+            },
+
+            function (async_done) {
+                var pm = theConnection.procedureMgr();
+                pm.get(sp_name, function (proc) {
+                    var count = pm.getCount();
+                    assert.equal(count, 1);
+                    proc.call([10, 5], function (err, results, output) {
+                        var expected = [99, 15];
+                        assert.deepEqual(output, expected, "results didn't match");
+                        async_done();
+                    });
+                });
+            }
+        ];
+
+        async.series(fns, function() {
+            test_done();
+        })
+    });
+
     test('call proc that waits for delay of input param - wait 2, timeout 5 - should not error', function (test_done) {
 
         var sp_name = "test_spwait_for";

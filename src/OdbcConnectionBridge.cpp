@@ -116,11 +116,11 @@ namespace mssql
 		return fact.null();
 	}
 
-	Handle<Value> OdbcConnectionBridge::Prepare(Handle<Number> query_id, Handle<Object> queryObject, Handle<Object> callback) const
+	Handle<Value> OdbcConnectionBridge::Prepare(Handle<Number> query_id, Handle<Object> query_object, Handle<Object> callback) const
 	{
-		const auto query_string = get(queryObject, "query_str")->ToString();
-		auto timeout = get(queryObject, "query_timeout")->Int32Value();
-		auto polling = get(queryObject, "query_polling")->BooleanValue();
+		const auto query_string = get(query_object, "query_str")->ToString();
+		auto timeout = get(query_object, "query_timeout")->Int32Value();
+		auto polling = get(query_object, "query_polling")->BooleanValue();
 		auto id = query_id->IntegerValue();
 		const auto operation = make_shared<PrepareOperation>(connection, FromV8String(query_string), id, polling, timeout, callback);
 		connection->send(operation);
@@ -128,12 +128,12 @@ namespace mssql
 		return fact.null();
 	}
 
-	Handle<Value> OdbcConnectionBridge::CallProcedure(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const
+	Handle<Value> OdbcConnectionBridge::CallProcedure(Handle<Number> query_id, Handle<Object> query_object, Handle<Array> params, Handle<Object> callback) const
 	{
-		const auto query_string = get(queryObject, "query_str")->ToString();
-		auto timeout = get(queryObject, "query_timeout")->Int32Value();
-		auto polling = get(queryObject, "query_polling")->BooleanValue();
-		auto id = queryId->IntegerValue();
+		const auto query_string = get(query_object, "query_str")->ToString();
+		auto timeout = get(query_object, "query_timeout")->Int32Value();
+		auto polling = get(query_object, "query_polling")->BooleanValue();
+		auto id = query_id->IntegerValue();
 
 		const auto operation = make_shared<ProcedureOperation>(connection, FromV8String(query_string), id, polling, timeout, callback);
 		if (operation->BindParameters(params)) {
@@ -143,18 +143,18 @@ namespace mssql
 		return fact.newInt64(operation->OperationID);
 	}
 
-	Handle<Value> OdbcConnectionBridge::UnbindParameters(Handle<Number> queryId, Handle<Object> callback)
+	Handle<Value> OdbcConnectionBridge::UnbindParameters(Handle<Number> query_id, Handle<Object> callback)
 	{
-		auto id = queryId->IntegerValue();
+		auto id = query_id->IntegerValue();
 		const auto op = make_shared<UnbindOperation>(connection, id, callback);
 		connection->send(op);
 		nodeTypeFactory fact;
 		return fact.null();
 	}
 
-	Handle<Value> OdbcConnectionBridge::Cancel(Handle<Number> queryId, Handle<Object> callback)
+	Handle<Value> OdbcConnectionBridge::Cancel(Handle<Number> query_id, Handle<Object> callback)
 	{
-		auto id = queryId->IntegerValue();
+		auto id = query_id->IntegerValue();
 		//fprintf(stderr, "cancel %lld", id);
 		const auto op = make_shared<CancelOperation>(connection, id, callback);
 		connection->send(op);
@@ -162,9 +162,9 @@ namespace mssql
 		return fact.null();
 	}
 
-	Handle<Value> OdbcConnectionBridge::PollingMode(Handle<Number> queryId, Handle<Boolean> mode, Handle<Object> callback)
+	Handle<Value> OdbcConnectionBridge::PollingMode(Handle<Number> query_id, Handle<Boolean> mode, Handle<Object> callback)
 	{
-		auto id = queryId->IntegerValue();
+		auto id = query_id->IntegerValue();
 		auto polling = mode->BooleanValue();
 
 		const auto op = make_shared<PollingModeOperation>(connection, id, polling, callback);
@@ -173,39 +173,39 @@ namespace mssql
 		return fact.null();
 	}
 
-	Handle<Value> OdbcConnectionBridge::FreeStatement(Handle<Number> queryId, Handle<Object> callback)
+	Handle<Value> OdbcConnectionBridge::FreeStatement(Handle<Number> query_id, Handle<Object> callback)
 	{
-		auto id = static_cast<long>(queryId->IntegerValue());
+		auto id = static_cast<long>(query_id->IntegerValue());
 		nodeTypeFactory fact;
 		auto op = make_shared<FreeStatementOperation>(connection, id, callback);
 		connection->statements->checkin(id);	
 		op->mgr = connection->ops;
-		connection->ops->Add(op);
+		connection->ops->add(op);
 
 		return fact.null();
 	}
 
-	Handle<Value> OdbcConnectionBridge::ReadRow(Handle<Number> queryId, Handle<Object> callback) const
+	Handle<Value> OdbcConnectionBridge::ReadRow(Handle<Number> query_id, Handle<Object> callback) const
 	{
-		auto id = queryId->IntegerValue();
+		auto id = query_id->IntegerValue();
 		const auto op = make_shared<ReadRowOperation>(connection, id, callback);
 		connection->send(op);
 		nodeTypeFactory fact;
 		return fact.null();
 	}
 
-	Handle<Value> OdbcConnectionBridge::ReadNextResult(Handle<Number> queryId, Handle<Object> callback) const
+	Handle<Value> OdbcConnectionBridge::ReadNextResult(Handle<Number> query_id, Handle<Object> callback) const
 	{
-		auto id = queryId->IntegerValue();
+		auto id = query_id->IntegerValue();
 		const auto op = make_shared<ReadNextResultOperation>(connection, id, callback);
 		connection->send(op);
 		nodeTypeFactory fact;
 		return fact.null();
 	}
 
-	Handle<Value> OdbcConnectionBridge::ReadColumn(Handle<Number> queryId, Handle<Number> column, Handle<Object> callback) const
+	Handle<Value> OdbcConnectionBridge::ReadColumn(Handle<Number> query_id, Handle<Number> column, Handle<Object> callback) const
 	{
-		auto id = queryId->IntegerValue();
+		auto id = query_id->IntegerValue();
 		const auto op = make_shared<ReadColumnOperation>(connection, id, column->Int32Value(), callback);
 		connection->send(op);
 		nodeTypeFactory fact;
@@ -220,13 +220,13 @@ namespace mssql
 		return val;
 	}
 
-	Handle<Value> OdbcConnectionBridge::Open(Handle<Object> connectionObject, Handle<Object> callback, Handle<Object> backpointer)
+	Handle<Value> OdbcConnectionBridge::Open(Handle<Object> connection_object, Handle<Object> callback, Handle<Object> backpointer)
 	{
-		const auto connectionString = get(connectionObject, "conn_str")->ToString();
-		auto timeout = get(connectionObject, "conn_timeout")->Int32Value();
-		auto op = make_shared<OpenOperation>(connection, FromV8String(connectionString), timeout, callback, backpointer);
+		const auto connection_string = get(connection_object, "conn_str")->ToString();
+		auto timeout = get(connection_object, "conn_timeout")->Int32Value();
+		auto op = make_shared<OpenOperation>(connection, FromV8String(connection_string), timeout, callback, backpointer);
 		op->mgr = connection->ops;
-		connection->ops->Add(op);
+		connection->ops->add(op);
 		nodeTypeFactory fact;
 		return fact.null();
 	}

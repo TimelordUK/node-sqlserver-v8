@@ -49,10 +49,10 @@ namespace mssql
 		});
 	}
 
-	shared_ptr<OdbcStatement> OdbcStatementCache::find(long statementId)
+	shared_ptr<OdbcStatement> OdbcStatementCache::find(long statement_id)
 	{
 		shared_ptr<OdbcStatement> statement = nullptr;
-		const auto itr = statements.find(statementId);
+		const auto itr = statements.find(statement_id);
 		if (itr != statements.end()) {
 			statement = itr->second;
 		}
@@ -65,20 +65,20 @@ namespace mssql
 		return statement;
 	}
 
-	shared_ptr<OdbcStatement> OdbcStatementCache::checkout(long statementId)
+	shared_ptr<OdbcStatement> OdbcStatementCache::checkout(long statement_id)
 	{
-		if (statementId < 0)
+		if (statement_id < 0)
 		{
 			//fprintf(stderr, "dont fetch id %ld\n", statementId);
 			return nullptr;
 		}
-		auto statement = find(statementId);
+		auto statement = find(statement_id);
 		if (statement) return statement;
-		return store(make_shared<OdbcStatement>(statementId, connection));
+		return store(make_shared<OdbcStatement>(statement_id, connection));
 	}
 
-	void OdbcStatementCache::checkin(long statementId)
+	void OdbcStatementCache::checkin(long statement_id)
 	{
-		statements.erase(statementId);
+		statements.erase(statement_id);
 	}
 }

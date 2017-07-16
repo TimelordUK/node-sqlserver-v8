@@ -21,7 +21,7 @@ namespace mssql
 	{
 		statement = connection->statements->checkout(statementId);
 		if (statement == nullptr) return false;
-		statement->setPolling(polling);
-		return statement->TryPrepare(query, timeout);
+		statement->set_polling(polling);
+		return statement->try_prepare(query, timeout);
 	}
 }

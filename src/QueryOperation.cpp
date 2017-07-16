@@ -55,12 +55,12 @@ namespace mssql
 	bool QueryOperation::TryInvokeOdbc()
 	{
 		statement = connection->statements->checkout(statementId);	
-		statement->setPolling(polling);
-		return statement->TryExecuteDirect(query, timeout, params);
+		statement->set_polling(polling);
+		return statement->try_execute_direct(query, timeout, params);
 	}
 
 	Local<Value> QueryOperation::CreateCompletionArg()
 	{
-		return statement->GetMetaValue();
+		return statement->get_meta_value();
 	}
 }

@@ -12,8 +12,8 @@ namespace mssql
 
 	Local<Value> UnbindOperation::CreateCompletionArg()
 	{
-		auto a = statement->UnbindParams();
-		auto ret = a->Clone();
+		auto a = statement->unbind_params();
+		const auto ret = a->Clone();
 		return ret;
 	}
 }

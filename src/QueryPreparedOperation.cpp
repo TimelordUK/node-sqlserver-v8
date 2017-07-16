@@ -52,11 +52,11 @@ namespace mssql
 	bool QueryPreparedOperation::TryInvokeOdbc()
 	{
 		if (statement == nullptr) return false;
-		return statement->BindFetch(params);
+		return statement->bind_fetch(params);
 	}
 
 	Local<Value> QueryPreparedOperation::CreateCompletionArg()
 	{
-		return statement->GetMetaValue();
+		return statement->get_meta_value();
 	}
 }

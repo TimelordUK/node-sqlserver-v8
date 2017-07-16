@@ -125,7 +125,7 @@ namespace mssql
 		auto ret = openTimeout(timeout);
 		if (!CheckOdbcError(ret)) return false;
 		auto * conn_str = const_cast<wchar_t *>(connectionString.c_str());
-		auto len = static_cast<SQLSMALLINT>(connectionString.length());
+		const auto len = static_cast<SQLSMALLINT>(connectionString.length());
 		ret = SQLDriverConnect(*connection, nullptr, conn_str, len, nullptr, 0, nullptr, SQL_DRIVER_NOPROMPT);
 		if (!CheckOdbcError(ret)) return false;
 
@@ -150,14 +150,14 @@ namespace mssql
 		//fprintf(stderr, "OdbcConnection fetched\n");
 		//fprintf(stderr, "OdbcConnection statement %p\n", op->statement.get());
 		op->mgr = ops;
-		ops->Add(op);
+		ops->add(op);
 	}
 
-	bool OdbcConnection::TryEndTran(SQLSMALLINT completionType)
+	bool OdbcConnection::TryEndTran(SQLSMALLINT completion_type)
 	{
-		auto ret = SQLEndTran(SQL_HANDLE_DBC, *connection, completionType);
+		auto ret = SQLEndTran(SQL_HANDLE_DBC, *connection, completion_type);
 		if (!CheckOdbcError(ret)) return false;
-		auto acon = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_ON);
+		const auto acon = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_ON);
 		// put the connection back into auto commit mode
 		ret = SQLSetConnectAttr(*connection, SQL_ATTR_AUTOCOMMIT, acon, SQL_IS_UINTEGER);
 		if (!CheckOdbcError(ret)) return false;

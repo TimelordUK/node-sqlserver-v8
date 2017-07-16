@@ -60,62 +60,61 @@ namespace mssql
 		bool isPrepared() const 
 		{ return _prepared; }
 
-		Local<Array> UnbindParams() const;
-		Handle<Value> GetMetaValue() const;
-		bool  endOfResults() const;
-		Handle<Value> EndOfResults() const;
-		Handle<Value> EndOfRows() const;
-		Handle<Value> GetColumnValue() const;
-		bool setPolling(bool mode);
+		Local<Array> unbind_params() const;
+		Handle<Value> get_meta_value() const;
+		bool  end_of_results() const;
+		Handle<Value> handle_end_of_results() const;
+		Handle<Value> end_of_rows() const;
+		Handle<Value> get_column_value() const;
+		bool set_polling(bool mode);
 
 		shared_ptr<OdbcError> LastError(void) const
 		{
 			if (error) return error;
 			return error2;
 		}
-
-		
-		bool TryPrepare(const wstring& query, u_int timeout);
-		bool BindFetch(shared_ptr<BoundDatumSet> paramSet);
-		bool TryExecuteDirect(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> paramSet);
-		void cancelHandle();
-		bool TryReadRow();
-		bool TryReadColumn(int column);
-		bool TryReadNextResult();
+	
+		bool try_prepare(const wstring& query, u_int timeout);
+		bool bind_fetch(shared_ptr<BoundDatumSet> paramSet);
+		bool try_execute_direct(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> paramSet);
+		void cancel_handle();
+		bool try_read_row();
+		bool try_read_column(int column);
+		bool try_read_next_result();
 
 	private:
-		SQLRETURN PollCheck(SQLRETURN ret, bool direct);
-		bool getDataBinary(int column);
-		bool getDataDecimal(int column);
-		bool getDataBit(int column);
-		bool getDataTimestamp(int column);
-		bool getDataLong(int column);
-		bool getDataTimestampOffset(int column);
+		SQLRETURN poll_check(SQLRETURN ret, bool direct);
+		bool get_data_binary(int column);
+		bool get_data_decimal(int column);
+		bool get_data_bit(int column);
+		bool get_data_timestamp(int column);
+		bool get_data_long(int column);
+		bool get_data_timestamp_offset(int column);
 
-		bool StartReadingResults();
-		SQLRETURN queryTimeout(int timeout);
-		bool d_Variant(int col);
-		bool d_String(int col);
-		bool d_Bit(int col);
-		bool d_Integer(int col);
-		bool d_Decimal(int col);
-		bool d_Binary(int col);
-		bool d_TimestampOffset(int col);
-		bool d_Timestamp(int col);
-		bool d_Time(int col);
-		bool boundedString(SQLLEN display_size, int column);
-		bool reservedString(SQLLEN display_size, int column) const;
-		void applyPrecision(const BoundDatum & datum, int current_param) const;
-		bool readColAttributes(ResultSet::ColumnDefinition& current, int column);
-		bool readNext(int column);
-		bool Lob(SQLLEN display_size, int column);
+		bool start_reading_results();
+		SQLRETURN query_timeout(int timeout);
+		bool d_variant(int col);
+		bool d_string(int col);
+		bool d_bit(int col);
+		bool d_integer(int col);
+		bool d_decimal(int col);
+		bool d_binary(int col);
+		bool d_timestamp_offset(int col);
+		bool d_timestamp(int col);
+		bool d_time(int col);
+		bool bounded_string(SQLLEN display_size, int column);
+		bool reserved_string(SQLLEN display_size, int column) const;
+		void apply_precision(const BoundDatum & datum, int current_param) const;
+		bool read_col_attributes(ResultSet::ColumnDefinition& current, int column);
+		bool read_next(int column);
+		bool lob(SQLLEN display_size, int column);
 		static OdbcEnvironmentHandle environment;
 		bool dispatch(SQLSMALLINT t, int column);
-		bool BindParams(shared_ptr<BoundDatumSet>);
-		bool TryReadString(bool binary, int column);
+		bool bind_params(shared_ptr<BoundDatumSet>);
+		bool try_read_string(bool binary, int column);
 
-		bool ReturnOdbcError();
-		bool CheckOdbcError(SQLRETURN ret);
+		bool return_odbc_error();
+		bool check_odbc_error(SQLRETURN ret);
 		
 
 		shared_ptr<OdbcConnectionHandle> connection;
