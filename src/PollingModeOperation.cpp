@@ -1,7 +1,7 @@
 #include <v8.h>
-#include "OdbcStatement.h"
-#include "OperationManager.h"
-#include "PollingModeOperation.h"
+#include <OdbcStatement.h>
+#include <OperationManager.h>
+#include <PollingModeOperation.h>
 
 namespace mssql
 {

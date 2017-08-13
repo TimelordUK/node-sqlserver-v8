@@ -18,10 +18,11 @@
 //---------------------------------------------------------------------------------------------------------------------------------
 
 #include "stdafx.h"
-#include "OdbcStatement.h"
-#include "BoundDatumSet.h"
-#include "NodeColumns.h"
-#include "OdbcHelper.h"
+#include <OdbcStatement.h>
+#include <BoundDatumSet.h>
+#include <NodeColumns.h>
+#include <OdbcHelper.h>
+#include <QueryOperationParams.h>
 
 namespace mssql
 {
@@ -281,8 +282,9 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::try_prepare(const wstring& query, u_int timeout)
+	bool OdbcStatement::try_prepare(shared_ptr<QueryOperationParams> q)
 	{
+		auto query = q->query_string();
 		auto* sql_str = const_cast<SQLWCHAR *>(query.c_str());
 		SQLSMALLINT num_cols;
 
@@ -404,10 +406,10 @@ namespace mssql
 		}
 	}
 
-	bool OdbcStatement::try_execute_direct(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> param_set)
+	bool OdbcStatement::try_execute_direct(shared_ptr<QueryOperationParams> q, shared_ptr<BoundDatumSet> param_set)
 	{
 		SQLRETURN ret;
-
+		auto timeout = q->timeout();
 		const auto bound = bind_params(param_set);
 		if (!bound)
 		{
@@ -422,7 +424,7 @@ namespace mssql
 		_endOfResults = true; // reset 
 		ret = query_timeout(timeout);
 		if (!check_odbc_error(ret)) return false;
-
+		auto query = q->query_string();
 		auto* sql_str = const_cast<wchar_t *>(query.c_str());
 		_statementState = STATEMENT_SUBMITTED;
 		if (polling_mode)

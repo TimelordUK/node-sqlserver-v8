@@ -27,6 +27,7 @@ namespace mssql
 	class BoundDatum;
 	class BoundDatumSet;
 	class DatumStorage;
+	class QueryOperationParams;
 
 	using namespace std;
 
@@ -74,9 +75,9 @@ namespace mssql
 			return error2;
 		}
 	
-		bool try_prepare(const wstring& query, u_int timeout);
+		bool try_prepare(shared_ptr<QueryOperationParams> q);
 		bool bind_fetch(shared_ptr<BoundDatumSet> paramSet);
-		bool try_execute_direct(const wstring& query, u_int timeout, shared_ptr<BoundDatumSet> paramSet);
+		bool try_execute_direct(shared_ptr<QueryOperationParams> q, shared_ptr<BoundDatumSet> paramSet);
 		void cancel_handle();
 		bool try_read_row();
 		bool try_read_column(int column);

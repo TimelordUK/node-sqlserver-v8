@@ -19,6 +19,7 @@
 
 #include "stdafx.h"
 #include "OdbcOperation.h"
+
 #include "OdbcConnection.h"
 #include "OdbcStatement.h"
 #include "OdbcStatementCache.h"

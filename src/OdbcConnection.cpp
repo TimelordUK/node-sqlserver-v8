@@ -18,10 +18,10 @@
 //---------------------------------------------------------------------------------------------------------------------------------
 
 #include "stdafx.h"
-#include "OdbcConnection.h"
-#include "OdbcStatementCache.h"
-#include "OperationManager.h"
-#include "NodeColumns.h"
+#include <OdbcConnection.h>
+#include <OdbcStatementCache.h>
+#include <OperationManager.h>
+#include <NodeColumns.h>
 
 namespace mssql
 {

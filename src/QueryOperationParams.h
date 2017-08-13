@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------------------------------------------------------------
-// File: ProcedureOperation.h
+// File: OdbcOperation.h
 // Contents: ODBC Operation objects called on background thread
 // 
 // Copyright Microsoft Corporation and contributors
@@ -19,21 +19,43 @@
 
 #pragma once
 
-#include "QueryOperation.h"
+#include "OdbcOperation.h"
 
 namespace mssql
 {
 	using namespace std;
 	using namespace v8;
 
-	class OdbcConnection;
-
-	class ProcedureOperation : public QueryOperation
+	class QueryOperationParams
 	{
 	public:
-		bool TryInvokeOdbc() override;
-		Local<Value> CreateCompletionArg() override;
-		ProcedureOperation(shared_ptr<OdbcConnection> connection, shared_ptr<QueryOperationParams> query, Handle<Object> callback);
+
+		wstring query_string() { return _query_string; }
+		int64_t id() { return _id; }
+		int32_t timeout() { return _timeout; }
+		bool polling() { return _polling; }
+
+		QueryOperationParams(Handle<Number> query_id, Handle<Object> query_object)
+		{
+			_query_string = FromV8String(get(query_object, "query_str")->ToString());
+			_timeout = get(query_object, "query_timeout")->Int32Value();
+			_polling = get(query_object, "query_polling")->BooleanValue();
+			_id = query_id->IntegerValue();
+		}
+
+	private:
+		Local<Value> get(Local<Object> o, const char *v)
+		{
+			nodeTypeFactory fact;
+			const auto vp = fact.newString(v);
+			const auto val = o->Get(vp);
+			return val;
+		}
+
+		wstring _query_string;
+		int32_t _timeout;
+		int64_t _id;
+		bool _polling;
 	};
 }
 

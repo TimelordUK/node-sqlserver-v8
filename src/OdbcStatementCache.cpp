@@ -17,8 +17,8 @@
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
 
-#include "OdbcStatementCache.h"
-#include "OdbcStatement.h"
+#include <OdbcStatementCache.h>
+#include <OdbcStatement.h>
 
 namespace mssql
 {

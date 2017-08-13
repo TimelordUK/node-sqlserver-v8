@@ -1,20 +1,19 @@
 #include "stdafx.h"
-#include "OdbcConnection.h"
-#include "OdbcStatement.h"
-#include "OdbcStatementCache.h"
-#include "QueryOperation.h"
-#include "BoundDatumSet.h"
+#include <OdbcConnection.h>
+#include <OdbcStatement.h>
+#include <OdbcStatementCache.h>
+#include <QueryOperation.h>
+#include <QueryOperationParams.h>
+#include <BoundDatumSet.h>
 
 namespace mssql
 {
-	QueryOperation::QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, size_t query_id, bool polling, u_int timeout, Handle<Object> callback) :
+	QueryOperation::QueryOperation(shared_ptr<OdbcConnection> connection, shared_ptr<QueryOperationParams> query, Handle<Object> callback) :
 		OdbcOperation(connection, callback),
-	    polling(polling),
-		timeout(timeout),
-		query(query),
+		_query(query),
 		output_param_count(0)
 	{
-		statementId = static_cast<long>(query_id);
+		statementId = static_cast<long>(_query->id());
 		params = make_shared<BoundDatumSet>();
 	}
 
@@ -55,8 +54,8 @@ namespace mssql
 	bool QueryOperation::TryInvokeOdbc()
 	{
 		statement = connection->statements->checkout(statementId);	
-		statement->set_polling(polling);
-		return statement->try_execute_direct(query, timeout, params);
+		statement->set_polling(_query->polling());
+		return statement->try_execute_direct(_query, params);
 	}
 
 	Local<Value> QueryOperation::CreateCompletionArg()

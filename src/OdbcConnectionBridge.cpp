@@ -17,25 +17,26 @@
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
 
-#include "OdbcConnectionBridge.h"
-#include "QueryOperation.h"
-#include "EndTranOperation.h"
-#include "CollectOperation.h"
-#include "BeginTranOperation.h"
-#include "ProcedureOperation.h"
-#include "ReadRowOperation.h"
-#include "OpenOperation.h"
-#include "ReadNextResultOperation.h"
-#include "ReadColumnOperation.h"
-#include "CloseOperation.h"
-#include "CancelOperation.h"
-#include "PrepareOperation.h"
-#include "FreeStatementOperation.h"
-#include "QueryPreparedOperation.h"
-#include "OperationManager.h"
-#include "UnbindOperation.h"
-#include "OdbcStatementCache.h"
-#include "PollingModeOperation.h"
+#include <OdbcConnectionBridge.h>
+#include <QueryOperation.h>
+#include <QueryOperationParams.h>
+#include <EndTranOperation.h>
+#include <CollectOperation.h>
+#include <BeginTranOperation.h>
+#include <ProcedureOperation.h>
+#include <ReadRowOperation.h>
+#include <OpenOperation.h>
+#include <ReadNextResultOperation.h>
+#include <ReadColumnOperation.h>
+#include <CloseOperation.h>
+#include <CancelOperation.h>
+#include <PrepareOperation.h>
+#include <FreeStatementOperation.h>
+#include <QueryPreparedOperation.h>
+#include <OperationManager.h>
+#include <UnbindOperation.h>
+#include <OdbcStatementCache.h>
+#include <PollingModeOperation.h>
 
 namespace mssql
 {
@@ -93,11 +94,8 @@ namespace mssql
 
 	Handle<Value> OdbcConnectionBridge::Query(Handle<Number> query_id, Handle<Object> query_object, Handle<Array> params, Handle<Object> callback) const
 	{
-		const auto query_string = get(query_object, "query_str")->ToString();
-		auto timeout = get(query_object, "query_timeout")->Int32Value();
-		auto polling = get(query_object, "query_polling")->BooleanValue();
-		auto id = query_id->IntegerValue();
-		const auto operation = make_shared<QueryOperation>(connection, FromV8String(query_string), id, polling, timeout, callback);
+		auto q = make_shared<QueryOperationParams>(query_id, query_object);
+		const auto operation = make_shared<QueryOperation>(connection, q, callback);
 		if (operation->BindParameters(params)) {
 			connection->send(operation);
 		}
@@ -118,11 +116,8 @@ namespace mssql
 
 	Handle<Value> OdbcConnectionBridge::Prepare(Handle<Number> query_id, Handle<Object> query_object, Handle<Object> callback) const
 	{
-		const auto query_string = get(query_object, "query_str")->ToString();
-		auto timeout = get(query_object, "query_timeout")->Int32Value();
-		auto polling = get(query_object, "query_polling")->BooleanValue();
-		auto id = query_id->IntegerValue();
-		const auto operation = make_shared<PrepareOperation>(connection, FromV8String(query_string), id, polling, timeout, callback);
+		auto q = make_shared<QueryOperationParams>(query_id, query_object);
+		const auto operation = make_shared<PrepareOperation>(connection, q, callback);
 		connection->send(operation);
 		nodeTypeFactory fact;
 		return fact.null();
@@ -130,12 +125,9 @@ namespace mssql
 
 	Handle<Value> OdbcConnectionBridge::CallProcedure(Handle<Number> query_id, Handle<Object> query_object, Handle<Array> params, Handle<Object> callback) const
 	{
-		const auto query_string = get(query_object, "query_str")->ToString();
-		auto timeout = get(query_object, "query_timeout")->Int32Value();
-		auto polling = get(query_object, "query_polling")->BooleanValue();
-		auto id = query_id->IntegerValue();
+		auto q = make_shared<QueryOperationParams>(query_id, query_object);
 
-		const auto operation = make_shared<ProcedureOperation>(connection, FromV8String(query_string), id, polling, timeout, callback);
+		const auto operation = make_shared<ProcedureOperation>(connection, q, callback);
 		if (operation->BindParameters(params)) {
 			connection->send(operation);
 		}

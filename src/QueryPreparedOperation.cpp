@@ -1,8 +1,8 @@
 #include "stdafx.h"
-#include "OdbcConnection.h"
-#include "OdbcStatement.h"
-#include "BoundDatumSet.h"
-#include "QueryPreparedOperation.h"
+#include <OdbcConnection.h>
+#include <OdbcStatement.h>
+#include <BoundDatumSet.h>
+#include <QueryPreparedOperation.h>
 
 namespace mssql
 {

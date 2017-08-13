@@ -18,7 +18,7 @@
 //---------------------------------------------------------------------------------------------------------------------------------
 
 #include "stdafx.h"
-#include "TimestampColumn.h"
+#include <TimestampColumn.h>
 
 namespace mssql {
 
