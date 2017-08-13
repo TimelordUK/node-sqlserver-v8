@@ -49,6 +49,7 @@ export module MsNodeSqlDriverApiModule {
         DateTimeOffset(v:Date) : any;
         PollingQuery(s:string) : v8QueryDescription;
         TimeoutQuery(s:string, to:number) : v8QueryDescription;
+        TzOffsetQuery(s:string, offsetMinutes?:number) : v8QueryDescription;
     }
 
     export interface v8Connection {
@@ -88,7 +89,8 @@ export module MsNodeSqlDriverApiModule {
     export interface v8QueryDescription {
         query_str: string,
         query_timeout?: number,
-        query_polling?: boolean
+        query_polling?: boolean,
+        query_tz_adjustment?: number,
     }
 
     export interface v8Meta {

@@ -1,5 +1,5 @@
-#include "Operation.h"
-#include "OperationManager.h"
+#include <Operation.h>
+#include <OperationManager.h>
 #include <mutex>
 
 namespace mssql

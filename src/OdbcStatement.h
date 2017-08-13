@@ -117,9 +117,9 @@ namespace mssql
 		bool return_odbc_error();
 		bool check_odbc_error(SQLRETURN ret);
 		
-
-		shared_ptr<OdbcConnectionHandle> connection;
-		shared_ptr<OdbcStatementHandle> statement;
+		shared_ptr<QueryOperationParams> _query;
+		shared_ptr<OdbcConnectionHandle> _connection;
+		shared_ptr<OdbcStatementHandle> _statement;
 		//CriticalSection closeCriticalSection;
 
 		// any error that occurs when a Try* function returns false is stored here

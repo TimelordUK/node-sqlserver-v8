@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "OdbcOperation.h"
+#include <stdafx.h>
 
 namespace mssql
 {
@@ -33,6 +33,7 @@ namespace mssql
 		wstring query_string() { return _query_string; }
 		int64_t id() { return _id; }
 		int32_t timeout() { return _timeout; }
+		int32_t query_tz_adjustment() { return _query_tz_adjustment; }
 		bool polling() { return _polling; }
 
 		QueryOperationParams(Handle<Number> query_id, Handle<Object> query_object)
@@ -40,6 +41,7 @@ namespace mssql
 			_query_string = FromV8String(get(query_object, "query_str")->ToString());
 			_timeout = get(query_object, "query_timeout")->Int32Value();
 			_polling = get(query_object, "query_polling")->BooleanValue();
+			_query_tz_adjustment = get(query_object, "query_tz_adjustment")->Int32Value();
 			_id = query_id->IntegerValue();
 		}
 
@@ -54,6 +56,7 @@ namespace mssql
 
 		wstring _query_string;
 		int32_t _timeout;
+		int32_t _query_tz_adjustment;
 		int64_t _id;
 		bool _polling;
 	};

@@ -13,7 +13,6 @@ export module MsNodeSqlWrapperModule {
     import v8QueryEvent = v8api.v8QueryEvent;
     import v8Error = v8api.v8Error;
     import v8PreparedStatement = v8api.v8PreparedStatement;
-    import v8SubmittedEventCb = MsNodeSqlDriverApiModule.v8SubmittedEventCb;
 
     export const legacyDriver: v8api.v8driver = require('msnodesqlv8');
 
@@ -475,7 +474,7 @@ export module MsNodeSqlWrapperModule {
             return cached;
         }
 
-        public free(commandId?: string): Promise<boolean> {
+        public free(commandId?: string): Promise<string> {
             return new Promise((resolve, reject) => {
                 let c: SqlCommand = this.CachedCommands.get(commandId);
                 if (c == null) {
@@ -485,7 +484,7 @@ export module MsNodeSqlWrapperModule {
                 if (c.isPrepared()) {
                     c.freePrepared().then(() => {
                         this.CachedCommands.remove(commandId);
-                        resolve(true);
+                        resolve(commandId);
                     });
                 } else {
                     this.CachedCommands.remove(commandId);

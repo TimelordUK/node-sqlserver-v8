@@ -58,8 +58,11 @@ namespace mssql {
 		return floor(days);
 	}
 
-	void TimestampColumn::MillisecondsFromDate(TIMESTAMP_STRUCT const & ts)
+	void TimestampColumn::MillisecondsFromDate(TIMESTAMP_STRUCT const & ts, int32_t tz_offset)
 	{
+		auto tzhrs = tz_offset / 60;
+		auto tzmins = tz_offset % 60;
+
 		SQL_SS_TIMESTAMPOFFSET_STRUCT time_struct;
 		time_struct.year = ts.year;
 		time_struct.month = ts.month;
@@ -68,8 +71,8 @@ namespace mssql {
 		time_struct.minute = ts.minute;
 		time_struct.second = ts.second;
 		time_struct.fraction = ts.fraction;
-		time_struct.timezone_hour = 0;
-		time_struct.timezone_minute = 0;
+		time_struct.timezone_hour = tzhrs;
+		time_struct.timezone_minute = tzmins;
 		MillisecondsFromDate(time_struct);
 	}
 
@@ -81,9 +84,9 @@ namespace mssql {
 
 		// add in the hour, day minute, second and millisecond
 		ms += timeStruct.hour * ms_per_hour + timeStruct.minute * ms_per_minute + timeStruct.second * ms_per_second;
-		ms += timeStruct.fraction / NANOSECONDS_PER_MS;    // fraction is in nanoseconds
-
-														   // handle timezone adjustment to UTC
+		ms += timeStruct.fraction / NANOSECONDS_PER_MS;    
+		// fraction is in nanoseconds
+		// handle timezone adjustment to UTC
 		ms -= timeStruct.timezone_hour * ms_per_hour;
 		ms -= timeStruct.timezone_minute * ms_per_minute;
 

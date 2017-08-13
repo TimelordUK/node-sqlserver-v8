@@ -62,7 +62,7 @@ namespace mssql
 		return fact.null();
 	}
 
-	void OdbcConnectionBridge::Collect(void)
+	void OdbcConnectionBridge::Collect()
 	{
 		const auto op = make_shared<CollectOperation>(connection);
 		connection->send(op);

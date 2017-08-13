@@ -36,24 +36,61 @@ class Connection implements SimpleTest
 {
     public run(conn_str:string, argv :any): void {
         let delay : number = argv.delay || 5000;
-            console.log(`${conn_str}`);
-            setInterval( () => {
-                sql.open(conn_str, (err, conn) => {
-                    if (err) {
-                        throw err;
-                    }
-                    conn.query("select @@SPID as id, CURRENT_USER as name", (err, res) => {
-                        let sp = res[0]['id'];
-                        console.log(`open[${sp}]:  ${conn_str}`);
-                        conn.query(getConnectionsSql, (err, res) => {
-                            let count = res[0]['NumberOfConnections'];
-                            conn.close(() => {
-                                console.log(`close[${sp}]: NumberOfConnections = ${count}`);
-                            });
+        console.log(`${conn_str}`);
+        setInterval( () => {
+            sql.open(conn_str, (err, conn) => {
+                if (err) {
+                    throw err;
+                }
+                conn.query("select @@SPID as id, CURRENT_USER as name", (err, res) => {
+                    let sp = res[0]['id'];
+                    console.log(`open[${sp}]:  ${conn_str}`);
+                    conn.query(getConnectionsSql, (err, res) => {
+                        let count = res[0]['NumberOfConnections'];
+                        conn.close(() => {
+                            console.log(`close[${sp}]: NumberOfConnections = ${count}`);
                         });
                     });
                 });
+            });
         }, delay);
+    }
+}
+
+class DateTz implements SimpleTest {
+
+    public run(conn_str:string, argv :any): void {
+        let delay : number = argv.delay || 5000;
+
+        console.log(conn_str);
+        sql.open(conn_str, (err, conn) => {
+            if (err) {
+                throw err;
+            }
+            let x = 1;
+            if (err) {
+                throw err;
+            }
+
+            setInterval( () => {
+                let qs = `select convert(datetime, '2009-05-27 00:00:00.000') as test_field`;
+                //let qs = `select SYSDATETIME() as test_field`;
+                console.log(qs);
+                let q = conn.query(sql.UseUtcQuery(qs),
+                    (err, results :any, more) => {
+                        console.log(`[${x}] more = ${more} err ${err} results ${JSON.stringify(results)}`);
+                        let doo = results[0].test_field;
+                        let bb =  doo instanceof Date;
+                        let xx = new Date( doo.getTime() - doo.getTimezoneOffset() * -60000 );
+                        if (more) return;
+                        console.log(`[${x}] completes more = ${more}`);
+                        ++x;
+                    });
+                q.on('msg', (err: v8Error) => {
+                    //console.log(`[${x}]: q.msg = ${err.message}`);
+                });
+            }, delay);
+        });
     }
 }
 
@@ -213,6 +250,11 @@ class MemoryStress implements SimpleTest {
 let test : SimpleTest;
 
 switch (argv.t) {
+
+    case "datetz":
+        test = new DateTz();
+        break;
+
     case "busy":
         test = new BusyConnection();
         break;

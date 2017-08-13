@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "OdbcStatement.h"
-#include "ReadNextResultOperation.h"
+#include <OdbcStatement.h>
+#include <ReadNextResultOperation.h>
 
 namespace mssql
 {

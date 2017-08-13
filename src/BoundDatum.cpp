@@ -1,5 +1,5 @@
 #include <TimestampColumn.h>
-#include "BoundDatum.h"
+#include <BoundDatum.h>
 
 namespace mssql
 {

@@ -19,6 +19,7 @@
 
 #include "stdafx.h"
 #include <Connection.h>
+#include <OdbcConnection.h>
 
 namespace mssql
 {

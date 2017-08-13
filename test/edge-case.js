@@ -40,6 +40,37 @@ class Connection {
         }, delay);
     }
 }
+class DateTz {
+    run(conn_str, argv) {
+        let delay = argv.delay || 5000;
+        console.log(conn_str);
+        exports.sql.open(conn_str, (err, conn) => {
+            if (err) {
+                throw err;
+            }
+            let x = 1;
+            if (err) {
+                throw err;
+            }
+            setInterval(() => {
+                let qs = `select convert(datetime, '2009-05-27 00:00:00.000') as test_field`;
+                console.log(qs);
+                let q = conn.query(exports.sql.TzOffsetQuery(qs), (err, results, more) => {
+                    console.log(`[${x}] more = ${more} err ${err} results ${JSON.stringify(results)}`);
+                    let doo = results[0].test_field;
+                    let bb = doo instanceof Date;
+                    let xx = new Date(doo.getTime() - doo.getTimezoneOffset() * -60000);
+                    if (more)
+                        return;
+                    console.log(`[${x}] completes more = ${more}`);
+                    ++x;
+                });
+                q.on('msg', (err) => {
+                });
+            }, delay);
+        });
+    }
+}
 class RaiseErrors {
     run(conn_str, argv) {
         let delay = argv.delay || 5000;
@@ -179,6 +210,9 @@ class MemoryStress {
 }
 let test;
 switch (argv.t) {
+    case "datetz":
+        test = new DateTz();
+        break;
     case "busy":
         test = new BusyConnection();
         break;
