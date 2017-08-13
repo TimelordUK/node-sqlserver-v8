@@ -1,7 +1,7 @@
 /**
  * Created by Stephen on 1/22/2017.
  */
-import {MsNodeSqlDriverApiModule, MsNodeSqlDriverApiModule as v8api} from './MsNodeSqlDriverApiModule'
+import {MsNodeSqlDriverApiModule as v8api} from './MsNodeSqlDriverApiModule'
 
 export module MsNodeSqlWrapperModule {
 
