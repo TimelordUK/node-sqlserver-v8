@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "QueryOperation.h"
+#include <QueryOperation.h>
 
 namespace mssql
 {

@@ -20,6 +20,7 @@
 #include "stdafx.h"
 #include <OdbcConnection.h>
 #include <OdbcStatementCache.h>
+#include <OdbcOperation.h>
 #include <OperationManager.h>
 #include <NodeColumns.h>
 

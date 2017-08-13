@@ -20,10 +20,7 @@
 #pragma once
 
 #include "stdafx.h"
-#include "ResultSet.h"
-#include "CriticalSection.h"
-#include "OdbcOperation.h"
-
+#include <CriticalSection.h>
 #include <map>
 
 namespace mssql
@@ -31,6 +28,9 @@ namespace mssql
 	using namespace std;
 
 	class OdbcStatementCache;
+	class ResultSet;
+	class OdbcOperation;
+	class OperationManager;
 
 	class OdbcConnection
 	{

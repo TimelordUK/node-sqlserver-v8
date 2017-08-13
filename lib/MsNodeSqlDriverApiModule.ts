@@ -54,6 +54,8 @@ export module MsNodeSqlDriverApiModule {
 
     export interface v8Connection {
         id:number;
+        setUseUTC(utc:boolean):void
+        getUseUTC():boolean
         close(cb: v8StatusCb): void
         query(sql: string, cb?: v8QueryCb): v8Query
         query(sql: string, params?: any[], cb?: v8QueryCb): v8Query

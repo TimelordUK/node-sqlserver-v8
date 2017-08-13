@@ -1,7 +1,7 @@
 #pragma once
 // undo these tokens to use numeric_limits below
 
-#include "BoundDatumHelper.h"
+#include <BoundDatumHelper.h>
 
 namespace mssql
 {

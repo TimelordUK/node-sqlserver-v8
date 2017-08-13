@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sql = require('msnodesqlv8');
 let supp = require('../demo-support');
 let argv = require('minimist')(process.argv.slice(2));
+let assert = require('assert');
 let support = null;
 let procedureHelper = null;
 let helper = null;
@@ -52,14 +53,14 @@ class DateTz {
             if (err) {
                 throw err;
             }
+            conn.setUseUTC(false);
+            let expected = new Date('2009-05-27 00:00:00.000');
             setInterval(() => {
                 let qs = `select convert(datetime, '2009-05-27 00:00:00.000') as test_field`;
                 console.log(qs);
-                let q = conn.query(exports.sql.TzOffsetQuery(qs), (err, results, more) => {
+                let q = conn.query(qs, (err, results, more) => {
                     console.log(`[${x}] more = ${more} err ${err} results ${JSON.stringify(results)}`);
-                    let doo = results[0].test_field;
-                    let bb = doo instanceof Date;
-                    let xx = new Date(doo.getTime() - doo.getTimezoneOffset() * -60000);
+                    assert.deepEqual(results[0].test_field, expected);
                     if (more)
                         return;
                     console.log(`[${x}] completes more = ${more}`);

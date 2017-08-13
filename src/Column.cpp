@@ -17,7 +17,7 @@
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
 
-#include "NodeColumns.h"
+#include <NodeColumns.h>
 
 namespace mssql {
 

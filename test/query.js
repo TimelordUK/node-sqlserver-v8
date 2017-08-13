@@ -17,7 +17,7 @@
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
 
-var buffer = require('buffer');
+
 var assert = require( 'assert' );
 var supp = require('../demo-support');
 

@@ -1,15 +1,11 @@
 import {MsNodeSqlDriverApiModule as v8} from '../lib/MsNodeSqlDriverApiModule'
-
-import v8Connection = v8.v8Connection;
-import v8PreparedStatement = v8.v8PreparedStatement;
-import v8BindCb = v8.v8BindCb;
-import v8BulkMgr = v8.v8BulkTableMgr;
 import v8Error = v8.v8Error;
 
 export const sql: v8.v8driver = require('msnodesqlv8');
 
 let supp = require('../demo-support');
 let argv = require('minimist')(process.argv.slice(2));
+let assert = require( 'assert' );
 
 let support : any = null;
 let procedureHelper : any = null;
@@ -72,16 +68,16 @@ class DateTz implements SimpleTest {
                 throw err;
             }
 
+            conn.setUseUTC(false);
+            let expected = new Date('2009-05-27 00:00:00.000');
             setInterval( () => {
                 let qs = `select convert(datetime, '2009-05-27 00:00:00.000') as test_field`;
-                //let qs = `select SYSDATETIME() as test_field`;
+
                 console.log(qs);
-                let q = conn.query(sql.UseUtcQuery(qs),
+                let q = conn.query(qs,
                     (err, results :any, more) => {
                         console.log(`[${x}] more = ${more} err ${err} results ${JSON.stringify(results)}`);
-                        let doo = results[0].test_field;
-                        let bb =  doo instanceof Date;
-                        let xx = new Date( doo.getTime() - doo.getTimezoneOffset() * -60000 );
+                        assert.deepEqual(results[0].test_field, expected);
                         if (more) return;
                         console.log(`[${x}] completes more = ${more}`);
                         ++x;

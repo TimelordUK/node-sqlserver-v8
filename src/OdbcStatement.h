@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include "ResultSet.h"
-#include "CriticalSection.h"
+#include <ResultSet.h>
+#include <CriticalSection.h>
 
 namespace mssql
 {
@@ -28,6 +28,7 @@ namespace mssql
 	class BoundDatumSet;
 	class DatumStorage;
 	class QueryOperationParams;
+
 
 	using namespace std;
 
