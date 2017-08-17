@@ -1,4 +1,4 @@
-//---------------------------------------------------------------------------------------------------------------------------------
+//  ---------------------------------------------------------------------------------------------------------------------------------
 // File: txn.js
 // Contents: test suite for transactions
 //
@@ -15,309 +15,303 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//---------------------------------------------------------------------------------------------------------------------------------
+//  ---------------------------------------------------------------------------------------------------------------------------------
 
-var assert = require( 'assert' );
-var supp = require('../demo-support');
+var assert = require('assert')
+var supp = require('../demo-support')
 
-suite( 'txn', function() {
+suite('txn', function () {
+  var theConnection
+  this.timeout(20000)
+  var conn_str
+  var support
+  var async
+  var helper
+  var driver
 
-    var theConnection;
-    this.timeout(20000);
-    var conn_str;
-    var support;
-    var async;
-    var helper;
-    var driver;
+  var sql = global.native_sql
 
-    var sql = global.native_sql;
+  setup(function (test_done) {
+    supp.GlobalConn.init(sql, function (co) {
+      conn_str = co.conn_str
+      driver = co.driver
+      support = co.support
+      async = co.async
+      helper = co.helper
+      helper.setVerbose(false)
+      sql.open(conn_str, function (err, new_conn) {
+        assert.ifError(err)
+        theConnection = new_conn
+        test_done()
+      })
+    })
+  })
 
-    setup(function (test_done) {
-        supp.GlobalConn.init(sql, function(co) {
-            conn_str = co.conn_str;
-            driver = co.driver;
-            support = co.support;
-            async = co.async;
-            helper =  co.helper;
-            helper.setVerbose(false);
-            sql.open(conn_str, function (err, new_conn) {
-                assert.ifError(err);
-                theConnection = new_conn;
-                test_done();
-            });
-        })
-    });
+  teardown(function (done) {
+    theConnection.close(function () {
+      done()
+    })
+  })
 
-    teardown(function (done) {
-        theConnection.close(function() {
-            done();
-        });
-    });
+  test('setup for tests', function (test_done) {
+    // single setup necessary for the test
 
-    test( 'setup for tests', function( test_done ) {
-        // single setup necessary for the test
+    var fns = [
 
-        var fns = [
-
-            function( async_done ) {
-                try {
-                    var q = sql.query( conn_str, "drop table test_txn", function( err, results ) {
-
-                        async_done();
-                    });
-                }
-                    // skip any errors because the table might not exist
-                catch( e ) {
-                    async_done();
-                }
-            },
-            function( async_done ) {
-                sql.query( conn_str, "create table test_txn (id int identity, name varchar(100))", function( err, results ) {
-
-                    assert.ifError( err );
-                    async_done();
-                });
-            },
-            function (async_done) {
-                theConnection.queryRaw("create clustered index index_txn on test_txn (id)", function (err) {
-                    assert.ifError(err);
-                    async_done();
-                });
-            }
-        ];
-
-        async.series( fns, function () {
-            test_done();
-        });
-    });
-
-    test('begin a transaction and rollback with no query', function( done ) {
-
-        theConnection.beginTransaction( function( err ) { assert.ifError( err ); });
-        theConnection.rollback( function( err ) { assert.ifError( err ); done(); });
-    });
-
-    test('begin a transaction and rollback with no query and no callback', function( done ) {
-
+      function (asyncDone) {
         try {
-
-            theConnection.beginTransaction();
-            theConnection.rollback( function( err ) {
-                assert.ifError( err );
-                done();
-            });
+          var q = sql.query(conn_str, 'drop table test_txn', function (err, results) {
+            asyncDone()
+          })
+        } catch (e) {
+          asyncDone()   // skip any errors because the table might not exist
         }
-        catch( e ) {
+      },
+      function (asyncDone) {
+        sql.query(conn_str, 'create table test_txn (id int identity, name varchar(100))', function (err, results) {
 
-            assert.ifError( e );
-        }
-    });
-
-    test('begin a transaction and commit', function( test_done ) {
-
-        var fns = [
-
-            function (async_done) {
-                theConnection.beginTransaction(function (err) {
-                    assert.ifError(err);
-                    async_done();
-                });
-            },
-
-            function (async_done) {
-                theConnection.queryRaw("INSERT INTO test_txn (name) VALUES ('Anne')", function (err, results) {
-                    assert.ifError(err);
-                    assert.deepEqual(results, {meta: null, rowcount: 1}, "Insert results don't match");
-                    async_done();
-                });
-            },
-            function (async_done) {
-                theConnection.queryRaw("INSERT INTO test_txn (name) VALUES ('Bob')", function (err, results) {
-                    assert.ifError(err);
-                    assert.deepEqual(results, {meta: null, rowcount: 1}, "Insert results don't match");
-                    async_done();
-                });
-            },
-            function (async_done) {
-                theConnection.commit(function (err) {
-                    assert.ifError(err);
-                    async_done();
-                });
-            },
-            function (async_done) {
-                theConnection.queryRaw("select * from test_txn", function (err, results) {
-                    assert.ifError(err);
-
-                    // verify results
-                    var expected = {
-                        'meta': [{
-                            'name': 'id',
-                            'size': 10,
-                            'nullable': false,
-                            'type': 'number',
-                            sqlType: 'int identity'
-                        },
-                            {'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar'}],
-                        'rows': [[1, 'Anne'], [2, 'Bob']]
-                    };
-
-                    assert.deepEqual(results, expected, "Transaction not committed properly");
-                    async_done();
-                });
-            }
-        ];
-        async.series(fns, function () {
-            test_done();
-        });
-    });
-
-    test('begin a transaction and rollback', function( test_done ) {
-
-        var fns = [
-
-            function (async_done) {
-                theConnection.beginTransaction(function (err) {
-                    assert.ifError(err);
-                    async_done();
-                });
-            },
-            function (async_done) {
-                theConnection.queryRaw("INSERT INTO test_txn (name) VALUES ('Carl')", function (err, results) {
-                    assert.ifError(err);
-                    assert.deepEqual(results, {meta: null, rowcount: 1}, "Insert results don't match");
-                    async_done();
-                });
-            },
-            function (async_done) {
-                theConnection.queryRaw("INSERT INTO test_txn (name) VALUES ('Dana')", function (err, results) {
-                    assert.ifError(err);
-                    assert.deepEqual(results, {meta: null, rowcount: 1}, "Insert results don't match");
-                    async_done();
-                });
-            },
-            function (async_done) {
-                theConnection.rollback(function (err) {
-                    assert.ifError(err);
-                    async_done();
-                });
-            },
-            function (async_done) {
-                theConnection.queryRaw("select * from test_txn", function (err, results) {
-                    assert.ifError(err);
-
-                    // verify results
-                    var expected = {
-                        'meta': [{
-                            'name': 'id',
-                            'size': 10,
-                            'nullable': false,
-                            'type': 'number',
-                            sqlType: 'int identity'
-                        },
-                            {'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar'}],
-                        'rows': [[1, 'Anne'], [2, 'Bob']]
-                    };
-
-                    assert.deepEqual(results, expected, "Transaction not rolled back properly");
-                    async_done();
-                });
-            }
-        ];
-
-        async.series(fns, function () {
-            test_done();
-        });
-    });
-
-    test('begin a transaction and then query with an error', function( test_done ) {
-
-        var fns = [
-
-            function (async_done) {
-                theConnection.beginTransaction(function (err) {
-                    assert.ifError(err);
-                    async_done();
-                });
-            },
-
-            function (async_done) {
-                var q = theConnection.queryRaw("INSERT INTO test_txn (naem) VALUES ('Carl')");
-                // events are emitted before callbacks are called currently
-                q.on('error', function (err) {
-
-                    var expected = new Error("[Microsoft][" + driver + "][SQL Server]Unclosed quotation mark after the character string 'm with STUPID'.");
-                    expected.sqlstate = '42S22';
-                    expected.code = 207;
-
-                    assert.deepEqual(err, expected, "Transaction should have caused an error");
-
-                    theConnection.rollback(function (err) {
-                        assert.ifError(err);
-                        async_done();
-                    });
-                });
-            },
-
-            function (async_done) {
-                theConnection.queryRaw("select * from test_txn", function (err, results) {
-                    assert.ifError(err);
-                    assert.ifError(err);
-
-                    // verify results
-                    var expected = {
-                        'meta': [{
-                            'name': 'id',
-                            'size': 10,
-                            'nullable': false,
-                            'type': 'number',
-                            sqlType: 'int identity'
-                        },
-                            {'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar'}],
-                        'rows': [[1, 'Anne'], [2, 'Bob']]
-                    };
-
-                    assert.deepEqual(results, expected, "Transaction not rolled back properly");
-                    async_done();
-                });
-            }
-        ];
-
-        async.series(fns, function () {
-            test_done();
+          assert.ifError(err)
+          asyncDone()
         })
-    });
+      },
+      function (asyncDone) {
+        theConnection.queryRaw('create clustered index index_txn on test_txn (id)', function (err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      }
+    ]
 
-    test('begin a transaction and commit (with no async support)', function( test_done ) {
+    async.series(fns, function () {
+      test_done()
+    })
+  })
 
-        theConnection.beginTransaction( function( err ) {
-            assert.ifError( err );
-        });
+  test('begin a transaction and rollback with no query', function (done) {
+    theConnection.beginTransaction(function (err) { assert.ifError(err) })
+    theConnection.rollback(function (err) {
+      assert.ifError(err)
+      done()
+    })
+  })
 
-        theConnection.queryRaw( "INSERT INTO test_txn (name) VALUES ('Anne')", function( err, results ) {
-            assert.ifError( err );
-        });
+  test('begin a transaction and rollback with no query and no callback', function (done) {
+    try {
+      theConnection.beginTransaction()
+      theConnection.rollback(function (err) {
+        assert.ifError(err)
+        done()
+      })
+    } catch (e) {
+      assert.ifError(e)
+    }
+  })
 
-        theConnection.queryRaw( "INSERT INTO test_txn (name) VALUES ('Bob')", function( err, results ) {
-            assert.ifError( err );
-        });
+  test('begin a transaction and commit', function (test_done) {
+    var fns = [
 
-        theConnection.commit( function( err ) {
-            assert.ifError( err );
-        });
+      function (asyncDone) {
+        theConnection.beginTransaction(function (err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
 
-        theConnection.queryRaw( "select * from test_txn", function( err, results ) {
-            assert.ifError( err );
+      function (asyncDone) {
+        theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Anne\')', function (err, results) {
+          assert.ifError(err)
+          assert.deepEqual(results, {meta: null, rowcount: 1}, 'Insert results don\'t match')
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Bob\')', function (err, results) {
+          assert.ifError(err)
+          assert.deepEqual(results, {meta: null, rowcount: 1}, 'Insert results don\'t match')
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.commit(function (err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.queryRaw('select * from test_txn', function (err, results) {
+          assert.ifError(err)
 
-            // verify results
-            var expected = { 'meta':
-                [ { 'name': 'id', 'size': 10, 'nullable': false, 'type': 'number', sqlType: 'int identity' },
-                    { 'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar' } ],
-                'rows': [ [ 1, 'Anne' ], [ 2, 'Bob' ], [ 5, 'Anne' ], [ 6, 'Bob' ] ] };
+          // verify results
+          var expected = {
+            'meta': [{
+              'name': 'id',
+              'size': 10,
+              'nullable': false,
+              'type': 'number',
+              sqlType: 'int identity'
+            },
+              {'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar'}],
+            'rows': [[1, 'Anne'], [2, 'Bob']]
+          }
 
-            assert.deepEqual( results, expected, "Transaction not committed properly" );
+          assert.deepEqual(results, expected, 'Transaction not committed properly')
+          asyncDone()
+        })
+      }
+    ]
+    async.series(fns, function () {
+      test_done()
+    })
+  })
 
-            test_done();
-        });
-    });
-});
+  test('begin a transaction and rollback', function (test_done) {
+    var fns = [
+
+      function (asyncDone) {
+        theConnection.beginTransaction(function (err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Carl\')', function (err, results) {
+          assert.ifError(err)
+          assert.deepEqual(results, {meta: null, rowcount: 1}, 'Insert results don\'t match')
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Dana\')', function (err, results) {
+          assert.ifError(err)
+          assert.deepEqual(results, {meta: null, rowcount: 1}, 'Insert results don\'t match')
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.rollback(function (err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.queryRaw('select * from test_txn', function (err, results) {
+          assert.ifError(err)
+
+          // verify results
+          var expected = {
+            'meta': [{
+              'name': 'id',
+              'size': 10,
+              'nullable': false,
+              'type': 'number',
+              sqlType: 'int identity'
+            },
+              {'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar'}],
+            'rows': [[1, 'Anne'], [2, 'Bob']]
+          }
+
+          assert.deepEqual(results, expected, 'Transaction not rolled back properly')
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      test_done()
+    })
+  })
+
+  test('begin a transaction and then query with an error', function (test_done) {
+
+    var fns = [
+
+      function (asyncDone) {
+        theConnection.beginTransaction(function (err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var q = theConnection.queryRaw('INSERT INTO test_txn (naem) VALUES (\'Carl\')')
+        // events are emitted before callbacks are called currently
+        q.on('error', function (err) {
+
+          var expected = new Error('[Microsoft][' + driver + '][SQL Server]Unclosed quotation mark after the character string \'m with STUPID\'.')
+          expected.sqlstate = '42S22'
+          expected.code = 207
+
+          assert.deepEqual(err, expected, 'Transaction should have caused an error')
+
+          theConnection.rollback(function (err) {
+            assert.ifError(err)
+            asyncDone()
+          })
+        })
+      },
+
+      function (asyncDone) {
+        theConnection.queryRaw('select * from test_txn', function (err, results) {
+          assert.ifError(err)
+          assert.ifError(err)
+
+          // verify results
+          var expected = {
+            'meta': [{
+              'name': 'id',
+              'size': 10,
+              'nullable': false,
+              'type': 'number',
+              sqlType: 'int identity'
+            },
+              {'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar'}],
+            'rows': [[1, 'Anne'], [2, 'Bob']]
+          }
+
+          assert.deepEqual(results, expected, 'Transaction not rolled back properly')
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      test_done()
+    })
+  })
+
+  test('begin a transaction and commit (with no async support)', function (test_done) {
+
+    theConnection.beginTransaction(function (err) {
+      assert.ifError(err)
+    })
+
+    theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Anne\')', function (err, results) {
+      assert.ifError(err)
+    })
+
+    theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Bob\')', function (err, results) {
+      assert.ifError(err)
+    })
+
+    theConnection.commit(function (err) {
+      assert.ifError(err)
+    })
+
+    theConnection.queryRaw('select * from test_txn', function (err, results) {
+      assert.ifError(err)
+
+      // verify results
+      var expected = {
+        'meta':
+          [{'name': 'id', 'size': 10, 'nullable': false, 'type': 'number', sqlType: 'int identity'},
+            {'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar'}],
+        'rows': [[1, 'Anne'], [2, 'Bob'], [5, 'Anne'], [6, 'Bob']]
+      }
+
+      assert.deepEqual(results, expected, 'Transaction not committed properly')
+
+      test_done()
+    })
+  })
+})
 

@@ -52,14 +52,20 @@
       "email": "sjames8888@gmail.com"
     }
   ],
+  "eslintConfig": {
+    "env": {
+      "node": true
+    }
+  },
   "devDependencies": {
+    "@types/electron": "^1.4.31",
+    "@types/node": "^7.0.5",
     "asynquence": "^0.10.0",
     "asynquence-contrib": "^0.28.0",
     "electron": "^1.4.3",
     "minimist": "^1.2.0",
     "mocha": ">=2.2.5",
-    "@types/electron": "^1.4.31",
-    "@types/node": "^7.0.5"
+    "standard": "^10.0.3"
   },
   "os": [
     "win32"
@@ -81,6 +87,5 @@
     "tarball": "http://registry.npmjs.org/msnodesqlv8/-/msnodesqlv8-0.1.35.tgz"
   },
   "directories": {},
-  "dependencies": {
-  }
+  "dependencies": {}
 }

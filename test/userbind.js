@@ -1,662 +1,650 @@
- var assert = require('assert'),
-    supp = require('../demo-support'),
-    fs = require('fs');
+var assert = require('assert'),
+  supp = require('../demo-support'),
+  fs = require('fs')
 
 suite('userbind', function () {
 
-    var theConnection;
-    this.timeout(20000);
-    var conn_str;
-    var support;
-    var async;
-    var helper;
+  var theConnection
+  this.timeout(20000)
+  var conn_str
+  var support
+  var async
+  var helper
 
-    var sql = global.native_sql;
+  var sql = global.native_sql
 
-    setup(function (test_done) {
-        supp.GlobalConn.init(sql, function(co) {
-            conn_str = co.conn_str;
-            support = co.support;
-            async = co.async;
-            helper =  co.helper;
-            helper.setVerbose(false);
-            sql.open(conn_str, function (err, new_conn) {
-                assert.ifError(err);
-                theConnection = new_conn;
-                test_done();
-            });
+  setup(function (test_done) {
+    supp.GlobalConn.init(sql, function (co) {
+      conn_str = co.conn_str
+      support = co.support
+      async = co.async
+      helper = co.helper
+      helper.setVerbose(false)
+      sql.open(conn_str, function (err, new_conn) {
+        assert.ifError(err)
+        theConnection = new_conn
+        test_done()
+      })
+    })
+  })
+
+  teardown(function (done) {
+    theConnection.close(function () {
+      done()
+    })
+  })
+
+  function testUserBind (params, cb) {
+    var allres = []
+    var skip = false
+    var error = null
+    var results = null
+
+    var sequence = [
+
+      function (asyncDone) {
+        theConnection.query(params.query, [params.setter(params.min)], function (err, res) {
+          error = err
+          results = res
+          if (err) {
+            skip = true
+            asyncDone()
+          } else {
+            allres.push(res[0])
+            asyncDone()
+          }
         })
-    });
+      },
 
-    teardown(function (done) {
-        theConnection.close(function() {
-            done();
-        });
-    });
+      function (asyncDone) {
+        if (skip) {
+          asyncDone()
+          return
+        }
+        theConnection.query(params.query, [params.setter(params.max)], function (err, res) {
+          error = err
+          results = res
+          if (err) {
+            skip = true
+            asyncDone()
+          } else {
+            allres.push(res[0])
+            asyncDone()
+          }
+        })
+      },
 
-    function testUserBind(params, cb) {
-
-        var allres = [];
-        var skip = false;
-        var error = null;
-        var results = null;
-
-        var sequence = [
-
-            function (async_done) {
-                theConnection.query(params.query, [params.setter(params.min)], function (err, res) {
-                    error = err;
-                    results = res;
-                    if (err) {
-                        skip = true;
-                        async_done();
-                    } else {
-                        allres.push(res[0]);
-                        async_done();
-                    }
-                });
-            },
-
-            function (async_done) {
-                if (skip) {
-                    async_done();
-                    return;
-                }
-                theConnection.query(params.query, [params.setter(params.max)], function (err, res) {
-                    error = err;
-                    results = res;
-                    if (err) {
-                        skip = true;
-                        async_done();
-                    } else {
-                        allres.push(res[0]);
-                        async_done();
-                    }
-                });
-            },
-
-            function (async_done) {
-                if (skip) {
-                    async_done();
-                    return;
-                }
-                if (params.hasOwnProperty('test_null')) {
-                    if (!params.test_null) {
-                        async_done();
-                    }
-                } else {
-                    theConnection.query(params.query, [params.setter(null)], function (err, res) {
-                        error = err;
-                        results = res;
-                        if (err) {
-                            error = err;
-                            async_done();
-                        } else {
-                            allres.push(res[0]);
-                            async_done();
-                        }
-                    });
-                }
-            }
-        ];
-
-        async.series(sequence,
-            function () {
-                cb(error, allres);
-            });
-    }
-
-    function compare(params, res) {
-
-        var min = params.expected != null ? params.expected[0] : params.min;
-        var max = params.expected != null ? params.expected[1] : params.max;
-        var expected = [
-            {v: min},
-            {v: max}
-        ];
-
-        var testNull = true;
+      function (asyncDone) {
+        if (skip) {
+          asyncDone()
+          return
+        }
         if (params.hasOwnProperty('test_null')) {
-            testNull = params.test_null;
+          if (!params.test_null) {
+            asyncDone()
+          }
+        } else {
+          theConnection.query(params.query, [params.setter(null)], function (err, res) {
+            error = err
+            results = res
+            if (err) {
+              error = err
+              asyncDone()
+            } else {
+              allres.push(res[0])
+              asyncDone()
+            }
+          })
         }
+      }
+    ]
 
-        if (testNull) {
-            expected.push({
-                v : null
-            });
-        }
+    async.series(sequence,
+      function () {
+        cb(error, allres)
+      })
+  }
 
-        assert.deepEqual(res, expected);
+  function compare (params, res) {
+    var min = params.expected != null ? params.expected[0] : params.min
+    var max = params.expected != null ? params.expected[1] : params.max
+    var expected = [
+      {v: min},
+      {v: max}
+    ]
+
+    var testNull = true
+    if (params.hasOwnProperty('test_null')) {
+      testNull = params.test_null
     }
 
-    test('user bind DateTime2 to sql type datetime2(7) - with scale set too low, should error', function (test_done) {
-        var jsonDate = "2011-05-26T07:56:00.123Z";
-        var then = new Date(jsonDate);
-        var params = {
-            query : 'declare @v DATETIME2(7) = ?; select @v as v',
-            min : then,
-            max : then,
-            setter: function (v) {
-                return sql.DateTime2(v, 1); // set scale too low
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ok(err.message.indexOf('Fractional second precision exceeds the scale specified') > 0);
-            test_done();
-        });
-    });
+    if (testNull) {
+      expected.push({
+        v: null
+      })
+    }
 
-    test('user bind WLongVarChar to NVARCHAR(MAX)', function (test_done) {
+    assert.deepEqual(res, expected)
+  }
 
-        String.prototype.repeat = function (num) {
-            return new Array(num + 1).join(this);
-        };
-        
-        var smallLen = 2200;
-        var largeLen = 8200;
-        var params = {
-            query : 'declare @v NVARCHAR(MAX) = ?; select @v as v',
-            min : "N".repeat(smallLen),
-            max : "X".repeat(largeLen),
-            test_null : false,
-            setter: function (v) {
-                return sql.WLongVarChar(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+  test('user bind DateTime2 to sql type datetime2(7) - with scale set too low, should error', function (test_done) {
+    var jsonDate = '2011-05-26T07:56:00.123Z'
+    var then = new Date(jsonDate)
+    var params = {
+      query: 'declare @v DATETIME2(7) = ?; select @v as v',
+      min: then,
+      max: then,
+      setter: function (v) {
+        return sql.DateTime2(v, 1) // set scale too low
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ok(err.message.indexOf('Fractional second precision exceeds the scale specified') > 0)
+      test_done()
+    })
+  })
 
-    test('user bind DateTimeOffset to sql type DateTimeOffset - provide offset of 60 minutes', function (test_done) {
-        var offset = 60;
-        var scale = 7;
-        var now = new Date();
-        var smalldt = new Date(Date.UTC(now.getUTCFullYear(),
-            now.getUTCMonth(),
-            now.getUTCDate(),
-            14,
-            0,
-            0,
-            0));
+  test('user bind WLongVarChar to NVARCHAR(MAX)', function (test_done) {
+    String.prototype.repeat = function (num) {
+      return new Array(num + 1).join(this)
+    }
 
-        var expected = new Date(smalldt.getTime() - offset * 60000);
+    var smallLen = 2200
+    var largeLen = 8200
+    var params = {
+      query: 'declare @v NVARCHAR(MAX) = ?; select @v as v',
+      min: 'N'.repeat(smallLen),
+      max: 'X'.repeat(largeLen),
+      test_null: false,
+      setter: function (v) {
+        return sql.WLongVarChar(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-        var params = {
-            query: 'declare @v DateTimeOffset = ?; select @v as v',
-            min: smalldt,
-            max: smalldt,
-            expected: [
-                expected,
-                expected
-            ],
-            setter: function (v) {
-                return sql.DateTimeOffset(v, scale, offset);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+  test('user bind DateTimeOffset to sql type DateTimeOffset - provide offset of 60 minutes', function (test_done) {
+    var offset = 60
+    var scale = 7
+    var now = new Date()
+    var smalldt = new Date(Date.UTC(now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      14,
+      0,
+      0,
+      0))
 
-    test('user bind DateTimeOffset to sql type DateTimeOffset - no offset ', function (test_done) {
-        var now = new Date();
-        var smalldt = new Date(Date.UTC(now.getUTCFullYear(),
-            now.getUTCMonth(),
-            now.getUTCDate(),
-            14,
-            0,
-            0,
-            0));
-        var params = {
-            query: 'declare @v DateTimeOffset = ?; select @v as v',
-            min: smalldt,
-            max: smalldt,
-            setter: function (v) {
-                return sql.DateTimeOffset(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+    var expected = new Date(smalldt.getTime() - offset * 60000)
 
-    test('user bind SmallDateTime to sql type smalldatetime', function (test_done) {
-        var now = new Date();
-        var smalldt = new Date(Date.UTC(now.getUTCFullYear(),
-            now.getUTCMonth(),
-            now.getUTCDate(),
-            now.getUTCHours(),
-            now.getUTCMinutes(),
-            0,
-            0));
-        var params = {
-            query: 'declare @v smalldatetime = ?; select @v as v',
-            min: smalldt,
-            max: smalldt,
-            setter: function (v) {
-                return sql.SmallDateTime(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+    var params = {
+      query: 'declare @v DateTimeOffset = ?; select @v as v',
+      min: smalldt,
+      max: smalldt,
+      expected: [
+        expected,
+        expected
+      ],
+      setter: function (v) {
+        return sql.DateTimeOffset(v, scale, offset)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-    test('user bind DateTime2 to sql type datetime2(7) default scale', function (test_done) {
-        var now = new Date();
-        var params = {
-            query: 'declare @v DATETIME2(7) = ?; select @v as v',
-            min: now,
-            max: now,
-            setter: function (v) {
-                return sql.DateTime2(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+  test('user bind DateTimeOffset to sql type DateTimeOffset - no offset ', function (test_done) {
+    var now = new Date()
+    var smalldt = new Date(Date.UTC(now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      14,
+      0,
+      0,
+      0))
+    var params = {
+      query: 'declare @v DateTimeOffset = ?; select @v as v',
+      min: smalldt,
+      max: smalldt,
+      setter: function (v) {
+        return sql.DateTimeOffset(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-    test('user bind DateTime2 to sql type datetime2(7) - with scale set correctly, should pass', function (test_done) {
-        var now = new Date();
-        var params = {
-            query: 'declare @v DATETIME2(7) = ?; select @v as v',
-            min: now,
-            max: now,
-            setter: function (v) {
-                return sql.DateTime2(v, 3); // set scale just right for ms
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+  test('user bind SmallDateTime to sql type smalldatetime', function (test_done) {
+    var now = new Date()
+    var smalldt = new Date(Date.UTC(now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      now.getUTCHours(),
+      now.getUTCMinutes(),
+      0,
+      0))
+    var params = {
+      query: 'declare @v smalldatetime = ?; select @v as v',
+      min: smalldt,
+      max: smalldt,
+      setter: function (v) {
+        return sql.SmallDateTime(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-    test('user bind DateTime2 to sql type datetime2(7) - with scale set to illegal value, should error', function (test_done) {
-        var now = new Date();
-        var params = {
-            query: 'declare @v DATETIME2(7) = ?; select @v as v',
-            min: now,
-            max: now,
-            setter: function (v) {
-                return sql.DateTime2(v, 8); // set scale illegal
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert(err.message != null);
-            test_done();
-        });
-    });
+  test('user bind DateTime2 to sql type datetime2(7) default scale', function (test_done) {
+    var now = new Date()
+    var params = {
+      query: 'declare @v DATETIME2(7) = ?; select @v as v',
+      min: now,
+      max: now,
+      setter: function (v) {
+        return sql.DateTime2(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
+  test('user bind DateTime2 to sql type datetime2(7) - with scale set correctly, should pass', function (test_done) {
+    var now = new Date()
+    var params = {
+      query: 'declare @v DATETIME2(7) = ?; select @v as v',
+      min: now,
+      max: now,
+      setter: function (v) {
+        return sql.DateTime2(v, 3) // set scale just right for ms
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-    test('user bind DateTime to sql type datetime2(7)', function (test_done) {
-        var now = new Date();
-        var params = {
-            query: 'declare @v DATETIME2(7) = ?; select @v as v',
-            min: now,
-            max: now,
-            setter: function (v) {
-                return sql.DateTime(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+  test('user bind DateTime2 to sql type datetime2(7) - with scale set to illegal value, should error', function (test_done) {
+    var now = new Date()
+    var params = {
+      query: 'declare @v DATETIME2(7) = ?; select @v as v',
+      min: now,
+      max: now,
+      setter: function (v) {
+        return sql.DateTime2(v, 8) // set scale illegal
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert(err.message != null)
+      test_done()
+    })
+  })
 
-    test('user bind DateTime to sql type datetime - driver currently only supports 10ms accuracy with datetime', function (test_done) {
-        var now = sql.DateRound();
-        var params = {
-            query: 'declare @v DATETIME2(7) = ?; select @v as v',
-            min: now,
-            max: now,
-            setter: function (v) {
-                return sql.DateTime(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+  test('user bind DateTime to sql type datetime2(7)', function (test_done) {
+    var now = new Date()
+    var params = {
+      query: 'declare @v DATETIME2(7) = ?; select @v as v',
+      min: now,
+      max: now,
+      setter: function (v) {
+        return sql.DateTime(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-    test('user bind UniqueIdentifier', function (test_done) {
-        var params = {
-            query: 'declare @v uniqueidentifier = ?; select @v as v',
-            min: 'F01251E5-96A3-448D-981E-0F99D789110D',
-            max: '45E8F437-670D-4409-93CB-F9424A40D6EE',
-            setter: function (v) {
-                return sql.UniqueIdentifier(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+  test('user bind DateTime to sql type datetime - driver currently only supports 10ms accuracy with datetime', function (test_done) {
+    var now = sql.DateRound()
+    var params = {
+      query: 'declare @v DATETIME2(7) = ?; select @v as v',
+      min: now,
+      max: now,
+      setter: function (v) {
+        return sql.DateTime(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-    test('user bind Time', function (test_done) {
-        var today = new Date();
-        var timeOnly = new Date(Date.UTC(1900,
-            0,
-            1,
-            today.getUTCHours(),
-            today.getUTCMinutes(),
-            today.getUTCSeconds(),
-            today.getUTCMilliseconds()));
-        var params = {
-            query: 'declare @v time = ?; select @v as v',
-            min: today,
-            max: today,
-            expected: [
-                timeOnly,
-                timeOnly
-            ],
-            setter: function (v) {
-                return sql.Time(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+  test('user bind UniqueIdentifier', function (test_done) {
+    var params = {
+      query: 'declare @v uniqueidentifier = ?; select @v as v',
+      min: 'F01251E5-96A3-448D-981E-0F99D789110D',
+      max: '45E8F437-670D-4409-93CB-F9424A40D6EE',
+      setter: function (v) {
+        return sql.UniqueIdentifier(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-    test('user bind Date', function (test_done) {
-        var today = new Date();
-        var dateOnly = new Date(Date.UTC(today.getUTCFullYear(),
-            today.getUTCMonth(),
-            today.getUTCDate(),
-            0,
-            0,
-            0,
-            0));
-        var params = {
-            query: 'declare @v date = ?; select @v as v',
-            min: today,
-            max: today,
-            expected: [
-                dateOnly,
-                dateOnly
-            ],
-            setter: function (v) {
-                return sql.Date(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+  test('user bind Time', function (test_done) {
+    var today = new Date()
+    var timeOnly = new Date(Date.UTC(1900,
+      0,
+      1,
+      today.getUTCHours(),
+      today.getUTCMinutes(),
+      today.getUTCSeconds(),
+      today.getUTCMilliseconds()))
+    var params = {
+      query: 'declare @v time = ?; select @v as v',
+      min: today,
+      max: today,
+      expected: [
+        timeOnly,
+        timeOnly
+      ],
+      setter: function (v) {
+        return sql.Time(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-    test('user bind Xml - well formatted.', function (test_done) {
-        var params = {
-            query: 'declare @v xml = ?; select @v as v',
-            min: '<Cars><Car id="1234"><Make>Volkswagen</Make><Model>Eurovan</Model><Year>2003</Year><Color>White</Color></Car></Cars>',
-            max: '<Cars><Car id="1234"><Make>Volkswagen</Make><Model>Eurovan</Model><Year>2003</Year><Color>White</Color></Car><Car id="5678"><Make>Honda</Make><Model>CRV</Model><Year>2009</Year><Color>Black</Color><Mileage>35,600</Mileage></Car></Cars>',
-            setter: function (v) {
-                return sql.Xml(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+  test('user bind Date', function (test_done) {
+    var today = new Date()
+    var dateOnly = new Date(Date.UTC(today.getUTCFullYear(),
+      today.getUTCMonth(),
+      today.getUTCDate(),
+      0,
+      0,
+      0,
+      0))
+    var params = {
+      query: 'declare @v date = ?; select @v as v',
+      min: today,
+      max: today,
+      expected: [
+        dateOnly,
+        dateOnly
+      ],
+      setter: function (v) {
+        return sql.Date(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-    test('user bind Xml - bad xml should give error', function (test_done) {
-        var params = {
-            query: 'declare @v xml = ?; select @v as v',
-            min: '',
-            max: '<Cars><Car id="1234"><Make>Volkswagen</Make><Model>Eurovan</Model><Year>2003</Year><Color>White</Color></Cars>',
-            setter: function (v) {
-                return sql.Xml(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ok(err.message.indexOf('end tag does not match start tag') > 0);
-            test_done();
-        });
-    });
+  test('user bind Xml - well formatted.', function (test_done) {
+    var params = {
+      query: 'declare @v xml = ?; select @v as v',
+      min: '<Cars><Car id="1234"><Make>Volkswagen</Make><Model>Eurovan</Model><Year>2003</Year><Color>White</Color></Car></Cars>',
+      max: '<Cars><Car id="1234"><Make>Volkswagen</Make><Model>Eurovan</Model><Year>2003</Year><Color>White</Color></Car><Car id="5678"><Make>Honda</Make><Model>CRV</Model><Year>2009</Year><Color>Black</Color><Mileage>35,600</Mileage></Car></Cars>',
+      setter: function (v) {
+        return sql.Xml(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-    test('user bind nchar - check truncated user strings (1)', function (test_done) {
-        var params = {
-            query: 'declare @v nchar(5) = ?; select @v as v',
-            min: 'five',
-            max: 'hello world',
-            expected: [
-                'five ',
-                'hello'
-            ],
+  test('user bind Xml - bad xml should give error', function (test_done) {
+    var params = {
+      query: 'declare @v xml = ?; select @v as v',
+      min: '',
+      max: '<Cars><Car id="1234"><Make>Volkswagen</Make><Model>Eurovan</Model><Year>2003</Year><Color>White</Color></Cars>',
+      setter: function (v) {
+        return sql.Xml(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ok(err.message.indexOf('end tag does not match start tag') > 0)
+      test_done()
+    })
+  })
 
-            setter: function (v) {
-                return sql.NChar(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+  test('user bind nchar - check truncated user strings (1)', function (test_done) {
+    var params = {
+      query: 'declare @v nchar(5) = ?; select @v as v',
+      min: 'five',
+      max: 'hello world',
+      expected: [
+        'five ',
+        'hello'
+      ],
 
-    test('user bind Char - check truncated user strings (1)', function (test_done) {
-        var params = {
-            query: 'declare @v char(5) = ?; select @v as v',
-            min: 'five',
-            max: 'hello world',
-            expected: [
-                'five ',
-                'hello'
-            ],
-            setter: function (v) {
-                return sql.Char(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+      setter: function (v) {
+        return sql.NChar(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-    test('user bind Char - returned string will be padded (2)', function (test_done) {
-        var params = {
-            query: 'declare @v char(5) = ?; select @v as v',
-            min: 'h',
-            max: 'world',
-            expected: [
-                'h    ',
-                'world'
-            ],
-            setter: function (v) {
-                return sql.Char(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+  test('user bind Char - check truncated user strings (1)', function (test_done) {
+    var params = {
+      query: 'declare @v char(5) = ?; select @v as v',
+      min: 'five',
+      max: 'hello world',
+      expected: [
+        'five ',
+        'hello'
+      ],
+      setter: function (v) {
+        return sql.Char(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-    test('user bind Char - use precision to clip user string (3)', function (test_done) {
-        var params = {
-            query: 'declare @v char(11) = ?; select @v as v',
-            min: 'h',
-            max: 'world',
-            expected: [
-                'h' + new Array(11).join(" "),
-                'wo' + new Array(10).join(" ")
-            ],
-            setter: function (v) {
-                return sql.Char(v, 2);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+  test('user bind Char - returned string will be padded (2)', function (test_done) {
+    var params = {
+      query: 'declare @v char(5) = ?; select @v as v',
+      min: 'h',
+      max: 'world',
+      expected: [
+        'h    ',
+        'world'
+      ],
+      setter: function (v) {
+        return sql.Char(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-    test('user bind NVarChar /16 bit encoded', function (test_done) {
-        var params = {
-            query: 'declare @v varchar(100) = ?; select @v as v',
-            min: 'hello',
-            max: 'world',
-            expected: [
-                'hello',
-                'world'
-            ],
-            setter: function (v) {
-                return sql.NVarChar(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+  test('user bind Char - use precision to clip user string (3)', function (test_done) {
+    var params = {
+      query: 'declare @v char(11) = ?; select @v as v',
+      min: 'h',
+      max: 'world',
+      expected: [
+        'h' + new Array(11).join(' '),
+        'wo' + new Array(10).join(' ')
+      ],
+      setter: function (v) {
+        return sql.Char(v, 2)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-    test('user bind Float, maps to numeric data structure.', function (test_done) {
-        var params = {
-            query: 'declare @v float = ?; select @v as v',
-            min: -1.7976931348623158E+308,
-            max: 1.7976931348623158E+308,
-            setter: function (v) {
-                return sql.Float(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+  test('user bind NVarChar /16 bit encoded', function (test_done) {
+    var params = {
+      query: 'declare @v varchar(100) = ?; select @v as v',
+      min: 'hello',
+      max: 'world',
+      expected: [
+        'hello',
+        'world'
+      ],
+      setter: function (v) {
+        return sql.NVarChar(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
+  test('user bind Float, maps to numeric data structure.', function (test_done) {
+    var params = {
+      query: 'declare @v float = ?; select @v as v',
+      min: -1.7976931348623158E+308,
+      max: 1.7976931348623158E+308,
+      setter: function (v) {
+        return sql.Float(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-    test('user bind Double, maps to numeric data structure.', function (test_done) {
-        var params = {
-            query: 'declare @v float = ?; select @v as v',
-            min: -1.7976931348623158E+308,
-            max: 1.7976931348623158E+308,
-            setter: function (v) {
-                return sql.Float(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+  test('user bind Double, maps to numeric data structure.', function (test_done) {
+    var params = {
+      query: 'declare @v float = ?; select @v as v',
+      min: -1.7976931348623158E+308,
+      max: 1.7976931348623158E+308,
+      setter: function (v) {
+        return sql.Float(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-    test('user bind Bit', function (test_done) {
-        var params = {
-            query: 'declare @v bit = ?; select @v as v',
-            min: false,
-            max: true,
-            setter: function (v) {
-                return sql.Bit(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+  test('user bind Bit', function (test_done) {
+    var params = {
+      query: 'declare @v bit = ?; select @v as v',
+      min: false,
+      max: true,
+      setter: function (v) {
+        return sql.Bit(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-    test('user bind BigInt', function (test_done) {
+  test('user bind BigInt', function (test_done) {
+    var params = {
+      query: 'declare @v bigint = ?; select @v as v',
+      min: -9007199254740991,
+      max: 9007199254740991,
+      setter: function (v) {
+        return sql.BigInt(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-        var params = {
-            query: 'declare @v bigint = ?; select @v as v',
-            min: -9007199254740991,
-            max: 9007199254740991,
-            setter: function (v) {
-                return sql.BigInt(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
+  test('user bind Int', function (test_done) {
+    var params = {
+      query: 'declare @v int = ?; select @v as v',
+      min: -2147483648,
+      max: 2147483647,
+      setter: function (v) {
+        return sql.Int(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-    test('user bind Int', function (test_done) {
+  test('user bind TinyInt', function (test_done) {
+    var params = {
+      query: 'declare @v tinyint = ?; select @v as v',
+      min: 0,
+      max: 255,
+      setter: function (v) {
+        return sql.TinyInt(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
 
-        var params = {
-            query: 'declare @v int = ?; select @v as v',
-            min: -2147483648,
-            max: 2147483647,
-            setter: function (v) {
-                return sql.Int(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
-
-    test('user bind TinyInt', function (test_done) {
-
-        var params = {
-            query: 'declare @v tinyint = ?; select @v as v',
-            min: 0,
-            max: 255,
-            setter: function (v) {
-                return sql.TinyInt(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
-
-    test('user bind SmallInt', function (test_done) {
-
-        var params = {
-            query: 'declare @v smallint = ?; select @v as v',
-            min: -32768,
-            max: 32767,
-            setter: function (v) {
-                return sql.SmallInt(v);
-            }
-        };
-        testUserBind(params, function (err, res) {
-            assert.ifError(err);
-            compare(params, res);
-            test_done();
-        });
-    });
-});
-
-
-
+  test('user bind SmallInt', function (test_done) {
+    var params = {
+      query: 'declare @v smallint = ?; select @v as v',
+      min: -32768,
+      max: 32767,
+      setter: function (v) {
+        return sql.SmallInt(v)
+      }
+    }
+    testUserBind(params, function (err, res) {
+      assert.ifError(err)
+      compare(params, res)
+      test_done()
+    })
+  })
+})

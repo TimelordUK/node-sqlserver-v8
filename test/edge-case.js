@@ -59,7 +59,7 @@ class DateTz {
                 let qs = `select convert(datetime, '2009-05-27 00:00:00.000') as test_field`;
                 console.log(qs);
                 let q = conn.query(qs, (err, results, more) => {
-                    console.log(`[${x}] more = ${more} err ${err} results ${JSON.stringify(results)}`);
+                    console.log(`[${x}] more = ${more} err ${err} expected ${expected} results ${results[0].test_field}`);
                     assert.deepEqual(results[0].test_field, expected);
                     if (more)
                         return;

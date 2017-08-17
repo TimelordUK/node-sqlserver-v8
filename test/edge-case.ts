@@ -76,7 +76,7 @@ class DateTz implements SimpleTest {
                 console.log(qs);
                 let q = conn.query(qs,
                     (err, results :any, more) => {
-                        console.log(`[${x}] more = ${more} err ${err} results ${JSON.stringify(results)}`);
+                        console.log(`[${x}] more = ${more} err ${err} expected ${expected} results ${results[0].test_field}`);
                         assert.deepEqual(results[0].test_field, expected);
                         if (more) return;
                         console.log(`[${x}] completes more = ${more}`);

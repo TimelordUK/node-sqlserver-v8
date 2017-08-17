@@ -17,127 +17,127 @@
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
 
-var assert = require('assert');
-var supp = require('../demo-support');
+var assert = require('assert')
+var supp = require('../demo-support')
 
 suite('open', function () {
 
-    var conn_str;
-    var support;
-    var async;
-    var helper;
-    var driver;
-    var database;
-    var procedureHelper;
-    var sql = global.native_sql;
+  var conn_str
+  var support
+  var async
+  var helper
+  var driver
+  var database
+  var procedureHelper
+  var sql = global.native_sql
 
-    this.timeout(20000);
+  this.timeout(20000)
 
-    setup(function (test_done) {
-        supp.GlobalConn.init(sql, function (co) {
-            conn_str = co.conn_str;
-            support = co.support;
-            procedureHelper = new support.ProcedureHelper(conn_str);
-            procedureHelper.setVerbose(false);
-            async = co.async;
-            helper = co.helper;
-            driver = co.driver;
-            database = co.database;
-            helper.setVerbose(false);
-            test_done();
-        });
-    });
+  setup(function (test_done) {
+    supp.GlobalConn.init(sql, function (co) {
+      conn_str = co.conn_str
+      support = co.support
+      procedureHelper = new support.ProcedureHelper(conn_str)
+      procedureHelper.setVerbose(false)
+      async = co.async
+      helper = co.helper
+      driver = co.driver
+      database = co.database
+      helper.setVerbose(false)
+      test_done()
+    })
+  })
 
-    test('connection closes OK in sequence with query', function (done) {
-        sql.open(conn_str,
-            function (err, conn) {
-                var expected = [{
-                    n : 1
-                }];
-                assert.ifError(err);
-                conn.query("SELECT 1 as n", function (err, results) {
-                    assert.ifError(err);
-                    assert.deepEqual(results, expected);
-                    conn.close(function () {
-                        done();
-                    });
-                });
-            });
-    });
+  test('connection closes OK in sequence with query', function (done) {
+    sql.open(conn_str,
+      function (err, conn) {
+        var expected = [{
+          n: 1
+        }]
+        assert.ifError(err)
+        conn.query('SELECT 1 as n', function (err, results) {
+          assert.ifError(err)
+          assert.deepEqual(results, expected)
+          conn.close(function () {
+            done()
+          })
+        })
+      })
+  })
 
-    test('trusted connection to a server', function (done) {
-        sql.open(conn_str,
-            function (err, conn) {
-                assert.ifError(err);
-                assert(typeof conn == 'object');
-                conn.close(function () {
-                    done();
-                })
-            });
-    });
+  test('trusted connection to a server', function (done) {
+    sql.open(conn_str,
+      function (err, conn) {
+        assert.ifError(err)
+        assert(typeof conn == 'object')
+        conn.close(function () {
+          done()
+        })
+      })
+  })
 
-    test('verify closed connection throws an exception', function (done) {
-        sql.open(conn_str, function (err, conn) {
-            assert.ifError(err);
-            conn.close(function() {
-                var thrown = false;
-                try {
-                    conn.query("SELECT 1", function (err) {
-                        assert.ifError(err)
-                    });
-                }
-                catch (e) {
-                    assert(e == "Error: [msnodesql] Connection is closed.");
-                    thrown = true;
-                }
-                assert(thrown);
-                done();
-            });
-        });
-    });
+  test('verify closed connection throws an exception', function (done) {
+    sql.open(conn_str, function (err, conn) {
+      assert.ifError(err)
+      conn.close(function () {
+        var thrown = false
+        try {
+          conn.query('SELECT 1', function (err) {
+            assert.ifError(err)
+          })
+        }
+        catch (e) {
+          assert(e == 'Error: [msnodesql] Connection is closed.')
+          thrown = true
+        }
+        assert(thrown)
+        done()
+      })
+    })
+  })
 
-    test('verify connection is not closed prematurely until a query is complete', function (done) {
-        sql.open(conn_str, function (err, conn) {
-            assert.ifError(err);
-            var closeCalled = false;
-            var stmt = conn.queryRaw("select 1");
-            stmt.on('meta', function (m) {
-            });
-            stmt.on('column', function (c, d) {
-                assert(c == 0 && d == 1);
-            });
-            stmt.on('error', function (e) {
-                assert.ifError(e);
-            });
-            stmt.on('row', function (r) {
-                assert(r == 0);
-                conn.close(function() {
-                    closeCalled = true;
-                    done();
-                });
-            });
-        });
-    });
+  test('verify connection is not closed prematurely until a query is complete', function (done) {
+    sql.open(conn_str, function (err, conn) {
+      assert.ifError(err)
+      var closeCalled = false
+      var stmt = conn.queryRaw('select 1')
+      stmt.on('meta', function (m) {
+      })
+      stmt.on('column', function (c, d) {
+        assert(c == 0 && d == 1)
+      })
+      stmt.on('error', function (e) {
+        assert.ifError(e)
+      })
+      stmt.on('row', function (r) {
+        assert(r == 0)
+        conn.close(function () {
+          closeCalled = true
+          done()
+        })
+      })
+    })
+  })
 
-    test('verify that close immediately flag only accepts booleans', function (done) {
+  test('verify that close immediately flag only accepts booleans', function (done) {
 
-        sql.open(conn_str, function (err, conn) {
-            assert.ifError(err);
-            var thrown = false;
-            try {
-                conn.close("SELECT 1", function (err) {
-                    assert.ifError(err)
-                });
-            }
-            catch (e) {
-                assert(e == "Error: [msnodesql] Invalid parameters passed to close.");
-                thrown = true;
-            }
-            conn.close(function( ) {
-                assert(thrown);
-                done();
-            });
-        });
-    });
-});
+    sql.open(conn_str, function (err, conn) {
+      assert.ifError(err)
+      var thrown = false
+      try {
+        conn.close('SELECT 1', function (err) {
+          assert.ifError(err)
+        })
+      }
+      catch (e) {
+        assert(e == 'Error: [msnodesql] Invalid parameters passed to close.')
+        thrown = true
+      }
+      conn.close(function () {
+        assert(thrown)
+        done()
+      })
+    })
+  })
+})
 
