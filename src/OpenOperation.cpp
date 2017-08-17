@@ -1,19 +1,19 @@
 #include "stdafx.h"
-#include "OdbcConnection.h"
-#include "OpenOperation.h"
+#include <OdbcConnection.h>
+#include <OpenOperation.h>
 
 namespace mssql
 {
-	OpenOperation::OpenOperation(shared_ptr<OdbcConnection> connection, const wstring& connectionString, int timeout, Handle<Object> callback,
+	OpenOperation::OpenOperation(shared_ptr<OdbcConnection> connection, const wstring& connection_string, int timeout, Handle<Object> callback,
 		Handle<Object> backpointer)
 		: OdbcOperation(connection, callback),
-		connectionString(connectionString),
+		connectionString(connection_string),
 		backpointer(Isolate::GetCurrent(), backpointer),
 		timeout(timeout)
 	{
 	}
 
-	OpenOperation::~OpenOperation(void)
+	OpenOperation::~OpenOperation()
 	{
 		backpointer.Reset();
 	}
@@ -26,7 +26,7 @@ namespace mssql
 	Local<Value> OpenOperation::CreateCompletionArg()
 	{
 		nodeTypeFactory fact;
-		auto o = fact.newObject(backpointer);
+		const auto o = fact.newObject(backpointer);
 		return o;
 	}
 }

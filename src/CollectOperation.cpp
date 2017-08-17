@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "OdbcConnection.h"
-#include "CollectOperation.h"
+#include <OdbcConnection.h>
+#include <CollectOperation.h>
 
 namespace mssql
 {

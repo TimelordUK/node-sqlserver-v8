@@ -1,5 +1,7 @@
 #include "stdafx.h"
-#include "BoundDatumSet.h"
+#include <BoundDatum.h>
+#include <BoundDatumSet.h>
+#include <ResultSet.h>
 
 namespace mssql
 {
@@ -8,15 +10,16 @@ namespace mssql
 		first_error(0), 
 		output_param_count(-1)
 	{
+		bindings = make_shared<param_bindings>();
 	}
 
-	bool BoundDatumSet::reserve(shared_ptr<ResultSet> set)
+	bool BoundDatumSet::reserve(shared_ptr<ResultSet> set) const
 	{
 		for (uint32_t i = 0; i < set->GetColumns(); ++i) {
 			BoundDatum binding;
 			auto & def = set->GetMetadata(i);
-			binding.reserveColumnType(def.dataType, def.columnSize);
-			bindings.push_back(move(binding));
+			binding.reserve_column_type(def.dataType, def.columnSize);
+			bindings->push_back(move(binding));
 		}
 		return true;
 	}
@@ -47,7 +50,7 @@ namespace mssql
 					first_error = i;
 					break;
 				}
-				bindings.push_back(move(binding));
+				bindings->push_back(move(binding));
 			}
 		}
 
@@ -57,10 +60,10 @@ namespace mssql
 	Local<Array> BoundDatumSet::unbind()
 	{
 		nodeTypeFactory fact;
-		auto arr = fact.newArray(output_param_count);
+		const auto arr = fact.newArray(output_param_count);
 		auto i = 0;
 
-		std::for_each(bindings.begin(), bindings.end(), [&](BoundDatum& param) mutable
+		std::for_each(bindings->begin(), bindings->end(), [&](BoundDatum& param) mutable
 		{
 			switch (param.param_type)
 			{

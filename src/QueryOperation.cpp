@@ -1,20 +1,19 @@
 #include "stdafx.h"
-#include "OdbcConnection.h"
-#include "OdbcStatement.h"
-#include "OdbcStatementCache.h"
-#include "QueryOperation.h"
-#include "BoundDatumSet.h"
+#include <OdbcConnection.h>
+#include <OdbcStatement.h>
+#include <OdbcStatementCache.h>
+#include <QueryOperation.h>
+#include <QueryOperationParams.h>
+#include <BoundDatumSet.h>
 
 namespace mssql
 {
-	QueryOperation::QueryOperation(shared_ptr<OdbcConnection> connection, const wstring& query, size_t queryId, bool polling, u_int timeout, Handle<Object> callback) :
+	QueryOperation::QueryOperation(shared_ptr<OdbcConnection> connection, shared_ptr<QueryOperationParams> query, Handle<Object> callback) :
 		OdbcOperation(connection, callback),
-	    polling(polling),
-		timeout(timeout),
-		query(query),
+		_query(query),
 		output_param_count(0)
 	{
-		statementId = static_cast<long>(queryId);
+		statementId = static_cast<long>(_query->id());
 		params = make_shared<BoundDatumSet>();
 	}
 
@@ -28,13 +27,13 @@ namespace mssql
 		full_error << "IMNOD: [msnodesql] Parameter " << param + 1 << ": " << error;
 
 		auto err = fact.error(full_error);
-		auto imn = fact.newString("IMNOD");
+		const auto imn = fact.newString("IMNOD");
 		err->Set(fact.newString("sqlstate"), imn);
 		err->Set(fact.newString("code"), fact.newInteger(-1));
 
 		Local<Value> args[1];
 		args[0] = err;
-		auto argc = 1;
+		const auto argc = 1;
 
 		fact.scopedCallback(callback, argc, args);
 
@@ -43,7 +42,7 @@ namespace mssql
 
 	bool QueryOperation::BindParameters(Handle<Array> &node_params) const
 	{
-		auto res = params->bind(node_params);
+		const auto res = params->bind(node_params);
 		if (!res)
 		{
 			ParameterErrorToUserCallback(params->first_error, params->err);
@@ -55,12 +54,12 @@ namespace mssql
 	bool QueryOperation::TryInvokeOdbc()
 	{
 		statement = connection->statements->checkout(statementId);	
-		statement->setPolling(polling);
-		return statement->TryExecuteDirect(query, timeout, params);
+		statement->set_polling(_query->polling());
+		return statement->try_execute_direct(_query, params);
 	}
 
 	Local<Value> QueryOperation::CreateCompletionArg()
 	{
-		return statement->GetMetaValue();
+		return statement->get_meta_value();
 	}
 }

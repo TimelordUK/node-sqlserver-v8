@@ -1,19 +1,17 @@
 #include "stdafx.h"
-#include "OdbcConnection.h"
-#include "OdbcStatement.h"
-#include "OdbcStatementCache.h"
-#include "PrepareOperation.h"
+#include <OdbcConnection.h>
+#include <OdbcStatement.h>
+#include <OdbcStatementCache.h>
+#include <PrepareOperation.h>
+#include <QueryOperationParams.h>
 
 namespace mssql
 {
 	PrepareOperation::PrepareOperation(
 		shared_ptr<OdbcConnection> connection,
-		const wstring& query,
-		size_t id,
-		bool polling,
-		u_int timeout,
+		shared_ptr<QueryOperationParams> query,
 		Handle<Object> callback) :
-		QueryOperation(connection, query, id, polling, timeout, callback)
+		QueryOperation(connection, query, callback)
 	{
 	}
 
@@ -21,7 +19,7 @@ namespace mssql
 	{
 		statement = connection->statements->checkout(statementId);
 		if (statement == nullptr) return false;
-		statement->setPolling(polling);
-		return statement->TryPrepare(query, timeout);
+		statement->set_polling(_query->polling());
+		return statement->try_prepare(_query);
 	}
 }

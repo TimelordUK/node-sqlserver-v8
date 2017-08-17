@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sql = require('msnodesqlv8');
 let supp = require('../demo-support');
 let argv = require('minimist')(process.argv.slice(2));
+let assert = require('assert');
 let support = null;
 let procedureHelper = null;
 let helper = null;
@@ -38,6 +39,37 @@ class Connection {
                 });
             });
         }, delay);
+    }
+}
+class DateTz {
+    run(conn_str, argv) {
+        let delay = argv.delay || 5000;
+        console.log(conn_str);
+        exports.sql.open(conn_str, (err, conn) => {
+            if (err) {
+                throw err;
+            }
+            let x = 1;
+            if (err) {
+                throw err;
+            }
+            conn.setUseUTC(false);
+            let expected = new Date('2009-05-27 00:00:00.000');
+            setInterval(() => {
+                let qs = `select convert(datetime, '2009-05-27 00:00:00.000') as test_field`;
+                console.log(qs);
+                let q = conn.query(qs, (err, results, more) => {
+                    console.log(`[${x}] more = ${more} err ${err} expected ${expected} results ${results[0].test_field}`);
+                    assert.deepEqual(results[0].test_field, expected);
+                    if (more)
+                        return;
+                    console.log(`[${x}] completes more = ${more}`);
+                    ++x;
+                });
+                q.on('msg', (err) => {
+                });
+            }, delay);
+        });
     }
 }
 class RaiseErrors {
@@ -179,6 +211,9 @@ class MemoryStress {
 }
 let test;
 switch (argv.t) {
+    case "datetz":
+        test = new DateTz();
+        break;
     case "busy":
         test = new BusyConnection();
         break;

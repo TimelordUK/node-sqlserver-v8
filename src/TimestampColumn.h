@@ -1,11 +1,11 @@
 #pragma once
 
 #include <v8.h>
-#include "Column.h"
-#include "Utility.h"
+#include <Column.h>
+#include <Utility.h>
 #include <sql.h>
 #include <sqlncli.h>
-#include "BoundDatumHelper.h"
+#include <BoundDatumHelper.h>
 
 namespace mssql
 {
@@ -16,7 +16,7 @@ namespace mssql
 	{
 	public:
 
-		TimestampColumn(shared_ptr<DatumStorage> storage)
+		TimestampColumn(shared_ptr<DatumStorage> storage, int32_t tz_offset = 0)
 		{
 			auto & ins = (*storage);
 			if (ins.timestampoffsetvec_ptr != nullptr) {
@@ -25,7 +25,7 @@ namespace mssql
 			}
 			else if (ins.timestampvec_ptr != nullptr) {
 				auto & timeStruct = (*ins.timestampvec_ptr)[0];
-				MillisecondsFromDate(timeStruct);
+				MillisecondsFromDate(timeStruct, tz_offset);
 			}
 		}
 
@@ -104,7 +104,7 @@ namespace mssql
 									  // return the number of days since Jan 1, 1970
 		double DaysSinceEpoch(SQLSMALLINT y, SQLUSMALLINT m, SQLUSMALLINT d) const;
 
-		void MillisecondsFromDate(TIMESTAMP_STRUCT const & ts);
+		void MillisecondsFromDate(TIMESTAMP_STRUCT const & ts, int tz_offset = 0);
 
 		// derived from ECMA 262 15.9
 		void MillisecondsFromDate(SQL_SS_TIMESTAMPOFFSET_STRUCT const& timeStruct);

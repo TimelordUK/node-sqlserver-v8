@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "OdbcOperation.h"
+#include <OdbcOperation.h>
 
 namespace mssql
 {

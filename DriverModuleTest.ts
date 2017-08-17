@@ -5,12 +5,10 @@
 import {MsNodeSqlWrapperModule} from './lib/MsNodeSqWrapperModule'
 import {MsNodeSqlDriverApiModule} from "./lib/MsNodeSqlDriverApiModule";
 import v8Meta = MsNodeSqlDriverApiModule.v8Meta;
-import v8RawData = MsNodeSqlDriverApiModule.v8RawData;
+
 import CommandResponse = MsNodeSqlWrapperModule.SqlCommandResponse;
 import v8driver = MsNodeSqlDriverApiModule.v8driver;
 import Connection = MsNodeSqlWrapperModule.Connection;
-import SqlCommand = MsNodeSqlWrapperModule.SqlCommand;
-import SqlCommandResponse = MsNodeSqlWrapperModule.SqlCommandResponse;
 
 let assert = require('assert');
 let supp = require('./demo-support');

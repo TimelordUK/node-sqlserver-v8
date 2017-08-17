@@ -17,7 +17,7 @@
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
 
-#include "OdbcHandle.h"
+#include <OdbcHandle.h>
 #include "stdafx.h"
 #include <locale>
 #include <codecvt>
@@ -81,18 +81,17 @@ namespace mssql
 	{
 		shared_ptr<OdbcError> first;
 
-		SQLSMALLINT MsgLen;
+		SQLSMALLINT msg_len;
 		SQLRETURN      rc2;
-		SQLINTEGER    NativeError;
-		SQLWCHAR        Msg[SQL_MAX_MESSAGE_LENGTH];
-		SQLWCHAR SqlState[6];
+		SQLINTEGER    native_error;
+		SQLWCHAR        msg[SQL_MAX_MESSAGE_LENGTH];
+		SQLWCHAR sql_state[6];
 
 		// Get the status records.  
 		SQLSMALLINT i = 1;
-		while ((rc2 = SQLGetDiagRec(HandleType, handle, i, SqlState, &NativeError, Msg, sizeof(Msg), &MsgLen)) != SQL_NO_DATA) {
-			
-			wstring sqlstate(SqlState);
-			wstring message(Msg);
+		while ((rc2 = SQLGetDiagRec(HandleType, handle, i, sql_state, &native_error, msg, sizeof(msg), &msg_len)) != SQL_NO_DATA) {
+			const wstring sqlstate(sql_state);
+			const wstring message(msg);
 
 			//setup converter
 			using convert_type = codecvt_utf8<wchar_t>;
@@ -100,7 +99,7 @@ namespace mssql
 			//use converter (.to_bytes: wstr->str, .from_bytes: str->wstr)
 			auto c_state = converter.to_bytes(sqlstate);
 			auto c_msg = converter.to_bytes(message);
-			auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), NativeError);
+			const auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), native_error);
 			if (i == 1) first = last;
 			i++;
 		}

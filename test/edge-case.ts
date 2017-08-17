@@ -1,15 +1,11 @@
 import {MsNodeSqlDriverApiModule as v8} from '../lib/MsNodeSqlDriverApiModule'
-
-import v8Connection = v8.v8Connection;
-import v8PreparedStatement = v8.v8PreparedStatement;
-import v8BindCb = v8.v8BindCb;
-import v8BulkMgr = v8.v8BulkTableMgr;
 import v8Error = v8.v8Error;
 
 export const sql: v8.v8driver = require('msnodesqlv8');
 
 let supp = require('../demo-support');
 let argv = require('minimist')(process.argv.slice(2));
+let assert = require( 'assert' );
 
 let support : any = null;
 let procedureHelper : any = null;
@@ -36,24 +32,61 @@ class Connection implements SimpleTest
 {
     public run(conn_str:string, argv :any): void {
         let delay : number = argv.delay || 5000;
-            console.log(`${conn_str}`);
-            setInterval( () => {
-                sql.open(conn_str, (err, conn) => {
-                    if (err) {
-                        throw err;
-                    }
-                    conn.query("select @@SPID as id, CURRENT_USER as name", (err, res) => {
-                        let sp = res[0]['id'];
-                        console.log(`open[${sp}]:  ${conn_str}`);
-                        conn.query(getConnectionsSql, (err, res) => {
-                            let count = res[0]['NumberOfConnections'];
-                            conn.close(() => {
-                                console.log(`close[${sp}]: NumberOfConnections = ${count}`);
-                            });
+        console.log(`${conn_str}`);
+        setInterval( () => {
+            sql.open(conn_str, (err, conn) => {
+                if (err) {
+                    throw err;
+                }
+                conn.query("select @@SPID as id, CURRENT_USER as name", (err, res) => {
+                    let sp = res[0]['id'];
+                    console.log(`open[${sp}]:  ${conn_str}`);
+                    conn.query(getConnectionsSql, (err, res) => {
+                        let count = res[0]['NumberOfConnections'];
+                        conn.close(() => {
+                            console.log(`close[${sp}]: NumberOfConnections = ${count}`);
                         });
                     });
                 });
+            });
         }, delay);
+    }
+}
+
+class DateTz implements SimpleTest {
+
+    public run(conn_str:string, argv :any): void {
+        let delay : number = argv.delay || 5000;
+
+        console.log(conn_str);
+        sql.open(conn_str, (err, conn) => {
+            if (err) {
+                throw err;
+            }
+            let x = 1;
+            if (err) {
+                throw err;
+            }
+
+            conn.setUseUTC(false);
+            let expected = new Date('2009-05-27 00:00:00.000');
+            setInterval( () => {
+                let qs = `select convert(datetime, '2009-05-27 00:00:00.000') as test_field`;
+
+                console.log(qs);
+                let q = conn.query(qs,
+                    (err, results :any, more) => {
+                        console.log(`[${x}] more = ${more} err ${err} expected ${expected} results ${results[0].test_field}`);
+                        assert.deepEqual(results[0].test_field, expected);
+                        if (more) return;
+                        console.log(`[${x}] completes more = ${more}`);
+                        ++x;
+                    });
+                q.on('msg', (err: v8Error) => {
+                    //console.log(`[${x}]: q.msg = ${err.message}`);
+                });
+            }, delay);
+        });
     }
 }
 
@@ -213,6 +246,11 @@ class MemoryStress implements SimpleTest {
 let test : SimpleTest;
 
 switch (argv.t) {
+
+    case "datetz":
+        test = new DateTz();
+        break;
+
     case "busy":
         test = new BusyConnection();
         break;

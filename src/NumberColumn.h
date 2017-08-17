@@ -1,8 +1,8 @@
 #pragma once
 
 #include <v8.h>
-#include "Column.h"
-#include "BoundDatumHelper.h"
+#include <Column.h>
+#include <BoundDatumHelper.h>
 
 namespace mssql
 {

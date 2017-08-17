@@ -41,6 +41,7 @@ export module MsNodeSqlDriverApiModule {
         LongVarBinary(v:any) : any;
         Image(v:any) : any;
         Time(v:Date) : any;
+        Time2(v:Date) : any;
         Date(v:Date) : any;
         DateTime(v:Date) : any;
         DateTime2(v:Date) : any;
@@ -49,10 +50,13 @@ export module MsNodeSqlDriverApiModule {
         DateTimeOffset(v:Date) : any;
         PollingQuery(s:string) : v8QueryDescription;
         TimeoutQuery(s:string, to:number) : v8QueryDescription;
+        TzOffsetQuery(s:string, offsetMinutes?:number) : v8QueryDescription;
     }
 
     export interface v8Connection {
         id:number;
+        setUseUTC(utc:boolean):void
+        getUseUTC():boolean
         close(cb: v8StatusCb): void
         query(sql: string, cb?: v8QueryCb): v8Query
         query(sql: string, params?: any[], cb?: v8QueryCb): v8Query
@@ -88,7 +92,8 @@ export module MsNodeSqlDriverApiModule {
     export interface v8QueryDescription {
         query_str: string,
         query_timeout?: number,
-        query_polling?: boolean
+        query_polling?: boolean,
+        query_tz_adjustment?: number,
     }
 
     export interface v8Meta {

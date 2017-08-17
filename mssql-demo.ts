@@ -3,17 +3,14 @@
 import {MsNodeSqlDriverApiModule, MsNodeSqlDriverApiModule as v8} from './lib/MsNodeSqlDriverApiModule'
 
 import v8Connection = v8.v8Connection;
-import v8BindCb = v8.v8BindCb;
 import v8BulkMgr = v8.v8BulkTableMgr;
 import v8Error = v8.v8Error;
 import v8QueryDescription = MsNodeSqlDriverApiModule.v8QueryDescription;
-import v8StatusCb = MsNodeSqlDriverApiModule.v8StatusCb;
 import v8Query = MsNodeSqlDriverApiModule.v8Query;
 import v8PreparedStatement = MsNodeSqlDriverApiModule.v8PreparedStatement;
 
 export const sql: v8.v8driver = require('msnodesqlv8');
 
-let fs = require('fs');
 let supp = require('./demo-support');
 
 /*

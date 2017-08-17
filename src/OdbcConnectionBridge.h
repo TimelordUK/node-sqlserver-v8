@@ -20,7 +20,6 @@
 #pragma once
 
 #include <stdafx.h>
-#include "OdbcConnection.h"
 
 namespace mssql
 {
@@ -54,8 +53,7 @@ namespace mssql
 		Handle<Value> FreeStatement(Handle<Number> queryId, Handle<Object> callback);
 
 	private:
-		shared_ptr<OdbcConnection> connection;
+		shared_ptr<OdbcConnection> connection;		
 		static Local<Value> get(Local<Object> o, const char *v);
-		
 	};
 }

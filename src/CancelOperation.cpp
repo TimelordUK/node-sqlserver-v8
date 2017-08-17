@@ -1,7 +1,7 @@
 #include <v8.h>
-#include "OdbcStatement.h"
-#include "CancelOperation.h"
-#include "OperationManager.h"
+#include <OdbcStatement.h>
+#include <CancelOperation.h>
+#include <OperationManager.h>
 
 namespace mssql
 {

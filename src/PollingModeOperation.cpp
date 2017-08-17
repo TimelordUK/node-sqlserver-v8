@@ -1,7 +1,7 @@
 #include <v8.h>
-#include "OdbcStatement.h"
-#include "OperationManager.h"
-#include "PollingModeOperation.h"
+#include <OdbcStatement.h>
+#include <OperationManager.h>
+#include <PollingModeOperation.h>
 
 namespace mssql
 {
@@ -10,7 +10,7 @@ namespace mssql
 		if (statement == nullptr) {
 			return false;
 		}
-		return statement->setPolling(_polling);
+		return statement->set_polling(_polling);
 	}
 
 	Local<Value> PollingModeOperation::CreateCompletionArg()

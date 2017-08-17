@@ -37,9 +37,9 @@ namespace mssql {
 	public:
 		OperationManager();
 		~OperationManager();
-		bool Add(shared_ptr<Operation> operation_ptr);
-		void CheckinOperation(size_t id);
-		shared_ptr<Operation> GetOperation(int id)
+		bool add(shared_ptr<Operation> operation_ptr);
+		void check_in_operation(size_t id);
+		shared_ptr<Operation> get_operation(int id)
 		{
 			map_operations_t::const_iterator itr = operations.find(id);
 			return itr->second;
@@ -48,8 +48,8 @@ namespace mssql {
 	private:
 		map_operations_t operations;
 		ssize_t _id;
-		static void OnBackground(uv_work_t* work);
-		static void OnForeground(uv_work_t* work);
+		static void on_background(uv_work_t* work);
+		static void on_foreground(uv_work_t* work);
 		mutex g_i_mutex;
 	};
 }
