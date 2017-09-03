@@ -103,7 +103,7 @@ namespace mssql
 		}
 	}
 
-	int getMaxStrLen(const Local<Value>& p)
+	int get_max_str_len(const Local<Value>& p)
 	{
 		auto str_len = 0;
 		auto arr = Local<Array>::Cast(p);
@@ -116,23 +116,23 @@ namespace mssql
 		return str_len;
 	}
 
-	void BoundDatum::reserve_w_var_char_array(size_t maxStrLen, size_t arrayLen)
+	void BoundDatum::reserve_w_var_char_array(size_t max_str_len, size_t array_len)
 	{
 		js_type = JS_STRING;
 		c_type = SQL_C_WCHAR;
 		sql_type = SQL_WVARCHAR;
 
 		const auto size = sizeof(uint16_t);
-		indvec.resize(arrayLen);
-		storage->ReserveUint16(arrayLen * maxStrLen);
+		indvec.resize(array_len);
+		storage->ReserveUint16(array_len * max_str_len);
 		buffer = storage->uint16vec_ptr->data();
-		buffer_len = maxStrLen * size;
-		param_size = maxStrLen;
+		buffer_len = max_str_len * size;
+		param_size = max_str_len;
 	}
 
 	void BoundDatum::bind_w_var_char_array(const Local<Value>& p)
 	{
-		const auto max_str_len = getMaxStrLen(p);
+		const auto max_str_len = get_max_str_len(p);
 		auto arr = Local<Array>::Cast(p);
 		const auto array_len = arr->Length();
 		const auto size = sizeof(uint16_t);
@@ -180,7 +180,7 @@ namespace mssql
 		}
 	}
 
-	size_t getMaxObjectLen(const Local<Value>& p)
+	size_t get_max_object_len(const Local<Value>& p)
 	{
 		size_t obj_len = 0;
 		auto arr = Local<Array>::Cast(p);
@@ -200,18 +200,18 @@ namespace mssql
 		sql_type = SQL_LONGVARBINARY;
 	}
 
-	void BoundDatum::reserve_var_binary_array(size_t maxObjLen, size_t arrayLen)
+	void BoundDatum::reserve_var_binary_array(size_t max_obj_len, size_t array_len)
 	{
 		js_type = JS_BUFFER;
 		c_type = SQL_C_BINARY;
-		sql_type = SQL_VARBINARY;
+		sql_type = max_obj_len > 2000 ? SQL_LONGVARBINARY : SQL_VARBINARY;
 		digits = 0;
 		const auto size = sizeof(uint8_t);
-		storage->ReserveChars(arrayLen * maxObjLen);
-		indvec.resize(arrayLen);
+		storage->ReserveChars(array_len * max_obj_len);
+		indvec.resize(array_len);
 		buffer = storage->charvec_ptr->data();
-		buffer_len = maxObjLen * size;
-		param_size = maxObjLen;
+		buffer_len = max_obj_len * size;
+		param_size = max_obj_len;
 	}
 
 	void BoundDatum::bind_var_binary( Local<Value> & p)
@@ -234,7 +234,7 @@ namespace mssql
 	{
 		auto arr = Local<Array>::Cast(p);
 		const auto array_len = arr->Length();
-		const auto max_obj_len = getMaxObjectLen(p);
+		const auto max_obj_len = get_max_object_len(p);
 		reserve_var_binary_array(max_obj_len, array_len);
 		auto itr = storage->charvec_ptr->data();
 		for (uint32_t i = 0; i < array_len; ++i)

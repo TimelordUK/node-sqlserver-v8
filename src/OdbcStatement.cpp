@@ -412,7 +412,7 @@ namespace mssql
 	{
 		SQLRETURN ret;
 		_query = q;
-		auto timeout = q->timeout();
+		const auto timeout = q->timeout();
 		const auto bound = bind_params(param_set);
 		if (!bound)
 		{

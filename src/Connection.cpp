@@ -34,22 +34,22 @@ namespace mssql
 
 	void Connection::api(Local<FunctionTemplate> & tpl)
 	{
-		NODE_SET_PROTOTYPE_METHOD(tpl, "close", Close);
-		NODE_SET_PROTOTYPE_METHOD(tpl, "open", Open);
-		NODE_SET_PROTOTYPE_METHOD(tpl, "query", Query);
-		NODE_SET_PROTOTYPE_METHOD(tpl, "bindQuery", BindQuery);
-		NODE_SET_PROTOTYPE_METHOD(tpl, "prepare", Prepare);
-		NODE_SET_PROTOTYPE_METHOD(tpl, "readRow", ReadRow);
-		NODE_SET_PROTOTYPE_METHOD(tpl, "readColumn", ReadColumn);
-		NODE_SET_PROTOTYPE_METHOD(tpl, "beginTransaction", BeginTransaction);
-		NODE_SET_PROTOTYPE_METHOD(tpl, "commit", Commit);
-		NODE_SET_PROTOTYPE_METHOD(tpl, "rollback", Rollback);
-		NODE_SET_PROTOTYPE_METHOD(tpl, "nextResult", ReadNextResult);
-		NODE_SET_PROTOTYPE_METHOD(tpl, "callProcedure", CallProcedure);
-		NODE_SET_PROTOTYPE_METHOD(tpl, "unbind", Unbind);
-		NODE_SET_PROTOTYPE_METHOD(tpl, "freeStatement", FreeStatement);
-		NODE_SET_PROTOTYPE_METHOD(tpl, "cancelQuery", CancelStatement);
-		NODE_SET_PROTOTYPE_METHOD(tpl, "pollingMode", PollingMode);
+		NODE_SET_PROTOTYPE_METHOD(tpl, "close", close);
+		NODE_SET_PROTOTYPE_METHOD(tpl, "open", open);
+		NODE_SET_PROTOTYPE_METHOD(tpl, "query", query);
+		NODE_SET_PROTOTYPE_METHOD(tpl, "bindQuery", bind_query);
+		NODE_SET_PROTOTYPE_METHOD(tpl, "prepare", prepare);
+		NODE_SET_PROTOTYPE_METHOD(tpl, "readRow", read_row);
+		NODE_SET_PROTOTYPE_METHOD(tpl, "readColumn", read_column);
+		NODE_SET_PROTOTYPE_METHOD(tpl, "beginTransaction", begin_transaction);
+		NODE_SET_PROTOTYPE_METHOD(tpl, "commit", commit);
+		NODE_SET_PROTOTYPE_METHOD(tpl, "rollback", rollback);
+		NODE_SET_PROTOTYPE_METHOD(tpl, "nextResult", read_next_result);
+		NODE_SET_PROTOTYPE_METHOD(tpl, "callProcedure", call_procedure);
+		NODE_SET_PROTOTYPE_METHOD(tpl, "unbind", unbind);
+		NODE_SET_PROTOTYPE_METHOD(tpl, "freeStatement", free_statement);
+		NODE_SET_PROTOTYPE_METHOD(tpl, "cancelQuery", cancel_statement);
+		NODE_SET_PROTOTYPE_METHOD(tpl, "pollingMode", polling_mode);
 	}
 
 	void Connection::Initialize(Handle<Object> exports)
@@ -80,7 +80,7 @@ namespace mssql
 		//connectionBridge->Collect();
 	}
 
-	void Connection::Close(const FunctionCallbackInfo<Value>& info)
+	void Connection::close(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto cb = info[0].As<Object>();
 		auto connection = Unwrap<Connection>(info.This());
@@ -88,7 +88,7 @@ namespace mssql
 		info.GetReturnValue().Set(ret);
 	}
 
-	void Connection::BeginTransaction(const FunctionCallbackInfo<Value>& info)
+	void Connection::begin_transaction(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto cb = info[0].As<Object>();
 		auto connection = Unwrap<Connection>(info.This());
@@ -96,7 +96,7 @@ namespace mssql
 		info.GetReturnValue().Set(ret);
 	}
 
-	void Connection::Commit(const FunctionCallbackInfo<Value>& info)
+	void Connection::commit(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto cb = info[0].As<Object>();
 		auto connection = Unwrap<Connection>(info.This());
@@ -104,7 +104,7 @@ namespace mssql
 		info.GetReturnValue().Set(ret);
 	}
 
-	void Connection::Rollback(const FunctionCallbackInfo<Value>& info)
+	void Connection::rollback(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto cb = info[0].As<Object>();
 		auto connection = Unwrap<Connection>(info.This());
@@ -123,7 +123,7 @@ namespace mssql
 		info.GetReturnValue().Set(info.This());
 	}
 
-	void Connection::Query(const FunctionCallbackInfo<Value>& info)
+	void Connection::query(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto query_id = info[0].As<Number>();
 		const auto query_object = info[1].As<Object>();
@@ -135,7 +135,7 @@ namespace mssql
 		info.GetReturnValue().Set(ret);
 	}
 
-	void Connection::Prepare(const FunctionCallbackInfo<Value>& info)
+	void Connection::prepare(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto query_id = info[0].As<Number>();
 		const auto query_object = info[1].As<Object>();
@@ -146,7 +146,7 @@ namespace mssql
 		info.GetReturnValue().Set(ret);
 	}
 
-	void Connection::BindQuery(const FunctionCallbackInfo<Value>& info)
+	void Connection::bind_query(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto query_id = info[0].As<Number>();
 		const auto params = info[1].As<Array>();
@@ -157,7 +157,7 @@ namespace mssql
 		info.GetReturnValue().Set(ret);
 	}
 
-	void Connection::CallProcedure(const FunctionCallbackInfo<Value>& info)
+	void Connection::call_procedure(const FunctionCallbackInfo<Value>& info)
 	{
 		// need to ensure the signature is changed (in js ?) to form (?) = call sproc (?, ? ... );
 		const auto query_id = info[0].As<Number>();
@@ -170,7 +170,7 @@ namespace mssql
 		info.GetReturnValue().Set(ret);
 	}
 
-	void Connection::Unbind(const FunctionCallbackInfo<Value>& info)
+	void Connection::unbind(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto query_id = info[0].As<Number>();
 		const auto callback = info[1].As<Object>();
@@ -179,7 +179,7 @@ namespace mssql
 		info.GetReturnValue().Set(ret);
 	}
 
-	void Connection::FreeStatement(const FunctionCallbackInfo<Value>& info)
+	void Connection::free_statement(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto query_id = info[0].As<Number>();
 		const auto callback = info[1].As<Object>();
@@ -188,7 +188,7 @@ namespace mssql
 		info.GetReturnValue().Set(ret);
 	}
 
-	void Connection::ReadRow(const FunctionCallbackInfo<Value>& info)
+	void Connection::read_row(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto query_id = info[0].As<Number>();
 		const auto cb = info[1].As<Object>();
@@ -197,7 +197,7 @@ namespace mssql
 		info.GetReturnValue().Set(ret);
 	}
 
-	void Connection::ReadColumn(const FunctionCallbackInfo<Value>& info)
+	void Connection::read_column(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto query_id = info[0].As<Number>();
 		const auto column = info[1].As<Number>();
@@ -207,7 +207,7 @@ namespace mssql
 		info.GetReturnValue().Set(ret);
 	}
 
-	void Connection::ReadNextResult(const FunctionCallbackInfo<Value>& info)
+	void Connection::read_next_result(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto query_id = info[0].As<Number>();
 		const auto callback = info[1].As<Object>();
@@ -216,7 +216,7 @@ namespace mssql
 		info.GetReturnValue().Set(ret);
 	}
 
-	void Connection::Open(const FunctionCallbackInfo<Value>& info)
+	void Connection::open(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto connection_object = info[0].As<Object>();
 		const auto callback = info[1].As<Object>();
@@ -226,7 +226,7 @@ namespace mssql
 		info.GetReturnValue().Set(ret);
 	}
 
-	void Connection::CancelStatement(const FunctionCallbackInfo<Value>& info)
+	void Connection::cancel_statement(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto query_id = info[0].As<Number>();
 		const auto callback = info[1].As<Object>();
@@ -236,7 +236,7 @@ namespace mssql
 		info.GetReturnValue().Set(ret);
 	}
 
-	void Connection::PollingMode(const FunctionCallbackInfo<Value>& info)
+	void Connection::polling_mode(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto query_id = info[0].As<Number>();
 		const auto v1 = info[1].As<Number>();
