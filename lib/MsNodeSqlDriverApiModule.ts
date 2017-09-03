@@ -140,7 +140,8 @@ export module MsNodeSqlDriverApiModule {
     }
     export interface v8DescribeProcedureCb { (description?: v8ProcedureSummary): void
     }
-
+    export interface v8GetProcedureCb { (procedure?: v8ProcedureDefinition): void
+    }
     export interface v8TableColumn {
         table_catalog: string
         table_schema: string
@@ -190,6 +191,15 @@ export module MsNodeSqlDriverApiModule {
         val: any
     }
 
+    export interface v8ProcedureDefinition
+    {
+        call(params?: any[], cb?: v8CallProcedureCb): v8Query,
+        setTimeout(to:number): void,
+        setPolling(polling: boolean) : void,
+        getMeta(): v8ProcedureSummary,
+        getName(): string
+    }
+
     export interface v8ProcedureSummary {
         signature: string
         summary: string
@@ -197,6 +207,7 @@ export module MsNodeSqlDriverApiModule {
     }
 
     export interface v8ProcedureManager {
+        get(name:string, cb?:v8GetProcedureCb):void
         callproc(name: string, params?: any[], cb?: v8CallProcedureCb): v8Query
         describe(name: string, cb?: v8DescribeProcedureCb): void
         setTimeout(timeout: number): void

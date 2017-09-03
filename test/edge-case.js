@@ -41,6 +41,27 @@ class Connection {
         }, delay);
     }
 }
+class Tvp {
+    run(conn_str, argv) {
+        let delay = argv.delay || 1000;
+        console.log(conn_str);
+        exports.sql.open(conn_str, (err, conn) => {
+            if (err) {
+                throw err;
+            }
+            if (err) {
+                throw err;
+            }
+            setInterval(() => {
+                let pm = conn.procedureMgr();
+                pm.get('InsertFromTVP', procedure => {
+                    let meta = procedure.getMeta();
+                    console.log(JSON.stringify(meta));
+                });
+            }, delay);
+        });
+    }
+}
 class DateTz {
     run(conn_str, argv) {
         let delay = argv.delay || 5000;
@@ -211,6 +232,9 @@ class MemoryStress {
 }
 let test;
 switch (argv.t) {
+    case "tvp":
+        test = new Tvp();
+        break;
     case "datetz":
         test = new DateTz();
         break;
@@ -233,7 +257,7 @@ switch (argv.t) {
         test = new Connection();
         break;
     default:
-        console.log(`test ${test} is not valid.`);
+        console.log(`test ${argv.t} is not valid.`);
         break;
 }
 supp.GlobalConn.init(exports.sql, (co) => {

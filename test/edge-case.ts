@@ -53,6 +53,31 @@ class Connection implements SimpleTest
     }
 }
 
+class Tvp implements SimpleTest {
+
+    public run(conn_str:string, argv :any): void {
+        let delay : number = argv.delay || 1000;
+
+        console.log(conn_str);
+        sql.open(conn_str, (err, conn) => {
+            if (err) {
+                throw err;
+            }
+            if (err) {
+                throw err;
+            }
+
+            setInterval( () => {
+                let pm = conn.procedureMgr();
+                pm.get('InsertFromTVP', procedure => {
+                    let meta = procedure.getMeta();
+                    console.log(JSON.stringify(meta));
+                });
+            }, delay);
+        });
+    }
+}
+
 class DateTz implements SimpleTest {
 
     public run(conn_str:string, argv :any): void {
@@ -247,6 +272,10 @@ let test : SimpleTest;
 
 switch (argv.t) {
 
+    case "tvp":
+        test = new Tvp();
+        break;
+
     case "datetz":
         test = new DateTz();
         break;
@@ -276,7 +305,7 @@ switch (argv.t) {
         break;
 
     default:
-        console.log(`test ${test} is not valid.`);
+        console.log(`test ${argv.t} is not valid.`);
         break;
 }
 
