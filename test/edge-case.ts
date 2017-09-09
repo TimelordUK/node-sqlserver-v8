@@ -1,5 +1,6 @@
-import {MsNodeSqlDriverApiModule as v8} from '../lib/MsNodeSqlDriverApiModule'
+import {MsNodeSqlDriverApiModule, MsNodeSqlDriverApiModule as v8} from '../lib/MsNodeSqlDriverApiModule'
 import v8Error = v8.v8Error;
+import v8ProcedureSummary = MsNodeSqlDriverApiModule.v8ProcedureSummary;
 
 export const sql: v8.v8driver = require('msnodesqlv8');
 
@@ -70,7 +71,17 @@ class Tvp implements SimpleTest {
             setInterval( () => {
                 let pm = conn.procedureMgr();
                 pm.get('InsertFromTVP', procedure => {
-                    let meta = procedure.getMeta();
+                    let meta:v8ProcedureSummary = procedure.getMeta();
+                    let c0 = meta.params[0];
+                    let pTvp = {
+                        FirstName:"Stephen",
+                        LastName:"James",
+                        Address:"Flat 12, 8 Lansdowne Road SW20 8AP",
+                        City:"London"
+                    };
+                    procedure.call([pTvp], (err, results)=> {
+                            console.log(err);
+                    });
                     console.log(JSON.stringify(meta));
                 });
             }, delay);
