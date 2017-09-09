@@ -16,13 +16,13 @@ namespace mssql
 
 	bool ProcedureOperation::TryInvokeOdbc()
 	{
-		statement = connection->statements->checkout(statementId);
-		statement->set_polling(_query->polling());
-		return statement->try_execute_direct(_query, params);
+		_statement = _connection->statements->checkout(_statementId);
+		_statement->set_polling(_query->polling());
+		return _statement->try_execute_direct(_query, _params);
 	}
 
 	Local<Value> ProcedureOperation::CreateCompletionArg()
 	{
-		return statement->get_meta_value();
+		return _statement->get_meta_value();
 	}
 }

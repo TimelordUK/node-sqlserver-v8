@@ -15,7 +15,7 @@ namespace mssql
 		//fprintf(stderr, "invoke TryClose statementId = %d operationId = %llu\n",
 		//	statementId,
 		//	OperationID );
-		return connection->TryClose();
+		return _connection->TryClose();
 	}
 
 	Local<Value> CloseOperation::CreateCompletionArg()

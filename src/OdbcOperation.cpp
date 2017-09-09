@@ -27,63 +27,63 @@ namespace mssql
 {
 	OdbcOperation::OdbcOperation(size_t query_id, Local<Object> cb)
 		:
-		connection(nullptr),
-		statement(nullptr),
-		callback(Isolate::GetCurrent(), cb.As<Function>()),
-		cb(cb),
+		_connection(nullptr),
+		_statement(nullptr),
+		_callback(Isolate::GetCurrent(), cb.As<Function>()),
+		_cb(cb),
 		failed(false),
 		failure(nullptr)
 	{
-		statementId = static_cast<long>(query_id);
+		_statementId = static_cast<long>(query_id);
 		nodeTypeFactory fact;
-		output_param = fact.null();
+		_output_param = fact.null();
 	}
 
 	OdbcOperation::OdbcOperation(shared_ptr<OdbcConnection> connection, size_t query_id, Local<Object> cb)
 		: 
-		connection(connection),
-		statement(nullptr),
-		callback(Isolate::GetCurrent(), cb.As<Function>()),
-		cb(cb),
+		_connection(connection),
+		_statement(nullptr),
+		_callback(Isolate::GetCurrent(), cb.As<Function>()),
+		_cb(cb),
 		failed(false),
 		failure(nullptr)
 	{
-		statementId = static_cast<long>(query_id);
+		_statementId = static_cast<long>(query_id);
 		nodeTypeFactory fact;
-		output_param = fact.null();
+		_output_param = fact.null();
 	}
 
 	OdbcOperation::OdbcOperation(shared_ptr<OdbcConnection> connection, Local<Object> cb)
 		:
-		connection(connection),
-		statement(nullptr),
-		callback(Isolate::GetCurrent(), cb.As<Function>()),
-		cb(cb),
+		_connection(connection),
+		_statement(nullptr),
+		_callback(Isolate::GetCurrent(), cb.As<Function>()),
+		_cb(cb),
 		failed(false),
 		failure(nullptr)
 	{
-		statementId = -1;
+		_statementId = -1;
 		nodeTypeFactory fact;
-		output_param = fact.null();
+		_output_param = fact.null();
 	}
 
 	OdbcOperation::~OdbcOperation()
 	{
-		callback.Reset();
+		_callback.Reset();
 	}
 
 	void OdbcOperation::fetchStatement()
 	{
-		statement = connection->statements->checkout(statementId);
+		_statement = _connection->statements->checkout(_statementId);
 	}
 
 	void OdbcOperation::getFailure()
 	{
-		if (connection) {
-			failure = connection->LastError();
+		if (_connection) {
+			failure = _connection->LastError();
 		}
-		if (!failure && statement) {
-			failure = statement->LastError();
+		if (!failure && _statement) {
+			failure = _statement->LastError();
 		}
 		if (!failure)
 		{
@@ -108,9 +108,9 @@ namespace mssql
 		err->Set(fact.newString("code"), fact.newInteger(failure->Code()));
 		
 		auto more  = false;
-		if (statement)
+		if (_statement)
 		{
-			const auto rs = statement->GetResultSet();
+			const auto rs = _statement->GetResultSet();
 			if (rs) more = !rs->EndOfRows();
 		}
 
@@ -128,8 +128,8 @@ namespace mssql
 		args[0] = fact.newLocalValue(fact.newBoolean(false));
 		const auto arg = CreateCompletionArg();
 		args[1] = fact.newLocalValue(arg);
-		const int c = output_param->IsNull() ? 0 : output_param.As<Array>()->Length();
-		if (c > 0) args[2] = output_param;
+		const int c = _output_param->IsNull() ? 0 : _output_param.As<Array>()->Length();
+		if (c > 0) args[2] = _output_param;
 		const auto argc = c == 0 ? 2 : 3;
 		return argc;
 	}
@@ -139,10 +139,10 @@ namespace mssql
 		auto isolate = Isolate::GetCurrent();
 		HandleScope scope(isolate);
 		nodeTypeFactory fact;
-		if (callback.IsEmpty()) return;
+		if (_callback.IsEmpty()) return;
 		Local<Value> args[3];
 		const auto argc = failed ? Error(args) : Success(args);
-		auto cons = fact.newCallbackFunction(callback);		
+		auto cons = fact.newCallbackFunction(_callback);		
 		auto context = isolate->GetCurrentContext();
 		const auto global = context->Global();
 		cons->Call(global, argc, args);

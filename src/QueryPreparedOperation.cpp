@@ -6,20 +6,20 @@
 
 namespace mssql
 {
-	QueryPreparedOperation::QueryPreparedOperation(shared_ptr<OdbcConnection> connection,  size_t queryId, u_int timeout, Handle<Object> callback) :
+	QueryPreparedOperation::QueryPreparedOperation(shared_ptr<OdbcConnection> connection,  size_t query_id, u_int timeout, Handle<Object> callback) :
 		OdbcOperation(connection, callback),
-		timeout(timeout),
-		output_param_count(0)
+		_timeout(timeout),
+		_output_param_count(0)
 	{
-		statementId = static_cast<long>(queryId);
-		params = make_shared<BoundDatumSet>();
+		_statementId = static_cast<long>(query_id);
+		_params = make_shared<BoundDatumSet>();
 	}
 
-	bool QueryPreparedOperation::ParameterErrorToUserCallback(uint32_t param, const char* error) const
+	bool QueryPreparedOperation::parameter_error_to_user_callback(uint32_t param, const char* error) const
 	{
 		nodeTypeFactory fact;
 
-		params->clear();
+		_params->clear();
 
 		stringstream full_error;
 		full_error << "IMNOD: [msnodesql] Parameter " << param + 1 << ": " << error;
@@ -33,17 +33,17 @@ namespace mssql
 		args[0] = err;
 		const auto argc = 1;
 
-		fact.scopedCallback(callback, argc, args);
+		fact.scopedCallback(_callback, argc, args);
 
 		return false;
 	}
 
-	bool QueryPreparedOperation::BindParameters(Handle<Array> &node_params) const
+	bool QueryPreparedOperation::bind_parameters(Handle<Array> &node_params) const
 	{
-		const auto res = params->bind(node_params);
+		const auto res = _params->bind(node_params);
 		if (!res)
 		{
-			ParameterErrorToUserCallback(params->first_error, params->err);
+			parameter_error_to_user_callback(_params->first_error, _params->err);
 		}
 
 		return res;
@@ -51,12 +51,12 @@ namespace mssql
 
 	bool QueryPreparedOperation::TryInvokeOdbc()
 	{
-		if (statement == nullptr) return false;
-		return statement->bind_fetch(params);
+		if (_statement == nullptr) return false;
+		return _statement->bind_fetch(_params);
 	}
 
 	Local<Value> QueryPreparedOperation::CreateCompletionArg()
 	{
-		return statement->get_meta_value();
+		return _statement->get_meta_value();
 	}
 }

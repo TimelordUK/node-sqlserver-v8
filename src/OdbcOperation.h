@@ -35,13 +35,13 @@ namespace mssql
 
 		friend OdbcConnection;
 
-		shared_ptr<OdbcConnection> connection;
-		shared_ptr<OdbcStatement> statement;
-		Persistent<Function> callback;
-		Handle<Value> output_param;
-		Local<Object> cb;
+		shared_ptr<OdbcConnection> _connection;
+		shared_ptr<OdbcStatement> _statement;
+		Persistent<Function> _callback;
+		Handle<Value> _output_param;
+		Local<Object> _cb;
 		void fetchStatement();
-		long statementId;
+		long _statementId;
 
 	private:
 

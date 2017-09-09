@@ -38,10 +38,10 @@ namespace mssql
 		OdbcConnection();
 		~OdbcConnection();
 		static bool InitializeEnvironment();
-		bool TryBeginTran();
+		bool try_begin_tran();
 		void send(shared_ptr<OdbcOperation> op) const;
-		bool TryEndTran(SQLSMALLINT completionType);
-		bool TryOpen(const wstring& connectionString, int timeout);
+		bool try_end_tran(SQLSMALLINT completionType);
+		bool try_open(const wstring& connectionString, int timeout);
 		shared_ptr<OdbcError> LastError(void) const { return error; }
 		bool TryClose();
 		shared_ptr<OdbcStatementCache> statements;

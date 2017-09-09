@@ -10,7 +10,7 @@ namespace mssql
 
 	bool BeginTranOperation::TryInvokeOdbc()
 	{
-		return connection->TryBeginTran();
+		return _connection->try_begin_tran();
 	}
 
 	Local<Value> BeginTranOperation::CreateCompletionArg()

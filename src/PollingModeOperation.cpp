@@ -7,10 +7,10 @@ namespace mssql
 {
 	bool PollingModeOperation::TryInvokeOdbc()
 	{
-		if (statement == nullptr) {
+		if (_statement == nullptr) {
 			return false;
 		}
-		return statement->set_polling(_polling);
+		return _statement->set_polling(_polling);
 	}
 
 	Local<Value> PollingModeOperation::CreateCompletionArg()

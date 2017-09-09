@@ -34,7 +34,7 @@ namespace mssql
 		ReadNextResultOperation(shared_ptr<OdbcConnection> connection, size_t queryId, Handle<Object> callback)
 			: OdbcOperation(connection, callback), preRowCount(-1), postRowCount(-1)
 		{
-			statementId = queryId;
+			_statementId = queryId;
 		}
 
 		bool TryInvokeOdbc() override;

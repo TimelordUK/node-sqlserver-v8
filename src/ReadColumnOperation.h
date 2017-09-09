@@ -38,7 +38,7 @@ namespace mssql
 			: OdbcOperation(connection, callback),
 			column(column)
 		{
-			statementId = queryId;
+			_statementId = queryId;
 		}
 
 		bool TryInvokeOdbc() override;

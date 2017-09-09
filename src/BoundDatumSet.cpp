@@ -26,7 +26,7 @@ namespace mssql
 
 	bool BoundDatumSet::bind(Handle<Array> &node_params)
 	{
-		auto count = node_params->Length();
+		const auto count = node_params->Length();
 		auto res = true;
 		output_param_count = 0;
 		if (count > 0) {

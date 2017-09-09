@@ -17,7 +17,7 @@
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include <v8.h>
 #include <Connection.h>
 #include <OdbcConnection.h>
 
@@ -52,7 +52,7 @@ namespace mssql
 		NODE_SET_PROTOTYPE_METHOD(tpl, "pollingMode", polling_mode);
 	}
 
-	void Connection::Initialize(Handle<Object> exports)
+	void Connection::initialize(Handle<Object> exports)
 	{
 		const auto initialized = OdbcConnection::InitializeEnvironment();
 		nodeTypeFactory fact;
@@ -84,7 +84,7 @@ namespace mssql
 	{
 		const auto cb = info[0].As<Object>();
 		auto connection = Unwrap<Connection>(info.This());
-		const auto ret = connection->connectionBridge->Close(cb);
+		const auto ret = connection->connectionBridge->close(cb);
 		info.GetReturnValue().Set(ret);
 	}
 
@@ -92,7 +92,7 @@ namespace mssql
 	{
 		const auto cb = info[0].As<Object>();
 		auto connection = Unwrap<Connection>(info.This());
-		const auto ret = connection->connectionBridge->BeginTransaction(cb);
+		const auto ret = connection->connectionBridge->begin_transaction(cb);
 		info.GetReturnValue().Set(ret);
 	}
 
@@ -100,7 +100,7 @@ namespace mssql
 	{
 		const auto cb = info[0].As<Object>();
 		auto connection = Unwrap<Connection>(info.This());
-		const auto ret = connection->connectionBridge->Commit(cb);
+		const auto ret = connection->connectionBridge->commit(cb);
 		info.GetReturnValue().Set(ret);
 	}
 
@@ -108,7 +108,7 @@ namespace mssql
 	{
 		const auto cb = info[0].As<Object>();
 		auto connection = Unwrap<Connection>(info.This());
-		const auto ret = connection->connectionBridge->Rollback(cb);
+		const auto ret = connection->connectionBridge->rollback(cb);
 		info.GetReturnValue().Set(ret);
 	}
 
@@ -131,7 +131,7 @@ namespace mssql
 		const auto callback = info[3].As<Object>();
 
 		const auto connection = Unwrap<Connection>(info.This());
-		const auto ret = connection->connectionBridge->Query(query_id, query_object, params, callback);
+		const auto ret = connection->connectionBridge->query(query_id, query_object, params, callback);
 		info.GetReturnValue().Set(ret);
 	}
 
@@ -142,7 +142,7 @@ namespace mssql
 		const auto callback = info[2].As<Object>();
 
 		const auto connection = Unwrap<Connection>(info.This());
-		const auto ret = connection->connectionBridge->Prepare(query_id, query_object, callback);
+		const auto ret = connection->connectionBridge->prepare(query_id, query_object, callback);
 		info.GetReturnValue().Set(ret);
 	}
 
@@ -153,7 +153,7 @@ namespace mssql
 		const auto callback = info[2].As<Object>();
 
 		const auto connection = Unwrap<Connection>(info.This());
-		const auto ret = connection->connectionBridge->QueryPrepared(query_id, params, callback);
+		const auto ret = connection->connectionBridge->query_prepared(query_id, params, callback);
 		info.GetReturnValue().Set(ret);
 	}
 
@@ -166,7 +166,7 @@ namespace mssql
 		const auto callback = info[3].As<Object>();
 
 		const auto connection = Unwrap<Connection>(info.This());
-		const auto ret = connection->connectionBridge->CallProcedure(query_id, query_object, params, callback);
+		const auto ret = connection->connectionBridge->call_procedure(query_id, query_object, params, callback);
 		info.GetReturnValue().Set(ret);
 	}
 
@@ -175,7 +175,7 @@ namespace mssql
 		const auto query_id = info[0].As<Number>();
 		const auto callback = info[1].As<Object>();
 		auto connection = Unwrap<Connection>(info.This());
-		const auto ret = connection->connectionBridge->UnbindParameters(query_id, callback);
+		const auto ret = connection->connectionBridge->unbind_parameters(query_id, callback);
 		info.GetReturnValue().Set(ret);
 	}
 
@@ -184,7 +184,7 @@ namespace mssql
 		const auto query_id = info[0].As<Number>();
 		const auto callback = info[1].As<Object>();
 		auto connection = Unwrap<Connection>(info.This());
-		const auto ret = connection->connectionBridge->FreeStatement(query_id, callback);
+		const auto ret = connection->connectionBridge->free_statement(query_id, callback);
 		info.GetReturnValue().Set(ret);
 	}
 
@@ -193,7 +193,7 @@ namespace mssql
 		const auto query_id = info[0].As<Number>();
 		const auto cb = info[1].As<Object>();
 		const auto connection = Unwrap<Connection>(info.This());
-		const auto ret = connection->connectionBridge->ReadRow(query_id, cb);
+		const auto ret = connection->connectionBridge->read_row(query_id, cb);
 		info.GetReturnValue().Set(ret);
 	}
 
@@ -203,7 +203,7 @@ namespace mssql
 		const auto column = info[1].As<Number>();
 		const auto cb = info[2].As<Object>();
 		const auto connection = Unwrap<Connection>(info.This());
-		const auto ret = connection->connectionBridge->ReadColumn(query_id, column, cb);
+		const auto ret = connection->connectionBridge->read_column(query_id, column, cb);
 		info.GetReturnValue().Set(ret);
 	}
 
@@ -212,7 +212,7 @@ namespace mssql
 		const auto query_id = info[0].As<Number>();
 		const auto callback = info[1].As<Object>();
 		const auto connection = Unwrap<Connection>(info.This());
-		const auto ret = connection->connectionBridge->ReadNextResult(query_id, callback);
+		const auto ret = connection->connectionBridge->read_next_result(query_id, callback);
 		info.GetReturnValue().Set(ret);
 	}
 
@@ -222,7 +222,7 @@ namespace mssql
 		const auto callback = info[1].As<Object>();
 
 		auto connection = Unwrap<Connection>(info.This());
-		const auto ret = connection->connectionBridge->Open(connection_object, callback, info.This());
+		const auto ret = connection->connectionBridge->open(connection_object, callback, info.This());
 		info.GetReturnValue().Set(ret);
 	}
 
@@ -232,7 +232,7 @@ namespace mssql
 		const auto callback = info[1].As<Object>();
 		auto connection = Unwrap<Connection>(info.This());
 
-		const auto ret = connection->connectionBridge->Cancel(query_id, callback);
+		const auto ret = connection->connectionBridge->cancel(query_id, callback);
 		info.GetReturnValue().Set(ret);
 	}
 
@@ -242,14 +242,14 @@ namespace mssql
 		const auto v1 = info[1].As<Number>();
 		const auto callback = info[2].As<Object>();
 		auto connection = Unwrap<Connection>(info.This());
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		const auto i32 = v1->Int32Value();
 		const auto b1 = fact.newBoolean(i32 > 0);
 
-		const auto ret = connection->connectionBridge->PollingMode(query_id, b1, callback);
+		const auto ret = connection->connectionBridge->polling_mode(query_id, b1, callback);
 		info.GetReturnValue().Set(ret);
 	}
 }
 
-NODE_MODULE(sqlserver, mssql::Connection::Initialize)
+NODE_MODULE(sqlserver, mssql::Connection::initialize)
 

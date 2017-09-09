@@ -6,12 +6,12 @@ namespace mssql
 {
 	bool ReadColumnOperation::TryInvokeOdbc()
 	{
-		if (statement == nullptr) return false;
-		return statement->try_read_column(column);
+		if (_statement == nullptr) return false;
+		return _statement->try_read_column(column);
 	}
 
 	Local<Value> ReadColumnOperation::CreateCompletionArg()
 	{
-		return statement->get_column_value();
+		return _statement->get_column_value();
 	}
 }

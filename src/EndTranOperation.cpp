@@ -13,7 +13,7 @@ namespace mssql
 
 	bool EndTranOperation::TryInvokeOdbc()
 	{
-		return connection->TryEndTran(completionType);
+		return _connection->try_end_tran(completionType);
 	}
 
 	Local<Value> EndTranOperation::CreateCompletionArg()

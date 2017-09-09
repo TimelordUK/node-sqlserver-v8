@@ -7,10 +7,10 @@ namespace mssql
 {
 	bool CancelOperation::TryInvokeOdbc()
 	{
-		if (statement == nullptr) {
+		if (_statement == nullptr) {
 			return false;
 		}
-		return statement->cancel();
+		return _statement->cancel();
 	}
 
 	Local<Value> CancelOperation::CreateCompletionArg()

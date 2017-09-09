@@ -11,7 +11,7 @@ namespace mssql
 
 	bool CollectOperation::TryInvokeOdbc()
 	{
-		return connection->TryClose();
+		return _connection->TryClose();
 	}
 
 	Local<Value> CollectOperation::CreateCompletionArg()

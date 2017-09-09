@@ -108,7 +108,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcConnection::TryOpen(const wstring& connectionString, int timeout)
+	bool OdbcConnection::try_open(const wstring& connectionString, int timeout)
 	{
 		assert(connectionState == Closed);
 
@@ -134,7 +134,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcConnection::TryBeginTran(void)
+	bool OdbcConnection::try_begin_tran()
 	{
 		// turn off autocommit
 		const auto acoff = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_OFF);
@@ -154,7 +154,7 @@ namespace mssql
 		ops->add(op);
 	}
 
-	bool OdbcConnection::TryEndTran(SQLSMALLINT completion_type)
+	bool OdbcConnection::try_end_tran(SQLSMALLINT completion_type)
 	{
 		auto ret = SQLEndTran(SQL_HANDLE_DBC, *connection, completion_type);
 		if (!CheckOdbcError(ret)) return false;

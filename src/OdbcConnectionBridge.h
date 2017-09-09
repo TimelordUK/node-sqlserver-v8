@@ -34,23 +34,23 @@ namespace mssql
 
 		OdbcConnectionBridge();
 		~OdbcConnectionBridge();
-		Handle<Value> Close(Handle<Object> callback);
+		Handle<Value> close(Handle<Object> callback);
 		void Collect(void);
-		Handle<Value> BeginTransaction(Handle<Object> callback);
-		Handle<Value> Commit(Handle<Object> callback);
-		Handle<Value> Rollback(Handle<Object> callback);
-		Handle<Value> Query(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const;
-		Handle<Value> QueryPrepared(Handle<Number> queryId, Handle<Array> params, Handle<Object> callback) const;
-		Handle<Value> Prepare(Handle<Number> queryId, Handle<Object> queryObject, Handle<Object> callback) const;
-		Handle<Value> CallProcedure(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const;
-		Handle<Value> UnbindParameters(Handle<Number> queryId, Handle<Object> callback);
-		Handle<Value> Cancel(Handle<Number> queryId, Handle<Object> callback);
-		Handle<Value> PollingMode(Handle<Number> queryId, Handle<Boolean> mode, Handle<Object> callback);
-		Handle<Value> ReadRow(Handle<Number> queryId, Handle<Object> callback) const;
-		Handle<Value> ReadNextResult(Handle<Number> queryId, Handle<Object> callback) const;
-		Handle<Value> ReadColumn(Handle<Number> queryId, Handle<Number> column, Handle<Object> callback) const;	
-		Handle<Value> Open(Handle<Object> connectionObject, Handle<Object> callback, Handle<Object> backpointer);
-		Handle<Value> FreeStatement(Handle<Number> queryId, Handle<Object> callback);
+		Handle<Value> begin_transaction(Handle<Object> callback);
+		Handle<Value> commit(Handle<Object> callback);
+		Handle<Value> rollback(Handle<Object> callback);
+		Handle<Value> query(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const;
+		Handle<Value> query_prepared(Handle<Number> queryId, Handle<Array> params, Handle<Object> callback) const;
+		Handle<Value> prepare(Handle<Number> queryId, Handle<Object> queryObject, Handle<Object> callback) const;
+		Handle<Value> call_procedure(Handle<Number> queryId, Handle<Object> queryObject, Handle<Array> params, Handle<Object> callback) const;
+		Handle<Value> unbind_parameters(Handle<Number> queryId, Handle<Object> callback);
+		Handle<Value> cancel(Handle<Number> queryId, Handle<Object> callback);
+		Handle<Value> polling_mode(Handle<Number> queryId, Handle<Boolean> mode, Handle<Object> callback);
+		Handle<Value> read_row(Handle<Number> queryId, Handle<Object> callback) const;
+		Handle<Value> read_next_result(Handle<Number> queryId, Handle<Object> callback) const;
+		Handle<Value> read_column(Handle<Number> queryId, Handle<Number> column, Handle<Object> callback) const;	
+		Handle<Value> open(Handle<Object> connectionObject, Handle<Object> callback, Handle<Object> backpointer);
+		Handle<Value> free_statement(Handle<Number> queryId, Handle<Object> callback);
 
 	private:
 		shared_ptr<OdbcConnection> connection;		

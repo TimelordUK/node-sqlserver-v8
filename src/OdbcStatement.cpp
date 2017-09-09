@@ -62,7 +62,6 @@ namespace mssql
 		_statement = make_shared<OdbcStatementHandle>();
 		if (!_statement->Alloc(*_connection))
 		{
-			// todo: set error state.
 		}
 	}
 

@@ -35,7 +35,7 @@ namespace mssql
 		ReadRowOperation(shared_ptr<OdbcConnection> connection, size_t queryId, Handle<Object> callback)
 			: OdbcOperation(connection, callback)
 		{
-			statementId = queryId;
+			_statementId = queryId;
 		}
 
 		bool TryInvokeOdbc() override;

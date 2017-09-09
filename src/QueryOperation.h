@@ -35,7 +35,7 @@ namespace mssql
 	{
 	public:
 		QueryOperation(shared_ptr<OdbcConnection> connection, shared_ptr<QueryOperationParams> query, Handle<Object> callback);
-		bool BindParameters(Handle<Array> & node_params) const;
+		bool bind_parameters(Handle<Array> & node_params) const;
 		// called by BindParameters when an error occurs.  It passes a node.js error to the user's callback.
 		bool ParameterErrorToUserCallback(uint32_t param, const char* error) const;
 		bool TryInvokeOdbc() override;
@@ -44,10 +44,7 @@ namespace mssql
 	protected:
 	
 		shared_ptr<QueryOperationParams> _query;
-		//bool polling;
-		//u_int timeout;
-		//wstring query;
-		shared_ptr<BoundDatumSet> params;
+		shared_ptr<BoundDatumSet> _params;
 		int output_param_count;
 	};
 }

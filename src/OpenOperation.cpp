@@ -20,7 +20,7 @@ namespace mssql
 
 	bool OpenOperation::TryInvokeOdbc()
 	{
-		return connection->TryOpen(connectionString, timeout);
+		return _connection->try_open(connectionString, timeout);
 	}
 
 	Local<Value> OpenOperation::CreateCompletionArg()

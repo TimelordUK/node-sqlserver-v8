@@ -30,13 +30,12 @@ namespace mssql
     class Connection :node::ObjectWrap
     {
     public:
-
+		static void initialize(Handle<Object> target);
 		Connection();
 		virtual ~Connection();
 
-	   static void Initialize(Handle<Object> target);
-
 	private:
+		
 		static void New(const FunctionCallbackInfo<Value>& info);
 		static void close(const FunctionCallbackInfo<Value>& info);
 		static void begin_transaction(const FunctionCallbackInfo<Value>& info);
