@@ -838,7 +838,7 @@ namespace mssql
 		return res;
 	}
 
-	bool isDate(const wstring& v)
+	bool is_date(const wstring& v)
 	{
 		const auto res = v == L"date"
 			|| v == L"datetimeoffset"
@@ -893,7 +893,7 @@ namespace mssql
 	{
 		const auto str = getH(p, "type_id");
 		const auto v = FromV8String(str);
-		const auto res = isDate(v);
+		const auto res = is_date(v);
 		return res;
 	}
 

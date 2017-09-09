@@ -8,9 +8,9 @@ namespace mssql
 	BoundDatumSet::BoundDatumSet() : 
 		err(nullptr), 
 		first_error(0), 
-		output_param_count(-1)
+		_output_param_count(-1)
 	{
-		bindings = make_shared<param_bindings>();
+		_bindings = make_shared<param_bindings>();
 	}
 
 	bool BoundDatumSet::reserve(shared_ptr<ResultSet> set) const
@@ -19,7 +19,7 @@ namespace mssql
 			BoundDatum binding;
 			auto & def = set->GetMetadata(i);
 			binding.reserve_column_type(def.dataType, def.columnSize);
-			bindings->push_back(move(binding));
+			_bindings->push_back(move(binding));
 		}
 		return true;
 	}
@@ -28,7 +28,7 @@ namespace mssql
 	{
 		const auto count = node_params->Length();
 		auto res = true;
-		output_param_count = 0;
+		_output_param_count = 0;
 		if (count > 0) {
 			for (uint32_t i = 0; i < count; ++i) {
 				BoundDatum binding;
@@ -39,7 +39,7 @@ namespace mssql
 				{
 				case SQL_PARAM_OUTPUT:
 				case SQL_PARAM_INPUT_OUTPUT:
-					output_param_count++;
+					_output_param_count++;
 					break;
 
 				default:
@@ -50,7 +50,7 @@ namespace mssql
 					first_error = i;
 					break;
 				}
-				bindings->push_back(move(binding));
+				_bindings->push_back(move(binding));
 			}
 		}
 
@@ -60,10 +60,10 @@ namespace mssql
 	Local<Array> BoundDatumSet::unbind()
 	{
 		nodeTypeFactory fact;
-		const auto arr = fact.newArray(output_param_count);
+		const auto arr = fact.newArray(_output_param_count);
 		auto i = 0;
 
-		std::for_each(bindings->begin(), bindings->end(), [&](BoundDatum& param) mutable
+		std::for_each(_bindings->begin(), _bindings->end(), [&](BoundDatum& param) mutable
 		{
 			switch (param.param_type)
 			{
