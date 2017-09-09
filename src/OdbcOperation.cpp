@@ -25,7 +25,7 @@
 
 namespace mssql
 {
-	OdbcOperation::OdbcOperation(size_t queryId, Local<Object> cb)
+	OdbcOperation::OdbcOperation(size_t query_id, Local<Object> cb)
 		:
 		connection(nullptr),
 		statement(nullptr),
@@ -34,12 +34,12 @@ namespace mssql
 		failed(false),
 		failure(nullptr)
 	{
-		statementId = static_cast<long>(queryId);
+		statementId = static_cast<long>(query_id);
 		nodeTypeFactory fact;
 		output_param = fact.null();
 	}
 
-	OdbcOperation::OdbcOperation(shared_ptr<OdbcConnection> connection, size_t queryId, Local<Object> cb)
+	OdbcOperation::OdbcOperation(shared_ptr<OdbcConnection> connection, size_t query_id, Local<Object> cb)
 		: 
 		connection(connection),
 		statement(nullptr),
@@ -48,7 +48,7 @@ namespace mssql
 		failed(false),
 		failure(nullptr)
 	{
-		statementId = static_cast<long>(queryId);
+		statementId = static_cast<long>(query_id);
 		nodeTypeFactory fact;
 		output_param = fact.null();
 	}

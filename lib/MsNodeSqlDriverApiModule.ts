@@ -180,7 +180,30 @@ export module MsNodeSqlDriverApiModule {
         setUpdateCols(cols: any[]): void
     }
 
+    export interface v8TableValueParam {
+        /*
+type_name	column_id	ordered_column	column_name	data_type	nullable	length	precision	scale	collation
+dbo.PersonTVP	1	01: vFirstName	vFirstName	varchar		255	0	0	SQL_Latin1_General_CP1_CI_AS
+dbo.PersonTVP	2	02: vLastName	vLastName	varchar		255	0	0	SQL_Latin1_General_CP1_CI_AS
+dbo.PersonTVP	3	03: vAddress	vAddress	varchar		255	0	0	SQL_Latin1_General_CP1_CI_AS
+dbo.PersonTVP	4	04: vCity	vCity	varchar		255	0	0	SQL_Latin1_General_CP1_CI_AS
+         */
+
+        name:string
+        column_id:number
+        ordered_column:string
+        column_name:string
+        data_type:string
+        nullable:string
+        length:number
+        precision:number
+        scale:number
+        collation:number
+    }
+
     export interface v8ProcedureParam {
+        table_value_param?:v8TableValueParam[]
+        is_user_defined?:boolean
         is_output: boolean
         name: string
         type_id: string
