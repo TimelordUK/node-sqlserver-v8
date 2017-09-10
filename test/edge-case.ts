@@ -68,23 +68,23 @@ class Tvp implements SimpleTest {
                 throw err;
             }
 
-            setInterval( () => {
+            setImmediate( () => {
                 let pm = conn.procedureMgr();
                 pm.get('InsertFromTVP', procedure => {
                     let meta:v8ProcedureSummary = procedure.getMeta();
-                    let c0 = meta.params[0];
+                    let c0 = meta.params[1];
                     let pTvp = {
-                        FirstName:"Stephen",
-                        LastName:"James",
-                        Address:"Flat 12, 8 Lansdowne Road SW20 8AP",
-                        City:"London"
+                        vFirstName:"Stephen",
+                        vLastName:"James",
+                        vAddress:"Flat 12, 8 Lansdowne Road SW20 8AP",
+                        vCity:"London"
                     };
                     procedure.call([pTvp], (err, results)=> {
                             console.log(err);
                     });
                     console.log(JSON.stringify(meta));
                 });
-            }, delay);
+            });
         });
     }
 }

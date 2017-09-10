@@ -23,6 +23,47 @@ namespace mssql
 		return res;
 	}
 
+	static Local<Value> get_as_value(Local<Object> o, const char* v)
+	{
+		nodeTypeFactory fact;
+		const auto vp = fact.newString(v);
+		const auto val = o->Get(vp);
+		return val;
+	}
+
+	static Local<String> get_as_string(Local<Value> o, const char* v)
+	{
+		nodeTypeFactory fact;
+		const auto vp = fact.newString(v);
+		const auto val = o->ToObject()->Get(vp);
+		return val->ToString();
+	}
+
+	static Local<Boolean> get_as_bool(Local<Value> o, const char* v)
+	{
+		nodeTypeFactory fact;
+		const auto vp = fact.newString(v);
+		if (o->IsNull())
+		{
+			return fact.newBoolean(false);
+		}
+		if (!o->IsObject())
+		{
+			return fact.newBoolean(false);
+		}
+		auto as_obj = o->ToObject();	
+		if (as_obj->IsNull())
+		{
+			return fact.newBoolean(false);
+		}
+		const auto val = as_obj->Get(vp);
+		if (val->IsNull())
+		{
+			return fact.newBoolean(false);
+		}
+		return val->ToBoolean();
+	}
+
 	void BoundDatum::bind_null(const Local<Value>& p)
 	{
 		reserve_null(1);
@@ -212,6 +253,47 @@ namespace mssql
 		buffer = storage->charvec_ptr->data();
 		buffer_len = max_obj_len * size;
 		param_size = max_obj_len;
+	}
+
+	/*
+	 *const auto r = SQLBindParameter(*_statement, current_param, datum.param_type, datum.c_type, datum.sql_type,
+			                          datum.param_size, datum.digits, datum.buffer, datum.buffer_len, datum.get_ind_vec().data());
+
+
+									  retcode = SQLBindParameter(
+									  hstmt,              // Statement handle
+				current_param		1,                  // Parameter Number
+				param_type			SQL_PARAM_INPUT,    // Input/Output Type (always INPUT for TVP)
+				c_type				SQL_C_DEFAULT,      // C - Type (always this for a TVP)
+				sql_type			SQL_SS_TABLE,       // SQL Type (always this for a TVP)
+				param_size			MAX_ARRAY_SIZE,     // For a TVP this is max rows we will use
+				digits				0,                  // For a TVP this is always 0
+				buffer				TVPTableName,       // For a TVP this is the type name of the
+									  // TVP, and also a token returned by
+									  // SQLParamData.
+				buffer_len			SQL_NTS,            // For a TVP this is the length of the type
+									  // name or SQL_NTS.
+									  &lTVPRowsUsed);     // For a TVP this is the number of rows
+									  // actually available.
+	 */
+
+	void BoundDatum::bind_tvp(Local<Value> & p) {
+		is_tvp = true;
+		param_type = SQL_PARAM_INPUT;
+		c_type = SQL_C_DEFAULT;
+		sql_type = SQL_SS_TABLE;
+		const auto str = get_as_string(p, "type_id");
+		indvec.resize(1);	
+		const auto precision = str->Length();
+		storage->ReserveChars(precision + 1);
+		auto* itr_p = storage->charvec_ptr->data();
+		buffer = itr_p;
+		str->WriteUtf8(itr_p, precision);
+		itr_p[precision] = 0;
+		buffer_len = 1;
+		param_size = 1;
+		indvec[0] = 1;
+		digits = 0;
 	}
 
 	void BoundDatum::bind_var_binary( Local<Value> & p)
@@ -539,10 +621,10 @@ namespace mssql
 		indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
-			auto dateObject = Handle<Date>::Cast<Value>(p);
-			assert(!dateObject.IsEmpty());
+			auto date_object = Handle<Date>::Cast<Value>(p);
+			assert(!date_object.IsEmpty());
 			// dates in JS are stored internally as ms count from Jan 1, 1970
-			const auto d = dateObject->NumberValue();
+			const auto d = date_object->NumberValue();
 			auto& ts = (*storage->timestampoffsetvec_ptr)[0];
 			TimestampColumn sql_date(d, 0, offset);
 			sql_date.ToTimestampOffset(ts);
@@ -722,74 +804,9 @@ namespace mssql
 		}
 	}
 
-	bool BoundDatum::bind_datum_type(Local<Value>& p)
-	{
-		if (p->IsNull())
-		{
-			bind_null(p);
-		}
-		else if (p->IsString())
-		{
-			bind_w_var_char(p);
-		}
-		else if (p->IsBoolean())
-		{
-			bind_boolean(p);
-		}
-		else if (p->IsInt32())
-		{
-			bind_int32(p);
-		}
-		else if (p->IsUint32())
-		{
-			bind_uint32(p);
-		}
-		else if (p->IsNumber())
-		{
-			const auto d = p->NumberValue();
-			if (_isnan(d) || !_finite(d))
-			{
-				err = "Invalid number parameter";
-				return false;
-			}
-			bind_number(p);
-		}
-		else if (p->IsDate())
-		{
-			bind_time_stamp_offset(p);
-		}
-		else if (p->IsObject() && node::Buffer::HasInstance(p))
-		{
-			bind_var_binary(p);
-		}
-		else
-		{
-			err = "Invalid parameter type";
-			return false;
-		}
-
-		return true;
-	}
-
-	static Local<Value> get(Local<Object> o, const char* v)
-	{
-		nodeTypeFactory fact;
-		const auto vp = fact.newString(v);
-		const auto val = o->Get(vp);
-		return val;
-	}
-
-	static Local<String> getH(Local<Value> o, const char* v)
-	{
-		nodeTypeFactory fact;
-		const auto vp = fact.newString(v);
-		const auto val = o->ToObject()->Get(vp);
-		return val->ToString();
-	}
-
 	bool BoundDatum::bind(Local<Object> o, const char* if_str, uint16_t type)
 	{
-		auto val = get(o, if_str);
+		auto val = get_as_value(o, if_str);
 		if (!val->IsUndefined())
 		{
 			param_type = type;
@@ -849,9 +866,16 @@ namespace mssql
 		return res;
 	}
 
+	bool sql_type_s_maps_to_tvp(Local<Value> p)
+	{
+		const auto is_user_defined = get_as_bool(p, "is_user_defined");
+		if (is_user_defined->IsNull()) return false;
+		return is_user_defined->BooleanValue();	
+	}
+
 	bool sql_type_s_maps_to_numeric(Local<Value> p)
 	{
-		const auto str = getH(p, "type_id");
+		const auto str = get_as_string(p, "type_id");
 		auto v = FromV8String(str);
 		const auto res = is_numeric(v);
 		return res;
@@ -859,7 +883,7 @@ namespace mssql
 
 	bool sql_type_s_maps_to_u_int32(Local<Value> p)
 	{
-		const auto str = getH(p, "type_id");
+		const auto str = get_as_string(p, "type_id");
 		const auto v = FromV8String(str);
 		const auto res = v == L"sbigint";
 		return res;
@@ -867,7 +891,7 @@ namespace mssql
 
 	bool sql_type_s_maps_to_int32(Local<Value> p)
 	{
-		const auto str = getH(p, "type_id");
+		const auto str = get_as_string(p, "type_id");
 		const auto v = FromV8String(str);
 		const auto res = is_int(v);
 		return res;
@@ -875,7 +899,7 @@ namespace mssql
 
 	bool sql_type_s_maps_totring(Local<Value> p)
 	{
-		const auto str = getH(p, "type_id");
+		const auto str = get_as_string(p, "type_id");
 		const auto v = FromV8String(str);
 		const auto res = is_string(v);
 		return res;
@@ -883,7 +907,7 @@ namespace mssql
 
 	bool sql_type_s_maps_to_boolean(Local<Value> p)
 	{
-		const auto str = getH(p, "type_id");
+		const auto str = get_as_string(p, "type_id");
 		const auto v = FromV8String(str);
 		const auto res = is_bit(v);
 		return res;
@@ -891,10 +915,63 @@ namespace mssql
 
 	bool sql_type_s_maps_to_date(Local<Value> p)
 	{
-		const auto str = getH(p, "type_id");
+		const auto str = get_as_string(p, "type_id");
 		const auto v = FromV8String(str);
 		const auto res = is_date(v);
 		return res;
+	}
+
+	bool BoundDatum::bind_datum_type(Local<Value>& p)
+	{
+		if (p->IsNull())
+		{
+			bind_null(p);
+		}
+		else if (p->IsString())
+		{
+			bind_w_var_char(p);
+		}
+		else if (p->IsBoolean())
+		{
+			bind_boolean(p);
+		}
+		else if (p->IsInt32())
+		{
+			bind_int32(p);
+		}
+		else if (p->IsUint32())
+		{
+			bind_uint32(p);
+		}
+		else if (p->IsNumber())
+		{
+			const auto d = p->NumberValue();
+			if (_isnan(d) || !_finite(d))
+			{
+				err = "Invalid number parameter";
+				return false;
+			}
+			bind_number(p);
+		}
+		else if (p->IsDate())
+		{
+			bind_time_stamp_offset(p);
+		}
+		else if (p->IsObject() && node::Buffer::HasInstance(p))
+		{
+			bind_var_binary(p);
+		}
+		else if (sql_type_s_maps_to_tvp(p))
+		{
+			bind_tvp(p);
+		}
+		else
+		{
+			err = "Invalid parameter type";
+			return false;
+		}
+
+		return true;
 	}
 
 	Local<Value> reserve_output_param(Local<Value> p, int size)
@@ -940,7 +1017,7 @@ namespace mssql
 		const auto is_output = v->ToInteger();
 
 		Local<Value> pval;
-		const auto size = get(p->ToObject(), "max_length")->Int32Value();
+		const auto size = get_as_value(p->ToObject(), "max_length")->Int32Value();
 		if (is_output->Int32Value() != 0)
 		{
 			param_type = SQL_PARAM_OUTPUT;
@@ -949,7 +1026,7 @@ namespace mssql
 		else
 		{
 			param_type = SQL_PARAM_INPUT;
-			pval = get(p->ToObject(), "val");
+			pval = get_as_value(p->ToObject(), "val");
 		}
 
 		return bind_datum_type(pval);
@@ -957,19 +1034,19 @@ namespace mssql
 
 	void BoundDatum::assign_precision(Local<Object>& pv)
 	{
-		const auto precision = get(pv, "precision");
+		const auto precision = get_as_value(pv, "precision");
 		if (!precision->IsUndefined())
 		{
 			param_size = precision->Int32Value();
 		}
 
-		const auto scale = get(pv, "scale");
+		const auto scale = get_as_value(pv, "scale");
 		if (!scale->IsUndefined())
 		{
 			digits = scale->Int32Value();
 		}
 
-		const auto off = get(pv, "offset");
+		const auto off = get_as_value(pv, "offset");
 		if (!off->IsUndefined())
 		{
 			offset = off->Int32Value();
@@ -982,7 +1059,7 @@ namespace mssql
 		param_type = SQL_PARAM_INPUT;
 
 		auto pv = p->ToObject();
-		auto pp = get(pv, "value");
+		auto pp = get_as_value(pv, "value");
 
 		assign_precision(pv);
 
@@ -1086,13 +1163,13 @@ namespace mssql
 	{
 		const auto po = p->ToObject();
 
-		auto v = get(po, "is_output");
+		auto v = get_as_value(po, "is_output");
 		if (!v->IsUndefined())
 		{
 			return proc_bind(p, v);
 		}
 
-		v = get(po, "sql_type");
+		v = get_as_value(po, "sql_type");
 		if (!v->IsUndefined())
 		{
 			return user_bind(p, v);

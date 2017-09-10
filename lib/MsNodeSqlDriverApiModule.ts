@@ -193,6 +193,7 @@ dbo.PersonTVP	4	04: vCity	vCity	varchar		255	0	0	SQL_Latin1_General_CP1_CI_AS
         column_id:number
         ordered_column:string
         column_name:string
+        type_id:string
         data_type:string
         nullable:string
         length:number

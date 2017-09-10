@@ -22,7 +22,7 @@ namespace mssql
 
 		Local<Value> unbind() const;
 		
-		vector<SQLLEN> & get_ind_vec() { return indvec; }
+		vector<SQLLEN> & get_ind_vec()  { return indvec; }
 		
 		char *getErr() const { return err; }
 
@@ -40,29 +40,12 @@ namespace mssql
 			offset(0),
 			definedPrecision(false),
 			definedScale(false),
-			err(nullptr)
+			err(nullptr),
+			is_tvp(false),
+			tvp_no_cols(0)
 		{
 			indvec = vector<SQLLEN>(1);
 			storage = make_shared<DatumStorage>();
-		}
-
-		BoundDatum(BoundDatum&& other)
-		{
-			js_type = other.js_type;
-			c_type = other.c_type;
-			sql_type = other.sql_type;
-			param_size = other.param_size;
-			digits = other.digits;
-			buffer = other.buffer;
-			buffer_len = other.buffer_len;
-			offset = other.offset;
-
-			storage = other.storage;
-
-			indvec = other.indvec;
-			param_type = other.param_type;
-			err = other.err;
-			other.buffer_len = 0;
 		}
 
 		enum JS_TYPE {
@@ -87,8 +70,11 @@ namespace mssql
 		SQLLEN buffer_len;
 		uint16_t param_type;
 		uint32_t offset;
+		bool is_tvp;
+		int tvp_no_cols;
 
 	private:
+	
 		vector<SQLLEN> indvec;
 		shared_ptr<DatumStorage> storage;
 		bool definedPrecision;
@@ -151,6 +137,8 @@ namespace mssql
 
 		void bind_number(const Local<Value> & p);
 		void bind_number_array(const Local<Value> & p);
+
+		void bind_tvp(Local<Value> & p);
 
 		void bind_var_binary( Local<Value> & p);
 		void bind_var_binary_array(const Local<Value> & p);

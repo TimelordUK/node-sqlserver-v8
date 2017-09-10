@@ -106,12 +106,13 @@ namespace mssql
 		bool d_time(int col);
 		bool bounded_string(SQLLEN display_size, int column);
 		bool reserved_string(SQLLEN display_size, int column) const;
-		void apply_precision(const BoundDatum & datum, int current_param) const;
+		void apply_precision(const shared_ptr<BoundDatum> & datum, int current_param) const;
 		bool read_col_attributes(ResultSet::ColumnDefinition& current, int column);
 		bool read_next(int column);
 		bool lob(SQLLEN display_size, int column);
 		static OdbcEnvironmentHandle environment;
 		bool dispatch(SQLSMALLINT t, int column);
+		bool bind_datum(int current_param, shared_ptr<BoundDatum> datum);
 		bool bind_params(shared_ptr<BoundDatumSet>);
 		bool try_read_string(bool binary, int column);
 

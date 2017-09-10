@@ -57,21 +57,22 @@ suite('sproc', function () {
       'END\n'
 
     var fns = [
-      function (async_done) {
+      function (asyncDone) {
         procedureHelper.createProcedure(sp_name, def, function () {
-          async_done()
+          asyncDone()
         })
       },
 
-      function (async_done) {
+      function (asyncDone) {
         var pm = theConnection.procedureMgr()
         pm.get(sp_name, function (proc) {
           var count = pm.getCount()
           assert.equal(count, 1)
           proc.call([10, 5], function (err, results, output) {
             var expected = [99, 15]
+            assert.ifError(err)
             assert.deepEqual(output, expected, 'results didn\'t match')
-            async_done()
+            asyncDone()
           })
         })
       }
@@ -96,18 +97,18 @@ suite('sproc', function () {
       'END\n'
 
     var fns = [
-      function (async_done) {
+      function (asyncDone) {
         procedureHelper.createProcedure(sp_name, def, function () {
-          async_done()
+          asyncDone()
         })
       },
 
-      function (async_done) {
+      function (asyncDone) {
         var pm = theConnection.procedureMgr()
         pm.setTimeout(5)
         pm.callproc(sp_name, ['0:0:2'], function (err) {
           assert.ifError(err)
-          async_done()
+          asyncDone()
         })
       }
     ]
@@ -129,13 +130,13 @@ suite('sproc', function () {
       + ' END \n'
 
     var fns = [
-      function (async_done) {
+      function (asyncDone) {
         procedureHelper.createProcedure(sp_name, def, function () {
-          async_done()
+          asyncDone()
         })
       },
 
-      function (async_done) {
+      function (asyncDone) {
         var pm = theConnection.procedureMgr()
         pm.callproc(sp_name, ['US of A!'], function (err, results, output) {
           var expected = [8]
@@ -147,7 +148,7 @@ suite('sproc', function () {
               type_desc: 'SQL_STORED_PROCEDURE'
             }]
           assert.deepEqual(results, expected, 'results didn\'t match')
-          async_done()
+          asyncDone()
         })
       }
     ]
@@ -168,18 +169,18 @@ suite('sproc', function () {
       + ' END \n'
 
     var fns = [
-      function (async_done) {
+      function (asyncDone) {
         procedureHelper.createProcedure(sp_name, def, function () {
-          async_done()
+          asyncDone()
         })
       },
 
-      function (async_done) {
+      function (asyncDone) {
         var pm = theConnection.procedureMgr()
         pm.callproc(sp_name, ['US of A!'], function (err, results, output) {
           var expected = [8]
           assert.deepEqual(output, expected, 'results didn\'t match')
-          async_done()
+          asyncDone()
         })
       }
     ]
@@ -207,18 +208,18 @@ suite('sproc', function () {
       'END\n'
 
     var fns = [
-      function (async_done) {
+      function (asyncDone) {
         procedureHelper.createProcedure(sp_name, def, function () {
-          async_done()
+          asyncDone()
         })
       },
 
-      function (async_done) {
+      function (asyncDone) {
         var pm = theConnection.procedureMgr()
         pm.callproc(sp_name, [1], function (err, results, output) {
           var expected = [99, 'name', 'company']
           assert.deepEqual(output, expected, 'results didn\'t match')
-          async_done()
+          asyncDone()
         })
       }
     ]
@@ -245,18 +246,18 @@ suite('sproc', function () {
       'END\n'
 
     var fns = [
-      function (async_done) {
+      function (asyncDone) {
         procedureHelper.createProcedure(sp_name, def, function () {
-          async_done()
+          asyncDone()
         })
       },
 
-      function (async_done) {
+      function (asyncDone) {
         var pm = theConnection.procedureMgr()
         pm.callproc(sp_name, [10, 5], function (err, results, output) {
           var expected = [99, 15]
           assert.deepEqual(output, expected, 'results didn\'t match')
-          async_done()
+          asyncDone()
         })
       }
     ]

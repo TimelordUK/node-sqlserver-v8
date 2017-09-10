@@ -17,13 +17,14 @@
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include <v8.h>
 #include <OdbcStatement.h>
 #include <BoundDatum.h>
 #include <BoundDatumSet.h>
 #include <NodeColumns.h>
 #include <OdbcHelper.h>
 #include <QueryOperationParams.h>
+#include <set>
 
 namespace mssql
 {
@@ -31,8 +32,10 @@ namespace mssql
 
 	size_t get_size(BoundDatumSet& params)
 	{
-		auto f = params.begin();
-		const auto size = f != params.end() ? f->get_ind_vec().size() : 0;
+		const auto f = params.begin();
+		if (f == params.end()) return 0;
+		auto p = *f;
+		const auto size = p->get_ind_vec().size();
 		return size;
 	}
 
@@ -65,16 +68,16 @@ namespace mssql
 		}
 	}
 
-	void OdbcStatement::apply_precision(const BoundDatum& datum, int current_param) const
+	void OdbcStatement::apply_precision(const shared_ptr<BoundDatum> &datum, int current_param) const
 	{
 		/* Modify the fields in the implicit application parameter descriptor */
 		SQLHDESC hdesc = nullptr;
 
 		SQLGetStmtAttr(_statement->get(), SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, nullptr);
-		SQLSetDescField(hdesc, current_param, SQL_DESC_TYPE, reinterpret_cast<SQLPOINTER>(datum.c_type), 0);
-		SQLSetDescField(hdesc, current_param, SQL_DESC_PRECISION, reinterpret_cast<SQLPOINTER>(datum.param_size), 0);
-		SQLSetDescField(hdesc, current_param, SQL_DESC_SCALE, reinterpret_cast<SQLPOINTER>(datum.digits), 0);
-		SQLSetDescField(hdesc, current_param, SQL_DESC_DATA_PTR, static_cast<SQLPOINTER>(datum.buffer), 0);
+		SQLSetDescField(hdesc, current_param, SQL_DESC_TYPE, reinterpret_cast<SQLPOINTER>(datum->c_type), 0);
+		SQLSetDescField(hdesc, current_param, SQL_DESC_PRECISION, reinterpret_cast<SQLPOINTER>(datum->param_size), 0);
+		SQLSetDescField(hdesc, current_param, SQL_DESC_SCALE, reinterpret_cast<SQLPOINTER>(datum->digits), 0);
+		SQLSetDescField(hdesc, current_param, SQL_DESC_DATA_PTR, static_cast<SQLPOINTER>(datum->buffer), 0);
 	}
 
 	// this will show on a different thread to the current executing query.
@@ -100,6 +103,21 @@ namespace mssql
 		return true;
 	}
 
+	static wstring www = L"hello";
+
+	bool OdbcStatement::bind_datum(int current_param, shared_ptr<BoundDatum> datum)
+	{
+		const auto & statement = *_statement;
+		const auto r = SQLBindParameter(statement, current_param, datum->param_type, datum->c_type, datum->sql_type,
+				datum->param_size, datum->digits, datum->buffer, datum->buffer_len, datum->get_ind_vec().data());
+		if (!check_odbc_error(r)) return false;
+		if (datum->get_defined_precision())
+		{
+			apply_precision(datum, current_param);
+		}
+		return true;
+	}
+
 	// bind all the parameters in the array
 	bool OdbcStatement::bind_params(shared_ptr<BoundDatumSet> params)
 	{
@@ -107,21 +125,44 @@ namespace mssql
 		//fprintf(stderr, "BindParams\n");
 		const auto size = get_size(ps);
 		if (size <= 0) return true;
-		const auto ret = SQLSetStmtAttr(*_statement, SQL_ATTR_PARAMSET_SIZE, reinterpret_cast<SQLPOINTER>(size), 0);
-		if (!check_odbc_error(ret)) return false;
+		const auto & statement = *_statement;
+		if (size > 1) {
+			const auto ret = SQLSetStmtAttr(statement, SQL_ATTR_PARAMSET_SIZE, reinterpret_cast<SQLPOINTER>(size), 0);
+			if (!check_odbc_error(ret)) return false;
+		}
 		auto current_param = 1;
-
+		auto tvp_col_count = 0;
+		auto parent_param = 1;
+		
 		for (auto itr = ps.begin(); itr != ps.end(); ++itr)
 		{
-			auto& datum = *itr;
-			const auto r = SQLBindParameter(*_statement, current_param, datum.param_type, datum.c_type, datum.sql_type,
-			                          datum.param_size, datum.digits, datum.buffer, datum.buffer_len, datum.get_ind_vec().data());
-			if (!check_odbc_error(r)) return false;
-			if (datum.get_defined_precision())
+			const auto& datum = *itr;
+			bind_datum(current_param, datum);
+
+			if (datum->is_tvp)
 			{
-				apply_precision(datum, current_param);
+				const auto tvpret = SQLSetStmtAttr(statement, SQL_SOPT_SS_PARAM_FOCUS,
+					reinterpret_cast<SQLPOINTER>(current_param), SQL_IS_INTEGER);
+				tvp_col_count = datum->tvp_no_cols;
+				if (!check_odbc_error(tvpret)) return false;
+				current_param = 1;
 			}
-			++current_param;
+			else {
+				++current_param;
+				if (tvp_col_count > 0) {
+					--tvp_col_count;
+					if (tvp_col_count == 0)
+					{
+						current_param = parent_param + 1;
+						const auto tvpret = SQLSetStmtAttr(statement, SQL_SOPT_SS_PARAM_FOCUS,
+							static_cast<SQLPOINTER>(nullptr), SQL_IS_INTEGER);
+						if (!check_odbc_error(tvpret)) return false;
+					}
+				}else
+				{
+					parent_param = current_param;
+				}
+			}
 		}
 
 		return true;
@@ -309,7 +350,7 @@ namespace mssql
 		for (auto itr = _preparedStorage->begin(); itr != _preparedStorage->end(); ++itr)
 		{
 			auto& datum = *itr;
-			ret = SQLBindCol(*_statement, i + 1, datum.c_type, datum.buffer, datum.buffer_len, datum.get_ind_vec().data());
+			ret = SQLBindCol(*_statement, i + 1, datum->c_type, datum->buffer, datum->buffer_len, datum->get_ind_vec().data());
 			if (!check_odbc_error(ret)) return false;
 			++i;
 		}
@@ -434,6 +475,7 @@ namespace mssql
 			SQLSetStmtAttr(*_statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
 		}
 		ret = SQLExecDirect(*_statement, sql_str, SQL_NTS);
+		
 		if (polling_mode)
 		{
 			ret = poll_check(ret, true);
@@ -633,7 +675,7 @@ namespace mssql
 		if (_prepared)
 		{
 			auto& datum = _preparedStorage->atIndex(column);
-			auto storage = datum.get_storage();
+			auto storage = datum->get_storage();
 			resultset->SetColumn(make_shared<TimestampColumn>(storage));
 			return true;
 		}
@@ -664,7 +706,7 @@ namespace mssql
 		if (_prepared)
 		{
 			auto& datum = _preparedStorage->atIndex(column);
-			auto storage = datum.get_storage();
+			auto storage = datum->get_storage();
 			resultset->SetColumn(make_shared<TimestampColumn>(storage, _query->query_tz_adjustment()));
 			return true;
 		}
@@ -695,7 +737,7 @@ namespace mssql
 		if (_prepared)
 		{
 			auto& datum = _preparedStorage->atIndex(column);
-			auto storage = datum.get_storage();
+			auto storage = datum->get_storage();
 			resultset->SetColumn(make_shared<IntColumn>(storage));
 			return true;
 		}
@@ -731,7 +773,7 @@ namespace mssql
 		if (_prepared)
 		{
 			auto& datum = _preparedStorage->atIndex(column);
-			auto storage = datum.get_storage();
+			auto storage = datum->get_storage();
 			resultset->SetColumn(make_shared<BoolColumn>(storage));
 			return true;
 		}
@@ -761,7 +803,7 @@ namespace mssql
 		if (_prepared)
 		{
 			auto& datum = _preparedStorage->atIndex(column);
-			auto storage = datum.get_storage();
+			auto storage = datum->get_storage();
 			resultset->SetColumn(make_shared<NumberColumn>(storage));
 			return true;
 		}
@@ -812,8 +854,8 @@ namespace mssql
 		{
 			auto more = false;
 			auto& datum = _preparedStorage->atIndex(column);
-			auto storage = datum.get_storage();
-			auto& ind = datum.get_ind_vec();
+			auto storage = datum->get_storage();
+			auto& ind = datum->get_ind_vec();
 			auto amount = ind[0];
 			resultset->SetColumn(make_shared<BinaryColumn>(storage, amount, more));
 			return true;
@@ -870,11 +912,11 @@ namespace mssql
 	bool OdbcStatement::reserved_string(SQLLEN display_size, int column) const
 	{
 		auto& storage = _preparedStorage->atIndex(column);
-		auto& ind = storage.get_ind_vec();
+		auto& ind = storage->get_ind_vec();
 		const auto size = sizeof(uint16_t);
 		auto value_len = ind[0];
 		value_len /= size;
-		const auto value = make_shared<StringColumn>(storage.get_storage(), value_len);
+		const auto value = make_shared<StringColumn>(storage->get_storage(), value_len);
 		resultset->SetColumn(value);
 		return true;
 	}

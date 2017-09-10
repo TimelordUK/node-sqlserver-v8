@@ -45,15 +45,15 @@ namespace mssql
 
 	string w2a(const wchar_t* input)
 	{
-		vector<char> messageBuffer;
+		vector<char> message_buffer;
 		const auto length = ::WideCharToMultiByte(CP_UTF8, 0, input, -1, nullptr, 0, nullptr, nullptr);
 		if (length > 0)
 		{
 			// length includes null terminator
-			messageBuffer.resize(length);
-			::WideCharToMultiByte(CP_UTF8, 0, input, -1, messageBuffer.data(), static_cast<int>(messageBuffer.size()), nullptr, nullptr);
+			message_buffer.resize(length);
+			::WideCharToMultiByte(CP_UTF8, 0, input, -1, message_buffer.data(), static_cast<int>(message_buffer.size()), nullptr, nullptr);
 		}
-		return string(messageBuffer.data());
+		return string(message_buffer.data());
 	}
 
 	int char2_int(char input)
