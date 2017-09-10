@@ -24,7 +24,6 @@
 #include <NodeColumns.h>
 #include <OdbcHelper.h>
 #include <QueryOperationParams.h>
-#include <set>
 
 namespace mssql
 {
@@ -103,7 +102,27 @@ namespace mssql
 		return true;
 	}
 
-	static wstring www = L"hello";
+	bool OdbcStatement::bind_tvp(vector<tvp_t> &tvps)
+	{
+		const auto & statement = *_statement;
+		for (auto itr = tvps.begin(); itr != tvps.end(); ++itr)
+		{
+			auto tvpret = SQLSetStmtAttr(statement, SQL_SOPT_SS_PARAM_FOCUS,
+				reinterpret_cast<SQLPOINTER>(itr->first), SQL_IS_INTEGER);
+			if (!check_odbc_error(tvpret)) return false;
+			auto current_param = 1;
+			auto col_set = itr->second;
+			for (auto col_itr = col_set->begin(); col_itr != col_set->end(); ++col_itr)
+			{
+				bind_datum(current_param, *col_itr);
+				current_param++;
+			}
+			tvpret = SQLSetStmtAttr(statement, SQL_SOPT_SS_PARAM_FOCUS,
+				static_cast<SQLPOINTER>(nullptr), SQL_IS_INTEGER);
+			if (!check_odbc_error(tvpret)) return false;
+		}
+		return true;
+	}
 
 	bool OdbcStatement::bind_datum(int current_param, shared_ptr<BoundDatum> datum)
 	{
@@ -116,6 +135,19 @@ namespace mssql
 			apply_precision(datum, current_param);
 		}
 		return true;
+	}
+
+	void OdbcStatement::queue_tvp(int current_param, param_bindings::iterator &itr, shared_ptr<BoundDatum> datum, vector <tvp_t> & tvps) const
+	{
+		tvp_t tvp;
+		auto cols = make_shared<BoundDatumSet::param_bindings>();
+		for (auto c = 1; c <= datum->tvp_no_cols; ++c)
+		{
+			++itr;
+			const auto& col_datum = *itr;
+			cols->push_back(col_datum);
+		}
+		tvps.push_back({ current_param, cols });
 	}
 
 	// bind all the parameters in the array
@@ -131,39 +163,19 @@ namespace mssql
 			if (!check_odbc_error(ret)) return false;
 		}
 		auto current_param = 1;
-		auto tvp_col_count = 0;
-		auto parent_param = 1;
-		
+
+		vector <tvp_t> tvps;
 		for (auto itr = ps.begin(); itr != ps.end(); ++itr)
 		{
 			const auto& datum = *itr;
 			bind_datum(current_param, datum);
-
 			if (datum->is_tvp)
 			{
-				const auto tvpret = SQLSetStmtAttr(statement, SQL_SOPT_SS_PARAM_FOCUS,
-					reinterpret_cast<SQLPOINTER>(current_param), SQL_IS_INTEGER);
-				tvp_col_count = datum->tvp_no_cols;
-				if (!check_odbc_error(tvpret)) return false;
-				current_param = 1;
+				queue_tvp(current_param, itr, datum, tvps);
 			}
-			else {
-				++current_param;
-				if (tvp_col_count > 0) {
-					--tvp_col_count;
-					if (tvp_col_count == 0)
-					{
-						current_param = parent_param + 1;
-						const auto tvpret = SQLSetStmtAttr(statement, SQL_SOPT_SS_PARAM_FOCUS,
-							static_cast<SQLPOINTER>(nullptr), SQL_IS_INTEGER);
-						if (!check_odbc_error(tvpret)) return false;
-					}
-				}else
-				{
-					parent_param = current_param;
-				}
-			}
+			++current_param;
 		}
+		bind_tvp(tvps);
 
 		return true;
 	}

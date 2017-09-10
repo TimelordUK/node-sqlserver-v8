@@ -112,8 +112,12 @@ namespace mssql
 		bool lob(SQLLEN display_size, int column);
 		static OdbcEnvironmentHandle environment;
 		bool dispatch(SQLSMALLINT t, int column);
+		typedef vector<shared_ptr<BoundDatum>> param_bindings;
+		typedef pair<int, shared_ptr<param_bindings>> tvp_t;
+		bool bind_tvp(vector<tvp_t> &tvps);
 		bool bind_datum(int current_param, shared_ptr<BoundDatum> datum);
 		bool bind_params(shared_ptr<BoundDatumSet>);
+		void queue_tvp(int current_param, param_bindings::iterator &itr, shared_ptr<BoundDatum> datum, vector <tvp_t> & tvps) const;
 		bool try_read_string(bool binary, int column);
 
 		bool return_odbc_error();
