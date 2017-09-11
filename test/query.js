@@ -140,21 +140,21 @@ suite('query', function () {
         },
 
         function (asyncDone) {
-          sql.queryRaw(connStr, 'SELECT 1', function (e, r) {
+          sql.queryRaw(connStr, 'SELECT 1', function (e) {
             assert.ifError(e)
             asyncDone()
           })
         },
 
         function (asyncDone) {
-          sql.queryRaw(connStr, 'SELECT 1', [], function (e, r) {
+          sql.queryRaw(connStr, 'SELECT 1', [], function (e) {
             assert.ifError(e)
             asyncDone()
           })
         },
 
         function (asyncDone) {
-          sql.queryRaw(connStr, 'SELECT 1', null, function (e, r) {
+          sql.queryRaw(connStr, 'SELECT 1', null, function (e) {
             assert.ifError(e)
             asyncDone()
           })
@@ -165,7 +165,7 @@ suite('query', function () {
           stmt.on('error', function (e) {
             assert.ifError(e)
           })
-          stmt.on('closed', function (e) {
+          stmt.on('closed', function () {
             asyncDone()
           })
         },
@@ -175,7 +175,7 @@ suite('query', function () {
           stmt.on('error', function (e) {
             assert.ifError(e)
           })
-          stmt.on('closed', function (e) {
+          stmt.on('closed', function () {
             asyncDone()
           })
         },
@@ -244,7 +244,7 @@ suite('query', function () {
     var fns = [
       function (asyncDone) {
         assert.doesNotThrow(function () {
-          theConnection.queryRaw('I\'m with NOBODY', function (e, r) {
+          theConnection.queryRaw('I\'m with NOBODY', function (e) {
             assert(e instanceof Error)
             assert.deepEqual(e, expectedError, 'Unexpected error returned')
             asyncDone()
@@ -319,7 +319,7 @@ suite('query', function () {
       assert(idx === currentRow)
       ++currentRow
     })
-    stmt.on('column', function (idx, data, more) {
+    stmt.on('column', function (idx, data) {
       assert(data.substr(0, 3) === 'var')
     })
     stmt.on('done', function () {
@@ -393,7 +393,7 @@ suite('query', function () {
 
       function (asyncDone) {
         assert.doesNotThrow(function () {
-          theConnection.queryRaw('I\'m with NOBODY', function (e, r) {
+          theConnection.queryRaw('I\'m with NOBODY', function (e) {
             assert(e instanceof Error)
             assert.deepEqual(e, expectedError, 'Unexpected error returned')
             asyncDone()
@@ -523,7 +523,7 @@ suite('query', function () {
   test('verify empty results retrieved properly', function (testDone) {
     var fns = [
       function (asyncDone) {
-        theConnection.queryRaw('drop table test_sql_no_data', function (err) {
+        theConnection.queryRaw('drop table test_sql_no_data', function () {
           asyncDone()
         })
       },
@@ -558,7 +558,7 @@ suite('query', function () {
 
     var fns = [
       function (asyncDone) {
-        theConnection.queryRaw('DROP TABLE null_in_string_test', function (e) {
+        theConnection.queryRaw('DROP TABLE null_in_string_test', function () {
           asyncDone()
         })
       },
@@ -578,7 +578,7 @@ suite('query', function () {
       },
       function (asyncDone) {
         theConnection.queryRaw('INSERT INTO null_in_string_test (null_in_string) VALUES (?)', [embeddedNull],
-          function (e, r) {
+          function (e) {
             assert.ifError(e)
             asyncDone()
           })
@@ -587,7 +587,7 @@ suite('query', function () {
       function (asyncDone) {
         theConnection.queryRaw('SELECT null_in_string FROM null_in_string_test', function (e, r) {
           assert.ifError(e)
-          assert(r.rows[0] == embeddedNull)
+          assert(r.rows[0][0] === embeddedNull)
           asyncDone()
         })
       }
@@ -599,13 +599,13 @@ suite('query', function () {
   })
 
   test('test retrieving a non-LOB string of max size', function (testDone) {
-    String.prototype.repeat = function (num) {
-      return new Array(num + 1).join(this)
+    function repeat (c, num) {
+      return new Array(num + 1).join(c)
     }
 
     theConnection.query('SELECT REPLICATE(\'A\', 8000) AS \'NONLOB String\'', function (e, r) {
       assert.ifError(e)
-      assert(r[0]['NONLOB String'] === 'A'.repeat(8000))
+      assert(r[0]['NONLOB String'] === repeat('A', 8000))
       testDone()
     })
   })
@@ -646,7 +646,7 @@ suite('query', function () {
     // the database not existing
     var badConnection = connStr.replace('Database={' + database + '}', 'Database={DNE}')
 
-    sql.query(badConnection, 'SELECT 1 as X', function (err, results) {
+    sql.query(badConnection, 'SELECT 1 as X', function (err) {
       // verify we get the expected error when the login fails
       assert.ok(err.message.indexOf('Login failed for user') > 0)
       assert.equal(err.sqlstate, 28000)
@@ -746,21 +746,21 @@ suite('query', function () {
       },
 
       function (asyncDone) {
-        sql.queryRaw(connStr, 'SELECT 1', function (e, r) {
+        sql.queryRaw(connStr, 'SELECT 1', function (e) {
           assert.ifError(e)
           asyncDone()
         })
       },
 
       function (asyncDone) {
-        sql.queryRaw(connStr, 'SELECT 1', [], function (e, r) {
+        sql.queryRaw(connStr, 'SELECT 1', [], function (e) {
           assert.ifError(e)
           asyncDone()
         })
       },
 
       function (asyncDone) {
-        sql.queryRaw(connStr, 'SELECT 1', null, function (e, r) {
+        sql.queryRaw(connStr, 'SELECT 1', null, function (e) {
           assert.ifError(e)
           asyncDone()
         })
@@ -847,25 +847,25 @@ suite('query', function () {
     var fns = [
 
       function (asyncDone) {
-        theConnection.query('DROP TABLE spatial_test', function (e, r) {
+        theConnection.query('DROP TABLE spatial_test', function () {
           asyncDone()
         })
       },
       function (asyncDone) {
-        theConnection.query('CREATE TABLE spatial_test ( id int IDENTITY (1,1), GeogCol1 geography, GeogCol2 AS GeogCol1.STAsText() )', function (e, r) {
+        theConnection.query('CREATE TABLE spatial_test ( id int IDENTITY (1,1), GeogCol1 geography, GeogCol2 AS GeogCol1.STAsText() )', function (e) {
           assert.ifError(e)
           asyncDone()
         })
       },
       function (asyncDone) {
         theConnection.query('INSERT INTO spatial_test (GeogCol1) VALUES (geography::STGeomFromText(\'LINESTRING(-122.360 47.656, -122.343 47.656 )\', 4326))',
-          function (e, r) {
+          function (e) {
             assert.ifError(e)
             asyncDone()
           })
       },
       function (asyncDone) {
-        theConnection.query('INSERT INTO spatial_test (GeogCol1) VALUES (geography::STGeomFromText(\'POLYGON((-122.358 47.653 , -122.348 47.649, -122.348 47.658, -122.358 47.658, -122.358 47.653))\', 4326))', function (e, r) {
+        theConnection.query('INSERT INTO spatial_test (GeogCol1) VALUES (geography::STGeomFromText(\'POLYGON((-122.358 47.653 , -122.348 47.649, -122.348 47.658, -122.358 47.658, -122.358 47.653))\', 4326))', function (e) {
           assert.ifError(e)
           asyncDone()
         })
