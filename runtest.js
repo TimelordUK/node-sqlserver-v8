@@ -1,55 +1,53 @@
-var Mocha = require('mocha');
-var demo = require('./demo-support');
-var sql = require('msnodesqlv8');
+var Mocha = require('mocha')
+var sql = require('msnodesqlv8')
 
-runTest();
+runTest()
 
-function runTest() {
-    var argv = require('minimist')(process.argv.slice(2));
-    console.log(argv);
+function runTest () {
+  var argv = require('minimist')(process.argv.slice(2))
+  console.log(argv)
 
-    var toRun;
-    if (argv.hasOwnProperty('t')) {
-        toRun = argv['t'];
-    }
+  var toRun
+  if (argv.hasOwnProperty('t')) {
+    toRun = argv['t']
+  }
 
-    if (!Array.isArray(toRun)) {
-        toRun = [toRun];
-    }
+  if (!Array.isArray(toRun)) {
+    toRun = [toRun]
+  }
 
-    run(toRun, function(e) {
-        console.log(e);
-        process.exit(e);
-    });
+  run(toRun, function (e) {
+    console.log(e)
+    process.exit(e)
+  })
 
-    function run(files, done) {
+  function run (files, done) {
+    var mocha = new Mocha(
+      {
+        ui: 'tdd'
+      }
+    )
 
-        var mocha = new Mocha(
-            {
-                ui : 'tdd'
-            }
-        );
+    mocha.suite.on('pre-require', function (g) {
+      g.native_sql = sql
+    })
 
-        mocha.suite.on('pre-require', function(g, b, c) {
-            g.native_sql = sql;
-        });
+    mocha.suite.on('require', function (a, b, c) {
 
-        mocha.suite.on('require', function(a, b, c) {
+    })
 
-        });
+    files.forEach(function (f) {
+      mocha.addFile('test/' + f)
+    })
 
-        files.forEach(function(f) {
-            mocha.addFile('test/' + f);
-        });
+    mocha.run(function (failures) {
+      process.on('uncaughtException', function (err) {
+        console.log(err)
+      })
 
-        mocha.run(function (failures) {
-            process.on('uncaughtException', function (err) {
-                console.log(err);
-            });
-
-            process.on('exit', function () {
-                done(failures);
-            });
-        });
-    }
+      process.on('exit', function () {
+        done(failures)
+      })
+    })
+  }
 }
