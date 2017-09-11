@@ -316,14 +316,21 @@ suite('params', function () {
     var sequence = [
       function (asyncDone) {
         theConnection.queryRaw('INSERT INTO invalid_numbers_test (f) VALUES (?)', [Number.POSITIVE_INFINITY], function (e) {
-          assert(e == 'Error: IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
+          var expectedError = new Error('Error: IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
+          expectedError.code = -1
+          expectedError.sqlstate = 'IMNOD'
+          assert.deepEqual(e, expectedError)
           asyncDone()
         })
       },
 
       function (asyncDone) {
         theConnection.queryRaw('INSERT INTO invalid_numbers_test (f) VALUES (?)', [Number.NEGATIVE_INFINITY], function (e) {
-          assert(e == 'Error: IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
+          var expectedError = new Error('Error: IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
+          expectedError.code = -1
+          expectedError.sqlstate = 'IMNOD'
+
+          assert.deepEqual(e, expectedError)
           asyncDone()
         })
       }
@@ -905,8 +912,11 @@ suite('params', function () {
     testBoilerPlate('non_buffer_object',
       {'object_col': 'varbinary(100)'},
       function (asyncDone) {
-        theConnection.queryRaw('INSERT INTO non_buffer_object (object_col) VALUES (?)', [o], function (e, r) {
-          assert(e == 'Error: IMNOD: [msnodesql] Parameter 1: Invalid parameter type')
+        theConnection.queryRaw('INSERT INTO non_buffer_object (object_col) VALUES (?)', [o], function (e) {
+          var expectedError = new Error('IMNOD: [msnodesql] Parameter 1: Invalid parameter type')
+          expectedError.code = -1
+          expectedError.sqlstate = 'IMNOD'
+          assert.deepEqual(e, expectedError)
           asyncDone()
         })
       },
