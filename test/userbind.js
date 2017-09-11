@@ -1,29 +1,28 @@
-var assert = require('assert'),
-  supp = require('../demo-support'),
-  fs = require('fs')
+/* global suite teardown teardown test setup */
+'use strict'
+
+var assert = require('assert')
+var supp = require('../demo-support')
 
 suite('userbind', function () {
-
   var theConnection
   this.timeout(20000)
-  var conn_str
-  var support
+  var connStr
   var async
   var helper
 
   var sql = global.native_sql
 
-  setup(function (test_done) {
+  setup(function (testDone) {
     supp.GlobalConn.init(sql, function (co) {
-      conn_str = co.conn_str
-      support = co.support
+      connStr = co.conn_str
       async = co.async
       helper = co.helper
       helper.setVerbose(false)
-      sql.open(conn_str, function (err, new_conn) {
+      sql.open(connStr, function (err, newConn) {
         assert.ifError(err)
-        theConnection = new_conn
-        test_done()
+        theConnection = newConn
+        testDone()
       })
     })
   })
@@ -38,14 +37,12 @@ suite('userbind', function () {
     var allres = []
     var skip = false
     var error = null
-    var results = null
 
     var sequence = [
 
       function (asyncDone) {
         theConnection.query(params.query, [params.setter(params.min)], function (err, res) {
           error = err
-          results = res
           if (err) {
             skip = true
             asyncDone()
@@ -63,7 +60,6 @@ suite('userbind', function () {
         }
         theConnection.query(params.query, [params.setter(params.max)], function (err, res) {
           error = err
-          results = res
           if (err) {
             skip = true
             asyncDone()
@@ -86,7 +82,6 @@ suite('userbind', function () {
         } else {
           theConnection.query(params.query, [params.setter(null)], function (err, res) {
             error = err
-            results = res
             if (err) {
               error = err
               asyncDone()
@@ -106,8 +101,8 @@ suite('userbind', function () {
   }
 
   function compare (params, res) {
-    var min = params.expected != null ? params.expected[0] : params.min
-    var max = params.expected != null ? params.expected[1] : params.max
+    var min = params.expected ? params.expected[0] : params.min
+    var max = params.expected ? params.expected[1] : params.max
     var expected = [
       {v: min},
       {v: max}
@@ -127,7 +122,7 @@ suite('userbind', function () {
     assert.deepEqual(res, expected)
   }
 
-  test('user bind DateTime2 to sql type datetime2(7) - with scale set too low, should error', function (test_done) {
+  test('user bind DateTime2 to sql type datetime2(7) - with scale set too low, should error', function (testDone) {
     var jsonDate = '2011-05-26T07:56:00.123Z'
     var then = new Date(jsonDate)
     var params = {
@@ -138,13 +133,13 @@ suite('userbind', function () {
         return sql.DateTime2(v, 1) // set scale too low
       }
     }
-    testUserBind(params, function (err, res) {
+    testUserBind(params, function (err) {
       assert.ok(err.message.indexOf('Fractional second precision exceeds the scale specified') > 0)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind WLongVarChar to NVARCHAR(MAX)', function (test_done) {
+  test('user bind WLongVarChar to NVARCHAR(MAX)', function (testDone) {
     String.prototype.repeat = function (num) {
       return new Array(num + 1).join(this)
     }
@@ -163,11 +158,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind DateTimeOffset to sql type DateTimeOffset - provide offset of 60 minutes', function (test_done) {
+  test('user bind DateTimeOffset to sql type DateTimeOffset - provide offset of 60 minutes', function (testDone) {
     var offset = 60
     var scale = 7
     var now = new Date()
@@ -196,11 +191,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind DateTimeOffset to sql type DateTimeOffset - no offset ', function (test_done) {
+  test('user bind DateTimeOffset to sql type DateTimeOffset - no offset ', function (testDone) {
     var now = new Date()
     var smalldt = new Date(Date.UTC(now.getUTCFullYear(),
       now.getUTCMonth(),
@@ -220,11 +215,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind SmallDateTime to sql type smalldatetime', function (test_done) {
+  test('user bind SmallDateTime to sql type smalldatetime', function (testDone) {
     var now = new Date()
     var smalldt = new Date(Date.UTC(now.getUTCFullYear(),
       now.getUTCMonth(),
@@ -244,11 +239,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind DateTime2 to sql type datetime2(7) default scale', function (test_done) {
+  test('user bind DateTime2 to sql type datetime2(7) default scale', function (testDone) {
     var now = new Date()
     var params = {
       query: 'declare @v DATETIME2(7) = ?; select @v as v',
@@ -261,11 +256,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind DateTime2 to sql type datetime2(7) - with scale set correctly, should pass', function (test_done) {
+  test('user bind DateTime2 to sql type datetime2(7) - with scale set correctly, should pass', function (testDone) {
     var now = new Date()
     var params = {
       query: 'declare @v DATETIME2(7) = ?; select @v as v',
@@ -278,11 +273,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind DateTime2 to sql type datetime2(7) - with scale set to illegal value, should error', function (test_done) {
+  test('user bind DateTime2 to sql type datetime2(7) - with scale set to illegal value, should error', function (testDone) {
     var now = new Date()
     var params = {
       query: 'declare @v DATETIME2(7) = ?; select @v as v',
@@ -292,13 +287,13 @@ suite('userbind', function () {
         return sql.DateTime2(v, 8) // set scale illegal
       }
     }
-    testUserBind(params, function (err, res) {
-      assert(err.message != null)
-      test_done()
+    testUserBind(params, function (err) {
+      assert(err)
+      testDone()
     })
   })
 
-  test('user bind DateTime to sql type datetime2(7)', function (test_done) {
+  test('user bind DateTime to sql type datetime2(7)', function (testDone) {
     var now = new Date()
     var params = {
       query: 'declare @v DATETIME2(7) = ?; select @v as v',
@@ -311,11 +306,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind DateTime to sql type datetime - driver currently only supports 10ms accuracy with datetime', function (test_done) {
+  test('user bind DateTime to sql type datetime - driver currently only supports 10ms accuracy with datetime', function (testDone) {
     var now = sql.DateRound()
     var params = {
       query: 'declare @v DATETIME2(7) = ?; select @v as v',
@@ -328,11 +323,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind UniqueIdentifier', function (test_done) {
+  test('user bind UniqueIdentifier', function (testDone) {
     var params = {
       query: 'declare @v uniqueidentifier = ?; select @v as v',
       min: 'F01251E5-96A3-448D-981E-0F99D789110D',
@@ -344,11 +339,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind Time', function (test_done) {
+  test('user bind Time', function (testDone) {
     var today = new Date()
     var timeOnly = new Date(Date.UTC(1900,
       0,
@@ -372,11 +367,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind Date', function (test_done) {
+  test('user bind Date', function (testDone) {
     var today = new Date()
     var dateOnly = new Date(Date.UTC(today.getUTCFullYear(),
       today.getUTCMonth(),
@@ -400,11 +395,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind Xml - well formatted.', function (test_done) {
+  test('user bind Xml - well formatted.', function (testDone) {
     var params = {
       query: 'declare @v xml = ?; select @v as v',
       min: '<Cars><Car id="1234"><Make>Volkswagen</Make><Model>Eurovan</Model><Year>2003</Year><Color>White</Color></Car></Cars>',
@@ -416,11 +411,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind Xml - bad xml should give error', function (test_done) {
+  test('user bind Xml - bad xml should give error', function (testDone) {
     var params = {
       query: 'declare @v xml = ?; select @v as v',
       min: '',
@@ -429,13 +424,13 @@ suite('userbind', function () {
         return sql.Xml(v)
       }
     }
-    testUserBind(params, function (err, res) {
+    testUserBind(params, function (err) {
       assert.ok(err.message.indexOf('end tag does not match start tag') > 0)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind nchar - check truncated user strings (1)', function (test_done) {
+  test('user bind nchar - check truncated user strings (1)', function (testDone) {
     var params = {
       query: 'declare @v nchar(5) = ?; select @v as v',
       min: 'five',
@@ -452,11 +447,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind Char - check truncated user strings (1)', function (test_done) {
+  test('user bind Char - check truncated user strings (1)', function (testDone) {
     var params = {
       query: 'declare @v char(5) = ?; select @v as v',
       min: 'five',
@@ -472,11 +467,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind Char - returned string will be padded (2)', function (test_done) {
+  test('user bind Char - returned string will be padded (2)', function (testDone) {
     var params = {
       query: 'declare @v char(5) = ?; select @v as v',
       min: 'h',
@@ -492,11 +487,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind Char - use precision to clip user string (3)', function (test_done) {
+  test('user bind Char - use precision to clip user string (3)', function (testDone) {
     var params = {
       query: 'declare @v char(11) = ?; select @v as v',
       min: 'h',
@@ -512,11 +507,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind NVarChar /16 bit encoded', function (test_done) {
+  test('user bind NVarChar /16 bit encoded', function (testDone) {
     var params = {
       query: 'declare @v varchar(100) = ?; select @v as v',
       min: 'hello',
@@ -532,11 +527,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind Float, maps to numeric data structure.', function (test_done) {
+  test('user bind Float, maps to numeric data structure.', function (testDone) {
     var params = {
       query: 'declare @v float = ?; select @v as v',
       min: -1.7976931348623158E+308,
@@ -548,11 +543,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind Double, maps to numeric data structure.', function (test_done) {
+  test('user bind Double, maps to numeric data structure.', function (testDone) {
     var params = {
       query: 'declare @v float = ?; select @v as v',
       min: -1.7976931348623158E+308,
@@ -564,11 +559,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind Bit', function (test_done) {
+  test('user bind Bit', function (testDone) {
     var params = {
       query: 'declare @v bit = ?; select @v as v',
       min: false,
@@ -580,11 +575,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind BigInt', function (test_done) {
+  test('user bind BigInt', function (testDone) {
     var params = {
       query: 'declare @v bigint = ?; select @v as v',
       min: -9007199254740991,
@@ -596,11 +591,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind Int', function (test_done) {
+  test('user bind Int', function (testDone) {
     var params = {
       query: 'declare @v int = ?; select @v as v',
       min: -2147483648,
@@ -612,11 +607,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind TinyInt', function (test_done) {
+  test('user bind TinyInt', function (testDone) {
     var params = {
       query: 'declare @v tinyint = ?; select @v as v',
       min: 0,
@@ -628,11 +623,11 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 
-  test('user bind SmallInt', function (test_done) {
+  test('user bind SmallInt', function (testDone) {
     var params = {
       query: 'declare @v smallint = ?; select @v as v',
       min: -32768,
@@ -644,7 +639,7 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      test_done()
+      testDone()
     })
   })
 })
