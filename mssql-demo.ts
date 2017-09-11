@@ -133,7 +133,7 @@ function event(done: Function): void {
                 console.log('event: column = ' + col);
             });
 
-            q.on('submitted', (q: string, params:any[]) => {
+            q.on('submitted', (q: string) => {
                 console.log('event: submitted query = ' + JSON.stringify(q));
             });
 
@@ -693,9 +693,9 @@ function table(done: Function) {
             let summary = bm.getSummary();
             let s = JSON.stringify(summary, null, 2);
             console.log(s);
-            console.log(summary.select_signature);
+            console.log(summary.selectSignature);
             console.log("prepare the above statement.");
-            let select: string = summary.select_signature;
+            let select: string = summary.selectSignature;
             conn.prepare(select, (err: v8Error, ps: v8PreparedStatement) => {
                 Assert.ifError(err);
                 ps.preparedQuery([1], (err, res) => {
@@ -806,7 +806,7 @@ function cancel(done: Function): void {
                 },
 
                 function (async_done:Function) {
-                    let q:v8Query = prepared.preparedQuery(['00:00:20'], (err:v8Error, d:any) => {
+                    let q:v8Query = prepared.preparedQuery(['00:00:20'], (err:v8Error) => {
                         Assert.check(err.message.indexOf('Operation canceled') > 0);
                         async_done();
                     });

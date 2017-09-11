@@ -290,9 +290,9 @@ namespace mssql
 		buffer = itr_p;
 		str->WriteUtf8(itr_p, precision);
 		itr_p[precision] = 0;
-		buffer_len = 1;
-		param_size = 1;
-		indvec[0] = 1;
+		buffer_len = 1; // note *not* number of chars of table.
+		param_size = 1; // max no of rows.
+		indvec[0] = 1; // no of rows.
 		digits = 0;
 	}
 

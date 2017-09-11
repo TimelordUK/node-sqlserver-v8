@@ -160,12 +160,12 @@ export module MsNodeSqlDriverApiModule {
     }
 
     export interface v8BulkMgrSummary {
-        insert_signature: string
-        where_columns: v8TableColumn[]
-        update_columns: v8TableColumn[]
-        select_signature: string
-        delete_signature: string
-        update_signature: string
+        insertSignature: string
+        whereColumns: v8TableColumn[]
+        updateColumns: v8TableColumn[]
+        selectSignature: string
+        deleteSignature: string
+        updateSignature: string
         columns: v8TableColumn[]
     }
 

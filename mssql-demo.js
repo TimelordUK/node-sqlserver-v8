@@ -64,7 +64,7 @@ function event(done) {
             q.on('column', (col) => {
                 console.log('event: column = ' + col);
             });
-            q.on('submitted', (q, params) => {
+            q.on('submitted', (q) => {
                 console.log('event: submitted query = ' + JSON.stringify(q));
             });
             q.on('rowcount', (count) => {
@@ -529,9 +529,9 @@ function table(done) {
             let summary = bm.getSummary();
             let s = JSON.stringify(summary, null, 2);
             console.log(s);
-            console.log(summary.select_signature);
+            console.log(summary.selectSignature);
             console.log("prepare the above statement.");
-            let select = summary.select_signature;
+            let select = summary.selectSignature;
             conn.prepare(select, (err, ps) => {
                 Assert.ifError(err);
                 ps.preparedQuery([1], (err, res) => {
@@ -625,7 +625,7 @@ function cancel(done) {
                     });
                 },
                 function (async_done) {
-                    let q = prepared.preparedQuery(['00:00:20'], (err, d) => {
+                    let q = prepared.preparedQuery(['00:00:20'], (err) => {
                         Assert.check(err.message.indexOf('Operation canceled') > 0);
                         async_done();
                     });

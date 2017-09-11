@@ -64,10 +64,10 @@ var GlobalConn = (function () {
     })
   }
 
-  function init (sql, done, candidate_conn_str) {
+  function init (sql, done, candidateConnStr) {
     var ds = new DemoSupport()
 
-    if (candidate_conn_str == null) {
+    if (!candidateConnStr) {
       getLocalConnStr(function (cs) {
         var ret = {
           driver: driver,
@@ -75,7 +75,7 @@ var GlobalConn = (function () {
           conn_str: cs,
           support: new DemoSupport(sql, cs),
           async: new ds.Async(),
-          helper: new ds.EmployeeHelper(sql, cs),
+          helper: new ds.EmployeeHelper(sql, cs)
         }
         done(ret)
       })
@@ -83,10 +83,10 @@ var GlobalConn = (function () {
       var ret = {
         driver: driver,
         database: database,
-        conn_str: candidate_conn_str,
-        support: new DemoSupport(sql, candidate_conn_str),
+        conn_str: candidateConnStr,
+        support: new DemoSupport(sql, candidateConnStr),
         async: new ds.Async(),
-        helper: new ds.EmployeeHelper(sql, candidate_conn_str),
+        helper: new ds.EmployeeHelper(sql, candidateConnStr)
       }
       done(ret)
     }
@@ -103,7 +103,6 @@ var GlobalConn = (function () {
 })()
 
 function DemoSupport (native) {
-
   var sql = native
 
   function Assert () {
@@ -155,24 +154,23 @@ function DemoSupport (native) {
     var verbose = true
 
     function createProcedure (procedureName, procedureSql, doneFunction) {
-
       procedureSql = procedureSql.replace(/<name>/g, procedureName)
 
       var sequence = [
-        function (async_done) {
+        function (asyncDone) {
           var createSql = 'IF NOT EXISTS (SELECT *  FROM sys.objects WHERE type = \'P\' AND name = \'' + procedureName + '\')'
           createSql += ' EXEC (\'CREATE PROCEDURE ' + procedureName + ' AS BEGIN SET nocount ON; END\')'
           if (verbose) console.log(createSql)
           sql.query(conn_str, createSql, function () {
-            async_done()
+            asyncDone()
           })
         },
 
-        function (async_done) {
+        function (asyncDone) {
           sql.query(conn_str, procedureSql,
             function (e) {
               assert.ifError(e, 'Error creating procedure.')
-              async_done()
+              asyncDone()
             })
         }
       ]
@@ -192,7 +190,6 @@ function DemoSupport (native) {
   }
 
   function EmployeeHelper (native, cstr) {
-
     var conn_str = cstr
     var sql = native
     var verbose = true
@@ -212,7 +209,6 @@ function DemoSupport (native) {
     }
 
     function dropCreateTable (params, doneFunction) {
-
       var async = new Async()
       var name = params.name
       var type = params.type
@@ -236,23 +232,23 @@ function DemoSupport (native) {
 
       var sequence = [
 
-        function (async_done) {
-          sql.open(conn_str, function (err, new_con) {
+        function (asyncDone) {
+          sql.open(conn_str, function (err, newConn) {
             assert.ifError(err)
-            conn = new_con
-            async_done()
+            conn = newConn
+            asyncDone()
           })
         },
 
-        function (async_done) {
+        function (asyncDone) {
           var dropSql = 'DROP TABLE ' + name
           if (verbose) console.log(dropSql)
           conn.query(dropSql, function () {
-            async_done()
+            asyncDone()
           })
         },
 
-        function (async_done) {
+        function (asyncDone) {
           var folder = __dirname + '/test'
           var file = folder + '/sql/' + name
           file += '.sql'
@@ -271,8 +267,7 @@ function DemoSupport (native) {
                 conn.query(arr[i], function (err, res) {
                   next(err, res)
                 })
-              }
-              else {
+              } else {
                 callback()
               }
             }
@@ -287,20 +282,20 @@ function DemoSupport (native) {
               arr[i] = arr[i].replace(/^\s+|\s+$/g, '')
             }
             inChunks(arr, function () {
-              async_done()
+              asyncDone()
             })
           })
         },
 
-        function (async_done) {
+        function (asyncDone) {
           if (!insert) {
-            async_done()
+            asyncDone()
           }
         },
 
-        function (async_done) {
+        function (asyncDone) {
           conn.close(function () {
-            async_done()
+            asyncDone()
           })
         }
       ]
@@ -318,7 +313,7 @@ function DemoSupport (native) {
       var parsedJSON = JSON.parse(fs.readFileSync(folder + '/employee.json', 'utf8'))
 
       for (var i = 0; i < parsedJSON.length; ++i) {
-        parsedJSON[i].OrganizationNode = new Buffer(parsedJSON[i].OrganizationNode.data, 'utf8')
+        parsedJSON[i].OrganizationNode = Buffer.from(parsedJSON[i].OrganizationNode.data, 'utf8')
         parsedJSON[i].BirthDate = new Date(parsedJSON[i].BirthDate)
         parsedJSON[i].HireDate = new Date(parsedJSON[i].HireDate)
         parsedJSON[i].ModifiedDate = new Date(parsedJSON[i].ModifiedDate)
