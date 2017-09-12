@@ -17,32 +17,34 @@
 // limitations under the License.
 //  ---------------------------------------------------------------------------------------------------------------------------------
 
+/* global suite teardown teardown test setup */
+
+'use strict'
+
 var assert = require('assert')
 var supp = require('../demo-support')
 
 suite('txn', function () {
   var theConnection
   this.timeout(20000)
-  var conn_str
-  var support
+  var connStr
   var async
   var helper
   var driver
 
   var sql = global.native_sql
 
-  setup(function (test_done) {
+  setup(function (testDone) {
     supp.GlobalConn.init(sql, function (co) {
-      conn_str = co.conn_str
+      connStr = co.conn_str
       driver = co.driver
-      support = co.support
       async = co.async
       helper = co.helper
       helper.setVerbose(false)
-      sql.open(conn_str, function (err, new_conn) {
+      sql.open(connStr, function (err, newConn) {
         assert.ifError(err)
-        theConnection = new_conn
-        test_done()
+        theConnection = newConn
+        testDone()
       })
     })
   })
@@ -53,14 +55,14 @@ suite('txn', function () {
     })
   })
 
-  test('setup for tests', function (test_done) {
+  test('setup for tests', function (testDone) {
     // single setup necessary for the test
 
     var fns = [
 
       function (asyncDone) {
         try {
-          var q = sql.query(conn_str, 'drop table test_txn', function (err, results) {
+          sql.query(connStr, 'drop table test_txn', function () {
             asyncDone()
           })
         } catch (e) {
@@ -68,8 +70,7 @@ suite('txn', function () {
         }
       },
       function (asyncDone) {
-        sql.query(conn_str, 'create table test_txn (id int identity, name varchar(100))', function (err, results) {
-
+        sql.query(connStr, 'create table test_txn (id int identity, name varchar(100))', function (err) {
           assert.ifError(err)
           asyncDone()
         })
@@ -83,7 +84,7 @@ suite('txn', function () {
     ]
 
     async.series(fns, function () {
-      test_done()
+      testDone()
     })
   })
 
@@ -107,7 +108,7 @@ suite('txn', function () {
     }
   })
 
-  test('begin a transaction and commit', function (test_done) {
+  test('begin a transaction and commit', function (testDone) {
     var fns = [
 
       function (asyncDone) {
@@ -160,11 +161,11 @@ suite('txn', function () {
       }
     ]
     async.series(fns, function () {
-      test_done()
+      testDone()
     })
   })
 
-  test('begin a transaction and rollback', function (test_done) {
+  test('begin a transaction and rollback', function (testDone) {
     var fns = [
 
       function (asyncDone) {
@@ -217,14 +218,12 @@ suite('txn', function () {
     ]
 
     async.series(fns, function () {
-      test_done()
+      testDone()
     })
   })
 
-  test('begin a transaction and then query with an error', function (test_done) {
-
+  test('begin a transaction and then query with an error', function (testDone) {
     var fns = [
-
       function (asyncDone) {
         theConnection.beginTransaction(function (err) {
           assert.ifError(err)
@@ -236,7 +235,6 @@ suite('txn', function () {
         var q = theConnection.queryRaw('INSERT INTO test_txn (naem) VALUES (\'Carl\')')
         // events are emitted before callbacks are called currently
         q.on('error', function (err) {
-
           var expected = new Error('[Microsoft][' + driver + '][SQL Server]Unclosed quotation mark after the character string \'m with STUPID\'.')
           expected.sqlstate = '42S22'
           expected.code = 207
@@ -275,21 +273,20 @@ suite('txn', function () {
     ]
 
     async.series(fns, function () {
-      test_done()
+      testDone()
     })
   })
 
-  test('begin a transaction and commit (with no async support)', function (test_done) {
-
+  test('begin a transaction and commit (with no async support)', function (testDone) {
     theConnection.beginTransaction(function (err) {
       assert.ifError(err)
     })
 
-    theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Anne\')', function (err, results) {
+    theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Anne\')', function (err) {
       assert.ifError(err)
     })
 
-    theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Bob\')', function (err, results) {
+    theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Bob\')', function (err) {
       assert.ifError(err)
     })
 
@@ -302,16 +299,18 @@ suite('txn', function () {
 
       // verify results
       var expected = {
-        'meta':
-          [{'name': 'id', 'size': 10, 'nullable': false, 'type': 'number', sqlType: 'int identity'},
-            {'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar'}],
-        'rows': [[1, 'Anne'], [2, 'Bob'], [5, 'Anne'], [6, 'Bob']]
+        'meta': [
+          {'name': 'id', 'size': 10, 'nullable': false, 'type': 'number', sqlType: 'int identity'},
+          {'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar'}
+        ],
+        'rows': [
+          [1, 'Anne'], [2, 'Bob'], [5, 'Anne'], [6, 'Bob']
+        ]
       }
 
       assert.deepEqual(results, expected, 'Transaction not committed properly')
 
-      test_done()
+      testDone()
     })
   })
 })
-
