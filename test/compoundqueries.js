@@ -30,6 +30,7 @@ suite('compoundqueries', function () {
   var testname = 'not set yet'
   var connStr
   var async
+  var driver
   var helper
   var sql = global.native_sql
 
@@ -40,6 +41,7 @@ suite('compoundqueries', function () {
       connStr = co.conn_str
       helper = co.helper
       async = co.async
+      driver = co.driver
       helper.setVerbose(false)
       sql.open(connStr, function (err, newConn) {
         assert.ifError(err)
@@ -355,49 +357,19 @@ suite('compoundqueries', function () {
       done()
     })  // end of async.series()
   }) // end of test()
-/*
+
   testname = 'test 004 - batched query: SELECT....; INSERT (invalid...should fail) ....; SELECT....;'
   test(testname, function (done) {
     var invalidtablename = 'invalid' + tablename
     var testcolumnsize = 100
     var testcolumntype = ' varchar(' + testcolumnsize + ')'
-    var testcolumnclienttype = 'text'
-    var testcolumnsqltype = 'varchar'
     var testcolumnname = 'col2'
     var testdata1 = null
     var testdata2Expected = 'string data row 2'
     var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
     var tsql = 'SELECT * FROM ' + tablename + ' ORDER BY id;  INSERT INTO ' + invalidtablename + ' (' + testcolumnname + ') VALUES (' + testdata1 + ');SELECT * FROM ' + tablename + ' ORDER BY id;'
 
-    var expected1 = {
-      meta:
-        [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
-          {
-            name: testcolumnname,
-            size: testcolumnsize,
-            nullable: true,
-            type: testcolumnclienttype,
-            sqlType: testcolumnsqltype
-          }],
-      rows:
-        [[1, null],
-          [2, testdata2Expected]]
-    }
-
-    var expected2 = {
-      meta:
-        [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
-          {
-            name: testcolumnname,
-            size: testcolumnsize,
-            nullable: true,
-            type: testcolumnclienttype,
-            sqlType: testcolumnsqltype
-          }],
-      rows:
-        []
-    }
-    var expectedError = new Error('[Microsoft][' + config.driver + '][SQL Server]Invalid object name \'' + invalidtablename + '\'.')
+    var expectedError = new Error('[Microsoft][' + driver + '][SQL Server]Invalid object name \'' + invalidtablename + '\'.')
     expectedError.sqlstate = '42S02'
     expectedError.code = 208
 
@@ -429,5 +401,4 @@ suite('compoundqueries', function () {
       done()
     })  // end of async.series()
   }) // end of test()
-*/
 })

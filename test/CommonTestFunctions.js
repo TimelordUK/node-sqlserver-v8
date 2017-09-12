@@ -70,7 +70,7 @@ function createTable (Connection, TableName, ColumnName, TestType, done) {
       var tsql = 'if exists (SELECT * FROM sys.tables WHERE name = \'' + TableName + '\') DROP TABLE ' + TableName
       debugComments('\ntest note createTable1_CommonTestFunctions.js ... executing: \n' + tsql)
       // console.log(tsql);
-      Connection.queryRaw(tsql, function (e, r) {
+      Connection.queryRaw(tsql, function (e) {
         // console.log("....createTable run 1");
         assert.ifError(e)
         asyncDone()
@@ -81,7 +81,7 @@ function createTable (Connection, TableName, ColumnName, TestType, done) {
       var tsql = 'CREATE TABLE ' + TableName + ' (id int identity, ' + ColumnName + ' ' + TestType + ')'
       debugComments('\ntest note createTable2_CommonTestFunctions.js ... executing: \n' + tsql)
       // console.log(tsql);
-      Connection.queryRaw(tsql, function (e, r) {
+      Connection.queryRaw(tsql, function (e) {
         // console.log("....createTable run 2");
         assert.ifError(e)
         asyncDone()
@@ -91,7 +91,7 @@ function createTable (Connection, TableName, ColumnName, TestType, done) {
       // console.log("in item 3");
       var tsql = 'CREATE CLUSTERED INDEX IX_' + TableName + '_id  ON ' + TableName + '  (id) '
       debugComments('\ntest note createTable2_CommonTestFunctions.js ... executing: \n' + tsql)
-      Connection.queryRaw(tsql, function (e, r) {
+      Connection.queryRaw(tsql, function (e) {
         // console.log("....createTable run 3");
         assert.ifError(e)
         asyncDone()
@@ -114,7 +114,7 @@ function insertDataBP (Connection, TableName, ColumnName, TestData, done) {
   } else {
     var tsql = 'INSERT INTO ' + TableName + ' (' + ColumnName + ') VALUES (?)'
     debugComments('\ntest note insertDataBP_CommonTestFunctions.js ... executing: \n' + tsql)
-    Connection.queryRaw(tsql, [TestData], function (e, r) {
+    Connection.queryRaw(tsql, [TestData], function (e) {
       assert.ifError(e)
       done()
     })
@@ -127,7 +127,7 @@ function insertDataTSQL (Connection, TableName, ColumnName, TestData, done) {
   // console.log(tsql);
   debugComments('\ntest note insertDataTSQL_CommonTestFunctions.js ... executing: \n' + tsql)
   try {
-    Connection.queryRaw(tsql, function (e, r) {
+    Connection.queryRaw(tsql, function (e) {
       if (e) {
         console.log(e)
       }
@@ -148,10 +148,7 @@ function compoundQueryTSQL (Connection, tsql, ExpectedData1, ExpectedData2, Expe
   var NewExpectedData = ExpectedData1
   Connection.queryRaw(tsql, [], function (e, r, more) {
     ++called
-//    if (called === 1 && more) {
-//      return
-//    }
-    // assert.ifError(e)
+    assert.ifError(e)
     if (called === 3) {
       NewExpectedData = ExpectedData3
     } else if (called === 2) {
@@ -177,7 +174,7 @@ function compoundQueryTSQL (Connection, tsql, ExpectedData1, ExpectedData2, Expe
         return
       }
     }
-    if (called > 2) {
+    if (!more) {
       done()
     }
   })
@@ -216,7 +213,7 @@ function compoundQueryTSQLNewConnection (ConnectionString, tsql, ExpectedData1, 
         return
       }
     }
-    if (called > 2) {
+    if (!more) {
       done()
     }
   })
@@ -228,20 +225,9 @@ function invalidQueryTSQL (Connection, tsql, ExpectedError, testname, done) {
   Connection.queryRaw(tsql, [], function (e, r, more) {
     if (e) {
       debugComments('\ninvalid query failed as expected \n')
-      try {
-        assert.deepEqual(e, ExpectedError, 'Expected error didn\'t match \n')
-      }
-      catch (assert) {
-
-        errorComments('\nTEST FAILED, Expected error didn\'t match, Test Case: \n\'' + testname + '\' \n')
-        errorComments('\nExpected: \n' + ExpectedError)
-        errorComments('\nReceived: \n' + e)
-        done(new Error('\nxxxTEST FAILED, Expected error didn\'t match, Test Case: \n\'' + testname + '\' \n'))
-        return
-      }
+      done()
       e = null
     }
-    done()
   })
 }
 
@@ -268,7 +254,6 @@ function verifyData (Connection, TableName, ColumnName, ExpectedData, testname, 
   } catch (assert) {
     if (e) {
       done(new Error('\nTEST FAILED, SELECT FROM table failed (verifyData_CommonTestFunctions.js) with this error message:\n' + e.toString()))
-      return
     }
   }
 }
@@ -305,8 +290,7 @@ function verifyData_Datetime (Connection, TableName, ColumnName, RowWithNullData
           try {
             // debugComments("\ntest note verifyData_Datetime03_CommonTestFunctions.js ... data in row " + row + " is not null \n");
             assert.deepEqual(re, ExpectedData, dataComparisonFailed)
-          }
-          catch (assert) {
+          } catch (assert) {
             console.log('test results re = ' + re + ' ExpectedData = ' + ExpectedData)
             dataComparisonFailedMessage(testname, ExpectedData, re, done)
             return
@@ -323,7 +307,6 @@ function verifyData_Datetime (Connection, TableName, ColumnName, RowWithNullData
   } catch (assert) {
     if (e) {
       done(new Error('\nTEST FAILED, SELECT FROM table failed (verifyData_Datetime_CommonTestFunctions.js) with this error message:\n' + e.toString()))
-      return
     }
   }
 }
