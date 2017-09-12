@@ -17,64 +17,64 @@
 // limitations under the License.
 //  ---------------------------------------------------------------------------------------------------------------------------------
 
-var supp = require('../demo-support'),
-  assert = require('assert'),
-  fs = require('fs')
+/* global suite teardown teardown test setup */
+'use strict'
+
+var supp = require('../demo-support')
+var assert = require('assert')
 
 function empSelectSQL () {
-  return `SELECT [BusinessEntityID]
-     ,[NationalIDNumber]
-     ,[LoginID]
-     ,[OrganizationNode]
-     ,[OrganizationLevel]
-     ,[JobTitle]
-     ,[BirthDate]
-     ,[MaritalStatus]
-     ,[Gender]
-     ,[HireDate]
-     ,[SalariedFlag]
-     ,[VacationHours]
-     ,[SickLeaveHours]
-     ,[CurrentFlag]
-     ,[rowguid]
-     ,[ModifiedDate]
-     FROM [scratch].[dbo].[Employee]
-     WHERE BusinessEntityID = ?`
+  return 'SELECT [BusinessEntityID] ' +
+     ',[NationalIDNumber] ' +
+     ',[LoginID] ' +
+     ',[OrganizationNode] ' +
+     ',[OrganizationLevel] ' +
+     ',[JobTitle] ' +
+     ',[BirthDate] ' +
+     ',[MaritalStatus] ' +
+     ',[Gender] ' +
+     ',[HireDate] ' +
+     ',[SalariedFlag] ' +
+     ',[VacationHours] ' +
+     ',[SickLeaveHours] ' +
+     ',[CurrentFlag] ' +
+     ',[rowguid] ' +
+     ',[ModifiedDate] ' +
+     'FROM [scratch].[dbo].[Employee] ' +
+     ' WHERE BusinessEntityID = ? '
 }
 
 function empDeleteSQL () {
-  return `DELETE FROM [scratch].[dbo].[Employee]
-        WHERE BusinessEntityID = ?`
+  return 'DELETE FROM [scratch].[dbo].[Employee] ' +
+        'WHERE BusinessEntityID = ?'
 }
 
 function empNoParamsSQL () {
-  return `SELECT [BusinessEntityID]
-     ,[NationalIDNumber]
-     ,[LoginID]
-     ,[OrganizationNode]
-     ,[OrganizationLevel]
-     ,[JobTitle]
-     ,[BirthDate]
-     ,[MaritalStatus]
-     ,[Gender]
-     ,[HireDate]
-     ,[SalariedFlag]
-     ,[VacationHours]
-     ,[SickLeaveHours]
-     ,[CurrentFlag]
-     ,[rowguid]
-     ,[ModifiedDate]
-     FROM [scratch].[dbo].[Employee]`
+  return 'SELECT [BusinessEntityID] ' +
+     ',[NationalIDNumber] ' +
+     ',[LoginID] ' +
+     ',[OrganizationNode] ' +
+     ',[OrganizationLevel] ' +
+     ',[JobTitle] ' +
+     ',[BirthDate] ' +
+     ',[MaritalStatus] ' +
+     ',[Gender] ' +
+     ',[HireDate] ' +
+     ',[SalariedFlag] ' +
+     ',[VacationHours] ' +
+     ',[SickLeaveHours] ' +
+     ',[CurrentFlag] ' +
+     ',[rowguid] ' +
+     ',[ModifiedDate] ' +
+     'FROM [scratch].[dbo].[Employee]'
 }
 
 suite('prepared', function () {
-  var conn_str
+  var connStr
   var theConnection
   var support
   var async
   var helper
-  var driver
-  var database
   var procedureHelper
   var prepared
   var parsedJSON
@@ -84,9 +84,9 @@ suite('prepared', function () {
   var actions = [
     // open a connection.
     function (asyncDone) {
-      sql.open(conn_str, function (err, new_conn) {
+      sql.open(connStr, function (err, newConn) {
         assert.ifError(err)
-        theConnection = new_conn
+        theConnection = newConn
         asyncDone()
       })
     },
@@ -94,7 +94,7 @@ suite('prepared', function () {
     // drop / create an Employee table.
     function (asyncDone) {
       helper.dropCreateTable({
-        name: table_name
+        name: tableName
       }, function () {
         asyncDone()
       })
@@ -103,7 +103,7 @@ suite('prepared', function () {
     // insert test set using bulk insert
     function (asyncDone) {
       var tm = theConnection.tableMgr()
-      tm.bind(table_name, function (bulkMgr) {
+      tm.bind(tableName, function (bulkMgr) {
         bulkMgr.insertRows(parsedJSON, function () {
           asyncDone()
         })
@@ -135,9 +135,9 @@ suite('prepared', function () {
     }
   ]
 
-  var table_name = 'Employee'
+  var tableName = 'Employee'
 
-  setup(function (test_done) {
+  setup(function (testDone) {
     prepared = {
       select: null,
       delete: null,
@@ -145,19 +145,17 @@ suite('prepared', function () {
     }
 
     supp.GlobalConn.init(sql, function (co) {
-      conn_str = co.conn_str
+      connStr = co.conn_str
       support = co.support
-      procedureHelper = new support.ProcedureHelper(conn_str)
+      procedureHelper = new support.ProcedureHelper(connStr)
       procedureHelper.setVerbose(false)
       async = co.async
       helper = co.helper
-      driver = co.driver
-      database = co.database
       helper.setVerbose(false)
       parsedJSON = helper.getJSON()
       async.series(actions,
         function () {
-          test_done()
+          testDone()
         })
     })
   })
@@ -194,7 +192,7 @@ suite('prepared', function () {
     })
   }
 
-  test('use prepared statement twice with no parameters.', function (test_done) {
+  test('use prepared statement twice with no parameters.', function (testDone) {
     var select = prepared.scan
     var meta = select.getMeta()
     assert(meta.length > 0)
@@ -204,12 +202,12 @@ suite('prepared', function () {
       select.preparedQuery(function (err, res2) {
         assert.ifError(err)
         assert.deepEqual(parsedJSON, res2, 'results didn\'t match')
-        test_done()
+        testDone()
       })
     })
   })
 
-  test('use prepared statements to select a row, then delete it over each row.', function (test_done) {
+  test('use prepared statements to select a row, then delete it over each row.', function (testDone) {
     var select = prepared.select
     var meta = select.getMeta()
     assert(meta.length > 0)
@@ -227,8 +225,8 @@ suite('prepared', function () {
     function check () {
       theConnection.query('select count(*) as rows from Employee', function (err, res) {
         assert.ifError(err)
-        assert(res[0].rows == 0)
-        test_done()
+        assert(res[0].rows === 0)
+        testDone()
       })
     }
 
@@ -245,7 +243,7 @@ suite('prepared', function () {
     }
   })
 
-  test('stress test prepared statement with 500 invocations cycling through primary key', function (test_done) {
+  test('stress test prepared statement with 500 invocations cycling through primary key', function (testDone) {
     var select = prepared.select
     var meta = select.getMeta()
     assert(meta.length > 0)
@@ -262,7 +260,7 @@ suite('prepared', function () {
       if (iteration < totalIterations) {
         next(businessId, iterate)
       } else {
-        test_done()
+        testDone()
       }
     }
 
@@ -270,13 +268,13 @@ suite('prepared', function () {
       select.preparedQuery([businessId],
         function (err, res1) {
           assert.ifError(err)
-          assert(res1[0].BusinessEntityID == businessId)
+          assert(res1[0].BusinessEntityID === businessId)
           done()
         })
     }
   })
 
-  test('use prepared statement twice with different params.', function (test_done) {
+  test('use prepared statement twice with different params.', function (testDone) {
     var select = prepared.select
     var meta = select.getMeta()
     var id1 = 2
@@ -291,7 +289,7 @@ suite('prepared', function () {
 
         var o2 = parsedJSON[id2 - 1]
         assert.deepEqual(o2, res2[0], 'results didn\'t match')
-        test_done()
+        testDone()
       })
     })
   })

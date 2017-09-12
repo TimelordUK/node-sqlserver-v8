@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------------------------------------------------------------
+//  ---------------------------------------------------------------------------------------------------------------------------------
 // File: connect.js
 // Contents: test suite for connections
-// 
+
 // Copyright Microsoft Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//---------------------------------------------------------------------------------------------------------------------------------
+//  ---------------------------------------------------------------------------------------------------------------------------------
 
 var assert = require('assert')
 var supp = require('../demo-support')
