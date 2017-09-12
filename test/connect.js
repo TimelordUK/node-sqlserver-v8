@@ -17,39 +17,35 @@
 // limitations under the License.
 //  ---------------------------------------------------------------------------------------------------------------------------------
 
+/* global suite test setup */
+'use strict'
+
 var assert = require('assert')
 var supp = require('../demo-support')
 
 suite('open', function () {
-
-  var conn_str
+  var connStr
   var support
-  var async
   var helper
-  var driver
-  var database
   var procedureHelper
   var sql = global.native_sql
 
   this.timeout(20000)
 
-  setup(function (test_done) {
+  setup(function (testDone) {
     supp.GlobalConn.init(sql, function (co) {
-      conn_str = co.conn_str
+      connStr = co.conn_str
       support = co.support
-      procedureHelper = new support.ProcedureHelper(conn_str)
+      procedureHelper = new support.ProcedureHelper(connStr)
       procedureHelper.setVerbose(false)
-      async = co.async
       helper = co.helper
-      driver = co.driver
-      database = co.database
       helper.setVerbose(false)
-      test_done()
+      testDone()
     })
   })
 
   test('connection closes OK in sequence with query', function (done) {
-    sql.open(conn_str,
+    sql.open(connStr,
       function (err, conn) {
         var expected = [{
           n: 1
@@ -66,10 +62,10 @@ suite('open', function () {
   })
 
   test('trusted connection to a server', function (done) {
-    sql.open(conn_str,
+    sql.open(connStr,
       function (err, conn) {
         assert.ifError(err)
-        assert(typeof conn == 'object')
+        assert(typeof conn === 'object')
         conn.close(function () {
           done()
         })
@@ -77,7 +73,7 @@ suite('open', function () {
   })
 
   test('verify closed connection throws an exception', function (done) {
-    sql.open(conn_str, function (err, conn) {
+    sql.open(connStr, function (err, conn) {
       assert.ifError(err)
       conn.close(function () {
         var thrown = false
@@ -97,20 +93,20 @@ suite('open', function () {
   })
 
   test('verify connection is not closed prematurely until a query is complete', function (done) {
-    sql.open(conn_str, function (err, conn) {
+    sql.open(connStr, function (err, conn) {
       assert.ifError(err)
       var closeCalled = false
       var stmt = conn.queryRaw('select 1')
       stmt.on('meta', function (m) {
       })
       stmt.on('column', function (c, d) {
-        assert(c == 0 && d == 1)
+        assert(c === 0 && d === 1)
       })
       stmt.on('error', function (e) {
         assert.ifError(e)
       })
       stmt.on('row', function (r) {
-        assert(r == 0)
+        assert(r === 0)
         conn.close(function () {
           closeCalled = true
           done()
@@ -120,16 +116,14 @@ suite('open', function () {
   })
 
   test('verify that close immediately flag only accepts booleans', function (done) {
-
-    sql.open(conn_str, function (err, conn) {
+    sql.open(connStr, function (err, conn) {
       assert.ifError(err)
       var thrown = false
       try {
         conn.close('SELECT 1', function (err) {
           assert.ifError(err)
         })
-      }
-      catch (e) {
+      } catch (e) {
         assert(e == 'Error: [msnodesql] Invalid parameters passed to close.')
         thrown = true
       }
@@ -140,4 +134,3 @@ suite('open', function () {
     })
   })
 })
-

@@ -1,29 +1,28 @@
-var assert = require('assert'),
-  supp = require('../demo-support'),
-  fs = require('fs')
+/* global suite teardown teardown test setup */
+'use strict'
+
+var assert = require('assert')
+var supp = require('../demo-support')
 
 suite('concurrent', function () {
-
   var theConnection
   this.timeout(20000)
-  var conn_str
-  var support
+  var connStr
   var async
   var helper
 
   var sql = global.native_sql
 
-  setup(function (test_done) {
+  setup(function (testDone) {
     supp.GlobalConn.init(sql, function (co) {
-      conn_str = co.conn_str
-      support = co.support
+      connStr = co.conn_str
       async = co.async
       helper = co.helper
       helper.setVerbose(false)
-      sql.open(conn_str, function (err, new_conn) {
+      sql.open(connStr, function (err, newConn) {
         assert.ifError(err)
-        theConnection = new_conn
-        test_done()
+        theConnection = newConn
+        testDone()
       })
     })
   })
@@ -35,14 +34,13 @@ suite('concurrent', function () {
   })
 
   var open = function (done) {
-    sql.open(conn_str, function (err, conn) {
+    sql.open(connStr, function (err, conn) {
       assert.ifError(err)
       done(conn)
     })
   }
 
-  test('check for blocked calls to api with event emission', function (test_done) {
-
+  test('check for blocked calls to api with event emission', function (testDone) {
     var delays = []
     var start = Date.now()
     var expected = ['a', 'b', 'c', 'd']
@@ -50,7 +48,7 @@ suite('concurrent', function () {
 
     function test () {
       assert.deepEqual(expected, seq)
-      test_done()
+      testDone()
     }
 
     function pushTest (c) {
@@ -76,8 +74,7 @@ suite('concurrent', function () {
     })
   })
 
-  test('open connections in sequence and prove distinct connection objects created', function (test_done) {
-
+  test('open connections in sequence and prove distinct connection objects created', function (testDone) {
     var connections = []
 
     open(function (conn1) {
@@ -98,35 +95,34 @@ suite('concurrent', function () {
 
       var t1 = c0 === c1 && c1 === c2
       assert(t1 === false)
-      assert(c0.id != c1.id)
-      assert(c1.id != c2.id)
+      assert(c0.id !== c1.id)
+      assert(c1.id !== c2.id)
 
       var clean = [
-        function (async_done) {
+        function (asyncDone) {
           c0.close(function () {
-            async_done()
+            asyncDone()
           })
         },
-        function (async_done) {
+        function (asyncDone) {
           c1.close(function () {
-            async_done()
+            asyncDone()
           })
         },
-        function (async_done) {
+        function (asyncDone) {
           c2.close(function () {
-            async_done()
+            asyncDone()
           })
-        },
+        }
       ]
 
       async.series(clean, function () {
-        test_done()
+        testDone()
       })
     }
   })
 
-  test('check for blocked calls to api', function (test_done) {
-
+  test('check for blocked calls to api', function (testDone) {
     var seq = []
     var delays = []
     var start = Date.now()
@@ -137,7 +133,7 @@ suite('concurrent', function () {
       delays.push(Date.now() - start)
       if (seq.length === expected.length) {
         assert.deepEqual(expected, seq)
-        test_done()
+        testDone()
       }
     }
 
@@ -156,8 +152,7 @@ suite('concurrent', function () {
     })
   })
 
-  test('check for blocked calls to api with nested query', function (test_done) {
-
+  test('check for blocked calls to api with nested query', function (testDone) {
     var seq = []
     var delays = []
     var start = Date.now()
@@ -168,7 +163,7 @@ suite('concurrent', function () {
       delays.push(Date.now() - start)
       if (seq.length === expected.length) {
         assert.deepEqual(expected, seq)
-        test_done()
+        testDone()
       }
     }
 
@@ -176,7 +171,7 @@ suite('concurrent', function () {
     process.nextTick(function () {
       pushTest('c')
     })
-    theConnection.query('waitfor delay \'00:00:02\';', [], function (res) {
+    theConnection.query('waitfor delay \'00:00:02\';', [], function () {
       pushTest('e')
       pushTest('f')
       process.nextTick(function () {
@@ -196,8 +191,7 @@ suite('concurrent', function () {
     })
   })
 
-  test('open connections simultaneously and prove distinct connection objects created', function (test_done) {
-
+  test('open connections simultaneously and prove distinct connection objects created', function (testDone) {
     var connections = []
 
     open(function (conn1) {
@@ -216,42 +210,40 @@ suite('concurrent', function () {
     })
 
     function done () {
-
       var c0 = connections[0]
       var c1 = connections[1]
       var c2 = connections[2]
 
       var t1 = c0 === c1 && c1 === c2
       assert(t1 === false)
-      assert(c0.id != c1.id)
-      assert(c1.id != c2.id)
+      assert(c0.id !== c1.id)
+      assert(c1.id !== c2.id)
 
       var clean = [
-        function (async_done) {
+        function (asyncDone) {
           c0.close(function () {
-            async_done()
+            asyncDone()
           })
         },
-        function (async_done) {
+        function (asyncDone) {
           c1.close(function () {
-            async_done()
+            asyncDone()
           })
         },
-        function (async_done) {
+        function (asyncDone) {
           c2.close(function () {
-            async_done()
+            asyncDone()
           })
-        },
+        }
       ]
 
       async.series(clean, function () {
-        test_done()
+        testDone()
       })
     }
   })
 
-  test('make sure two concurrent connections each have unique spid ', function (test_done) {
-
+  test('make sure two concurrent connections each have unique spid ', function (testDone) {
     var spid1
     var spid2
 
@@ -259,33 +251,33 @@ suite('concurrent', function () {
       open(function (c2) {
         c1.query('select @@SPID as id, CURRENT_USER as name', function (err, res) {
           assert.ifError(err)
-          assert(res.length == 1)
+          assert(res.length === 1)
           spid1 = res[0]['id']
-          assert(spid1 != null)
+          assert(spid1 !== null)
 
           c2.query('select @@SPID as id, CURRENT_USER as name', function (err, res) {
             assert.ifError(err)
-            assert(res.length == 1)
+            assert(res.length === 1)
             spid2 = res[0]['id']
-            assert(spid2 != null)
-            assert(spid1 != spid2)
+            assert(spid2 !== null)
+            assert(spid1 !== spid2)
 
             var clean = [
 
-              function (async_done) {
+              function (asyncDone) {
                 c1.close(function () {
-                  async_done()
+                  asyncDone()
                 })
               },
-              function (async_done) {
+              function (asyncDone) {
                 c2.close(function () {
-                  async_done()
+                  asyncDone()
                 })
-              },
+              }
             ]
 
             async.series(clean, function () {
-              test_done()
+              testDone()
             })
           })
         })
@@ -293,6 +285,3 @@ suite('concurrent', function () {
     })
   })
 })
-
-
-

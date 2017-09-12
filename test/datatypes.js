@@ -15,13 +15,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
+// ---------------------------------------------------------------------------------------------------------------------------------`
 var assert = require('assert')
 var commonTestFns = require('./CommonTestFunctions')
 var supp = require('../demo-support')
 
 /* global suite teardown teardown test setup */
+'use strict'
 
 suite('datatypes', function () {
   var tablename = 'types_table'

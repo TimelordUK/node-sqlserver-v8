@@ -1,15 +1,12 @@
 /**
  * Created by admin on 03/07/2016.
  */
-var
-  assert = require('assert'),
-  config = require('./test-config'),
-  supp = require('../demo-support'),
-  fs = require('fs')
+var assert = require('assert')
+var supp = require('../demo-support')
+var fs = require('fs')
 
 function TestHelper (native, cstr) {
-
-  var conn_str = cstr
+  var connStr = cstr
   var sql = native
   var support = new supp.DemoSupport(sql, cstr)
   var async = new support.Async()
@@ -31,22 +28,22 @@ function TestHelper (native, cstr) {
 
     var sequence = [
 
-      function (async_done) {
-        sql.open(conn_str, function (err, c) {
+      function (asyncDone) {
+        sql.open(connStr, function (err, c) {
           assert.ifError(err)
           conn = c
-          async_done()
+          asyncDone()
         })
       },
 
-      function (async_done) {
+      function (asyncDone) {
         var dropSql = 'DROP TABLE ' + name
         conn.query(dropSql, function () {
-          async_done()
+          asyncDone()
         })
       },
 
-      function (async_done) {
+      function (asyncDone) {
         var folder = __dirname
         var file = folder + '/sql/' + name
         file += '.sql'
@@ -76,13 +73,13 @@ function TestHelper (native, cstr) {
             arr[i] = arr[i].replace(/^\s+|\s+$/g, '')
           }
           inChunks(arr, function () {
-            async_done()
+            asyncDone()
           })
         })
       },
-      function (async_done) {
+      function (asyncDone) {
         conn.close(function () {
-          async_done()
+          asyncDone()
         })
       }
     ]
@@ -99,7 +96,7 @@ function TestHelper (native, cstr) {
     var parsedJSON = JSON.parse(fs.readFileSync(folder + '/employee.json', 'utf8'))
 
     for (var i = 0; i < parsedJSON.length; ++i) {
-      parsedJSON[i].OrganizationNode = new Buffer(parsedJSON[i].OrganizationNode.data, 'utf8')
+      parsedJSON[i].OrganizationNode = Buffer.from(parsedJSON[i].OrganizationNode.data, 'utf8')
       parsedJSON[i].BirthDate = new Date(parsedJSON[i].BirthDate)
       parsedJSON[i].HireDate = new Date(parsedJSON[i].HireDate)
       parsedJSON[i].ModifiedDate = new Date(parsedJSON[i].ModifiedDate)

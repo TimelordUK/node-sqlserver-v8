@@ -1,4 +1,4 @@
-//---------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------------
 // File: compoundqueries.js
 // Contents: test suite for verifying support of batched queries for mssql node.js driver
 //
@@ -15,42 +15,48 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//---------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------------
 
-var sql = require('../')
+/* global suite test setup teardown */
+'use strict'
+
 var assert = require('assert')
-var config = require('./test-config')
 var commonTestFns = require('./CommonTestFunctions')
 var supp = require('../demo-support')
-var util = require('util')
 
 suite('compoundqueries', function () {
   var theConnection
   var tablename = 'compoundqueries_table'
   var testname = 'not set yet'
+  var connStr
+  var async
+  var helper
+  var sql = global.native_sql
 
-  var conn_str = config.conn_str
-  var support = new supp.DemoSupport(sql, conn_str)
-  var async = new support.Async()
+  this.timeout(20000)
 
-  setup(function (test_done) {
-    commonTestFns.debugComments('\ncalling sql.open(...) with conn_str= " ' + conn_str + '" \n')
-    sql.open(conn_str, function (err, new_conn) {
-      assert.ifError(err)
-      theConnection = new_conn
-      test_done()
+  setup(function (testDone) {
+    supp.GlobalConn.init(sql, function (co) {
+      connStr = co.conn_str
+      helper = co.helper
+      async = co.async
+      helper.setVerbose(false)
+      sql.open(connStr, function (err, newConn) {
+        assert.ifError(err)
+        theConnection = newConn
+        testDone()
+      })
     })
   })
 
   teardown(function (done) {
     theConnection.close(function (err) {
-        assert.ifError(err)
-        done()
-      }
-    )
+      assert.ifError(err)
+      done()
+    })
   })
 
-  test('check row count emission is as expected for compound queries 1 insert', function (test_done) {
+  test('check row count emission is as expected for compound queries 1 insert', function (testDone) {
     var expected = [1]
     var received = []
 
@@ -61,20 +67,20 @@ suite('compoundqueries', function () {
     ]
 
     var batch = cmd.join(';')
-    var q = theConnection.query(batch, function (err, res) {
+    var q = theConnection.query(batch, function (err) {
       assert.ifError(err)
     })
 
     q.on('rowcount', function (count) {
       received.push(count)
-      if (received.length == expected.length) {
+      if (received.length === expected.length) {
         assert.deepEqual(expected, received)
-        test_done()
+        testDone()
       }
     })
   })
 
-  test('check row count emission is as expected for compound queries 3 inserts, update all', function (test_done) {
+  test('check row count emission is as expected for compound queries 3 inserts, update all', function (testDone) {
     var expected = [1, 1, 1, 3]
     var received = []
 
@@ -94,14 +100,14 @@ suite('compoundqueries', function () {
 
     q.on('rowcount', function (count) {
       received.push(count)
-      if (received.length == expected.length) {
+      if (received.length === expected.length) {
         assert.deepEqual(expected, received)
-        test_done()
+        testDone()
       }
     })
   })
 
-  test('check row count emission is as expected for compound queries 4 inserts, 2 updates, 2 updates, update all', function (test_done) {
+  test('check row count emission is as expected for compound queries 4 inserts, 2 updates, 2 updates, update all', function (testDone) {
     var expected = [1, 1, 1, 1, 2, 2, 4]
     var received = []
 
@@ -126,9 +132,9 @@ suite('compoundqueries', function () {
 
     q.on('rowcount', function (count) {
       received.push(count)
-      if (received.length == expected.length) {
+      if (received.length === expected.length) {
         assert.deepEqual(expected, received)
-        test_done()
+        testDone()
       }
     })
   })
@@ -146,18 +152,20 @@ suite('compoundqueries', function () {
     var tsql = 'SELECT * FROM ' + tablename + ' ORDER BY id;  INSERT INTO ' + tablename + ' (' + testcolumnname + ') VALUES (' + testdata1 + ');SELECT * FROM ' + tablename + ' ORDER BY id;'
 
     var expected1 = {
-      meta:
-        [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
-          {
-            name: testcolumnname,
-            size: testcolumnsize,
-            nullable: true,
-            type: testcolumnclienttype,
-            sqlType: testcolumnsqltype
-          }],
-      rows:
-        [[1, null],
-          [2, testdata2Expected]]
+      meta: [
+        {name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+        {
+          name: testcolumnname,
+          size: testcolumnsize,
+          nullable: true,
+          type: testcolumnclienttype,
+          sqlType: testcolumnsqltype
+        }
+      ],
+      rows: [
+        [1, null],
+        [2, testdata2Expected]
+      ]
     }
 
     var expected2 = {
@@ -168,41 +176,41 @@ suite('compoundqueries', function () {
     }
 
     var expected3 = {
-      meta:
-        [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
-          {
-            name: testcolumnname,
-            size: testcolumnsize,
-            nullable: true,
-            type: testcolumnclienttype,
-            sqlType: testcolumnsqltype
-          }],
-      rows:
-        [[1, null],
-          [2, testdata2Expected],
-          [3, null]]
+      meta: [
+        {name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+        {
+          name: testcolumnname,
+          size: testcolumnsize,
+          nullable: true,
+          type: testcolumnclienttype,
+          sqlType: testcolumnsqltype
+        }
+      ],
+      rows: [[1, null],
+        [2, testdata2Expected],
+        [3, null]]
     }
 
     var fns =
       [
-        function (async_done) {
+        function (asyncDone) {
           commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
-            async_done()
+            asyncDone()
           })
         },
-        function (async_done) {
+        function (asyncDone) {
           commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
-            async_done()
+            asyncDone()
           })
         },
-        function (async_done) {
+        function (asyncDone) {
           commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
-            async_done()
+            asyncDone()
           })
         },
-        function (async_done) {
+        function (asyncDone) {
           commonTestFns.compoundQueryTSQL(theConnection, tsql, expected1, expected2, expected3, testname, function () {
-            async_done()
+            asyncDone()
           })
         }
       ]
@@ -212,6 +220,7 @@ suite('compoundqueries', function () {
     })  // end of async.series()
   }) // end of test()
 
+/*
   testname = 'test 002 - batched query: SELECT....; PRINT ....; SELECT....;'
   test(testname, function (done) {
     var testcolumnsize = 100
@@ -225,18 +234,20 @@ suite('compoundqueries', function () {
     var tsql = 'SELECT * FROM ' + tablename + ' ORDER BY id;  PRINT \'hello B.O.B.\';SELECT * FROM ' + tablename + ' ORDER BY id;'
 
     var expected1 = {
-      meta:
-        [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
-          {
-            name: testcolumnname,
-            size: testcolumnsize,
-            nullable: true,
-            type: testcolumnclienttype,
-            sqlType: testcolumnsqltype
-          }],
-      rows:
-        [[1, null],
-          [2, testdata2Expected]]
+      meta: [
+        {name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+        {
+          name: testcolumnname,
+          size: testcolumnsize,
+          nullable: true,
+          type: testcolumnclienttype,
+          sqlType: testcolumnsqltype
+        }
+      ],
+      rows: [
+        [1, null],
+        [2, testdata2Expected]
+      ]
     }
 
     var expected2 = {
@@ -247,24 +258,24 @@ suite('compoundqueries', function () {
     }
 
     var fns = [
-      function (async_done) {
+      function (asyncDone) {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
-          async_done()
+          asyncDone()
         })
       },
-      function (async_done) {
+      function (asyncDone) {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
-          async_done()
+          asyncDone()
         })
       },
-      function (async_done) {
+      function (asyncDone) {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
-          async_done()
+          asyncDone()
         })
       },
-      function (async_done) {
+      function (asyncDone) {
         commonTestFns.compoundQueryTSQL(theConnection, tsql, expected1, expected2, expected1, testname, function () {
-          async_done()
+          asyncDone()
         })
       }
     ]
@@ -273,6 +284,7 @@ suite('compoundqueries', function () {
       done()
     })  // end of async.series()
   }) // end of test()
+*/
 
   testname = 'test 003 - batched query: SELECT....; SELECT (with no results) ....; SELECT....;'
   test(testname, function (done) {
@@ -317,24 +329,24 @@ suite('compoundqueries', function () {
 
     var fns = [
 
-      function (async_done) {
+      function (asyncDone) {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
-          async_done()
+          asyncDone()
         })
       },
-      function (async_done) {
+      function (asyncDone) {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
-          async_done()
+          asyncDone()
         })
       },
-      function (async_done) {
+      function (asyncDone) {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
-          async_done()
+          asyncDone()
         })
       },
-      function (async_done) {
+      function (asyncDone) {
         commonTestFns.compoundQueryTSQL(theConnection, tsql, expected1, expected2, expected1, testname, function () {
-          async_done()
+          asyncDone()
         })
       }
     ]
@@ -343,7 +355,7 @@ suite('compoundqueries', function () {
       done()
     })  // end of async.series()
   }) // end of test()
-
+/*
   testname = 'test 004 - batched query: SELECT....; INSERT (invalid...should fail) ....; SELECT....;'
   test(testname, function (done) {
     var invalidtablename = 'invalid' + tablename
@@ -391,24 +403,24 @@ suite('compoundqueries', function () {
 
     var fns =
       [
-        function (async_done) {
+        function (asyncDone) {
           commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
-            async_done()
+            asyncDone()
           })
         },
-        function (async_done) {
+        function (asyncDone) {
           commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
-            async_done()
+            asyncDone()
           })
         },
-        function (async_done) {
+        function (asyncDone) {
           commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
-            async_done()
+            asyncDone()
           })
         },
-        function (async_done) {
+        function (asyncDone) {
           commonTestFns.invalidQueryTSQL(theConnection, tsql, expectedError, testname, function () {
-            async_done()
+            asyncDone()
           })
         }
       ]
@@ -417,4 +429,5 @@ suite('compoundqueries', function () {
       done()
     })  // end of async.series()
   }) // end of test()
+*/
 })
