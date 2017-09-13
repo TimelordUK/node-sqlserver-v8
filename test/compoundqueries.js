@@ -301,30 +301,33 @@ suite('compoundqueries', function () {
     var tsql = 'SELECT * FROM ' + tablename + ' ORDER BY id;  SELECT * FROM ' + tablename + ' WHERE 1=2; SELECT * FROM ' + tablename + ' ORDER BY id;'
 
     var expected1 = {
-      meta:
-        [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
-          {
-            name: testcolumnname,
-            size: testcolumnsize,
-            nullable: true,
-            type: testcolumnclienttype,
-            sqlType: testcolumnsqltype
-          }],
-      rows:
-        [[1, null],
-          [2, testdata2Expected]]
+      meta: [
+        {name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+        {
+          name: testcolumnname,
+          size: testcolumnsize,
+          nullable: true,
+          type: testcolumnclienttype,
+          sqlType: testcolumnsqltype
+        }
+      ],
+      rows: [
+        [1, null],
+        [2, testdata2Expected]
+      ]
     }
 
     var expected2 = {
-      meta:
-        [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
-          {
-            name: testcolumnname,
-            size: testcolumnsize,
-            nullable: true,
-            type: testcolumnclienttype,
-            sqlType: testcolumnsqltype
-          }],
+      meta: [
+        {name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+        {
+          name: testcolumnname,
+          size: testcolumnsize,
+          nullable: true,
+          type: testcolumnclienttype,
+          sqlType: testcolumnsqltype
+        }
+      ],
       rows:
         []
     }

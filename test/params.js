@@ -136,14 +136,14 @@ suite('params', function () {
       })
   })
 
-  test('insert large string into max column using user binding WLongVarChar', function (testDone) {
-    String.prototype.repeat = function (num) {
-      return new Array(num + 1).join(this)
-    }
+  function repeat (a, num) {
+    return new Array(num + 1).join(a)
+  }
 
+  test('insert large string into max column using user binding WLongVarChar', function (testDone) {
     testBoilerPlate('test_large_insert', {'large_insert': 'nvarchar(max) '},
       function (done) {
-        var largeText = 'A'.repeat(10000)
+        var largeText = repeat('A', 10000)
         theConnection.query('INSERT INTO test_large_insert (large_insert) VALUES (?)', [sql.WLongVarChar(largeText)], function (e) {
           assert.ifError(e, 'Error inserting large string')
           done()
@@ -702,13 +702,9 @@ suite('params', function () {
   })
 
   test('insert large string into max column', function (testDone) {
-    String.prototype.repeat = function (num) {
-      return new Array(num + 1).join(this)
-    }
-
     testBoilerPlate('test_large_insert', {'large_insert': 'nvarchar(max) '},
       function (done) {
-        var largeText = 'A'.repeat(10000)
+        var largeText = repeat('A', 10000)
         theConnection.query('INSERT INTO test_large_insert (large_insert) VALUES (?)', [largeText], function (e) {
           assert.ifError(e, 'Error inserting large string')
           done()
@@ -810,8 +806,7 @@ suite('params', function () {
         theConnection.queryRaw('SELECT midnight_date_test FROM midnight_date_test', function (e, r) {
           assert.ifError(e)
           var expectedDates = []
-          var expectedDate = midnightDate
-          expectedDates.push([expectedDate])
+          expectedDates.push([midnightDate])
           var expectedResults = {
             meta: [{
               name: 'midnight_date_test',
@@ -854,8 +849,7 @@ suite('params', function () {
         theConnection.queryRaw('SELECT eoy_date_test FROM eoy_date_test', function (e, r) {
           assert.ifError(e)
           var expectedDates = []
-          var expectedDate = eoyDate
-          expectedDates.push([expectedDate])
+          expectedDates.push([eoyDate])
           var expectedResults = {
             meta: [{
               name: 'eoy_date_test',

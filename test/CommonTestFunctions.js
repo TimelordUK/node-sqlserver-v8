@@ -223,7 +223,7 @@ function compoundQueryTSQLNewConnection (ConnectionString, tsql, ExpectedData1, 
 //  'tsql' contains an invalid and should fail with the error 'ExpectedError'
 function invalidQueryTSQL (Connection, tsql, ExpectedError, testname, done) {
   debugComments('\ntest note invalidQueryTSQL_CommonTestFunctions.js ... executing: \n' + tsql)
-  Connection.queryRaw(tsql, [], function (e, r, more) {
+  Connection.queryRaw(tsql, [], function (e) {
     if (e) {
       debugComments('\ninvalid query failed as expected \n')
       done()

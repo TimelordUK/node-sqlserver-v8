@@ -4,6 +4,7 @@
 var assert = require('assert')
 var supp = require('../demo-support')
 var fs = require('fs')
+var path = require('path')
 
 function TestHelper (native, cstr) {
   var connStr = cstr
@@ -44,8 +45,7 @@ function TestHelper (native, cstr) {
       },
 
       function (asyncDone) {
-        var folder = __dirname
-        var file = folder + '/sql/' + name
+        var file = path.join(__dirname, '/sql/', name)
         file += '.sql'
 
         function inChunks (arr, callback) {

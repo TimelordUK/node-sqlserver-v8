@@ -215,7 +215,7 @@ suite('querycancel', function () {
       },
 
       function (asyncDone) {
-        var q = prepared.preparedQuery(['00:00:20'], function (err, res) {
+        var q = prepared.preparedQuery(['00:00:20'], function (err) {
           assert(err)
           assert(err.message.indexOf('Operation canceled') > 0)
           asyncDone()

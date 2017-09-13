@@ -139,17 +139,17 @@ suite('userbind', function () {
     })
   })
 
-  test('user bind WLongVarChar to NVARCHAR(MAX)', function (testDone) {
-    String.prototype.repeat = function (num) {
-      return new Array(num + 1).join(this)
-    }
+  function repeat (a, num) {
+    return new Array(num + 1).join(a)
+  }
 
+  test('user bind WLongVarChar to NVARCHAR(MAX)', function (testDone) {
     var smallLen = 2200
     var largeLen = 8200
     var params = {
       query: 'declare @v NVARCHAR(MAX) = ?; select @v as v',
-      min: 'N'.repeat(smallLen),
-      max: 'X'.repeat(largeLen),
+      min: repeat('N', smallLen),
+      max: repeat('X', largeLen),
       test_null: false,
       setter: function (v) {
         return sql.WLongVarChar(v)

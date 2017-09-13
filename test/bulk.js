@@ -137,7 +137,7 @@ suite('bulk', function () {
       },
 
       function (asyncDone) {
-        bindInsert(tableName, function (bm, selected) {
+        bindInsert(tableName, function () {
           asyncDone()
         })
       }
