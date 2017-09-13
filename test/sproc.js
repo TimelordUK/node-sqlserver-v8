@@ -1,7 +1,8 @@
+'use strict'
+/* global suite teardown teardown test setup */
+
 var assert = require('assert')
 var supp = require('../demo-support')
-
-/* global suite teardown teardown test setup */
 
 suite('sproc', function () {
   var connStr

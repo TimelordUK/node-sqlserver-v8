@@ -16,6 +16,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //  ---------------------------------------------------------------------------------------------------------------------------------
+'use strict'
 
 var sql = require('../')
 var assert = require('assert')
@@ -251,7 +252,7 @@ function verifyData (Connection, TableName, ColumnName, ExpectedData, testname, 
       }
       done()
     })
-  } catch (assert) {
+  } catch (e) {
     if (e) {
       done(new Error('\nTEST FAILED, SELECT FROM table failed (verifyData_CommonTestFunctions.js) with this error message:\n' + e.toString()))
     }
@@ -304,7 +305,7 @@ function verifyData_Datetime (Connection, TableName, ColumnName, RowWithNullData
       }
       done()
     })
-  } catch (assert) {
+  } catch (e) {
     if (e) {
       done(new Error('\nTEST FAILED, SELECT FROM table failed (verifyData_Datetime_CommonTestFunctions.js) with this error message:\n' + e.toString()))
     }
