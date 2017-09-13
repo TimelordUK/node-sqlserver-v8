@@ -96,7 +96,7 @@ suite('compoundqueries', function () {
     ]
 
     var batch = cmd.join(';')
-    var q = theConnection.query(batch, function (err, res) {
+    var q = theConnection.query(batch, function (err) {
       assert.ifError(err)
     })
 
@@ -128,7 +128,7 @@ suite('compoundqueries', function () {
     ]
 
     var batch = cmd.join(';')
-    var q = theConnection.query(batch, function (err, res) {
+    var q = theConnection.query(batch, function (err) {
       assert.ifError(err)
     })
 
