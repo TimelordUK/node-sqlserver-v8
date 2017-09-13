@@ -81,9 +81,8 @@ suite('open', function () {
           conn.query('SELECT 1', function (err) {
             assert.ifError(err)
           })
-        }
-        catch (e) {
-          assert(e == 'Error: [msnodesql] Connection is closed.')
+        } catch (e) {
+          assert.deepEqual(e, new Error('Error: [msnodesql] Connection is closed.'))
           thrown = true
         }
         assert(thrown)
@@ -95,7 +94,6 @@ suite('open', function () {
   test('verify connection is not closed prematurely until a query is complete', function (done) {
     sql.open(connStr, function (err, conn) {
       assert.ifError(err)
-      var closeCalled = false
       var stmt = conn.queryRaw('select 1')
       stmt.on('meta', function (m) {
       })
@@ -108,7 +106,6 @@ suite('open', function () {
       stmt.on('row', function (r) {
         assert(r === 0)
         conn.close(function () {
-          closeCalled = true
           done()
         })
       })
@@ -124,7 +121,7 @@ suite('open', function () {
           assert.ifError(err)
         })
       } catch (e) {
-        assert(e == 'Error: [msnodesql] Invalid parameters passed to close.')
+        assert.deepEqual(e, new Error('Error: [msnodesql] Invalid parameters passed to close.'))
         thrown = true
       }
       conn.close(function () {
