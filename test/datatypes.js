@@ -65,7 +65,7 @@ suite('datatypes', function () {
     var testcolumnname = 'col2'
 
     var buffer = []
-    var i = 0
+    var i
     for (i = 0; i < 2 * 1024 * 1024; ++i) {
       buffer[buffer.length] = i % 255
     }

@@ -142,7 +142,7 @@ suite('concurrent', function () {
       pushTest('c')
     })
 
-    theConnection.query('waitfor delay \'00:00:02\';', function (res) {
+    theConnection.query('waitfor delay \'00:00:02\';', function () {
       pushTest('e')
     })
 
@@ -177,7 +177,7 @@ suite('concurrent', function () {
       process.nextTick(function () {
         pushTest('h')
       })
-      theConnection.query('waitfor delay \'00:00:02\';', [], function (res) {
+      theConnection.query('waitfor delay \'00:00:02\';', [], function () {
         pushTest('j')
       })
       pushTest('g')

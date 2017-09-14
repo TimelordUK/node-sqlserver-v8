@@ -57,7 +57,6 @@ suite('date tests', function () {
   // SQL Server is assumed to be only returning valid times and dates.
   test('date retrieval verification', function (testDone) {
     var testDates = ['1-1-1970', '12-31-1969', '2-29-1904', '2-29-2000']
-
     var fns = [
       function (asyncDone) {
         theConnection.queryRaw('DROP TABLE date_test', function () {
