@@ -291,14 +291,15 @@ namespace mssql
 
 	bool OdbcStatement::read_next(int column)
 	{
+		const auto & statement = *_statement;
 		SQLSMALLINT name_length;
 		const auto index = column + 1;
-		auto ret = SQLDescribeCol(*_statement, index, nullptr, 0, &name_length, nullptr, nullptr, nullptr, nullptr);
+		auto ret = SQLDescribeCol(statement, index, nullptr, 0, &name_length, nullptr, nullptr, nullptr, nullptr);
 		if (!check_odbc_error(ret)) return false;
 
 		auto& current = resultset->GetMetadata(column);
 		vector<wchar_t> buffer(name_length + 1);
-		ret = SQLDescribeCol(*_statement, index, buffer.data(), name_length + 1, &name_length, &current.dataType,
+		ret = SQLDescribeCol(statement, index, buffer.data(), name_length + 1, &name_length, &current.dataType,
 		                     &current.columnSize, &current.decimalDigits, &current.nullable);
 		if (!check_odbc_error(ret)) return false;
 		current.name = wstring(buffer.data(), name_length);
@@ -312,7 +313,8 @@ namespace mssql
 	bool OdbcStatement::start_reading_results()
 	{
 		SQLSMALLINT columns;
-		auto ret = SQLNumResultCols(*_statement, &columns);
+		const auto & statement = *_statement;
+		auto ret = SQLNumResultCols(statement, &columns);
 		if (!check_odbc_error(ret)) return false;
 
 		auto column = 0;
@@ -326,7 +328,7 @@ namespace mssql
 			}
 		}
 
-		ret = SQLRowCount(*_statement, &resultset->rowcount);
+		ret = SQLRowCount(statement, &resultset->rowcount);
 		if (!check_odbc_error(ret)) return false;
 
 		return true;
@@ -334,12 +336,13 @@ namespace mssql
 
 	SQLRETURN OdbcStatement::query_timeout(int timeout)
 	{
+		const auto & statement = *_statement;
 		if (timeout > 0)
 		{
 			const auto to = reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout));
-			const auto ret = SQLSetStmtAttr(*_statement, SQL_QUERY_TIMEOUT, to, SQL_IS_UINTEGER);
+			const auto ret = SQLSetStmtAttr(statement, SQL_QUERY_TIMEOUT, to, SQL_IS_UINTEGER);
 			if (!check_odbc_error(ret)) return false;
-			SQLSetStmtAttr(*_statement, SQL_ATTR_QUERY_TIMEOUT, to, SQL_IS_UINTEGER);
+			SQLSetStmtAttr(statement, SQL_ATTR_QUERY_TIMEOUT, to, SQL_IS_UINTEGER);
 			if (!check_odbc_error(ret)) return false;
 		}
 		return true;
@@ -347,15 +350,16 @@ namespace mssql
 
 	bool OdbcStatement::try_prepare(shared_ptr<QueryOperationParams> q)
 	{
+		const auto & statement = *_statement;
 		_query = q;
 		auto query = q->query_string();
 		auto* sql_str = const_cast<SQLWCHAR *>(query.c_str());
 		SQLSMALLINT num_cols;
 
-		auto ret = SQLPrepare(*_statement, sql_str, static_cast<SQLINTEGER>(query.length()));
+		auto ret = SQLPrepare(statement, sql_str, static_cast<SQLINTEGER>(query.length()));
 		if (!check_odbc_error(ret)) return false;
 
-		ret = SQLNumResultCols(*_statement, &num_cols);
+		ret = SQLNumResultCols(statement, &num_cols);
 		if (!check_odbc_error(ret)) return false;
 
 		_preparedStorage = make_shared<BoundDatumSet>();
@@ -372,7 +376,7 @@ namespace mssql
 		for (auto itr = _preparedStorage->begin(); itr != _preparedStorage->end(); ++itr)
 		{
 			auto& datum = *itr;
-			ret = SQLBindCol(*_statement, i + 1, datum->c_type, datum->buffer, datum->buffer_len, datum->get_ind_vec().data());
+			ret = SQLBindCol(statement, i + 1, datum->c_type, datum->buffer, datum->buffer_len, datum->get_ind_vec().data());
 			if (!check_odbc_error(ret)) return false;
 			++i;
 		}
@@ -387,17 +391,19 @@ namespace mssql
 
 	SQLRETURN OdbcStatement::poll_check(SQLRETURN ret, bool direct)
 	{
+		const auto & statement = *_statement;
+
 		if (ret == SQL_STILL_EXECUTING)
 		{
 			while (true)
 			{
 				if (direct)
 				{
-					ret = SQLExecDirect(*_statement, reinterpret_cast<SQLWCHAR*>(""), SQL_NTS);
+					ret = SQLExecDirect(statement, reinterpret_cast<SQLWCHAR*>(""), SQL_NTS);
 				}
 				else
 				{
-					ret = SQLExecute(*_statement);
+					ret = SQLExecute(statement);
 				}
 
 				bool submit_cancel;
@@ -423,6 +429,8 @@ namespace mssql
 
 	bool OdbcStatement::bind_fetch(shared_ptr<BoundDatumSet> param_set)
 	{
+		const auto & statement = *_statement;
+
 		bool polling_mode;
 		{
 			lock_guard<mutex> lock(g_i_mutex);
@@ -436,9 +444,9 @@ namespace mssql
 		}
 		if (polling_mode)
 		{
-			SQLSetStmtAttr(*_statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
+			SQLSetStmtAttr(statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
 		}
-		auto ret = SQLExecute(*_statement);
+		auto ret = SQLExecute(statement);
 		if (polling_mode)
 		{
 			ret = poll_check(ret, false);
@@ -446,7 +454,7 @@ namespace mssql
 
 		if (!check_odbc_error(ret)) return false;
 
-		ret = SQLRowCount(*_statement, &resultset->rowcount);
+		ret = SQLRowCount(statement, &resultset->rowcount);
 		if (!check_odbc_error(ret)) return false;
 
 		return true;

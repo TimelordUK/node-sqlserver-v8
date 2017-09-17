@@ -69,6 +69,14 @@ namespace mssql
 		return val;
 	}
 
+	static Local<Integer> get_as_integer(Local<Object> o, const char* v)
+	{
+		nodeTypeFactory fact;
+		const auto vp = fact.newString(v);
+		const auto val = o->ToObject()->Get(vp);
+		return val->ToInteger();
+	}
+
 	static Local<String> get_as_string(Local<Value> o, const char* v)
 	{
 		nodeTypeFactory fact;
@@ -292,6 +300,17 @@ namespace mssql
 									  // actually available.
 	 */
 
+	static int get_row_count(Local<Value> & p)
+	{
+		auto rows = 1;
+		const auto row_count_int = get_as_value(p->ToObject(), "row_count");
+		if (!row_count_int->IsNull())
+		{
+			rows = row_count_int->Int32Value();
+		}
+		return rows;
+	}
+
 	void BoundDatum::bind_tvp(Local<Value> & p) {
 
 		wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
@@ -301,7 +320,8 @@ namespace mssql
 		param_type = SQL_PARAM_INPUT;
 		c_type = SQL_C_DEFAULT;
 		sql_type = SQL_SS_TABLE;
-		const auto str = get_as_string(p, "type_id");		
+		auto rows = get_row_count(p);
+		const auto str = get_as_string(p, "type_id");
 		indvec.resize(1);	
 		const auto precision = str->Length();
 		storage->ReserveChars(precision + 1);
@@ -313,8 +333,8 @@ namespace mssql
 		memcpy(static_cast<void*>(storage->uint16vec_ptr->data()), wide.c_str(), precision * sizeof(uint16_t));
 		buffer = storage->uint16vec_ptr->data();	
 		buffer_len = precision * sizeof(uint16_t); 
-		param_size = 1; // max no of rows.
-		indvec[0] = 1; // no of rows.
+		param_size = rows; // max no of rows.
+		indvec[0] = rows; // no of rows.
 		digits = 0;
 	}
 

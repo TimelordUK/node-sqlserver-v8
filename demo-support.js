@@ -1,4 +1,5 @@
 var fs = require('fs')
+var path = require('path')
 
 var GlobalConn = (function () {
   var conn_str = 'set global connection here'
@@ -148,7 +149,7 @@ function DemoSupport (native) {
   }
 
   function ProcedureHelper (conn) {
-    var conn_str = conn
+    var connStr = conn
     var async = new Async()
     var assert = new Assert()
     var verbose = true
@@ -161,13 +162,13 @@ function DemoSupport (native) {
           var createSql = 'IF NOT EXISTS (SELECT *  FROM sys.objects WHERE type = \'P\' AND name = \'' + procedureName + '\')'
           createSql += ' EXEC (\'CREATE PROCEDURE ' + procedureName + ' AS BEGIN SET nocount ON; END\')'
           if (verbose) console.log(createSql)
-          sql.query(conn_str, createSql, function () {
+          sql.query(connStr, createSql, function () {
             asyncDone()
           })
         },
 
         function (asyncDone) {
-          sql.query(conn_str, procedureSql,
+          sql.query(connStr, procedureSql,
             function (e) {
               assert.ifError(e, 'Error creating procedure.')
               asyncDone()
@@ -190,7 +191,7 @@ function DemoSupport (native) {
   }
 
   function EmployeeHelper (native, cstr) {
-    var conn_str = cstr
+    var connStr = cstr
     var sql = native
     var verbose = true
 
@@ -233,7 +234,7 @@ function DemoSupport (native) {
       var sequence = [
 
         function (asyncDone) {
-          sql.open(conn_str, function (err, newConn) {
+          sql.open(connStr, function (err, newConn) {
             assert.ifError(err)
             conn = newConn
             asyncDone()
@@ -249,7 +250,7 @@ function DemoSupport (native) {
         },
 
         function (asyncDone) {
-          var folder = __dirname + '/test'
+          var folder = path.join(__dirname, '/test')
           var file = folder + '/sql/' + name
           file += '.sql'
 
@@ -307,7 +308,7 @@ function DemoSupport (native) {
     }
 
     function getJSON () {
-      var folder = __dirname + '/test'
+      var folder = path.join(__dirname, '/test')
       var fs = require('fs')
 
       var parsedJSON = JSON.parse(fs.readFileSync(folder + '/employee.json', 'utf8'))
