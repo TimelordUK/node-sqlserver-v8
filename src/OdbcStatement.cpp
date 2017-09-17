@@ -152,6 +152,14 @@ namespace mssql
 		tvps.push_back({ current_param, cols });
 	}
 
+	/*
+	SQLHDESC hdesc = nullptr;
+	SQLGetStmtAttr(statement, SQL_ATTR_IMP_PARAM_DESC, &hdesc, 0, nullptr);
+	const auto char_vec = (*datum).get_storage()->uint16vec_ptr;
+	const auto d = char_vec->data();
+	SQLSetDescField(hdesc, current_param, SQL_CA_SS_TYPE_NAME, static_cast<SQLPOINTER>(d), char_vec->size() * sizeof(WCHAR));
+	*/
+
 	// bind all the parameters in the array
 	bool OdbcStatement::bind_params(shared_ptr<BoundDatumSet> params)
 	{
@@ -173,13 +181,6 @@ namespace mssql
 			bind_datum(current_param, datum);
 			if (datum->is_tvp)
 			{	
-				/*
-				SQLHDESC hdesc = nullptr;
-				SQLGetStmtAttr(statement, SQL_ATTR_IMP_PARAM_DESC, &hdesc, 0, nullptr);
-				const auto char_vec = (*datum).get_storage()->uint16vec_ptr;
-				const auto d = char_vec->data();
-				SQLSetDescField(hdesc, current_param, SQL_CA_SS_TYPE_NAME, static_cast<SQLPOINTER>(d), char_vec->size() * sizeof(WCHAR));
-				*/
 				queue_tvp(current_param, itr, datum, tvps);	
 			}
 			++current_param;
