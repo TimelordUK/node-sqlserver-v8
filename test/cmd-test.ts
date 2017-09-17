@@ -70,14 +70,12 @@ class Tvp implements SimpleTest {
 
             setTimeout( () => {
                 let pm = conn.procedureMgr();
-                pm.get('InsertFromTVP', procedure => {
+                pm.get('MyCustomStoredProcedure', procedure => {
                     let meta:v8ProcedureSummary = procedure.getMeta();
                     let c0 = meta.params[1];
                     let pTvp = {
-                        vFirstName:"Father",
-                        vLastName:"Christmas",
-                        vAddress:"A very cold place",
-                        vCity:"Lapland"
+                        a:"Father",
+                        b:999
                     };
                     procedure.call([pTvp], (err, results)=> {
                         console.log(err);

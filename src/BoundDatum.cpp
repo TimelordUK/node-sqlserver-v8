@@ -1,5 +1,6 @@
 #include <TimestampColumn.h>
 #include <BoundDatum.h>
+#include <codecvt>
 
 namespace mssql
 {
@@ -8,9 +9,46 @@ namespace mssql
 	const int sql_server_2008_default_timestamp_precision = 27;
 	const int sql_server_2008_default_datetime_scale = 7;
 
+	static Local<Boolean> get_as_bool(Local<Value> o, const char* v)
+	{
+		nodeTypeFactory fact;
+		const auto vp = fact.newString(v);
+		if (o->IsNull())
+		{
+			return fact.newBoolean(false);
+		}
+		if (!o->IsObject())
+		{
+			return fact.newBoolean(false);
+		}
+		auto as_obj = o->ToObject();
+		if (as_obj->IsNull())
+		{
+			return fact.newBoolean(false);
+		}
+		const auto val = as_obj->Get(vp);
+		if (val->IsNull())
+		{
+			return fact.newBoolean(false);
+		}
+		return val->ToBoolean();
+	}
+
+	bool sql_type_s_maps_to_tvp(Local<Value> p)
+	{
+		const auto is_user_defined = get_as_bool(p, "is_user_defined");
+		if (is_user_defined->IsNull()) return false;
+		return is_user_defined->BooleanValue();
+	}
+
 	bool BoundDatum::bind(Local<Value>& p)
 	{
 		auto res = false;
+		if (sql_type_s_maps_to_tvp(p))
+		{
+			bind_tvp(p);
+			return true;
+		}
 		if (p->IsArray())
 		{
 			res = bind_array(p);
@@ -39,30 +77,7 @@ namespace mssql
 		return val->ToString();
 	}
 
-	static Local<Boolean> get_as_bool(Local<Value> o, const char* v)
-	{
-		nodeTypeFactory fact;
-		const auto vp = fact.newString(v);
-		if (o->IsNull())
-		{
-			return fact.newBoolean(false);
-		}
-		if (!o->IsObject())
-		{
-			return fact.newBoolean(false);
-		}
-		auto as_obj = o->ToObject();	
-		if (as_obj->IsNull())
-		{
-			return fact.newBoolean(false);
-		}
-		const auto val = as_obj->Get(vp);
-		if (val->IsNull())
-		{
-			return fact.newBoolean(false);
-		}
-		return val->ToBoolean();
-	}
+
 
 	void BoundDatum::bind_null(const Local<Value>& p)
 	{
@@ -278,19 +293,26 @@ namespace mssql
 	 */
 
 	void BoundDatum::bind_tvp(Local<Value> & p) {
+
+		wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+		//string narrow = converter.to_bytes(wide_utf16_source_string);
+		
 		is_tvp = true;
 		param_type = SQL_PARAM_INPUT;
 		c_type = SQL_C_DEFAULT;
 		sql_type = SQL_SS_TABLE;
-		const auto str = get_as_string(p, "type_id");
+		const auto str = get_as_string(p, "type_id");		
 		indvec.resize(1);	
 		const auto precision = str->Length();
 		storage->ReserveChars(precision + 1);
+		storage->ReserveUint16(precision + 1);
 		auto* itr_p = storage->charvec_ptr->data();
-		buffer = itr_p;
 		str->WriteUtf8(itr_p, precision);
-		itr_p[precision] = 0;
-		buffer_len = 1; // note *not* number of chars of table.
+		const string narrow = storage->charvec_ptr->data();
+		auto wide = converter.from_bytes(narrow);
+		memcpy(static_cast<void*>(storage->uint16vec_ptr->data()), wide.c_str(), precision * sizeof(uint16_t));
+		buffer = storage->uint16vec_ptr->data();	
+		buffer_len = precision * sizeof(uint16_t); 
 		param_size = 1; // max no of rows.
 		indvec[0] = 1; // no of rows.
 		digits = 0;
@@ -866,12 +888,7 @@ namespace mssql
 		return res;
 	}
 
-	bool sql_type_s_maps_to_tvp(Local<Value> p)
-	{
-		const auto is_user_defined = get_as_bool(p, "is_user_defined");
-		if (is_user_defined->IsNull()) return false;
-		return is_user_defined->BooleanValue();	
-	}
+
 
 	bool sql_type_s_maps_to_numeric(Local<Value> p)
 	{
