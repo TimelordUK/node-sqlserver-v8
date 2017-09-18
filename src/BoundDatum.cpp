@@ -1112,6 +1112,225 @@ namespace mssql
 		}
 	}
 
+	void BoundDatum::sql_longvarbinary(Local<Value> pp)
+	{
+		if (pp->IsArray()) {
+			bind_var_binary_array(pp);
+		}
+		else {
+			bind_long_var_binary(pp);
+		}
+	}
+
+	void BoundDatum::sql_integer(Local<Value> pp)
+	{
+		if (pp->IsArray())
+		{
+			bind_int32_array(pp);
+		}
+		else {
+			bind_int32(pp);
+		}
+	}
+
+	void BoundDatum::sql_wvarchar(Local<Value> pp)
+	{
+		if (pp->IsArray())
+		{
+			bind_w_var_char_array(pp);
+		}
+		else {
+			bind_w_var_char(pp);
+		}
+	}
+
+	void BoundDatum::sql_wlongvarchar(Local<Value> pp)
+	{
+		if (pp->IsArray())
+		{
+			bind_w_var_char_array(pp);
+		}
+		else {
+			bind_w_long_var_char(pp);
+		}
+	}
+
+	void BoundDatum::sql_bit(Local<Value> pp)
+	{
+		if (pp->IsArray()) {
+			bind_boolean_array(pp);
+		}
+		else {
+			bind_boolean(pp);
+		}
+	}
+
+	void BoundDatum::sql_bigint(Local<Value> pp)
+	{
+		if (pp->IsArray())
+		{
+			bind_integer_array(pp);
+		}
+		else {
+			bind_integer(pp);
+		}
+	}
+
+	void BoundDatum::sql_double(Local<Value> pp)
+	{
+		if (pp->IsArray())
+		{
+			bind_double_array(pp);
+		}
+		else {
+			bind_double(pp);
+		}
+	}
+
+	void BoundDatum::sql_float(Local<Value> pp)
+	{
+		if (pp->IsArray())
+		{
+			bind_double_array(pp);
+			sql_type = SQL_FLOAT;
+		}
+		else {
+			bind_float(pp);
+		}
+	}
+
+	void BoundDatum::sql_real(Local<Value> pp)
+	{
+		if (pp->IsArray())
+		{
+			bind_double_array(pp);
+			sql_type = SQL_REAL;
+		}
+		else {
+			bind_real(pp);
+		}
+	}
+
+	void BoundDatum::sql_tinyint(Local<Value> pp)
+	{
+		if (pp->IsArray()) {
+			bind_int32_array(pp);
+			sql_type = SQL_TINYINT;
+		}
+		else
+		{
+			bind_tiny_int(pp);
+		}
+	}
+
+	void BoundDatum::sql_smallint(Local<Value> pp)
+	{
+		if (pp->IsArray())
+		{
+			bind_uint32_array(pp);
+			sql_type = SQL_SMALLINT;
+		}
+		else {
+			bind_small_int(pp);
+		}
+	}
+
+	void BoundDatum::sql_numeric(Local<Value> pp)
+	{
+		if (pp->IsArray())
+		{
+			bind_numeric_array(pp);
+		}
+		else {
+			bind_numeric(pp);
+		}
+	}
+
+	void BoundDatum::sql_char(Local<Value> pp)
+	{
+		if (pp->IsArray())
+		{
+			bind_w_var_char_array(pp);
+		}
+		else {
+			bind_char(pp);
+		}
+	}
+
+	void BoundDatum::sql_varchar(Local<Value> pp)
+	{
+		if (pp->IsArray())
+		{
+			bind_w_var_char_array(pp);
+		}
+		else {
+			bind_var_char(pp);
+		}
+	}
+
+	void BoundDatum::sql_ss_time2(Local<Value> pp)
+	{
+		if (pp->IsArray()) {
+			bind_time_stamp_offset_array(pp);
+		}
+		else
+		{
+			bind_time(pp);
+		}
+	}
+
+	void BoundDatum::sql_type_date(Local<Value> pp)
+	{
+		if (pp->IsArray()) {
+			bind_time_stamp_offset_array(pp);
+		}
+		else
+		{
+			bind_date(pp);
+		}
+	}
+
+	void BoundDatum::sql_type_timestamp(Local<Value> pp)
+	{
+		if (pp->IsArray()) {
+			bind_time_stamp_offset_array(pp);
+		}
+		else
+		{
+			bind_time_stamp(pp);
+		}
+	}
+
+	void BoundDatum::sql_ss_timestampoffset(Local<Value> pp)
+	{
+		if (pp->IsArray()) {
+			bind_time_stamp_offset_array(pp);
+		}
+		else
+		{
+			bind_time_stamp_offset(pp);
+		}
+	}
+
+	void BoundDatum::sql_varbinary(Local<Value> pp)
+	{
+		if (pp->IsArray())
+		{
+			bind_var_binary_array(pp);
+		}
+		else {
+			if (pp->IsNull()
+				|| (pp->IsObject() && node::Buffer::HasInstance(pp)))
+			{
+				bind_var_binary(pp);
+			}
+			else
+			{
+				err = "Invalid parameter type";
+			}
+		}
+	}
+
 	bool BoundDatum::user_bind(Local<Value>& p, Local<Value>& v)
 	{
 		sql_type = v->Int32Value();
@@ -1125,206 +1344,82 @@ namespace mssql
 		switch (sql_type)
 		{
 		case SQL_LONGVARBINARY:
-			if (pp->IsArray()) {
-				bind_var_binary_array(pp);
-			}
-			else {
-				bind_long_var_binary(pp);
-			}
+			sql_longvarbinary(pp);
 			break;
 
 		case SQL_VARBINARY:
 		{
-			if (pp->IsArray())
-			{
-				bind_var_binary_array(pp);
-			}
-			else {
-				if (pp->IsNull()
-					|| (pp->IsObject() && node::Buffer::HasInstance(pp)))
-				{
-					bind_var_binary(pp);
-				}
-				else
-				{
-					err = "Invalid parameter type";
-					return false;
-				}
-			}
+			sql_varbinary(pp);
+			if (err) return false;
 		}
 		break;
 
 		case SQL_INTEGER:
-			if (pp->IsArray())
-			{
-				bind_int32_array(pp);
-			}
-			else {
-				bind_int32(pp);
-			}
+			sql_integer(pp);
 			break;
 
 		case SQL_WVARCHAR:
-			if (pp->IsArray())
-			{
-				bind_w_var_char_array(pp);
-			}
-			else {
-				bind_w_var_char(pp);
-			}
+			sql_wvarchar(pp);
 			break;
 
 		case SQL_WLONGVARCHAR:
-			if (pp->IsArray())
-			{
-				bind_w_var_char_array(pp);
-			}
-			else {
-				bind_w_long_var_char(pp);
-			}
+			sql_wlongvarchar(pp);
 			break;
 
 		case SQL_BIT:
-			if (pp->IsArray()) {
-				bind_boolean_array(pp);
-			}
-			else {
-				bind_boolean(pp);
-			}
+			sql_bit(pp);
 			break;
 
 		case SQL_BIGINT:
-			if (pp->IsArray())
-			{
-				bind_integer_array(pp);
-			}
-			else {
-				bind_integer(pp);
-			}
+			sql_bigint(pp);
 			break;
 
 		case SQL_DOUBLE:
-			if (pp->IsArray())
-			{
-				bind_double_array(pp);
-			}
-			else {
-				bind_double(pp);
-			}
+			sql_double(pp);
 			break;
 
 		case SQL_FLOAT:
-			if (pp->IsArray())
-			{
-				bind_double_array(pp);
-				sql_type = SQL_FLOAT;
-			}
-			else {
-				bind_float(pp);
-			}
+			sql_float(pp);
 			break;
 
 		case SQL_REAL:
-			if (pp->IsArray())
-			{
-				bind_double_array(pp);
-				sql_type = SQL_REAL;
-			}
-			else {
-				bind_real(pp);
-			}
+			sql_real(pp);
 			break;
 
 		case SQL_TINYINT:
-			if (pp->IsArray()) {
-				bind_int32_array(pp);
-				sql_type = SQL_TINYINT;
-			}
-			else
-			{
-				bind_tiny_int(pp);
-			}
+			sql_tinyint(pp);
 			break;
 
 		case SQL_SMALLINT:
-			if (pp->IsArray())
-			{
-				bind_uint32_array(pp);
-				sql_type = SQL_SMALLINT;
-			}
-			else {
-				bind_small_int(pp);
-			}
+			sql_smallint(pp);
 			break;
 
 		case SQL_NUMERIC:
-			if (pp->IsArray())
-			{
-				bind_numeric_array(pp);
-			}
-			else {
-				bind_numeric(pp);
-			}
+			sql_numeric(pp);
 			break;
 
 		case SQL_CHAR:
-			if (pp->IsArray())
-			{
-				bind_w_var_char_array(pp);
-			}
-			else {
-				bind_char(pp);
-			}
+			sql_char(pp);
 			break;
 
 		case SQL_VARCHAR:
-			if (pp->IsArray())
-			{
-				bind_w_var_char_array(pp);
-			}
-			else {
-				bind_var_char(pp);
-			}
+			sql_varchar(pp);
 			break;
 
 		case SQL_SS_TIME2:
-			if (pp->IsArray()) {
-				bind_time_stamp_offset_array(pp);
-			}
-			else
-			{
-				bind_time(pp);
-			}
+			sql_ss_time2(pp);
 			break;
 
 		case SQL_TYPE_DATE:
-			if (pp->IsArray()) {
-				bind_time_stamp_offset_array(pp);
-			}
-			else
-			{
-				bind_date(pp);
-			}
+			sql_type_date(pp);
 			break;
 
 		case SQL_TYPE_TIMESTAMP:
-			if (pp->IsArray()) {
-				bind_time_stamp_offset_array(pp);
-			}
-			else
-			{
-				bind_time_stamp(pp);
-			}
+			sql_type_timestamp(pp);
 			break;
 
 		case SQL_SS_TIMESTAMPOFFSET:
-			if (pp->IsArray()) {
-				bind_time_stamp_offset_array(pp);
-			}
-			else
-			{
-				bind_time_stamp_offset(pp);
-			}
+			sql_ss_timestampoffset(pp);
 			break;
 
 		default:

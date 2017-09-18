@@ -159,6 +159,26 @@ namespace mssql
 		bool user_bind(Local<Value> &p, Local<Value> &v);
 		void assign_precision(Local<Object> &pv);
 
+		void sql_longvarbinary(Local<Value> pp);
+		void sql_integer(Local<Value> pp);
+		void sql_wvarchar(Local<Value> pp);
+		void sql_wlongvarchar(Local<Value> p);
+		void sql_bit(Local<Value> pp);
+		void sql_bigint(Local<Value> pp);
+		void sql_double(Local<Value> pp);
+		void sql_float(Local<Value> pp);
+		void sql_real(Local<Value> pp);
+		void sql_tinyint(Local<Value> pp);
+		void sql_smallint(Local<Value> pp);
+		void sql_numeric(Local<Value> pp);
+		void sql_char(Local<Value> pp);
+		void sql_varchar(Local<Value> pp);
+		void sql_ss_time2(Local<Value> pp);
+		void sql_type_date(Local<Value> pp);
+		void sql_type_timestamp(Local<Value> pp);
+		void sql_ss_timestampoffset(Local<Value> pp);
+		void sql_varbinary(Local<Value> pp);
+
 		static Handle<Value> unbind_null();
 		Handle<Value> unbind_string() const;
 		Handle<Value> unbind_double() const;
