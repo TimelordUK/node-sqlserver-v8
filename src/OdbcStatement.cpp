@@ -34,6 +34,10 @@ namespace mssql
 		const auto f = params.begin();
 		if (f == params.end()) return 0;
 		auto p = *f;
+		if (p->is_tvp)
+		{
+			//return p->param_size;
+		}
 		const auto size = p->get_ind_vec().size();
 		return size;
 	}

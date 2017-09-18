@@ -100,7 +100,9 @@ namespace mssql
 
 		void bind_small_int(const Local<Value> & p);
 		void bind_tiny_int(const Local<Value> & p);
+
 		void bind_numeric(const Local<Value> & p);
+		void bind_numeric_array(const Local<Value> & p);
 		void reserve_numeric(SQLLEN len);
 
 		void bind_int32(const Local<Value> & p);

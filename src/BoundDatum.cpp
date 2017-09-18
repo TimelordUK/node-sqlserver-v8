@@ -320,7 +320,7 @@ namespace mssql
 		param_type = SQL_PARAM_INPUT;
 		c_type = SQL_C_DEFAULT;
 		sql_type = SQL_SS_TABLE;
-		auto rows = get_row_count(p);
+		const auto rows = get_row_count(p);
 		const auto str = get_as_string(p, "type_id");
 		indvec.resize(1);	
 		const auto precision = str->Length();
@@ -436,6 +436,28 @@ namespace mssql
 			param_size = ns.precision;
 			digits = ns.scale;
 			indvec[0] = sizeof(SQL_NUMERIC_STRUCT);
+		}
+	}
+
+	void BoundDatum::bind_numeric_array(const Local<Value>& p)
+	{
+		auto arr = Local<Array>::Cast(p);
+		const int len = arr->Length();
+		reserve_numeric(len);
+		auto& vec = *storage->numeric_ptr;
+		for (auto i = 0; i < len; ++i)
+		{
+			auto& ns = vec[i];
+			indvec[i] = SQL_NULL_DATA;
+			const auto elem = arr->Get(i);
+			if (!elem->IsNull())
+			{
+				const auto d = elem ->NumberValue();
+				encodeNumericStruct(d, static_cast<int>(param_size), digits, ns);
+				param_size = ns.precision;
+				digits = ns.scale;
+				indvec[i] = sizeof(SQL_NUMERIC_STRUCT);
+			}
 		}
 	}
 
@@ -1103,11 +1125,21 @@ namespace mssql
 		switch (sql_type)
 		{
 		case SQL_LONGVARBINARY:
-			bind_long_var_binary(pp);
+			if (pp->IsArray()) {
+				bind_var_binary_array(pp);
+			}
+			else {
+				bind_long_var_binary(pp);
+			}
 			break;
 
 		case SQL_VARBINARY:
+		{
+			if (pp->IsArray())
 			{
+				bind_var_binary_array(pp);
+			}
+			else {
 				if (pp->IsNull()
 					|| (pp->IsObject() && node::Buffer::HasInstance(pp)))
 				{
@@ -1119,74 +1151,180 @@ namespace mssql
 					return false;
 				}
 			}
-			break;
+		}
+		break;
 
 		case SQL_INTEGER:
-			bind_int32(pp);
+			if (pp->IsArray())
+			{
+				bind_int32_array(pp);
+			}
+			else {
+				bind_int32(pp);
+			}
 			break;
 
 		case SQL_WVARCHAR:
-			bind_w_var_char(pp);
+			if (pp->IsArray())
+			{
+				bind_w_var_char_array(pp);
+			}
+			else {
+				bind_w_var_char(pp);
+			}
 			break;
 
 		case SQL_WLONGVARCHAR:
-			bind_w_long_var_char(pp);
+			if (pp->IsArray())
+			{
+				bind_w_var_char_array(pp);
+			}
+			else {
+				bind_w_long_var_char(pp);
+			}
 			break;
 
 		case SQL_BIT:
-			bind_boolean(pp);
+			if (pp->IsArray()) {
+				bind_boolean_array(pp);
+			}
+			else {
+				bind_boolean(pp);
+			}
 			break;
 
 		case SQL_BIGINT:
-			bind_integer(pp);
+			if (pp->IsArray())
+			{
+				bind_integer_array(pp);
+			}
+			else {
+				bind_integer(pp);
+			}
 			break;
 
 		case SQL_DOUBLE:
-			bind_double(pp);
+			if (pp->IsArray())
+			{
+				bind_double_array(pp);
+			}
+			else {
+				bind_double(pp);
+			}
 			break;
 
 		case SQL_FLOAT:
-			bind_float(pp);
+			if (pp->IsArray())
+			{
+				bind_double_array(pp);
+				sql_type = SQL_FLOAT;
+			}
+			else {
+				bind_float(pp);
+			}
 			break;
 
 		case SQL_REAL:
-			bind_real(pp);
+			if (pp->IsArray())
+			{
+				bind_double_array(pp);
+				sql_type = SQL_REAL;
+			}
+			else {
+				bind_real(pp);
+			}
 			break;
 
 		case SQL_TINYINT:
-			bind_tiny_int(pp);
+			if (pp->IsArray()) {
+				bind_int32_array(pp);
+				sql_type = SQL_TINYINT;
+			}
+			else
+			{
+				bind_tiny_int(pp);
+			}
 			break;
 
 		case SQL_SMALLINT:
-			bind_small_int(pp);
+			if (pp->IsArray())
+			{
+				bind_uint32_array(pp);
+				sql_type = SQL_SMALLINT;
+			}
+			else {
+				bind_small_int(pp);
+			}
 			break;
 
 		case SQL_NUMERIC:
-			bind_numeric(pp);
+			if (pp->IsArray())
+			{
+				bind_numeric_array(pp);
+			}
+			else {
+				bind_numeric(pp);
+			}
 			break;
 
 		case SQL_CHAR:
-			bind_char(pp);
+			if (pp->IsArray())
+			{
+				bind_w_var_char_array(pp);
+			}
+			else {
+				bind_char(pp);
+			}
 			break;
 
 		case SQL_VARCHAR:
-			bind_var_char(pp);
+			if (pp->IsArray())
+			{
+				bind_w_var_char_array(pp);
+			}
+			else {
+				bind_var_char(pp);
+			}
 			break;
 
 		case SQL_SS_TIME2:
-			bind_time(pp);
+			if (pp->IsArray()) {
+				bind_time_stamp_offset_array(pp);
+			}
+			else
+			{
+				bind_time(pp);
+			}
 			break;
 
 		case SQL_TYPE_DATE:
-			bind_date(pp);
+			if (pp->IsArray()) {
+				bind_time_stamp_offset_array(pp);
+			}
+			else
+			{
+				bind_date(pp);
+			}
 			break;
 
 		case SQL_TYPE_TIMESTAMP:
-			bind_time_stamp(pp);
+			if (pp->IsArray()) {
+				bind_time_stamp_offset_array(pp);
+			}
+			else
+			{
+				bind_time_stamp(pp);
+			}
 			break;
 
 		case SQL_SS_TIMESTAMPOFFSET:
-			bind_time_stamp_offset(pp);
+			if (pp->IsArray()) {
+				bind_time_stamp_offset_array(pp);
+			}
+			else
+			{
+				bind_time_stamp_offset(pp);
+			}
 			break;
 
 		default:
