@@ -225,6 +225,7 @@ dbo.PersonTVP	4	04: vCity	vCity	varchar		255	0	0	SQL_Latin1_General_CP1_CI_AS
     }
 
     export interface v8ProcedureSummary {
+        select:string
         signature: string
         summary: string
         params: v8ProcedureParam[]
