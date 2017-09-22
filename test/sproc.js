@@ -312,4 +312,50 @@ suite('sproc', function () {
       testDone()
     })
   })
+
+  test('test asselect on proc', function (testDone) {
+    var spName = 'test_sp_get_int_int'
+
+    var def = 'alter PROCEDURE <name>' +
+      '(\n' +
+      '@num1 INT,\n' +
+      '@num2 INT,\n' +
+      '@num3 INT OUTPUT\n' +
+      '\n)' +
+      'AS\n' +
+      'BEGIN\n' +
+      '   SET @num3 = @num1 + @num2\n' +
+      '   RETURN 99;\n' +
+      'END\n'
+
+    var fns = [
+      function (asyncDone) {
+        procedureHelper.createProcedure(spName, def, function () {
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var pm = theConnection.procedureMgr()
+        pm.get(spName, function(proc) {
+          var meta = proc.getMeta()
+          var s = meta.select
+          theConnection.query(s, [10, 5], function (err, results) {
+            assert.ifError(err)
+            var expected = [{
+              num3: 15,
+              ___return___: 99
+            }]
+            assert.deepEqual(results, expected, 'results didn\'t match')
+            asyncDone()
+          })
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
 })
