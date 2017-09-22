@@ -173,11 +173,60 @@ suite('sproc', function () {
 
       function (asyncDone) {
         var pm = theConnection.procedureMgr()
-        pm.callproc(spName, ['US of A!'], function (err, results, output) {
-          assert.ifError(err)
-          var expected = [8]
-          assert.deepEqual(output, expected, 'results didn\'t match')
+        pm.get(spName, function (proc) {
+          proc.call(['US of A!'], function (err, results, output) {
+            assert.ifError(err)
+            var expected = [8]
+            assert.deepEqual(output, expected, 'results didn\'t match')
+            asyncDone()
+          })
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
+  test('stream call proc no callback', function (testDone) {
+    var spName = 'test_len_of_sp'
+
+    var def = 'alter PROCEDURE <name> @param VARCHAR(50) \n' +
+      ' AS \n' +
+      ' BEGIN \n' +
+      '     select LEN(@param) as len; \n' +
+      ' END \n'
+
+    var fns = [
+      function (asyncDone) {
+        procedureHelper.createProcedure(spName, def, function () {
           asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var pm = theConnection.procedureMgr()
+        var rows = []
+        pm.get(spName, function (proc) {
+          var qp = proc.call(['javascript'])
+          qp.on('column', function(c,data) {
+            var l = c.toString()
+            var r = {}
+            r[l] = data
+            rows.push(r)
+          })
+
+          qp.on('done', function() {
+            assert(rows.length === 1)
+            var expected = [
+              {
+                '0':10
+              }
+            ]
+            assert.deepEqual(expected, rows)
+            asyncDone()
+          })
         })
       }
     ]
