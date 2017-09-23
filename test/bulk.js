@@ -38,6 +38,61 @@ suite('bulk', function () {
     })
   })
 
+  test('employee use tm to get a table value type representing table', function (testDone) {
+    var tableName = 'Employee'
+    var bulkMgr
+
+    var fns = [
+
+      function (asyncDone) {
+        helper.dropCreateTable({
+          name: tableName
+        }, function () {
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var tm = theConnection.tableMgr()
+        tm.bind(tableName, function (bulk) {
+          bulkMgr = bulk
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var sql = 'IF TYPE_ID(N\'EmployeeType\') IS not NULL'
+        sql += ' drop type EmployeeType'
+        theConnection.query(sql, function(err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var sql = bulkMgr.asUserType()
+        theConnection.query(sql, function(err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var sqlMeta = sql.metaResolver
+        sqlMeta.getUserType(theConnection, 'EmployeeType', function (err, def) {
+          assert.ifError(err)
+          var summary = bulkMgr.getSummary()
+          assert(def.length = summary.columns.length)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
   test('bulk insert/update/select int column of signed batchSize ' + test2BatchSize, function (testDone) {
     signedTest(test2BatchSize, true, true, function () {
       testDone()
@@ -147,6 +202,9 @@ suite('bulk', function () {
       testDone()
     })
   })
+
+
+
 
   function bindInsert (tableName, done) {
     var bulkMgr
