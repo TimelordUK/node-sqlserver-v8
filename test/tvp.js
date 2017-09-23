@@ -49,6 +49,7 @@ suite('tvp', function () {
   test('use tvp to select from table type', function (testDone) {
     var tableName = 'Employee'
     var bulkMgr
+    var selectSql
 
     var fns = [
 
@@ -85,13 +86,20 @@ suite('tvp', function () {
         })
       },
 
+      function(asyncDone) {
+        var pm = theConnection.procedureMgr()
+        pm.get('EmployeeTvpSelect', function (proc) {
+          selectSql = proc.getMeta().select
+          asyncDone()
+        })
+      },
+
       function (asyncDone) {
         var parsedJSON = helper.getJSON()
         var table = bulkMgr.asTableType()
         populateTable(parsedJSON, table)
-        var q = 'exec EmployeeTvpSelect ( @tvp = ? )'
         var tp = sql.Tvp(table.name, table)
-        theConnection.query(q, [tp], function(err, res) {
+        theConnection.query(selectSql, [tp], function(err, res) {
           asyncDone()
         })
       }

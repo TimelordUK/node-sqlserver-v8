@@ -171,6 +171,7 @@ export module MsNodeSqlDriverApiModule {
 
     export interface v8BulkTableMgr {
         getSummary(): v8BulkMgrSummary
+        asUserType(name:string): string
         selectRows(cols: any[], cb: v8BulkSelectCb): void
         insertRows(rows: any[], cb: v8StatusCb): void
         deleteRows(rows: any[], cb: v8StatusCb): void

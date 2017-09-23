@@ -4,6 +4,7 @@
 	   COL.name                                         AS column_name,
        ST.name                                          AS data_type,
        ST.name                                          AS type_id,
+       ST.name                                          AS declaration,
        CASE COL.Is_Nullable
        WHEN 1 THEN ''
        ELSE        'NOT NULL'

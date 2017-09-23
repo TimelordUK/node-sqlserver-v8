@@ -113,7 +113,9 @@ namespace mssql
 		{			
 			auto tvpret = SQLSetStmtAttr(statement, SQL_SOPT_SS_PARAM_FOCUS,
 				reinterpret_cast<SQLPOINTER>(itr->first), SQL_IS_INTEGER);
-			if (!check_odbc_error(tvpret)) return false;
+			if (!check_odbc_error(tvpret)) {
+				return false;
+			}
 			auto current_param = 1;
 			auto col_set = itr->second;
 			for (auto col_itr = col_set->begin(); col_itr != col_set->end(); ++col_itr)
@@ -123,7 +125,9 @@ namespace mssql
 			}
 			tvpret = SQLSetStmtAttr(statement, SQL_SOPT_SS_PARAM_FOCUS,
 				static_cast<SQLPOINTER>(nullptr), SQL_IS_INTEGER);
-			if (!check_odbc_error(tvpret)) return false;
+			if (!check_odbc_error(tvpret)) {
+				return false;
+			}
 		}
 		return true;
 	}
