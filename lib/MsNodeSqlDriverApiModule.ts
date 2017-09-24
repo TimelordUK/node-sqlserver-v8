@@ -15,72 +15,73 @@ export module MsNodeSqlDriverApiModule {
         queryRaw(conn_str: string, description: v8QueryDescription, params?: any[], cb?: v8QueryRawCb): v8Query
         queryRaw(conn_str: string, sql: string, params?: any[], cb?: v8QueryRawCb): v8Query
         queryRaw(conn_str: string, sql: string, cb: v8QueryRawCb): v8Query
-        Bit(v:number): any;
-        BigInt(v:number): any;
-        Int(v:number): any;
-        TinyInt(v:number): any;
-        SmallInt(v:number): any;
-        Float(v:number): any;
-        Numeric(v:number): any;
-        Money(v:number): any;
-        SmallMoney(v:number): any;
-        Decimal(v:number): any;
-        Double(v:number): any;
-        Real(v:number): any;
-        WVarChar(v:String) : any;
-        Char(v:String) : any;
-        VarChar(v:String) : any;
-        NChar(v:String) : any;
-        NVarChar(v:String) : any;
-        Text(v:String) : any;
-        NText(v:String) : any;
-        Xml(v:String) : any;
-        WLongVarChar(v:string) : any;
-        UniqueIdentifier(v:String) : any;
-        VarBinary(v:any) : any;
-        LongVarBinary(v:any) : any;
-        Image(v:any) : any;
-        Time(v:Date) : any;
-        Time2(v:Date) : any;
-        Date(v:Date) : any;
-        DateTime(v:Date) : any;
-        DateTime2(v:Date) : any;
-        DateRound(v:Date) : any;
-        SmallDateTime(v:Date) : any;
-        DateTimeOffset(v:Date) : any;
-        PollingQuery(s:string) : v8QueryDescription;
-        TimeoutQuery(s:string, to:number) : v8QueryDescription;
-        TzOffsetQuery(s:string, offsetMinutes?:number) : v8QueryDescription;
+        Bit(v:number): any
+        BigInt(v:number): any
+        Int(v:number): any
+        TinyInt(v:number): any
+        SmallInt(v:number): any
+        Float(v:number): any
+        Numeric(v:number): any
+        Money(v:number): any
+        SmallMoney(v:number): any
+        Decimal(v:number): any
+        Double(v:number): any
+        Real(v:number): any
+        WVarChar(v:String) : any
+        Char(v:String) : any
+        VarChar(v:String) : any
+        NChar(v:String) : any
+        NVarChar(v:String) : any
+        Text(v:String) : any
+        NText(v:String) : any
+        Xml(v:String) : any
+        WLongVarChar(v:string) : any
+        UniqueIdentifier(v:String) : any
+        VarBinary(v:any) : any
+        LongVarBinary(v:any) : any
+        Image(v:any) : any
+        Time(v:Date) : any
+        Time2(v:Date) : any
+        Date(v:Date) : any
+        DateTime(v:Date) : any
+        DateTime2(v:Date) : any
+        DateRound(v:Date) : any
+        SmallDateTime(v:Date) : any
+        DateTimeOffset(v:Date) : any
+        PollingQuery(s:string) : v8QueryDescription
+        TimeoutQuery(s:string, to:number) : v8QueryDescription
+        TzOffsetQuery(s:string, offsetMinutes?:number) : v8QueryDescription,
+        TvpFromTable(table:v8Table) : v8ProcedureParam
     }
 
     export interface v8Table {
-        name:string,
+        name:string
         rows: any[]
         columns: v8TableColumn[]
         addRowsFromObjects(vec:any) : void
     }
 
     export interface v8TableColumnType {
-        declaration:string,
+        declaration:string
         length:string
     }
 
     export interface v8TableColumn {
         type_name: string
-        column_id: number,
-        ordered_column: string,
-        column_name: string,
-        name: string,
-        data_type: string,
-        type_id: string,
-        declaration: string,
-        nullable: string,
-        length: number,
-        precision: number,
-        scale: 0,
-        collation: string,
-        is_output: number,
-        system_type_id: number,
+        column_id: number
+        ordered_column: string
+        column_name: string
+        name: string
+        data_type: string
+        type_id: string
+        declaration: string
+        nullable: string
+        length: number
+        precision: number
+        scale: 0
+        collation: string
+        is_output: number
+        system_type_id: number
         type:v8TableColumnType
     }
 
