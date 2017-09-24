@@ -149,6 +149,53 @@ suite('tvp', function () {
     }
   ]
 
+  test('use tvp simple test type insert test using pm', function (testDone) {
+    var tableName = 'TestTvp'
+    var table
+    var procedure
+
+    var fns = [
+
+      function (asyncDone) {
+        setupSimpleType(tableName, function(t) {
+          table = t
+          table.addRowsFromObjects(vec)
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var pm = theConnection.procedureMgr()
+        pm.get('insertTestTvp', function(p) {
+          assert(p)
+          procedure = p
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var tp = sql.TvpFromTable(table)
+        table.rows = []
+        procedure.call([tp], function (err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        theConnection.query('select * from ' + tableName, function (err, res) {
+          assert.ifError(err)
+          assert.deepEqual(vec, res)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
   test('use tvp simple test type select test', function (testDone) {
     var tableName = 'TestTvp'
     var table
