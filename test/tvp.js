@@ -37,10 +37,16 @@ suite('tvp', function () {
   function setupSimpleType(tableName, done) {
 
     var tableTypeName = tableName + 'Type'
+    var insertProcedureTypeName = 'insert' + tableName
     var table
 
-    var dropTable = 'IF OBJECT_ID(\'' + tableName + '\', \'U\') IS NOT NULL \n' +
+    var dropTableSql = 'IF OBJECT_ID(\'' + tableName + '\', \'U\') IS NOT NULL \n' +
       '  DROP TABLE ' + tableName + ';'
+
+    var dropProcedureSql = 'IF EXISTS (SELECT * FROM sys.objects WHERE type = \'P\' AND OBJECT_ID = OBJECT_ID(\'' + insertProcedureTypeName + '\'))\n' +
+      '	begin' +
+      ' drop PROCEDURE ' + insertProcedureTypeName +
+      ' end '
 
     var createTableSql = 'create TABLE ' +tableName + '(\n' +
       '\tusername nvarchar(30), \n' +
@@ -52,10 +58,36 @@ suite('tvp', function () {
 
     var createTypeSql = 'CREATE TYPE ' + tableTypeName + ' AS TABLE (username nvarchar(30), age int, salary real)'
 
+    var insertProcedureSql = 'create PROCEDURE InsertTestTvp\n' +
+      '@tvp TestTvpType READONLY\n' +
+      'AS\n' +
+      'BEGIN\n' +
+      ' set nocount on\n' +
+      ' INSERT INTO TestTvp\n' +
+      '(\n' +
+      '   [username],\n' +
+      '   [age],\n' +
+      '   [salary]\n' +
+      ' )\n' +
+      ' SELECT \n' +
+      ' [username],\n' +
+      ' [age],\n' +
+      ' [salary]\n' +
+      'n' +
+      ' FROM @tvp tvp\n' +
+      'END'
+
     var fns = [
 
       function (asyncDone) {
-        theConnection.query(dropTable, function(err) {
+        theConnection.query(dropProcedureSql, function(err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        theConnection.query(dropTableSql, function(err) {
           assert.ifError(err)
           asyncDone()
         })
@@ -83,11 +115,18 @@ suite('tvp', function () {
       },
 
       function (asyncDone) {
+        theConnection.query(insertProcedureSql, function (err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
         theConnection.getUserTypeTable(tableTypeName, function (err, t) {
           assert.ifError(err)
           table = t
           assert(table.columns.length === 3)
-          asyncDone(table)
+          asyncDone()
         })
       }
     ]
@@ -97,22 +136,22 @@ suite('tvp', function () {
     })
   }
 
-  test('use tvp simple test type', function (testDone) {
+  var vec = [
+    {
+      username:'santa',
+      age:1000,
+      salary:0
+    },
+    {
+      username:'md',
+      age:28,
+      salary:100000
+    }
+  ]
+
+  test('use tvp simple test type select test', function (testDone) {
     var tableName = 'TestTvp'
     var table
-
-    var vec = [
-      {
-        username:'santa',
-        age:1000,
-        salary:0
-      },
-      {
-        username:'md',
-        age:28,
-        salary:100000
-      }
-    ]
 
     var fns = [
 
@@ -129,6 +168,43 @@ suite('tvp', function () {
         table.rows = []
         theConnection.query('select * from ?;', [tp], function (err, res) {
           assert.deepEqual(res, vec)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
+  test('use tvp simple test type insert test', function (testDone) {
+    var tableName = 'TestTvp'
+    var table
+
+    var fns = [
+
+      function (asyncDone) {
+        setupSimpleType(tableName, function(t) {
+          table = t
+          table.addRowsFromObjects(vec)
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var tp = sql.TvpFromTable(table)
+        table.rows = []
+        theConnection.query('exec insertTestTvp @tvp = ?;', [tp], function (err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        theConnection.query('select * from ' + tableName, function (err, res) {
+          assert.ifError(err)
+          assert.deepEqual(vec, res)
           asyncDone()
         })
       }
@@ -262,5 +338,4 @@ suite('tvp', function () {
       testDone()
     })
   })
-
 })
