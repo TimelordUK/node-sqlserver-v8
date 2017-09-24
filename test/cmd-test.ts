@@ -218,8 +218,8 @@ class LargeStringSelect implements SimpleTest {
                 q.on('column', (col:number, data:any, more:boolean) => {
                     console.log(`[column:${x}]: col = ${col} data.length ${data.length}, more : ${more} p.length ${p.length}`)
                 });
-                q.on('partial-column', (col:number, data:any, more:boolean) => {
-                    console.log(`[partial-column:${x}]: col = ${col} data.length ${data.length}, more : ${more} p.length ${p.length}`)
+                q.on('partial', (col:number, data:any, more:boolean) => {
+                    console.log(`[partial:${x}]: col = ${col} data.length ${data.length}, more : ${more} p.length ${p.length}`)
                 });
             }, delay);
         });

@@ -624,7 +624,7 @@ suite('query', function () {
 
     var stmt = theConnection.query('SELECT REPLICATE(CAST(\'B\' AS varchar(max)), 20000) AS \'LOB String\'')
 
-    stmt.on('partial-column', function (c, d, m) {
+    stmt.on('partial', function (c, d, m) {
       assert(c === 0)
       totalLength += d.length
       if (m) {

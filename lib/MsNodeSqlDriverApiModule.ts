@@ -53,8 +53,40 @@ export module MsNodeSqlDriverApiModule {
         TzOffsetQuery(s:string, offsetMinutes?:number) : v8QueryDescription;
     }
 
+    export interface v8Table {
+        name:string,
+        rows: any[]
+        columns: v8TableColumn[]
+        addRowsFromObjects(vec:any) : void
+    }
+
+    export interface v8TableColumnType {
+        declaration:string,
+        length:string
+    }
+
+    export interface v8TableColumn {
+        type_name: string
+        column_id: number,
+        ordered_column: string,
+        column_name: string,
+        name: string,
+        data_type: string,
+        type_id: string,
+        declaration: string,
+        nullable: string,
+        length: number,
+        precision: number,
+        scale: 0,
+        collation: string,
+        is_output: number,
+        system_type_id: number,
+        type:v8TableColumnType
+    }
+
     export interface v8Connection {
-        id:number;
+        getUserTypeTable(cb:v8TableCb):void
+        id:number
         setUseUTC(utc:boolean):void
         getUseUTC():boolean
         close(cb: v8StatusCb): void
@@ -116,6 +148,8 @@ export module MsNodeSqlDriverApiModule {
         rows: Array<any[]>
     }
 
+    export interface v8TableCb { (err: v8Error, table: v8Table): void
+    }
     export interface v8BindCb { (cb: v8BulkTableMgr): void
     }
     export interface v8OpenCb { (err: v8Error, connection: v8Connection): void
@@ -141,22 +175,6 @@ export module MsNodeSqlDriverApiModule {
     export interface v8DescribeProcedureCb { (description?: v8ProcedureSummary): void
     }
     export interface v8GetProcedureCb { (procedure?: v8ProcedureDefinition): void
-    }
-    export interface v8TableColumn {
-        table_catalog: string
-        table_schema: string
-        table_name: string
-        name: string
-        type: string
-        max_length: number
-        precision: number
-        scale: number
-        is_nullable: boolean
-        is_computed: boolean
-        is_identity: boolean
-        object_id: number
-        is_primary_key: boolean
-        is_foreign_key: 0
     }
 
     export interface v8BulkMgrSummary {
@@ -255,10 +273,12 @@ dbo.PersonTVP	4	04: vCity	vCity	varchar		255	0	0	SQL_Latin1_General_CP1_CI_AS
     export abstract class v8QueryEvent {
         public static meta = 'meta';
         public static column = 'column';
+        public static partial = 'partial';
         public static rowCount = 'rowCount';
         public static row = 'row';
         public static done = 'done';
         public static error = 'error';
+        public static warning = 'warning';
         public static closed = 'closed';
         public static submitted = 'submitted';
     }
