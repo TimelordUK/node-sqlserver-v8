@@ -79,11 +79,10 @@ suite('tvp', function () {
       },
 
       function (asyncDone) {
-        theConnection.getUserType('TestTvpType', function (err, res) {
+        theConnection.getUserTypeTable('TestTvpType', function (err, t) {
           assert.ifError(err)
-          assert(Array.isArray(res))
-          assert(res.length === 3)
-          table = new sql.Table('TestTvpType', res)
+          table = t
+          assert(table.columns.length === 3)
           table.addRowsFromObjects(vec)
           asyncDone()
         })
@@ -211,10 +210,10 @@ suite('tvp', function () {
       },
 
       function (asyncDone) {
-        theConnection.getUserType('EmployeeType', function (err, def) {
+        theConnection.getUserTypeTable('EmployeeType', function (err, def) {
           assert.ifError(err)
           var summary = bulkMgr.getSummary()
-          assert(def.length = summary.columns.length)
+          assert(def.columns.length = summary.columns.length)
           var t = bulkMgr.asTableType()
           assert(t.columns.length === summary.columns.length)
           asyncDone()
