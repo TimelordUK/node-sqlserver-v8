@@ -13,8 +13,6 @@ suite('tvp', function () {
 
   var sql = global.native_sql
 
-  sql.module.helloWorld()
-
   setup(function (testDone) {
     supp.GlobalConn.init(sql, function (co) {
       connStr = co.conn_str
@@ -65,7 +63,7 @@ suite('tvp', function () {
         var sql = 'IF TYPE_ID(N\'EmployeeType\') IS not NULL'
         sql += ' drop type EmployeeType'
         theConnection.query(sql, function (err) {
-          //assert.ifError(err)
+          assert.ifError(err)
           asyncDone()
         })
       },
@@ -73,7 +71,7 @@ suite('tvp', function () {
       function (asyncDone) {
         var sql = bulkMgr.asUserType()
         theConnection.query(sql, function (err) {
-          //assert.ifError(err)
+          assert.ifError(err)
           asyncDone()
         })
       },
