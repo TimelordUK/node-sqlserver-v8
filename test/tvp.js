@@ -99,7 +99,7 @@ suite('tvp', function () {
         var table = bulkMgr.asTableType()
         populateTable(parsedJSON, table)
         var tp = sql.Tvp(table.name, table)
-        theConnection.query(selectSql, [tp], function(err, res) {
+        theConnection.query('select * from ?;', [tp], function(err, res) {
           asyncDone()
         })
       }
