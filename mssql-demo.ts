@@ -133,6 +133,10 @@ function event(done: Function): void {
                 console.log('event: column = ' + col);
             });
 
+            q.on('partial', (col: any) => {
+                console.log('event: partial column = ' + col);
+            });
+
             q.on('submitted', (q: string) => {
                 console.log('event: submitted query = ' + JSON.stringify(q));
             });
@@ -149,8 +153,20 @@ function event(done: Function): void {
                 console.log('event: done');
             });
 
-            q.on('error', (err: string) => {
-                console.log(err);
+            q.on('open', () => {
+                console.log('event: open');
+            });
+
+            q.on('closed', () => {
+                console.log('event: open');
+            });
+
+            q.on('error', (err: any) => {
+                console.log(JSON.stringify(err));
+            });
+
+            q.on('warning', (err: any) => {
+                console.log(JSON.stringify(err));
             });
         },
 
