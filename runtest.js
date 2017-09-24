@@ -1,5 +1,6 @@
 var Mocha = require('mocha')
 var sql = require('msnodesqlv8')
+var path = require('path')
 
 runTest()
 
@@ -37,7 +38,8 @@ function runTest () {
     })
 
     files.forEach(function (f) {
-      mocha.addFile('test/' + f)
+      var p = path.join('unit.tests', f)
+      mocha.addFile(p)
     })
 
     mocha.run(function (failures) {

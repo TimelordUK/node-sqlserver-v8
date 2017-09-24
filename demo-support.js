@@ -250,7 +250,7 @@ function DemoSupport (native) {
         },
 
         function (asyncDone) {
-          var folder = path.join(__dirname, '/test')
+          var folder = path.join(__dirname, 'unit.tests')
           var file = folder + '/sql/' + name
           file += '.sql'
 
@@ -308,7 +308,7 @@ function DemoSupport (native) {
     }
 
     function getJSON () {
-      var folder = path.join(__dirname, '/test')
+      var folder = path.join(__dirname, 'unit.tests')
       var fs = require('fs')
 
       var parsedJSON = JSON.parse(fs.readFileSync(folder + '/employee.json', 'utf8'))

@@ -35,6 +35,7 @@ function testBoilerPlate(params, doneFunction) {
 
             function (async_done) {
                 var folder = __dirname;
+
                 var file = folder + '/sql/' + name;
                 file += '.sql';
 

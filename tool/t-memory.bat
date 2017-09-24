@@ -1,1 +1,1 @@
-node test\edge-case.js -t memory --delay=500 
+node unit.tests\cmd-test.js -t memory --delay=500
