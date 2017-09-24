@@ -148,9 +148,6 @@ suite('bulk', function () {
     })
   })
 
-
-
-
   function bindInsert (tableName, done) {
     var bulkMgr
     var parsedJSON = helper.getJSON()

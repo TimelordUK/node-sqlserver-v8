@@ -34,8 +34,7 @@ suite('tvp', function () {
     })
   })
 
-  function setupSimpleType(tableName, done) {
-
+  function setupSimpleType (tableName, done) {
     var tableTypeName = tableName + 'Type'
     var insertProcedureTypeName = 'insert' + tableName
     var table
@@ -44,17 +43,17 @@ suite('tvp', function () {
       '  DROP TABLE ' + tableName + ';'
 
     var dropProcedureSql = 'IF EXISTS (SELECT * FROM sys.objects WHERE type = \'P\' AND OBJECT_ID = OBJECT_ID(\'' + insertProcedureTypeName + '\'))\n' +
-      '	begin' +
+      ' begin' +
       ' drop PROCEDURE ' + insertProcedureTypeName +
       ' end '
 
-    var createTableSql = 'create TABLE ' +tableName + '(\n' +
+    var createTableSql = 'create TABLE ' + tableName + '(\n' +
       '\tusername nvarchar(30), \n' +
       '\tage int, \n' +
       '\tsalary real\n' +
       ')'
 
-    var dropTypeSql = 'IF TYPE_ID(N\'' + tableTypeName +'\') IS not NULL drop type ' + tableTypeName
+    var dropTypeSql = 'IF TYPE_ID(N\'' + tableTypeName + '\') IS not NULL drop type ' + tableTypeName
 
     var createTypeSql = 'CREATE TYPE ' + tableTypeName + ' AS TABLE (username nvarchar(30), age int, salary real)'
 
@@ -80,21 +79,21 @@ suite('tvp', function () {
     var fns = [
 
       function (asyncDone) {
-        theConnection.query(dropProcedureSql, function(err) {
+        theConnection.query(dropProcedureSql, function (err) {
           assert.ifError(err)
           asyncDone()
         })
       },
 
       function (asyncDone) {
-        theConnection.query(dropTableSql, function(err) {
+        theConnection.query(dropTableSql, function (err) {
           assert.ifError(err)
           asyncDone()
         })
       },
 
       function (asyncDone) {
-        theConnection.query(createTableSql, function(err) {
+        theConnection.query(createTableSql, function (err) {
           assert.ifError(err)
           asyncDone()
         })
@@ -138,14 +137,14 @@ suite('tvp', function () {
 
   var vec = [
     {
-      username:'santa',
-      age:1000,
-      salary:0
+      username: 'santa',
+      age: 1000,
+      salary: 0
     },
     {
-      username:'md',
-      age:28,
-      salary:100000
+      username: 'md',
+      age: 28,
+      salary: 100000
     }
   ]
 
@@ -157,7 +156,7 @@ suite('tvp', function () {
     var fns = [
 
       function (asyncDone) {
-        setupSimpleType(tableName, function(t) {
+        setupSimpleType(tableName, function (t) {
           table = t
           table.addRowsFromObjects(vec)
           asyncDone()
@@ -166,7 +165,7 @@ suite('tvp', function () {
 
       function (asyncDone) {
         var pm = theConnection.procedureMgr()
-        pm.get('insertTestTvp', function(p) {
+        pm.get('insertTestTvp', function (p) {
           assert(p)
           procedure = p
           asyncDone()
@@ -203,7 +202,7 @@ suite('tvp', function () {
     var fns = [
 
       function (asyncDone) {
-        setupSimpleType(tableName, function(t) {
+        setupSimpleType(tableName, function (t) {
           table = t
           table.addRowsFromObjects(vec)
           asyncDone()
@@ -214,6 +213,7 @@ suite('tvp', function () {
         var tp = sql.TvpFromTable(table)
         table.rows = []
         theConnection.query('select * from ?;', [tp], function (err, res) {
+          assert.ifError(err)
           assert.deepEqual(res, vec)
           asyncDone()
         })
@@ -232,7 +232,7 @@ suite('tvp', function () {
     var fns = [
 
       function (asyncDone) {
-        setupSimpleType(tableName, function(t) {
+        setupSimpleType(tableName, function (t) {
           table = t
           table.addRowsFromObjects(vec)
           asyncDone()
@@ -265,7 +265,6 @@ suite('tvp', function () {
   test('use tvp to select from table type complex object Employee type', function (testDone) {
     var tableName = 'Employee'
     var bulkMgr
-    var selectSql
 
     var fns = [
 
@@ -302,14 +301,6 @@ suite('tvp', function () {
         })
       },
 
-      function(asyncDone) {
-        var pm = theConnection.procedureMgr()
-        pm.get('EmployeeTvpSelect', function (proc) {
-          selectSql = proc.getMeta().select
-          asyncDone()
-        })
-      },
-
       function (asyncDone) {
         var parsedJSON = helper.getJSON()
         // construct a table type based on a table definition.
@@ -318,8 +309,9 @@ suite('tvp', function () {
         table.addRowsFromObjects(parsedJSON)
         // use a type the native driver can understand, using column based bulk binding.
         var tp = sql.TvpFromTable(table)
-        theConnection.query('select * from ?;', [tp], function(err, res) {
-          assert.deepEqual(res,parsedJSON)
+        theConnection.query('select * from ?;', [tp], function (err, res) {
+          assert.ifError(err)
+          assert.deepEqual(res, parsedJSON)
           asyncDone()
         })
       }

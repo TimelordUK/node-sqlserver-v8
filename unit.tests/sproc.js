@@ -210,18 +210,18 @@ suite('sproc', function () {
         var rows = []
         pm.get(spName, function (proc) {
           var qp = proc.call(['javascript'])
-          qp.on('column', function(c,data) {
+          qp.on('column', function (c, data) {
             var l = c.toString()
             var r = {}
             r[l] = data
             rows.push(r)
           })
 
-          qp.on('done', function() {
+          qp.on('done', function () {
             assert(rows.length === 1)
             var expected = [
               {
-                '0':10
+                '0': 10
               }
             ]
             assert.deepEqual(expected, rows)
@@ -337,8 +337,9 @@ suite('sproc', function () {
 
       function (asyncDone) {
         var pm = theConnection.procedureMgr()
-        pm.get(spName, function(proc) {
+        pm.get(spName, function (proc) {
           var meta = proc.getMeta()
+          // use an mssql style select
           var s = meta.select
           theConnection.query(s, [10, 5], function (err, results) {
             assert.ifError(err)
@@ -357,5 +358,4 @@ suite('sproc', function () {
       testDone()
     })
   })
-
 })
