@@ -34,8 +34,71 @@ suite('tvp', function () {
     })
   })
 
+  function setupSimpleType(tableName, done) {
+
+    var tableTypeName = tableName + 'Type'
+    var table
+
+    var dropTable = 'IF OBJECT_ID(\'' + tableName + '\', \'U\') IS NOT NULL \n' +
+      '  DROP TABLE ' + tableName + ';'
+
+    var createTableSql = 'create TABLE ' +tableName + '(\n' +
+      '\tusername nvarchar(30), \n' +
+      '\tage int, \n' +
+      '\tsalary real\n' +
+      ')'
+
+    var dropTypeSql = 'IF TYPE_ID(N\'' + tableTypeName +'\') IS not NULL drop type ' + tableTypeName
+
+    var createTypeSql = 'CREATE TYPE ' + tableTypeName + ' AS TABLE (username nvarchar(30), age int, salary real)'
+
+    var fns = [
+
+      function (asyncDone) {
+        theConnection.query(dropTable, function(err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        theConnection.query(createTableSql, function(err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        theConnection.query(dropTypeSql, function (err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        theConnection.query(createTypeSql, function (err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        theConnection.getUserTypeTable(tableTypeName, function (err, t) {
+          assert.ifError(err)
+          table = t
+          assert(table.columns.length === 3)
+          asyncDone(table)
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      done(table)
+    })
+  }
+
   test('use tvp simple test type', function (testDone) {
-    var tableName = 'Employee'
+    var tableName = 'TestTvp'
     var table
 
     var vec = [
@@ -54,44 +117,18 @@ suite('tvp', function () {
     var fns = [
 
       function (asyncDone) {
-        helper.dropCreateTable({
-          name: tableName
-        }, function () {
-          asyncDone()
-        })
-      },
-
-      function (asyncDone) {
-        var sql = 'IF TYPE_ID(N\'TestTvpType\') IS not NULL'
-        sql += ' drop type TestTvpType'
-        theConnection.query(sql, function (err) {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      function (asyncDone) {
-        var sql = 'CREATE TYPE TestTvpType AS TABLE (username nvarchar(30), age int, salary real)'
-        theConnection.query(sql, function (err) {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      function (asyncDone) {
-        theConnection.getUserTypeTable('TestTvpType', function (err, t) {
-          assert.ifError(err)
+        setupSimpleType(tableName, function(t) {
           table = t
-          assert(table.columns.length === 3)
           table.addRowsFromObjects(vec)
           asyncDone()
         })
       },
 
       function (asyncDone) {
-      var tp = sql.TvpFromTable(table)
-        theConnection.query('select * from ?;', [tp], function(err, res) {
-          assert.deepEqual(res,vec)
+        var tp = sql.TvpFromTable(table)
+        table.rows = []
+        theConnection.query('select * from ?;', [tp], function (err, res) {
+          assert.deepEqual(res, vec)
           asyncDone()
         })
       }
