@@ -2,6 +2,7 @@
        COL.column_id,
        SUBSTRING(CAST(COL.column_id + 100 AS char(3)), 2, 2)  + ': ' + COL.name   AS ordered_column,
 	   COL.name                                         AS column_name,
+       COL.name                                         AS name,
        ST.name                                          AS data_type,
        ST.name                                          AS type_id,
        ST.name                                          AS declaration,

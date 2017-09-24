@@ -34,9 +34,76 @@ suite('tvp', function () {
     })
   })
 
-  //
+  test('use tvp simple test type', function (testDone) {
+    var tableName = 'Employee'
+    var table
 
-  test('use tvp to select from table type', function (testDone) {
+    var vec = [
+      {
+        username:'santa',
+        age:1000,
+        salary:0
+      },
+      {
+        username:'md',
+        age:28,
+        salary:100000
+      }
+    ]
+
+    var fns = [
+
+      function (asyncDone) {
+        helper.dropCreateTable({
+          name: tableName
+        }, function () {
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var sql = 'IF TYPE_ID(N\'TestTvpType\') IS not NULL'
+        sql += ' drop type TestTvpType'
+        theConnection.query(sql, function (err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var sql = 'CREATE TYPE TestTvpType AS TABLE (username nvarchar(30), age int, salary real)'
+        theConnection.query(sql, function (err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        theConnection.getUserType('TestTvpType', function (err, res) {
+          assert.ifError(err)
+          assert(Array.isArray(res))
+          assert(res.length === 3)
+          table = new sql.Table('TestTvpType', res)
+          table.addRowsFromObjects(vec)
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+      var tp = sql.TvpFromTable(table)
+        theConnection.query('select * from ?;', [tp], function(err, res) {
+          assert.deepEqual(res,vec)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
+  test('use tvp to select from table type complex object Employee type', function (testDone) {
     var tableName = 'Employee'
     var bulkMgr
     var selectSql
@@ -86,10 +153,14 @@ suite('tvp', function () {
 
       function (asyncDone) {
         var parsedJSON = helper.getJSON()
+        // construct a table type based on a table definition.
         var table = bulkMgr.asTableType()
+        // convert a set of objects to rows
         table.addRowsFromObjects(parsedJSON)
+        // use a type the native driver can understand, using column based bulk binding.
         var tp = sql.TvpFromTable(table)
         theConnection.query('select * from ?;', [tp], function(err, res) {
+          assert.deepEqual(res,parsedJSON)
           asyncDone()
         })
       }
@@ -140,7 +211,7 @@ suite('tvp', function () {
       },
 
       function (asyncDone) {
-        sql.getUserType(theConnection, 'EmployeeType', function (err, def) {
+        theConnection.getUserType('EmployeeType', function (err, def) {
           assert.ifError(err)
           var summary = bulkMgr.getSummary()
           assert(def.length = summary.columns.length)
