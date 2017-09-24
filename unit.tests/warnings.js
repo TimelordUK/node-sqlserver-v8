@@ -1,5 +1,6 @@
 'use strict'
-/* global suite teardown teardown test setup */
+
+/* global suite test setup */
 
 var assert = require('assert')
 var supp = require('../demo-support')
@@ -33,26 +34,26 @@ suite('warnings', function () {
   })
 
   var joinFailTestQry =
-    'SELECT tmp. * '
-    + 'FROM ('
-    + ' SELECT 1 [id], \'test1\' [value]'
-    + ' UNION ALL select 2, \'test2\''
-    + ') tmp '
-    + ' INNER MERGE JOIN ('
-    + ' SELECT 1 [id2],\'jointest1\' [value2] '
-    + ' UNION ALL select 2, \'jointest2\''
-    + ') tmp2 ON tmp.id = tmp2.id2 '
-    + ' OPTION (RECOMPILE);'
+    'SELECT tmp. * ' +
+    'FROM (' +
+    ' SELECT 1 [id], \'test1\' [value]' +
+    ' UNION ALL select 2, \'test2\'' +
+    ') tmp ' +
+    ' INNER MERGE JOIN (' +
+    ' SELECT 1 [id2],\'jointest1\' [value2] ' +
+    ' UNION ALL select 2, \'jointest2\'' +
+    ') tmp2 ON tmp.id = tmp2.id2 ' +
+    ' OPTION (RECOMPILE);'
 
   var nullEliminatedTestQry =
-    'SELECT '
-    + ' SUM(tmp.[A])'
-    + ' FROM ( '
-    + ' SELECT 1 [A], 2 [B], 3 [C] '
-    + ' UNION ALL SELECT NULL, 5, 6 '
-    + ' UNION ALL SELECT 7, NULL, NULL '
-    + ' ) as tmp '
-    + ' OPTION (RECOMPILE);'
+    'SELECT ' +
+    ' SUM(tmp.[A])' +
+    ' FROM ( ' +
+    ' SELECT 1 [A], 2 [B], 3 [C] ' +
+    ' UNION ALL SELECT NULL, 5, 6 ' +
+    ' UNION ALL SELECT 7, NULL, NULL ' +
+    ' ) as tmp ' +
+    ' OPTION (RECOMPILE);'
 
   function testQry (qry, done) {
     var errors = []
@@ -105,7 +106,6 @@ suite('warnings', function () {
     */
 
   test('TEST ONE - Query - JOIN HINT WARNING', function (testDone) {
-
     var fns = [
       function (asyncDone) {
         testQry(joinFailTestQry, function (warnings, errors) {
@@ -122,7 +122,6 @@ suite('warnings', function () {
   })
 
   test('TEST TWO - Query - NULL ELIMNATED WARNING', function (testDone) {
-
     var fns = [
       function (asyncDone) {
         testQry(nullEliminatedTestQry, function (warnings, errors) {
@@ -138,7 +137,6 @@ suite('warnings', function () {
   })
 
   test('TEST THREE - Prepared Query - JOIN HINT WARNING', function (testDone) {
-
     var fns = [
       function (asyncDone) {
         testPrepared(joinFailTestQry, function (warnings, errors) {
@@ -154,7 +152,6 @@ suite('warnings', function () {
   })
 
   test('TEST FOUR - Prepared Query - NULL ELIMNATED WARNING', function (testDone) {
-
     var fns = [
       function (asyncDone) {
         testPrepared(nullEliminatedTestQry, function (warnings, errors) {
@@ -170,7 +167,6 @@ suite('warnings', function () {
   })
 
   test('TEST FIVE - Stord Proc - JOIN HINT WARNING', function (testDone) {
-
     var fns = [
       function (asyncDone) {
         testSP(function (warnings, errors) {
