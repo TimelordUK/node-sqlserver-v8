@@ -13,6 +13,8 @@ suite('tvp', function () {
 
   var sql = global.native_sql
 
+  sql.module.helloWorld()
+
   setup(function (testDone) {
     supp.GlobalConn.init(sql, function (co) {
       connStr = co.conn_str
@@ -35,16 +37,6 @@ suite('tvp', function () {
   })
 
   //
-
-  function populateTable(vec, table) {
-    vec.forEach(function(v) {
-      var row = []
-      table.columns.forEach(function (col) {
-        row.push(v[col.name])
-      })
-      table.rows.push(row)
-    })
-  }
 
   test('use tvp to select from table type', function (testDone) {
     var tableName = 'Employee'
@@ -97,8 +89,8 @@ suite('tvp', function () {
       function (asyncDone) {
         var parsedJSON = helper.getJSON()
         var table = bulkMgr.asTableType()
-        populateTable(parsedJSON, table)
-        var tp = sql.Tvp(table.name, table)
+        table.addRowsFromObjects(parsedJSON)
+        var tp = sql.TvpFromTable(table)
         theConnection.query('select * from ?;', [tp], function(err, res) {
           asyncDone()
         })
@@ -150,8 +142,7 @@ suite('tvp', function () {
       },
 
       function (asyncDone) {
-        var sqlMeta = sql.metaResolver
-        sqlMeta.getUserType(theConnection, 'EmployeeType', function (err, def) {
+        sql.getUserType(theConnection, 'EmployeeType', function (err, def) {
           assert.ifError(err)
           var summary = bulkMgr.getSummary()
           assert(def.length = summary.columns.length)
