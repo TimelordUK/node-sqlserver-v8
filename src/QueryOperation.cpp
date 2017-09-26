@@ -8,7 +8,7 @@
 
 namespace mssql
 {
-	QueryOperation::QueryOperation(shared_ptr<OdbcConnection> connection, shared_ptr<QueryOperationParams> query, Handle<Object> callback) :
+	QueryOperation::QueryOperation(const shared_ptr<OdbcConnection> connection, const shared_ptr<QueryOperationParams> query, const Handle<Object> callback) :
 		OdbcOperation(connection, callback),
 		_query(query),
 		output_param_count(0)
@@ -17,7 +17,7 @@ namespace mssql
 		_params = make_shared<BoundDatumSet>();
 	}
 
-	bool QueryOperation::ParameterErrorToUserCallback(uint32_t param, const char* error) const
+	bool QueryOperation::ParameterErrorToUserCallback(const uint32_t param, const char* error) const
 	{
 		nodeTypeFactory fact;
 

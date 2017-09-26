@@ -94,7 +94,7 @@ namespace mssql
 		return true;
 	}
 
-	SQLRETURN OdbcConnection::openTimeout(int timeout)
+	SQLRETURN OdbcConnection::openTimeout(const int timeout)
 	{
 		if (timeout > 0)
 		{
@@ -108,7 +108,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcConnection::try_open(const wstring& connectionString, int timeout)
+	bool OdbcConnection::try_open(const wstring& connection_string, const int timeout)
 	{
 		assert(connectionState == Closed);
 
@@ -125,8 +125,8 @@ namespace mssql
 
 		auto ret = openTimeout(timeout);
 		if (!CheckOdbcError(ret)) return false;
-		auto * conn_str = const_cast<wchar_t *>(connectionString.c_str());
-		const auto len = static_cast<SQLSMALLINT>(connectionString.length());
+		auto * conn_str = const_cast<wchar_t *>(connection_string.c_str());
+		const auto len = static_cast<SQLSMALLINT>(connection_string.length());
 		ret = SQLDriverConnect(*connection, nullptr, conn_str, len, nullptr, 0, nullptr, SQL_DRIVER_NOPROMPT);
 		if (!CheckOdbcError(ret)) return false;
 
@@ -154,7 +154,7 @@ namespace mssql
 		ops->add(op);
 	}
 
-	bool OdbcConnection::try_end_tran(SQLSMALLINT completion_type)
+	bool OdbcConnection::try_end_tran(const SQLSMALLINT completion_type)
 	{
 		auto ret = SQLEndTran(SQL_HANDLE_DBC, *connection, completion_type);
 		if (!CheckOdbcError(ret)) return false;

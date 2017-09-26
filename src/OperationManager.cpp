@@ -36,7 +36,7 @@ namespace mssql
 		operation->mgr->check_in_operation(operation->OperationID);
 	}
 
-	void OperationManager::check_in_operation(size_t id)
+	void OperationManager::check_in_operation(const size_t id)
 	{
 		lock_guard<mutex> lock(g_i_mutex);
 		operations.erase(id);

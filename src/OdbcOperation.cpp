@@ -25,7 +25,7 @@
 
 namespace mssql
 {
-	OdbcOperation::OdbcOperation(size_t query_id, Local<Object> cb)
+	OdbcOperation::OdbcOperation(const size_t query_id, Local<Object> cb)
 		:
 		_connection(nullptr),
 		_statement(nullptr),
@@ -39,7 +39,7 @@ namespace mssql
 		_output_param = fact.null();
 	}
 
-	OdbcOperation::OdbcOperation(shared_ptr<OdbcConnection> connection, size_t query_id, Local<Object> cb)
+	OdbcOperation::OdbcOperation(const shared_ptr<OdbcConnection> connection, const size_t query_id, Local<Object> cb)
 		: 
 		_connection(connection),
 		_statement(nullptr),
@@ -53,7 +53,7 @@ namespace mssql
 		_output_param = fact.null();
 	}
 
-	OdbcOperation::OdbcOperation(shared_ptr<OdbcConnection> connection, Local<Object> cb)
+	OdbcOperation::OdbcOperation(const shared_ptr<OdbcConnection> connection, Local<Object> cb)
 		:
 		_connection(connection),
 		_statement(nullptr),

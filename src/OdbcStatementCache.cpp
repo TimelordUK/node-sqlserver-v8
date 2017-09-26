@@ -24,7 +24,7 @@ namespace mssql
 {
 	using namespace std;
 
-	OdbcStatementCache::OdbcStatementCache(shared_ptr<OdbcConnectionHandle>  connection) 
+	OdbcStatementCache::OdbcStatementCache(const shared_ptr<OdbcConnectionHandle>  connection) 
 		: 
 		connection(connection)
 	{
@@ -49,7 +49,7 @@ namespace mssql
 		});
 	}
 
-	shared_ptr<OdbcStatement> OdbcStatementCache::find(long statement_id)
+	shared_ptr<OdbcStatement> OdbcStatementCache::find(const long statement_id)
 	{
 		shared_ptr<OdbcStatement> statement = nullptr;
 		const auto itr = statements.find(statement_id);
@@ -77,7 +77,7 @@ namespace mssql
 		return store(make_shared<OdbcStatement>(statement_id, connection));
 	}
 
-	void OdbcStatementCache::checkin(long statement_id)
+	void OdbcStatementCache::checkin(const long statement_id)
 	{
 		statements.erase(statement_id);
 	}
