@@ -64,6 +64,9 @@ function event(done) {
             q.on('column', (col) => {
                 console.log('event: column = ' + col);
             });
+            q.on('partial', (col) => {
+                console.log('event: partial column = ' + col);
+            });
             q.on('submitted', (q) => {
                 console.log('event: submitted query = ' + JSON.stringify(q));
             });
@@ -76,8 +79,17 @@ function event(done) {
             q.on('done', () => {
                 console.log('event: done');
             });
+            q.on('open', () => {
+                console.log('event: open');
+            });
+            q.on('closed', () => {
+                console.log('event: open');
+            });
             q.on('error', (err) => {
-                console.log(err);
+                console.log(JSON.stringify(err));
+            });
+            q.on('warning', (err) => {
+                console.log(JSON.stringify(err));
             });
         },
         function (async_done) {
