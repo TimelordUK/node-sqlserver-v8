@@ -180,4 +180,41 @@ suite('warnings', function () {
       testDone()
     })
   })
+
+  test('print raises warning not error', function (testDone) {
+    var fns = [
+      function (asyncDone) {
+        var warnings = []
+        var err = new Error('[Microsoft][SQL Server Native Client 11.0][SQL Server]print error')
+        err.code = 0
+        err.sqlstate = '01000'
+        var expectedErrors = [err]
+        var expectedResults = [
+          {
+            cnt: 1
+          }
+        ]
+        var sql = 'print \'print error\'; select 1 as cnt'
+        var q = theConnection.query(sql, [], function (err, res, more) {
+          assert.ifError(err)
+          if (!more) {
+            assert(warnings.length === 1)
+            assert.deepEqual(warnings, expectedErrors)
+            assert.deepEqual(res, expectedResults)
+            asyncDone()
+          }
+        })
+        q.on('error', function (err) {
+          assert.ifError(err)
+        })
+        q.on('warning', function (err) {
+          warnings.push(err)
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
 })
