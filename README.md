@@ -1,18 +1,22 @@
 # Note
 
+[![NPM Version][npm-image]][npm-url] [![NPM Downloads][downloads-image]][downloads-url] [![Package Quality][quality-image]][quality-url] [![Travis CI][travis-image]][travis-url] [![Appveyor CI][appveyor-image]][appveyor-url] [![Join the chat at https://gitter.im/patriksimek/node-mssql](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/patriksimek/node-mssql?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 This driver is branched from the Microsft node-sqlserver module. The MS team are working on an entirely new version and in the interim this version will be gradually improved to include new features.
 # Microsoft / Contributors Node V8 Driver for Node.js for SQL Server
 
 This version includes stored procedure support and bulk insert/delete/amend for SQL Server
 
 1. supports input/output parameters.
-2. captures return code from stored procedure.
-3. will obtain meta data describing parameters.
-4. compatibe with Node 0.12.x / 4.x.x / 5.x.x / 6.x.x
-5. includes 64 bit/ia32 precompiled libraries.
-6. npm install with npm install msnodesqlv8
-7. new features to be made available over coming months.
-8. bulk table operations insert,delete,update
+1. captures return code from stored procedure.
+1. will obtain meta data describing parameters.
+1. compatibe with Node 4, 5, 6, 7 and 8
+1. includes 64 bit/ia32 precompiled libraries.
+1. npm install with npm install msnodesqlv8
+1. new features to be made available over coming months.
+1. bulk table operations insert, delete, update
+1. prepared statements
+1. table value parameters
 
 # **NODE-SQLSERVER-V8**
 
