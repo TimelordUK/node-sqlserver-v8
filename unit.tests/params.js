@@ -133,6 +133,24 @@ suite('params', function () {
     })
   })
 
+  test('select a long buffer using callback', function (testDone) {
+    function repeat (a, num) {
+      return new Array(num + 1).join(a)
+    }
+    var longString = repeat('a', 50000)
+    var longBuffer = Buffer.from(longString)
+    var expected = [
+      {
+        long_binary: longBuffer
+      }
+    ]
+    theConnection.query('select ? as long_binary', [longBuffer], function (err, res) {
+      assert.ifError(err)
+      assert.deepEqual(res, expected)
+      testDone()
+    })
+  })
+
   test('select a long string using streaming - ensure no fragmentation', function (testDone) {
     function repeat (a, num) {
       return new Array(num + 1).join(a)
