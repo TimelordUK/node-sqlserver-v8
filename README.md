@@ -1,11 +1,6 @@
-# Note
+# msnodesqlv8
 
 [![NPM Version][npm-image]][npm-url] [![NPM Downloads][downloads-image]][downloads-url] [![Package Quality][quality-image]][quality-url] [![Travis CI][travis-image]][travis-url] [![Appveyor CI][appveyor-image]][appveyor-url] [![Join the chat at https://gitter.im/patriksimek/node-mssql](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/patriksimek/node-mssql?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-This driver is branched from the Microsft node-sqlserver module. The MS team are working on an entirely new version and in the interim this version will be gradually improved to include new features.
-# Microsoft / Contributors Node V8 Driver for Node.js for SQL Server
-
-This version includes stored procedure support and bulk insert/delete/amend for SQL Server
 
 1. supports input/output parameters.
 1. captures return code from stored procedure.
@@ -18,21 +13,11 @@ This version includes stored procedure support and bulk insert/delete/amend for 
 1. prepared statements
 1. table value parameters
 
-# **NODE-SQLSERVER-V8**
-
 ## Node JS support for SQL server 
 
-Based on node-sqlserver, this version will compile in Visual Studio 2013/2015 and is built against the v8 node module API.  The module will work against node version 0.12.x. and >= 4.1.x.    Included in the repository are pre compiled binaries for both x64 and x86 targets.  
+Based on node-sqlserver, this version will compile in Visual Studio 2015/2017 and is built against the v8 node module API.  The module will work against node version 0.12.x. and >= 4.1.x.    Included in the repository are pre compiled binaries for both x64 and x86 targets.  
 
 Functionally the API should work exactly as the existing library. The existing unit tests pass based on Node 0.12 and also against Node 4.2.1.
-
-## Node >= 5.12.0
-
-The library has been built against the latest Node 5 version.  The test cases pass OK.
-
-## Node >= 6.2.2
-
-The library has been built against the latest Node 6 version.  The test cases pass OK, please take library for a spin. Note native libraries have been included, it should work out the box.
 
 ## Prepared Statements
 
