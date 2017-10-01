@@ -116,6 +116,54 @@ suite('params', function () {
       })
   }
 
+  test('select a long string using callback', function (testDone) {
+    function repeat (a, num) {
+      return new Array(num + 1).join(a)
+    }
+    var longString = repeat('a', 50000)
+    var expected = [
+      {
+        long_string: longString
+      }
+    ]
+    theConnection.query('select ? as long_string', [longString], function (err, res) {
+      assert.ifError(err)
+      assert.deepEqual(res, expected)
+      testDone()
+    })
+  })
+
+  test('select a long string using streaming - ensure no fragmentation', function (testDone) {
+    function repeat (a, num) {
+      return new Array(num + 1).join(a)
+    }
+    var longString = repeat('a', 50000)
+    var expected = [
+      {
+        long_string: longString
+      }
+    ]
+    var res = []
+    var colNames = []
+    var query = theConnection.query('select ? as long_string', [longString])
+    query.on('column', function (c, d) {
+      assert(c === 0)
+      var obj = {}
+      obj[colNames[c]] = d
+      res.push(obj)
+    })
+    query.on('error', function (e) {
+      assert(e)
+    })
+    query.on('meta', function (m) {
+      colNames.push(m[0].name)
+    })
+    query.on('done', function () {
+      assert.deepEqual(expected, res)
+      testDone()
+    })
+  })
+
   test('verify buffer longer than column causes error', function (testDone) {
     var b = Buffer.from('0102030405060708090a', 'hex')
     testBoilerPlate('buffer_param_test', {'buffer_param': 'varbinary(5)'},
