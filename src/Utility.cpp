@@ -24,7 +24,7 @@ namespace mssql
 {
 	using namespace v8;
 
-	wstring FromV8String(Handle<String> input)
+	wstring FromV8String(const Handle<String> input)
 	{
 		wstring result;
 		const auto buffer_length = 256;
@@ -56,7 +56,7 @@ namespace mssql
 		return string(message_buffer.data());
 	}
 
-	int char2_int(char input)
+	int char2_int(const char input)
 	{
 		if (input >= '0' && input <= '9')
 			return input - '0';
@@ -82,7 +82,7 @@ namespace mssql
 		return len;
 	}
 
-	double round(double val, int dp)
+	double round(const double val, const int dp)
 	{
 		const auto raised = pow(10, dp);
 		const auto temp = val * raised;
@@ -108,7 +108,7 @@ namespace mssql
 		return string(res.rbegin(), res.rend());
 	}
 
-	void encodeNumericStruct(double v, int precision, int upscale_limit, SQL_NUMERIC_STRUCT & numeric) {
+	void encodeNumericStruct(const double v, const int precision, int upscale_limit, SQL_NUMERIC_STRUCT & numeric) {
 		auto encode = fabs(v);
 		double intpart;
 		auto scale = 0;
@@ -147,12 +147,12 @@ namespace mssql
 		isolate = Isolate::GetCurrent();
 	}
 
-	Local<Number> nodeTypeFactory::newNumber(double d) const
+	Local<Number> nodeTypeFactory::newNumber(const double d) const
 	{
 		return Number::New(isolate, d);
 	}
 
-	void nodeTypeFactory::scopedCallback(const Persistent<Function> & callback, int argc, Local<Value> args[]) const
+	void nodeTypeFactory::scopedCallback(const Persistent<Function> & callback, const int argc, Local<Value> args[]) const
 	{
 		auto cons = newCallbackFunction(callback);
 		auto context = isolate->GetCurrentContext();
@@ -160,32 +160,32 @@ namespace mssql
 		cons->Call(global, argc, args);
 	}
 
-	Local<Integer> nodeTypeFactory::newInteger(int32_t i) const
+	Local<Integer> nodeTypeFactory::newInteger(const int32_t i) const
 	{
 		return Integer::New(isolate, i);
 	}
 
-	Local<Integer> nodeTypeFactory::newLong(int64_t i) const
+	Local<Integer> nodeTypeFactory::newLong(const int64_t i) const
 	{
 		return Integer::New(isolate, static_cast<int32_t>(i));
 	}
 
-	Local<Boolean> nodeTypeFactory::newBoolean(bool b) const
+	Local<Boolean> nodeTypeFactory::newBoolean(const bool b) const
 	{
 		return Boolean::New(isolate, b);
 	}
 
-	Local<Boolean> nodeTypeFactory::newBoolean(uint16_t n) const
+	Local<Boolean> nodeTypeFactory::newBoolean(const uint16_t n) const
 	{
 		return Boolean::New(isolate, n != 0 ? true : false);
 	}
 
-	Local<Integer> nodeTypeFactory::newInt32(int32_t i) const
+	Local<Integer> nodeTypeFactory::newInt32(const int32_t i) const
 	{
 		return Int32::New(isolate, i);
 	}
 
-	Local<Number> nodeTypeFactory::newInt64(int64_t i) const
+	Local<Number> nodeTypeFactory::newInt64(const int64_t i) const
 	{
 		return Number::New(isolate, static_cast<double>(i));
 	}
@@ -200,7 +200,7 @@ namespace mssql
 		return Object::New(isolate);
 	}
 
-	Local<Integer> nodeTypeFactory::newUint32(uint32_t n) const
+	Local<Integer> nodeTypeFactory::newUint32(const uint32_t n) const
 	{
 		return Integer::New(isolate, n);
 	}
@@ -210,7 +210,7 @@ namespace mssql
 		return String::NewFromUtf8(isolate, cstr);
 	}
 
-	Local<String> nodeTypeFactory::newString(const char *cstr, int size) const
+	Local<String> nodeTypeFactory::newString(const char *cstr, const int size) const
 	{
 		return String::NewFromUtf8(isolate, cstr, String::NewStringType::kNormalString, size);
 	}
@@ -220,7 +220,7 @@ namespace mssql
 		return Array::New(isolate);
 	}
 
-	Local<Array> nodeTypeFactory::newArray(int count) const
+	Local<Array> nodeTypeFactory::newArray(const int count) const
 	{
 		return Array::New(isolate, count);
 	}
@@ -255,12 +255,12 @@ namespace mssql
 		return String::NewFromTwoByte(isolate, text);
 	}
 
-	Local<Value> nodeTypeFactory::fromTwoByte(const uint16_t* text, size_t size) const
+	Local<Value> nodeTypeFactory::fromTwoByte(const uint16_t* text, const size_t size) const
 	{
 		return String::NewFromTwoByte(isolate, text, String::NewStringType::kNormalString, static_cast<int>(size));
 	}
 
-	Local<Value> nodeTypeFactory::newBuffer(int size) const
+	Local<Value> nodeTypeFactory::newBuffer(const int size) const
 	{
 		return node::Buffer::New(isolate, size)
 #ifdef NODE_GYP_V4 
@@ -287,7 +287,7 @@ namespace mssql
 		return dd;
 	}
 
-	Local<Value> nodeTypeFactory::newDate(double milliseconds, int32_t nanoseconds_delta) const
+	Local<Value> nodeTypeFactory::newDate(const double milliseconds, const int32_t nanoseconds_delta) const
 	{
 		const auto ns = String::NewFromUtf8(isolate, "nanosecondsDelta");
 		const auto n = Number::New(isolate, nanoseconds_delta / (NANOSECONDS_PER_MS * 1000.0));
