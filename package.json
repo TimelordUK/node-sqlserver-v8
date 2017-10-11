@@ -62,9 +62,9 @@
     "@types/node": "^7.0.5",
     "asynquence": "^0.10.0",
     "asynquence-contrib": "^0.28.0",
-    "electron": "^1.4.3",
+    "electron": "^1.8.1",
     "minimist": "^1.2.0",
-    "mocha": ">=2.2.5",
+    "mocha": "^4.0.1",
     "standard": "^10.0.3"
   },
   "os": [
