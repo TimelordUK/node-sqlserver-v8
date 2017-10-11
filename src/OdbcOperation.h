@@ -60,7 +60,7 @@ namespace mssql
 
 		void getFailure();
 		void InvokeBackground() override;
-		int Error(Local<Value> args[]) const;
+		int Error(Local<Value> args[]);
 		int Success(Local<Value> args[]);
 		void CompleteForeground() override;
 	};

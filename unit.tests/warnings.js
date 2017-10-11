@@ -58,15 +58,28 @@ suite('warnings', function () {
   function testQry (qry, done) {
     var errors = []
     var warnings = []
+    var meta
+    var res = []
+    var obj
     var stmt = theConnection.queryRaw(qry)
+    stmt.on('meta', function (m) {
+      meta = m
+    })
     stmt.on('error', function (err) {
       errors.push(err)
     })
     stmt.on('warning', function (err) {
       warnings.push(err)
     })
+    stmt.on('column', function (c, d) {
+      obj.push(d)
+    })
+    stmt.on('row', function () {
+      obj = []
+      res.push(obj)
+    })
     stmt.on('done', function () {
-      done(warnings, errors)
+      done(warnings, errors, meta, res)
     })
   }
 
@@ -106,11 +119,24 @@ suite('warnings', function () {
     */
 
   test('TEST ONE - Query - JOIN HINT WARNING', function (testDone) {
+    var expected = [
+      [
+        1,
+        'test1'
+      ],
+      [
+        2,
+        'test2'
+      ]
+    ]
     var fns = [
       function (asyncDone) {
-        testQry(joinFailTestQry, function (warnings, errors) {
+        testQry(joinFailTestQry, function (warnings, errors, meta, res) {
+          assert(meta)
+          assert(meta.length === 2)
           assert(warnings.length === 1)
           assert(errors.length === 0)
+          assert.deepEqual(expected, res)
           asyncDone()
         })
       }
