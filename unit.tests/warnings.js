@@ -148,10 +148,19 @@ suite('warnings', function () {
   })
 
   test('TEST TWO - Query - NULL ELIMNATED WARNING', function (testDone) {
+    var expected = [
+      [
+        8
+      ]
+    ]
     var fns = [
       function (asyncDone) {
-        testQry(nullEliminatedTestQry, function (warnings, errors) {
+        testQry(nullEliminatedTestQry, function (warnings, errors, meta, res) {
+          assert(warnings.length === 0)
           assert(errors.length === 0)
+          assert(meta)
+          assert.deepEqual(res, expected)
+          assert(meta.length === 1)
           asyncDone()
         })
       }
