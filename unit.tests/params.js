@@ -382,7 +382,7 @@ suite('params', function () {
     var sequence = [
       function (asyncDone) {
         theConnection.queryRaw('INSERT INTO invalid_numbers_test (f) VALUES (?)', [Number.POSITIVE_INFINITY], function (e) {
-          var expectedError = new Error('Error: IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
+          var expectedError = new Error('IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
           expectedError.code = -1
           expectedError.sqlstate = 'IMNOD'
           assert.deepEqual(e, expectedError)
@@ -392,7 +392,7 @@ suite('params', function () {
 
       function (asyncDone) {
         theConnection.queryRaw('INSERT INTO invalid_numbers_test (f) VALUES (?)', [Number.NEGATIVE_INFINITY], function (e) {
-          var expectedError = new Error('Error: IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
+          var expectedError = new Error('IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
           expectedError.code = -1
           expectedError.sqlstate = 'IMNOD'
 

@@ -82,7 +82,7 @@ suite('open', function () {
             assert.ifError(err)
           })
         } catch (e) {
-          assert.deepEqual(e, new Error('Error: [msnodesql] Connection is closed.'))
+          assert.deepEqual(e, new Error('[msnodesql] Connection is closed.'))
           thrown = true
         }
         assert(thrown)
@@ -121,7 +121,7 @@ suite('open', function () {
           assert.ifError(err)
         })
       } catch (e) {
-        assert.deepEqual(e, new Error('Error: [msnodesql] Invalid parameters passed to close.'))
+        assert.deepEqual(e, new Error('[msnodesql] Invalid parameters passed to close.'))
         thrown = true
       }
       conn.close(function () {
