@@ -59,9 +59,9 @@
   },
   "devDependencies": {
     "@types/electron": "^1.4.31",
-    "@types/node": "^7.0.5",
-    "asynquence": "^0.10.0",
-    "asynquence-contrib": "^0.28.0",
+    "@types/node": "^8.0.53",
+    "asynquence": "^0.10.2",
+    "asynquence-contrib": "^0.28.2",
     "electron": "^1.8.1",
     "minimist": "^1.2.0",
     "mocha": "^4.0.1",
