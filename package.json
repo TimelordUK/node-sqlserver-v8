@@ -26,7 +26,8 @@
     "tds",
     "microsoft",
     "msnodesql",
-    "node-sqlserver"
+    "node-sqlserver",
+    "tvp"
   ],
   "homepage": "https://github.com/TimelordUK/node-sqlserver-v8",
   "bugs": {
