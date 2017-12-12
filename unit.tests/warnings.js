@@ -68,7 +68,7 @@ suite('warnings', function () {
     stmt.on('error', function (err) {
       errors.push(err)
     })
-    stmt.on('warning', function (err) {
+    stmt.on('info', function (err) {
       warnings.push(err)
     })
     stmt.on('column', function (c, d) {
@@ -108,7 +108,7 @@ suite('warnings', function () {
       errors.push(err)
       done(warnings, errors)
     })
-    sp.on('warning', function (err) {
+    sp.on('info', function (err) {
       warnings.push(err)
       done(warnings, errors)
     })
@@ -242,7 +242,7 @@ suite('warnings', function () {
         q.on('error', function (err) {
           assert.ifError(err)
         })
-        q.on('warning', function (err) {
+        q.on('info', function (err) {
           warnings.push(err)
         })
       }
