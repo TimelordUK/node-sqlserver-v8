@@ -19,6 +19,3 @@ call build.bat
 
 call switch-ver 4
 call build.bat
-
-call switch-ver 0
-call build.bat

@@ -148,9 +148,22 @@ namespace mssql
 		return true;
 	}
 
-	void OdbcStatement::queue_tvp(int current_param, param_bindings::iterator& itr, const shared_ptr<BoundDatum> datum,
-	                              vector<tvp_t>& tvps) const
+	void OdbcStatement::queue_tvp(int current_param, param_bindings::iterator& itr,  shared_ptr<BoundDatum> &datum, vector<tvp_t>& tvps) 
 	{
+		SQLHANDLE ipd;
+		const auto& statement = *_statement;
+		SQLINTEGER string_length;
+		SQLTCHAR parameter_type_name[256];
+		auto r = SQLGetStmtAttr(statement, SQL_ATTR_IMP_PARAM_DESC, &ipd, SQL_IS_POINTER, &string_length);
+		if (!check_odbc_error(r)) return;
+		auto schema = datum->get_storage()->schema;		
+		if (!schema.empty()) {
+			const auto schema_ptr = const_cast<wchar_t*>(schema.c_str());
+			r = SQLSetDescField(ipd, current_param, SQL_CA_SS_SCHEMA_NAME, reinterpret_cast<SQLPOINTER>(schema_ptr), schema.size() * sizeof(wchar_t));
+			if (!check_odbc_error(r)) return;
+			r = SQLGetDescField(ipd, current_param, SQL_CA_SS_SCHEMA_NAME, parameter_type_name, sizeof(parameter_type_name), &string_length);
+			if (!check_odbc_error(r)) return;
+		}
 		tvp_t tvp;
 		auto cols = make_shared<BoundDatumSet::param_bindings>();
 		for (auto c = 1; c <= datum->tvp_no_cols; ++c)
@@ -159,7 +172,7 @@ namespace mssql
 			const auto& col_datum = *itr;
 			cols->push_back(col_datum);
 		}
-		tvps.push_back({current_param, cols});
+		tvps.emplace_back(current_param, cols);
 	}
 
 	/*
@@ -188,7 +201,7 @@ namespace mssql
 		vector<tvp_t> tvps;
 		for (auto itr = ps.begin(); itr != ps.end(); ++itr)
 		{
-			const auto& datum = *itr;
+			auto& datum = *itr;
 			bind_datum(current_param, datum);
 			if (datum->is_tvp)
 			{
@@ -332,7 +345,7 @@ namespace mssql
 		auto column = 0;
 		resultset = make_unique<ResultSet>(columns);
 
-		while (column < resultset->GetColumns())
+		while (column < static_cast<int>(resultset->GetColumns()))
 		{
 			if (!read_next(column++))
 			{
@@ -341,9 +354,7 @@ namespace mssql
 		}
 
 		ret = SQLRowCount(statement, &resultset->rowcount);
-		if (!check_odbc_error(ret)) return false;
-
-		return true;
+		return check_odbc_error(ret);
 	}
 
 	SQLRETURN OdbcStatement::query_timeout(const int timeout)
@@ -382,7 +393,7 @@ namespace mssql
 			read_next(i);
 		}
 
-		_preparedStorage->reserve(resultset);
+		auto reserved=  _preparedStorage->reserve(resultset);
 
 		auto i = 0;
 		for (auto itr = _preparedStorage->begin(); itr != _preparedStorage->end(); ++itr)
@@ -492,7 +503,6 @@ namespace mssql
 
 	bool OdbcStatement::try_execute_direct(shared_ptr<QueryOperationParams> q, const shared_ptr<BoundDatumSet> param_set)
 	{
-		SQLRETURN ret;
 		_query = q;
 		const auto timeout = q->timeout();
 		const auto bound = bind_params(param_set);
@@ -507,7 +517,7 @@ namespace mssql
 			polling_mode = _pollingEnabled;
 		}
 		_endOfResults = true; // reset 
-		ret = query_timeout(timeout);
+		auto ret = query_timeout(timeout);
 		if (!check_odbc_error(ret)) return false;
 		auto query = q->query_string();
 		auto* sql_str = const_cast<wchar_t *>(query.c_str());
@@ -566,9 +576,7 @@ namespace mssql
 		}
 		_statementState = STATEMENT_FETCHING;
 		resultset->endOfRows = false;
-		if (!check_odbc_error(ret)) return false;
-
-		return true;
+		return check_odbc_error(ret);
 	}
 
 	bool OdbcStatement::dispatch(const SQLSMALLINT t, const int column)
@@ -1013,7 +1021,7 @@ namespace mssql
 		// when a field type is LOB, we read a packet at time and pass that back.
 		if (display_size == 0 || display_size == numeric_limits<int>::max() ||
 			display_size == numeric_limits<int>::max() >> 1 ||
-			display_size == numeric_limits<unsigned long>::max() - 1)
+			static_cast<unsigned long>(display_size) == numeric_limits<unsigned long>::max() - 1)
 		{
 			return lob(display_size, column);
 		}

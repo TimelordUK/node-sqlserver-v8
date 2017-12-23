@@ -35,8 +35,24 @@ suite('tvp', function () {
   })
 
   function setupSimpleType (tableName, done) {
+
+    var schemaName = 'dbo'
+    var unqualifiedTableName = tableName
+    var schemaIndex = tableName.indexOf(".")
+    if (schemaIndex > 0) {
+      schemaName = tableName.substr(0,schemaIndex)
+      unqualifiedTableName = tableName.substr(schemaIndex + 1)
+    }
+    var createSchemaSql = 'IF NOT EXISTS (\n' +
+      'SELECT schema_name\n' +
+        'FROM  information_schema.schemata\n' +
+        'WHERE schema_name = \'' + schemaName + '\')\n' +
+        'BEGIN\n' +
+        ' EXEC sp_executesql N\'CREATE SCHEMA ' + schemaName + '\'\n' +
+        'END'
+
     var tableTypeName = tableName + 'Type'
-    var insertProcedureTypeName = 'insert' + tableName
+    var insertProcedureTypeName = schemaName + '.Insert' + unqualifiedTableName
     var table
 
     var dropTableSql = 'IF OBJECT_ID(\'' + tableName + '\', \'U\') IS NOT NULL \n' +
@@ -57,12 +73,12 @@ suite('tvp', function () {
 
     var createTypeSql = 'CREATE TYPE ' + tableTypeName + ' AS TABLE (username nvarchar(30), age int, salary real)'
 
-    var insertProcedureSql = 'create PROCEDURE InsertTestTvp\n' +
-      '@tvp TestTvpType READONLY\n' +
+    var insertProcedureSql = 'create PROCEDURE ' + insertProcedureTypeName + '\n' +
+      '@tvp ' + tableTypeName + ' READONLY\n' +
       'AS\n' +
       'BEGIN\n' +
       ' set nocount on\n' +
-      ' INSERT INTO TestTvp\n' +
+      ' INSERT INTO ' + tableName + '\n' +
       '(\n' +
       '   [username],\n' +
       '   [age],\n' +
@@ -77,6 +93,13 @@ suite('tvp', function () {
       'END'
 
     var fns = [
+
+      function (asyncDone) {
+        theConnection.query(createSchemaSql, function (err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
 
       function (asyncDone) {
         theConnection.query(dropProcedureSql, function (err) {
@@ -185,6 +208,36 @@ suite('tvp', function () {
         theConnection.query('select * from ' + tableName, function (err, res) {
           assert.ifError(err)
           assert.deepEqual(vec, res)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
+  test('non dbo schema use tvp simple test type select test', function (testDone) {
+    var tableName = 'TestSchema.TestTvp'
+    var table
+
+    var fns = [
+
+      function (asyncDone) {
+        setupSimpleType(tableName, function (t) {
+          table = t
+          table.addRowsFromObjects(vec)
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var tp = sql.TvpFromTable(table)
+        table.rows = []
+        theConnection.query('select * from ?;', [tp], function (err, res) {
+          assert.ifError(err)
+          assert.deepEqual(res, vec)
           asyncDone()
         })
       }

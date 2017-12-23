@@ -81,7 +81,7 @@ namespace mssql
 	void BoundDatum::bind_null(const Local<Value>& p)
 	{
 		reserve_null(1);
-		indvec[0] = SQL_NULL_DATA;
+		_indvec[0] = SQL_NULL_DATA;
 	}
 
 	void BoundDatum::bind_null_array(const Local<Value>& p)
@@ -91,14 +91,14 @@ namespace mssql
 		reserve_null(len);
 		for (uint32_t i = 0; i < len; ++i)
 		{
-			indvec[i] = SQL_NULL_DATA;
+			_indvec[i] = SQL_NULL_DATA;
 		}
 	}
 
 	void BoundDatum::reserve_null(const SQLLEN len)
 	{
 		buffer_len = 0;
-		indvec.resize(len);
+		_indvec.resize(len);
 		js_type = JS_NULL;
 		c_type = SQL_C_CHAR;
 		sql_type = SQL_CHAR;
@@ -139,9 +139,9 @@ namespace mssql
 		c_type = SQL_C_CHAR;
 		sql_type = SQL_VARCHAR;
 		digits = 0;
-		indvec[0] = SQL_NULL_DATA;
-		storage->ReserveChars(max(1, static_cast<int>(precision)));
-		auto* itr_p = storage->charvec_ptr->data();
+		_indvec[0] = SQL_NULL_DATA;
+		_storage->ReserveChars(max(1, static_cast<int>(precision)));
+		auto* itr_p = _storage->charvec_ptr->data();
 		buffer = itr_p;
 		buffer_len = precision;
 		param_size = max(buffer_len, static_cast<SQLLEN>(1));
@@ -153,8 +153,8 @@ namespace mssql
 		if (!p->IsNull())
 		{
 			const auto str_param = p->ToString();
-			str_param->WriteUtf8(storage->charvec_ptr->data(), precision);
-			indvec[0] = precision;
+			str_param->WriteUtf8(_storage->charvec_ptr->data(), precision);
+			_indvec[0] = precision;
 		}
 	}
 
@@ -178,9 +178,9 @@ namespace mssql
 		sql_type = SQL_WVARCHAR;
 
 		const auto size = sizeof(uint16_t);
-		indvec.resize(array_len);
-		storage->ReserveUint16(array_len * max_str_len);
-		buffer = storage->uint16vec_ptr->data();
+		_indvec.resize(array_len);
+		_storage->ReserveUint16(array_len * max_str_len);
+		buffer = _storage->uint16vec_ptr->data();
 		buffer_len = max_str_len * size;
 		param_size = max_str_len;
 	}
@@ -193,17 +193,17 @@ namespace mssql
 		const auto size = sizeof(uint16_t);
 		reserve_w_var_char_array(max_str_len, array_len);
 
-		auto itr = storage->uint16vec_ptr->begin();
+		auto itr = _storage->uint16vec_ptr->begin();
 		for (uint32_t i = 0; i < array_len; ++i)
 		{
-			indvec[i] = SQL_NULL_DATA;
+			_indvec[i] = SQL_NULL_DATA;
 			const auto elem = arr->Get(i);
 			if (!elem->IsNull())
 			{
 				const auto str = arr->Get(i)->ToString();
 				const auto width = str->Length() * size;
-				indvec[i] = width;
-				str->Write(&*itr, 0, max_str_len);
+				_indvec[i] = width;
+				auto written = str->Write(&*itr, 0, max_str_len);
 			}
 			itr += max_str_len;
 		}
@@ -215,12 +215,12 @@ namespace mssql
 		const auto size = sizeof(uint16_t);
 		reserve_w_var_char_array(max_str_len, 1);
 
-		indvec[0] = SQL_NULL_DATA;
+		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
 			const auto str_param = p->ToString();
-			const auto first_p = storage->uint16vec_ptr->data();
-			str_param->Write(first_p, 0, precision);
+			const auto first_p = _storage->uint16vec_ptr->data();
+			auto written = str_param->Write(first_p, 0, precision);
 			buffer_len = precision * size;
 			if (precision > 4000)
 			{
@@ -231,7 +231,7 @@ namespace mssql
 				param_size = max(buffer_len, static_cast<SQLLEN>(1));
 			}
 
-			indvec[0] = buffer_len;
+			_indvec[0] = buffer_len;
 		}
 	}
 
@@ -262,9 +262,9 @@ namespace mssql
 		sql_type = max_obj_len > 2000 ? SQL_LONGVARBINARY : SQL_VARBINARY;
 		digits = 0;
 		const auto size = sizeof(uint8_t);
-		storage->ReserveChars(array_len * max_obj_len);
-		indvec.resize(array_len);
-		buffer = storage->charvec_ptr->data();
+		_storage->ReserveChars(array_len * max_obj_len);
+		_indvec.resize(array_len);
+		buffer = _storage->charvec_ptr->data();
 		buffer_len = max_obj_len * size;
 		param_size = max_obj_len;
 	}
@@ -302,6 +302,17 @@ namespace mssql
 		return rows;
 	}
 
+	wstring wide_from_js_string(const Local<String> s)
+	{
+		wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+		char tmp[1 * 1024];
+		const auto precision = max(1024, s->Length());
+		auto written = s->WriteUtf8(tmp, precision);
+		const string narrow(tmp);
+		auto wide = converter.from_bytes(narrow);
+		return wide;
+	}
+
 	void BoundDatum::bind_tvp(Local<Value>& p)
 	{
 		wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
@@ -312,35 +323,40 @@ namespace mssql
 		c_type = SQL_C_DEFAULT;
 		sql_type = SQL_SS_TABLE;
 		const auto rows = get_row_count(p);
-		const auto str = get_as_string(p, "type_id");
-		indvec.resize(1);
-		const auto precision = str->Length();
-		storage->ReserveChars(precision + 1);
-		storage->ReserveUint16(precision + 1);
-		auto* itr_p = storage->charvec_ptr->data();
-		str->WriteUtf8(itr_p, precision);
-		const string narrow = storage->charvec_ptr->data();
+		const auto type_id_str = get_as_string(p, "type_id");
+		const auto schema_str = get_as_string(p, "schema");
+		if (!schema_str->IsNull())
+		{
+			_storage->schema = wide_from_js_string(schema_str);
+		}
+		_indvec.resize(1);
+		const auto precision = type_id_str->Length();
+		_storage->ReserveChars(precision + 1);
+		_storage->ReserveUint16(precision + 1);
+		auto* itr_p = _storage->charvec_ptr->data();
+		auto written = type_id_str->WriteUtf8(itr_p, precision);
+		const string narrow = _storage->charvec_ptr->data();
 		auto wide = converter.from_bytes(narrow);
-		memcpy(static_cast<void*>(storage->uint16vec_ptr->data()), wide.c_str(), precision * sizeof(uint16_t));
-		buffer = storage->uint16vec_ptr->data();
+		memcpy(static_cast<void*>(_storage->uint16vec_ptr->data()), wide.c_str(), precision * sizeof(uint16_t));
+		buffer = _storage->uint16vec_ptr->data();
 		buffer_len = precision * sizeof(uint16_t);
 		param_size = rows; // max no of rows.
-		indvec[0] = rows; // no of rows.
+		_indvec[0] = rows; // no of rows.
 		digits = 0;
 	}
 
 	void BoundDatum::bind_var_binary(Local<Value>& p)
 	{
 		const auto o = p.As<Object>();
-		indvec[0] = SQL_NULL_DATA;
+		_indvec[0] = SQL_NULL_DATA;
 		const auto obj_len = !o->IsNull() ? node::Buffer::Length(o) : 0;
 		reserve_var_binary_array(obj_len, 1);
 
 		if (!o->IsNull())
 		{
-			const auto itr = storage->charvec_ptr->begin();
+			const auto itr = _storage->charvec_ptr->begin();
 			const auto ptr = node::Buffer::Data(o);
-			indvec[0] = obj_len;
+			_indvec[0] = obj_len;
 			memcpy(&*itr, ptr, obj_len);
 		}
 	}
@@ -351,17 +367,17 @@ namespace mssql
 		const auto array_len = arr->Length();
 		const auto max_obj_len = get_max_object_len(p);
 		reserve_var_binary_array(max_obj_len, array_len);
-		auto itr = storage->charvec_ptr->data();
+		auto itr = _storage->charvec_ptr->data();
 		for (uint32_t i = 0; i < array_len; ++i)
 		{
-			indvec[i] = SQL_NULL_DATA;
+			_indvec[i] = SQL_NULL_DATA;
 			const auto elem = arr->Get(i);
 			if (!elem->IsNull())
 			{
 				const auto o = elem->ToObject();
 				const auto ptr = node::Buffer::Data(o);
 				const auto obj_len = node::Buffer::Length(o);
-				indvec[i] = obj_len;
+				_indvec[i] = obj_len;
 				memcpy(&*itr, ptr, obj_len);
 			}
 			itr += max_obj_len;
@@ -371,12 +387,12 @@ namespace mssql
 	void BoundDatum::bind_boolean(const Local<Value>& p)
 	{
 		reserve_boolean(1);
-		auto& vec = *storage->charvec_ptr;
-		indvec[0] = SQL_NULL_DATA;
+		auto& vec = *_storage->charvec_ptr;
+		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
-			vec[0] = p->BooleanValue() == false ? 0 : 1;
-			indvec[0] = 0;
+			vec[0] = !p->BooleanValue() ? 0 : 1;
+			_indvec[0] = 0;
 		}
 	}
 
@@ -385,16 +401,16 @@ namespace mssql
 		auto arr = Local<Array>::Cast(p);
 		const auto len = arr->Length();
 		reserve_boolean(len);
-		auto& vec = *storage->charvec_ptr;
+		auto& vec = *_storage->charvec_ptr;
 		for (uint32_t i = 0; i < len; ++i)
 		{
-			indvec[i] = SQL_NULL_DATA;
+			_indvec[i] = SQL_NULL_DATA;
 			const auto elem = arr->Get(i);
 			if (!elem->IsNull())
 			{
-				const auto b = elem->BooleanValue() == false ? 0 : 1;
+				const auto b = !elem->BooleanValue() ? 0 : 1;
 				vec[i] = b;
-				indvec[i] = 0;
+				_indvec[i] = 0;
 			}
 		}
 	}
@@ -403,12 +419,12 @@ namespace mssql
 	{
 		const auto size = sizeof(char);
 		buffer_len = len * size;
-		storage->ReserveChars(len);
-		indvec.resize(len);
+		_storage->ReserveChars(len);
+		_indvec.resize(len);
 		js_type = JS_BOOLEAN;
 		c_type = SQL_C_BIT;
 		sql_type = SQL_BIT;
-		buffer = storage->charvec_ptr->data();
+		buffer = _storage->charvec_ptr->data();
 		param_size = size;
 		digits = 0;
 	}
@@ -417,16 +433,16 @@ namespace mssql
 	{
 		reserve_numeric(1);
 		sql_type = SQL_NUMERIC;
-		indvec[0] = SQL_NULL_DATA;
+		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
 			const auto d = p->NumberValue();
-			auto& vec = *storage->numeric_ptr;
+			auto& vec = *_storage->numeric_ptr;
 			auto& ns = vec[0];
 			encodeNumericStruct(d, static_cast<int>(param_size), digits, ns);
 			param_size = ns.precision;
 			digits = ns.scale;
-			indvec[0] = sizeof(SQL_NUMERIC_STRUCT);
+			_indvec[0] = sizeof(SQL_NUMERIC_STRUCT);
 		}
 	}
 
@@ -435,11 +451,11 @@ namespace mssql
 		auto arr = Local<Array>::Cast(p);
 		const int len = arr->Length();
 		reserve_numeric(len);
-		auto& vec = *storage->numeric_ptr;
+		auto& vec = *_storage->numeric_ptr;
 		for (auto i = 0; i < len; ++i)
 		{
 			auto& ns = vec[i];
-			indvec[i] = SQL_NULL_DATA;
+			_indvec[i] = SQL_NULL_DATA;
 			const auto elem = arr->Get(i);
 			if (!elem->IsNull())
 			{
@@ -447,7 +463,7 @@ namespace mssql
 				encodeNumericStruct(d, static_cast<int>(param_size), digits, ns);
 				param_size = ns.precision;
 				digits = ns.scale;
-				indvec[i] = sizeof(SQL_NUMERIC_STRUCT);
+				_indvec[i] = sizeof(SQL_NUMERIC_STRUCT);
 			}
 		}
 	}
@@ -456,12 +472,12 @@ namespace mssql
 	{
 		definedPrecision = true;
 		buffer_len = len * sizeof(SQL_NUMERIC_STRUCT);
-		storage->ReserveNumerics(len);
-		indvec.resize(len);
+		_storage->ReserveNumerics(len);
+		_indvec.resize(len);
 		js_type = JS_NUMBER;
 		c_type = SQL_C_NUMERIC;
 		sql_type = SQL_NUMERIC;
-		buffer = storage->numeric_ptr->data();
+		buffer = _storage->numeric_ptr->data();
 	}
 
 	void BoundDatum::bind_tiny_int(const Local<Value>& p)
@@ -479,13 +495,13 @@ namespace mssql
 	void BoundDatum::bind_int32(const Local<Value>& p)
 	{
 		reserve_int32(1);
-		indvec[0] = SQL_NULL_DATA;
-		auto& vec = *storage->int32vec_ptr;
+		_indvec[0] = SQL_NULL_DATA;
+		auto& vec = *_storage->int32vec_ptr;
 		vec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
 			vec[0] = p->Int32Value();
-			indvec[0] = 0;
+			_indvec[0] = 0;
 		}
 	}
 
@@ -494,15 +510,15 @@ namespace mssql
 		auto arr = Local<Array>::Cast(p);
 		const int len = arr->Length();
 		reserve_int32(len);
-		auto& vec = *storage->int32vec_ptr;
+		auto& vec = *_storage->int32vec_ptr;
 		for (auto i = 0; i < len; ++i)
 		{
-			indvec[i] = SQL_NULL_DATA;
+			_indvec[i] = SQL_NULL_DATA;
 			const auto elem = arr->Get(i);
 			if (!elem->IsNull())
 			{
 				vec[i] = elem->Int32Value();
-				indvec[i] = 0;
+				_indvec[i] = 0;
 			}
 		}
 	}
@@ -511,12 +527,12 @@ namespace mssql
 	{
 		const auto size = sizeof(int32_t);
 		buffer_len = len * size;
-		storage->ReserveInt32(len);
-		indvec.resize(len);
+		_storage->ReserveInt32(len);
+		_indvec.resize(len);
 		js_type = JS_INT;
 		c_type = SQL_C_SLONG;
 		sql_type = SQL_INTEGER;
-		buffer = storage->int32vec_ptr->data();
+		buffer = _storage->int32vec_ptr->data();
 		param_size = size;
 		digits = 0;
 	}
@@ -524,12 +540,12 @@ namespace mssql
 	void BoundDatum::bind_uint32(const Local<Value>& p)
 	{
 		reserve_uint32(1);
-		auto& vec = *storage->uint32vec_ptr;
-		indvec[0] = SQL_NULL_DATA;
+		auto& vec = *_storage->uint32vec_ptr;
+		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
 			vec[0] = p->Uint32Value();
-			indvec[0] = 0;
+			_indvec[0] = 0;
 		}
 	}
 
@@ -538,15 +554,15 @@ namespace mssql
 		auto arr = Local<Array>::Cast(p);
 		const auto len = arr->Length();
 		reserve_uint32(len);
-		auto& vec = *storage->uint32vec_ptr;
+		auto& vec = *_storage->uint32vec_ptr;
 		for (uint32_t i = 0; i < len; ++i)
 		{
-			indvec[i] = SQL_NULL_DATA;
+			_indvec[i] = SQL_NULL_DATA;
 			const auto elem = arr->Get(i);
 			if (!elem->IsNull())
 			{
 				vec[i] = elem->Uint32Value();
-				indvec[i] = 0;
+				_indvec[i] = 0;
 			}
 		}
 	}
@@ -555,12 +571,12 @@ namespace mssql
 	{
 		const auto size = sizeof(uint32_t);
 		buffer_len = len * size;
-		storage->ReserveUInt32(len);
-		indvec.resize(len);
+		_storage->ReserveUInt32(len);
+		_indvec.resize(len);
 		js_type = JS_UINT;
 		c_type = SQL_C_ULONG;
 		sql_type = SQL_BIGINT;
-		buffer = storage->uint32vec_ptr->data();
+		buffer = _storage->uint32vec_ptr->data();
 		param_size = size;
 		digits = 0;
 	}
@@ -569,7 +585,7 @@ namespace mssql
 	{
 		reserve_date(1);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC
-		indvec[0] = SQL_NULL_DATA;
+		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
 			auto date_object = Handle<Date>::Cast<Value>(p);
@@ -577,23 +593,23 @@ namespace mssql
 			// dates in JS are stored internally as ms count from Jan 1, 1970
 			const auto d = date_object->NumberValue();
 			TimestampColumn sql_date(d);
-			auto& dt = (*storage->datevec_ptr)[0];
+			auto& dt = (*_storage->datevec_ptr)[0];
 			sql_date.ToDateStruct(dt);
-			indvec[0] = buffer_len;
+			_indvec[0] = buffer_len;
 		}
 	}
 
 	void BoundDatum::reserve_date(SQLLEN len)
 	{
 		buffer_len = len * sizeof(SQL_DATE_STRUCT);
-		storage->datevec_ptr = make_shared<vector<SQL_DATE_STRUCT>>(len);
-		indvec.resize(len);
+		_storage->datevec_ptr = make_shared<vector<SQL_DATE_STRUCT>>(len);
+		_indvec.resize(len);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC		
 		js_type = JS_DATE;
 		c_type = SQL_C_TYPE_DATE;
 		// TODO: Determine proper SQL type based on version of server we're talking to
 		sql_type = SQL_TYPE_DATE;
-		buffer = storage->datevec_ptr->data();
+		buffer = _storage->datevec_ptr->data();
 		// TODO: Determine proper precision and size based on version of server we're talking to
 		if (param_size <= 0)
 			param_size = sql_server_2008_default_datetime_precision;
@@ -604,7 +620,7 @@ namespace mssql
 	{
 		reserve_time(1);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC
-		indvec[0] = SQL_NULL_DATA;
+		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
 			auto date_object = Handle<Date>::Cast<Value>(p);
@@ -612,23 +628,23 @@ namespace mssql
 			// dates in JS are stored internally as ms count from Jan 1, 1970
 			const auto d = date_object->NumberValue();
 			TimestampColumn sql_date(d);
-			auto& time2 = (*storage->time2vec_ptr)[0];
+			auto& time2 = (*_storage->time2vec_ptr)[0];
 			sql_date.ToTime2Struct(time2);
-			indvec[0] = buffer_len;
+			_indvec[0] = buffer_len;
 		}
 	}
 
 	void BoundDatum::reserve_time(const SQLLEN len)
 	{
 		buffer_len = len * sizeof(SQL_SS_TIME2_STRUCT);
-		storage->Reservetime2(len);
-		indvec.resize(len);
+		_storage->Reservetime2(len);
+		_indvec.resize(len);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC		
 		js_type = JS_DATE;
 		c_type = SQL_C_BINARY;
 		// TODO: Determine proper SQL type based on version of server we're talking to
 		sql_type = SQL_SS_TIME2;
-		buffer = storage->time2vec_ptr->data();
+		buffer = _storage->time2vec_ptr->data();
 		// TODO: Determine proper precision and size based on version of server we're talking to
 
 		param_size = sql_server_2008_default_time_precision;
@@ -639,7 +655,7 @@ namespace mssql
 	{
 		reserve_time_stamp(1);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC
-		indvec[0] = SQL_NULL_DATA;
+		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
 			auto date_object = Handle<Date>::Cast<Value>(p);
@@ -647,23 +663,23 @@ namespace mssql
 			// dates in JS are stored internally as ms count from Jan 1, 1970
 			const auto d = date_object->NumberValue();
 			TimestampColumn sql_date(d);
-			auto& timestamp = (*storage->timestampvec_ptr)[0];
+			auto& timestamp = (*_storage->timestampvec_ptr)[0];
 			sql_date.ToTimestampStruct(timestamp);
-			indvec[0] = buffer_len;
+			_indvec[0] = buffer_len;
 		}
 	}
 
 	void BoundDatum::reserve_time_stamp(const SQLLEN len)
 	{
 		buffer_len = len * sizeof(SQL_TIMESTAMP_STRUCT);
-		storage->ReserveTimestamp(len);
-		indvec.resize(len);
+		_storage->ReserveTimestamp(len);
+		_indvec.resize(len);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC		
 		js_type = JS_DATE;
 		c_type = SQL_C_TIMESTAMP;
 		// TODO: Determine proper SQL type based on version of server we're talking to
 		sql_type = SQL_TYPE_TIMESTAMP;
-		buffer = storage->timestampvec_ptr->data();
+		buffer = _storage->timestampvec_ptr->data();
 		// TODO: Determine proper precision and size based on version of server we're talking to
 		param_size = sql_server_2008_default_timestamp_precision;
 		if (digits <= 0) digits = sql_server_2008_default_datetime_scale;
@@ -673,31 +689,31 @@ namespace mssql
 	{
 		reserve_time_stamp_offset(1);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC
-		indvec[0] = SQL_NULL_DATA;
+		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
 			auto date_object = Handle<Date>::Cast<Value>(p);
 			assert(!date_object.IsEmpty());
 			// dates in JS are stored internally as ms count from Jan 1, 1970
 			const auto d = date_object->NumberValue();
-			auto& ts = (*storage->timestampoffsetvec_ptr)[0];
+			auto& ts = (*_storage->timestampoffsetvec_ptr)[0];
 			TimestampColumn sql_date(d, 0, offset);
 			sql_date.ToTimestampOffset(ts);
-			indvec[0] = buffer_len;
+			_indvec[0] = buffer_len;
 		}
 	}
 
 	void BoundDatum::reserve_time_stamp_offset(SQLLEN len)
 	{
 		buffer_len = sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT);
-		storage->timestampoffsetvec_ptr = make_shared<vector<SQL_SS_TIMESTAMPOFFSET_STRUCT>>(len);
-		indvec.resize(len);
+		_storage->timestampoffsetvec_ptr = make_shared<vector<SQL_SS_TIMESTAMPOFFSET_STRUCT>>(len);
+		_indvec.resize(len);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC		
 		js_type = JS_DATE;
 		c_type = SQL_C_BINARY;
 		// TODO: Determine proper SQL type based on version of server we're talking to
 		sql_type = SQL_SS_TIMESTAMPOFFSET;
-		buffer = storage->timestampoffsetvec_ptr->data();
+		buffer = _storage->timestampoffsetvec_ptr->data();
 		// TODO: Determine proper precision and size based on version of server we're talking to
 		param_size = sql_server_2008_default_datetime_precision;
 		if (digits <= 0) digits = sql_server_2008_default_datetime_scale;
@@ -708,15 +724,15 @@ namespace mssql
 		auto arr = Local<Array>::Cast(p);
 		const auto len = arr->Length();
 		reserve_time_stamp_offset(len);
-		auto& vec = *storage->timestampoffsetvec_ptr;
+		auto& vec = *_storage->timestampoffsetvec_ptr;
 		buffer_len = sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT);
 		for (uint32_t i = 0; i < len; ++i)
 		{
-			indvec[i] = SQL_NULL_DATA;
+			_indvec[i] = SQL_NULL_DATA;
 			const auto elem = arr->Get(i);
 			if (!elem->IsNull())
 			{
-				indvec[i] = sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT);
+				_indvec[i] = sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT);
 				const auto d = Handle<Date>::Cast<Value>(elem);
 				auto& ts = vec[i];
 				TimestampColumn sql_date(d->NumberValue());
@@ -728,24 +744,24 @@ namespace mssql
 	void BoundDatum::bind_integer(const Local<Value>& p)
 	{
 		reserve_integer(1);
-		auto& vec = *storage->int64vec_ptr;
-		indvec[0] = SQL_NULL_DATA;
+		auto& vec = *_storage->int64vec_ptr;
+		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
 			vec[0] = p->IntegerValue();
-			indvec[0] = 0;
+			_indvec[0] = 0;
 		}
 	}
 
 	void BoundDatum::reserve_integer(const SQLLEN len)
 	{
 		const auto size = sizeof(int64_t);
-		storage->ReserveInt64(len);
-		indvec.resize(len);
+		_storage->ReserveInt64(len);
+		_indvec.resize(len);
 		js_type = JS_NUMBER;
 		c_type = SQL_C_SBIGINT;
 		sql_type = SQL_BIGINT;
-		buffer = storage->int64vec_ptr->data();
+		buffer = _storage->int64vec_ptr->data();
 		buffer_len = size * len;
 		param_size = size;
 		digits = 0;
@@ -756,14 +772,14 @@ namespace mssql
 		auto arr = Local<Array>::Cast(p);
 		const auto len = arr->Length();
 		reserve_uint32(len);
-		auto& vec = *storage->int64vec_ptr;
+		auto& vec = *_storage->int64vec_ptr;
 		for (uint32_t i = 0; i < len; ++i)
 		{
-			indvec[i] = SQL_NULL_DATA;
+			_indvec[i] = SQL_NULL_DATA;
 			const auto elem = arr->Get(i);
 			if (!elem->IsNull())
 			{
-				indvec[i] = 0;
+				_indvec[i] = 0;
 				vec[i] = elem->IntegerValue();
 			}
 		}
@@ -784,24 +800,24 @@ namespace mssql
 	void BoundDatum::bind_double(const Local<Value>& p)
 	{
 		reserve_double(1);
-		auto& vec = *storage->doublevec_ptr;
-		indvec[0] = SQL_NULL_DATA;
+		auto& vec = *_storage->doublevec_ptr;
+		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
 			vec[0] = p->NumberValue();
-			indvec[0] = 0;
+			_indvec[0] = 0;
 		}
 	}
 
 	void BoundDatum::reserve_double(const SQLLEN len)
 	{
 		const auto size = sizeof(double);
-		storage->ReserveDouble(len);
-		indvec.resize(len);
+		_storage->ReserveDouble(len);
+		_indvec.resize(len);
 		js_type = JS_NUMBER;
 		c_type = SQL_C_DOUBLE;
 		sql_type = SQL_DOUBLE;
-		buffer = storage->doublevec_ptr->data();
+		buffer = _storage->doublevec_ptr->data();
 		buffer_len = size * len;
 		param_size = size;
 		digits = 0;
@@ -812,15 +828,15 @@ namespace mssql
 		auto arr = Local<Array>::Cast(p);
 		const auto len = arr->Length();
 		reserve_double(len);
-		auto& vec = *storage->doublevec_ptr;
+		auto& vec = *_storage->doublevec_ptr;
 		for (uint32_t i = 0; i < len; ++i)
 		{
-			indvec[i] = SQL_NULL_DATA;
+			_indvec[i] = SQL_NULL_DATA;
 			const auto elem = arr->Get(i);
 			if (!elem->IsNull())
 			{
 				vec[i] = elem->NumberValue();
-				indvec[i] = 0;
+				_indvec[i] = 0;
 			}
 		}
 	}
@@ -997,7 +1013,7 @@ namespace mssql
 			const auto d = p->NumberValue();
 			if (_isnan(d) || !_finite(d))
 			{
-				err = "Invalid number parameter";
+				err = static_cast<char*>("Invalid number parameter");
 				return false;
 			}
 			bind_number(p);
@@ -1016,7 +1032,7 @@ namespace mssql
 		}
 		else
 		{
-			err = "Invalid parameter type";
+			err = static_cast<char*>("Invalid parameter type");
 			return false;
 		}
 
@@ -1337,7 +1353,7 @@ namespace mssql
 			}
 			else
 			{
-				err = "Invalid parameter type";
+				err = static_cast<char*>("Invalid parameter type");
 			}
 		}
 	}
@@ -1488,7 +1504,7 @@ namespace mssql
 		}
 		else if (counts.getoutBoundsCount() > 0)
 		{
-			err = "Invalid number parameter";
+			err = static_cast<char*>("Invalid number parameter");
 			return false;
 		}
 		else if (counts.numberCount > 0)
@@ -1507,13 +1523,13 @@ namespace mssql
 		{
 			bind_uint32_array(pp);
 		}
-		else if (counts.nullCount == arr->Length())
+		else if (counts.nullCount == static_cast<int>(arr->Length()))
 		{
 			bind_null_array(pp);
 		}
 		else
 		{
-			err = "Invalid parameter type";
+			err = static_cast<char*>("Invalid parameter type");
 			return false;
 		}
 
@@ -1529,14 +1545,14 @@ namespace mssql
 	Handle<Value> BoundDatum::unbind_string() const
 	{
 		nodeTypeFactory fact;
-		const auto s = fact.fromTwoByte(storage->uint16vec_ptr->data());
+		const auto s = fact.fromTwoByte(_storage->uint16vec_ptr->data());
 		return s;
 	}
 
 	Handle<Value> BoundDatum::unbind_double() const
 	{
 		nodeTypeFactory fact;
-		auto& vec = *storage->doublevec_ptr;
+		auto& vec = *_storage->doublevec_ptr;
 		const auto s = fact.newNumber(vec[0]);
 		return s;
 	}
@@ -1544,7 +1560,7 @@ namespace mssql
 	Handle<Value> BoundDatum::unbind_boolean() const
 	{
 		nodeTypeFactory fact;
-		auto& vec = *storage->uint16vec_ptr;
+		auto& vec = *_storage->uint16vec_ptr;
 		const auto s = fact.newBoolean(vec[0]);
 		return s;
 	}
@@ -1552,7 +1568,7 @@ namespace mssql
 	Handle<Value> BoundDatum::unbind_int32() const
 	{
 		nodeTypeFactory fact;
-		auto& vec = *storage->int32vec_ptr;
+		auto& vec = *_storage->int32vec_ptr;
 		const auto s = fact.newInt32(vec[0]);
 		return s;
 	}
@@ -1560,7 +1576,7 @@ namespace mssql
 	Handle<Value> BoundDatum::unbind_uint32() const
 	{
 		nodeTypeFactory fact;
-		auto& vec = *storage->uint32vec_ptr;
+		auto& vec = *_storage->uint32vec_ptr;
 		const auto s = fact.newUint32(vec[0]);
 		return s;
 	}
@@ -1575,7 +1591,7 @@ namespace mssql
 		else
 		{
 			nodeTypeFactory fact;
-			auto& vec = *storage->int64vec_ptr;
+			auto& vec = *_storage->int64vec_ptr;
 			v = fact.newInt64(vec[0]);
 		}
 		return v;
@@ -1583,7 +1599,7 @@ namespace mssql
 
 	Handle<Value> BoundDatum::unbind_date() const
 	{
-		auto& vec = *storage->timestampoffsetvec_ptr;
+		auto& vec = *_storage->timestampoffsetvec_ptr;
 		TimestampColumn tsc(vec[0]);
 		return tsc.ToValue();
 	}
