@@ -35,12 +35,11 @@ suite('tvp', function () {
   })
 
   function setupSimpleType (tableName, done) {
-
     var schemaName = 'dbo'
     var unqualifiedTableName = tableName
-    var schemaIndex = tableName.indexOf(".")
+    var schemaIndex = tableName.indexOf('.')
     if (schemaIndex > 0) {
-      schemaName = tableName.substr(0,schemaIndex)
+      schemaName = tableName.substr(0, schemaIndex)
       unqualifiedTableName = tableName.substr(schemaIndex + 1)
     }
     var createSchemaSql = 'IF NOT EXISTS (\n' +
