@@ -1,3 +1,5 @@
+ [![Appveyor CI][appveyor-image]][appveyor-url]
+
 # msnodesqlv8
 
 1. supports input/output parameters.
