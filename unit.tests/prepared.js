@@ -40,12 +40,12 @@ function empSelectSQL () {
      ',[CurrentFlag] ' +
      ',[rowguid] ' +
      ',[ModifiedDate] ' +
-     'FROM [scratch].[dbo].[Employee] ' +
+     'FROM [dbo].[Employee] ' +
      ' WHERE BusinessEntityID = ? '
 }
 
 function empDeleteSQL () {
-  return 'DELETE FROM [scratch].[dbo].[Employee] ' +
+  return 'DELETE FROM [dbo].[Employee] ' +
         'WHERE BusinessEntityID = ?'
 }
 
@@ -66,7 +66,7 @@ function empNoParamsSQL () {
      ',[CurrentFlag] ' +
      ',[rowguid] ' +
      ',[ModifiedDate] ' +
-     'FROM [scratch].[dbo].[Employee]'
+     'FROM [dbo].[Employee]'
 }
 
 suite('prepared', function () {
