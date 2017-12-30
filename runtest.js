@@ -16,6 +16,7 @@ function runTest () {
 
   if (argv.hasOwnProperty('a')) {
     connStr = 'Driver={SQL Server Native Client 11.0}; Server=(local); Database={master};User ID=sa;Password=Password12!'
+    console.log('set connStr as ' + connStr)
   }
 
   if (!Array.isArray(toRun)) {
@@ -37,6 +38,7 @@ function runTest () {
     mocha.suite.on('pre-require', function (g) {
       g.native_sql = sql
       if (connStr) {
+        console.log('override conn_str')
         g.conn_str = connStr
       }
     })
