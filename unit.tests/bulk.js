@@ -27,8 +27,8 @@ suite('bulk', function () {
         assert.ifError(err)
         theConnection = newConn
         testDone()
-      }, global.conn_str)
-    })
+      })
+    }, global.conn_str)
   })
 
   teardown(function (done) {
