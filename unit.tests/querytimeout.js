@@ -22,7 +22,7 @@ suite('querytimeout', function () {
         theConnection = newConn
         testDone()
       })
-    })
+    }, global.conn_str)
   })
 
   teardown(function (done) {

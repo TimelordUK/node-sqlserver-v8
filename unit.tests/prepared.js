@@ -157,7 +157,7 @@ suite('prepared', function () {
         function () {
           testDone()
         })
-    })
+    }, global.conn_str)
   })
 
   teardown(function (done) {

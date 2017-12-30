@@ -41,7 +41,7 @@ suite('open', function () {
       helper = co.helper
       helper.setVerbose(false)
       testDone()
-    })
+    }, global.conn_str)
   })
 
   test('connection closes OK in sequence with query', function (done) {

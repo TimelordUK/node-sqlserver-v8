@@ -48,7 +48,7 @@ suite('query', function () {
         assert.ifError(err)
         testDone()
       })
-    })
+    }, global.conn_str)
   })
 
   teardown(function (done) {

@@ -30,7 +30,7 @@ suite('querycancel', function () {
         theConnection = newConn
         done()
       })
-    })
+    }, global.conn_str)
   })
 
   teardown(function (done) {

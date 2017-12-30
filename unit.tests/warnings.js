@@ -30,7 +30,7 @@ suite('warnings', function () {
         assert.ifError(err)
         testDone()
       })
-    })
+    }, global.conn_str)
   })
 
   var joinFailTestQry =
