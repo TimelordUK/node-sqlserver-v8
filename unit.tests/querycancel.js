@@ -18,7 +18,7 @@ suite('querycancel', function () {
 
   setup(function (done) {
     supp.GlobalConn.init(sql, function (co) {
-      connStr = co.conn_str
+      connStr = global.conn_str || co.conn_str
       support = co.support
       procedureHelper = new support.ProcedureHelper(connStr)
       procedureHelper.setVerbose(false)

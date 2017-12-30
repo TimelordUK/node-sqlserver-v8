@@ -7,10 +7,15 @@ runTest()
 function runTest () {
   var argv = require('minimist')(process.argv.slice(2))
   console.log(argv)
+  var connStr = null
 
   var toRun
   if (argv.hasOwnProperty('t')) {
     toRun = argv['t']
+  }
+
+  if (argv.hasOwnProperty('a')) {
+    connStr = 'Server=(local)\\\\SQL2017;Database=master;User ID=sa;Password=Password12!'
   }
 
   if (!Array.isArray(toRun)) {
@@ -31,10 +36,12 @@ function runTest () {
 
     mocha.suite.on('pre-require', function (g) {
       g.native_sql = sql
+      if (connStr) {
+        g.conn_str = connStr
+      }
     })
 
     mocha.suite.on('require', function (a, b, c) {
-
     })
 
     files.forEach(function (f) {

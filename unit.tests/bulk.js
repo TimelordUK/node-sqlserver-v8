@@ -19,7 +19,7 @@ suite('bulk', function () {
 
   setup(function (testDone) {
     supp.GlobalConn.init(sql, function (co) {
-      connStr = co.conn_str
+      connStr = global.conn_str || co.conn_str
       async = co.async
       helper = co.helper
       helper.setVerbose(false)
