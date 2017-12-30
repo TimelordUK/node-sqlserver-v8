@@ -1,15 +1,16 @@
 environment:
-
-version: 1.0.{build}
-image: Visual Studio 2017
-clone_folder: c:\projects\node_modules\msnodesqlv8
-services: mssql2017
   matrix:
     - nodejs_version: "4"
     - nodejs_version: "5"
     - nodejs_version: "6"
     - nodejs_version: "7"
     - nodejs_version: "8"
+
+version: 1.0.{build}
+image: Visual Studio 2017
+clone_folder: c:\projects\node_modules\msnodesqlv8
+services: mssql2017
+
 build_script:
 - cmd: tool\build.bat
 test_script:
