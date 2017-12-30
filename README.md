@@ -1,4 +1,3 @@
- [![Appveyor CI][appveyor-image]][appveyor-url]
 
 # msnodesqlv8
 
