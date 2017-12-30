@@ -15,7 +15,7 @@ function runTest () {
   }
 
   if (argv.hasOwnProperty('a')) {
-    connStr = 'Server=(local)\\\\SQL2017;Database=master;User ID=sa;Password=Password12!'
+    connStr = 'Server=(local)\\SQL2017;Database=master;User ID=sa;Password=Password12!'
   }
 
   if (!Array.isArray(toRun)) {
