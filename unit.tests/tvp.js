@@ -16,6 +16,7 @@ suite('tvp', function () {
   setup(function (testDone) {
     supp.GlobalConn.init(sql, function (co) {
       connStr = global.conn_str || co.conn_str
+      console.log('using ' + connStr)
       async = co.async
       helper = co.helper
       helper.setVerbose(false)
