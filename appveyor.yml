@@ -15,7 +15,6 @@ platform:
   - x64
 
 services:
-  - mssql2016
   - mssql2017
 
 install:
