@@ -14,7 +14,10 @@ platform:
   - x86
   - x64
 
-services: mssql2017
+services:
+  - mssql2016
+  - mssql2017
+
 install:
 - ps: Install-Product node $env:nodejs_version $env:platform
 build_script:
