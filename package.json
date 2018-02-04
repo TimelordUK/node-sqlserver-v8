@@ -12,7 +12,7 @@
       "name": "Stephen James"
     }
   ],
-  "version": "0.4.7",
+  "version": "0.4.8",
   "keywords": [
     "sql",
     "prepared",
@@ -74,8 +74,8 @@
   "gitHead": "e025462083dd1140eed2519c449bc257482bc61b",
   "_id": "msnodesqlv8@0.1.35",
   "scripts": {
-    "build" : "call tool/build.bat",
-    "test" : "call tool/testonce.bat"
+    "build": "call tool/build.bat",
+    "test": "call tool/testonce.bat"
   },
   "_shasum": "7ef7b229b0abf09aeeb847df6eb249626b626669",
   "_from": "msnodesqlv8@*",
