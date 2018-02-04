@@ -20,7 +20,7 @@ t_name_cte(full_name, table_name) AS
 (
 	SELECT
 	    ISNULL(e.full_name, f.full_name) AS full_name,
-	    ISNULL(e.table_name, f.table_name) AS Expr1
+	    ISNULL(e.table_name, f.table_name) AS table_name
     FROM t_fuzzy_cte AS f
 		LEFT OUTER JOIN t_exact_cte AS e ON e.id = f.id
 )
