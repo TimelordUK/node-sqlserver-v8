@@ -1,9 +1,28 @@
-with t_cte (full_name, table_name) as
+WITH t_fuzzy_cte(id, full_name, table_name) AS
+(SELECT  TOP (1)
+	0 AS id,
+	TABLE_CATALOG + '..' + TABLE_NAME AS full_name,
+	TABLE_NAME
+	FROM
+		<table_catalog>.INFORMATION_SCHEMA.COLUMNS
+	WHERE TABLE_NAME LIKE '<table_name>%')
+,
+t_exact_cte(id, full_name, table_name) AS
+(SELECT TOP (1)
+		0 AS id,
+		TABLE_CATALOG + '..' + TABLE_NAME AS full_name,
+		TABLE_NAME
+      FROM
+			<table_catalog>.INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_NAME = '<table_name>'
+),
+t_name_cte(full_name, table_name) AS
 (
-	select top 1 table_catalog + '..' + table_name as full_name,
-	table_name
-	from <table_catalog>.INFORMATION_SCHEMA.COLUMNS
-	where table_name like '<table_name>%'
+	SELECT
+	    ISNULL(e.full_name, f.full_name) AS full_name,
+	    ISNULL(e.table_name, f.table_name) AS Expr1
+    FROM t_fuzzy_cte AS f
+		LEFT OUTER JOIN t_exact_cte AS e ON e.id = f.id
 )
 SELECT
 	sc.table_catalog,
@@ -43,7 +62,7 @@ FROM <table_catalog>.INFORMATION_SCHEMA.TABLES st
        AND sc.TABLE_SCHEMA = u.TABLE_SCHEMA
        AND sc.TABLE_NAME = u.TABLE_NAME
        AND sc.COLUMN_NAME = u.COLUMN_NAME
-  cross join t_cte r
+  cross join t_name_cte r
   INNER JOIN 
   <table_catalog>.sys.columns c ON c.name = sc.column_name
   INNER JOIN
