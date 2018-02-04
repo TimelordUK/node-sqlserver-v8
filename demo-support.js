@@ -213,6 +213,7 @@ function DemoSupport (native) {
       var async = new Async()
       var name = params.name
       var type = params.type
+      var theConnection = params.theConnection
       var insert = false
       if (params.hasOwnProperty('insert')) {
         insert = params.insert
@@ -234,11 +235,16 @@ function DemoSupport (native) {
       var sequence = [
 
         function (asyncDone) {
-          sql.open(connStr, function (err, newConn) {
-            assert.ifError(err)
-            conn = newConn
+          if (theConnection) {
+            conn = theConnection
             asyncDone()
-          })
+          } else {
+            sql.open(connStr, function (err, newConn) {
+              assert.ifError(err)
+              conn = newConn
+              asyncDone()
+            })
+          }
         },
 
         function (asyncDone) {
@@ -251,7 +257,11 @@ function DemoSupport (native) {
 
         function (asyncDone) {
           var folder = path.join(__dirname, 'unit.tests')
-          var file = folder + '/sql/' + name
+          var fileName = name
+          if (fileName.charAt(0) === '#') {
+            fileName = fileName.substr(1)
+          }
+          var file = folder + '/sql/' + fileName
           file += '.sql'
 
           function inChunks (arr, callback) {
@@ -295,9 +305,13 @@ function DemoSupport (native) {
         },
 
         function (asyncDone) {
-          conn.close(function () {
+          if (theConnection) {
             asyncDone()
-          })
+          } else {
+            conn.close(function () {
+              asyncDone()
+            })
+          }
         }
       ]
 
