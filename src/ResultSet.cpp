@@ -24,7 +24,7 @@ namespace mssql
 {
     using namespace v8;
 
-    static const wchar_t* map_type(SQLSMALLINT datatype)
+    static const wchar_t* map_type(const SQLSMALLINT datatype)
     {
 	   const wchar_t* type_name;
 

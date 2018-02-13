@@ -24,7 +24,7 @@
 
 namespace mssql
 {
-	OdbcHandle::OdbcHandle(SQLSMALLINT ht) 
+	OdbcHandle::OdbcHandle(const SQLSMALLINT ht) 
 		: 
 		HandleType(ht), 
 		handle(nullptr)

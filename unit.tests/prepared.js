@@ -40,12 +40,12 @@ function empSelectSQL () {
      ',[CurrentFlag] ' +
      ',[rowguid] ' +
      ',[ModifiedDate] ' +
-     'FROM [scratch].[dbo].[Employee] ' +
+     'FROM [dbo].[Employee] ' +
      ' WHERE BusinessEntityID = ? '
 }
 
 function empDeleteSQL () {
-  return 'DELETE FROM [scratch].[dbo].[Employee] ' +
+  return 'DELETE FROM [dbo].[Employee] ' +
         'WHERE BusinessEntityID = ?'
 }
 
@@ -66,7 +66,7 @@ function empNoParamsSQL () {
      ',[CurrentFlag] ' +
      ',[rowguid] ' +
      ',[ModifiedDate] ' +
-     'FROM [scratch].[dbo].[Employee]'
+     'FROM [dbo].[Employee]'
 }
 
 suite('prepared', function () {
@@ -145,7 +145,7 @@ suite('prepared', function () {
     }
 
     supp.GlobalConn.init(sql, function (co) {
-      connStr = co.conn_str
+      connStr = global.conn_str || co.conn_str
       support = co.support
       procedureHelper = new support.ProcedureHelper(connStr)
       procedureHelper.setVerbose(false)
@@ -157,7 +157,7 @@ suite('prepared', function () {
         function () {
           testDone()
         })
-    })
+    }, global.conn_str)
   })
 
   teardown(function (done) {

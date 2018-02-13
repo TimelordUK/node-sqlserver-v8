@@ -25,7 +25,7 @@
 
 namespace mssql
 {
-	OdbcOperation::OdbcOperation(size_t query_id, Local<Object> cb)
+	OdbcOperation::OdbcOperation(const size_t query_id, Local<Object> cb)
 		:
 		_connection(nullptr),
 		_statement(nullptr),
@@ -39,7 +39,7 @@ namespace mssql
 		_output_param = fact.null();
 	}
 
-	OdbcOperation::OdbcOperation(shared_ptr<OdbcConnection> connection, size_t query_id, Local<Object> cb)
+	OdbcOperation::OdbcOperation(const shared_ptr<OdbcConnection> connection, const size_t query_id, Local<Object> cb)
 		: 
 		_connection(connection),
 		_statement(nullptr),
@@ -53,7 +53,7 @@ namespace mssql
 		_output_param = fact.null();
 	}
 
-	OdbcOperation::OdbcOperation(shared_ptr<OdbcConnection> connection, Local<Object> cb)
+	OdbcOperation::OdbcOperation(const shared_ptr<OdbcConnection> connection, Local<Object> cb)
 		:
 		_connection(connection),
 		_statement(nullptr),
@@ -100,14 +100,14 @@ namespace mssql
 		}
 	}
 
-	int OdbcOperation::Error(Local<Value> args[]) const
+	int OdbcOperation::Error(Local<Value> args[])
 	{
 		nodeTypeFactory fact;
 		auto err = fact.error(failure->Message());
 		err->Set(fact.newString("sqlstate"), fact.newString(failure->SqlState()));
 		err->Set(fact.newString("code"), fact.newInteger(failure->Code()));
-		
-		auto more  = false;
+
+		auto more = false;
 		if (_statement)
 		{
 			const auto rs = _statement->GetResultSet();
@@ -115,7 +115,14 @@ namespace mssql
 		}
 
 		args[0] = err;
-		args[1] = fact.newArray();
+		if (more) {
+			const auto arg = CreateCompletionArg();
+			args[1] = fact.newLocalValue(arg);
+		}
+		else
+		{
+			args[1] = fact.newArray();
+		}
 		args[2] = fact.newBoolean(more);
 		const auto argc = 3;
 		return argc;

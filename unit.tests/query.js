@@ -30,25 +30,25 @@ suite('query', function () {
   var async
   var helper
   var driver
-  var database
+  // var database
 
   this.timeout(20000)
   var sql = global.native_sql
 
   setup(function (testDone) {
     supp.GlobalConn.init(sql, function (co) {
-      connStr = co.conn_str
+      connStr = global.conn_str || co.conn_str
       async = co.async
       helper = co.helper
       driver = co.driver
-      database = co.database
+      // database = co.database
       helper.setVerbose(false)
       sql.open(connStr, function (err, conn) {
         theConnection = conn
         assert.ifError(err)
         testDone()
       })
-    })
+    }, global.conn_str)
   })
 
   teardown(function (done) {
@@ -641,6 +641,7 @@ suite('query', function () {
     })
   })
 
+  /*
   test('test login failure', function (done) {
     // construct a connection string that will fail due to
     // the database not existing
@@ -653,6 +654,7 @@ suite('query', function () {
       done()
     })
   })
+  */
 
   test('test function parameter validation', function (testDone) {
     var thrown = false

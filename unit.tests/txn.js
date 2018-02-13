@@ -36,7 +36,7 @@ suite('txn', function () {
 
   setup(function (testDone) {
     supp.GlobalConn.init(sql, function (co) {
-      connStr = co.conn_str
+      connStr = global.conn_str || co.conn_str
       driver = co.driver
       async = co.async
       helper = co.helper
@@ -46,7 +46,7 @@ suite('txn', function () {
         theConnection = newConn
         testDone()
       })
-    })
+    }, global.conn_str)
   })
 
   teardown(function (done) {
@@ -232,12 +232,12 @@ suite('txn', function () {
       },
 
       function (asyncDone) {
-        var q = theConnection.queryRaw('INSERT INTO test_txn (naem) VALUES (\'Carl\')')
+        var q = theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Carl\')\'m with STUPID')
         // events are emitted before callbacks are called currently
         q.on('error', function (err) {
           var expected = new Error('[Microsoft][' + driver + '][SQL Server]Unclosed quotation mark after the character string \'m with STUPID\'.')
-          expected.sqlstate = '42S22'
-          expected.code = 207
+          expected.sqlstate = '42000'
+          expected.code = 105
 
           assert.deepEqual(err, expected, 'Transaction should have caused an error')
 

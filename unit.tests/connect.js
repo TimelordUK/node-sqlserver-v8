@@ -34,14 +34,14 @@ suite('open', function () {
 
   setup(function (testDone) {
     supp.GlobalConn.init(sql, function (co) {
-      connStr = co.conn_str
+      connStr = global.conn_str || co.conn_str
       support = co.support
       procedureHelper = new support.ProcedureHelper(connStr)
       procedureHelper.setVerbose(false)
       helper = co.helper
       helper.setVerbose(false)
       testDone()
-    })
+    }, global.conn_str)
   })
 
   test('connection closes OK in sequence with query', function (done) {
@@ -82,7 +82,7 @@ suite('open', function () {
             assert.ifError(err)
           })
         } catch (e) {
-          assert.deepEqual(e, new Error('Error: [msnodesql] Connection is closed.'))
+          assert.deepEqual(e, new Error('[msnodesql] Connection is closed.'))
           thrown = true
         }
         assert(thrown)
@@ -121,7 +121,7 @@ suite('open', function () {
           assert.ifError(err)
         })
       } catch (e) {
-        assert.deepEqual(e, new Error('Error: [msnodesql] Invalid parameters passed to close.'))
+        assert.deepEqual(e, new Error('[msnodesql] Invalid parameters passed to close.'))
         thrown = true
       }
       conn.close(function () {

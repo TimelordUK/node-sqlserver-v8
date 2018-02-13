@@ -29,14 +29,14 @@ namespace mssql {
 		const int64_t ms_per_hour = 60 * ms_per_minute;
 		const int64_t ms_per_day = 24 * ms_per_hour;
 
-		bool is_leap_year(int64_t year)
+		bool is_leap_year(const int64_t year)
 		{
 			return (year % 4 == 0 && (year % 100 != 0) || (year % 400) == 0);
 		}
 	}
 
 	// return the number of days since Jan 1, 1970
-	double TimestampColumn::DaysSinceEpoch(SQLSMALLINT y, SQLUSMALLINT m, SQLUSMALLINT d) const
+	double TimestampColumn::DaysSinceEpoch(const SQLSMALLINT y, const SQLUSMALLINT m, const SQLUSMALLINT d) const
 	{
 		// table derived from ECMA 262 15.9.1.4
 		static const double days_in_months[] = { 0.0, 31.0, 59.0, 90.0, 120.0, 151.0, 181.0, 212.0, 243.0, 273.0, 304.0, 334.0 };
@@ -58,10 +58,10 @@ namespace mssql {
 		return floor(days);
 	}
 
-	void TimestampColumn::MillisecondsFromDate(TIMESTAMP_STRUCT const & ts, int32_t tz_offset)
+	void TimestampColumn::MillisecondsFromDate(TIMESTAMP_STRUCT const & ts, const int32_t tz_offset)
 	{
-		auto tzhrs = tz_offset / 60;
-		auto tzmins = tz_offset % 60;
+		const auto tzhrs = tz_offset / 60;
+		const auto tzmins = tz_offset % 60;
 
 		SQL_SS_TIMESTAMPOFFSET_STRUCT time_struct;
 		time_struct.year = ts.year;

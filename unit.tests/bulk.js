@@ -6,7 +6,7 @@ var assert = require('assert')
 
 suite('bulk', function () {
   var theConnection
-  this.timeout(20000)
+  this.timeout(200000)
   var tm
   var connStr
   var totalObjectsForInsert = 10
@@ -19,7 +19,7 @@ suite('bulk', function () {
 
   setup(function (testDone) {
     supp.GlobalConn.init(sql, function (co) {
-      connStr = co.conn_str
+      connStr = global.conn_str || co.conn_str
       async = co.async
       helper = co.helper
       helper.setVerbose(false)
@@ -28,7 +28,7 @@ suite('bulk', function () {
         theConnection = newConn
         testDone()
       })
-    })
+    }, global.conn_str)
   })
 
   teardown(function (done) {
@@ -38,32 +38,28 @@ suite('bulk', function () {
     })
   })
 
-  test('bulk insert/update/select int column of signed batchSize ' + test2BatchSize, function (testDone) {
-    signedTest(test2BatchSize, true, true, function () {
-      testDone()
-    })
-  })
+  test('employee tmp table complex json object array bulk operations', function (testDone) {
+    var tableName = '#Employee'
 
-  test('bulk insert/select varbinary column batchSize ' + test1BatchSize, function (testDone) {
-    varbinaryTest(test1BatchSize, true, function () {
-      testDone()
-    })
-  })
+    var fns = [
 
-  test('bulk insert/select varbinary column batchSize ' + test2BatchSize, function (testDone) {
-    varbinaryTest(test2BatchSize, true, function () {
-      testDone()
-    })
-  })
+      function (asyncDone) {
+        helper.dropCreateTable({
+          name: tableName,
+          theConnection:theConnection
+        }, function () {
+          asyncDone()
+        })
+      },
 
-  test('bulk insert/select null column of datetime batchSize ' + test2BatchSize, function (testDone) {
-    nullTest(test2BatchSize, false, function () {
-      testDone()
-    })
-  })
+      function (asyncDone) {
+        bindInsert(tableName, function () {
+          asyncDone()
+        })
+      }
+    ]
 
-  test('bulk insert/select null column of datetime batchSize ' + test1BatchSize, function (testDone) {
-    nullTest(test1BatchSize, false, function () {
+    async.series(fns, function () {
       testDone()
     })
   })
@@ -119,6 +115,36 @@ suite('bulk', function () {
     ]
 
     async.series(fns, function () {
+      testDone()
+    })
+  })
+
+  test('bulk insert/update/select int column of signed batchSize ' + test2BatchSize, function (testDone) {
+    signedTest(test2BatchSize, true, true, function () {
+      testDone()
+    })
+  })
+
+  test('bulk insert/select varbinary column batchSize ' + test1BatchSize, function (testDone) {
+    varbinaryTest(test1BatchSize, true, function () {
+      testDone()
+    })
+  })
+
+  test('bulk insert/select varbinary column batchSize ' + test2BatchSize, function (testDone) {
+    varbinaryTest(test2BatchSize, true, function () {
+      testDone()
+    })
+  })
+
+  test('bulk insert/select null column of datetime batchSize ' + test2BatchSize, function (testDone) {
+    nullTest(test2BatchSize, false, function () {
+      testDone()
+    })
+  })
+
+  test('bulk insert/select null column of datetime batchSize ' + test1BatchSize, function (testDone) {
+    nullTest(test1BatchSize, false, function () {
       testDone()
     })
   })

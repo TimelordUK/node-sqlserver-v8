@@ -18,7 +18,7 @@ suite('warnings', function () {
 
   setup(function (testDone) {
     supp.GlobalConn.init(sql, function (co) {
-      connStr = co.conn_str
+      connStr = global.conn_str || co.conn_str
       support = co.support
       procedureHelper = new support.ProcedureHelper(connStr)
       procedureHelper.setVerbose(false)
@@ -30,7 +30,7 @@ suite('warnings', function () {
         assert.ifError(err)
         testDone()
       })
-    })
+    }, global.conn_str)
   })
 
   var joinFailTestQry =
@@ -58,15 +58,28 @@ suite('warnings', function () {
   function testQry (qry, done) {
     var errors = []
     var warnings = []
+    var meta
+    var res = []
+    var obj
     var stmt = theConnection.queryRaw(qry)
+    stmt.on('meta', function (m) {
+      meta = m
+    })
     stmt.on('error', function (err) {
       errors.push(err)
     })
-    stmt.on('warning', function (err) {
+    stmt.on('info', function (err) {
       warnings.push(err)
     })
+    stmt.on('column', function (c, d) {
+      obj.push(d)
+    })
+    stmt.on('row', function () {
+      obj = []
+      res.push(obj)
+    })
     stmt.on('done', function () {
-      done(warnings, errors)
+      done(warnings, errors, meta, res)
     })
   }
 
@@ -95,7 +108,7 @@ suite('warnings', function () {
       errors.push(err)
       done(warnings, errors)
     })
-    sp.on('warning', function (err) {
+    sp.on('info', function (err) {
       warnings.push(err)
       done(warnings, errors)
     })
@@ -106,11 +119,24 @@ suite('warnings', function () {
     */
 
   test('TEST ONE - Query - JOIN HINT WARNING', function (testDone) {
+    var expected = [
+      [
+        1,
+        'test1'
+      ],
+      [
+        2,
+        'test2'
+      ]
+    ]
     var fns = [
       function (asyncDone) {
-        testQry(joinFailTestQry, function (warnings, errors) {
+        testQry(joinFailTestQry, function (warnings, errors, meta, res) {
+          assert(meta)
+          assert(meta.length === 2)
           assert(warnings.length === 1)
           assert(errors.length === 0)
+          assert.deepEqual(expected, res)
           asyncDone()
         })
       }
@@ -122,10 +148,19 @@ suite('warnings', function () {
   })
 
   test('TEST TWO - Query - NULL ELIMNATED WARNING', function (testDone) {
+    var expected = [
+      [
+        8
+      ]
+    ]
     var fns = [
       function (asyncDone) {
-        testQry(nullEliminatedTestQry, function (warnings, errors) {
+        testQry(nullEliminatedTestQry, function (warnings, errors, meta, res) {
+          assert(warnings.length === 0)
           assert(errors.length === 0)
+          assert(meta)
+          assert.deepEqual(res, expected)
+          assert(meta.length === 1)
           asyncDone()
         })
       }
@@ -172,6 +207,43 @@ suite('warnings', function () {
         testSP(function (warnings, errors) {
           assert(errors.length === 1)
           asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
+  test('print raises warning not error', function (testDone) {
+    var fns = [
+      function (asyncDone) {
+        var warnings = []
+        var err = new Error('[Microsoft][SQL Server Native Client 11.0][SQL Server]print error')
+        err.code = 0
+        err.sqlstate = '01000'
+        var expectedErrors = [err]
+        var expectedResults = [
+          {
+            cnt: 1
+          }
+        ]
+        var sql = 'print \'print error\'; select 1 as cnt'
+        var q = theConnection.query(sql, [], function (err, res, more) {
+          assert.ifError(err)
+          if (!more) {
+            assert(warnings.length === 1)
+            assert.deepEqual(warnings, expectedErrors)
+            assert.deepEqual(res, expectedResults)
+            asyncDone()
+          }
+        })
+        q.on('error', function (err) {
+          assert.ifError(err)
+        })
+        q.on('info', function (err) {
+          warnings.push(err)
         })
       }
     ]

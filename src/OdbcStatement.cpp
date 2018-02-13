@@ -52,7 +52,7 @@ namespace mssql
 		_statementState = STATEMENT_CLOSED;
 	}
 
-	OdbcStatement::OdbcStatement(long statement_id, shared_ptr<OdbcConnectionHandle> c)
+	OdbcStatement::OdbcStatement(const long statement_id, const shared_ptr<OdbcConnectionHandle> c)
 		:
 		_connection(c),
 		error(nullptr),
@@ -71,7 +71,7 @@ namespace mssql
 		}
 	}
 
-	void OdbcStatement::apply_precision(const shared_ptr<BoundDatum> &datum, int current_param) const
+	void OdbcStatement::apply_precision(const shared_ptr<BoundDatum>& datum, const int current_param) const
 	{
 		/* Modify the fields in the implicit application parameter descriptor */
 		SQLHDESC hdesc = nullptr;
@@ -99,21 +99,22 @@ namespace mssql
 		return false;
 	}
 
-	bool OdbcStatement::set_polling(bool mode)
+	bool OdbcStatement::set_polling(const bool mode)
 	{
 		lock_guard<mutex> lock(g_i_mutex);
 		_pollingEnabled = mode;
 		return true;
 	}
 
-	bool OdbcStatement::bind_tvp(vector<tvp_t> &tvps)
+	bool OdbcStatement::bind_tvp(vector<tvp_t>& tvps)
 	{
-		const auto & statement = *_statement;
+		const auto& statement = *_statement;
 		for (auto itr = tvps.begin(); itr != tvps.end(); ++itr)
-		{			
+		{
 			auto tvpret = SQLSetStmtAttr(statement, SQL_SOPT_SS_PARAM_FOCUS,
-				reinterpret_cast<SQLPOINTER>(itr->first), SQL_IS_INTEGER);
-			if (!check_odbc_error(tvpret)) {
+			                             reinterpret_cast<SQLPOINTER>(itr->first), SQL_IS_INTEGER);
+			if (!check_odbc_error(tvpret))
+			{
 				return false;
 			}
 			auto current_param = 1;
@@ -124,19 +125,21 @@ namespace mssql
 				current_param++;
 			}
 			tvpret = SQLSetStmtAttr(statement, SQL_SOPT_SS_PARAM_FOCUS,
-				static_cast<SQLPOINTER>(nullptr), SQL_IS_INTEGER);
-			if (!check_odbc_error(tvpret)) {
+			                        static_cast<SQLPOINTER>(nullptr), SQL_IS_INTEGER);
+			if (!check_odbc_error(tvpret))
+			{
 				return false;
 			}
 		}
 		return true;
 	}
 
-	bool OdbcStatement::bind_datum(int current_param, shared_ptr<BoundDatum> datum)
+	bool OdbcStatement::bind_datum(const int current_param, shared_ptr<BoundDatum> datum)
 	{
-		const auto & statement = *_statement;
+		const auto& statement = *_statement;
 		const auto r = SQLBindParameter(statement, current_param, datum->param_type, datum->c_type, datum->sql_type,
-				datum->param_size, datum->digits, datum->buffer, datum->buffer_len, datum->get_ind_vec().data());
+		                                datum->param_size, datum->digits, datum->buffer, datum->buffer_len,
+		                                datum->get_ind_vec().data());
 		if (!check_odbc_error(r)) return false;
 		if (datum->get_defined_precision())
 		{
@@ -145,8 +148,22 @@ namespace mssql
 		return true;
 	}
 
-	void OdbcStatement::queue_tvp(int current_param, param_bindings::iterator &itr, shared_ptr<BoundDatum> datum, vector <tvp_t> & tvps) const
+	void OdbcStatement::queue_tvp(int current_param, param_bindings::iterator& itr,  shared_ptr<BoundDatum> &datum, vector<tvp_t>& tvps) 
 	{
+		SQLHANDLE ipd;
+		const auto& statement = *_statement;
+		SQLINTEGER string_length;
+		SQLTCHAR parameter_type_name[256];
+		auto r = SQLGetStmtAttr(statement, SQL_ATTR_IMP_PARAM_DESC, &ipd, SQL_IS_POINTER, &string_length);
+		if (!check_odbc_error(r)) return;
+		auto schema = datum->get_storage()->schema;		
+		if (!schema.empty()) {
+			const auto schema_ptr = const_cast<wchar_t*>(schema.c_str());
+			r = SQLSetDescField(ipd, current_param, SQL_CA_SS_SCHEMA_NAME, reinterpret_cast<SQLPOINTER>(schema_ptr), schema.size() * sizeof(wchar_t));
+			if (!check_odbc_error(r)) return;
+			r = SQLGetDescField(ipd, current_param, SQL_CA_SS_SCHEMA_NAME, parameter_type_name, sizeof(parameter_type_name), &string_length);
+			if (!check_odbc_error(r)) return;
+		}
 		tvp_t tvp;
 		auto cols = make_shared<BoundDatumSet::param_bindings>();
 		for (auto c = 1; c <= datum->tvp_no_cols; ++c)
@@ -155,7 +172,7 @@ namespace mssql
 			const auto& col_datum = *itr;
 			cols->push_back(col_datum);
 		}
-		tvps.push_back({ current_param, cols });
+		tvps.emplace_back(current_param, cols);
 	}
 
 	/*
@@ -167,27 +184,28 @@ namespace mssql
 	*/
 
 	// bind all the parameters in the array
-	bool OdbcStatement::bind_params(shared_ptr<BoundDatumSet> params)
+	bool OdbcStatement::bind_params(const shared_ptr<BoundDatumSet> params)
 	{
 		auto& ps = *params;
 		//fprintf(stderr, "BindParams\n");
 		const auto size = get_size(ps);
 		if (size <= 0) return true;
-		const auto & statement = *_statement;
-		if (size > 1) {
+		const auto& statement = *_statement;
+		if (size > 1)
+		{
 			const auto ret = SQLSetStmtAttr(statement, SQL_ATTR_PARAMSET_SIZE, reinterpret_cast<SQLPOINTER>(size), 0);
 			if (!check_odbc_error(ret)) return false;
 		}
 		auto current_param = 1;
 
-		vector <tvp_t> tvps;
+		vector<tvp_t> tvps;
 		for (auto itr = ps.begin(); itr != ps.end(); ++itr)
 		{
-			const auto& datum = *itr;
+			auto& datum = *itr;
 			bind_datum(current_param, datum);
 			if (datum->is_tvp)
-			{	
-				queue_tvp(current_param, itr, datum, tvps);	
+			{
+				queue_tvp(current_param, itr, datum, tvps);
 			}
 			++current_param;
 		}
@@ -258,7 +276,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::read_col_attributes(ResultSet::ColumnDefinition& current, int column)
+	bool OdbcStatement::read_col_attributes(ResultSet::ColumnDefinition& current, const int column)
 	{
 		const size_t l = 1024;
 		wchar_t type_name[l];
@@ -282,7 +300,8 @@ namespace mssql
 			{
 				wchar_t udt_type_name[l];
 				SQLSMALLINT udt_type_name_len;
-				ret = SQLColAttribute(*_statement, index, SQL_CA_SS_UDT_TYPE_NAME, udt_type_name, l * width, &udt_type_name_len, nullptr);
+				ret = SQLColAttribute(*_statement, index, SQL_CA_SS_UDT_TYPE_NAME, udt_type_name, l * width, &udt_type_name_len,
+				                      nullptr);
 				if (!check_odbc_error(ret)) return false;
 				current.udtTypeName = wstring(udt_type_name, udt_type_name_len);
 			}
@@ -295,9 +314,9 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::read_next(int column)
+	bool OdbcStatement::read_next(const int column)
 	{
-		const auto & statement = *_statement;
+		const auto& statement = *_statement;
 		SQLSMALLINT name_length;
 		const auto index = column + 1;
 		auto ret = SQLDescribeCol(statement, index, nullptr, 0, &name_length, nullptr, nullptr, nullptr, nullptr);
@@ -319,14 +338,14 @@ namespace mssql
 	bool OdbcStatement::start_reading_results()
 	{
 		SQLSMALLINT columns;
-		const auto & statement = *_statement;
+		const auto& statement = *_statement;
 		auto ret = SQLNumResultCols(statement, &columns);
 		if (!check_odbc_error(ret)) return false;
 
 		auto column = 0;
 		resultset = make_unique<ResultSet>(columns);
 
-		while (column < resultset->GetColumns())
+		while (column < static_cast<int>(resultset->GetColumns()))
 		{
 			if (!read_next(column++))
 			{
@@ -335,14 +354,12 @@ namespace mssql
 		}
 
 		ret = SQLRowCount(statement, &resultset->rowcount);
-		if (!check_odbc_error(ret)) return false;
-
-		return true;
+		return check_odbc_error(ret);
 	}
 
-	SQLRETURN OdbcStatement::query_timeout(int timeout)
+	SQLRETURN OdbcStatement::query_timeout(const int timeout)
 	{
-		const auto & statement = *_statement;
+		const auto& statement = *_statement;
 		if (timeout > 0)
 		{
 			const auto to = reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout));
@@ -356,7 +373,7 @@ namespace mssql
 
 	bool OdbcStatement::try_prepare(shared_ptr<QueryOperationParams> q)
 	{
-		const auto & statement = *_statement;
+		const auto& statement = *_statement;
 		_query = q;
 		auto query = q->query_string();
 		auto* sql_str = const_cast<SQLWCHAR *>(query.c_str());
@@ -376,7 +393,7 @@ namespace mssql
 			read_next(i);
 		}
 
-		_preparedStorage->reserve(resultset);
+		auto reserved=  _preparedStorage->reserve(resultset);
 
 		auto i = 0;
 		for (auto itr = _preparedStorage->begin(); itr != _preparedStorage->end(); ++itr)
@@ -395,9 +412,9 @@ namespace mssql
 		return true;
 	}
 
-	SQLRETURN OdbcStatement::poll_check(SQLRETURN ret, bool direct)
+	SQLRETURN OdbcStatement::poll_check(SQLRETURN ret, const bool direct)
 	{
-		const auto & statement = *_statement;
+		const auto& statement = *_statement;
 
 		if (ret == SQL_STILL_EXECUTING)
 		{
@@ -433,9 +450,9 @@ namespace mssql
 		return ret;
 	}
 
-	bool OdbcStatement::bind_fetch(shared_ptr<BoundDatumSet> param_set)
+	bool OdbcStatement::bind_fetch(const shared_ptr<BoundDatumSet> param_set)
 	{
-		const auto & statement = *_statement;
+		const auto& statement = *_statement;
 
 		bool polling_mode;
 		{
@@ -484,9 +501,8 @@ namespace mssql
 		}
 	}
 
-	bool OdbcStatement::try_execute_direct(shared_ptr<QueryOperationParams> q, shared_ptr<BoundDatumSet> param_set)
+	bool OdbcStatement::try_execute_direct(shared_ptr<QueryOperationParams> q, const shared_ptr<BoundDatumSet> param_set)
 	{
-		SQLRETURN ret;
 		_query = q;
 		const auto timeout = q->timeout();
 		const auto bound = bind_params(param_set);
@@ -501,7 +517,7 @@ namespace mssql
 			polling_mode = _pollingEnabled;
 		}
 		_endOfResults = true; // reset 
-		ret = query_timeout(timeout);
+		auto ret = query_timeout(timeout);
 		if (!check_odbc_error(ret)) return false;
 		auto query = q->query_string();
 		auto* sql_str = const_cast<wchar_t *>(query.c_str());
@@ -511,7 +527,7 @@ namespace mssql
 			SQLSetStmtAttr(*_statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
 		}
 		ret = SQLExecDirect(*_statement, sql_str, SQL_NTS);
-		
+
 		if (polling_mode)
 		{
 			ret = poll_check(ret, true);
@@ -546,10 +562,10 @@ namespace mssql
 	{
 		//column = 0; // reset
 		//fprintf(stderr, "TryReadRow\n");
-		
+
 		if (resultset == nullptr) return false;
 		if (!_statement) return false;
-		const auto & statement = *_statement;
+		const auto& statement = *_statement;
 
 		const auto ret = SQLFetch(statement);
 
@@ -560,12 +576,10 @@ namespace mssql
 		}
 		_statementState = STATEMENT_FETCHING;
 		resultset->endOfRows = false;
-		if (!check_odbc_error(ret)) return false;
-
-		return true;
+		return check_odbc_error(ret);
 	}
 
-	bool OdbcStatement::dispatch(SQLSMALLINT t, int column)
+	bool OdbcStatement::dispatch(const SQLSMALLINT t, const int column)
 	{
 		bool res;
 		switch (t)
@@ -641,9 +655,9 @@ namespace mssql
 		return res;
 	}
 
-	bool OdbcStatement::d_variant(int column)
+	bool OdbcStatement::d_variant(const int column)
 	{
-		const auto & statement = *_statement;
+		const auto& statement = *_statement;
 		SQLLEN variant_type;
 		SQLLEN iv;
 		char b;
@@ -660,9 +674,9 @@ namespace mssql
 		return r;
 	}
 
-	bool OdbcStatement::d_time(int column)
+	bool OdbcStatement::d_time(const int column)
 	{
-		const auto & statement = *_statement;
+		const auto& statement = *_statement;
 		SQLLEN str_len_or_ind_ptr;
 		SQL_SS_TIME2_STRUCT time;
 		memset(&time, 0, sizeof(time));
@@ -690,15 +704,15 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::get_data_timestamp_offset(int column)
+	bool OdbcStatement::get_data_timestamp_offset(const int column)
 	{
-		const auto & statement = *_statement;
+		const auto& statement = *_statement;
 		auto storage = make_shared<DatumStorage>();
 		storage->ReserveTimestampOffset(1);
 		SQLLEN str_len_or_ind_ptr;
 
 		const auto ret = SQLGetData(statement, column + 1, SQL_C_DEFAULT, storage->timestampoffsetvec_ptr->data(),
-		                      sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT), &str_len_or_ind_ptr);
+		                            sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT), &str_len_or_ind_ptr);
 		if (!check_odbc_error(ret)) return false;
 		if (str_len_or_ind_ptr == SQL_NULL_DATA)
 		{
@@ -709,7 +723,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::d_timestamp_offset(int column)
+	bool OdbcStatement::d_timestamp_offset(const int column)
 	{
 		shared_ptr<IntColumn> col_val;
 		if (_prepared)
@@ -723,14 +737,14 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::get_data_timestamp(int column)
+	bool OdbcStatement::get_data_timestamp(const int column)
 	{
-		const auto & statement = *_statement;
+		const auto& statement = *_statement;
 		auto storage = make_shared<DatumStorage>();
 		storage->ReserveTimestamp(1);
 		SQLLEN str_len_or_ind_ptr;
 		const auto ret = SQLGetData(statement, column + 1, SQL_C_TIMESTAMP, storage->timestampvec_ptr->data(),
-		                      sizeof(TIMESTAMP_STRUCT), &str_len_or_ind_ptr);
+		                            sizeof(TIMESTAMP_STRUCT), &str_len_or_ind_ptr);
 		if (!check_odbc_error(ret)) return false;
 		if (str_len_or_ind_ptr == SQL_NULL_DATA)
 		{
@@ -741,7 +755,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::d_timestamp(int column)
+	bool OdbcStatement::d_timestamp(const int column)
 	{
 		shared_ptr<IntColumn> col_val;
 		if (_prepared)
@@ -755,14 +769,14 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::get_data_long(int column)
+	bool OdbcStatement::get_data_long(const int column)
 	{
-		const auto & statement = *_statement;
+		const auto& statement = *_statement;
 		auto storage = make_shared<DatumStorage>();
 		storage->ReserveInt64(1);
 		SQLLEN str_len_or_ind_ptr;
 		const auto ret = SQLGetData(statement, column + 1, SQL_C_SLONG, storage->int64vec_ptr->data(), sizeof(int64_t),
-		                      &str_len_or_ind_ptr);
+		                            &str_len_or_ind_ptr);
 		if (!check_odbc_error(ret)) return false;
 		if (str_len_or_ind_ptr == SQL_NULL_DATA)
 		{
@@ -773,7 +787,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::d_integer(int column)
+	bool OdbcStatement::d_integer(const int column)
 	{
 		shared_ptr<IntColumn> col_val;
 		if (_prepared)
@@ -787,20 +801,20 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::d_string(int column)
+	bool OdbcStatement::d_string(const int column)
 	{
 		const auto read = try_read_string(false, column);
 		return read;
 	}
 
-	bool OdbcStatement::get_data_bit(int column)
+	bool OdbcStatement::get_data_bit(const int column)
 	{
-		const auto & statement = *_statement;
+		const auto& statement = *_statement;
 		auto storage = make_shared<DatumStorage>();
 		storage->ReserveChars(1);
 		SQLLEN str_len_or_ind_ptr;
 		const auto ret = SQLGetData(statement, column + 1, SQL_C_BIT, storage->charvec_ptr->data(), sizeof(byte),
-		                      &str_len_or_ind_ptr);
+		                            &str_len_or_ind_ptr);
 		if (!check_odbc_error(ret)) return false;
 		if (str_len_or_ind_ptr == SQL_NULL_DATA)
 		{
@@ -811,7 +825,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::d_bit(int column)
+	bool OdbcStatement::d_bit(const int column)
 	{
 		if (_prepared)
 		{
@@ -824,14 +838,14 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::get_data_decimal(int column)
+	bool OdbcStatement::get_data_decimal(const int column)
 	{
-		const auto & statement = *_statement;
+		const auto& statement = *_statement;
 		auto storage = make_shared<DatumStorage>();
 		storage->ReserveDouble(1);
 		SQLLEN str_len_or_ind_ptr;
 		const auto ret = SQLGetData(statement, column + 1, SQL_C_DOUBLE, storage->doublevec_ptr->data(), sizeof(double),
-		                      &str_len_or_ind_ptr);
+		                            &str_len_or_ind_ptr);
 		if (!check_odbc_error(ret)) return false;
 		if (str_len_or_ind_ptr == SQL_NULL_DATA)
 		{
@@ -842,7 +856,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::d_decimal(int column)
+	bool OdbcStatement::d_decimal(const int column)
 	{
 		if (_prepared)
 		{
@@ -854,9 +868,9 @@ namespace mssql
 		return get_data_decimal(column);
 	}
 
-	bool OdbcStatement::get_data_binary(int column)
+	bool OdbcStatement::get_data_binary(const int column)
 	{
-		const auto & statement = *_statement;
+		const auto& statement = *_statement;
 		auto storage = make_shared<DatumStorage>();
 		SQLLEN amount = 2048;
 		storage->ReserveChars(amount);
@@ -893,7 +907,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::d_binary(int column)
+	bool OdbcStatement::d_binary(const int column)
 	{
 		if (_prepared)
 		{
@@ -917,16 +931,16 @@ namespace mssql
 		return dispatch(definition.dataType, column);
 	}
 
-	bool OdbcStatement::lob(SQLLEN display_size, int column)
+	bool OdbcStatement::lob(SQLLEN display_size, const int column)
 	{
 		bool more;
 		auto storage = make_shared<DatumStorage>();
 		SQLLEN value_len = LOB_PACKET_SIZE + 1;
 		storage->ReserveUint16(value_len);
 		const auto size = sizeof(uint16_t);
-		const auto & statement = *_statement;
+		const auto& statement = *_statement;
 		const auto r = SQLGetData(statement, column + 1, SQL_C_WCHAR, storage->uint16vec_ptr->data(), value_len * size,
-		                    &value_len);
+		                          &value_len);
 
 		//CHECK_ODBC_NO_DATA(r, statement);
 		if (!check_odbc_error(r)) return false;
@@ -954,7 +968,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::reserved_string(SQLLEN display_size, int column) const
+	bool OdbcStatement::reserved_string(SQLLEN display_size, const int column) const
 	{
 		auto& storage = _preparedStorage->atIndex(column);
 		auto& ind = storage->get_ind_vec();
@@ -966,7 +980,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::bounded_string(SQLLEN display_size, int column)
+	bool OdbcStatement::bounded_string(SQLLEN display_size, const int column)
 	{
 		auto storage = make_shared<DatumStorage>();
 		const auto size = sizeof(uint16_t);
@@ -976,7 +990,7 @@ namespace mssql
 		storage->ReserveUint16(display_size); // increment for null terminator
 
 		const auto r = SQLGetData(*_statement, column + 1, SQL_C_WCHAR, storage->uint16vec_ptr->data(), display_size * size,
-		                    &value_len);
+		                          &value_len);
 		if (!check_odbc_error(r)) return false;
 		//CHECK_ODBC_NO_DATA(r, statement);
 
@@ -997,7 +1011,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::try_read_string(bool binary, int column)
+	bool OdbcStatement::try_read_string(bool binary, const int column)
 	{
 		SQLLEN display_size = 0;
 
@@ -1007,7 +1021,7 @@ namespace mssql
 		// when a field type is LOB, we read a packet at time and pass that back.
 		if (display_size == 0 || display_size == numeric_limits<int>::max() ||
 			display_size == numeric_limits<int>::max() >> 1 ||
-			display_size == numeric_limits<unsigned long>::max() - 1)
+			static_cast<unsigned long>(display_size) == numeric_limits<unsigned long>::max() - 1)
 		{
 			return lob(display_size, column);
 		}
@@ -1040,32 +1054,32 @@ namespace mssql
 		switch (ret)
 		{
 		case SQL_NO_DATA:
-		{
-			//fprintf(stderr, "SQL_NO_DATA\n");
-			_endOfResults = true;
-			if (_prepared)
 			{
-				SQLCloseCursor(*_statement);
+				//fprintf(stderr, "SQL_NO_DATA\n");
+				_endOfResults = true;
+				if (_prepared)
+				{
+					SQLCloseCursor(*_statement);
+				}
+				return true;
 			}
-			return true;
-		}
 
 		case SQL_SUCCESS_WITH_INFO:
-		{
-			return_odbc_error();
-			auto saved_errors = error;
-			const auto res = start_reading_results();
-			if (res)
 			{
-				resultset->endOfRows = false;
+				return_odbc_error();
+				auto saved_errors = error;
+				const auto res = start_reading_results();
+				if (res)
+				{
+					resultset->endOfRows = false;
+				}
+				else
+				{
+					resultset->endOfRows = true;
+				}
+				return false;
 			}
-			else
-			{
-				resultset->endOfRows = true;
-			}
-			return false;
-		}
-		default:;
+		default: ;
 		}
 		_endOfResults = false;
 		return start_reading_results();

@@ -117,7 +117,7 @@ namespace mssql
 		bool bind_tvp(vector<tvp_t> &tvps);
 		bool bind_datum(int current_param, shared_ptr<BoundDatum> datum);
 		bool bind_params(shared_ptr<BoundDatumSet>);
-		void queue_tvp(int current_param, param_bindings::iterator &itr, shared_ptr<BoundDatum> datum, vector <tvp_t> & tvps) const;
+		void queue_tvp(int current_param, param_bindings::iterator &itr, shared_ptr<BoundDatum> &datum, vector <tvp_t> & tvps);
 		bool try_read_string(bool binary, int column);
 
 		bool return_odbc_error();

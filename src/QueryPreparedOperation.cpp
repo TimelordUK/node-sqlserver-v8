@@ -6,7 +6,7 @@
 
 namespace mssql
 {
-	QueryPreparedOperation::QueryPreparedOperation(shared_ptr<OdbcConnection> connection,  size_t query_id, u_int timeout, Handle<Object> callback) :
+	QueryPreparedOperation::QueryPreparedOperation(const shared_ptr<OdbcConnection> connection, const size_t query_id, const u_int timeout, const Handle<Object> callback) :
 		OdbcOperation(connection, callback),
 		_timeout(timeout),
 		_output_param_count(0)
@@ -15,7 +15,7 @@ namespace mssql
 		_params = make_shared<BoundDatumSet>();
 	}
 
-	bool QueryPreparedOperation::parameter_error_to_user_callback(uint32_t param, const char* error) const
+	bool QueryPreparedOperation::parameter_error_to_user_callback(const uint32_t param, const char* error) const
 	{
 		nodeTypeFactory fact;
 

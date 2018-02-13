@@ -22,11 +22,11 @@ namespace mssql
 
 		Local<Value> unbind() const;
 		
-		vector<SQLLEN> & get_ind_vec()  { return indvec; }
+		vector<SQLLEN> & get_ind_vec()  { return _indvec; }
 		
 		char *getErr() const { return err; }
 
-		shared_ptr<DatumStorage> get_storage() { return storage; }
+		shared_ptr<DatumStorage> get_storage() { return _storage; }
 
 		BoundDatum(void) :
 			js_type(JS_UNKNOWN),
@@ -44,8 +44,8 @@ namespace mssql
 			is_tvp(false),
 			tvp_no_cols(0)
 		{
-			indvec = vector<SQLLEN>(1);
-			storage = make_shared<DatumStorage>();
+			_indvec = vector<SQLLEN>(1);
+			_storage = make_shared<DatumStorage>();
 		}
 
 		enum JS_TYPE {
@@ -73,14 +73,16 @@ namespace mssql
 		bool is_tvp;
 		int tvp_no_cols;
 
+
 	private:
 	
-		vector<SQLLEN> indvec;
-		shared_ptr<DatumStorage> storage;
+		vector<SQLLEN> _indvec;
+		shared_ptr<DatumStorage> _storage;
 		bool definedPrecision;
 		bool definedScale;
 
 		char * err;
+	
 
 		void bind_null(const Local<Value> & p);
 		void bind_null_array(const Local<Value> & p);

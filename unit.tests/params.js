@@ -43,7 +43,7 @@ suite('params', function () {
 
   setup(function (testDone) {
     supp.GlobalConn.init(sql, function (co) {
-      connStr = co.conn_str
+      connStr = global.conn_str || co.conn_str
       async = co.async
       helper = co.helper
       helper.setVerbose(false)
@@ -52,7 +52,7 @@ suite('params', function () {
         theConnection = newConn
         testDone()
       })
-    })
+    }, global.conn_str)
   })
 
   teardown(function (done) {
@@ -115,6 +115,72 @@ suite('params', function () {
         doneFunction()
       })
   }
+
+  test('select a long string using callback', function (testDone) {
+    function repeat (a, num) {
+      return new Array(num + 1).join(a)
+    }
+    var longString = repeat('a', 50000)
+    var expected = [
+      {
+        long_string: longString
+      }
+    ]
+    theConnection.query('select ? as long_string', [longString], function (err, res) {
+      assert.ifError(err)
+      assert.deepEqual(res, expected)
+      testDone()
+    })
+  })
+
+  test('select a long buffer using callback', function (testDone) {
+    function repeat (a, num) {
+      return new Array(num + 1).join(a)
+    }
+    var longString = repeat('a', 50000)
+    var longBuffer = Buffer.from(longString)
+    var expected = [
+      {
+        long_binary: longBuffer
+      }
+    ]
+    theConnection.query('select ? as long_binary', [longBuffer], function (err, res) {
+      assert.ifError(err)
+      assert.deepEqual(res, expected)
+      testDone()
+    })
+  })
+
+  test('select a long string using streaming - ensure no fragmentation', function (testDone) {
+    function repeat (a, num) {
+      return new Array(num + 1).join(a)
+    }
+    var longString = repeat('a', 50000)
+    var expected = [
+      {
+        long_string: longString
+      }
+    ]
+    var res = []
+    var colNames = []
+    var query = theConnection.query('select ? as long_string', [longString])
+    query.on('column', function (c, d) {
+      assert(c === 0)
+      var obj = {}
+      obj[colNames[c]] = d
+      res.push(obj)
+    })
+    query.on('error', function (e) {
+      assert(e)
+    })
+    query.on('meta', function (m) {
+      colNames.push(m[0].name)
+    })
+    query.on('done', function () {
+      assert.deepEqual(expected, res)
+      testDone()
+    })
+  })
 
   test('verify buffer longer than column causes error', function (testDone) {
     var b = Buffer.from('0102030405060708090a', 'hex')
@@ -316,7 +382,7 @@ suite('params', function () {
     var sequence = [
       function (asyncDone) {
         theConnection.queryRaw('INSERT INTO invalid_numbers_test (f) VALUES (?)', [Number.POSITIVE_INFINITY], function (e) {
-          var expectedError = new Error('Error: IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
+          var expectedError = new Error('IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
           expectedError.code = -1
           expectedError.sqlstate = 'IMNOD'
           assert.deepEqual(e, expectedError)
@@ -326,7 +392,7 @@ suite('params', function () {
 
       function (asyncDone) {
         theConnection.queryRaw('INSERT INTO invalid_numbers_test (f) VALUES (?)', [Number.NEGATIVE_INFINITY], function (e) {
-          var expectedError = new Error('Error: IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
+          var expectedError = new Error('IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
           expectedError.code = -1
           expectedError.sqlstate = 'IMNOD'
 

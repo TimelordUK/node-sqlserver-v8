@@ -40,7 +40,7 @@ suite('datatypes', function () {
 
   setup(function (testDone) {
     supp.GlobalConn.init(sql, function (co) {
-      connStr = co.conn_str
+      connStr = global.conn_str || co.conn_str
       driver = co.driver
       async = co.async
       helper = co.helper
@@ -50,7 +50,7 @@ suite('datatypes', function () {
         theConnection = newConn
         testDone()
       })
-    })
+    }, global.conn_str)
   })
 
   teardown(function (done) {

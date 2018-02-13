@@ -12,7 +12,7 @@
       "name": "Stephen James"
     }
   ],
-  "version": "0.4.5",
+  "version": "0.4.11",
   "keywords": [
     "sql",
     "prepared",
@@ -26,7 +26,8 @@
     "tds",
     "microsoft",
     "msnodesql",
-    "node-sqlserver"
+    "node-sqlserver",
+    "tvp"
   ],
   "homepage": "https://github.com/TimelordUK/node-sqlserver-v8",
   "bugs": {
@@ -59,12 +60,12 @@
   },
   "devDependencies": {
     "@types/electron": "^1.4.31",
-    "@types/node": "^7.0.5",
-    "asynquence": "^0.10.0",
-    "asynquence-contrib": "^0.28.0",
-    "electron": "^1.4.3",
+    "@types/node": "^8.5.2",
+    "asynquence": "^0.10.2",
+    "asynquence-contrib": "^0.28.2",
+    "electron": "^1.8.1",
     "minimist": "^1.2.0",
-    "mocha": ">=2.2.5",
+    "mocha": "^4.0.1",
     "standard": "^10.0.3"
   },
   "os": [
@@ -72,7 +73,10 @@
   ],
   "gitHead": "e025462083dd1140eed2519c449bc257482bc61b",
   "_id": "msnodesqlv8@0.1.35",
-  "scripts": {},
+  "scripts": {
+    "build": "call tool/build.bat",
+    "test": "call tool/testonce.bat"
+  },
   "_shasum": "7ef7b229b0abf09aeeb847df6eb249626b626669",
   "_from": "msnodesqlv8@*",
   "_resolved": "https://registry.npmjs.org/msnodesqlv8/-/msnodesqlv8-0.1.35.tgz",

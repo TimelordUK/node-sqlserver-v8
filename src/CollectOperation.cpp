@@ -4,7 +4,7 @@
 
 namespace mssql
 {
-	CollectOperation::CollectOperation(shared_ptr<OdbcConnection> connection)
+	CollectOperation::CollectOperation(const shared_ptr<OdbcConnection> connection)
 		: OdbcOperation(connection, Handle<Object>())
 	{
 	}
