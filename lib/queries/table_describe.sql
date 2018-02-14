@@ -78,4 +78,5 @@ WHERE
   AND TABLE_TYPE = 'BASE TABLE'
   AND sc.TABLE_NAME = r.table_name
   AND (sc.TABLE_SCHEMA = '<table_schema>' or '<table_schema>' = '')
+  AND (ta.schema_id = SCHEMA_ID('<table_schema>') or '<table_schema>' = '')
   
