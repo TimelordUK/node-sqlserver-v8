@@ -322,7 +322,7 @@ suite('tvp', function () {
 
       function (asyncDone) {
         helper.dropCreateTable({
-          name: tableName
+          tableName: tableName
         }, function () {
           asyncDone()
         })
@@ -382,7 +382,7 @@ suite('tvp', function () {
 
       function (asyncDone) {
         helper.dropCreateTable({
-          name: tableName
+          tableName: tableName
         }, function () {
           asyncDone()
         })

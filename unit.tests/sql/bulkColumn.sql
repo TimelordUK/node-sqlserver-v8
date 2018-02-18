@@ -9,7 +9,7 @@ GO
 
 CREATE TABLE [dbo].[<name>](
   [pkid]   [int] NOT NULL,
-  [col1] <type>  NULL
+  [<col_name>] <type>  NULL
   PRIMARY KEY (pkid)
 ) ON [PRIMARY]
 

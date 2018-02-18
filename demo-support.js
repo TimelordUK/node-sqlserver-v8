@@ -211,7 +211,8 @@ function DemoSupport (native) {
 
     function dropCreateTable (params, doneFunction) {
       var async = new Async()
-      var name = params.name
+      var tableName = params.tableName
+      var columnName = params.columnName || 'col1'
       var type = params.type
       var theConnection = params.theConnection
       var insert = false
@@ -248,7 +249,7 @@ function DemoSupport (native) {
         },
 
         function (asyncDone) {
-          var dropSql = 'DROP TABLE ' + name
+          var dropSql = 'DROP TABLE ' + tableName
           if (verbose) console.log(dropSql)
           conn.query(dropSql, function () {
             asyncDone()
@@ -257,7 +258,7 @@ function DemoSupport (native) {
 
         function (asyncDone) {
           var folder = path.join(__dirname, 'unit.tests')
-          var fileName = name
+          var fileName = tableName
           if (fileName.charAt(0) === '#') {
             fileName = fileName.substr(1)
           }
@@ -286,8 +287,9 @@ function DemoSupport (native) {
 
           // submit the SQL one chunk at a time to create table with constraints.
           readFile(file, function (createSql) {
-            createSql = createSql.replace(/<name>/g, name)
+            createSql = createSql.replace(/<name>/g, tableName)
             createSql = createSql.replace(/<type>/g, type)
+            createSql = createSql.replace(/<col_name>/g, columnName)
             var arr = createSql.split('GO')
             for (var i = 0; i < arr.length; ++i) {
               arr[i] = arr[i].replace(/^\s+|\s+$/g, '')

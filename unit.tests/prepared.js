@@ -94,7 +94,7 @@ suite('prepared', function () {
     // drop / create an Employee table.
     function (asyncDone) {
       helper.dropCreateTable({
-        name: tableName
+        tableName: tableName
       }, function () {
         asyncDone()
       })
