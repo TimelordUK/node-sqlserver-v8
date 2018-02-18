@@ -6,7 +6,7 @@ var assert = require('assert')
 
 suite('bulk', function () {
   var theConnection
-  this.timeout(200000)
+  this.timeout(100000)
   var tm
   var connStr
   var totalObjectsForInsert = 10
@@ -45,8 +45,8 @@ suite('bulk', function () {
 
       function (asyncDone) {
         helper.dropCreateTable({
-          name: tableName,
-          theConnection:theConnection
+          tableName: tableName,
+          theConnection: theConnection
         }, function () {
           asyncDone()
         })
@@ -90,7 +90,7 @@ suite('bulk', function () {
     var fns = [
       function (asyncDone) {
         helper.dropCreateTable({
-          name: tableName
+          tableName: tableName
         }, function () {
           asyncDone()
         })
@@ -156,7 +156,7 @@ suite('bulk', function () {
 
       function (asyncDone) {
         helper.dropCreateTable({
-          name: tableName
+          tableName: tableName
         }, function () {
           asyncDone()
         })
@@ -225,7 +225,7 @@ suite('bulk', function () {
 
       function (asyncDone) {
         helper.dropCreateTable({
-          name: tableName
+          tableName: tableName
         }, function () {
           asyncDone()
         })
@@ -272,7 +272,7 @@ suite('bulk', function () {
 
       function (asyncDone) {
         helper.dropCreateTable({
-          name: tableName
+          tableName: tableName
         }, function () {
           asyncDone()
         })
@@ -312,6 +312,44 @@ suite('bulk', function () {
     ]
 
     async.series(fns, function () {
+      testDone()
+    })
+  })
+
+  function bitTestStrictColumn (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
+    var params = {
+      columnType: 'bit',
+      columnName: 'Key',
+      buildFunction: function (i) {
+        return i % 2 === 0
+      },
+      updateFunction: runUpdateFunction ? function (i) {
+        return i % 3 === 0
+      } : null,
+      check: selectAfterInsert,
+      deleteAfterTest: false,
+      batchSize: batchSize
+    }
+
+    simpleColumnBulkTest(params, function () {
+      testDone()
+    })
+  }
+
+  test('bulk insert/update/select bit strict column ' + test2BatchSize, function (testDone) {
+    bitTestStrictColumn(test2BatchSize, true, true, function () {
+      testDone()
+    })
+  })
+
+  test('bulk insert/select bit strict column batchSize ' + test1BatchSize, function (testDone) {
+    bitTestStrictColumn(test1BatchSize, true, false, function () {
+      testDone()
+    })
+  })
+
+  test('bulk insert/select bit strict column ' + test2BatchSize, function (testDone) {
+    bitTestStrictColumn(test2BatchSize, true, false, function () {
       testDone()
     })
   })
@@ -571,7 +609,7 @@ suite('bulk', function () {
     var tableName = 'BulkTest'
 
     helper.dropCreateTable({
-      name: tableName
+      tableName: tableName
     }, go)
 
     function go () {
@@ -607,19 +645,18 @@ suite('bulk', function () {
     var check = params.check
     var batchSize = params.batchSize
     var deleteAfterTest = params.deleteAfterTest
-
     var tableName = 'bulkColumn'
+    var columnName = params.columnName || 'col1'
 
     function buildTestObjects (batch, functionToRun) {
       var arr = []
 
       for (var i = 0; i < batch; ++i) {
-        arr.push(
-          {
-            pkid: i,
-            col1: functionToRun(i)
-          }
-        )
+        var o = {
+          pkid: i
+        }
+        o[columnName] = functionToRun(i)
+        arr.push(o)
       }
       return arr
     }
@@ -635,7 +672,8 @@ suite('bulk', function () {
 
       function (asyncDone) {
         helper.dropCreateTable({
-          name: tableName,
+          tableName: tableName,
+          columnName: columnName,
           type: type
         }, function () {
           asyncDone()
