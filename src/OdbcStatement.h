@@ -76,9 +76,9 @@ namespace mssql
 			return error2;
 		}
 	
-		bool try_prepare(shared_ptr<QueryOperationParams> q);
-		bool bind_fetch(shared_ptr<BoundDatumSet> paramSet);
-		bool try_execute_direct(shared_ptr<QueryOperationParams> q, shared_ptr<BoundDatumSet> paramSet);
+		bool try_prepare(const shared_ptr<QueryOperationParams> &q);
+		bool bind_fetch(const shared_ptr<BoundDatumSet> &paramSet);
+		bool try_execute_direct(const shared_ptr<QueryOperationParams> &q, const shared_ptr<BoundDatumSet> &paramSet);
 		void cancel_handle();
 		bool try_read_row();
 		bool try_read_column(int column);
@@ -115,8 +115,8 @@ namespace mssql
 		typedef vector<shared_ptr<BoundDatum>> param_bindings;
 		typedef pair<int, shared_ptr<param_bindings>> tvp_t;
 		bool bind_tvp(vector<tvp_t> &tvps);
-		bool bind_datum(int current_param, shared_ptr<BoundDatum> datum);
-		bool bind_params(shared_ptr<BoundDatumSet>);
+		bool bind_datum(int current_param, const shared_ptr<BoundDatum> &datum);
+		bool bind_params(const shared_ptr<BoundDatumSet> & params);
 		void queue_tvp(int current_param, param_bindings::iterator &itr, shared_ptr<BoundDatum> &datum, vector <tvp_t> & tvps);
 		bool try_read_string(bool binary, int column);
 

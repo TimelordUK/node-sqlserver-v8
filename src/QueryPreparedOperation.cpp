@@ -6,7 +6,9 @@
 
 namespace mssql
 {
-	QueryPreparedOperation::QueryPreparedOperation(const shared_ptr<OdbcConnection> connection, const size_t query_id, const u_int timeout, const Handle<Object> callback) :
+	QueryPreparedOperation::QueryPreparedOperation(
+		const shared_ptr<OdbcConnection> &connection, 
+		const size_t query_id, const u_int timeout, const Handle<Object> callback) :
 		OdbcOperation(connection, callback),
 		_timeout(timeout),
 		_output_param_count(0)

@@ -32,9 +32,9 @@ namespace mssql
 		SQLSMALLINT HandleType;
 		OdbcHandle(SQLSMALLINT ht);
 		~OdbcHandle();
-		bool Alloc();
-		bool Alloc(const OdbcHandle parent);
-		void Free();
+		bool alloc();
+		bool alloc(const OdbcHandle &parent);
+		void free();
 		SQLHANDLE get() const;
 		operator SQLHANDLE() const { return handle; }
 		operator bool() const { return handle != nullptr; }

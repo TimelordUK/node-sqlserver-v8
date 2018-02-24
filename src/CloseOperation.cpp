@@ -5,7 +5,7 @@
 
 namespace mssql
 {
-	CloseOperation::CloseOperation(const shared_ptr<OdbcConnection> connection, const Handle<Object> callback)
+	CloseOperation::CloseOperation(const shared_ptr<OdbcConnection> &connection, const Handle<Object> callback)
 		: OdbcOperation(connection, callback)
 	{
 	}

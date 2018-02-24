@@ -66,7 +66,7 @@ namespace mssql
 	{
 		//fprintf(stderr, "OdbcStatement::OdbcStatement OdbcStatement ID = %ld\n ", statementId);
 		_statement = make_shared<OdbcStatementHandle>();
-		if (!_statement->Alloc(*_connection))
+		if (!_statement->alloc(*_connection))
 		{
 		}
 	}
@@ -134,7 +134,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::bind_datum(const int current_param, shared_ptr<BoundDatum> datum)
+	bool OdbcStatement::bind_datum(const int current_param, const shared_ptr<BoundDatum> &datum)
 	{
 		const auto& statement = *_statement;
 		const auto r = SQLBindParameter(statement, current_param, datum->param_type, datum->c_type, datum->sql_type,
@@ -184,7 +184,7 @@ namespace mssql
 	*/
 
 	// bind all the parameters in the array
-	bool OdbcStatement::bind_params(const shared_ptr<BoundDatumSet> params)
+	bool OdbcStatement::bind_params(const shared_ptr<BoundDatumSet> &params)
 	{
 		auto& ps = *params;
 		//fprintf(stderr, "BindParams\n");
@@ -371,7 +371,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::try_prepare(shared_ptr<QueryOperationParams> q)
+	bool OdbcStatement::try_prepare(const shared_ptr<QueryOperationParams> &q)
 	{
 		const auto& statement = *_statement;
 		_query = q;
@@ -450,7 +450,7 @@ namespace mssql
 		return ret;
 	}
 
-	bool OdbcStatement::bind_fetch(const shared_ptr<BoundDatumSet> param_set)
+	bool OdbcStatement::bind_fetch(const shared_ptr<BoundDatumSet> & param_set)
 	{
 		const auto& statement = *_statement;
 
@@ -478,9 +478,7 @@ namespace mssql
 		if (!check_odbc_error(ret)) return false;
 
 		ret = SQLRowCount(statement, &resultset->rowcount);
-		if (!check_odbc_error(ret)) return false;
-
-		return true;
+		return check_odbc_error(ret);
 	}
 
 	void OdbcStatement::cancel_handle()
@@ -501,7 +499,7 @@ namespace mssql
 		}
 	}
 
-	bool OdbcStatement::try_execute_direct(shared_ptr<QueryOperationParams> q, const shared_ptr<BoundDatumSet> param_set)
+	bool OdbcStatement::try_execute_direct(const shared_ptr<QueryOperationParams> &q, const shared_ptr<BoundDatumSet> &param_set)
 	{
 		_query = q;
 		const auto timeout = q->timeout();

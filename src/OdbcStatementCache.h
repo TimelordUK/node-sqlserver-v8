@@ -32,7 +32,7 @@ namespace mssql
 	class OdbcStatementCache
 	{
 	public:		
-		OdbcStatementCache(shared_ptr<OdbcConnectionHandle> connection);
+		OdbcStatementCache(const shared_ptr<OdbcConnectionHandle> &connection);
 		~OdbcStatementCache();
 		shared_ptr<OdbcStatement> checkout(long statementId);
 		void checkin(long statementId);

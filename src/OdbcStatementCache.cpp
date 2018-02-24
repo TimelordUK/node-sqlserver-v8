@@ -24,7 +24,7 @@ namespace mssql
 {
 	using namespace std;
 
-	OdbcStatementCache::OdbcStatementCache(const shared_ptr<OdbcConnectionHandle>  connection) 
+	OdbcStatementCache::OdbcStatementCache(const shared_ptr<OdbcConnectionHandle>  &connection) 
 		: 
 		connection(connection)
 	{

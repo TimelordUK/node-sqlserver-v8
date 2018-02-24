@@ -31,7 +31,7 @@ namespace mssql
 	class CollectOperation : public OdbcOperation
 	{
 	public:
-		CollectOperation(shared_ptr<OdbcConnection> connection);
+		CollectOperation(const shared_ptr<OdbcConnection> &connection);
 		bool TryInvokeOdbc() override;
 		Local<Value> CreateCompletionArg() override;
 		// override to not call a callback

@@ -61,8 +61,8 @@ namespace mssql
 		nodeTypeFactory fact;
 		return fact.null();
 	}
-
-	void OdbcConnectionBridge::Collect()
+	
+	void OdbcConnectionBridge::collect()
 	{
 		const auto op = make_shared<CollectOperation>(connection);
 		connection->send(op);

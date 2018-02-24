@@ -31,7 +31,7 @@ namespace mssql
 	class CloseOperation : public OdbcOperation
 	{
 	public:
-		CloseOperation(shared_ptr<OdbcConnection> connection, Handle<Object> callback);
+		CloseOperation(const shared_ptr<OdbcConnection> &connection, const Handle<Object> callback);
 		bool TryInvokeOdbc() override;
 		Local<Value> CreateCompletionArg() override;
 	};
