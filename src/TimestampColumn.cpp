@@ -58,7 +58,7 @@ namespace mssql {
 		return floor(days);
 	}
 
-	void TimestampColumn::MillisecondsFromDate(TIMESTAMP_STRUCT const & ts, const int32_t tz_offset)
+	void TimestampColumn::milliseconds_from_timestamp(TIMESTAMP_STRUCT const & ts, const int32_t tz_offset)
 	{
 		const auto tzhrs = tz_offset / 60;
 		const auto tzmins = tz_offset % 60;
@@ -73,18 +73,18 @@ namespace mssql {
 		time_struct.fraction = ts.fraction;
 		time_struct.timezone_hour = tzhrs;
 		time_struct.timezone_minute = tzmins;
-		MillisecondsFromDate(time_struct);
+		milliseconds_from_timestamp_offset(time_struct);
 	}
 
 	// derived from ECMA 262 15.9
-	void TimestampColumn::MillisecondsFromDate(SQL_SS_TIMESTAMPOFFSET_STRUCT const& timeStruct)
+	void TimestampColumn::milliseconds_from_timestamp_offset(SQL_SS_TIMESTAMPOFFSET_STRUCT const& timeStruct)
 	{
 		auto ms = DaysSinceEpoch(timeStruct.year, timeStruct.month, timeStruct.day);
 		ms *= ms_per_day;
 
 		// add in the hour, day minute, second and millisecond
 		ms += timeStruct.hour * ms_per_hour + timeStruct.minute * ms_per_minute + timeStruct.second * ms_per_second;
-		ms += timeStruct.fraction / NANOSECONDS_PER_MS;    
+		ms += static_cast<double>(timeStruct.fraction / NANOSECONDS_PER_MS);    
 		// fraction is in nanoseconds
 		// handle timezone adjustment to UTC
 		ms -= timeStruct.timezone_hour * ms_per_hour;
@@ -95,7 +95,7 @@ namespace mssql {
 		nanoseconds_delta = timeStruct.fraction % NANOSECONDS_PER_MS;
 	}
 
-	int64_t TimestampColumn::YearFromDay(int64_t& day)
+	int64_t TimestampColumn::year_from_day(int64_t& day)
 	{
 		int64_t year = 1970;
 		int64_t days_in_year = 365;
@@ -155,7 +155,7 @@ namespace mssql {
 		}
 
 		// how many leap years have passed since that time?
-		const auto year = YearFromDay(day);
+		const auto year = year_from_day(day);
 
 		if (is_leap_year(year)) {
 			start_days = leap_days_in_months;

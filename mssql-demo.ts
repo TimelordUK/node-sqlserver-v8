@@ -503,7 +503,7 @@ function prepared(done: Function) {
         // drop / create an Employee table.
         function (async_done: Function) {
             helper.dropCreateTable({
-                name: table_name
+                tableName: table_name
             }, function () {
                 async_done();
             });
@@ -647,7 +647,7 @@ function table(done: Function) {
         function (async_done: Function) {
             console.log("create an employee table.");
             helper.dropCreateTable({
-                name: table_name
+                tableName: table_name
             }, function () {
                 async_done();
             });

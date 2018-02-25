@@ -306,7 +306,7 @@ namespace mssql
 	{
 		wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
 		char tmp[1 * 1024];
-		const auto precision = max(1024, s->Length());
+		const auto precision = min(1024, s->Length() + 1);
 		auto written = s->WriteUtf8(tmp, precision);
 		const string narrow(tmp);
 		auto wide = converter.from_bytes(narrow);
@@ -439,7 +439,7 @@ namespace mssql
 			const auto d = p->NumberValue();
 			auto& vec = *_storage->numeric_ptr;
 			auto& ns = vec[0];
-			encodeNumericStruct(d, static_cast<int>(param_size), digits, ns);
+			encode_numeric_struct(d, static_cast<int>(param_size), digits, ns);
 			param_size = ns.precision;
 			digits = ns.scale;
 			_indvec[0] = sizeof(SQL_NUMERIC_STRUCT);
@@ -460,7 +460,7 @@ namespace mssql
 			if (!elem->IsNull())
 			{
 				const auto d = elem->NumberValue();
-				encodeNumericStruct(d, static_cast<int>(param_size), digits, ns);
+				encode_numeric_struct(d, static_cast<int>(param_size), digits, ns);
 				param_size = ns.precision;
 				digits = ns.scale;
 				_indvec[i] = sizeof(SQL_NUMERIC_STRUCT);
@@ -664,7 +664,7 @@ namespace mssql
 			const auto d = date_object->NumberValue();
 			TimestampColumn sql_date(d);
 			auto& timestamp = (*_storage->timestampvec_ptr)[0];
-			sql_date.ToTimestampStruct(timestamp);
+			sql_date.to_timestamp_struct(timestamp);
 			_indvec[0] = buffer_len;
 		}
 	}
@@ -698,7 +698,7 @@ namespace mssql
 			const auto d = date_object->NumberValue();
 			auto& ts = (*_storage->timestampoffsetvec_ptr)[0];
 			TimestampColumn sql_date(d, 0, offset);
-			sql_date.ToTimestampOffset(ts);
+			sql_date.to_timestamp_offset(ts);
 			_indvec[0] = buffer_len;
 		}
 	}
@@ -736,7 +736,7 @@ namespace mssql
 				const auto d = Handle<Date>::Cast<Value>(elem);
 				auto& ts = vec[i];
 				TimestampColumn sql_date(d->NumberValue());
-				sql_date.ToTimestampOffset(ts);
+				sql_date.to_timestamp_offset(ts);
 			}
 		}
 	}

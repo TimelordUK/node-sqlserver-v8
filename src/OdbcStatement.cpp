@@ -227,7 +227,7 @@ namespace mssql
 
 	Handle<Value> OdbcStatement::get_meta_value() const
 	{
-		return resultset->MetaToValue();
+		return resultset->meta_to_value();
 	}
 
 	bool OdbcStatement::end_of_results() const
@@ -251,7 +251,7 @@ namespace mssql
 	{
 		nodeTypeFactory fact;
 		auto result = fact.newObject();
-		auto column = resultset->GetColumn();
+		auto column = resultset->get_column();
 		result->Set(fact.fromTwoByte(L"data"), column->ToValue());
 		result->Set(fact.fromTwoByte(L"more"), fact.newBoolean(column->More()));
 		return result;
@@ -260,7 +260,7 @@ namespace mssql
 	bool OdbcStatement::return_odbc_error()
 	{
 		if (!_statement) return false;
-		error = _statement->ReadErrors();
+		error = _statement->read_errors();
 		//fprintf(stderr, "%s\n", error->Message());
 		// fprintf(stderr, "RETURN_ODBC_ERROR - free statement handle\n\n");
 		return false;
@@ -322,7 +322,7 @@ namespace mssql
 		auto ret = SQLDescribeCol(statement, index, nullptr, 0, &name_length, nullptr, nullptr, nullptr, nullptr);
 		if (!check_odbc_error(ret)) return false;
 
-		auto& current = resultset->GetMetadata(column);
+		auto& current = resultset->get_meta_data(column);
 		vector<wchar_t> buffer(name_length + 1);
 		ret = SQLDescribeCol(statement, index, buffer.data(), name_length + 1, &name_length, &current.dataType,
 		                     &current.columnSize, &current.decimalDigits, &current.nullable);
@@ -345,7 +345,7 @@ namespace mssql
 		auto column = 0;
 		resultset = make_unique<ResultSet>(columns);
 
-		while (column < static_cast<int>(resultset->GetColumns()))
+		while (column < static_cast<int>(resultset->get_column_count()))
 		{
 			if (!read_next(column++))
 			{
@@ -666,7 +666,7 @@ namespace mssql
 		ret = SQLColAttribute(statement, column + 1, SQL_CA_SS_VARIANT_TYPE, nullptr, NULL, nullptr, &variant_type);
 		if (!check_odbc_error(ret)) return false;
 		// set the definiton to actual data underlying data type.
-		auto& definition = resultset->GetMetadata(column);
+		auto& definition = resultset->get_meta_data(column);
 		definition.dataType = static_cast<SQLSMALLINT>(variant_type);
 		const auto r = try_read_column(column);
 		return r;
@@ -924,8 +924,8 @@ namespace mssql
 	bool OdbcStatement::try_read_column(int column)
 	{
 		//fprintf(stderr, "TryReadColumn %d\n", column);
-		assert(column >= 0 && column < resultset->GetColumns());
-		const auto& definition = resultset->GetMetadata(column);
+		assert(column >= 0 && column < resultset->get_column_count());
+		const auto& definition = resultset->get_meta_data(column);
 		return dispatch(definition.dataType, column);
 	}
 

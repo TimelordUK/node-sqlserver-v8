@@ -52,14 +52,14 @@ namespace mssql
 		
 		OdbcStatement(long statementId, shared_ptr<OdbcConnectionHandle> c);
 		virtual ~OdbcStatement();
-		SQLLEN RowCount() const { return resultset != nullptr ? resultset->RowCount() : -1; }
-		shared_ptr<ResultSet> GetResultSet() const
+		SQLLEN get_row_count() const { return resultset != nullptr ? resultset->row_count() : -1; }
+		shared_ptr<ResultSet> get_result_set() const
 		{ return resultset; } 
 
-		long getStatementId() const
+		long get_statement_id() const
 		{ return _statementId; }
 
-		bool isPrepared() const 
+		bool is_prepared() const 
 		{ return _prepared; }
 
 		Local<Array> unbind_params() const;
@@ -70,7 +70,7 @@ namespace mssql
 		Handle<Value> get_column_value() const;
 		bool set_polling(bool mode);
 
-		shared_ptr<OdbcError> LastError(void) const
+		shared_ptr<OdbcError> get_last_error(void) const
 		{
 			if (error) return error;
 			return error2;

@@ -39,8 +39,8 @@ namespace mssql {
 	   }
 
 	   virtual ~Operation();
-	   virtual void InvokeBackground() = 0;
-	   virtual void CompleteForeground() = 0;
+	   virtual void invoke_background() = 0;
+	   virtual void complete_foreground() = 0;
 
 	   size_t OperationID;
 	   shared_ptr<OperationManager> mgr;

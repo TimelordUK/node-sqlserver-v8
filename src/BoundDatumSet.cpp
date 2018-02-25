@@ -15,9 +15,9 @@ namespace mssql
 
 	bool BoundDatumSet::reserve(const shared_ptr<ResultSet> &set) const
 	{
-		for (uint32_t i = 0; i < set->GetColumns(); ++i) {
+		for (uint32_t i = 0; i < set->get_column_count(); ++i) {
 			auto binding = make_shared<BoundDatum>();
-			auto & def = set->GetMetadata(i);
+			auto & def = set->get_meta_data(i);
 			binding->reserve_column_type(def.dataType, def.columnSize);
 			_bindings->push_back(binding);
 		}

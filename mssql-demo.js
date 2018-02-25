@@ -366,7 +366,7 @@ function prepared(done) {
         },
         function (async_done) {
             helper.dropCreateTable({
-                name: table_name
+                tableName: table_name
             }, function () {
                 async_done();
             });
@@ -488,7 +488,7 @@ function table(done) {
         function (async_done) {
             console.log("create an employee table.");
             helper.dropCreateTable({
-                name: table_name
+                tableName: table_name
             }, function () {
                 async_done();
             });

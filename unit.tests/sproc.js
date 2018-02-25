@@ -81,6 +81,65 @@ suite('sproc', function () {
     })
   })
 
+  test('get proc and call multiple times with changing params i.e. prove each call is independent', function (testDone) {
+    var spName = 'test_sp_get_int_int'
+
+    var def = 'alter PROCEDURE <name>' +
+      '(\n' +
+      '@num1 INT,\n' +
+      '@num2 INT,\n' +
+      '@num3 INT OUTPUT\n' +
+      '\n)' +
+      'AS\n' +
+      'BEGIN\n' +
+      '   SET @num3 = @num1 + @num2\n' +
+      '   RETURN 99;\n' +
+      'END\n'
+
+    var fns = [
+      function (asyncDone) {
+        procedureHelper.createProcedure(spName, def, function () {
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+
+        var pm = theConnection.procedureMgr()
+        pm.get(spName, function (proc) {
+          var count = pm.getCount()
+          assert.equal(count, 1)
+          var i
+          var received = []
+          var iterations = 100
+
+          function check() {
+            for (i = 0; i < iterations; ++i) {
+              var expected = [99, i * 2]
+              assert.deepEqual(received[i], expected, 'results didn\'t match')
+            }
+            asyncDone()
+          }
+
+          for (i = 0; i < iterations; ++i) {
+            proc.call([i, i], function (err, results, output) {
+              assert.ifError(err)
+              received[received.length] = output
+              if (received.length === iterations) {
+                check()
+              }
+            })
+          }
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
+
   test('call proc that waits for delay of input param - wait 2, timeout 5 - should not error', function (testDone) {
     var spName = 'test_spwait_for'
 

@@ -40,7 +40,7 @@ namespace mssql
 		Persistent<Function> _callback;
 		Handle<Value> _output_param;
 		Local<Object> _cb;
-		void fetchStatement();
+		void fetch_statement();
 		long _statementId;
 
 	private:
@@ -59,10 +59,10 @@ namespace mssql
 		virtual Local<Value> CreateCompletionArg() = 0;
 
 		void getFailure();
-		void InvokeBackground() override;
+		void invoke_background() override;
 		int Error(Local<Value> args[]);
 		int Success(Local<Value> args[]);
-		void CompleteForeground() override;
+		void complete_foreground() override;
 	};
 }
 

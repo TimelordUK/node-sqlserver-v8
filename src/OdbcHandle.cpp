@@ -77,7 +77,7 @@ namespace mssql
 		return handle;
 	} 
 
-	shared_ptr<OdbcError> OdbcHandle::ReadErrors() const
+	shared_ptr<OdbcError> OdbcHandle::read_errors() const
 	{
 		shared_ptr<OdbcError> first;
 

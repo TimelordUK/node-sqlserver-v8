@@ -50,9 +50,9 @@ namespace mssql
 	private:
 		bool ReturnOdbcError();
 		bool CheckOdbcError(SQLRETURN ret);
-
+		
 		static OdbcEnvironmentHandle environment;
-		SQLRETURN openTimeout(int timeout);
+		SQLRETURN open_timeout(int timeout);
 		
 		shared_ptr<OdbcConnectionHandle> connection;
 		CriticalSection closeCriticalSection;

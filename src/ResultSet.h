@@ -49,29 +49,29 @@ namespace mssql
             column.reset();
         }
   
-        ColumnDefinition & GetMetadata(int column)
+        ColumnDefinition & get_meta_data(int column)
         {
             return metadata[column];
         }
 
-        size_t GetColumns() const
+        size_t get_column_count() const
         {
             return metadata.size();
         }
 
-        Handle<Value> MetaToValue();
+        Handle<Value> meta_to_value();
 
         void SetColumn(shared_ptr<Column> column)
         {
             this->column = column;
         }
 
-        shared_ptr<Column> GetColumn() const
+        shared_ptr<Column> get_column() const
         {
             return column;
         }
 
-        SQLLEN RowCount() const
+        SQLLEN row_count() const
         {
             return rowcount;
         }
@@ -82,7 +82,7 @@ namespace mssql
         }
 
     private:
-		static Local<Object> getEntry(nodeTypeFactory & fact, const ColumnDefinition & definition);
+		static Local<Object> get_entry(const nodeTypeFactory & fact, const ColumnDefinition & definition);
         vector<ColumnDefinition> metadata;
         SQLLEN rowcount;
         bool endOfRows;

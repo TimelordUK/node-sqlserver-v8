@@ -72,7 +72,7 @@ namespace mssql
 		_callback.Reset();
 	}
 
-	void OdbcOperation::fetchStatement()
+	void OdbcOperation::fetch_statement()
 	{
 		_statement = _connection->statements->checkout(_statementId);
 	}
@@ -83,7 +83,7 @@ namespace mssql
 			failure = _connection->LastError();
 		}
 		if (!failure && _statement) {
-			failure = _statement->LastError();
+			failure = _statement->get_last_error();
 		}
 		if (!failure)
 		{
@@ -91,7 +91,7 @@ namespace mssql
 		}
 	}
 
-	void OdbcOperation::InvokeBackground()
+	void OdbcOperation::invoke_background()
 	{
 		failed = !TryInvokeOdbc();
 
@@ -110,7 +110,7 @@ namespace mssql
 		auto more = false;
 		if (_statement)
 		{
-			const auto rs = _statement->GetResultSet();
+			const auto rs = _statement->get_result_set();
 			if (rs) more = !rs->EndOfRows();
 		}
 
@@ -141,7 +141,7 @@ namespace mssql
 		return argc;
 	}
 
-	void OdbcOperation::CompleteForeground()
+	void OdbcOperation::complete_foreground()
 	{
 		auto isolate = Isolate::GetCurrent();
 		HandleScope scope(isolate);

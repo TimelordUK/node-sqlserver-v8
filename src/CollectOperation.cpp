@@ -21,7 +21,7 @@ namespace mssql
 	}
 
 	// override to not call a callback
-	void CollectOperation::CompleteForeground()
+	void CollectOperation::complete_foreground()
 	{
 	}
 }

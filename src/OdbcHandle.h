@@ -38,7 +38,7 @@ namespace mssql
 		SQLHANDLE get() const;
 		operator SQLHANDLE() const { return handle; }
 		operator bool() const { return handle != nullptr; }
-		shared_ptr<OdbcError> ReadErrors() const;
+		shared_ptr<OdbcError> read_errors() const;
       
     private:
 

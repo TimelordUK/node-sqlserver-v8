@@ -108,7 +108,7 @@ namespace mssql
 		return string(res.rbegin(), res.rend());
 	}
 
-	void encodeNumericStruct(const double v, const int precision, int upscale_limit, SQL_NUMERIC_STRUCT & numeric) {
+	void encode_numeric_struct(const double v, const int precision, int upscale_limit, SQL_NUMERIC_STRUCT & numeric) {
 		auto encode = fabs(v);
 		double intpart;
 		auto scale = 0;

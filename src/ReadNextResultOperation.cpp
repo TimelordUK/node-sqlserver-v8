@@ -7,9 +7,9 @@ namespace mssql
 	bool ReadNextResultOperation::TryInvokeOdbc()
 	{
 		if (_statement == nullptr) return false;
-		preRowCount = _statement->RowCount();
+		preRowCount = _statement->get_row_count();
 		const auto res = _statement->try_read_next_result();
-		postRowCount = _statement->RowCount();
+		postRowCount = _statement->get_row_count();
 		return res;
 	}
 

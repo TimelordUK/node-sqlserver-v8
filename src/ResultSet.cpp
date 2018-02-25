@@ -74,7 +74,7 @@ namespace mssql
 	   return type_name;
     }
 
-	Local<Object> ResultSet::getEntry(nodeTypeFactory & fact, const ColumnDefinition & definition)  {
+	Local<Object> ResultSet::get_entry(const nodeTypeFactory & fact, const ColumnDefinition & definition)  {
 		const auto type_name = map_type(definition.dataType);
 		auto entry = fact.newObject();
 		entry->Set(fact.fromTwoByte(L"size"), fact.newInteger(static_cast<int32_t>(definition.columnSize)));
@@ -88,13 +88,13 @@ namespace mssql
 		return entry;
 	}
 
-    Handle<Value> ResultSet::MetaToValue()
+    Handle<Value> ResultSet::meta_to_value()
     {
-	   nodeTypeFactory fact;
+	   const nodeTypeFactory fact;
 	   auto metadata = fact.newArray();
 
-	   for_each(this->metadata.begin(), this->metadata.end(), [&](const ColumnDefinition & definition) {
-		  metadata->Set(metadata->Length(), getEntry(fact, definition));
+	   for_each(this->metadata.begin(), this->metadata.end(), [fact,metadata](const ColumnDefinition & definition) {
+		  metadata->Set(metadata->Length(), get_entry(fact, definition));
 	   });
 
 	   return metadata;

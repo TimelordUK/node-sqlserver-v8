@@ -79,7 +79,7 @@ namespace mssql
 
 	bool OdbcConnection::ReturnOdbcError()
 	{
-		error = connection->ReadErrors();
+		error = connection->read_errors();
 		// fprintf(stderr, "RETURN_ODBC_ERROR - free connection handle\n\n");
 		TryClose();
 		return false;
@@ -94,7 +94,7 @@ namespace mssql
 		return true;
 	}
 
-	SQLRETURN OdbcConnection::openTimeout(const int timeout)
+	SQLRETURN OdbcConnection::open_timeout(const int timeout)
 	{
 		if (timeout > 0)
 		{
@@ -115,7 +115,7 @@ namespace mssql
 		this->connection = make_shared<OdbcConnectionHandle>();
 	
 		if (!connection->alloc(environment)) {
-			error = environment.ReadErrors();
+			error = environment.read_errors();
 			//fprintf(stderr, "RETURN_ODBC_ERROR - free environment handle\n\n");
 			environment.free();
 			return false;
@@ -123,7 +123,7 @@ namespace mssql
 	
 		statements = make_shared<OdbcStatementCache>(connection);
 
-		auto ret = openTimeout(timeout);
+		auto ret = open_timeout(timeout);
 		if (!CheckOdbcError(ret)) return false;
 		auto * conn_str = const_cast<wchar_t *>(connection_string.c_str());
 		const auto len = static_cast<SQLSMALLINT>(connection_string.length());
@@ -145,7 +145,7 @@ namespace mssql
 	void OdbcConnection::send(const shared_ptr<OdbcOperation> &op) const
 	{
 		//fprintf(stderr, "OdbcConnection send\n");
-		op->fetchStatement();
+		op->fetch_statement();
 		//fprintf(stderr, "OdbcConnection fetched\n");
 		//fprintf(stderr, "OdbcConnection statement %p\n", op->statement.get());
 		op->mgr = ops;

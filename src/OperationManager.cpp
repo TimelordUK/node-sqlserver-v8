@@ -21,18 +21,14 @@ namespace mssql
 		operation_ptr->work.data = operation_ptr.get();
 
 		const auto result = uv_queue_work(uv_default_loop(), &operation_ptr->work, on_background, reinterpret_cast<uv_after_work_cb>(on_foreground));
-		if (result != 0)
-		{
-			return false;
-		}
-		return true;
+		return result == 0;
 	}
 
 	void OperationManager::on_foreground(uv_work_t* work)
 	{
 		auto operation = static_cast<Operation*>(work->data);
 		//fprintf(stderr, "OnForeground %llu\n ", operation->OperationID);
-		operation->CompleteForeground();
+		operation->complete_foreground();
 		operation->mgr->check_in_operation(operation->OperationID);
 	}
 
@@ -45,6 +41,6 @@ namespace mssql
 	void OperationManager::on_background(uv_work_t* work)
 	{
 		auto operation = static_cast<Operation*>(work->data);
-		operation->InvokeBackground();
+		operation->invoke_background();
 	}
 }
