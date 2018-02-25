@@ -4,7 +4,7 @@
 
 namespace mssql
 {
-	EndTranOperation::EndTranOperation(const shared_ptr<OdbcConnection> connection,
+	EndTranOperation::EndTranOperation(const shared_ptr<OdbcConnection> &connection,
 	                                   const SQLSMALLINT completion_type, const Handle<Object> callback)
 		: OdbcOperation(connection, callback),
 		completionType(completion_type)

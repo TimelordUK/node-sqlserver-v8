@@ -34,13 +34,13 @@ namespace mssql
 
 	OdbcHandle::~OdbcHandle()
 	{
-		Free();
+		free();
 	}
 
-	bool OdbcHandle::Alloc()
+	bool OdbcHandle::alloc()
 	{
 		assert(handle == SQL_NULL_HANDLE);
-		auto ret = SQLAllocHandle(HandleType, nullptr, &handle);
+		const auto ret = SQLAllocHandle(HandleType, nullptr, &handle);
 		if (!SQL_SUCCEEDED(ret))
 		{
 			handle = nullptr;
@@ -49,10 +49,10 @@ namespace mssql
 		return true;
 	}
 	
-	bool OdbcHandle::Alloc(const OdbcHandle parent)
+	bool OdbcHandle::alloc(const OdbcHandle &parent)
 	{
 		assert(handle == SQL_NULL_HANDLE);
-		auto ret = SQLAllocHandle(HandleType, parent, &handle);
+		const auto ret = SQLAllocHandle(HandleType, parent, &handle);
 		//fprintf(stderr, "Alloc OdbcHandle %i %p\n", HandleType, handle);
 		if (!SQL_SUCCEEDED(ret))
 		{
@@ -62,7 +62,7 @@ namespace mssql
 		return true;
 	}
 
-	void OdbcHandle::Free()
+	void OdbcHandle::free()
 	{
 		if (handle != nullptr)
 		{	

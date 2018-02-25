@@ -39,7 +39,7 @@ namespace mssql
 		~OdbcConnection();
 		static bool InitializeEnvironment();
 		bool try_begin_tran();
-		void send(shared_ptr<OdbcOperation> op) const;
+		void send(const shared_ptr<OdbcOperation> & op) const;
 		bool try_end_tran(SQLSMALLINT completionType);
 		bool try_open(const wstring& connectionString, int timeout);
 		shared_ptr<OdbcError> LastError(void) const { return error; }

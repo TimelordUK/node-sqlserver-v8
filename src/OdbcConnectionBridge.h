@@ -35,7 +35,7 @@ namespace mssql
 		OdbcConnectionBridge();
 		~OdbcConnectionBridge();
 		Handle<Value> close(Handle<Object> callback);
-		void Collect(void);
+		void collect(void);
 		Handle<Value> begin_transaction(Handle<Object> callback);
 		Handle<Value> commit(Handle<Object> callback);
 		Handle<Value> rollback(Handle<Object> callback);

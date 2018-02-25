@@ -8,8 +8,8 @@
 namespace mssql
 {
 	PrepareOperation::PrepareOperation(
-		const shared_ptr<OdbcConnection> connection,
-		const shared_ptr<QueryOperationParams> query,
+		const shared_ptr<OdbcConnection> &connection,
+		const shared_ptr<QueryOperationParams> &query,
 		const Handle<Object> callback) :
 		QueryOperation(connection, query, callback)
 	{

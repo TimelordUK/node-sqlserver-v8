@@ -8,7 +8,10 @@
 
 namespace mssql
 {
-	QueryOperation::QueryOperation(const shared_ptr<OdbcConnection> connection, const shared_ptr<QueryOperationParams> query, const Handle<Object> callback) :
+	QueryOperation::QueryOperation(
+		const shared_ptr<OdbcConnection> &connection, 
+		const shared_ptr<QueryOperationParams> &query, 
+		const Handle<Object> callback) :
 		OdbcOperation(connection, callback),
 		_query(query),
 		output_param_count(0)

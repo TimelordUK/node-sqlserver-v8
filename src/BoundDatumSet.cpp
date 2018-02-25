@@ -13,7 +13,7 @@ namespace mssql
 		_bindings = make_shared<param_bindings>();
 	}
 
-	bool BoundDatumSet::reserve(shared_ptr<ResultSet> set) const
+	bool BoundDatumSet::reserve(const shared_ptr<ResultSet> &set) const
 	{
 		for (uint32_t i = 0; i < set->GetColumns(); ++i) {
 			auto binding = make_shared<BoundDatum>();

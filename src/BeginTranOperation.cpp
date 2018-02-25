@@ -3,7 +3,7 @@
 
 namespace mssql
 {
-	BeginTranOperation::BeginTranOperation(const shared_ptr<OdbcConnection> connection, Handle<Object> callback)
+	BeginTranOperation::BeginTranOperation(const shared_ptr<OdbcConnection> &connection, const Handle<Object> callback)
 		: OdbcOperation(connection, callback)
 	{
 	}

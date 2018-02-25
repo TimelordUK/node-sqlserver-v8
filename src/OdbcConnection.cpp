@@ -35,7 +35,7 @@ namespace mssql
 		auto ret = SQLSetEnvAttr(nullptr, SQL_ATTR_CONNECTION_POOLING, reinterpret_cast<SQLPOINTER>(SQL_CP_ONE_PER_HENV), 0);
 		if (!SQL_SUCCEEDED(ret)) { return false; }
 
-		if (!environment.Alloc()) { return false; }
+		if (!environment.alloc()) { return false; }
 
 		ret = SQLSetEnvAttr(environment, SQL_ATTR_ODBC_VERSION, reinterpret_cast<SQLPOINTER>(SQL_OV_ODBC3), 0);
 		if (!SQL_SUCCEEDED(ret)) { return false; }
@@ -114,10 +114,10 @@ namespace mssql
 
 		this->connection = make_shared<OdbcConnectionHandle>();
 	
-		if (!connection->Alloc(environment)) {
+		if (!connection->alloc(environment)) {
 			error = environment.ReadErrors();
 			//fprintf(stderr, "RETURN_ODBC_ERROR - free environment handle\n\n");
-			environment.Free();
+			environment.free();
 			return false;
 		}
 	
@@ -139,12 +139,10 @@ namespace mssql
 		// turn off autocommit
 		const auto acoff = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_OFF);
 		const auto ret = SQLSetConnectAttr(*connection, SQL_ATTR_AUTOCOMMIT, acoff, SQL_IS_UINTEGER);
-		if (!CheckOdbcError(ret)) return false;
-
-		return true;
+		return CheckOdbcError(ret);
 	}
 	
-	void OdbcConnection::send(shared_ptr<OdbcOperation> op) const
+	void OdbcConnection::send(const shared_ptr<OdbcOperation> &op) const
 	{
 		//fprintf(stderr, "OdbcConnection send\n");
 		op->fetchStatement();
@@ -161,8 +159,6 @@ namespace mssql
 		const auto acon = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_ON);
 		// put the connection back into auto commit mode
 		ret = SQLSetConnectAttr(*connection, SQL_ATTR_AUTOCOMMIT, acon, SQL_IS_UINTEGER);
-		if (!CheckOdbcError(ret)) return false;
-
-		return true;
+		return CheckOdbcError(ret);
 	}
 }

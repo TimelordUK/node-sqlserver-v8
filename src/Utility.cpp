@@ -177,7 +177,7 @@ namespace mssql
 
 	Local<Boolean> nodeTypeFactory::newBoolean(const uint16_t n) const
 	{
-		return Boolean::New(isolate, n != 0 ? true : false);
+		return Boolean::New(isolate, n != 0);
 	}
 
 	Local<Integer> nodeTypeFactory::newInt32(const int32_t i) const
