@@ -66,7 +66,7 @@ suite('txn', function () {
             asyncDone()
           })
         } catch (e) {
-          asyncDone()   // skip any errors because the table might not exist
+          asyncDone() // skip any errors because the table might not exist
         }
       },
       function (asyncDone) {
@@ -151,7 +151,7 @@ suite('txn', function () {
               'type': 'number',
               sqlType: 'int identity'
             },
-              {'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar'}],
+            {'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar'}],
             'rows': [[1, 'Anne'], [2, 'Bob']]
           }
 
@@ -207,7 +207,7 @@ suite('txn', function () {
               'type': 'number',
               sqlType: 'int identity'
             },
-              {'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar'}],
+            {'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar'}],
             'rows': [[1, 'Anne'], [2, 'Bob']]
           }
 
@@ -262,7 +262,7 @@ suite('txn', function () {
               'type': 'number',
               sqlType: 'int identity'
             },
-              {'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar'}],
+            {'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar'}],
             'rows': [[1, 'Anne'], [2, 'Bob']]
           }
 

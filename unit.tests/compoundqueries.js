@@ -219,10 +219,10 @@ suite('compoundqueries', function () {
 
     async.series(fns, function () {
       done()
-    })  // end of async.series()
+    }) // end of async.series()
   }) // end of test()
 
-/*
+  /*
   testname = 'test 002 - batched query: SELECT....; PRINT ....; SELECT....;'
   test(testname, function (done) {
     var testcolumnsize = 100
@@ -358,7 +358,7 @@ suite('compoundqueries', function () {
 
     async.series(fns, function () {
       done()
-    })  // end of async.series()
+    }) // end of async.series()
   }) // end of test()
 
   testname = 'test 004 - batched query: SELECT....; INSERT (invalid...should fail) ....; SELECT....;'
@@ -402,6 +402,6 @@ suite('compoundqueries', function () {
 
     async.series(fns, function () {
       done()
-    })  // end of async.series()
+    }) // end of async.series()
   }) // end of test()
 })

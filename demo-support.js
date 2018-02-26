@@ -1,8 +1,10 @@
+'use strict'
+
 var fs = require('fs')
 var path = require('path')
 
 var GlobalConn = (function () {
-  var conn_str = 'set global connection here'
+  var connStr = 'set global connection here'
 
   function getSqlLocalDbPipe (done) {
     var childProcess = require('child_process')
@@ -94,7 +96,7 @@ var GlobalConn = (function () {
   }
 
   function getConnStr () {
-    return conn_str
+    return connStr
   }
 
   return {

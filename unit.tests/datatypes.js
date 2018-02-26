@@ -98,7 +98,7 @@ suite('datatypes', function () {
       function () {
         done()
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -206,8 +206,8 @@ suite('datatypes', function () {
 
     async.series(fns, function () {
       done()
-    })  // end of async.series()
-  })   // end of test(
+    }) // end of async.series()
+  }) // end of test(
 
   testname = 'test 003_a - insert valid data into time(7) via TSQL, fetch as date'
   test(testname, function (done) {
@@ -258,7 +258,7 @@ suite('datatypes', function () {
     async.series(fns, function () {
       done()
     })
-  })  // end of test()
+  }) // end of test()
 
   testname = 'test 003_b - insert valid data into time(0) via TSQL, fetch as date'
   test(testname, function (done) {
@@ -308,7 +308,7 @@ suite('datatypes', function () {
 
     async.series(fns, function () {
       done()
-    })  // end of async.series()
+    }) // end of async.series()
   }) // end of test()
 
   testname = 'test 004_a - insert valid data into datetime2(7) via TSQL, fetch as date'
@@ -359,7 +359,7 @@ suite('datatypes', function () {
 
     async.series(fns, function () {
       done()
-    })  // end of async.series()
+    }) // end of async.series()
   })
 
   testname = 'test 004_b - insert valid data into datetime2(0) via TSQL, fetch as date'
@@ -674,7 +674,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -719,7 +719,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -764,7 +764,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -807,7 +807,7 @@ suite('datatypes', function () {
         function () {
           commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
         }
-      ])  // end of async.series()
+      ]) // end of async.series()
     }
     // end of test():
   })
@@ -849,7 +849,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -890,7 +890,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -931,7 +931,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -975,7 +975,7 @@ suite('datatypes', function () {
         function () {
           commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
         }
-      ])  // end of async.series()
+      ]) // end of async.series()
     }
     // end of test():
   })
@@ -1017,7 +1017,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -1050,7 +1050,7 @@ suite('datatypes', function () {
           commonTestFns.invalidQueryTSQL(theConnection, tsql, expectedError, testname, done)
           //                commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
         }
-      ])  // end of async.series()
+      ]) // end of async.series()
     }
     // end of test():
   })
@@ -1093,7 +1093,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -1135,7 +1135,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -1175,7 +1175,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -1217,7 +1217,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -1258,7 +1258,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -1301,7 +1301,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -1344,7 +1344,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -1385,7 +1385,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -1396,7 +1396,7 @@ suite('datatypes', function () {
     var testcolumnclienttype = 'binary'
     var testcolumnname = 'col2'
     var testdata1 = null
-   //  var testdata2Expected = 0x0123
+    //  var testdata2Expected = 0x0123
     var testdata2TsqlInsert = 'CONVERT(varbinary(50), 0x0123456789AB)'
     var binaryBuffer = Buffer.from('0123456789AB', 'hex')
 
@@ -1427,7 +1427,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -1470,7 +1470,7 @@ suite('datatypes', function () {
         function () {
           commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
         }
-      ])  // end of async.series()
+      ]) // end of async.series()
     }
     // end of test():
   })
@@ -1513,7 +1513,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -1555,7 +1555,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -1597,7 +1597,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -1638,7 +1638,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -1680,7 +1680,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -1722,7 +1722,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -1764,7 +1764,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 
@@ -1805,7 +1805,7 @@ suite('datatypes', function () {
       function () {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
-    ])  // end of async.series()
+    ]) // end of async.series()
     // end of test():
   })
 

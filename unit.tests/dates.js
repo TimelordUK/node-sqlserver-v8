@@ -129,8 +129,8 @@ suite('date tests', function () {
       })
   })
 
-// this test simply verifies dates round trip.  It doesn't try to verify illegal dates vs. legal dates.
-// SQL Server is assumed to be only returning valid times and dates.
+  // this test simply verifies dates round trip.  It doesn't try to verify illegal dates vs. legal dates.
+  // SQL Server is assumed to be only returning valid times and dates.
 
   test('date to millisecond verification', function (testDone) {
     var testDates = [{date1: '1-1-1900', date2: '1-1-1901', milliseconds: 31536000000},

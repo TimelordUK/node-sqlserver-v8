@@ -1,4 +1,4 @@
-//---------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------------
 // File: test-config.js
 // Contents: configuration for tests
 //
@@ -15,12 +15,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//---------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------------
 
 // server connection info
-var driver = 'SQL Server Native Client 11.0';
-var conn_str = "Driver={SQL Server Native Client 11.0};Server= np:\\\\.\\pipe\\LOCALDB#E9B74E99\\tsql\\query;Database={scratch};Trusted_Connection=Yes;";
+var driver = 'SQL Server Native Client 11.0'
+var conn_str = 'Driver={SQL Server Native Client 11.0};Server= np:\\\\.\\pipe\\LOCALDB#E9B74E99\\tsql\\query;Database={scratch};Trusted_Connection=Yes;'
 // Driver name needs to be exported for building expected error messages...
-exports.driver = driver;
+exports.driver = driver
 // Here's a complete connection string which can be shared by multiple tests...
-exports.conn_str = conn_str;
+exports.conn_str = conn_str
