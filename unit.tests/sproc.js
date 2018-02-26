@@ -104,7 +104,6 @@ suite('sproc', function () {
       },
 
       function (asyncDone) {
-
         var pm = theConnection.procedureMgr()
         pm.get(spName, function (proc) {
           var count = pm.getCount()
@@ -113,7 +112,7 @@ suite('sproc', function () {
           var received = []
           var iterations = 100
 
-          function check() {
+          function check () {
             for (i = 0; i < iterations; ++i) {
               var expected = [99, i * 2]
               assert.deepEqual(received[i], expected, 'results didn\'t match')
@@ -138,7 +137,6 @@ suite('sproc', function () {
       testDone()
     })
   })
-
 
   test('call proc that waits for delay of input param - wait 2, timeout 5 - should not error', function (testDone) {
     var spName = 'test_spwait_for'
