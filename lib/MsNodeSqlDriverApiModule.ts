@@ -104,6 +104,7 @@ export module MsNodeSqlDriverApiModule {
         rollback(cb?: v8StatusCb): void
         procedureMgr(): v8ProcedureManager
         tableMgr(): v8TableManager
+        pollingMode(q: v8Query, v:boolean, cb?: v8SimpleCb): void
         cancelQuery(q: v8Query, cb?: v8StatusCb): void
         prepare(sql: string, cb: v8PrepareCb): void
         prepare(description: v8QueryDescription, cb: v8PrepareCb): void
@@ -148,7 +149,8 @@ export module MsNodeSqlDriverApiModule {
         meta: v8Meta[]
         rows: Array<any[]>
     }
-
+    export interface v8SimpleCb { (): void
+    }
     export interface v8TableCb { (err: v8Error, table: v8Table): void
     }
     export interface v8BindCb { (cb: v8BulkTableMgr): void
