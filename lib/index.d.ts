@@ -2,7 +2,7 @@
  * Created by admin on 19/01/2017.
  */
 
-export interface v8driver {
+export interface SqlClient {
     open(description: v8ConnectDescription, cb: v8OpenCb): void
     open(conn_str: string, cb: v8OpenCb): void
     query(conn_str: string, sql: string, cb?: v8QueryCb): v8Query
