@@ -1,15 +1,7 @@
+import { Connection, Error, PreparedStatement, Query, SqlClient, QueryDescription, } from 'msnodesqlv8';
+
 // require the module so it can be used in your node JS code.
-
-import {MsNodeSqlDriverApiModule, MsNodeSqlDriverApiModule as v8} from './lib/MsNodeSqlDriverApiModule'
-
-import v8Connection = v8.v8Connection;
-import v8BulkMgr = v8.v8BulkTableMgr;
-import v8Error = v8.v8Error;
-import v8QueryDescription = MsNodeSqlDriverApiModule.v8QueryDescription;
-import v8Query = MsNodeSqlDriverApiModule.v8Query;
-import v8PreparedStatement = MsNodeSqlDriverApiModule.v8PreparedStatement;
-
-export const sql: v8.v8driver = require('msnodesqlv8');
+export const sql: SqlClient = require('msnodesqlv8');
 
 let supp = require('./demo-support');
 
@@ -70,7 +62,7 @@ interface Employee {
 let support: any = null;
 let procedureHelper: any = null;
 let helper: any = null;
-let parsedJSON: Array<Employee> = null;
+let parsedJSON: Array<Employee> | null = null;
 
 supp.GlobalConn.init(sql, (co: any) => {
         conn_str = co.conn_str;
@@ -94,7 +86,7 @@ function event(done: Function): void {
 
     let async = new support.Async();
     let Assert = new support.Assert();
-    let conn: v8Connection = null;
+    let conn: Connection;
 
     let fns: Array<Function> = [
 
@@ -105,7 +97,7 @@ function event(done: Function): void {
 
         function (async_done: Function) {
             console.log("opening a connection ....");
-            sql.open(conn_str, (err: v8Error, new_conn: v8Connection) => {
+            sql.open(conn_str, (err: Error, new_conn: Connection) => {
                 Assert.ifError(err);
                 conn = new_conn;
                 Assert.check(conn != null, "connection from open is null.");
@@ -118,7 +110,7 @@ function event(done: Function): void {
             console.log("listen to the events raised from the driver");
             let s = "select top 1 id, name, type, crdate from sysobjects so where so.type='U'";
             console.log(s);
-            let q = conn.query(s, (err: v8Error, res: Array<any>) => {
+            let q = conn.query(s, (err: Error, res: Array<any>) => {
                 Assert.ifError(err);
                 console.log("res.length = " + res.length);
                 console.log(res);
@@ -195,7 +187,7 @@ function query(done: Function) {
     let async = new support.Async();
     let Assert = new support.Assert();
 
-    let conn: v8Connection = null;
+    let conn: Connection;;
 
     let fns = [
 
@@ -231,8 +223,11 @@ function query(done: Function) {
             console.log(s);
             conn.query(s, (err, res) => {
                 Assert.ifError(err);
-                console.log("res.length = " + res.length);
-                console.log(res);
+                if (res) {
+                    console.log("res.length = " + res.length);
+                    console.log(res);    
+                }
+
                 async_done();
             })
         },
@@ -243,15 +238,18 @@ function query(done: Function) {
             console.log(s);
             conn.queryRaw(s, (err, res) => {
                 Assert.ifError(err);
-                console.log("res.length = " + res.rows.length);
-                console.log(res);
+                if (res) {
+                    console.log("res.length = " + res.rows.length);
+                    console.log(res);
+                }
+                
                 async_done();
             })
         },
 
         function (async_done: Function) {
             console.log('use timeout to place limit on how long to wait for query.');
-            let queryObj :v8QueryDescription = {
+            let queryObj: QueryDescription = {
                 query_str: "waitfor delay \'00:00:10\';",
                 query_timeout: 2
             };
@@ -288,7 +286,7 @@ function procedure(done: Function) {
     let async = new support.Async();
     let Assert = new support.Assert();
 
-    let conn: v8Connection = null;
+    let conn: Connection;;
 
     let sp_name = "test_sp_get_int_int";
     let def = "alter PROCEDURE <name>" +
@@ -332,7 +330,7 @@ function procedure(done: Function) {
 
         function (async_done: Function) {
             let pm = conn.procedureMgr();
-            pm.callproc(sp_name, [10, 5], (err: v8Error, results: any, output: Array<any>) => {
+            pm.callproc(sp_name, [10, 5], (err: Error, results: any, output: Array<any>) => {
                 Assert.ifError(err);
                 let expected = [99, 15];
                 console.log(output);
@@ -377,7 +375,7 @@ function connection(done: Function) {
     let async = new support.Async();
     let Assert = new support.Assert();
 
-    let conn: v8Connection = null;
+    let conn: Connection;
 
     let fns = [
 
@@ -401,9 +399,13 @@ function connection(done: Function) {
             console.log("fetch spid for the connection.");
             conn.query("select @@SPID as id, CURRENT_USER as name", (err, res) => {
                 Assert.ifError(err);
-                Assert.check(res.length == 1, "unexpected result length.");
-                let sp = res[0]['id'];
-                Assert.check(sp != null, "did not find expected id.");
+
+                if (res) {
+                    Assert.check(res.length == 1, "unexpected result length.");
+                    let sp = res[0]['id'];
+                    Assert.check(sp != null, "did not find expected id.");  
+                }
+                
                 async_done();
             });
         },
@@ -466,14 +468,14 @@ function prepared(done: Function) {
     let Assert = new support.Assert();
 
 
-    let statements: {selectStatement: v8PreparedStatement; deleteStatement: v8PreparedStatement} = {
-        selectStatement: null,
-        deleteStatement: null,
+    let statements: {
+        selectStatement: PreparedStatement; 
+        deleteStatement: PreparedStatement;
     };
 
     let table_name = "Employee";
 
-    let conn: v8Connection = null;
+    let conn: Connection;
 
     function employeePrepare(query: string, done: Function) {
         conn.prepare(query, (err, ps) => {
@@ -512,7 +514,7 @@ function prepared(done: Function) {
         // insert test set using bulk insert
         function (async_done: Function) {
             let tm = conn.tableMgr();
-            tm.bind(table_name, (bulkMgr: v8BulkMgr) => {
+            tm.bind(table_name, (bulkMgr: BulkMgr) => {
                 bulkMgr.insertRows(parsedJSON, () => {
                     async_done();
                 });
@@ -522,7 +524,7 @@ function prepared(done: Function) {
         // prepare a select statement.
         function (async_done: Function) {
             console.log("preparing a select statement.");
-            employeePrepare(empSelectSQL(), (ps: v8PreparedStatement) => {
+            employeePrepare(empSelectSQL(), (ps: PreparedStatement) => {
                 statements.selectStatement = ps;
                 async_done();
             })
@@ -531,7 +533,7 @@ function prepared(done: Function) {
         // prepare a free statement.
         function (async_done: Function) {
             console.log("preparing a free statement.");
-            employeePrepare(empDeleteSQL(), (ps: v8PreparedStatement) => {
+            employeePrepare(empDeleteSQL(), (ps: PreparedStatement) => {
                 statements.deleteStatement = ps;
                 async_done();
             })
@@ -550,8 +552,12 @@ function prepared(done: Function) {
             console.log("use prepared statement to fetch " + id);
             statements.selectStatement.preparedQuery([id], (err, res) => {
                 Assert.ifError(err);
-                Assert.check(res.length == 1);
-                console.log(res[0]);
+
+                if (res) {
+                    Assert.check(res.length == 1);
+                    console.log(res[0]);
+                }
+               
                 async_done();
             })
         },
@@ -561,8 +567,12 @@ function prepared(done: Function) {
             console.log("use prepared statement to fetch " + id);
             statements.selectStatement.preparedQuery([id], (err, res) => {
                 Assert.ifError(err);
-                Assert.check(res.length == 1);
-                console.log(res[0]);
+
+                if (res) {
+                    Assert.check(res.length == 1);
+                    console.log(res[0]);    
+                }
+                
                 async_done();
             })
         },
@@ -580,8 +590,12 @@ function prepared(done: Function) {
             console.log("check how many rows are left.");
             conn.query("select * from Employee", (err, res) => {
                 Assert.ifError(err);
-                console.log("returned rows " + res.length);
-                Assert.check(res.length == 9, "one row should have been deleted.");
+
+                if (res) {
+                    console.log("returned rows " + res.length);
+                    Assert.check(res.length == 9, "one row should have been deleted.");   
+                }
+               
                 async_done();
             });
         },
@@ -620,9 +634,9 @@ function table(done: Function) {
     let async = new support.Async();
     let Assert = new support.Assert();
     let helper = new support.EmployeeHelper(sql, conn_str);
-    let conn: v8Connection = null;
+    let conn: Connection;
     let table_name = "Employee";
-    let bm: v8BulkMgr = null;
+    let bm: BulkMgr;
     let records : Array<Employee>= helper.getJSON();
 
 
@@ -656,7 +670,7 @@ function table(done: Function) {
         function (async_done: Function) {
             let tm = conn.tableMgr();
             console.log("bind to table " + table_name);
-            tm.bind(table_name, (bulk: v8BulkMgr) => {
+            tm.bind(table_name, (bulk: BulkMgr) => {
                 bm = bulk;
                 Assert.check(bm, "no bulk manager returned.");
                 async_done();
@@ -674,7 +688,11 @@ function table(done: Function) {
             console.log("check rows have been inserted.");
             conn.query("select * from " + table_name, (err, res) => {
                 Assert.ifError(err);
-                Assert.check(res.length == records.length);
+
+                if (res) {
+                    Assert.check(res.length == records.length);
+                }
+                
                 async_done();
             });
         },
@@ -712,11 +730,15 @@ function table(done: Function) {
             console.log(summary.selectSignature);
             console.log("prepare the above statement.");
             let select: string = summary.selectSignature;
-            conn.prepare(select, (err: v8Error, ps: v8PreparedStatement) => {
+            conn.prepare(select, (err: Error, ps: PreparedStatement) => {
                 Assert.ifError(err);
                 ps.preparedQuery([1], (err, res) => {
                     Assert.ifError(err);
-                    Assert.check(res.length == 1);
+                    
+                    if (res) {
+                        Assert.check(res.length == 1);
+                    }
+                    
                     async_done();
                 });
             });
@@ -734,7 +756,11 @@ function table(done: Function) {
             console.log("check rows have been deleted.");
             conn.query("select * from " + table_name, (err, res) => {
                 Assert.ifError(err);
-                Assert.check(res.length == 0);
+
+                if (res) {
+                    Assert.check(res.length == 0);
+                }
+                
                 async_done();
             });
         },
@@ -763,7 +789,7 @@ function cancel(done: Function): void {
 
     let async = new support.Async();
     let Assert = new support.Assert();
-    let conn: v8Connection = null;
+    let conn: Connection;
 
     let fns: Array<Function> = [
 
@@ -774,7 +800,7 @@ function cancel(done: Function): void {
 
         function (async_done: Function) {
             console.log("opening a connection ....");
-            sql.open(conn_str, (err: v8Error, new_conn: v8Connection) => {
+            sql.open(conn_str, (err: Error, new_conn: Connection) => {
                 Assert.ifError(err);
                 conn = new_conn;
                 Assert.check(conn, "connection from open is null.");
@@ -785,8 +811,11 @@ function cancel(done: Function): void {
 
         function (async_done: Function) {
             console.log("use an open connection to call query(), then cancel it");
-            let q :v8Query = conn.query(sql.PollingQuery("waitfor delay \'00:00:20\';"), err => {
-                Assert.check(err.message.indexOf('Operation canceled') > 0);
+            let q: Query = conn.query(sql.PollingQuery("waitfor delay \'00:00:20\';"), err => {
+                if (err) {
+                    Assert.check(err.message.indexOf('Operation canceled') > 0);
+                }
+                
                 async_done();
             });
 
@@ -797,8 +826,11 @@ function cancel(done: Function): void {
 
         function (async_done: Function) {
             console.log("cancel using query identifier.");
-            let q: v8Query = conn.query(sql.PollingQuery("waitfor delay \'00:00:20\';"), function (err) {
-                Assert.check(err.message.indexOf('Operation canceled') > 0);
+            let q: Query = conn.query(sql.PollingQuery("waitfor delay \'00:00:20\';"), function (err) {
+                if (err) {
+                    Assert.check(err.message.indexOf('Operation canceled') > 0);
+                }
+                
                 async_done();
             });
 
@@ -810,11 +842,11 @@ function cancel(done: Function): void {
         function (async_done:Function) {
             console.log("cancel a prepared statement.");
             let s = "waitfor delay ?;";
-            let prepared:v8PreparedStatement;
+            let prepared: PreparedStatement;
 
             let fns :Function[] = [
                 function (async_done:Function) {
-                    conn.prepare(sql.PollingQuery(s), (err:v8Error, pq:v8PreparedStatement) => {
+                    conn.prepare(sql.PollingQuery(s), (err: Error, pq: PreparedStatement) => {
                         Assert.check(!err);
                         prepared = pq;
                         async_done();
@@ -822,13 +854,13 @@ function cancel(done: Function): void {
                 },
 
                 function (async_done:Function) {
-                    let q:v8Query = prepared.preparedQuery(['00:00:20'], (err:v8Error) => {
+                    let q: Query = prepared.preparedQuery(['00:00:20'], (err: Error) => {
                         Assert.check(err.message.indexOf('Operation canceled') > 0);
                         async_done();
                     });
 
                     q.on('submitted', function () {
-                        q.cancelQuery((e:v8Error) => {
+                        q.cancelQuery((e: Error) => {
                             Assert.ifError(e);
                         });
                     });
@@ -864,9 +896,13 @@ function cancel(done: Function): void {
                 function (async_done: Function) {
                     let pm = conn.procedureMgr();
                     pm.setPolling(true);
-                    let q:v8Query = pm.callproc(sp_name, ['0:0:20'], function (err) {
+                    let q: Query = pm.callproc(sp_name, ['0:0:20'], function (err) {
                         Assert.check(err);
-                        Assert.check(err.message.indexOf('Operation canceled') > 0);
+                        
+                        if (err) {
+                            Assert.check(err.message.indexOf('Operation canceled') > 0);
+                        }
+                        
                         async_done();
                     });
                     q.on('submitted', function () {

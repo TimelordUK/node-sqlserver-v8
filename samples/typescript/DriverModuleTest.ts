@@ -1,13 +1,10 @@
 /**
  * Created by admin on 19/01/2017.
  */
-
-import {MsNodeSqlWrapperModule} from './lib/MsNodeSqWrapperModule'
-import {MsNodeSqlDriverApiModule} from "./lib/MsNodeSqlDriverApiModule";
-import v8Meta = MsNodeSqlDriverApiModule.v8Meta;
+import { SqlClient } from 'msnodesqlv8';
+import { MsNodeSqlWrapperModule } from 'msnodesqlv8/lib/MsNodeSqWrapperModule';
 
 import CommandResponse = MsNodeSqlWrapperModule.SqlCommandResponse;
-import v8driver = MsNodeSqlDriverApiModule.v8driver;
 import Connection = MsNodeSqlWrapperModule.Connection;
 
 let assert = require('assert');
@@ -15,14 +12,14 @@ let supp = require('./demo-support');
 let ASQ = require('asynquence-contrib');
 
 class eventHits {
-    public onMeta: number;
-    public onColumn: number;
-    public onRowCount: number;
-    public onRow: number;
-    public onDone: number;
-    public onClosed: number;
-    public onSubmitted: number;
-    public onError: number;
+    public onMeta: number = 0;
+    public onColumn: number = 0;
+    public onRowCount: number = 0;
+    public onRow: number = 0;
+    public onDone: number = 0;
+    public onClosed: number = 0;
+    public onSubmitted: number = 0;
+    public onError: number = 0;
 }
 
 class StoredProcedureDef {
@@ -33,13 +30,13 @@ class StoredProcedureDef {
 
 class WrapperTest {
 
-    conn_str: string;
+    conn_str: string = "";
     support: any;
     procedureHelper: any;
     helper: any;
     parsedJSON: any;
-    sqlWrapper: MsNodeSqlWrapperModule.Sql;
-    legacy: v8driver = MsNodeSqlWrapperModule.legacyDriver;
+    sqlWrapper: MsNodeSqlWrapperModule.Sql |undefined;
+    legacy: SqlClient = MsNodeSqlWrapperModule.legacyDriver;
 
     getIntIntProcedure = new StoredProcedureDef(
         'test_sp_get_int_int',
@@ -243,17 +240,17 @@ class WrapperTest {
                 command.sql(inst.testSelect);
                 let h = new eventHits();
 
-                command.onMeta((meta: v8Meta) => {
+                command.onMeta((meta: Meta) => {
                     if (inst.debug) console.log(`onMeta: ${JSON.stringify(meta, null, 2)}`);
                     h.onMeta++;
                     assert.deepEqual(inst.expectedMeta, meta, "results didn't match");
-                }).onColumn((col, data, more) => {
+                }).onColumn((col: any, data: any, more: any) => {
                     if (inst.debug) console.log(`onColumn: more = ${more} data = ${JSON.stringify(data, null, 2)}`);
                     h.onColumn++;
-                }).onRowCount(count => {
+                }).onRowCount(count: any => {
                     if (inst.debug) console.log(`onRowCount: ${count}`);
                     h.onRowCount++;
-                }).onRow(r => {
+                }).onRow(r: any => {
                     if (inst.debug) console.log(`onRow: row = ${JSON.stringify(r, null, 2)}`);
                     h.onRow++;
                 }).onDone(() => {
@@ -281,7 +278,7 @@ class WrapperTest {
             }
 
             this.sqlWrapper.open()
-                .then(c => runTest(c)).catch(e => {
+                .then(c: any => runTest(c)).catch(e => {
                 console.log(e);
                 reject(e);
             });
@@ -293,6 +290,3 @@ let wt = new WrapperTest(true);
 wt.run(() => {
     console.log('done.');
 });
-
-
-
