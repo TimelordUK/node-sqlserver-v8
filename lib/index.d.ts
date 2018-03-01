@@ -271,15 +271,15 @@ export interface PreparedStatement {
     getMeta(): Meta[]
 }
 
-export abstract class QueryEvent {
-    public static meta = 'meta';
-    public static column = 'column';
-    public static partial = 'partial';
-    public static rowCount = 'rowCount';
-    public static row = 'row';
-    public static done = 'done';
-    public static error = 'error';
-    public static warning = 'warning';
-    public static closed = 'closed';
-    public static submitted = 'submitted';
+export enum QueryEvent {
+    meta = 'meta',
+    column = 'column',
+    partial = 'partial',
+    rowCount = 'rowCount',
+    row = 'row',
+    done = 'done',
+    error = 'error',
+    warning = 'warning',
+    closed = 'closed',
+    submitted = 'submitted',
 }
