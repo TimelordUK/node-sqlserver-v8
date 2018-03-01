@@ -3,16 +3,16 @@
  */
 
 export interface SqlClient {
-    open(description: v8ConnectDescription, cb: v8OpenCb): void
-    open(conn_str: string, cb: v8OpenCb): void
-    query(conn_str: string, sql: string, cb?: v8QueryCb): v8Query
-    query(conn_str: string, sql: string, params?: any[], cb?: v8QueryCb): v8Query
-    query(conn_str: string, description: v8QueryDescription, cb?: v8QueryCb): v8Query
-    query(conn_str: string, description: v8QueryDescription, params?: any[], cb?: v8QueryCb): v8Query
-    queryRaw(conn_str: string, description: v8QueryDescription, cb: v8QueryRawCb): v8Query
-    queryRaw(conn_str: string, description: v8QueryDescription, params?: any[], cb?: v8QueryRawCb): v8Query
-    queryRaw(conn_str: string, sql: string, params?: any[], cb?: v8QueryRawCb): v8Query
-    queryRaw(conn_str: string, sql: string, cb: v8QueryRawCb): v8Query
+    open(description: ConnectDescription, cb: OpenCb): void
+    open(conn_str: string, cb: OpenCb): void
+    query(conn_str: string, sql: string, cb?: QueryCb): Query
+    query(conn_str: string, sql: string, params?: any[], cb?: QueryCb): Query
+    query(conn_str: string, description: QueryDescription, cb?: QueryCb): Query
+    query(conn_str: string, description: QueryDescription, params?: any[], cb?: QueryCb): Query
+    queryRaw(conn_str: string, description: QueryDescription, cb: QueryRawCb): Query
+    queryRaw(conn_str: string, description: QueryDescription, params?: any[], cb?: QueryRawCb): Query
+    queryRaw(conn_str: string, sql: string, params?: any[], cb?: QueryRawCb): Query
+    queryRaw(conn_str: string, sql: string, cb: QueryRawCb): Query
     Bit(v:number): any
     BigInt(v:number): any
     Int(v:number): any
@@ -46,25 +46,25 @@ export interface SqlClient {
     DateRound(v:Date) : any
     SmallDateTime(v:Date) : any
     DateTimeOffset(v:Date) : any
-    PollingQuery(s:string) : v8QueryDescription
-    TimeoutQuery(s:string, to:number) : v8QueryDescription
-    TzOffsetQuery(s:string, offsetMinutes?:number) : v8QueryDescription,
-    TvpFromTable(table:v8Table) : v8ProcedureParam
+    PollingQuery(s:string) : QueryDescription
+    TimeoutQuery(s:string, to:number) : QueryDescription
+    TzOffsetQuery(s:string, offsetMinutes?:number) : QueryDescription,
+    TvpFromTable(table:Table) : ProcedureParam
 }
 
-export interface v8Table {
+export interface Table {
     name:string
     rows: any[]
-    columns: v8TableColumn[]
+    columns: TableColumn[]
     addRowsFromObjects(vec:any) : void
 }
 
-export interface v8TableColumnType {
+export interface TableColumnType {
     declaration:string
     length:string
 }
 
-export interface v8TableColumn {
+export interface TableColumn {
     type_name: string
     column_id: number
     ordered_column: string
@@ -80,55 +80,55 @@ export interface v8TableColumn {
     collation: string
     is_output: number
     system_type_id: number
-    type:v8TableColumnType
+    type:TableColumnType
 }
 
-export interface v8Connection {
-    getUserTypeTable(cb:v8TableCb):void
+export interface Connection {
+    getUserTypeTable(cb:TableCb):void
     id:number
     setUseUTC(utc:boolean):void
     getUseUTC():boolean
-    close(cb: v8StatusCb): void
-    query(sql: string, cb?: v8QueryCb): v8Query
-    query(sql: string, params?: any[], cb?: v8QueryCb): v8Query
-    query(description: v8QueryDescription, cb?: v8QueryCb): v8Query
-    query(description: v8QueryDescription, params?: any[], cb?: v8QueryCb): v8Query
-    queryRaw(description: v8QueryDescription, cb: v8QueryRawCb): v8Query
-    queryRaw(description: v8QueryDescription, params?: any[], cb?: v8QueryRawCb): v8Query
-    queryRaw(sql: string, params?: any[], cb?: v8QueryRawCb): v8Query
-    queryRaw(sql: string, cb: v8QueryRawCb): v8Query
-    beginTransaction(cb?: v8StatusCb): void
-    commit(cb?: v8StatusCb): void
-    rollback(cb?: v8StatusCb): void
-    procedureMgr(): v8ProcedureManager
-    tableMgr(): v8TableManager
-    pollingMode(q: v8Query, v:boolean, cb?: v8SimpleCb): void
-    cancelQuery(q: v8Query, cb?: v8StatusCb): void
-    prepare(sql: string, cb: v8PrepareCb): void
-    prepare(description: v8QueryDescription, cb: v8PrepareCb): void
+    close(cb: StatusCb): void
+    query(sql: string, cb?: QueryCb): Query
+    query(sql: string, params?: any[], cb?: QueryCb): Query
+    query(description: QueryDescription, cb?: QueryCb): Query
+    query(description: QueryDescription, params?: any[], cb?: QueryCb): Query
+    queryRaw(description: QueryDescription, cb: QueryRawCb): Query
+    queryRaw(description: QueryDescription, params?: any[], cb?: QueryRawCb): Query
+    queryRaw(sql: string, params?: any[], cb?: QueryRawCb): Query
+    queryRaw(sql: string, cb: QueryRawCb): Query
+    beginTransaction(cb?: StatusCb): void
+    commit(cb?: StatusCb): void
+    rollback(cb?: StatusCb): void
+    procedureMgr(): ProcedureManager
+    tableMgr(): TableManager
+    pollingMode(q: Query, v:boolean, cb?: SimpleCb): void
+    cancelQuery(q: Query, cb?: StatusCb): void
+    prepare(sql: string, cb: PrepareCb): void
+    prepare(description: QueryDescription, cb: PrepareCb): void
     setFilterNonCriticalErrors(flag:boolean):void
 }
 
-export interface v8Query {
-    on(name: string, cb: v8SubmittedEventCb): void
-    on(name: string, cb: v8EventCb): void
-    on(name: string, cb: v8EventColumnCb): void
-    cancelQuery(qcb?: v8StatusCb): void
+export interface Query {
+    on(name: string, cb: SubmittedEventCb): void
+    on(name: string, cb: EventCb): void
+    on(name: string, cb: EventColumnCb): void
+    cancelQuery(qcb?: StatusCb): void
 }
 
-export interface v8ConnectDescription {
+export interface ConnectDescription {
     conn_str: string,
     conn_timeout: number
 }
 
-export interface v8QueryDescription {
+export interface QueryDescription {
     query_str: string,
     query_timeout?: number,
     query_polling?: boolean,
     query_tz_adjustment?: number,
 }
 
-export interface v8Meta {
+export interface Meta {
     name: string,
     nullable: boolean
     size: number
@@ -136,71 +136,71 @@ export interface v8Meta {
     type: string
 }
 
-export interface v8Error
+export interface Error
 {
     message:string
     sqlstate: string
     code: number
 }
 
-export interface v8RawData {
-    meta: v8Meta[]
+export interface RawData {
+    meta: Meta[]
     rows: Array<any[]>
 }
-export interface v8SimpleCb { (): void
+export interface SimpleCb { (): void
 }
-export interface v8TableCb { (err: v8Error, table: v8Table): void
+export interface TableCb { (err: Error, table: Table): void
 }
-export interface v8BindCb { (cb: v8BulkTableMgr): void
+export interface BindCb { (cb: BulkTableMgr): void
 }
-export interface v8OpenCb { (err: v8Error, connection: v8Connection): void
+export interface OpenCb { (err: Error, connection: Connection): void
 }
-export interface v8QueryCb { (err?: v8Error, rows?: any[], more?: boolean): void
+export interface QueryCb { (err?: Error, rows?: any[], more?: boolean): void
 }
-export interface v8CallProcedureCb { (err?: v8Error, rows?: any[], outputParams?:any[]): void
+export interface CallProcedureCb { (err?: Error, rows?: any[], outputParams?:any[]): void
 }
-export interface v8QueryRawCb { (err?: v8Error, raw?: v8RawData, more?: boolean): void
+export interface QueryRawCb { (err?: Error, raw?: RawData, more?: boolean): void
 }
-export interface v8StatusCb { (err?: v8Error): void
+export interface StatusCb { (err?: Error): void
 }
-export interface v8PrepareCb { (err?: v8Error, statement?: v8PreparedStatement): void
+export interface PrepareCb { (err?: Error, statement?: PreparedStatement): void
 }
-export interface v8EventCb { (data: any): void
+export interface EventCb { (data: any): void
 }
-export interface v8SubmittedEventCb { (sql: string, params:any[]): void
+export interface SubmittedEventCb { (sql: string, params:any[]): void
 }
-export interface v8EventColumnCb { (colIndex: number, data:any, more:boolean): void
+export interface EventColumnCb { (colIndex: number, data:any, more:boolean): void
 }
-export interface v8BulkSelectCb { (err: v8Error, rows: any[]): void
+export interface BulkSelectCb { (err: Error, rows: any[]): void
 }
-export interface v8DescribeProcedureCb { (description?: v8ProcedureSummary): void
+export interface DescribeProcedureCb { (description?: ProcedureSummary): void
 }
-export interface v8GetProcedureCb { (procedure?: v8ProcedureDefinition): void
+export interface GetProcedureCb { (procedure?: ProcedureDefinition): void
 }
 
-export interface v8BulkMgrSummary {
+export interface BulkMgrSummary {
     insertSignature: string
-    whereColumns: v8TableColumn[]
-    updateColumns: v8TableColumn[]
+    whereColumns: TableColumn[]
+    updateColumns: TableColumn[]
     selectSignature: string
     deleteSignature: string
     updateSignature: string
-    columns: v8TableColumn[]
+    columns: TableColumn[]
 }
 
-export interface v8BulkTableMgr {
-    getSummary(): v8BulkMgrSummary
+export interface BulkTableMgr {
+    getSummary(): BulkMgrSummary
     asUserType(name:string): string
-    selectRows(cols: any[], cb: v8BulkSelectCb): void
-    insertRows(rows: any[], cb: v8StatusCb): void
-    deleteRows(rows: any[], cb: v8StatusCb): void
-    updateRows(rows: any[], cb: v8StatusCb): void
+    selectRows(cols: any[], cb: BulkSelectCb): void
+    insertRows(rows: any[], cb: StatusCb): void
+    deleteRows(rows: any[], cb: StatusCb): void
+    updateRows(rows: any[], cb: StatusCb): void
     setBatchSize(size: number): void
     setWhereCols(cols: any[]): void
     setUpdateCols(cols: any[]): void
 }
 
-export interface v8TableValueParam {
+export interface TableValueParam {
     /*
 type_name	column_id	ordered_column	column_name	data_type	nullable	length	precision	scale	collation
 dbo.PersonTVP	1	01: vFirstName	vFirstName	varchar		255	0	0	SQL_Latin1_General_CP1_CI_AS
@@ -222,8 +222,8 @@ dbo.PersonTVP	4	04: vCity	vCity	varchar		255	0	0	SQL_Latin1_General_CP1_CI_AS
     collation:number
 }
 
-export interface v8ProcedureParam {
-    table_value_param?:v8TableValueParam[]
+export interface ProcedureParam {
+    table_value_param?:TableValueParam[]
     is_user_defined?:boolean
     is_output: boolean
     name: string
@@ -235,43 +235,43 @@ export interface v8ProcedureParam {
     val: any
 }
 
-export interface v8ProcedureDefinition
+export interface ProcedureDefinition
 {
-    call(params?: any[], cb?: v8CallProcedureCb): v8Query,
+    call(params?: any[], cb?: CallProcedureCb): Query,
     setTimeout(to:number): void,
     setPolling(polling: boolean) : void,
-    getMeta(): v8ProcedureSummary,
+    getMeta(): ProcedureSummary,
     getName(): string
 }
 
-export interface v8ProcedureSummary {
+export interface ProcedureSummary {
     select:string
     signature: string
     summary: string
-    params: v8ProcedureParam[]
+    params: ProcedureParam[]
 }
 
-export interface v8ProcedureManager {
-    get(name:string, cb?:v8GetProcedureCb):void
-    callproc(name: string, params?: any[], cb?: v8CallProcedureCb): v8Query
-    describe(name: string, cb?: v8DescribeProcedureCb): void
+export interface ProcedureManager {
+    get(name:string, cb?:GetProcedureCb):void
+    callproc(name: string, params?: any[], cb?: CallProcedureCb): Query
+    describe(name: string, cb?: DescribeProcedureCb): void
     setTimeout(timeout: number): void
     setPolling(poll:boolean):void;
 }
 
-export interface v8TableManager {
-    bind(tableName: string, cb: v8BindCb): void
+export interface TableManager {
+    bind(tableName: string, cb: BindCb): void
 }
 
-export interface v8PreparedStatement {
-    preparedQuery(params?: any[], cb ?: v8QueryCb): v8Query
-    free(cb: v8StatusCb): void
+export interface PreparedStatement {
+    preparedQuery(params?: any[], cb ?: QueryCb): Query
+    free(cb: StatusCb): void
     getSignature(): string
     getId(): number
-    getMeta(): v8Meta[]
+    getMeta(): Meta[]
 }
 
-export abstract class v8QueryEvent {
+export abstract class QueryEvent {
     public static meta = 'meta';
     public static column = 'column';
     public static partial = 'partial';
