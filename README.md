@@ -18,6 +18,52 @@ Based on node-sqlserver, this version will compile in Visual Studio 2015/2017 an
 
 Functionally the API should work exactly as the existing library. The existing unit tests pass based on Node 0.12 and also against Node 4.2.1.
 
+## Installing
+
+Install the package from npm:
+
+```
+npm install msnodesqlv8 --save
+```
+
+## Getting started
+
+### JavaScript
+
+Require the module, and write a simple program link this:
+
+```javascript
+const sql = require("msnodesqlv8");
+
+const connectionString = "server=.;Database=Master;Trusted_Connection=Yes;Driver={SQL Server Native Client 11.0}";
+const query = "SELECT name FROM sys.databases";
+
+sql.query(connectionString, query, (err, rows) => {
+    console.log(rows);
+});
+```
+
+See our [JavaScript sample app](samples/javascript) for more details.
+
+### TypeScript
+
+Typings are included in the package. Simply import the types you need, and require the module to get started:
+
+```typescript
+import { SqlClient } from "msnodesqlv8";
+
+const sql: SqlClient = require("msnodesqlv8");
+
+const connectionString = "server=.;Database=Master;Trusted_Connection=Yes;Driver={SQL Server Native Client 11.0}";
+const query = "SELECT name FROM sys.databases";
+
+sql.query(connectionString, query, (err, rows) => {
+    console.log(rows);
+});
+```
+
+See our [TypeScript sample app](samples/typescript) for more details.
+
 ## Prepared Statements
 
 It is now possible to prepare one or more statements which can then be invoked
