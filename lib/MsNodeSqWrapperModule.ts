@@ -1,6 +1,6 @@
 
 
-import {SqlClient, Error, Meta, EventColumnCb, QueryEvent, PreparedStatement, Query, Connection} from "msnodesqlv8";
+import {SqlClient, Error, Meta, EventColumnCb, PreparedStatement, Query, Connection} from "msnodesqlv8";
 
 /**
  * Created by Stephen on 1/22/2017.
@@ -61,7 +61,6 @@ export module MsNodeSqlWrapperModule {
 
         public sql(s: string): SqlCommand {
             this._sql = s;
-            this._procedure;
             if (this.commandType == SqlCommandType.None)
                 this.commandType = SqlCommandType.QueryObjectFormat;
             return this;
@@ -83,7 +82,6 @@ export module MsNodeSqlWrapperModule {
         public procedure(s: string): SqlCommand {
             this._procedure = s;
             this.commandType = SqlCommandType.StoredProcedure;
-            this._sql;
             this.unsubscribe();
             return this;
         }
@@ -402,7 +400,7 @@ export module MsNodeSqlWrapperModule {
         }
 
         public error: Error | undefined;
-        public asObjects: any[] = new Array<any>();
+        public asObjects: any[] = [];
         public outputParams: any[] | undefined;
         public rawData: RawData | undefined;
     }
