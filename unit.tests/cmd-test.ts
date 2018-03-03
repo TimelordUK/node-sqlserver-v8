@@ -1,10 +1,12 @@
-import {MsNodeSqlDriverApiModule, MsNodeSqlDriverApiModule as v8} from '../lib/MsNodeSqlDriverApiModule'
-import v8Error = v8.v8Error;
-import v8ProcedureSummary = MsNodeSqlDriverApiModule.v8ProcedureSummary;
 
-export const sql: v8.v8driver = require('msnodesqlv8');
+import {Meta, ProcedureSummary, SqlClient} from 'msnodesqlv8';
+import SqlConnection = MsNodeSqlWrapperModule.SqlConnection;
+const sql: SqlClient = require('msnodesqlv8');
+import CommandResponse = MsNodeSqlWrapperModule.SqlCommandResponse;
+import {MsNodeSqlWrapperModule} from "../lib/MsNodeSqWrapperModule";
+import SqlWrapper = MsNodeSqlWrapperModule.Sql;
 
-let supp = require('../demo-support');
+let supp = require('../samples/typescript/demo-support');
 let argv = require('minimist')(process.argv.slice(2));
 let assert = require( 'assert' );
 
@@ -71,7 +73,7 @@ class Tvp implements SimpleTest {
             setTimeout( () => {
                 let pm = conn.procedureMgr();
                 pm.get('MyCustomStoredProcedure', procedure => {
-                    let meta:v8ProcedureSummary = procedure.getMeta();
+                    let meta:ProcedureSummary = procedure.getMeta();
                     let c0 = meta.params[1];
                     let pTvp = {
                         a:"Father",
@@ -116,7 +118,7 @@ class DateTz implements SimpleTest {
                         console.log(`[${x}] completes more = ${more}`);
                         ++x;
                     });
-                q.on('msg', (err: v8Error) => {
+                q.on('msg', (err: Error) => {
                     //console.log(`[${x}]: q.msg = ${err.message}`);
                 });
             }, delay);
@@ -154,7 +156,7 @@ class RaiseErrors implements SimpleTest {
                         console.log(`[${x}] completes more = ${more}`);
                         ++x;
                     });
-                q.on('msg', (err: v8Error) => {
+                q.on('msg', (err: Error) => {
                     //console.log(`[${x}]: q.msg = ${err.message}`);
                 });
             }, delay);

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sql = require('msnodesqlv8');
-let supp = require('../demo-support');
+const sql = require('msnodesqlv8');
+let supp = require('../samples/typescript/demo-support');
 let argv = require('minimist')(process.argv.slice(2));
 let assert = require('assert');
 let support = null;
@@ -23,7 +23,7 @@ class Connection {
         let delay = argv.delay || 5000;
         console.log(`${conn_str}`);
         setInterval(() => {
-            exports.sql.open(conn_str, (err, conn) => {
+            sql.open(conn_str, (err, conn) => {
                 if (err) {
                     throw err;
                 }
@@ -45,7 +45,7 @@ class Tvp {
     run(conn_str, argv) {
         let delay = argv.delay || 3000;
         console.log(conn_str);
-        exports.sql.open(conn_str, (err, conn) => {
+        sql.open(conn_str, (err, conn) => {
             if (err) {
                 throw err;
             }
@@ -74,7 +74,7 @@ class DateTz {
     run(conn_str, argv) {
         let delay = argv.delay || 5000;
         console.log(conn_str);
-        exports.sql.open(conn_str, (err, conn) => {
+        sql.open(conn_str, (err, conn) => {
             if (err) {
                 throw err;
             }
@@ -104,7 +104,7 @@ class DateTz {
 class RaiseErrors {
     run(conn_str, argv) {
         let delay = argv.delay || 5000;
-        exports.sql.open(conn_str, (err, conn) => {
+        sql.open(conn_str, (err, conn) => {
             if (err) {
                 throw err;
             }
@@ -138,7 +138,7 @@ class BusyConnection {
     run(conn_str, argv) {
         let delay = argv.delay || 5000;
         let severity = argv.severity || 9;
-        exports.sql.open(conn_str, (err, conn) => {
+        sql.open(conn_str, (err, conn) => {
             if (err) {
                 throw err;
             }
@@ -167,7 +167,7 @@ class BusyConnection {
 class LargeStringSelect {
     run(conn_str, argv) {
         let delay = argv.delay || 5000;
-        exports.sql.open(conn_str, (err, conn) => {
+        sql.open(conn_str, (err, conn) => {
             if (err) {
                 throw err;
             }
@@ -197,7 +197,7 @@ class LargeStringSelect {
 class PrintSelect {
     run(conn_str, argv) {
         let delay = argv.delay || 5000;
-        exports.sql.open(conn_str, (err, conn) => {
+        sql.open(conn_str, (err, conn) => {
             if (err) {
                 throw err;
             }
@@ -222,7 +222,7 @@ class PrintSelect {
 class MemoryStress {
     run(conn_str, argv) {
         let delay = argv.delay || 5000;
-        exports.sql.open(conn_str, (err, conn) => {
+        sql.open(conn_str, (err, conn) => {
             if (err) {
                 throw err;
             }
@@ -271,7 +271,7 @@ switch (argv.t) {
         console.log(`test ${argv.t} is not valid.`);
         break;
 }
-supp.GlobalConn.init(exports.sql, (co) => {
+supp.GlobalConn.init(sql, (co) => {
     let conn_str = co.conn_str;
     support = co.support;
     procedureHelper = new support.ProcedureHelper(conn_str);
