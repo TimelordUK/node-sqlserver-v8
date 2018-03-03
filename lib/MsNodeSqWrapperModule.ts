@@ -1,11 +1,13 @@
-import { SqlClient, Error, Meta, EventColumnCb, QueryEvent, PreparedStatement, Query } from '.';
+
+import {SqlClient, Error, Meta, EventColumnCb, QueryEvent, PreparedStatement, Query, Connection} from "msnodesqlv8";
+
 /**
  * Created by Stephen on 1/22/2017.
  */
 
 export module MsNodeSqlWrapperModule {
 
-    export const legacyDriver: SqlClient = require('msnodesqlv8');
+    const legacyDriver: SqlClient = require('msnodesqlv8');
 
     export class SqlModuleWrapperError implements Error {
         constructor(public message: string) {
@@ -30,7 +32,7 @@ export module MsNodeSqlWrapperModule {
 
     export class SqlCommand {
 
-        constructor(public connection: Connection, public id ?: string, public commandType: SqlCommandType = SqlCommandType.QueryObjectFormat) {
+        constructor(public connection: SqlConnection, public id ?: string, public commandType: SqlCommandType = SqlCommandType.QueryObjectFormat) {
         }
 
         _driverTimeoutMs: number | undefined;
@@ -156,28 +158,28 @@ export module MsNodeSqlWrapperModule {
 
             if (query) {
                 if (this._onMeta != null) {
-                    query.on(QueryEvent.meta, (m:any) => this._onMeta(m));
+                    query.on('meta', (m:any) => this._onMeta(m));
                 }
                 if (this._onColumn != null) {
-                    query.on(QueryEvent.column, (c:any, d:any, m:any) => this._onColumn(c, d, m));
+                    query.on('column', (c:any, d:any, m:any) => this._onColumn(c, d, m));
                 }
                 if (this._onRowCount != null) {
-                    query.on(QueryEvent.rowCount, (m:any) => this._onRowCount(m));
+                    query.on('rowCount', (m:any) => this._onRowCount(m));
                 }
                 if (this._onRow != null) {
-                    query.on(QueryEvent.row, (m:any) => this._onRow(m));
+                    query.on('row', (m:any) => this._onRow(m));
                 }
                 if (this._onDone != null) {
-                    query.on(QueryEvent.done, m => this._onDone(m));
+                    query.on('done', m => this._onDone(m));
                 }
                 if (this._onError != null) {
-                    query.on(QueryEvent.error, m => this._onError(m));
+                    query.on('error', m => this._onError(m));
                 }
                 if (this._onClosed != null) {
-                    query.on(QueryEvent.closed, m => this._onClosed(m));
+                    query.on('closed', m => this._onClosed(m));
                 }
                 if (this._onSubmitted != null) {
-                    query.on(QueryEvent.submitted, m => this._onSubmitted(m));
+                    query.on('submitted', m => this._onSubmitted(m));
                 }
             }            
         }
@@ -373,8 +375,8 @@ export module MsNodeSqlWrapperModule {
     }
 
     export class RawData implements RawData {
-        public meta: Meta[] = new Array<Meta>();
-        public rows: Array<any[]> = new Array<any[]>();
+        public meta: Meta[] = [];
+        public rows: Array<any[]> [];
     }
 
     export class SqlCommandResponse {
@@ -456,7 +458,7 @@ export module MsNodeSqlWrapperModule {
     export class CommandCache {
         public CachedCommands: Dictionary<SqlCommand> = new Dictionary<SqlCommand>();
 
-        constructor(public connection: Connection) {
+        constructor(public connection: SqlConnection) {
         }
 
         public get(id?: string): SqlCommand {
@@ -503,7 +505,7 @@ export module MsNodeSqlWrapperModule {
         }
     }
 
-    export class Connection {
+    export class SqlConnection {
 
         public CommandCache: CommandCache;
 
@@ -519,9 +521,13 @@ export module MsNodeSqlWrapperModule {
             return new SqlCommand(this);
         }
 
+        public static getLegacy(): SqlClient {
+            return legacyDriver;
+        }
+
         public close(): Promise<any> {
             return new Promise((resolve, reject) => {
-                this.legacy_conn.close((err: v8Error) => {
+                this.legacy_conn.close((err: Error) => {
                     if (err) reject(err);
                     else resolve();
                 })
@@ -536,7 +542,7 @@ export module MsNodeSqlWrapperModule {
 
         public execute(sql:string, params:any = [], raw:boolean = false) : Promise<SqlCommandResponse> {
             return new Promise((resolve, reject) => {
-                this.open().then( (connection : Connection) => {
+                this.open().then( (connection : SqlConnection) => {
                     let command = new SqlCommand(connection);
                     if (raw) command = command.rawFormat();
                     command.sql(sql).params(params).execute().then(res=> {
@@ -554,7 +560,7 @@ export module MsNodeSqlWrapperModule {
             });
         }
 
-        public open(timeout: number = 0): Promise<Connection> {
+        public open(timeout: number = 0): Promise<SqlConnection> {
             return new Promise((resolve, reject) => {
                 legacyDriver.open({
                     conn_str: this.connStr,
@@ -563,7 +569,7 @@ export module MsNodeSqlWrapperModule {
                     if (err) {
                         reject(err);
                     } else {
-                        let connection = new Connection(legacy);
+                        let connection = new SqlConnection(legacy);
                         resolve(connection);
                     }
                 });

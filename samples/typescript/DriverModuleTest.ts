@@ -1,16 +1,16 @@
 /**
  * Created by admin on 19/01/2017.
  */
-import { SqlClient } from 'msnodesqlv8';
-import { MsNodeSqlWrapperModule } from 'msnodesqlv8/lib/MsNodeSqWrapperModule';
-
+import {Meta, SqlClient} from 'msnodesqlv8';
+import SqlConnection = MsNodeSqlWrapperModule.SqlConnection;
+export const sql: SqlClient = require('msnodesqlv8');
 import CommandResponse = MsNodeSqlWrapperModule.SqlCommandResponse;
-import Connection = MsNodeSqlWrapperModule.Connection;
+import {MsNodeSqlWrapperModule} from "../../lib/MsNodeSqWrapperModule";
+import SqlWrapper = MsNodeSqlWrapperModule.Sql;
 
 let assert = require('assert');
 let supp = require('./demo-support');
 let ASQ = require('asynquence-contrib');
-
 
 class eventHits {
     public onMeta: number = 0;
@@ -25,7 +25,6 @@ class eventHits {
 
 class StoredProcedureDef {
     constructor(public name: string, public def: string) {
-
     }
 }
 
@@ -36,8 +35,7 @@ class WrapperTest {
     procedureHelper: any;
     helper: any;
     parsedJSON: any;
-    sqlWrapper: MsNodeSqlWrapperModule.Sql |undefined;
-    legacy: SqlClient = MsNodeSqlWrapperModule.legacyDriver;
+    sqlWrapper:SqlWrapper;
 
     getIntIntProcedure = new StoredProcedureDef(
         'test_sp_get_int_int',
@@ -134,7 +132,7 @@ class WrapperTest {
     }
 
     public run(done: Function) {
-        supp.GlobalConn.init(this.legacy, (co: any) => {
+        supp.GlobalConn.init(sql, (co: any) => {
                 this.conn_str = co.conn_str;
                 this.sqlWrapper = new MsNodeSqlWrapperModule.Sql(this.conn_str);
                 this.support = co.support;
@@ -236,7 +234,7 @@ class WrapperTest {
         return new Promise((resolve, reject) => {
             let inst = this;
 
-            function runTest(c: Connection) {
+            function runTest(c: SqlConnection) {
                 let command = c.getCommand();
                 command.sql(inst.testSelect);
                 let h = new eventHits();
@@ -245,13 +243,14 @@ class WrapperTest {
                     if (inst.debug) console.log(`onMeta: ${JSON.stringify(meta, null, 2)}`);
                     h.onMeta++;
                     assert.deepEqual(inst.expectedMeta, meta, "results didn't match");
-                }).onColumn((col: any, data: any, more: any) => {
+                }).onColumn((colIndex: number, data:any, more:boolean) => {
                     if (inst.debug) console.log(`onColumn: more = ${more} data = ${JSON.stringify(data, null, 2)}`);
                     h.onColumn++;
-                }).onRowCount(count: any => {
+                }).onRowCount((count: number) => {
                     if (inst.debug) console.log(`onRowCount: ${count}`);
                     h.onRowCount++;
-                }).onRow(r: any => {
+                })
+                .onRow((r: number) => {
                     if (inst.debug) console.log(`onRow: row = ${JSON.stringify(r, null, 2)}`);
                     h.onRow++;
                 }).onDone(() => {
@@ -279,7 +278,7 @@ class WrapperTest {
             }
 
             this.sqlWrapper.open()
-                .then(c: any => runTest(c)).catch(e => {
+                .then((c : SqlConnection) => runTest(c)).catch(e => {
                 console.log(e);
                 reject(e);
             });
