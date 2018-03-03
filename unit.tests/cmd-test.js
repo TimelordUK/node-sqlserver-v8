@@ -56,13 +56,17 @@ class Tvp {
                 let pm = conn.procedureMgr();
                 pm.get('MyCustomStoredProcedure', procedure => {
                     let meta = procedure.getMeta();
-                    let c0 = meta.params[1];
                     let pTvp = {
                         a: "Father",
                         b: 999
                     };
                     procedure.call([pTvp], (err, results) => {
-                        console.log(err);
+                        if (err) {
+                            console.log(err);
+                        }
+                        else {
+                            console.log(JSON.stringify(results));
+                        }
                     });
                     console.log(JSON.stringify(meta));
                 });
@@ -96,6 +100,7 @@ class DateTz {
                     ++x;
                 });
                 q.on('msg', (err) => {
+                    console.log(`[${x}]: q.msg = ${err.message}`);
                 });
             }, delay);
         });
@@ -129,6 +134,7 @@ class RaiseErrors {
                     ++x;
                 });
                 q.on('msg', (err) => {
+                    console.log(`[${x}]: q.msg = ${err.message}`);
                 });
             }, delay);
         });
