@@ -84,12 +84,12 @@ namespace mssql
 		SQLSMALLINT msg_len;
 		SQLRETURN      rc2;
 		SQLINTEGER    native_error;
-		SQLWCHAR        msg[SQL_MAX_MESSAGE_LENGTH];
+		SQLWCHAR        msg[2 * 1024];
 		SQLWCHAR sql_state[6];
 
 		// Get the status records.  
 		SQLSMALLINT i = 1;
-		while ((rc2 = SQLGetDiagRec(HandleType, handle, i, sql_state, &native_error, msg, sizeof(msg), &msg_len)) != SQL_NO_DATA) {
+		while ((rc2 = SQLGetDiagRec(HandleType, handle, i, sql_state, &native_error, msg, sizeof(msg) / sizeof(SQLWCHAR), &msg_len)) != SQL_NO_DATA) {
 			const wstring sqlstate(sql_state);
 			const wstring message(msg);
 
