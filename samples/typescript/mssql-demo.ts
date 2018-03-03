@@ -286,7 +286,7 @@ function procedure(done: Function) {
     let async = new support.Async();
     let Assert = new support.Assert();
 
-    let conn: Connection;;
+    let conn: Connection;
 
     let sp_name = "test_sp_get_int_int";
     let def = "alter PROCEDURE <name>" +

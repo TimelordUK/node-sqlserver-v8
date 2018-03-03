@@ -3,7 +3,7 @@
  */
 import {Meta, SqlClient} from 'msnodesqlv8';
 import SqlConnection = MsNodeSqlWrapperModule.SqlConnection;
-export const sql: SqlClient = require('msnodesqlv8');
+const sql: SqlClient = require('msnodesqlv8');
 import CommandResponse = MsNodeSqlWrapperModule.SqlCommandResponse;
 import {MsNodeSqlWrapperModule} from "../../lib/MsNodeSqWrapperModule";
 import SqlWrapper = MsNodeSqlWrapperModule.Sql;
