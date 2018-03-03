@@ -20,7 +20,7 @@
 /* global suite teardown teardown test setup */
 'use strict'
 
-var supp = require('../demo-support')
+var supp = require('../samples/typescript/demo-support')
 var assert = require('assert')
 
 function empSelectSQL () {

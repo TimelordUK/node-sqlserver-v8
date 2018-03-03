@@ -2,7 +2,7 @@
 /* global suite teardown teardown test setup */
 
 var assert = require('assert')
-var supp = require('../demo-support')
+var supp = require('../samples/typescript/demo-support')
 
 suite('sproc', function () {
   var connStr

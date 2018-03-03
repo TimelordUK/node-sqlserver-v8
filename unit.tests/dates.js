@@ -21,7 +21,7 @@
 'use strict'
 
 var assert = require('assert')
-var supp = require('../demo-support')
+var supp = require('../samples/typescript/demo-support')
 
 suite('date tests', function () {
   var theConnection

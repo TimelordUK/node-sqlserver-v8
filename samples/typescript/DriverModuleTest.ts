@@ -11,6 +11,7 @@ let assert = require('assert');
 let supp = require('./demo-support');
 let ASQ = require('asynquence-contrib');
 
+
 class eventHits {
     public onMeta: number = 0;
     public onColumn: number = 0;

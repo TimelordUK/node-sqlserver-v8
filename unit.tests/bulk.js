@@ -1,7 +1,7 @@
 'use strict'
 /* global suite teardown teardown test setup */
 
-var supp = require('../demo-support')
+var supp = require('../samples/typescript/demo-support')
 var assert = require('assert')
 
 suite('bulk', function () {

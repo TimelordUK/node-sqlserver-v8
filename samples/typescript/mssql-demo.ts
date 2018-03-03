@@ -1,4 +1,4 @@
-import { Connection, Error, PreparedStatement, Query, SqlClient, QueryDescription, } from 'msnodesqlv8';
+import {Connection, Error, PreparedStatement, Query, SqlClient, QueryDescription, BulkTableMgr,} from 'msnodesqlv8';
 
 // require the module so it can be used in your node JS code.
 export const sql: SqlClient = require('msnodesqlv8');
@@ -71,7 +71,7 @@ supp.GlobalConn.init(sql, (co: any) => {
         procedureHelper.setVerbose(false);
         let async = co.async;
         helper = co.helper;
-        parsedJSON = helper.getJSON();
+        parsedJSON = helper.getJSON('../../unit.tests');
 
         console.log(conn_str);
         async.series(demos, () => {
@@ -187,7 +187,7 @@ function query(done: Function) {
     let async = new support.Async();
     let Assert = new support.Assert();
 
-    let conn: Connection;;
+    let conn: Connection;
 
     let fns = [
 
@@ -458,6 +458,11 @@ function empDeleteSQL() {
         WHERE BusinessEntityID = ?`;
 }
 
+interface Statements {
+    selectStatement?: PreparedStatement
+    deleteStatement?: PreparedStatement
+}
+
 function prepared(done: Function) {
 
 // create and populate table - fetch prepared statements to select and free records for employee table.
@@ -467,11 +472,12 @@ function prepared(done: Function) {
     let async = new support.Async();
     let Assert = new support.Assert();
 
+    function statementsFactory(): Statements {
+        return {
+        }
+    }
 
-    let statements: {
-        selectStatement: PreparedStatement; 
-        deleteStatement: PreparedStatement;
-    };
+    let statements:Statements = statementsFactory();
 
     let table_name = "Employee";
 
@@ -514,7 +520,7 @@ function prepared(done: Function) {
         // insert test set using bulk insert
         function (async_done: Function) {
             let tm = conn.tableMgr();
-            tm.bind(table_name, (bulkMgr: BulkMgr) => {
+            tm.bind(table_name, (bulkMgr: BulkTableMgr) => {
                 bulkMgr.insertRows(parsedJSON, () => {
                     async_done();
                 });
@@ -636,7 +642,7 @@ function table(done: Function) {
     let helper = new support.EmployeeHelper(sql, conn_str);
     let conn: Connection;
     let table_name = "Employee";
-    let bm: BulkMgr;
+    let bm: BulkTableMgr;
     let records : Array<Employee>= helper.getJSON();
 
 
@@ -670,7 +676,7 @@ function table(done: Function) {
         function (async_done: Function) {
             let tm = conn.tableMgr();
             console.log("bind to table " + table_name);
-            tm.bind(table_name, (bulk: BulkMgr) => {
+            tm.bind(table_name, (bulk: BulkTableMgr) => {
                 bm = bulk;
                 Assert.check(bm, "no bulk manager returned.");
                 async_done();

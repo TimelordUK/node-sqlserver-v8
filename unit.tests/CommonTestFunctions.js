@@ -20,7 +20,7 @@
 
 var sql = require('../')
 var assert = require('assert')
-var supp = require('../demo-support')
+var supp = require('../samples/typescript/demo-support')
 var util = require('util')
 
 // Need to change this to false when parameters are supported

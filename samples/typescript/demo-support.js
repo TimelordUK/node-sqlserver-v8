@@ -214,6 +214,7 @@ function DemoSupport (native) {
     function dropCreateTable (params, doneFunction) {
       var async = new Async()
       var tableName = params.tableName
+      var rootPath = params.rootPath || '../../unit.tests'
       var columnName = params.columnName || 'col1'
       var type = params.type
       var theConnection = params.theConnection
@@ -259,7 +260,7 @@ function DemoSupport (native) {
         },
 
         function (asyncDone) {
-          var folder = path.join(__dirname, 'unit.tests')
+          var folder = path.join(__dirname, rootPath)
           var fileName = tableName
           if (fileName.charAt(0) === '#') {
             fileName = fileName.substr(1)
@@ -325,8 +326,9 @@ function DemoSupport (native) {
         })
     }
 
-    function getJSON () {
-      var folder = path.join(__dirname, 'unit.tests')
+    function getJSON (stem) {
+      var p = stem || '../../unit.tests'
+      var folder = path.join(__dirname, p)
       var fs = require('fs')
 
       var parsedJSON = JSON.parse(fs.readFileSync(folder + '/employee.json', 'utf8'))

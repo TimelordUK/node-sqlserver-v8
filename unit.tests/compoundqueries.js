@@ -22,7 +22,7 @@
 
 var assert = require('assert')
 var commonTestFns = require('./CommonTestFunctions')
-var supp = require('../demo-support')
+var supp = require('../samples/typescript/demo-support')
 
 suite('compoundqueries', function () {
   var theConnection

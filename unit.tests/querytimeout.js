@@ -2,7 +2,7 @@
 'use strict'
 
 var assert = require('assert')
-var supp = require('../demo-support')
+var supp = require('../samples/typescript/demo-support')
 
 suite('querytimeout', function () {
   this.timeout(20 * 1000)

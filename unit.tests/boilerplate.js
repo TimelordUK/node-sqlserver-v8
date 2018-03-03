@@ -2,7 +2,7 @@
  * Created by admin on 03/07/2016.
  */
 var assert = require('assert')
-var supp = require('../demo-support')
+var supp = require('../samples/typescript/demo-support')
 var fs = require('fs')
 var path = require('path')
 
