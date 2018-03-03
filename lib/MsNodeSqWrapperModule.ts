@@ -1,27 +1,18 @@
+import { SqlClient, Error, Meta, EventColumnCb, QueryEvent, PreparedStatement, Query } from '.';
 /**
  * Created by Stephen on 1/22/2017.
  */
-import {MsNodeSqlDriverApiModule as v8api} from './MsNodeSqlDriverApiModule'
 
 export module MsNodeSqlWrapperModule {
 
-    import v8Connection = v8api.v8Connection;
-    import v8Query = v8api.v8Query;
-    import v8Meta = v8api.v8Meta;
-    import v8EventColumnCb = v8api.v8EventColumnCb;
-    import v8RawData = v8api.v8RawData;
-    import v8QueryEvent = v8api.v8QueryEvent;
-    import v8Error = v8api.v8Error;
-    import v8PreparedStatement = v8api.v8PreparedStatement;
+    export const legacyDriver: SqlClient = require('msnodesqlv8');
 
-    export const legacyDriver: v8api.v8driver = require('msnodesqlv8');
-
-    export class SqlModuleWrapperError implements v8Error {
+    export class SqlModuleWrapperError implements Error {
         constructor(public message: string) {
         }
 
-        sqlstate: string;
-        code: number;
+        sqlstate: string = "";
+        code: number = 0;
     }
 
     export interface queryCb<T> { (v: T): void
@@ -42,24 +33,24 @@ export module MsNodeSqlWrapperModule {
         constructor(public connection: Connection, public id ?: string, public commandType: SqlCommandType = SqlCommandType.QueryObjectFormat) {
         }
 
-        _driverTimeoutMs: number;
-        _wrapperTimeoutMs: number;
-        _sql: string;
-        _procedure: string;
+        _driverTimeoutMs: number | undefined;
+        _wrapperTimeoutMs: number | undefined;
+        _sql: string | undefined;
+        _procedure: string | undefined;
 
-        _inputParams: any[];
+        _inputParams: any[] | undefined;
 
-        _onMeta: queryCb<v8Meta>;
-        _onColumn: v8EventColumnCb;
-        _onRowCount: queryCb<number>;
-        _onRow: queryCb<number>;
-        _onDone: queryCb<any>;
-        _onSubmitted: queryCb<any>;
-        _onError: queryCb<string>;
-        _onClosed: queryCb<string>;
+        _onMeta: queryCb<Meta> | undefined;
+        _onColumn: EventColumnCb | undefined;
+        _onRowCount: queryCb<number> | undefined;
+        _onRow: queryCb<number> | undefined;
+        _onDone: queryCb<any> | undefined;
+        _onSubmitted: queryCb<any> | undefined;
+        _onError: queryCb<string> | undefined;
+        _onClosed: queryCb<string> | undefined;
 
-        _query: v8Query;
-        _preparedStatement: v8PreparedStatement;
+        _query: Query | undefined;
+        _preparedStatement: PreparedStatement | undefined;
 
         public isPrepared(): boolean {
             return this.commandType == SqlCommandType.PreparingStatement;
@@ -67,7 +58,7 @@ export module MsNodeSqlWrapperModule {
 
         public sql(s: string): SqlCommand {
             this._sql = s;
-            this._procedure = null;
+            this._procedure;
             if (this.commandType == SqlCommandType.None)
                 this.commandType = SqlCommandType.QueryObjectFormat;
             return this;
@@ -89,7 +80,7 @@ export module MsNodeSqlWrapperModule {
         public procedure(s: string): SqlCommand {
             this._procedure = s;
             this.commandType = SqlCommandType.StoredProcedure;
-            this._sql = null;
+            this._sql;
             this.unsubscribe();
             return this;
         }
@@ -109,12 +100,12 @@ export module MsNodeSqlWrapperModule {
             return this;
         }
 
-        public onMeta(cb: queryCb<v8Meta>): SqlCommand {
+        public onMeta(cb: queryCb<Meta>): SqlCommand {
             this._onMeta = cb;
             return this;
         }
 
-        public onColumn(cb: v8EventColumnCb): SqlCommand {
+        public onColumn(cb: EventColumnCb): SqlCommand {
             this._onColumn = cb;
             return this;
         }
@@ -150,43 +141,45 @@ export module MsNodeSqlWrapperModule {
         }
 
         public unsubscribe(): void {
-            this._onMeta = null;
-            this._onColumn = null;
-            this._onRowCount = null;
-            this._onRow = null;
-            this._onDone = null;
-            this._onError = null;
-            this._onClosed = null;
+            this._onMeta = undefined;
+            this._onColumn = undefined;
+            this._onRowCount = undefined;
+            this._onRow = undefined;
+            this._onDone = undefined;
+            this._onError = undefined;
+            this._onClosed = undefined;
         }
 
         private subscribe(): void {
 
             let query = this._query;
 
-            if (this._onMeta != null) {
-                query.on(v8QueryEvent.meta, (m:any) => this._onMeta(m));
-            }
-            if (this._onColumn != null) {
-                query.on(v8QueryEvent.column, (c:any, d:any, m:any) => this._onColumn(c, d, m));
-            }
-            if (this._onRowCount != null) {
-                query.on(v8QueryEvent.rowCount, (m:any) => this._onRowCount(m));
-            }
-            if (this._onRow != null) {
-                query.on(v8QueryEvent.row, (m:any) => this._onRow(m));
-            }
-            if (this._onDone != null) {
-                query.on(v8QueryEvent.done, m => this._onDone(m));
-            }
-            if (this._onError != null) {
-                query.on(v8QueryEvent.error, m => this._onError(m));
-            }
-            if (this._onClosed != null) {
-                query.on(v8QueryEvent.closed, m => this._onClosed(m));
-            }
-            if (this._onSubmitted != null) {
-                query.on(v8QueryEvent.submitted, m => this._onSubmitted(m));
-            }
+            if (query) {
+                if (this._onMeta != null) {
+                    query.on(QueryEvent.meta, (m:any) => this._onMeta(m));
+                }
+                if (this._onColumn != null) {
+                    query.on(QueryEvent.column, (c:any, d:any, m:any) => this._onColumn(c, d, m));
+                }
+                if (this._onRowCount != null) {
+                    query.on(QueryEvent.rowCount, (m:any) => this._onRowCount(m));
+                }
+                if (this._onRow != null) {
+                    query.on(QueryEvent.row, (m:any) => this._onRow(m));
+                }
+                if (this._onDone != null) {
+                    query.on(QueryEvent.done, m => this._onDone(m));
+                }
+                if (this._onError != null) {
+                    query.on(QueryEvent.error, m => this._onError(m));
+                }
+                if (this._onClosed != null) {
+                    query.on(QueryEvent.closed, m => this._onClosed(m));
+                }
+                if (this._onSubmitted != null) {
+                    query.on(QueryEvent.submitted, m => this._onSubmitted(m));
+                }
+            }            
         }
 
         public subscribing(): boolean {
@@ -204,7 +197,7 @@ export module MsNodeSqlWrapperModule {
             let timeout = this._driverTimeoutMs > 0 ? this._driverTimeoutMs / 1000 : 0;
             let pm = this.connection.legacy_conn.procedureMgr();
             pm.setTimeout(timeout);
-            pm.callproc(this._procedure, this._inputParams, (err?: v8Error, rows?: any[], outputParams?: any[]) => {
+            pm.callproc(this._procedure, this._inputParams, (err?: Error, rows?: any[], outputParams?: any[]) => {
                 if (err) {
                     res.error = err;
                     reject(res);
@@ -222,7 +215,7 @@ export module MsNodeSqlWrapperModule {
             this._query = this.connection.legacy_conn.query({
                 query_str: this._sql,
                 query_timeout: timeout
-            }, this._inputParams, (err: v8Error, rows: any[], more: boolean) => {
+            }, this._inputParams, (err: Error, rows: any[], more: boolean) => {
                 if (err) {
                     res.error = err;
                     reject(res);
@@ -238,7 +231,7 @@ export module MsNodeSqlWrapperModule {
             this._query = this.connection.legacy_conn.queryRaw({
                 query_str: this._sql,
                 query_timeout: timeout
-            }, this._inputParams, (err?: v8Error, rawData?: v8RawData, more?: boolean) => {
+            }, this._inputParams, (err?: Error, rawData?: RawData, more?: boolean) => {
                 if (err) {
                     res.error = err;
                     reject(res);
@@ -251,7 +244,7 @@ export module MsNodeSqlWrapperModule {
 
         private execPrepared(resolve: Function, reject: Function, res: SqlCommandResponse): void {
             this._preparedStatement.preparedQuery(
-                this._inputParams, (err: v8Error, rows: any[], more: boolean) => {
+                this._inputParams, (err: Error, rows: any[], more: boolean) => {
                     if (err) {
                         res.error = err;
                         reject(res);
@@ -308,7 +301,7 @@ export module MsNodeSqlWrapperModule {
                 this.commandType = SqlCommandType.PreparingStatement;
                 this.unsubscribe();
                 let inst = this;
-                this.connection.legacy_conn.prepare(this._sql, (err?: v8Error, statement?: v8PreparedStatement) => {
+                this.connection.legacy_conn.prepare(this._sql, (err?: Error, statement?: PreparedStatement) => {
                     if (err) {
                         reject(err);
                         inst.commandType = SqlCommandType.None;
@@ -379,21 +372,23 @@ export module MsNodeSqlWrapperModule {
         }
     }
 
-    export class RawData implements v8RawData {
-        public meta: v8Meta[];
-        public rows: Array<any[]>;
+    export class RawData implements RawData {
+        public meta: Meta[] = new Array<Meta>();
+        public rows: Array<any[]> = new Array<any[]>();
     }
 
     export class SqlCommandResponse {
 
-        public aggregateRaw(raw: v8RawData) {
+        public aggregateRaw(raw: RawData) {
             let rd = this.rawData;
             if (rd == null) {
                 this.rawData = rd = new RawData();
                 rd.meta = raw.meta;
                 rd.rows = [];
             }
+
             raw.rows.forEach(row => rd.rows.push(row));
+            
         }
 
         public aggregate(rows: any[]) {
@@ -403,10 +398,10 @@ export module MsNodeSqlWrapperModule {
             rows.forEach(r => this.asObjects.push(r));
         }
 
-        public error: v8Error;
-        public asObjects: any[];
-        public outputParams: any[];
-        public rawData: v8RawData;
+        public error: Error | undefined;
+        public asObjects: any[] = new Array<any>();
+        public outputParams: any[] | undefined;
+        public rawData: RawData | undefined;
     }
 
     export interface dictIteratorCb<T> { (key: string, val: T): void
@@ -512,7 +507,7 @@ export module MsNodeSqlWrapperModule {
 
         public CommandCache: CommandCache;
 
-        constructor(public legacy_conn: v8Connection) {
+        constructor(public legacy_conn: Connection) {
             this.CommandCache = new CommandCache(this);
         }
 
@@ -564,7 +559,7 @@ export module MsNodeSqlWrapperModule {
                 legacyDriver.open({
                     conn_str: this.connStr,
                     conn_timeout: timeout
-                }, (err: v8Error, legacy: any) => {
+                }, (err: Error, legacy: any) => {
                     if (err) {
                         reject(err);
                     } else {
