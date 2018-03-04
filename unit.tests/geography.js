@@ -3,6 +3,7 @@
 
 var supp = require('../samples/typescript/demo-support')
 var assert = require('assert')
+var path = require('path')
 
 suite('geography', function () {
   var theConnection
@@ -33,6 +34,7 @@ suite('geography', function () {
       done()
     })
   })
+
   function createGeographyTable (done) {
     var fns = [
 
@@ -58,10 +60,16 @@ suite('geography', function () {
     'POINT (1.349 -9.349)'
   ]
 
-  var insertSql = 'INSERT INTO spatial_test (GeogCol1) VALUES (geography::STPointFromText(?, 4326))'
+  var lines = [
+    'LINESTRING (-0.19535064697265625 51.509249951770364, -0.19148826599121094 51.5100245354003)'
+  ]
+
+  var insertPolySql = 'INSERT INTO spatial_test (GeogCol1) VALUES (geography::STPolyFromText(?, 4326))'
+  var insertPointsSql = 'INSERT INTO spatial_test (GeogCol1) VALUES (geography::STPointFromText(?, 4326))'
+  var insertLinesSql = 'INSERT INTO spatial_test (GeogCol1) VALUES (geography::STLineFromText(?, 4326))'
   var selectSql = 'select id, GeogCol2 from spatial_test'
 
-  var expected = [
+  var expectedPoints = [
     {
       id: 1,
       GeogCol2: points[0]
@@ -71,7 +79,44 @@ suite('geography', function () {
       GeogCol2: points[1]
     }
   ]
-  test('insert an array of geography points', function (testDone) {
+
+  var expectedLines = [
+    {
+      id: 1,
+      GeogCol2: lines[0]
+    }
+  ]
+
+  function getJSON (stem) {
+    var p = stem || './json'
+    var folder = path.join(__dirname, p)
+    var fs = require('fs')
+
+    return JSON.parse(fs.readFileSync(folder + '/points.json', 'utf8'))
+  }
+
+  function asPoly (coordinates) {
+    // close the polygon
+    coordinates = coordinates.slice(0)
+    coordinates[coordinates.length] = coordinates[0]
+    var dp = 10
+    var s = coordinates.map(function (elem) {
+      return +elem[0].toFixed(dp) + ' ' + +elem[1].toFixed(dp)
+    })
+    return 'POLYGON ((' + s.join(', ') + '))'
+  }
+
+  test('insert a polygon from json coordinates', function (testDone) {
+    var json = getJSON()
+    var coordinates = json.features[0].geometry.coordinates
+    var poly = asPoly(coordinates)
+    var expectedPoly = [
+      {
+        id: 1,
+        GeogCol2: poly
+      }
+    ]
+
     var fns = [
 
       function (asyncDone) {
@@ -80,7 +125,7 @@ suite('geography', function () {
         })
       },
       function (asyncDone) {
-        theConnection.query(insertSql, [points], function (err, res) {
+        theConnection.query(insertPolySql, [poly], function (err, res) {
           assert.ifError(err)
           assert(res.length === 0)
           asyncDone()
@@ -89,8 +134,38 @@ suite('geography', function () {
       function (asyncDone) {
         theConnection.query(selectSql, function (err, res) {
           assert.ifError(err)
-          assert(res.length === expected.length)
-          assert.deepEqual(res, expected)
+          assert(res.length === expectedPoly.length)
+          assert.deepEqual(res, expectedPoly)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
+  test('insert an array of geography lines', function (testDone) {
+    var fns = [
+
+      function (asyncDone) {
+        createGeographyTable(function () {
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.query(insertLinesSql, [lines], function (err, res) {
+          assert.ifError(err)
+          assert(res.length === 0)
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.query(selectSql, function (err, res) {
+          assert.ifError(err)
+          assert(res.length === expectedLines.length)
+          assert.deepEqual(res, expectedLines)
           asyncDone()
         })
       }
@@ -100,7 +175,36 @@ suite('geography', function () {
     })
   })
 
-  test('prepare a geography statement for repeat invocations', function (testDone) {
+  test('insert an array of geography points', function (testDone) {
+    var fns = [
+
+      function (asyncDone) {
+        createGeographyTable(function () {
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.query(insertPointsSql, [points], function (err, res) {
+          assert.ifError(err)
+          assert(res.length === 0)
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.query(selectSql, function (err, res) {
+          assert.ifError(err)
+          assert(res.length === expectedPoints.length)
+          assert.deepEqual(res, expectedPoints)
+          asyncDone()
+        })
+      }
+    ]
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
+  test('prepare a geography point statement for repeat invocations', function (testDone) {
     var preparedPoint = null
 
     var fns = [
@@ -111,7 +215,7 @@ suite('geography', function () {
         })
       },
       function (asyncDone) {
-        theConnection.prepare(insertSql, function (err, prepared) {
+        theConnection.prepare(insertPointsSql, function (err, prepared) {
           assert.ifError(err)
           preparedPoint = prepared
           asyncDone()
@@ -134,8 +238,8 @@ suite('geography', function () {
       function (asyncDone) {
         theConnection.query(selectSql, function (err, res) {
           assert.ifError(err)
-          assert(res.length === expected.length)
-          assert.deepEqual(res, expected)
+          assert(res.length === expectedPoints.length)
+          assert.deepEqual(res, expectedPoints)
           asyncDone()
         })
       }
