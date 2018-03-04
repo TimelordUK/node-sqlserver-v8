@@ -30,7 +30,7 @@ test_script:
     sqlcmd.exe -S "(local)" -U "sa" -P "Password12!" -Q "select getdate()"
 
     del binding.gyp
-    npm install -g typescript
+
     npm install
 
     node runtest -a -t tvp -t warnings.js -t compoundqueries.js -t querycancel.js -t txn.js -t datatypes.js -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t sproc.js -t prepared.js -t userbind.js -t dates.js 2>&1
