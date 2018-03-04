@@ -5,37 +5,8 @@ var supp = require('../samples/typescript/demo-support')
 var assert = require('assert')
 var path = require('path')
 
-suite('geography', function () {
-  var theConnection
-  this.timeout(20000)
-  var connStr
-  var async
-  var helper
-
-  var sql = global.native_sql
-
-  setup(function (testDone) {
-    supp.GlobalConn.init(sql, function (co) {
-      connStr = global.conn_str || co.conn_str
-      async = co.async
-      helper = co.helper
-      helper.setVerbose(false)
-      sql.open(connStr, function (err, newConn) {
-        assert.ifError(err)
-        theConnection = newConn
-        testDone()
-      })
-    }, global.conn_str)
-  })
-
-  teardown(function (done) {
-    theConnection.close(function (err) {
-      assert.ifError(err)
-      done()
-    })
-  })
-
-  function createGeographyTable (done) {
+function GeographyHelper () {
+  function createGeographyTable (async, theConnection, done) {
     var fns = [
 
       function (asyncDone) {
@@ -123,27 +94,77 @@ suite('geography', function () {
     return res
   }
 
+  var api = {
+    asLines: asLines,
+    asPoly: asPoly,
+    getJSON: getJSON,
+    insertPolySql: insertPolySql,
+    expectedLines: expectedLines,
+    insertPointsSql: insertPointsSql,
+    insertLinesSql: insertLinesSql,
+    selectSql: selectSql,
+    createGeographyTable: createGeographyTable,
+    expectedPoints: expectedPoints,
+    lines: lines,
+    points: points
+  }
+
+  return api
+}
+
+suite('geography', function () {
+  var theConnection
+  this.timeout(20000)
+  var connStr
+  var async
+  var helper
+  var geographyHelper
+
+  var sql = global.native_sql
+
+  setup(function (testDone) {
+    supp.GlobalConn.init(sql, function (co) {
+      connStr = global.conn_str || co.conn_str
+      async = co.async
+      helper = co.helper
+      helper.setVerbose(false)
+      geographyHelper = new GeographyHelper()
+      sql.open(connStr, function (err, newConn) {
+        assert.ifError(err)
+        theConnection = newConn
+        testDone()
+      })
+    }, global.conn_str)
+  })
+
+  teardown(function (done) {
+    theConnection.close(function (err) {
+      assert.ifError(err)
+      done()
+    })
+  })
+
   test('insert lines from json coordinates', function (testDone) {
-    var json = getJSON()
+    var json = geographyHelper.getJSON()
     var coordinates = json.features[0].geometry.coordinates
-    var lines = asLines(coordinates)
+    var lines = geographyHelper.asLines(coordinates)
 
     var fns = [
 
       function (asyncDone) {
-        createGeographyTable(function () {
+        geographyHelper.createGeographyTable(async, theConnection, function () {
           asyncDone()
         })
       },
       function (asyncDone) {
-        theConnection.query(insertLinesSql, [lines], function (err, res) {
+        theConnection.query(geographyHelper.insertLinesSql, [lines], function (err, res) {
           assert.ifError(err)
           assert(res.length === 0)
           asyncDone()
         })
       },
       function (asyncDone) {
-        theConnection.query(selectSql, function (err, res) {
+        theConnection.query(geographyHelper.selectSql, function (err, res) {
           assert.ifError(err)
           assert(res.length === lines.length)
           asyncDone()
@@ -156,9 +177,9 @@ suite('geography', function () {
   })
 
   test('insert a polygon from json coordinates', function (testDone) {
-    var json = getJSON()
+    var json = geographyHelper.getJSON()
     var coordinates = json.features[0].geometry.coordinates
-    var poly = asPoly(coordinates)
+    var poly = geographyHelper.asPoly(coordinates)
     var expectedPoly = [
       {
         id: 1,
@@ -169,19 +190,19 @@ suite('geography', function () {
     var fns = [
 
       function (asyncDone) {
-        createGeographyTable(function () {
+        geographyHelper.createGeographyTable(async, theConnection, function () {
           asyncDone()
         })
       },
       function (asyncDone) {
-        theConnection.query(insertPolySql, [poly], function (err, res) {
+        theConnection.query(geographyHelper.insertPolySql, [poly], function (err, res) {
           assert.ifError(err)
           assert(res.length === 0)
           asyncDone()
         })
       },
       function (asyncDone) {
-        theConnection.query(selectSql, function (err, res) {
+        theConnection.query(geographyHelper.selectSql, function (err, res) {
           assert.ifError(err)
           assert(res.length === expectedPoly.length)
           assert.deepEqual(res, expectedPoly)
@@ -199,22 +220,22 @@ suite('geography', function () {
     var fns = [
 
       function (asyncDone) {
-        createGeographyTable(function () {
+        geographyHelper.createGeographyTable(async, theConnection, function () {
           asyncDone()
         })
       },
       function (asyncDone) {
-        theConnection.query(insertLinesSql, [lines], function (err, res) {
+        theConnection.query(geographyHelper.insertLinesSql, [geographyHelper.lines], function (err, res) {
           assert.ifError(err)
           assert(res.length === 0)
           asyncDone()
         })
       },
       function (asyncDone) {
-        theConnection.query(selectSql, function (err, res) {
+        theConnection.query(geographyHelper.selectSql, function (err, res) {
           assert.ifError(err)
-          assert(res.length === expectedLines.length)
-          assert.deepEqual(res, expectedLines)
+          assert(res.length === geographyHelper.expectedLines.length)
+          assert.deepEqual(res, geographyHelper.expectedLines)
           asyncDone()
         })
       }
@@ -228,22 +249,22 @@ suite('geography', function () {
     var fns = [
 
       function (asyncDone) {
-        createGeographyTable(function () {
+        geographyHelper.createGeographyTable(async, theConnection, function () {
           asyncDone()
         })
       },
       function (asyncDone) {
-        theConnection.query(insertPointsSql, [points], function (err, res) {
+        theConnection.query(geographyHelper.insertPointsSql, [geographyHelper.points], function (err, res) {
           assert.ifError(err)
           assert(res.length === 0)
           asyncDone()
         })
       },
       function (asyncDone) {
-        theConnection.query(selectSql, function (err, res) {
+        theConnection.query(geographyHelper.selectSql, function (err, res) {
           assert.ifError(err)
-          assert(res.length === expectedPoints.length)
-          assert.deepEqual(res, expectedPoints)
+          assert(res.length === geographyHelper.expectedPoints.length)
+          assert.deepEqual(res, geographyHelper.expectedPoints)
           asyncDone()
         })
       }
@@ -259,36 +280,36 @@ suite('geography', function () {
     var fns = [
 
       function (asyncDone) {
-        createGeographyTable(function () {
+        geographyHelper.createGeographyTable(async, theConnection, function () {
           asyncDone()
         })
       },
       function (asyncDone) {
-        theConnection.prepare(insertPointsSql, function (err, prepared) {
+        theConnection.prepare(geographyHelper.insertPointsSql, function (err, prepared) {
           assert.ifError(err)
           preparedPoint = prepared
           asyncDone()
         })
       },
       function (asyncDone) {
-        preparedPoint.preparedQuery([points[0]], function (err, res) {
+        preparedPoint.preparedQuery([geographyHelper.points[0]], function (err, res) {
           assert.ifError(err)
           assert(res.length === 0)
           asyncDone()
         })
       },
       function (asyncDone) {
-        preparedPoint.preparedQuery([points[1]], function (err, res) {
+        preparedPoint.preparedQuery([geographyHelper.points[1]], function (err, res) {
           assert.ifError(err)
           assert(res.length === 0)
           asyncDone()
         })
       },
       function (asyncDone) {
-        theConnection.query(selectSql, function (err, res) {
+        theConnection.query(geographyHelper.selectSql, function (err, res) {
           assert.ifError(err)
-          assert(res.length === expectedPoints.length)
-          assert.deepEqual(res, expectedPoints)
+          assert(res.length === geographyHelper.expectedPoints.length)
+          assert.deepEqual(res, geographyHelper.expectedPoints)
           asyncDone()
         })
       }

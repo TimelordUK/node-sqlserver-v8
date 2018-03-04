@@ -327,7 +327,7 @@ function DemoSupport (native) {
     }
 
     function getJSON (stem) {
-      var p = stem || '../../unit.tests'
+      var p = stem || '../../unit.tests/json'
       var folder = path.join(__dirname, p)
       var fs = require('fs')
 

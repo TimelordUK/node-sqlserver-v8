@@ -93,7 +93,7 @@ function TestHelper (native, cstr) {
   function getJSON () {
     var folder = __dirname
     var fs = require('fs')
-    var parsedJSON = JSON.parse(fs.readFileSync(folder + '/employee.json', 'utf8'))
+    var parsedJSON = JSON.parse(fs.readFileSync(folder + '/json/employee.json', 'utf8'))
 
     for (var i = 0; i < parsedJSON.length; ++i) {
       parsedJSON[i].OrganizationNode = Buffer.from(parsedJSON[i].OrganizationNode.data, 'utf8')
