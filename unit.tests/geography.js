@@ -70,7 +70,7 @@ function GeographyHelper () {
     // close the polygon
     coordinates = coordinates.slice(0)
     coordinates[coordinates.length] = coordinates[0]
-    var dp = 10
+    var dp = 13
     var s = coordinates.map(function (elem) {
       return +elem[0].toFixed(dp) + ' ' + +elem[1].toFixed(dp)
     })
@@ -78,8 +78,9 @@ function GeographyHelper () {
   }
 
   function asLine (coords) {
+    var dp = 13
     // 'LINESTRING (-0.19535064697265625 51.509249951770364, -0.19148826599121094 51.5100245354003)'
-    return 'LINESTRING (' + coords[0][0] + ' ' + coords[0][1] + ', ' + coords[1][0] + ' ' + coords[1][1] + ')'
+    return 'LINESTRING (' + +coords[0][0].toFixed(dp) + ' ' + +coords[0][1].toFixed(dp) + ', ' + +coords[1][0].toFixed(dp) + ' ' + +coords[1][1].toFixed(dp) + ')'
   }
 
   function asLines (coordinates) {
@@ -94,9 +95,31 @@ function GeographyHelper () {
     return res
   }
 
+  function asPoints (coordinates) {
+    // 'POINT (-89.349 -55.349)',
+    var dp = 13
+    return coordinates.map(function (elem) {
+      return 'POINT (' + +elem[0].toFixed(dp) + ' ' + +elem[1].toFixed(dp) + ')'
+    })
+  }
+
+  function asExpected (geography) {
+    var i
+    var expected = []
+    for (i = 0; i < geography.length; ++i) {
+      expected[expected.length] = {
+        id: i + 1,
+        GeogCol2: geography[i]
+      }
+    }
+    return expected
+  }
+
   var api = {
+    asExpected: asExpected,
     asLines: asLines,
     asPoly: asPoly,
+    asPoints: asPoints,
     getJSON: getJSON,
     insertPolySql: insertPolySql,
     expectedLines: expectedLines,
@@ -148,6 +171,7 @@ suite('geography', function () {
     var json = geographyHelper.getJSON()
     var coordinates = json.features[0].geometry.coordinates
     var lines = geographyHelper.asLines(coordinates)
+    var expected = geographyHelper.asExpected(lines)
 
     var fns = [
 
@@ -167,6 +191,41 @@ suite('geography', function () {
         theConnection.query(geographyHelper.selectSql, function (err, res) {
           assert.ifError(err)
           assert(res.length === lines.length)
+          assert.deepEqual(res, expected)
+          asyncDone()
+        })
+      }]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
+  test('insert points from json coordinates', function (testDone) {
+    var json = geographyHelper.getJSON()
+    var coordinates = json.features[0].geometry.coordinates
+    var points = geographyHelper.asPoints(coordinates)
+    var expected = geographyHelper.asExpected(points)
+
+    var fns = [
+
+      function (asyncDone) {
+        geographyHelper.createGeographyTable(async, theConnection, function () {
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.query(geographyHelper.insertPointsSql, [points], function (err, res) {
+          assert.ifError(err)
+          assert(res.length === 0)
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.query(geographyHelper.selectSql, function (err, res) {
+          assert.ifError(err)
+          assert(res.length === points.length)
+          assert.deepEqual(expected, res)
           asyncDone()
         })
       }]
