@@ -7,6 +7,28 @@ var path = require('path')
 
 function GeographyHelper () {
   function createGeographyTable (async, theConnection, done) {
+    var insertProcedureTypeName = 'InsertGeographyTvp'
+    var tableTypeName = 'geographyTvpType'
+    var createTableSql = 'CREATE TABLE spatial_test ( id int IDENTITY (1,1), GeogCol1 geography, GeogCol2 AS GeogCol1.STAsText() )'
+    var dropProcedureSql = 'IF EXISTS (SELECT * FROM sys.objects WHERE type = \'P\' AND OBJECT_ID = OBJECT_ID(\'' + insertProcedureTypeName + '\'))\n' +
+      ' begin' +
+      ' drop PROCEDURE ' + insertProcedureTypeName +
+      ' end '
+    var dropTypeSql = 'IF TYPE_ID(N\'' + tableTypeName + '\') IS not NULL drop type ' + tableTypeName
+    var createType = 'create type ' + tableTypeName + ' AS TABLE ([GeogCol1] nvarchar (2048))'
+    var createProcedureSql = 'create PROCEDURE InsertGeographyTvp ' +
+      '@tvp geographyTvpType READONLY\n' +
+      '       AS \n' +
+      '       BEGIN \n' +
+      '       set nocount on\n' +
+      '       INSERT INTO spatial_test \n' +
+      '       ( \n' +
+      '          GeogCol1\n' +
+      '        )\n' +
+      '        SELECT  geography::STLineFromText([GeogCol1], 4326)' +
+      '  n FROM @tvp tvp\n' +
+      '  END'
+    var table
     var fns = [
 
       function (asyncDone) {
@@ -15,14 +37,45 @@ function GeographyHelper () {
         })
       },
       function (asyncDone) {
-        theConnection.query('CREATE TABLE spatial_test ( id int IDENTITY (1,1), GeogCol1 geography, GeogCol2 AS GeogCol1.STAsText() )', function (e) {
+        theConnection.query(createTableSql, function (e) {
           assert.ifError(e)
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.query(dropProcedureSql, function (e) {
+          assert.ifError(e)
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.query(dropTypeSql, function (e) {
+          assert.ifError(e)
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.query(createType, function (e) {
+          assert.ifError(e)
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.query(createProcedureSql, function (e) {
+          assert.ifError(e)
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.getUserTypeTable(tableTypeName, function (err, t) {
+          assert.ifError(err)
+          table = t
           asyncDone()
         })
       }
     ]
     async.series(fns, function () {
-      done()
+      done(table)
     })
   }
 
@@ -66,21 +119,29 @@ function GeographyHelper () {
     return JSON.parse(fs.readFileSync(folder + '/points.json', 'utf8'))
   }
 
+  function getCoordinates() {
+    var json = getJSON()
+    return json.features[0].geometry.coordinates
+  }
+
+  function asPair (elem) {
+    var dp = 13
+    return +elem[0].toFixed(dp) + ' ' + +elem[1].toFixed(dp)
+  }
+
   function asPoly (coordinates) {
     // close the polygon
     coordinates = coordinates.slice(0)
     coordinates[coordinates.length] = coordinates[0]
-    var dp = 13
     var s = coordinates.map(function (elem) {
-      return +elem[0].toFixed(dp) + ' ' + +elem[1].toFixed(dp)
+      return asPair(elem)
     })
     return 'POLYGON ((' + s.join(', ') + '))'
   }
 
   function asLine (coords) {
-    var dp = 13
     // 'LINESTRING (-0.19535064697265625 51.509249951770364, -0.19148826599121094 51.5100245354003)'
-    return 'LINESTRING (' + +coords[0][0].toFixed(dp) + ' ' + +coords[0][1].toFixed(dp) + ', ' + +coords[1][0].toFixed(dp) + ' ' + +coords[1][1].toFixed(dp) + ')'
+    return 'LINESTRING (' + asPair(coords[0]) + ', ' + asPair(coords[1]) + ')'
   }
 
   function asLines (coordinates) {
@@ -97,9 +158,8 @@ function GeographyHelper () {
 
   function asPoints (coordinates) {
     // 'POINT (-89.349 -55.349)',
-    var dp = 13
     return coordinates.map(function (elem) {
-      return 'POINT (' + +elem[0].toFixed(dp) + ' ' + +elem[1].toFixed(dp) + ')'
+      return 'POINT (' + asPair(elem) + ')'
     })
   }
 
@@ -121,12 +181,13 @@ function GeographyHelper () {
     asPoly: asPoly,
     asPoints: asPoints,
     getJSON: getJSON,
+    getCoordinates: getCoordinates,
+    createGeographyTable: createGeographyTable,
     insertPolySql: insertPolySql,
     expectedLines: expectedLines,
     insertPointsSql: insertPointsSql,
     insertLinesSql: insertLinesSql,
     selectSql: selectSql,
-    createGeographyTable: createGeographyTable,
     expectedPoints: expectedPoints,
     lines: lines,
     points: points
@@ -167,9 +228,59 @@ suite('geography', function () {
     })
   })
 
+  test('use tvp to insert geography using pm', function (testDone) {
+    var table
+    var procedure
+    var coordinates = geographyHelper.getCoordinates()
+    var lines = geographyHelper.asLines(coordinates)
+    var expected = geographyHelper.asExpected(lines)
+    var fns = [
+
+      function (asyncDone) {
+        geographyHelper.createGeographyTable(async, theConnection, function (t) {
+          table = t
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var pm = theConnection.procedureMgr()
+        pm.get('InsertGeographyTvp', function (p) {
+          assert(p)
+          procedure = p
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        lines.forEach(function (l) {
+          // each row is represented as an array of columns
+          table.rows[table.rows.length] = [l]
+        })
+        var tp = sql.TvpFromTable(table)
+        table.rows = []
+        procedure.call([tp], function (err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.query(geographyHelper.selectSql, function (err, res) {
+          assert.ifError(err)
+          assert(res.length === lines.length)
+          assert.deepEqual(res, expected)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
   test('insert lines from json coordinates', function (testDone) {
-    var json = geographyHelper.getJSON()
-    var coordinates = json.features[0].geometry.coordinates
+    var coordinates = geographyHelper.getCoordinates()
     var lines = geographyHelper.asLines(coordinates)
     var expected = geographyHelper.asExpected(lines)
 
@@ -202,8 +313,7 @@ suite('geography', function () {
   })
 
   test('insert points from json coordinates', function (testDone) {
-    var json = geographyHelper.getJSON()
-    var coordinates = json.features[0].geometry.coordinates
+    var coordinates = geographyHelper.getCoordinates()
     var points = geographyHelper.asPoints(coordinates)
     var expected = geographyHelper.asExpected(points)
 
@@ -236,8 +346,7 @@ suite('geography', function () {
   })
 
   test('insert a polygon from json coordinates', function (testDone) {
-    var json = geographyHelper.getJSON()
-    var coordinates = json.features[0].geometry.coordinates
+    var coordinates = geographyHelper.getCoordinates()
     var poly = geographyHelper.asPoly(coordinates)
     var expectedPoly = [
       {
