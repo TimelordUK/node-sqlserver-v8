@@ -5,6 +5,26 @@ var supp = require('../samples/typescript/demo-support')
 var assert = require('assert')
 var path = require('path')
 
+/*
+create PROCEDURE InsertGeographyTvp @tvp geographyTvpType READONLY
+       AS
+       BEGIN
+       set nocount on
+       INSERT INTO spatial_test
+       (
+          GeogCol1
+        )
+SELECT  (case
+when GeogCol1 like 'POINT%'
+ then geography::STPointFromText([GeogCol1], 4326)
+when GeogCol1 like 'LINE%'
+ then geography::STLineFromText([GeogCol1], 4326)
+when GeogCol1 like 'POLY%'
+then geography::STPolyFromText([GeogCol1], 4326)
+end )
+  n FROM @tvp tvp
+  END
+ */
 function GeographyHelper () {
   function createGeographyTable (async, theConnection, done) {
     var insertProcedureTypeName = 'InsertGeographyTvp'
@@ -25,9 +45,16 @@ function GeographyHelper () {
       '       ( \n' +
       '          GeogCol1\n' +
       '        )\n' +
-      '        SELECT  geography::STLineFromText([GeogCol1], 4326)' +
+      'SELECT  (case\n' +
+      'when GeogCol1 like \'POINT%\'\n' +
+      ' then geography::STPointFromText([GeogCol1], 4326)\n' +
+      'when GeogCol1 like \'LINE%\'\n' +
+      ' then geography::STLineFromText([GeogCol1], 4326)\n' +
+      'when GeogCol1 like \'POLY%\'\n' +
+      'then geography::STPolyFromText([GeogCol1], 4326)\n' +
+      'end)\n' +
       '  n FROM @tvp tvp\n' +
-      '  END'
+      '  END\n'
     var table
     var fns = [
 
@@ -228,7 +255,7 @@ suite('geography', function () {
     })
   })
 
-  test('use tvp to insert geography using pm', function (testDone) {
+  test('use tvp to insert geography LINES using pm', function (testDone) {
     var table
     var procedure
     var coordinates = geographyHelper.getCoordinates()
@@ -268,6 +295,59 @@ suite('geography', function () {
         theConnection.query(geographyHelper.selectSql, function (err, res) {
           assert.ifError(err)
           assert(res.length === lines.length)
+          assert.deepEqual(res, expected)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
+  test('use tvp to insert geography LINESTRING, POINT and POLYGON using pm in 1 call', function (testDone) {
+    var table
+    var procedure
+    var coordinates = geographyHelper.getCoordinates()
+    var lines = geographyHelper.asLines(coordinates)
+    var points = geographyHelper.asPoints(coordinates)
+    var polygon = geographyHelper.asPoly(coordinates)
+    var allGeography = lines.concat(points).concat(polygon)
+    var expected = geographyHelper.asExpected(allGeography)
+    var fns = [
+
+      function (asyncDone) {
+        geographyHelper.createGeographyTable(async, theConnection, function (t) {
+          table = t
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var pm = theConnection.procedureMgr()
+        pm.get('InsertGeographyTvp', function (p) {
+          assert(p)
+          procedure = p
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        allGeography.forEach(function (l) {
+          // each row is represented as an array of columns
+          table.rows[table.rows.length] = [l]
+        })
+        var tp = sql.TvpFromTable(table)
+        table.rows = []
+        procedure.call([tp], function (err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.query(geographyHelper.selectSql, function (err, res) {
+          assert.ifError(err)
+          assert(res.length === allGeography.length)
           assert.deepEqual(res, expected)
           asyncDone()
         })
