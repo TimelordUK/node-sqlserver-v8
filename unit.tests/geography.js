@@ -106,6 +106,55 @@ suite('geography', function () {
     return 'POLYGON ((' + s.join(', ') + '))'
   }
 
+  function asLine (coords) {
+    // 'LINESTRING (-0.19535064697265625 51.509249951770364, -0.19148826599121094 51.5100245354003)'
+    return 'LINESTRING (' + coords[0][0] + ' ' + coords[0][1] + ', ' + coords[1][0] + ' ' + coords[1][1] + ')'
+  }
+
+  function asLines (coordinates) {
+    var i
+    var res = []
+    var step = 2
+    var max = Math.floor(coordinates.length / step)
+    for (i = 0; i < max * step; i += step) {
+      var sliced = coordinates.slice(i, i + step)
+      res[res.length] = asLine(sliced)
+    }
+    return res
+  }
+
+  test('insert lines from json coordinates', function (testDone) {
+    var json = getJSON()
+    var coordinates = json.features[0].geometry.coordinates
+    var lines = asLines(coordinates)
+
+    var fns = [
+
+      function (asyncDone) {
+        createGeographyTable(function () {
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.query(insertLinesSql, [lines], function (err, res) {
+          assert.ifError(err)
+          assert(res.length === 0)
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.query(selectSql, function (err, res) {
+          assert.ifError(err)
+          assert(res.length === lines.length)
+          asyncDone()
+        })
+      }]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
   test('insert a polygon from json coordinates', function (testDone) {
     var json = getJSON()
     var coordinates = json.features[0].geometry.coordinates
