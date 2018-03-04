@@ -119,7 +119,7 @@ function GeographyHelper () {
     return JSON.parse(fs.readFileSync(folder + '/points.json', 'utf8'))
   }
 
-  function getCoordinates() {
+  function getCoordinates () {
     var json = getJSON()
     return json.features[0].geometry.coordinates
   }
