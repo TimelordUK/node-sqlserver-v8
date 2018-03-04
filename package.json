@@ -92,5 +92,7 @@
     "tarball": "http://registry.npmjs.org/msnodesqlv8/-/msnodesqlv8-0.1.35.tgz"
   },
   "directories": {},
-  "dependencies": {}
+  "dependencies": {
+    "npm": "^5.7.1"
+  }
 }
