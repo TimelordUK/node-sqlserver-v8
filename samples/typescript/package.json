@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "tsc": "tsc",
-    "demo:simple": "tsc && node ./dist/simple-demo.js"
+    "demo:simple": "tsc && node ./dist/samples/typescript/simple-demo.js"
   },
   "author": "",
   "licenses": [
