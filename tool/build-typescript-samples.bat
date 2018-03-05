@@ -1,3 +1,8 @@
 @echo off
 echo Building TypeScript samples
-call npm run --prefix samples\typescript tsc
+cd samples\typescript
+
+CALL npm install
+CALL npm run tsc
+
+cd ..\..\
