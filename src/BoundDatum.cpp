@@ -12,24 +12,24 @@ namespace mssql
 	static Local<Boolean> get_as_bool(const Local<Value> o, const char* v)
 	{
 		nodeTypeFactory fact;
-		const auto vp = fact.newString(v);
+		const auto vp = fact.new_string(v);
 		if (o->IsNull())
 		{
-			return fact.newBoolean(false);
+			return fact.new_boolean(false);
 		}
 		if (!o->IsObject())
 		{
-			return fact.newBoolean(false);
+			return fact.new_boolean(false);
 		}
 		auto as_obj = o->ToObject();
 		if (as_obj->IsNull())
 		{
-			return fact.newBoolean(false);
+			return fact.new_boolean(false);
 		}
 		const auto val = as_obj->Get(vp);
 		if (val->IsNull())
 		{
-			return fact.newBoolean(false);
+			return fact.new_boolean(false);
 		}
 		return val->ToBoolean();
 	}
@@ -64,7 +64,7 @@ namespace mssql
 	static Local<Value> get_as_value(Local<Object> o, const char* v)
 	{
 		nodeTypeFactory fact;
-		const auto vp = fact.newString(v);
+		const auto vp = fact.new_string(v);
 		const auto val = o->Get(vp);
 		return val;
 	}
@@ -72,7 +72,7 @@ namespace mssql
 	static Local<String> get_as_string(const Local<Value> o, const char* v)
 	{
 		nodeTypeFactory fact;
-		const auto vp = fact.newString(v);
+		const auto vp = fact.new_string(v);
 		const auto val = o->ToObject()->Get(vp);
 		return val->ToString();
 	}
@@ -592,7 +592,7 @@ namespace mssql
 			assert(!date_object.IsEmpty());
 			// dates in JS are stored internally as ms count from Jan 1, 1970
 			const auto d = date_object->NumberValue();
-			TimestampColumn sql_date(d);
+			TimestampColumn sql_date(-1, d);
 			auto& dt = (*_storage->datevec_ptr)[0];
 			sql_date.ToDateStruct(dt);
 			_indvec[0] = buffer_len;
@@ -627,7 +627,7 @@ namespace mssql
 			assert(!date_object.IsEmpty());
 			// dates in JS are stored internally as ms count from Jan 1, 1970
 			const auto d = date_object->NumberValue();
-			TimestampColumn sql_date(d);
+			TimestampColumn sql_date(-1, d);
 			auto& time2 = (*_storage->time2vec_ptr)[0];
 			sql_date.ToTime2Struct(time2);
 			_indvec[0] = buffer_len;
@@ -662,7 +662,7 @@ namespace mssql
 			assert(!date_object.IsEmpty());
 			// dates in JS are stored internally as ms count from Jan 1, 1970
 			const auto d = date_object->NumberValue();
-			TimestampColumn sql_date(d);
+			TimestampColumn sql_date(-1, d);
 			auto& timestamp = (*_storage->timestampvec_ptr)[0];
 			sql_date.to_timestamp_struct(timestamp);
 			_indvec[0] = buffer_len;
@@ -697,7 +697,7 @@ namespace mssql
 			// dates in JS are stored internally as ms count from Jan 1, 1970
 			const auto d = date_object->NumberValue();
 			auto& ts = (*_storage->timestampoffsetvec_ptr)[0];
-			TimestampColumn sql_date(d, 0, offset);
+			TimestampColumn sql_date(-1, d, 0, offset);
 			sql_date.to_timestamp_offset(ts);
 			_indvec[0] = buffer_len;
 		}
@@ -735,7 +735,7 @@ namespace mssql
 				_indvec[i] = sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT);
 				const auto d = Handle<Date>::Cast<Value>(elem);
 				auto& ts = vec[i];
-				TimestampColumn sql_date(d->NumberValue());
+				TimestampColumn sql_date(-1, d->NumberValue());
 				sql_date.to_timestamp_offset(ts);
 			}
 		}
@@ -1046,33 +1046,33 @@ namespace mssql
 
 		if (sql_type_s_maps_to_int32(p))
 		{
-			pval = fact.newInt32(0);
+			pval = fact.new_int32(0);
 		}
 		else if (sql_type_s_maps_to_u_int32(p))
 		{
-			pval = fact.newUint32(0);
+			pval = fact.new_uint32(0);
 		}
 		else if (sql_type_s_maps_to_boolean(p))
 		{
-			pval = fact.newInt32(0);
+			pval = fact.new_int32(0);
 		}
 		else if (sql_type_s_maps_to_numeric(p))
 		{
-			pval = fact.newNumber(0.0);
+			pval = fact.new_number(0.0);
 		}
 		else if (sql_type_s_maps_to_date(p))
 		{
-			pval = fact.newDate();
+			pval = fact.new_date();
 		}
 		else if (sql_type_s_maps_totring(p))
 		{
 			vector<char> b;
 			b.resize(size);
-			pval = fact.newString(b.data(), size);
+			pval = fact.new_string(b.data(), size);
 		}
 		else
 		{
-			pval = fact.newBuffer(size);
+			pval = fact.new_buffer(size);
 		}
 		return pval;
 	}
@@ -1545,7 +1545,7 @@ namespace mssql
 	Handle<Value> BoundDatum::unbind_string() const
 	{
 		nodeTypeFactory fact;
-		const auto s = fact.fromTwoByte(_storage->uint16vec_ptr->data());
+		const auto s = fact.from_two_byte(_storage->uint16vec_ptr->data());
 		return s;
 	}
 
@@ -1553,7 +1553,7 @@ namespace mssql
 	{
 		nodeTypeFactory fact;
 		auto& vec = *_storage->doublevec_ptr;
-		const auto s = fact.newNumber(vec[0]);
+		const auto s = fact.new_number(vec[0]);
 		return s;
 	}
 
@@ -1561,7 +1561,7 @@ namespace mssql
 	{
 		nodeTypeFactory fact;
 		auto& vec = *_storage->uint16vec_ptr;
-		const auto s = fact.newBoolean(vec[0]);
+		const auto s = fact.new_boolean(vec[0]);
 		return s;
 	}
 
@@ -1569,7 +1569,7 @@ namespace mssql
 	{
 		nodeTypeFactory fact;
 		auto& vec = *_storage->int32vec_ptr;
-		const auto s = fact.newInt32(vec[0]);
+		const auto s = fact.new_int32(vec[0]);
 		return s;
 	}
 
@@ -1577,7 +1577,7 @@ namespace mssql
 	{
 		nodeTypeFactory fact;
 		auto& vec = *_storage->uint32vec_ptr;
-		const auto s = fact.newUint32(vec[0]);
+		const auto s = fact.new_uint32(vec[0]);
 		return s;
 	}
 
@@ -1592,7 +1592,7 @@ namespace mssql
 		{
 			nodeTypeFactory fact;
 			auto& vec = *_storage->int64vec_ptr;
-			v = fact.newInt64(vec[0]);
+			v = fact.new_int64(vec[0]);
 		}
 		return v;
 	}
@@ -1600,7 +1600,7 @@ namespace mssql
 	Handle<Value> BoundDatum::unbind_date() const
 	{
 		auto& vec = *_storage->timestampoffsetvec_ptr;
-		TimestampColumn tsc(vec[0]);
+		TimestampColumn tsc(-1, vec[0]);
 		return tsc.ToValue();
 	}
 

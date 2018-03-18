@@ -30,8 +30,14 @@ namespace mssql
 	class Column
 	{
 	public:
-		virtual ~Column();
+		Column(int id) : _id(id)
+		{			
+		}
+		virtual ~Column();		
 		virtual Handle<Value> ToValue() = 0;
 		virtual bool More() const { return false; }
+		int Id() const { return _id; }
+	private:
+		int _id;
 	};
 }

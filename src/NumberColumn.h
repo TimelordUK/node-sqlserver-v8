@@ -11,12 +11,14 @@ namespace mssql
     class NumberColumn : public Column
     {
     public:
-		NumberColumn(shared_ptr<DatumStorage> storage) : value((*storage->doublevec_ptr)[0]) {}
+		NumberColumn(int id, shared_ptr<DatumStorage> storage) : Column(id), value((*storage->doublevec_ptr)[0])
+		{			
+		}
 
 	   Handle<Value> ToValue() override
 	   {
 		  nodeTypeFactory fact;
-		  auto o = fact.newNumber(value);
+		  auto o = fact.new_number(value);
 		  return o;
 	   }
 

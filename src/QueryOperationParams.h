@@ -49,7 +49,7 @@ namespace mssql
 		Local<Value> get(Local<Object> o, const char *v)
 		{
 			nodeTypeFactory fact;
-			const auto vp = fact.newString(v);
+			const auto vp = fact.new_string(v);
 			const auto val = o->Get(vp);
 			return val;
 		}

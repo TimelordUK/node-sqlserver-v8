@@ -29,7 +29,6 @@ namespace mssql
 	class DatumStorage;
 	class QueryOperationParams;
 
-
 	using namespace std;
 
 	class OdbcStatement
@@ -81,7 +80,7 @@ namespace mssql
 		bool try_execute_direct(const shared_ptr<QueryOperationParams> &q, const shared_ptr<BoundDatumSet> &paramSet);
 		void cancel_handle();
 		bool try_read_row();
-		bool try_read_column(int column);
+		bool try_read_columns();
 		bool try_read_next_result();
 
 	private:
@@ -109,6 +108,7 @@ namespace mssql
 		void apply_precision(const shared_ptr<BoundDatum> & datum, int current_param) const;
 		bool read_col_attributes(ResultSet::ColumnDefinition& current, int column);
 		bool read_next(int column);
+		bool check_more_read(SQLRETURN r, bool & more);
 		bool lob(SQLLEN display_size, int column);
 		static OdbcEnvironmentHandle environment;
 		bool dispatch(SQLSMALLINT t, int column);
@@ -126,7 +126,6 @@ namespace mssql
 		shared_ptr<QueryOperationParams> _query;
 		shared_ptr<OdbcConnectionHandle> _connection;
 		shared_ptr<OdbcStatementHandle> _statement;
-		//CriticalSection closeCriticalSection;
 
 		// any error that occurs when a Try* function returns false is stored here
 		// and may be retrieved via the Error function below.

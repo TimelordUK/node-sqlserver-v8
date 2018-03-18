@@ -56,14 +56,14 @@ namespace mssql
 	{
 		const auto initialized = OdbcConnection::InitializeEnvironment();
 		nodeTypeFactory fact;
-		const auto connection = fact.newString("Connection");
+		const auto connection = fact.new_string("Connection");
 		if (!initialized) {
 			exports->Set(connection, fact.undefined());
 			fact.throwError("Unable to initialize msnodesql");
 			return;
 		}
 
-		auto tpl = fact.newTemplate(New);
+		auto tpl = fact.new_template(New);
 
 		tpl->InstanceTemplate()->SetInternalFieldCount(1);
 		tpl->SetClassName(connection);
@@ -244,7 +244,7 @@ namespace mssql
 		auto connection = Unwrap<Connection>(info.This());
 		const nodeTypeFactory fact;
 		const auto i32 = v1->Int32Value();
-		const auto b1 = fact.newBoolean(i32 > 0);
+		const auto b1 = fact.new_boolean(i32 > 0);
 
 		const auto ret = connection->connectionBridge->polling_mode(query_id, b1, callback);
 		info.GetReturnValue().Set(ret);

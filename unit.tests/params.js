@@ -116,6 +116,113 @@ suite('params', function () {
       })
   }
 
+  test('verify that non-Buffer object parameter returns an error', function (testDone) {
+    var o = {field1: 'value1', field2: -1}
+    testBoilerPlate('non_buffer_object',
+      {'object_col': 'varbinary(100)'},
+      function (asyncDone) {
+        theConnection.queryRaw('INSERT INTO non_buffer_object (object_col) VALUES (?)', [o], function (e) {
+          var expectedError = new Error('IMNOD: [msnodesql] Parameter 1: Invalid parameter type')
+          expectedError.code = -1
+          expectedError.sqlstate = 'IMNOD'
+          assert.deepEqual(e, expectedError)
+          asyncDone()
+        })
+      },
+      function (done) {
+        done()
+      },
+      function () {
+        testDone()
+      })
+  })
+
+  test('verify Buffer objects as input parameters', function (testDone) {
+    var b = Buffer.from('0102030405060708090a', 'hex')
+    testBoilerPlate(
+      'buffer_param_test',
+      {'buffer_param': 'varbinary(100)'},
+
+      function (done) {
+        theConnection.queryRaw('INSERT INTO buffer_param_test (buffer_param) VALUES (?)', [b], function (e) {
+          assert.ifError(e)
+          done()
+        })
+      },
+
+      function (done) {
+        theConnection.queryRaw('SELECT buffer_param FROM buffer_param_test WHERE buffer_param = ?', [b], function (e, r) {
+          assert.ifError(e)
+          assert(r.rows.length = 1)
+          assert.deepEqual(r.rows[0][0], b)
+          done()
+        })
+      },
+      function () {
+        testDone()
+      })
+  })
+
+  test('insert min and max number values', function (testDone) {
+    testBoilerPlate(
+      'minmax_test',
+      {'f': 'float'},
+
+      function (done) {
+        var fns =
+          [
+            function (asyncDone) {
+              theConnection.queryRaw('INSERT INTO minmax_test (f) VALUES (?)', [Number.MAX_VALUE],
+                function (e) {
+                  assert.ifError(e)
+                  asyncDone()
+                })
+            },
+
+            function (asyncDone) {
+              theConnection.queryRaw('INSERT INTO minmax_test (f) VALUES (?)', [-Number.MAX_VALUE],
+                function (e) {
+                  assert.ifError(e)
+                  asyncDone()
+                })
+            }
+          ]
+
+        async.series(fns, function () {
+          done()
+        })
+      },
+
+      function (done) {
+        theConnection.queryRaw('SELECT f FROM minmax_test order by id', function (e, r) {
+          assert.ifError(e)
+          var expected = {
+            meta: [
+              {name: 'f', size: 53, nullable: true, type: 'number', sqlType: 'float'}],
+            rows: [
+              [1.7976931348623157e+308],
+              [-1.7976931348623157e+308]]
+          }
+          assert.deepEqual(r, expected, 'minmax results don\'t match')
+          done()
+        })
+      },
+      function () {
+        testDone()
+      })
+  })
+
+  test('verify empty string is sent as empty string, not null', function (testDone) {
+    theConnection.query('declare @s NVARCHAR(MAX) = ?; select @s as data', [''], function (err, res) {
+      assert.ifError(err)
+      var expected = [{
+        data: ''
+      }]
+      assert.deepEqual(expected, res)
+      testDone()
+    })
+  })
+
   test('select a long string using callback', function (testDone) {
     function repeat (a, num) {
       return new Array(num + 1).join(a)
@@ -226,17 +333,6 @@ suite('params', function () {
       function () {
         testDone()
       })
-  })
-
-  test('verify empty string is sent as empty string, not null', function (testDone) {
-    theConnection.query('declare @s NVARCHAR(MAX) = ?; select @s as data', [''], function (err, res) {
-      assert.ifError(err)
-      var expected = [{
-        data: ''
-      }]
-      assert.deepEqual(expected, res)
-      testDone()
-    })
   })
 
   test('verify null string is sent as null, not empty string', function (testDone) {
@@ -721,52 +817,6 @@ suite('params', function () {
       })
   })
 
-  test('insert min and max number values', function (testDone) {
-    testBoilerPlate(
-      'minmax_test',
-      {'f': 'float'},
-
-      function (done) {
-        var fns =
-          [
-            function (asyncDone) {
-              theConnection.queryRaw('INSERT INTO minmax_test (f) VALUES (?)', [Number.MAX_VALUE],
-                function (e) {
-                  assert.ifError(e)
-                  asyncDone()
-                })
-            },
-
-            function (asyncDone) {
-              theConnection.queryRaw('INSERT INTO minmax_test (f) VALUES (?)', [-Number.MAX_VALUE],
-                function (e) {
-                  assert.ifError(e)
-                  asyncDone()
-                })
-            }
-          ]
-
-        async.series(fns, function () {
-          done()
-        })
-      },
-
-      function (done) {
-        theConnection.queryRaw('SELECT f FROM minmax_test', function (e, r) {
-          assert.ifError(e)
-          var expected = {
-            meta: [{name: 'f', size: 53, nullable: true, type: 'number', sqlType: 'float'}],
-            rows: [[1.7976931348623157e+308], [-1.7976931348623157e+308]]
-          }
-          assert.deepEqual(r, expected, 'minmax results don\'t match')
-          done()
-        })
-      },
-      function () {
-        testDone()
-      })
-  })
-
   test('insert large string into max column', function (testDone) {
     testBoilerPlate('test_large_insert', {'large_insert': 'nvarchar(max) '},
       function (done) {
@@ -935,53 +985,6 @@ suite('params', function () {
           }
           done()
         })
-      },
-      function () {
-        testDone()
-      })
-  })
-
-  test('verify Buffer objects as input parameters', function (testDone) {
-    var b = Buffer.from('0102030405060708090a', 'hex')
-    testBoilerPlate(
-      'buffer_param_test',
-      {'buffer_param': 'varbinary(100)'},
-
-      function (done) {
-        theConnection.queryRaw('INSERT INTO buffer_param_test (buffer_param) VALUES (?)', [b], function (e) {
-          assert.ifError(e)
-          done()
-        })
-      },
-
-      function (done) {
-        theConnection.queryRaw('SELECT buffer_param FROM buffer_param_test WHERE buffer_param = ?', [b], function (e, r) {
-          assert.ifError(e)
-          assert(r.rows.length = 1)
-          assert.deepEqual(r.rows[0][0], b)
-          done()
-        })
-      },
-      function () {
-        testDone()
-      })
-  })
-
-  test('verify that non-Buffer object parameter returns an error', function (testDone) {
-    var o = {field1: 'value1', field2: -1}
-    testBoilerPlate('non_buffer_object',
-      {'object_col': 'varbinary(100)'},
-      function (asyncDone) {
-        theConnection.queryRaw('INSERT INTO non_buffer_object (object_col) VALUES (?)', [o], function (e) {
-          var expectedError = new Error('IMNOD: [msnodesql] Parameter 1: Invalid parameter type')
-          expectedError.code = -1
-          expectedError.sqlstate = 'IMNOD'
-          assert.deepEqual(e, expectedError)
-          asyncDone()
-        })
-      },
-      function (done) {
-        done()
       },
       function () {
         testDone()

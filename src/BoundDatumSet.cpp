@@ -27,7 +27,7 @@ namespace mssql
 	Local<Value> get(Local<Object> o, const char *v)
 	{
 		nodeTypeFactory fact;
-		const auto vp = fact.newString(v);
+		const auto vp = fact.new_string(v);
 		const auto val = o->Get(vp);
 		return val;
 	}
@@ -104,7 +104,7 @@ namespace mssql
 	Local<Array> BoundDatumSet::unbind()
 	{
 		nodeTypeFactory fact;
-		const auto arr = fact.newArray(_output_param_count);
+		const auto arr = fact.new_array(_output_param_count);
 		auto i = 0;
 
 		std::for_each(_bindings->begin(), _bindings->end(), [&](shared_ptr<BoundDatum>& param) mutable

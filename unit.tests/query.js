@@ -237,6 +237,24 @@ suite('query', function () {
     })
   })
 
+  test('test retrieving a LOB string larger than max string size', function (testDone) {
+    var stmt = theConnection.query('SELECT REPLICATE(CAST(\'B\' AS varchar(max)), 20000) AS \'LOB String\'')
+    var len = 0
+    stmt.on('column', function (c, d, m) {
+      assert(c === 0)
+      if (d) {
+        len = d.length
+      }
+    })
+    stmt.on('done', function () {
+      assert(len === 20000)
+      testDone()
+    })
+    stmt.on('error', function (e) {
+      assert.ifError(e)
+    })
+  })
+
   test('query with errors', function (done) {
     var expectedError = new Error('[Microsoft][' + driver + '][SQL Server]Unclosed quotation mark after the character string \'m with NOBODY\'.')
     expectedError.sqlstate = '42000'
@@ -464,14 +482,16 @@ suite('query', function () {
 
     var expected = [
       [{name: 'X', size: 10, nullable: false, type: 'number', sqlType: 'int'},
-      {name: '', size: 3, nullable: false, type: 'text', sqlType: 'varchar'},
-      {name: '', size: 8, nullable: false, type: 'binary', sqlType: 'varbinary'}],
+        {name: '', size: 3, nullable: false, type: 'text', sqlType: 'varchar'},
+        {name: '', size: 8, nullable: false, type: 'binary', sqlType: 'varbinary'}],
       {row: 0},
       {column: 0, data: 1, more: false},
       {column: 1, data: 'ABC', more: false},
-      {column: 2,
+      {
+        column: 2,
         data: Buffer.from('0123456789abcdef', 'hex'),
-        more: false},
+        more: false
+      },
       [
         {name: 'Y', size: 10, nullable: false, type: 'number', sqlType: 'int'},
         {name: '', size: 3, nullable: false, type: 'text', sqlType: 'varchar'},
@@ -615,29 +635,6 @@ suite('query', function () {
       assert.ifError(e)
       assert(r[0]['Empty String'] === '')
       testDone()
-    })
-  })
-
-  test('test retrieving a LOB string larger than max string size', function (testDone) {
-    var moreCount = 0
-    var totalLength = 0
-
-    var stmt = theConnection.query('SELECT REPLICATE(CAST(\'B\' AS varchar(max)), 20000) AS \'LOB String\'')
-
-    stmt.on('partial', function (c, d, m) {
-      assert(c === 0)
-      totalLength += d.length
-      if (m) {
-        ++moreCount
-      }
-    })
-    stmt.on('done', function () {
-      assert(moreCount === 2, 'more not received 2 times')
-      assert(totalLength === 20000, 'length != 20000')
-      testDone()
-    })
-    stmt.on('error', function (e) {
-      assert.ifError(e)
     })
   })
 

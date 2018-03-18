@@ -13,8 +13,8 @@ namespace mssql
     class BinaryColumn : public Column
     {
     public:
-		BinaryColumn(shared_ptr<DatumStorage> storage, size_t l, bool more)
-			: len(l), raw(clone(storage->charvec_ptr, l)), more(more)
+		BinaryColumn(int id, shared_ptr<DatumStorage> storage, size_t l, bool more) : Column(id)
+			, len(l), raw(clone(storage->charvec_ptr, l)), more(more)
 		{
 		}
 

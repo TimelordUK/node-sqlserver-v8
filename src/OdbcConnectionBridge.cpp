@@ -132,7 +132,7 @@ namespace mssql
 			connection->send(operation);
 		}
 		nodeTypeFactory fact;
-		return fact.newInt64(operation->OperationID);
+		return fact.new_int64(operation->OperationID);
 	}
 
 	Handle<Value> OdbcConnectionBridge::unbind_parameters(const Handle<Number> query_id, Handle<Object> callback)
@@ -207,7 +207,7 @@ namespace mssql
 	Local<Value> OdbcConnectionBridge::get(Local<Object> o, const char *v)
 	{
 		nodeTypeFactory fact;
-		const auto vp = fact.newString(v);
+		const auto vp = fact.new_string(v);
 		const auto val = o->Get(vp);
 		return val;
 	}

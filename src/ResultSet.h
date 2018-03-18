@@ -41,12 +41,11 @@ namespace mssql
             wstring udtTypeName;
         };
 
-        ResultSet(int columns) 
+        ResultSet(int num_columns) 
             : rowcount(0),
               endOfRows(true)
         {
-            metadata.resize(columns);
-            column.reset();
+            metadata.resize(num_columns);
         }
   
         ColumnDefinition & get_meta_data(int column)
@@ -61,14 +60,18 @@ namespace mssql
 
         Handle<Value> meta_to_value();
 
-        void SetColumn(shared_ptr<Column> column)
+        void AddColumn(shared_ptr<Column> column)
         {
-            this->column = column;
+			if (this->columns.size() != metadata.size())
+			{
+				this->columns.resize(metadata.size());
+			}
+            this->columns[column->Id()] = column;
         }
 
-        shared_ptr<Column> get_column() const
+        shared_ptr<Column> get_column(int id) const
         {
-            return column;
+            return columns[id];
         }
 
         SQLLEN row_count() const
@@ -86,8 +89,7 @@ namespace mssql
         vector<ColumnDefinition> metadata;
         SQLLEN rowcount;
         bool endOfRows;
-        shared_ptr<Column> column;
-
+        vector<shared_ptr<Column>> columns;
 
 		friend class OdbcStatement;
     };

@@ -104,8 +104,8 @@ namespace mssql
 	{
 		nodeTypeFactory fact;
 		auto err = fact.error(failure->Message());
-		err->Set(fact.newString("sqlstate"), fact.newString(failure->SqlState()));
-		err->Set(fact.newString("code"), fact.newInteger(failure->Code()));
+		err->Set(fact.new_string("sqlstate"), fact.new_string(failure->SqlState()));
+		err->Set(fact.new_string("code"), fact.new_integer(failure->Code()));
 
 		auto more = false;
 		if (_statement)
@@ -117,13 +117,13 @@ namespace mssql
 		args[0] = err;
 		if (more) {
 			const auto arg = CreateCompletionArg();
-			args[1] = fact.newLocalValue(arg);
+			args[1] = fact.new_local_value(arg);
 		}
 		else
 		{
-			args[1] = fact.newArray();
+			args[1] = fact.new_array();
 		}
-		args[2] = fact.newBoolean(more);
+		args[2] = fact.new_boolean(more);
 		const auto argc = 3;
 		return argc;
 	}
@@ -132,9 +132,9 @@ namespace mssql
 	{
 		nodeTypeFactory fact;
 
-		args[0] = fact.newLocalValue(fact.newBoolean(false));
+		args[0] = fact.new_local_value(fact.new_boolean(false));
 		const auto arg = CreateCompletionArg();
-		args[1] = fact.newLocalValue(arg);
+		args[1] = fact.new_local_value(arg);
 		const int c = _output_param->IsNull() ? 0 : _output_param.As<Array>()->Length();
 		if (c > 0) args[2] = _output_param;
 		const auto argc = c == 0 ? 2 : 3;

@@ -11,12 +11,15 @@ namespace mssql
     class IntColumn : public Column
     {
     public:
-	   IntColumn(shared_ptr<DatumStorage> storage) : value((*storage->int64vec_ptr)[0]) {}
+	   IntColumn(int id,shared_ptr<DatumStorage> storage) : Column(id), value((*storage->int64vec_ptr)[0])
+	   {
+		   
+	   }
 
 	   Handle<Value> ToValue() override
 	   {
 		  nodeTypeFactory fact;
-		  auto v = fact.newLong(value);
+		  auto v = fact.new_long(value);
 		  return v;
 	   }
 

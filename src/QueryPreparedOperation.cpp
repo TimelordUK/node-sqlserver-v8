@@ -28,9 +28,9 @@ namespace mssql
 		full_error << "IMNOD: [msnodesql] Parameter " << param + 1 << ": " << error;
 
 		auto err = fact.error(full_error);
-		const auto imn = fact.newString("IMNOD");
-		err->Set(fact.newString("sqlstate"), imn);
-		err->Set(fact.newString("code"), fact.newInteger(-1));
+		const auto imn = fact.new_string("IMNOD");
+		err->Set(fact.new_string("sqlstate"), imn);
+		err->Set(fact.new_string("code"), fact.new_integer(-1));
 
 		Local<Value> args[1];
 		args[0] = err;

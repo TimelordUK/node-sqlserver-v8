@@ -11,7 +11,11 @@ namespace mssql
     class NullColumn : public Column
     {
     public:
-	    Handle<Value> ToValue() override
+		NullColumn(int id) : Column(id)
+		{		
+		}
+
+	   Handle<Value> ToValue() override
 	   {
 		  nodeTypeFactory fact;
 		  return fact.null();

@@ -16,7 +16,7 @@ namespace mssql
 	{
 	public:
 
-		TimestampColumn(shared_ptr<DatumStorage> storage, int32_t tz_offset = 0)
+		TimestampColumn(int id, shared_ptr<DatumStorage> storage, int32_t tz_offset = 0) : Column(id)
 		{
 			auto & ins = (*storage);
 			if (ins.timestampoffsetvec_ptr != nullptr) {
@@ -29,31 +29,31 @@ namespace mssql
 			}
 		}
 
-		TimestampColumn(SQL_SS_TIMESTAMPOFFSET_STRUCT const& timeStruct)
+		TimestampColumn(int id, SQL_SS_TIMESTAMPOFFSET_STRUCT const& timeStruct) : Column(id)
 		{
 			milliseconds_from_timestamp_offset(timeStruct);
 		}
 
-		TimestampColumn(TIMESTAMP_STRUCT const& timeStruct)
+		TimestampColumn(int id, TIMESTAMP_STRUCT const& timeStruct) : Column(id)
 		{
 			milliseconds_from_timestamp(timeStruct);
 		}
 
-		TimestampColumn(double ms, int32_t delta, int32_t offset) :
+		TimestampColumn(int id, double ms, int32_t delta, int32_t offset) : Column(id),
 			milliseconds(ms),
 			nanoseconds_delta(delta),
 			offset_minutes(offset)
 		{
 		}
 
-		TimestampColumn(double ms) : TimestampColumn(ms, 0, 0)
+		TimestampColumn(int id, double ms) : TimestampColumn(id, ms, 0, 0)
 		{
 		}
 
 		Handle<Value> ToValue() override
 		{
 			nodeTypeFactory fact;
-			auto dd = fact.newDate(milliseconds, nanoseconds_delta);
+			auto dd = fact.new_date(milliseconds, nanoseconds_delta);
 			return dd;
 		}
 

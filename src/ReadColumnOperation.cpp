@@ -7,7 +7,7 @@ namespace mssql
 	bool ReadColumnOperation::TryInvokeOdbc()
 	{
 		if (_statement == nullptr) return false;
-		return _statement->try_read_column(column);
+		return _statement->try_read_columns();
 	}
 
 	Local<Value> ReadColumnOperation::CreateCompletionArg()

@@ -16,11 +16,11 @@ namespace mssql
 	Local<Value> ReadNextResultOperation::CreateCompletionArg()
 	{
 		nodeTypeFactory fact;
-		auto more_meta = fact.newObject();
-		more_meta->Set(fact.newString("endOfResults"), _statement->handle_end_of_results());
-		more_meta->Set(fact.newString("meta"), _statement->get_meta_value());
-		more_meta->Set(fact.newString("preRowCount"), fact.newInt32(static_cast<int32_t>(preRowCount)));
-		more_meta->Set(fact.newString("rowCount"), fact.newInt32(static_cast<int32_t>(postRowCount)));
+		auto more_meta = fact.new_object();
+		more_meta->Set(fact.new_string("endOfResults"), _statement->handle_end_of_results());
+		more_meta->Set(fact.new_string("meta"), _statement->get_meta_value());
+		more_meta->Set(fact.new_string("preRowCount"), fact.new_int32(static_cast<int32_t>(preRowCount)));
+		more_meta->Set(fact.new_string("rowCount"), fact.new_int32(static_cast<int32_t>(postRowCount)));
 
 		return more_meta;
 	}

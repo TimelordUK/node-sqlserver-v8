@@ -18,15 +18,15 @@ namespace mssql
 	   {
 	   }
 
-	   StringColumn(shared_ptr<DatumStorage> s, size_t size) : more(false), size(size), storage(s)
+	   StringColumn(int id, shared_ptr<DatumStorage> s, size_t size) : Column(id), more(false), size(size), storage(s)
 	   {
 	   }
 
-	   StringColumn(shared_ptr<DatumStorage> s, size_t size, bool more) : more(more), size(size), storage(s)
+	   StringColumn(int id, shared_ptr<DatumStorage> s, size_t size, bool more) : Column(id), more(more), size(size), storage(s)
 	   {
 	   }
 
-	   StringColumn(int size) : more(false), storage(nullptr)
+	   StringColumn(int id, int size) : Column(id), more(false), storage(nullptr)
 	   {
 		   storage->uint16vec_ptr->resize(size);
 	   }
@@ -36,7 +36,7 @@ namespace mssql
 		  nodeTypeFactory fact;
 		  auto ptr = storage->uint16vec_ptr->data();
 		  auto len = size;
-		  auto s = fact.fromTwoByte(static_cast<const uint16_t*>(ptr), len);
+		  auto s = fact.from_two_byte(static_cast<const uint16_t*>(ptr), len);
 		  return s;
 	   }
 

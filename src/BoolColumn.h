@@ -11,12 +11,14 @@ namespace mssql
 	class BoolColumn : public Column
 	{
 	public:
-		BoolColumn(shared_ptr<DatumStorage> storage) : value((*storage->charvec_ptr)[0] != 0 ? true : false) {}
+		BoolColumn(int id, shared_ptr<DatumStorage> storage) : Column(id), value((*storage->charvec_ptr)[0] != 0 ? true : false)
+		{			
+		}
 
 		Handle<Value> ToValue() override
 		{
 			nodeTypeFactory fact;
-			auto b = fact.newBoolean(value);
+			auto b = fact.new_boolean(value);
 			return b;
 		}
 	private:
