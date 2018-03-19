@@ -1,6 +1,6 @@
 const sql = require('msnodesqlv8')
 
-const connectionString = 'Driver={SQL Server Native Client 11.0}; Server=np:\\\\.\\pipe\\LOCALDB#39CA0B07\\tsql\\query; Database={master}; Trusted_Connection=Yes;'
+const connectionString = 'Driver={SQL Server Native Client 11.0}; Server=np:\\\\.\\pipe\\LOCALDB#B854560A\\tsql\\query; Database={master}; Trusted_Connection=Yes;'
 const query = 'SELECT * FROM syscomments'
 
 sql.open(connectionString, function (err, con) {
@@ -15,5 +15,14 @@ sql.open(connectionString, function (err, con) {
     }
     var elapsed = new Date() - d
     console.log('rows.length ' + rows.length + ' elapsed ' + elapsed)
+    d = new Date()
+    con.query(query, function (err, rows) {
+      if (err) {
+        console.log(err.message)
+        return
+      }
+      var elapsed = new Date() - d
+      console.log('rows.length ' + rows.length + ' elapsed ' + elapsed)
+    })
   })
 })

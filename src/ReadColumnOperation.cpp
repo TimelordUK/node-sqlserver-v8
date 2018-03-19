@@ -12,6 +12,6 @@ namespace mssql
 
 	Local<Value> ReadColumnOperation::CreateCompletionArg()
 	{
-		return _statement->get_column_value();
+		return _statement->get_column_values();
 	}
 }

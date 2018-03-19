@@ -110,19 +110,19 @@ namespace mssql
 	bool OdbcStatement::bind_tvp(vector<tvp_t>& tvps)
 	{
 		const auto& statement = *_statement;
-		for (auto itr = tvps.begin(); itr != tvps.end(); ++itr)
+		for (auto& tvp : tvps)
 		{
 			auto tvpret = SQLSetStmtAttr(statement, SQL_SOPT_SS_PARAM_FOCUS,
-			                             reinterpret_cast<SQLPOINTER>(itr->first), SQL_IS_INTEGER);
+			                             reinterpret_cast<SQLPOINTER>(tvp.first), SQL_IS_INTEGER);
 			if (!check_odbc_error(tvpret))
 			{
 				return false;
 			}
 			auto current_param = 1;
-			auto col_set = itr->second;
-			for (auto col_itr = col_set->begin(); col_itr != col_set->end(); ++col_itr)
+			const auto col_set = tvp.second;
+			for (auto& col_itr : *col_set)
 			{
-				bind_datum(current_param, *col_itr);
+				bind_datum(current_param, col_itr);
 				current_param++;
 			}
 			tvpret = SQLSetStmtAttr(statement, SQL_SOPT_SS_PARAM_FOCUS,
@@ -248,18 +248,15 @@ namespace mssql
 		return fact.new_boolean(resultset->EndOfRows());
 	}
 
-	Handle<Value> OdbcStatement::get_column_value() const
+	Handle<Value> OdbcStatement::get_column_values() const
 	{
-		/*
 		nodeTypeFactory fact;
 		auto result = fact.new_object();
-		auto column = resultset->get_column();
-		result->Set(fact.from_two_byte(L"data"), column->ToValue());
-		result->Set(fact.from_two_byte(L"more"), fact.new_boolean(column->More()));
-		*/
-
-		nodeTypeFactory fact;
-		auto result = fact.new_object();
+		if (resultset->EndOfRows())
+		{
+			result->Set(fact.from_two_byte(L"end_rows"), fact.new_boolean(true));
+			return result;
+		}
 		const auto column_count = static_cast<int>(resultset->get_column_count());
 		auto arr = fact.new_array(column_count);
 		result->Set(fact.from_two_byte(L"data"), arr);
@@ -409,9 +406,8 @@ namespace mssql
 		auto reserved=  _preparedStorage->reserve(resultset);
 
 		auto i = 0;
-		for (auto itr = _preparedStorage->begin(); itr != _preparedStorage->end(); ++itr)
+		for (auto& datum : *_preparedStorage)
 		{
-			auto& datum = *itr;
 			ret = SQLBindCol(statement, i + 1, datum->c_type, datum->buffer, datum->buffer_len, datum->get_ind_vec().data());
 			if (!check_odbc_error(ret)) return false;
 			++i;
@@ -545,8 +541,8 @@ namespace mssql
 		}
 
 		if (
-			(ret == SQL_SUCCESS_WITH_INFO) ||
-			(ret != SQL_NO_DATA && !SQL_SUCCEEDED(ret)))
+			ret == SQL_SUCCESS_WITH_INFO ||
+			ret != SQL_NO_DATA && !SQL_SUCCEEDED(ret))
 		{
 			return_odbc_error();
 			boundParamsSet = param_set;
@@ -946,6 +942,14 @@ namespace mssql
 	bool OdbcStatement::try_read_columns()
 	{
 		//fprintf(stderr, "TryReadColumn %d\n", column);
+		const auto& statement = *_statement;
+		const auto ret = SQLFetch(statement);
+		if (ret == SQL_NO_DATA)
+		{
+			resultset->endOfRows = true;
+			return true;
+		}
+		resultset->endOfRows = false;
 		auto res = true;
 		const auto column_count = static_cast<int>(resultset->get_column_count());
 		for (auto c = 0; c < column_count; ++c) {

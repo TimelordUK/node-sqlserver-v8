@@ -66,7 +66,7 @@ namespace mssql
 		bool  end_of_results() const;
 		Handle<Value> handle_end_of_results() const;
 		Handle<Value> end_of_rows() const;
-		Handle<Value> get_column_value() const;
+		Handle<Value> get_column_values() const;
 		bool set_polling(bool mode);
 
 		shared_ptr<OdbcError> get_last_error(void) const
