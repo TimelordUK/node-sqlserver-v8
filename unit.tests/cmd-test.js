@@ -41,6 +41,44 @@ class Connection {
         }, delay);
     }
 }
+class Benchmark {
+    run(conn_str, argv) {
+        let delay = argv.delay || 1000;
+        let query = 'select * from master..syscomments';
+        console.log(`${conn_str}`);
+        let runs = 0;
+        let total = 0;
+        setInterval(() => {
+            sql.open(conn_str, (err, conn) => {
+                if (err) {
+                    throw err;
+                }
+                let d = new Date();
+                conn.query(query, function (err, rows) {
+                    if (err) {
+                        console.log(err.message);
+                        return;
+                    }
+                    let elapsed = new Date().getTime() - d.getTime();
+                    runs++;
+                    total += elapsed;
+                    console.log(`rows.length ${rows.length} elapsed ${elapsed}`);
+                    d = new Date();
+                    conn.query(query, function (err, rows) {
+                        if (err) {
+                            console.log(err.message);
+                            return;
+                        }
+                        let elapsed = new Date().getTime() - d.getTime();
+                        ++runs;
+                        total += elapsed;
+                        console.log(`rows.length ${rows.length} ${elapsed} runs ${runs} avg ${total / runs}`);
+                    });
+                });
+            });
+        }, delay);
+    }
+}
 class Tvp {
     run(conn_str, argv) {
         let delay = argv.delay || 3000;
@@ -133,8 +171,8 @@ class RaiseErrors {
                     console.log(`[${x}] completes more = ${more}`);
                     ++x;
                 });
-                q.on('info', (err) => {
-                    console.log(`[${x}]: q.info = ${err.message}`);
+                q.on('msg', (err) => {
+                    console.log(`[${x}]: q.msg = ${err.message}`);
                 });
             }, delay);
         });
@@ -272,6 +310,9 @@ switch (argv.t) {
         break;
     case "connection":
         test = new Connection();
+        break;
+    case "benchmark":
+        test = new Benchmark();
         break;
     default:
         console.log(`test ${argv.t} is not valid.`);

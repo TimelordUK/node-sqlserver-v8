@@ -52,6 +52,46 @@ class Connection implements SimpleTest
     }
 }
 
+class Benchmark implements SimpleTest
+{
+    public run(conn_str:string, argv :any): void {
+        let delay : number = argv.delay || 1000;
+        let query = 'select * from master..syscomments';
+        console.log(`${conn_str}`);
+        let runs = 0;
+        let total = 0;
+        setInterval( () => {
+            sql.open(conn_str, (err, conn) => {
+                if (err) {
+                    throw err;
+                }
+                let d = new Date();
+                conn.query(query, function (err, rows) {
+                    if (err) {
+                        console.log(err.message);
+                        return;
+                    }
+                    let elapsed :number = new Date().getTime() - d.getTime();
+                    runs++;
+                    total += elapsed;
+                    console.log(`rows.length ${rows.length} elapsed ${elapsed}`);
+                    d = new Date();
+                    conn.query(query, function (err, rows) {
+                        if (err) {
+                            console.log(err.message);
+                            return
+                        }
+                        let elapsed = new Date().getTime() - d.getTime();
+                        ++runs;
+                        total += elapsed;
+                        console.log(`rows.length ${rows.length} ${elapsed} runs ${runs} avg ${total / runs}`);
+                    })
+                })
+            });
+        }, delay);
+    }
+}
+
 class Tvp implements SimpleTest {
 
     public run(conn_str:string, argv :any): void {
@@ -316,6 +356,10 @@ switch (argv.t) {
 
     case "connection":
         test = new Connection();
+        break;
+
+    case "benchmark":
+        test = new Benchmark();
         break;
 
     default:
