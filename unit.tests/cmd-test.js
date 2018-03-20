@@ -133,8 +133,8 @@ class RaiseErrors {
                     console.log(`[${x}] completes more = ${more}`);
                     ++x;
                 });
-                q.on('msg', (err) => {
-                    console.log(`[${x}]: q.msg = ${err.message}`);
+                q.on('info', (err) => {
+                    console.log(`[${x}]: q.info = ${err.message}`);
                 });
             }, delay);
         });
