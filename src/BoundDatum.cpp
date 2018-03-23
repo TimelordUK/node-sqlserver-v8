@@ -1067,8 +1067,8 @@ namespace mssql
 		else if (sql_type_s_maps_totring(p))
 		{
 			vector<char> b;
-			b.resize(size);
-			pval = fact.new_string(b.data(), size);
+			b.resize(size + 1);
+			pval = fact.new_string(b.data(), size + 1);
 		}
 		else
 		{
