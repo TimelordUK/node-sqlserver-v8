@@ -18,7 +18,7 @@ dbid > 0
 and DB_NAME(dbid) = 'scratch'
 GROUP BY
 dbid, loginame`;
-class Connection {
+class PrintConnection {
     run(conn_str, argv) {
         let delay = argv.delay || 5000;
         console.log(`${conn_str}`);
@@ -77,6 +77,57 @@ class Benchmark {
                 });
             });
         }, delay);
+    }
+}
+class ProcedureOut {
+    randomIntFromInterval(min, max) {
+        return Math.floor(Math.random() * (max - min + 1) + min);
+    }
+    makeid() {
+        let text = "";
+        let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        for (let i = 0; i < this.randomIntFromInterval(10, 19); i++)
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+        return text;
+    }
+    run(conn_str, argv) {
+        let delay = argv.delay || 50;
+        console.log(conn_str);
+        sql.open(conn_str, (err, theConnection) => {
+            if (err) {
+                throw err;
+            }
+            if (err) {
+                throw err;
+            }
+            let spName = 'test_sp_get_str_str';
+            let s1 = this.makeid();
+            let s2 = this.makeid();
+            let def = 'alter PROCEDURE <name>' +
+                '(\n' +
+                '@id INT,\n' +
+                '@name varchar(20) OUTPUT,\n' +
+                '@company varchar(20) OUTPUT\n' +
+                '\n)' +
+                'AS\n' +
+                'BEGIN\n' +
+                `   SET @name = \'${s1}\'\n` +
+                `   SET @company = \'${s2}\'\n` +
+                '   RETURN 99;\n' +
+                'END\n';
+            let x = 0;
+            procedureHelper.createProcedure(spName, def, () => {
+                setInterval(() => {
+                    let pm = theConnection.procedureMgr();
+                    pm.callproc(spName, [1], function (err, results, output) {
+                        assert.ifError(err);
+                        let expected = [99, s1, s2];
+                        console.log(`${JSON.stringify(output)} x = ${x++}`);
+                        assert.deepEqual(output, expected, 'results didn\'t match');
+                    });
+                }, delay);
+            });
+        });
     }
 }
 class Tvp {
@@ -309,10 +360,13 @@ switch (argv.t) {
         test = new RaiseErrors();
         break;
     case "connection":
-        test = new Connection();
+        test = new PrintConnection();
         break;
     case "benchmark":
         test = new Benchmark();
+        break;
+    case "procedure":
+        test = new ProcedureOut();
         break;
     default:
         console.log(`test ${argv.t} is not valid.`);
