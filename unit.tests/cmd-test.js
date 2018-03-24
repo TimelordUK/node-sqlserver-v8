@@ -80,13 +80,13 @@ class Benchmark {
     }
 }
 class ProcedureOut {
-    randomIntFromInterval(min, max) {
+    static randomIntFromInterval(min, max) {
         return Math.floor(Math.random() * (max - min + 1) + min);
     }
-    makeid() {
+    static makeid() {
         let text = "";
         let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        for (let i = 0; i < this.randomIntFromInterval(10, 19); i++)
+        for (let i = 0; i < ProcedureOut.randomIntFromInterval(10, 19); i++)
             text += possible.charAt(Math.floor(Math.random() * possible.length));
         return text;
     }
@@ -101,8 +101,8 @@ class ProcedureOut {
                 throw err;
             }
             let spName = 'test_sp_get_str_str';
-            let s1 = this.makeid();
-            let s2 = this.makeid();
+            let s1 = ProcedureOut.makeid();
+            let s2 = ProcedureOut.makeid();
             let def = 'alter PROCEDURE <name>' +
                 '(\n' +
                 '@id INT,\n' +

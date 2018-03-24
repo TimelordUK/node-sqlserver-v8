@@ -91,16 +91,16 @@ class Benchmark implements SimpleTest {
 
 class ProcedureOut implements SimpleTest {
 
-    private randomIntFromInterval(min:number,max:number)
+    private static randomIntFromInterval(min:number, max:number)
     {
         return Math.floor(Math.random()*(max-min+1)+min);
     }
 
-    private makeid() : string {
+    private static makeid() : string {
         let text = "";
         let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-        for (let i = 0; i < this.randomIntFromInterval(10,19); i++)
+        for (let i = 0; i < ProcedureOut.randomIntFromInterval(10,19); i++)
             text += possible.charAt(Math.floor(Math.random() * possible.length));
 
         return text;
@@ -117,8 +117,8 @@ class ProcedureOut implements SimpleTest {
                 throw err;
             }
             let spName = 'test_sp_get_str_str';
-            let s1:string = this.makeid();
-            let s2:string = this.makeid();
+            let s1:string = ProcedureOut.makeid();
+            let s2:string = ProcedureOut.makeid();
 
             let def = 'alter PROCEDURE <name>' +
                 '(\n' +
