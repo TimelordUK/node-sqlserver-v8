@@ -39,6 +39,45 @@ suite('sproc', function () {
     })
   })
 
+  test('call proc that has 2 output string params + return code', function (testDone) {
+    var spName = 'test_sp_get_str_str'
+
+    var def = 'alter PROCEDURE <name>' +
+      '(\n' +
+      '@id INT,\n' +
+      '@name varchar(20) OUTPUT,\n' +
+      '@company varchar(20) OUTPUT\n' +
+      '\n)' +
+      'AS\n' +
+      'BEGIN\n' +
+      '   SET @name = \'name\'\n' +
+      '   SET @company = \'company\'\n' +
+      '   RETURN 99;\n' +
+      'END\n'
+
+    var fns = [
+      function (asyncDone) {
+        procedureHelper.createProcedure(spName, def, function () {
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var pm = theConnection.procedureMgr()
+        pm.callproc(spName, [1], function (err, results, output) {
+          assert.ifError(err)
+          var expected = [99, 'name', 'company']
+          assert.deepEqual(output, expected, 'results didn\'t match')
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
   test('get proc and call  - should not error', function (testDone) {
     var spName = 'test_sp_get_int_int'
 
@@ -138,6 +177,53 @@ suite('sproc', function () {
     })
   })
 
+  test('stream call proc no callback', function (testDone) {
+    var spName = 'test_len_of_sp'
+
+    var def = 'alter PROCEDURE <name> @param VARCHAR(50) \n' +
+      ' AS \n' +
+      ' BEGIN \n' +
+      '     select LEN(@param) as len; \n' +
+      ' END \n'
+
+    var fns = [
+      function (asyncDone) {
+        procedureHelper.createProcedure(spName, def, function () {
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var pm = theConnection.procedureMgr()
+        var rows = []
+        pm.get(spName, function (proc) {
+          var qp = proc.call(['javascript'])
+          qp.on('column', function (c, data) {
+            var l = c.toString()
+            var r = {}
+            r[l] = data
+            rows.push(r)
+          })
+
+          qp.on('done', function () {
+            assert(rows.length === 1)
+            var expected = [
+              {
+                '0': 10
+              }
+            ]
+            assert.deepEqual(expected, rows)
+            asyncDone()
+          })
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
   test('call proc that waits for delay of input param - wait 2, timeout 5 - should not error', function (testDone) {
     var spName = 'test_spwait_for'
 
@@ -171,6 +257,8 @@ suite('sproc', function () {
       testDone()
     })
   })
+
+
 
   test('call proc that returns length of input string and decribes itself in results', function (testDone) {
     var spName = 'test_sp'
@@ -237,92 +325,6 @@ suite('sproc', function () {
             assert.deepEqual(output, expected, 'results didn\'t match')
             asyncDone()
           })
-        })
-      }
-    ]
-
-    async.series(fns, function () {
-      testDone()
-    })
-  })
-
-  test('stream call proc no callback', function (testDone) {
-    var spName = 'test_len_of_sp'
-
-    var def = 'alter PROCEDURE <name> @param VARCHAR(50) \n' +
-      ' AS \n' +
-      ' BEGIN \n' +
-      '     select LEN(@param) as len; \n' +
-      ' END \n'
-
-    var fns = [
-      function (asyncDone) {
-        procedureHelper.createProcedure(spName, def, function () {
-          asyncDone()
-        })
-      },
-
-      function (asyncDone) {
-        var pm = theConnection.procedureMgr()
-        var rows = []
-        pm.get(spName, function (proc) {
-          var qp = proc.call(['javascript'])
-          qp.on('column', function (c, data) {
-            var l = c.toString()
-            var r = {}
-            r[l] = data
-            rows.push(r)
-          })
-
-          qp.on('done', function () {
-            assert(rows.length === 1)
-            var expected = [
-              {
-                '0': 10
-              }
-            ]
-            assert.deepEqual(expected, rows)
-            asyncDone()
-          })
-        })
-      }
-    ]
-
-    async.series(fns, function () {
-      testDone()
-    })
-  })
-
-  test('call proc that has 2 output string params + return code', function (testDone) {
-    var spName = 'test_sp_get_str_str'
-
-    var def = 'alter PROCEDURE <name>' +
-      '(\n' +
-      '@id INT,\n' +
-      '@name varchar(20) OUTPUT,\n' +
-      '@company varchar(20) OUTPUT\n' +
-      '\n)' +
-      'AS\n' +
-      'BEGIN\n' +
-      '   SET @name = \'name\'\n' +
-      '   SET @company = \'company\'\n' +
-      '   RETURN 99;\n' +
-      'END\n'
-
-    var fns = [
-      function (asyncDone) {
-        procedureHelper.createProcedure(spName, def, function () {
-          asyncDone()
-        })
-      },
-
-      function (asyncDone) {
-        var pm = theConnection.procedureMgr()
-        pm.callproc(spName, [1], function (err, results, output) {
-          assert.ifError(err)
-          var expected = [99, 'name', 'company']
-          assert.deepEqual(output, expected, 'results didn\'t match')
-          asyncDone()
         })
       }
     ]
