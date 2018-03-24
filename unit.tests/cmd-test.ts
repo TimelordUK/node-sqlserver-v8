@@ -252,8 +252,8 @@ class RaiseErrors implements SimpleTest {
                         console.log(`[${x}] completes more = ${more}`);
                         ++x;
                     });
-                q.on('msg', (err: Error) => {
-                    console.log(`[${x}]: q.msg = ${err.message}`);
+                q.on('info', (err: Error) => {
+                    console.log(`[${x}]: q.info = ${err.message}`);
                 });
             }, delay);
         });
