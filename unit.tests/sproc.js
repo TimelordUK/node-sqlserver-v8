@@ -39,6 +39,123 @@ suite('sproc', function () {
     })
   })
 
+  test('get proc and call multiple times synchronously with changing params i.e. prove each call is independent', function (testDone) {
+    var spName = 'test_sp_get_int_int'
+
+    var def = 'alter PROCEDURE <name>' +
+      '(\n' +
+      '@num1 INT,\n' +
+      '@num2 INT,\n' +
+      '@num3 INT OUTPUT\n' +
+      '\n)' +
+      'AS\n' +
+      'BEGIN\n' +
+      '   SET @num3 = @num1 + @num2\n' +
+      '   RETURN 99;\n' +
+      'END\n'
+
+    var fns = [
+      function (asyncDone) {
+        procedureHelper.createProcedure(spName, def, function () {
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var pm = theConnection.procedureMgr()
+        pm.get(spName, function (proc) {
+          var count = pm.getCount()
+          assert.equal(count, 1)
+          var i
+          var received = []
+          var iterations = 10
+
+          function check () {
+            for (i = 0; i < iterations; ++i) {
+              var expected = [99, i * 2]
+              assert.deepEqual(received[i], expected, 'results didn\'t match')
+            }
+            asyncDone()
+          }
+
+          function next (i) {
+            proc.call([i, i], function (err, results, output) {
+              assert.ifError(err)
+              received[received.length] = output
+              if (received.length === iterations) {
+                check()
+              } else {
+                next(i + 1)
+              }
+            })
+          }
+          next(0)
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
+  test('get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', function (testDone) {
+    var spName = 'test_sp_get_int_int'
+
+    var def = 'alter PROCEDURE <name>' +
+      '(\n' +
+      '@num1 INT,\n' +
+      '@num2 INT,\n' +
+      '@num3 INT OUTPUT\n' +
+      '\n)' +
+      'AS\n' +
+      'BEGIN\n' +
+      '   SET @num3 = @num1 + @num2\n' +
+      '   RETURN 99;\n' +
+      'END\n'
+
+    var fns = [
+      function (asyncDone) {
+        procedureHelper.createProcedure(spName, def, function () {
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var pm = theConnection.procedureMgr()
+        pm.get(spName, function (procedure) {
+          var count = pm.getCount()
+          assert.equal(count, 1)
+          var i
+          var received = []
+          var iterations = 1000
+
+          function check () {
+            for (i = 0; i < iterations; ++i) {
+              var expected = [99, i * 2]
+              assert.deepEqual(received[i], expected, 'results didn\'t match')
+            }
+            asyncDone()
+          }
+
+          for (i = 0; i < iterations; ++i) {
+            procedure.call([i, i], function (err, results, output) {
+              assert.ifError(err)
+              received[received.length] = output
+              if (received.length === iterations) {
+                check()
+              }
+            })
+          }
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
   test('call proc that has 2 output string params + return code', function (testDone) {
     var spName = 'test_sp_get_str_str'
 
@@ -111,63 +228,6 @@ suite('sproc', function () {
             assert.deepEqual(output, expected, 'results didn\'t match')
             asyncDone()
           })
-        })
-      }
-    ]
-
-    async.series(fns, function () {
-      testDone()
-    })
-  })
-
-  test('get proc and call multiple times with changing params i.e. prove each call is independent', function (testDone) {
-    var spName = 'test_sp_get_int_int'
-
-    var def = 'alter PROCEDURE <name>' +
-      '(\n' +
-      '@num1 INT,\n' +
-      '@num2 INT,\n' +
-      '@num3 INT OUTPUT\n' +
-      '\n)' +
-      'AS\n' +
-      'BEGIN\n' +
-      '   SET @num3 = @num1 + @num2\n' +
-      '   RETURN 99;\n' +
-      'END\n'
-
-    var fns = [
-      function (asyncDone) {
-        procedureHelper.createProcedure(spName, def, function () {
-          asyncDone()
-        })
-      },
-
-      function (asyncDone) {
-        var pm = theConnection.procedureMgr()
-        pm.get(spName, function (proc) {
-          var count = pm.getCount()
-          assert.equal(count, 1)
-          var i
-          var received = []
-          var iterations = 100
-
-          function check () {
-            for (i = 0; i < iterations; ++i) {
-              var expected = [99, i * 2]
-              assert.deepEqual(received[i], expected, 'results didn\'t match')
-            }
-            asyncDone()
-          }
-
-          for (i = 0; i < iterations; ++i) {
-            proc.call([i, i], function (err, results, output) {
-              assert.ifError(err)
-              received[received.length] = output
-              if (received.length === iterations) {
-                check()
-              }
-            })
-          }
         })
       }
     ]
@@ -257,8 +317,6 @@ suite('sproc', function () {
       testDone()
     })
   })
-
-
 
   test('call proc that returns length of input string and decribes itself in results', function (testDone) {
     var spName = 'test_sp'
