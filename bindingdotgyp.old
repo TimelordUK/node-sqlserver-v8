@@ -30,7 +30,6 @@
         'src/QueryPreparedOperation.cpp',
         'src/FreeStatementOperation.cpp',
         'src/ReadNextResultOperation.cpp',
-        'src/ReadRowOperation.cpp',
         'src/ResultSet.cpp',
         'src/Utility.cpp',
         'src/BoundDatum.cpp',

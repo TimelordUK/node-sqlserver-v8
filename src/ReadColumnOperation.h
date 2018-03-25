@@ -30,13 +30,13 @@ namespace mssql
 
 	class ReadColumnOperation : public OdbcOperation
 	{
-		int column;
+		int _number_rows;
 
 	public:
 
-		ReadColumnOperation(shared_ptr<OdbcConnection> connection, size_t queryId, int column, Handle<Object> callback)
+		ReadColumnOperation(shared_ptr<OdbcConnection> connection, size_t queryId, int number_rows, Handle<Object> callback)
 			: OdbcOperation(connection, callback),
-			column(column)
+			_number_rows(number_rows)
 		{
 			_statementId = queryId;
 		}

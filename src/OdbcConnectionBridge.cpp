@@ -24,7 +24,6 @@
 #include <CollectOperation.h>
 #include <BeginTranOperation.h>
 #include <ProcedureOperation.h>
-#include <ReadRowOperation.h>
 #include <OpenOperation.h>
 #include <ReadNextResultOperation.h>
 #include <ReadColumnOperation.h>
@@ -177,15 +176,6 @@ namespace mssql
 		return fact.null();
 	}
 
-	Handle<Value> OdbcConnectionBridge::read_row(const Handle<Number> query_id, Handle<Object> callback) const
-	{
-		auto id = query_id->IntegerValue();
-		const auto op = make_shared<ReadRowOperation>(connection, id, callback);
-		connection->send(op);
-		nodeTypeFactory fact;
-		return fact.null();
-	}
-
 	Handle<Value> OdbcConnectionBridge::read_next_result(const Handle<Number> query_id, Handle<Object> callback) const
 	{
 		auto id = query_id->IntegerValue();
@@ -195,10 +185,10 @@ namespace mssql
 		return fact.null();
 	}
 
-	Handle<Value> OdbcConnectionBridge::read_column(const Handle<Number> query_id, const Handle<Number> column, Handle<Object> callback) const
+	Handle<Value> OdbcConnectionBridge::read_column(const Handle<Number> query_id, const Handle<Number> number_rows, Handle<Object> callback) const
 	{
 		auto id = query_id->IntegerValue();
-		const auto op = make_shared<ReadColumnOperation>(connection, id, column->Int32Value(), callback);
+		const auto op = make_shared<ReadColumnOperation>(connection, id, number_rows->Int32Value(), callback);
 		connection->send(op);
 		nodeTypeFactory fact;
 		return fact.null();

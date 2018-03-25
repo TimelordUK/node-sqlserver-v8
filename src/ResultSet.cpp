@@ -74,6 +74,30 @@ namespace mssql
 	   return type_name;
     }
 
+	shared_ptr<Column> ResultSet::get_column(const size_t row_id, const size_t column_id) const
+	{
+		if (row_id >= _rows.size())
+		{
+			return nullptr;
+		}
+		auto &row = _rows[row_id];
+		return row[column_id];
+	}
+
+	void ResultSet::add_column(const size_t row_id, const shared_ptr<Column> &column)
+	{
+		if (_rows.size() < row_id + 1)
+		{
+			_rows.resize(row_id + 1);
+		}
+		auto &row = _rows[row_id];
+		if (row.size() != _metadata.size())
+		{
+			row.resize(_metadata.size());
+		}
+		row[column->Id()] = column;
+	}
+
 	Local<Object> ResultSet::get_entry(const nodeTypeFactory & fact, const ColumnDefinition & definition)  {
 		const auto type_name = map_type(definition.dataType);
 		auto entry = fact.new_object();
@@ -93,7 +117,7 @@ namespace mssql
 	   const nodeTypeFactory fact;
 	   auto metadata = fact.new_array();
 
-	   for_each(this->metadata.begin(), this->metadata.end(), [fact,metadata](const ColumnDefinition & definition) {
+	   for_each(this->_metadata.begin(), this->_metadata.end(), [fact,metadata](const ColumnDefinition & definition) {
 		  metadata->Set(metadata->Length(), get_entry(fact, definition));
 	   });
 

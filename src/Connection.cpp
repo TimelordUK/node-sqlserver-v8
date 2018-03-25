@@ -39,7 +39,6 @@ namespace mssql
 		NODE_SET_PROTOTYPE_METHOD(tpl, "query", query);
 		NODE_SET_PROTOTYPE_METHOD(tpl, "bindQuery", bind_query);
 		NODE_SET_PROTOTYPE_METHOD(tpl, "prepare", prepare);
-		NODE_SET_PROTOTYPE_METHOD(tpl, "readRow", read_row);
 		NODE_SET_PROTOTYPE_METHOD(tpl, "readColumn", read_column);
 		NODE_SET_PROTOTYPE_METHOD(tpl, "beginTransaction", begin_transaction);
 		NODE_SET_PROTOTYPE_METHOD(tpl, "commit", commit);
@@ -188,22 +187,13 @@ namespace mssql
 		info.GetReturnValue().Set(ret);
 	}
 
-	void Connection::read_row(const FunctionCallbackInfo<Value>& info)
-	{
-		const auto query_id = info[0].As<Number>();
-		const auto cb = info[1].As<Object>();
-		const auto connection = Unwrap<Connection>(info.This());
-		const auto ret = connection->connectionBridge->read_row(query_id, cb);
-		info.GetReturnValue().Set(ret);
-	}
-
 	void Connection::read_column(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto query_id = info[0].As<Number>();
-		const auto column = info[1].As<Number>();
+		const auto number_rows = info[1].As<Number>();
 		const auto cb = info[2].As<Object>();
 		const auto connection = Unwrap<Connection>(info.This());
-		const auto ret = connection->connectionBridge->read_column(query_id, column, cb);
+		const auto ret = connection->connectionBridge->read_column(query_id, number_rows, cb);
 		info.GetReturnValue().Set(ret);
 	}
 

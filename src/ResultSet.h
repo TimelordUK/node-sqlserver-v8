@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include<vector>
 #include "Column.h"
 
 namespace mssql
@@ -29,7 +30,7 @@ namespace mssql
     {
 
     public:
-
+		typedef vector<shared_ptr<Column>> t_row;
         struct ColumnDefinition
         {
             wstring name;
@@ -42,54 +43,50 @@ namespace mssql
         };
 
         ResultSet(int num_columns) 
-            : rowcount(0),
-              endOfRows(true)
+            : _row_count(0),
+              _end_of_rows(true)
         {
-            metadata.resize(num_columns);
+            _metadata.resize(num_columns);
         }
   
         ColumnDefinition & get_meta_data(int column)
         {
-            return metadata[column];
+            return _metadata[column];
         }
 
         size_t get_column_count() const
         {
-            return metadata.size();
+            return _metadata.size();
         }
-
+		void start_results()
+        {
+			_rows.clear();
+        }
         Handle<Value> meta_to_value();
-
-        void AddColumn(shared_ptr<Column> column)
-        {
-			if (this->columns.size() != metadata.size())
-			{
-				this->columns.resize(metadata.size());
-			}
-            this->columns[column->Id()] = column;
-        }
-
-        shared_ptr<Column> get_column(int id) const
-        {
-            return columns[id];
-        }
-
+		void add_column(size_t row, const shared_ptr<Column> & column);
+		shared_ptr<Column> get_column(size_t row, size_t id) const;
+		size_t get_result_count() const
+		{
+			return  _rows.size();
+		}
+       
         SQLLEN row_count() const
         {
-            return rowcount;
+            return _row_count;
         }
 
         bool EndOfRows() const
         {
-            return endOfRows;
+            return _end_of_rows;
         }
 
     private:
 		static Local<Object> get_entry(const nodeTypeFactory & fact, const ColumnDefinition & definition);
-        vector<ColumnDefinition> metadata;
-        SQLLEN rowcount;
-        bool endOfRows;
-        vector<shared_ptr<Column>> columns;
+        vector<ColumnDefinition> _metadata;
+		
+        SQLLEN _row_count;
+        bool _end_of_rows;
+		vector<t_row> _rows;
 
 		friend class OdbcStatement;
     };

@@ -51,9 +51,9 @@ namespace mssql
 		
 		OdbcStatement(long statementId, shared_ptr<OdbcConnectionHandle> c);
 		virtual ~OdbcStatement();
-		SQLLEN get_row_count() const { return resultset != nullptr ? resultset->row_count() : -1; }
+		SQLLEN get_row_count() const { return _resultset != nullptr ? _resultset->row_count() : -1; }
 		shared_ptr<ResultSet> get_result_set() const
-		{ return resultset; } 
+		{ return _resultset; } 
 
 		long get_statement_id() const
 		{ return _statementId; }
@@ -71,54 +71,53 @@ namespace mssql
 
 		shared_ptr<OdbcError> get_last_error(void) const
 		{
-			if (error) return error;
-			return error2;
+			if (_error) return _error;
+			return _error2;
 		}
 	
 		bool try_prepare(const shared_ptr<QueryOperationParams> &q);
 		bool bind_fetch(const shared_ptr<BoundDatumSet> &paramSet);
 		bool try_execute_direct(const shared_ptr<QueryOperationParams> &q, const shared_ptr<BoundDatumSet> &paramSet);
 		void cancel_handle();
-		bool try_read_row();
-		bool try_read_columns();
+		bool try_read_columns(size_t number_rows);
 		bool try_read_next_result();
 
 	private:
 		SQLRETURN poll_check(SQLRETURN ret, bool direct);
-		bool get_data_binary(int column);
-		bool get_data_decimal(int column);
-		bool get_data_bit(int column);
-		bool get_data_timestamp(int column);
-		bool get_data_long(int column);
-		bool get_data_timestamp_offset(int column);
+		bool get_data_binary(size_t row, size_t column);
+		bool get_data_decimal(size_t row, size_t column);
+		bool get_data_bit(size_t row, size_t column);
+		bool get_data_timestamp(size_t row, size_t column);
+		bool get_data_long(size_t row, size_t column);
+		bool get_data_timestamp_offset(size_t row, size_t column);
 
 		bool start_reading_results();
 		SQLRETURN query_timeout(int timeout);
-		bool d_variant(int col);
-		bool d_string(int col);
-		bool d_bit(int col);
-		bool d_integer(int col);
-		bool d_decimal(int col);
-		bool d_binary(int col);
-		bool d_timestamp_offset(int col);
-		bool d_timestamp(int col);
-		bool d_time(int col);
-		bool bounded_string(SQLLEN display_size, int column);
-		bool reserved_string(SQLLEN display_size, int column) const;
+		bool d_variant(size_t row, size_t col);
+		bool d_string(size_t row, size_t col);
+		bool d_bit(size_t row, size_t col);
+		bool d_integer(size_t row, size_t col);
+		bool d_decimal(size_t row, size_t col);
+		bool d_binary(size_t row, size_t col);
+		bool d_timestamp_offset(size_t row, size_t col);
+		bool d_timestamp(size_t row, size_t col);
+		bool d_time(size_t row, size_t col);
+		bool bounded_string(SQLLEN display_size, size_t row, size_t column);
+		bool reserved_string(SQLLEN display_size, size_t row, size_t column) const;
 		void apply_precision(const shared_ptr<BoundDatum> & datum, int current_param) const;
 		bool read_col_attributes(ResultSet::ColumnDefinition& current, int column);
 		bool read_next(int column);
 		bool check_more_read(SQLRETURN r, bool & more);
-		bool lob(SQLLEN display_size, int column);
+		bool lob(SQLLEN display_size, size_t, size_t column);
 		static OdbcEnvironmentHandle environment;
-		bool dispatch(SQLSMALLINT t, int column);
+		bool dispatch(SQLSMALLINT t, size_t row, size_t column);
 		typedef vector<shared_ptr<BoundDatum>> param_bindings;
 		typedef pair<int, shared_ptr<param_bindings>> tvp_t;
 		bool bind_tvp(vector<tvp_t> &tvps);
 		bool bind_datum(int current_param, const shared_ptr<BoundDatum> &datum);
 		bool bind_params(const shared_ptr<BoundDatumSet> & params);
 		void queue_tvp(int current_param, param_bindings::iterator &itr, shared_ptr<BoundDatum> &datum, vector <tvp_t> & tvps);
-		bool try_read_string(bool binary, int column);
+		bool try_read_string(bool binary, size_t row, size_t column);
 
 		bool return_odbc_error();
 		bool check_odbc_error(SQLRETURN ret);
@@ -130,8 +129,8 @@ namespace mssql
 		// any error that occurs when a Try* function returns false is stored here
 		// and may be retrieved via the Error function below.
 
-		shared_ptr<OdbcError> error;
-		shared_ptr<OdbcError> error2;
+		shared_ptr<OdbcError> _error;
+		shared_ptr<OdbcError> _error2;
 
 		bool _endOfResults;
 		long _statementId;
@@ -143,8 +142,8 @@ namespace mssql
 
 		// set binary true if a binary Buffer should be returned instead of a JS string
 	
-		shared_ptr<ResultSet> resultset;
-		shared_ptr<BoundDatumSet> boundParamsSet;
+		shared_ptr<ResultSet> _resultset;
+		shared_ptr<BoundDatumSet> _boundParamsSet;
 		shared_ptr<BoundDatumSet> _preparedStorage;	
 		
 		mutex g_i_mutex;
