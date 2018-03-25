@@ -21,7 +21,7 @@
 
 Based on node-sqlserver, this version will compile in Visual Studio 2015/2017 and is built against the v8 node module API.  The module will work against node version 0.12.x. and >= 4.1.x.    Included in the repository are pre compiled binaries for both x64 and x86 targets.  
 
-Functionally the API should work exactly as the existing library. The existing unit tests pass based on Node 0.12 and also against Node 4.2.1.
+Functionally the API should work exactly as the existing library. All versions of node are supported.
 
 ## Installing
 
