@@ -60,20 +60,9 @@ class Benchmark {
                         return;
                     }
                     let elapsed = new Date().getTime() - d.getTime();
-                    runs++;
+                    ++runs;
                     total += elapsed;
-                    console.log(`rows.length ${rows.length} elapsed ${elapsed} ms`);
-                    d = new Date();
-                    conn.query(query, function (err, rows) {
-                        if (err) {
-                            console.log(err.message);
-                            return;
-                        }
-                        let elapsed = new Date().getTime() - d.getTime();
-                        ++runs;
-                        total += elapsed;
-                        console.log(`rows.length ${rows.length} elapsed ${elapsed} ms [ runs ${runs} avg ${total / runs} ]`);
-                    });
+                    console.log(`rows.length ${rows.length} elapsed ${elapsed} ms [ runs ${runs} avg ${total / runs} ]`);
                 });
             });
         }, delay);

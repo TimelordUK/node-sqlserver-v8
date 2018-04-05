@@ -117,19 +117,19 @@ export interface Query {
 }
 
 export interface ConnectDescription {
-    conn_str: string,
+    conn_str: string
     conn_timeout: number
 }
 
 export interface QueryDescription {
-    query_str: string,
-    query_timeout?: number,
-    query_polling?: boolean,
-    query_tz_adjustment?: number,
+    query_str: string
+    query_timeout?: number
+    query_polling?: boolean
+    query_tz_adjustment?: number
 }
 
 export interface Meta {
-    name: string,
+    name: string
     nullable: boolean
     size: number
     sqlType: string
@@ -237,10 +237,10 @@ export interface ProcedureParam {
 
 export interface ProcedureDefinition
 {
-    call(params?: any[], cb?: CallProcedureCb): Query,
-    setTimeout(to:number): void,
-    setPolling(polling: boolean) : void,
-    getMeta(): ProcedureSummary,
+    call(params?: any[], cb?: CallProcedureCb): Query
+    setTimeout(to:number): void
+    setPolling(polling: boolean) : void
+    getMeta(): ProcedureSummary
     getName(): string
 }
 

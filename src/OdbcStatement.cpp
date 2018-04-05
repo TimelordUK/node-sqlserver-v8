@@ -250,6 +250,8 @@ namespace mssql
 
 	Handle<Value> OdbcStatement::get_column_values() const
 	{
+		//const auto start = std::clock();
+
 		nodeTypeFactory fact;
 		auto result = fact.new_object();
 		if (_resultset->EndOfRows())
@@ -269,6 +271,9 @@ namespace mssql
 				row_array->Set(c, _resultset->get_column(row_id, c)->ToValue());
 			}
 		}
+
+		// std::cout << "Time: " << (std::clock() - start) / static_cast<double>(CLOCKS_PER_SEC / 1000) << " ms" << std::endl;
+
 		return result;
 	}
 
@@ -545,9 +550,8 @@ namespace mssql
 			ret = poll_check(ret, true);
 		}
 
-		if (
-			ret == SQL_SUCCESS_WITH_INFO ||
-			ret != SQL_NO_DATA && !SQL_SUCCEEDED(ret))
+		const auto c1 = ret != SQL_NO_DATA && !SQL_SUCCEEDED(ret);
+		if (ret == SQL_SUCCESS_WITH_INFO || c1)
 		{
 			return_odbc_error();
 			_boundParamsSet = param_set;
@@ -865,7 +869,8 @@ namespace mssql
 		auto storage = make_shared<DatumStorage>();
 
 		const auto& statement = *_statement;
-		SQLLEN bytes_to_read = LOB_PACKET_SIZE;
+		const SQLLEN atomic_read = 24 * 1024;
+		auto bytes_to_read = atomic_read;
 		storage->ReserveChars(bytes_to_read + 1);
 		auto & char_data = storage->charvec_ptr;
 		auto write_ptr = char_data->data();
@@ -892,7 +897,7 @@ namespace mssql
 		write_ptr += bytes_to_read;
 		while (more)
 		{
-			bytes_to_read = min(static_cast<SQLLEN>(LOB_PACKET_SIZE), total_bytes_to_read);
+			bytes_to_read = min(static_cast<SQLLEN>(atomic_read), total_bytes_to_read);
 			r = SQLGetData(statement, column + 1, SQL_C_BINARY, write_ptr, bytes_to_read, &total_bytes_to_read);
 			if (!check_odbc_error(r)) return false;
 			more = check_more_read(r, status);
@@ -954,7 +959,6 @@ namespace mssql
 	bool OdbcStatement::check_more_read(SQLRETURN r, bool & status)
 	{
 		const auto& statement = *_statement;
-		SQLLEN bytes_read = 0;
 		SQLWCHAR sql_state[6];
 		SQLINTEGER native_error;
 		SQLSMALLINT text_length;
@@ -972,15 +976,16 @@ namespace mssql
 		return res;
 	}
 
-	bool OdbcStatement::lob(SQLLEN display_size, const size_t row_id, size_t column)
+	bool OdbcStatement::lob(const size_t row_id, size_t column)
 	{
 		auto reading_column = true;
 		auto storage = make_shared<DatumStorage>();
 			
 		const auto size = sizeof(uint16_t);
-		const auto& statement = *_statement;		
-		SQLLEN bytes_to_read = LOB_PACKET_SIZE;
-		storage->ReserveUint16(LOB_PACKET_SIZE / size + 1);
+		const auto& statement = *_statement;	
+		const SQLLEN atomic_read = 24 * 1024;
+		auto bytes_to_read = atomic_read;
+		storage->ReserveUint16(atomic_read / size + 1);
 		auto & uint16_data = storage->uint16vec_ptr;
 		auto write_ptr = uint16_data->data();
 		bytes_to_read += size;	
@@ -1017,7 +1022,7 @@ namespace mssql
 		auto reads = 1;
 		while (more)
 		{
-			bytes_to_read = min(static_cast<SQLLEN>(LOB_PACKET_SIZE + size), total_bytes_to_read);
+			bytes_to_read = min(static_cast<SQLLEN>(atomic_read + size), total_bytes_to_read);
 			r = SQLGetData(statement, column + 1, SQL_C_WCHAR, write_ptr, bytes_to_read + size, &total_bytes_to_read);
 			++reads;
 			if (total_bytes_to_read < 0)
@@ -1109,7 +1114,7 @@ namespace mssql
 			display_size == numeric_limits<int>::max() >> 1 ||
 			static_cast<unsigned long>(display_size) == numeric_limits<unsigned long>::max() - 1)
 		{
-			return lob(display_size, row_id, column);
+			return lob(row_id, column);
 		}
 
 		if (display_size >= 1 && display_size <= SQL_SERVER_MAX_STRING_SIZE)

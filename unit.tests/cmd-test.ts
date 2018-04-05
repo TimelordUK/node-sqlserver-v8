@@ -66,41 +66,29 @@ class Benchmark implements SimpleTest {
                 conn.query(query, function (err, rows) {
                     if (err) {
                         console.log(err.message);
-                        return;
+                        return
                     }
-                    let elapsed: number = new Date().getTime() - d.getTime();
-                    runs++;
+                    let elapsed = new Date().getTime() - d.getTime();
+                    ++runs;
                     total += elapsed;
-                    console.log(`rows.length ${rows.length} elapsed ${elapsed} ms`);
-                    d = new Date();
-                    conn.query(query, function (err, rows) {
-                        if (err) {
-                            console.log(err.message);
-                            return
-                        }
-                        let elapsed = new Date().getTime() - d.getTime();
-                        ++runs;
-                        total += elapsed;
-                        console.log(`rows.length ${rows.length} elapsed ${elapsed} ms [ runs ${runs} avg ${total / runs} ]`);
-                    })
+                    console.log(`rows.length ${rows.length} elapsed ${elapsed} ms [ runs ${runs} avg ${total / runs} ]`);
                 })
-            });
+            })
         }, delay);
     }
 }
 
 class ProcedureOut implements SimpleTest {
 
-    private static randomIntFromInterval(min:number, max:number)
-    {
-        return Math.floor(Math.random()*(max-min+1)+min);
+    private static randomIntFromInterval(min: number, max: number) {
+        return Math.floor(Math.random() * (max - min + 1) + min);
     }
 
-    private static makeid() : string {
+    private static makeid(): string {
         let text = "";
         let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-        for (let i = 0; i < ProcedureOut.randomIntFromInterval(10,19); i++)
+        for (let i = 0; i < ProcedureOut.randomIntFromInterval(10, 19); i++)
             text += possible.charAt(Math.floor(Math.random() * possible.length));
 
         return text;
@@ -117,8 +105,8 @@ class ProcedureOut implements SimpleTest {
                 throw err;
             }
             let spName = 'test_sp_get_str_str';
-            let s1:string = ProcedureOut.makeid();
-            let s2:string = ProcedureOut.makeid();
+            let s1: string = ProcedureOut.makeid();
+            let s2: string = ProcedureOut.makeid();
 
             let def = 'alter PROCEDURE <name>' +
                 '(\n' +

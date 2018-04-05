@@ -108,7 +108,7 @@ namespace mssql
 		bool read_col_attributes(ResultSet::ColumnDefinition& current, int column);
 		bool read_next(int column);
 		bool check_more_read(SQLRETURN r, bool & more);
-		bool lob(SQLLEN display_size, size_t, size_t column);
+		bool lob(size_t, size_t column);
 		static OdbcEnvironmentHandle environment;
 		bool dispatch(SQLSMALLINT t, size_t row, size_t column);
 		typedef vector<shared_ptr<BoundDatum>> param_bindings;
