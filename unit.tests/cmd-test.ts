@@ -70,8 +70,7 @@ class Benchmark implements SimpleTest {
         let delay: number = argv.delay || 500;
         let repeats: number = argv.repeats || 10;
         let query = 'select * from master..syscomments';
-
-        console.log(`${conn_str}`);
+        console.log(`Benchmark query ${query}`);
         let runs = 0;
         let total = 0;
 
@@ -438,22 +437,19 @@ switch (argv.t) {
 }
 
 if (test != null) {
-    let conn_str: string = null;
+    let global_conn_str: string = null;
     if (argv.hasOwnProperty('a')) {
-        conn_str = 'Driver={SQL Server Native Client 11.0}; Server=tcp:(local); Database={master}; Uid=sa; Pwd=Password12!';
-        console.log(`set conn_str as ${conn_str}`);
+        global_conn_str = 'Driver={SQL Server Native Client 11.0}; Server=tcp:(local); Database={master}; Uid=sa; Pwd=Password12!';
+        console.log(`set conn_str as ${global_conn_str}`);
     }
     supp.GlobalConn.init(sql, (co: any) => {
-            if (conn_str == null) {
-                conn_str = co.conn_str;
-            }
+            let conn_str =  co.conn_str || global_conn_str;
+            console.log(`running test with ${conn_str}`);
             support = co.support;
             procedureHelper = new support.ProcedureHelper(conn_str);
             procedureHelper.setVerbose(false);
             helper = co.helper;
-            if (test != null) {
-                test.run(conn_str, argv);
-            }
-        }, conn_str
+            test.run(conn_str, argv);
+        }, global_conn_str
     );
 }
