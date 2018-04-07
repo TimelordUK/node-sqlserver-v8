@@ -69,11 +69,18 @@ class Benchmark implements SimpleTest {
     public run(conn_str: string, argv: any): void {
         let delay: number = argv.delay || 500;
         let repeats: number = argv.repeats || 10;
-        let table: number = argv.table || 'syscomments';
+        let table: string = argv.table || 'syscomments';
+        let cycle: boolean = argv.hasOwnProperty('cycle') || false;
         let query = `select * from master..${table}`;
         console.log(`Benchmark query ${query}`);
         let runs = 0;
         let total = 0;
+
+        let cycles = cycle ? [
+            'sysobjects',
+            'syscomments',
+            'syscolumns'
+        ] : [table];
 
         sql.open(conn_str, (err, conn) => {
             if (err) {
@@ -82,6 +89,12 @@ class Benchmark implements SimpleTest {
             }
             let repeatId = setInterval(() => {
                 let d = new Date();
+
+                if (cycle) {
+                    table = cycles[runs % cycles.length];
+                    query = `select * from master..${table}`;
+                }
+
                 conn.query(query, function (err, rows) {
                     if (err) {
                         console.log(err.message);
@@ -90,7 +103,7 @@ class Benchmark implements SimpleTest {
                     let elapsed = new Date().getTime() - d.getTime();
                     ++runs;
                     total += elapsed;
-                    console.log(`rows.length ${rows.length} elapsed ${elapsed} ms [ runs ${runs} avg ${total / runs} ]`);
+                    console.log(`[${table}\t] rows.length ${rows.length} \t elapsed ${elapsed}\t ms [ runs ${runs} avg ${total / runs} ]`);
                     if (runs == repeats) {
                         clearInterval(repeatId)
                     }
