@@ -27,23 +27,37 @@ GROUP BY
 dbid, loginame`;
 
 class PrintConnection implements SimpleTest {
+
+    public test(conn_str: string, conn: Connection, done: Function) {
+        conn.query("select @@SPID as id, CURRENT_USER as name", (err, res) => {
+            let sp = res[0]['id'];
+            console.log(`open[${sp}]:  ${conn_str}`);
+            conn.query(getConnectionsSql, (err, res) => {
+                let count = res[0]['NumberOfConnections'];
+                conn.close(() => {
+                    console.log(`close[${sp}]: NumberOfConnections = ${count}`);
+                    done();
+                });
+            });
+        });
+    }
+
     public run(conn_str: string, argv: any): void {
         let delay: number = argv.delay || 5000;
+        let repeats: number = argv.repeats || 10;
         console.log(`${conn_str}`);
-        setInterval(() => {
+        let iteration = 0;
+        let repeatId = setInterval(() => {
             sql.open(conn_str, (err, conn) => {
                 if (err) {
+                    console.log(err);
                     throw err;
                 }
-                conn.query("select @@SPID as id, CURRENT_USER as name", (err, res) => {
-                    let sp = res[0]['id'];
-                    console.log(`open[${sp}]:  ${conn_str}`);
-                    conn.query(getConnectionsSql, (err, res) => {
-                        let count = res[0]['NumberOfConnections'];
-                        conn.close(() => {
-                            console.log(`close[${sp}]: NumberOfConnections = ${count}`);
-                        });
-                    });
+                this.test(conn_str, conn, () => {
+                    ++iteration;
+                    if (iteration == repeats) {
+                        clearInterval(repeatId)
+                    }
                 });
             });
         }, delay);
@@ -51,17 +65,22 @@ class PrintConnection implements SimpleTest {
 }
 
 class Benchmark implements SimpleTest {
+
     public run(conn_str: string, argv: any): void {
-        let delay: number = argv.delay || 1000;
+        let delay: number = argv.delay || 500;
+        let repeats: number = argv.repeats || 10;
         let query = 'select * from master..syscomments';
+
         console.log(`${conn_str}`);
         let runs = 0;
         let total = 0;
-        setInterval(() => {
-            sql.open(conn_str, (err, conn) => {
-                if (err) {
-                    throw err;
-                }
+
+        sql.open(conn_str, (err, conn) => {
+            if (err) {
+                console.log(err);
+                throw err;
+            }
+            let repeatId = setInterval(() => {
                 let d = new Date();
                 conn.query(query, function (err, rows) {
                     if (err) {
@@ -72,9 +91,12 @@ class Benchmark implements SimpleTest {
                     ++runs;
                     total += elapsed;
                     console.log(`rows.length ${rows.length} elapsed ${elapsed} ms [ runs ${runs} avg ${total / runs} ]`);
+                    if (runs == repeats) {
+                        clearInterval(repeatId)
+                    }
                 })
-            })
-        }, delay);
+            }, delay);
+        });
     }
 }
 
@@ -415,13 +437,23 @@ switch (argv.t) {
         break;
 }
 
-supp.GlobalConn.init(sql, (co: any) => {
-        let conn_str = co.conn_str;
-        support = co.support;
-        procedureHelper = new support.ProcedureHelper(conn_str);
-        procedureHelper.setVerbose(false);
-        helper = co.helper;
-        if (test != null)
-            test.run(conn_str, argv);
+if (test != null) {
+    let conn_str: string = null;
+    if (argv.hasOwnProperty('a')) {
+        conn_str = 'Driver={SQL Server Native Client 11.0}; Server=tcp:(local); Database={master}; Uid=sa; Pwd=Password12!';
+        console.log(`set conn_str as ${conn_str}`);
     }
-);
+    supp.GlobalConn.init(sql, (co: any) => {
+            if (conn_str == null) {
+                conn_str = co.conn_str;
+            }
+            support = co.support;
+            procedureHelper = new support.ProcedureHelper(conn_str);
+            procedureHelper.setVerbose(false);
+            helper = co.helper;
+            if (test != null) {
+                test.run(conn_str, argv);
+            }
+        }
+    );
+}

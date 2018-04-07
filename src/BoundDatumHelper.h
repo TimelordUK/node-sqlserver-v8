@@ -42,63 +42,69 @@ namespace mssql
 		{
 		}
 
-		void ReserveNumerics(size_t len)
+		template<typename  T>
+		inline shared_ptr<vector<T>> reserve_vec(shared_ptr<vector<T>> existing, size_t size)
 		{
-			numeric_ptr = make_shared<vector<SQL_NUMERIC_STRUCT>>(len);
-			memset(numeric_ptr->data(), 0, numeric_ptr->capacity() * sizeof(SQL_NUMERIC_STRUCT));
+			if (existing == nullptr) {
+				existing = make_shared<vector<T>>(size);
+			}
+			else
+			{
+				if (size > existing->capacity()) {
+					existing->reserve(size);
+					memset(existing->data(), 0, existing->capacity() * sizeof(T));
+				}
+			}
+			return existing;
 		}
 
-		void ReserveChars(size_t len)
+		inline void ReserveNumerics(size_t len)
 		{
-			charvec_ptr = make_shared<vector<char>>(len);
-			memset(charvec_ptr->data(), 0, charvec_ptr->capacity());
+			numeric_ptr = reserve_vec<SQL_NUMERIC_STRUCT>(numeric_ptr, len);
 		}
 
-		void ReserveUint16(size_t len)
+		inline void ReserveChars(size_t len)
 		{
-			uint16vec_ptr = make_shared<uint16_t_vec_t>(len);
-			memset(uint16vec_ptr->data(), 0, uint16vec_ptr->capacity() * sizeof(uint16_t));
+			charvec_ptr = reserve_vec<char>(charvec_ptr, len);
 		}
 
-		void ReserveInt32(size_t len)
+		inline void ReserveUint16(size_t len)
 		{
-			int32vec_ptr = make_shared<int32_vec_t>(len);
-			memset(int32vec_ptr->data(), 0, int32vec_ptr->capacity() * sizeof(int32_t));
+			uint16vec_ptr = reserve_vec<uint16_t>(uint16vec_ptr, len);
 		}
 
-		void ReserveUInt32(size_t len)
+		inline void ReserveInt32(size_t len)
+		{
+			int32vec_ptr = reserve_vec<int32_t>(int32vec_ptr, len);
+		}
+
+		inline void ReserveUInt32(size_t len)
 		{
 			uint32vec_ptr = make_shared<uint32_vec_t>(len);
-			memset(uint32vec_ptr->data(), 0, uint32vec_ptr->capacity() * sizeof(uint32_t));
 		}
 
-		void ReserveInt64(size_t len)
+		inline void ReserveInt64(size_t len)
 		{
-			int64vec_ptr = make_shared<int64_vec_t>(len);
-			memset(int64vec_ptr->data(), 0, int64vec_ptr->capacity() * sizeof(int64_t));
+			int64vec_ptr = reserve_vec<int64_t>(int64vec_ptr, len);
 		}
 
-		void ReserveDouble(size_t len)
+		inline void ReserveDouble(size_t len)
 		{
-			doublevec_ptr = make_shared<double_vec_t>(len);
-			memset(doublevec_ptr->data(), 0, doublevec_ptr->capacity() * sizeof(double));
+			doublevec_ptr = reserve_vec<double>(doublevec_ptr, len);			
 		}
 
-		void ReserveTimestamp(size_t len)
+		inline void ReserveTimestamp(size_t len)
 		{
-			timestampvec_ptr = make_shared<timestamp_struct_vec_t>(len);
-			memset(timestampvec_ptr->data(), 0, timestampvec_ptr->capacity() * sizeof(SQL_TIMESTAMP_STRUCT));
+			timestampvec_ptr = reserve_vec<SQL_TIMESTAMP_STRUCT>(timestampvec_ptr, len);
 		}
 
-		void Reservetime2(size_t len) {
-			time2vec_ptr = make_shared<time2_struct_vec_t>(len);
-			memset(time2vec_ptr->data(), 0, time2vec_ptr->capacity() * sizeof(SQL_SS_TIME2_STRUCT));
+		inline void Reservetime2(size_t len) {
+			time2vec_ptr = reserve_vec<SQL_SS_TIME2_STRUCT>(time2vec_ptr, len);
 		}
 
-		void ReserveTimestampOffset(size_t len)
+		inline void ReserveTimestampOffset(size_t len)
 		{
-			timestampoffsetvec_ptr = make_shared<timestamp_offset_vec_t>(len);
-			memset(timestampoffsetvec_ptr->data(), 0, timestampoffsetvec_ptr->capacity() * sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT));
+			timestampoffsetvec_ptr = reserve_vec<SQL_SS_TIMESTAMPOFFSET_STRUCT>(timestampoffsetvec_ptr, len);
 		}
 
 		shared_ptr<int32_vec_t> int32vec_ptr;

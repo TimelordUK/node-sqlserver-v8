@@ -19,23 +19,35 @@ and DB_NAME(dbid) = 'scratch'
 GROUP BY
 dbid, loginame`;
 class PrintConnection {
+    test(conn_str, conn, done) {
+        conn.query("select @@SPID as id, CURRENT_USER as name", (err, res) => {
+            let sp = res[0]['id'];
+            console.log(`open[${sp}]:  ${conn_str}`);
+            conn.query(getConnectionsSql, (err, res) => {
+                let count = res[0]['NumberOfConnections'];
+                conn.close(() => {
+                    console.log(`close[${sp}]: NumberOfConnections = ${count}`);
+                    done();
+                });
+            });
+        });
+    }
     run(conn_str, argv) {
         let delay = argv.delay || 5000;
+        let repeats = argv.repeats || 10;
         console.log(`${conn_str}`);
-        setInterval(() => {
+        let iteration = 0;
+        let repeatId = setInterval(() => {
             sql.open(conn_str, (err, conn) => {
                 if (err) {
+                    console.log(err);
                     throw err;
                 }
-                conn.query("select @@SPID as id, CURRENT_USER as name", (err, res) => {
-                    let sp = res[0]['id'];
-                    console.log(`open[${sp}]:  ${conn_str}`);
-                    conn.query(getConnectionsSql, (err, res) => {
-                        let count = res[0]['NumberOfConnections'];
-                        conn.close(() => {
-                            console.log(`close[${sp}]: NumberOfConnections = ${count}`);
-                        });
-                    });
+                this.test(conn_str, conn, () => {
+                    ++iteration;
+                    if (iteration == repeats) {
+                        clearInterval(repeatId);
+                    }
                 });
             });
         }, delay);
@@ -43,16 +55,18 @@ class PrintConnection {
 }
 class Benchmark {
     run(conn_str, argv) {
-        let delay = argv.delay || 1000;
+        let delay = argv.delay || 500;
+        let repeats = argv.repeats || 10;
         let query = 'select * from master..syscomments';
         console.log(`${conn_str}`);
         let runs = 0;
         let total = 0;
-        setInterval(() => {
-            sql.open(conn_str, (err, conn) => {
-                if (err) {
-                    throw err;
-                }
+        sql.open(conn_str, (err, conn) => {
+            if (err) {
+                console.log(err);
+                throw err;
+            }
+            let repeatId = setInterval(() => {
                 let d = new Date();
                 conn.query(query, function (err, rows) {
                     if (err) {
@@ -63,9 +77,12 @@ class Benchmark {
                     ++runs;
                     total += elapsed;
                     console.log(`rows.length ${rows.length} elapsed ${elapsed} ms [ runs ${runs} avg ${total / runs} ]`);
+                    if (runs == repeats) {
+                        clearInterval(repeatId);
+                    }
                 });
-            });
-        }, delay);
+            }, delay);
+        });
     }
 }
 class ProcedureOut {
@@ -361,13 +378,23 @@ switch (argv.t) {
         console.log(`test ${argv.t} is not valid.`);
         break;
 }
-supp.GlobalConn.init(sql, (co) => {
-    let conn_str = co.conn_str;
-    support = co.support;
-    procedureHelper = new support.ProcedureHelper(conn_str);
-    procedureHelper.setVerbose(false);
-    helper = co.helper;
-    if (test != null)
-        test.run(conn_str, argv);
-});
+if (test != null) {
+    let conn_str = null;
+    if (argv.hasOwnProperty('a')) {
+        conn_str = 'Driver={SQL Server Native Client 11.0}; Server=tcp:(local); Database={master}; Uid=sa; Pwd=Password12!';
+        console.log(`set conn_str as ${conn_str}`);
+    }
+    supp.GlobalConn.init(sql, (co) => {
+        if (conn_str == null) {
+            conn_str = co.conn_str;
+        }
+        support = co.support;
+        procedureHelper = new support.ProcedureHelper(conn_str);
+        procedureHelper.setVerbose(false);
+        helper = co.helper;
+        if (test != null) {
+            test.run(conn_str, argv);
+        }
+    });
+}
 //# sourceMappingURL=cmd-test.js.map
