@@ -454,6 +454,6 @@ if (test != null) {
             if (test != null) {
                 test.run(conn_str, argv);
             }
-        }
+        }, conn_str
     );
 }
