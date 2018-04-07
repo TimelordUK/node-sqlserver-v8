@@ -34,4 +34,5 @@ test_script:
     npm install
 
     node unit.tests\cmd-test.js -a -t benchmark --repeats=5 --delay=500
+
     node runtest -a -t geography -t tvp -t warnings.js -t compoundqueries.js -t querycancel.js -t txn.js -t datatypes.js -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t sproc.js -t prepared.js -t userbind.js -t dates.js 2>&1
