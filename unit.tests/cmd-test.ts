@@ -69,7 +69,8 @@ class Benchmark implements SimpleTest {
     public run(conn_str: string, argv: any): void {
         let delay: number = argv.delay || 500;
         let repeats: number = argv.repeats || 10;
-        let query = 'select * from master..syscomments';
+        let table: number = argv.table || 'syscomments';
+        let query = `select * from master..${table}`;
         console.log(`Benchmark query ${query}`);
         let runs = 0;
         let total = 0;

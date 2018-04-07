@@ -783,7 +783,6 @@ namespace mssql
 
 	bool OdbcStatement::d_integer(const size_t row_id, const size_t column)
 	{
-		shared_ptr<IntColumn> col_val;
 		if (_prepared)
 		{
 			auto& datum = _preparedStorage->atIndex(column);

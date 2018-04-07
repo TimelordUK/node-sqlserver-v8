@@ -57,7 +57,8 @@ class Benchmark {
     run(conn_str, argv) {
         let delay = argv.delay || 500;
         let repeats = argv.repeats || 10;
-        let query = 'select * from master..syscomments';
+        let table = argv.table || 'syscomments';
+        let query = `select * from master..${table}`;
         console.log(`Benchmark query ${query}`);
         let runs = 0;
         let total = 0;
