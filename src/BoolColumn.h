@@ -15,6 +15,10 @@ namespace mssql
 		{			
 		}
 
+		BoolColumn(int id, char v) : Column(id), value(v != 0 ? true : false)
+		{
+		}
+
 		Handle<Value> ToValue() override
 		{
 			nodeTypeFactory fact;

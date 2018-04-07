@@ -18,37 +18,26 @@ namespace mssql
 	   {
 	   }
 
-	   StringColumn(int id, shared_ptr<DatumStorage> s, size_t size) : Column(id), more(false), size(size), storage(s)
+	   StringColumn(int id, shared_ptr<DatumStorage> s, size_t size) : Column(id), size(size), storage(s->uint16vec_ptr)
 	   {
 	   }
 
-	   StringColumn(int id, shared_ptr<DatumStorage> s, size_t size, bool more) : Column(id), more(more), size(size), storage(s)
+	   StringColumn(int id, shared_ptr<DatumStorage::uint16_t_vec_t> s, size_t size) : Column(id), size(size), storage(s)
 	   {
-	   }
-
-	   StringColumn(int id, int size) : Column(id), more(false), storage(nullptr)
-	   {
-		   storage->uint16vec_ptr->resize(size);
 	   }
 
 	   Handle<Value> ToValue() override
 	   {
 		  nodeTypeFactory fact;
-		  auto ptr = storage->uint16vec_ptr->data();
+		  auto ptr = storage->data();
 		  auto len = size;
 		  auto s = fact.from_two_byte(static_cast<const uint16_t*>(ptr), len);
 		  return s;
 	   }
 
-	   bool More() const override
-	   {
-		  return more;
-	   }
-
     private:
 
-	   shared_ptr<DatumStorage> storage;
-	   size_t size;
-	   bool more;
+		shared_ptr<DatumStorage::uint16_t_vec_t> storage;
+		size_t size;
     };
 }

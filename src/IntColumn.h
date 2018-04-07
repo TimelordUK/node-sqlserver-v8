@@ -12,8 +12,11 @@ namespace mssql
     {
     public:
 	   IntColumn(int id,shared_ptr<DatumStorage> storage) : Column(id), value((*storage->int64vec_ptr)[0])
+	   {		   
+	   }
+
+	   IntColumn(int id, long v) : Column(id), value(v)
 	   {
-		   
 	   }
 
 	   Handle<Value> ToValue() override

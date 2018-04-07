@@ -13,8 +13,8 @@ namespace mssql
     class BinaryColumn : public Column
     {
     public:
-		BinaryColumn(int id, shared_ptr<DatumStorage> storage, size_t l, bool more) : Column(id)
-			, len(l), raw(clone(storage->charvec_ptr, l)), more(more)
+		BinaryColumn(int id, shared_ptr<DatumStorage> storage, size_t l) : Column(id)
+			, len(l), raw(clone(storage->charvec_ptr, l))
 		{
 		}
 
@@ -25,11 +25,6 @@ namespace mssql
 			   .ToLocalChecked()
 #endif
 			   ;
-	   }
-
-	   bool More() const override
-	   {
-		  return more;
 	   }
 
     private:
@@ -49,6 +44,5 @@ namespace mssql
 
 		size_t len;
 		char *raw;
-	    bool more;
     };
 }

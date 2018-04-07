@@ -116,6 +116,17 @@ suite('params', function () {
       })
   }
 
+  test('verify empty string is sent as empty string, not null', function (testDone) {
+    theConnection.query('declare @s NVARCHAR(MAX) = ?; select @s as data', [''], function (err, res) {
+      assert.ifError(err)
+      var expected = [{
+        data: ''
+      }]
+      assert.deepEqual(expected, res)
+      testDone()
+    })
+  })
+
   test('verify that non-Buffer object parameter returns an error', function (testDone) {
     var o = {field1: 'value1', field2: -1}
     testBoilerPlate('non_buffer_object',
@@ -212,16 +223,7 @@ suite('params', function () {
       })
   })
 
-  test('verify empty string is sent as empty string, not null', function (testDone) {
-    theConnection.query('declare @s NVARCHAR(MAX) = ?; select @s as data', [''], function (err, res) {
-      assert.ifError(err)
-      var expected = [{
-        data: ''
-      }]
-      assert.deepEqual(expected, res)
-      testDone()
-    })
-  })
+
 
   test('select a long string using callback', function (testDone) {
     function repeat (a, num) {

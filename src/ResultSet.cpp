@@ -117,7 +117,7 @@ namespace mssql
 	   const nodeTypeFactory fact;
 	   auto metadata = fact.new_array();
 
-	   for_each(this->_metadata.begin(), this->_metadata.end(), [fact,metadata](const ColumnDefinition & definition) {
+	   for_each(this->_metadata.begin(), this->_metadata.end(), [fact, metadata](const ColumnDefinition & definition) {
 		  metadata->Set(metadata->Length(), get_entry(fact, definition));
 	   });
 

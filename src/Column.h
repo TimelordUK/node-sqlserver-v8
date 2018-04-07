@@ -35,7 +35,6 @@ namespace mssql
 		}
 		virtual ~Column();		
 		virtual Handle<Value> ToValue() = 0;
-		virtual bool More() const { return false; }
 		int Id() const { return _id; }
 	private:
 		int _id;
