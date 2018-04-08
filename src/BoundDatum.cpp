@@ -1604,12 +1604,12 @@ namespace mssql
 		return tsc.ToValue();
 	}
 
-	void BoundDatum::reserve_column_type(const SQLSMALLINT type, const size_t len)
+	void BoundDatum::reserve_column_type(const SQLSMALLINT type, const size_t len, const size_t row_count)
 	{
 		switch (type)
 		{
 		case SQL_SS_VARIANT:
-			reserve_var_char(len);
+			reserve_w_var_char_array(len, row_count);
 			break;
 
 		case SQL_CHAR:
@@ -1620,11 +1620,11 @@ namespace mssql
 		case SQL_WLONGVARCHAR:
 		case SQL_SS_XML:
 		case SQL_GUID:
-			reserve_w_var_char_array(len + 1, 1);
+			reserve_w_var_char_array(len + 1, row_count);
 			break;
 
 		case SQL_BIT:
-			reserve_boolean(1);
+			reserve_boolean(row_count);
 			break;
 
 		case SQL_SMALLINT:
@@ -1636,7 +1636,7 @@ namespace mssql
 		case SQL_C_ULONG:
 		case SQL_C_USHORT:
 		case SQL_C_UTINYINT:
-			reserve_integer(1);
+			reserve_integer(row_count);
 			break;
 
 		case SQL_DECIMAL:
@@ -1645,34 +1645,34 @@ namespace mssql
 		case SQL_FLOAT:
 		case SQL_DOUBLE:
 		case SQL_BIGINT:
-			reserve_double(1);
+			reserve_double(row_count);
 			break;
 
 		case SQL_BINARY:
 		case SQL_VARBINARY:
 		case SQL_LONGVARBINARY:
 		case SQL_SS_UDT:
-			reserve_var_binary_array(len, 1);
+			reserve_var_binary_array(len, row_count);
 			break;
 
 		case SQL_SS_TIMESTAMPOFFSET:
-			reserve_time_stamp_offset(1);
+			reserve_time_stamp_offset(row_count);
 			break;
 
 		case SQL_TYPE_TIME:
 		case SQL_SS_TIME2:
-			reserve_time(1);
+			reserve_time(row_count);
 			break;
 
 		case SQL_TIMESTAMP:
 		case SQL_DATETIME:
 		case SQL_TYPE_TIMESTAMP:
 		case SQL_TYPE_DATE:
-			reserve_time_stamp(1);
+			reserve_time_stamp(row_count);
 			break;
 
 		default:
-			reserve_var_char(len);
+			reserve_w_var_char_array(len, row_count);
 			break;
 		}
 	}

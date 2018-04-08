@@ -103,7 +103,14 @@ namespace mssql
 		bool d_timestamp(size_t row, size_t col);
 		bool d_time(size_t row, size_t col);
 		bool bounded_string(SQLLEN display_size, size_t row, size_t column);
-		bool reserved_string(SQLLEN display_size, size_t row, size_t column) const;
+		bool reserved_string(const size_t rows_read, const size_t column_size, size_t const column) const;
+		bool reserved_binary(const size_t rows_read, const size_t column_size, size_t const column) const;
+		bool reserved_bit(const size_t rows_read, const size_t column) const;
+		bool reserved_int(const size_t rows_read, const size_t column) const;
+		bool reserved_decimal(const size_t rows_read, const size_t column) const;
+		bool reserved_time(const size_t rows_read, const size_t column) const;
+		bool reserved_timestamp(const size_t rows_read, const size_t column) const;
+		bool reserved_timestamp_offset(const size_t rows_read, const size_t column) const;
 		void apply_precision(const shared_ptr<BoundDatum> & datum, int current_param) const;
 		bool read_col_attributes(ResultSet::ColumnDefinition& current, int column);
 		bool read_next(int column);
@@ -111,6 +118,7 @@ namespace mssql
 		bool lob(size_t, size_t column);
 		static OdbcEnvironmentHandle environment;
 		bool dispatch(SQLSMALLINT t, size_t row, size_t column);
+		bool dispatch_prepared(const SQLSMALLINT t, const size_t column_size, const size_t rows_count, const size_t column) const;
 		typedef vector<shared_ptr<BoundDatum>> param_bindings;
 		typedef pair<int, shared_ptr<param_bindings>> tvp_t;
 		bool bind_tvp(vector<tvp_t> &tvps);
@@ -147,5 +155,8 @@ namespace mssql
 		shared_ptr<BoundDatumSet> _preparedStorage;	
 		
 		mutex g_i_mutex;
+
+		const static size_t prepared_rows_to_bind = 50;
+		
 	};
 }

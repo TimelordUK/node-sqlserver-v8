@@ -398,7 +398,8 @@ namespace mssql
 		auto query = q->query_string();
 		auto* sql_str = const_cast<SQLWCHAR *>(query.c_str());
 		SQLSMALLINT num_cols;
-
+		
+	
 		auto ret = SQLPrepare(statement, sql_str, static_cast<SQLINTEGER>(query.length()));
 		if (!check_odbc_error(ret)) return false;
 
@@ -413,7 +414,8 @@ namespace mssql
 			read_next(i);
 		}
 
-		auto reserved=  _preparedStorage->reserve(_resultset);
+		SQLSetStmtAttr(statement, SQL_ATTR_ROW_ARRAY_SIZE, reinterpret_cast<SQLPOINTER>(prepared_rows_to_bind), 0);
+		auto reserved=  _preparedStorage->reserve(_resultset, prepared_rows_to_bind);
 
 		auto i = 0;
 		for (auto& datum : *_preparedStorage)
@@ -574,8 +576,86 @@ namespace mssql
 		return start_reading_results();
 	}
 
+	bool OdbcStatement::dispatch_prepared(const SQLSMALLINT t, const size_t column_size, const size_t rows_read, const size_t column) const
+	{
+		bool res;
+		switch (t)
+		{
+		case SQL_SS_VARIANT:
+			// res = d_variant(row_id, column);
+			break;
+
+		case SQL_CHAR:
+		case SQL_VARCHAR:
+		case SQL_LONGVARCHAR:
+		case SQL_WCHAR:
+		case SQL_WVARCHAR:
+		case SQL_WLONGVARCHAR:
+		case SQL_SS_XML:
+		case SQL_GUID:
+			res = reserved_string(rows_read, column_size, column);
+			break;
+
+		case SQL_BIT:
+			res = reserved_bit(rows_read, column);
+			break;
+
+		case SQL_SMALLINT:
+		case SQL_TINYINT:
+		case SQL_INTEGER:
+		case SQL_C_SLONG:
+		case SQL_C_SSHORT:
+		case SQL_C_STINYINT:
+		case SQL_C_ULONG:
+		case SQL_C_USHORT:
+		case SQL_C_UTINYINT:
+			res = reserved_int(rows_read, column);
+			break;
+
+		case SQL_DECIMAL:
+		case SQL_NUMERIC:
+		case SQL_REAL:
+		case SQL_FLOAT:
+		case SQL_DOUBLE:
+		case SQL_BIGINT:
+			res = reserved_decimal(rows_read, column);
+			break;
+
+		case SQL_BINARY:
+		case SQL_VARBINARY:
+		case SQL_LONGVARBINARY:
+		case SQL_SS_UDT:
+			res = reserved_binary(rows_read, column_size, column);
+			break;
+
+		case SQL_SS_TIMESTAMPOFFSET:
+			res = reserved_timestamp_offset(rows_read, column);
+			break;
+
+		case SQL_TYPE_TIME:
+		case SQL_SS_TIME2:
+			res = reserved_time(rows_read, column);
+			break;
+
+		case SQL_TIMESTAMP:
+		case SQL_DATETIME:
+		case SQL_TYPE_TIMESTAMP:
+		case SQL_TYPE_DATE:
+			res = reserved_timestamp(rows_read, column);
+			break;
+
+		default:
+			res = reserved_string(rows_read, column_size, column);
+			break;
+		}
+
+		return res;
+	}
+
 	bool OdbcStatement::dispatch(const SQLSMALLINT t, const size_t row_id, const size_t column)
 	{
+		const auto& statement = *_statement;
+
 		bool res;
 		switch (t)
 		{
@@ -720,14 +800,6 @@ namespace mssql
 
 	bool OdbcStatement::d_timestamp_offset(const size_t row_id, const size_t column)
 	{
-		shared_ptr<IntColumn> col_val;
-		if (_prepared)
-		{
-			auto& datum = _preparedStorage->atIndex(column);
-			auto storage = datum->get_storage();
-			_resultset->add_column(row_id, make_shared<TimestampColumn>(column, storage));
-			return true;
-		}
 		get_data_timestamp_offset(row_id, column);
 		return true;
 	}
@@ -751,14 +823,6 @@ namespace mssql
 
 	bool OdbcStatement::d_timestamp(const size_t row_id, const size_t column)
 	{
-		shared_ptr<IntColumn> col_val;
-		if (_prepared)
-		{
-			auto& datum = _preparedStorage->atIndex(column);
-			auto storage = datum->get_storage();
-			_resultset->add_column(row_id, make_shared<TimestampColumn>(column, storage, _query->query_tz_adjustment()));
-			return true;
-		}
 		get_data_timestamp(row_id, column);
 		return true;
 	}
@@ -783,13 +847,6 @@ namespace mssql
 
 	bool OdbcStatement::d_integer(const size_t row_id, const size_t column)
 	{
-		if (_prepared)
-		{
-			auto& datum = _preparedStorage->atIndex(column);
-			auto storage = datum->get_storage();
-			_resultset->add_column(row_id, make_shared<IntColumn>(column, storage));
-			return true;
-		}
 		get_data_long(row_id, column);
 		return true;
 	}
@@ -817,15 +874,128 @@ namespace mssql
 		return true;
 	}
 
+	bool OdbcStatement::reserved_bit(const size_t row_count, const size_t column) const
+	{
+		auto& bound_datum = _preparedStorage->atIndex(column);
+		auto& ind = bound_datum->get_ind_vec();
+		const auto storage = bound_datum->get_storage();
+		for (size_t row_id = 0; row_id < row_count; ++row_id) {			
+			const auto str_len_or_ind_ptr = ind[row_id];
+			if (str_len_or_ind_ptr == SQL_NULL_DATA)
+			{
+				_resultset->add_column(row_id, make_shared<NullColumn>(column));
+				continue;
+			}
+			auto v = (*storage->charvec_ptr)[row_id];
+			_resultset->add_column(row_id, make_shared<BoolColumn>(column, v));
+		}		
+		return true;
+	}
+
+	bool OdbcStatement::reserved_int(const size_t row_count, const size_t column) const
+	{
+		auto& bound_datum = _preparedStorage->atIndex(column);
+		auto& ind = bound_datum->get_ind_vec();
+		const auto storage = bound_datum->get_storage();
+		for (size_t row_id = 0; row_id < row_count; ++row_id) {
+			auto v = (*storage->int64vec_ptr)[row_id];
+			const auto str_len_or_ind_ptr = ind[row_id];
+			if (str_len_or_ind_ptr == SQL_NULL_DATA)
+			{
+				_resultset->add_column(row_id, make_shared<NullColumn>(column));
+				continue;
+			}
+			_resultset->add_column(row_id, make_shared<IntColumn>(column, v));
+		}
+		return true;
+	}
+	
+	bool OdbcStatement::reserved_decimal(const size_t row_count, const size_t column) const
+	{
+		auto& bound_datum = _preparedStorage->atIndex(column);
+		auto& ind = bound_datum->get_ind_vec();
+		const auto storage = bound_datum->get_storage();
+		for (size_t row_id = 0; row_id < row_count; ++row_id) {
+			auto v = (*storage->doublevec_ptr)[row_id];
+			const auto str_len_or_ind_ptr = ind[row_id];
+			if (str_len_or_ind_ptr == SQL_NULL_DATA)
+			{
+				_resultset->add_column(0, make_shared<NullColumn>(column));
+				continue;
+			}
+			_resultset->add_column(row_id, make_shared<NumberColumn>(column, v));
+		}
+		return true;
+	}
+
+	bool OdbcStatement::reserved_timestamp(const size_t row_count, const size_t column) const
+	{
+		auto& bound_datum = _preparedStorage->atIndex(column);
+		auto& ind = bound_datum->get_ind_vec();
+		const auto storage = bound_datum->get_storage();
+		for (size_t row_id = 0; row_id < row_count; ++row_id) {
+			auto v = (*storage->timestampvec_ptr)[row_id];
+			const auto str_len_or_ind_ptr = ind[row_id];
+			if (str_len_or_ind_ptr == SQL_NULL_DATA)
+			{
+				_resultset->add_column(row_id, make_shared<NullColumn>(column));
+				continue;
+			}
+			_resultset->add_column(row_id, make_shared<TimestampColumn>(column, v));
+		}
+		return true;
+	}
+
+	bool OdbcStatement::reserved_timestamp_offset(const size_t row_count, const size_t column) const
+	{
+		auto& bound_datum = _preparedStorage->atIndex(column);
+		auto& ind = bound_datum->get_ind_vec();
+		const auto storage = bound_datum->get_storage();
+		for (size_t row_id = 0; row_id < row_count; ++row_id) {
+			auto v = (*storage->timestampoffsetvec_ptr)[row_id];
+			const auto str_len_or_ind_ptr = ind[row_id];
+			if (str_len_or_ind_ptr == SQL_NULL_DATA)
+			{
+				_resultset->add_column(row_id, make_shared<NullColumn>(column));
+				continue;
+			}
+			_resultset->add_column(row_id, make_shared<TimestampColumn>(column, v));
+		}
+		return true;
+	}
+
+	bool OdbcStatement::reserved_time(const size_t row_count, const size_t column) const
+	{
+		auto& bound_datum = _preparedStorage->atIndex(column);
+		auto& ind = bound_datum->get_ind_vec();
+		const auto storage = bound_datum->get_storage();
+		for (size_t row_id = 0; row_id < row_count; ++row_id) {
+			auto & time = (*storage->time2vec_ptr)[row_id];
+			const auto str_len_or_ind_ptr = ind[row_id];
+			if (str_len_or_ind_ptr == SQL_NULL_DATA)
+			{
+				_resultset->add_column(row_id, make_shared<NullColumn>(column));
+				continue;
+			}
+
+			SQL_SS_TIMESTAMPOFFSET_STRUCT datetime;
+			// not necessary, but simple precaution
+			memset(&datetime, 0, sizeof(datetime));
+			datetime.year = SQL_SERVER_DEFAULT_YEAR;
+			datetime.month = SQL_SERVER_DEFAULT_MONTH;
+			datetime.day = SQL_SERVER_DEFAULT_DAY;
+			datetime.hour = time.hour;
+			datetime.minute = time.minute;
+			datetime.second = time.second;
+			datetime.fraction = time.fraction;
+
+			_resultset->add_column(row_id, make_shared<TimestampColumn>(column, datetime));
+		}
+		return true;
+	}
+
 	bool OdbcStatement::d_bit(const size_t row_id, const size_t column)
 	{
-		if (_prepared)
-		{
-			auto& datum = _preparedStorage->atIndex(column);
-			auto storage = datum->get_storage();
-			_resultset->add_column(row_id, make_shared<BoolColumn>(column, storage));
-			return true;
-		}
 		get_data_bit(row_id, column);
 		return true;
 	}
@@ -849,13 +1019,6 @@ namespace mssql
 
 	bool OdbcStatement::d_decimal(const size_t row_id, const size_t column)
 	{
-		if (_prepared)
-		{
-			auto& datum = _preparedStorage->atIndex(column);
-			auto storage = datum->get_storage();
-			_resultset->add_column(row_id, make_shared<NumberColumn>(column, storage));
-			return true;
-		}
 		return get_data_decimal(row_id, column);
 	}
 
@@ -929,8 +1092,35 @@ namespace mssql
 		const auto& statement = *_statement;
 		auto res = false;
 		const auto row_fetches = _prepared ? 1 : number_rows;
-		for (size_t row_id = 0; row_id < row_fetches; ++row_id) {
-			const auto ret = SQLFetch(statement);
+		
+		if (!_prepared) {
+			for (size_t row_id = 0; row_id < row_fetches; ++row_id) {
+				const auto ret = SQLFetch(statement);
+				if (ret == SQL_NO_DATA)
+				{
+					_resultset->_end_of_rows = true;
+					return true;
+				}
+				_resultset->_end_of_rows = false;
+				res = true;
+
+				const auto column_count = static_cast<int>(_resultset->get_column_count());
+				for (auto c = 0; c < column_count; ++c) {
+					const auto& definition = _resultset->get_meta_data(c);
+					res = dispatch(definition.dataType, row_id, c);
+					if (!res) {
+						break;
+					}
+				}
+			}
+		}
+		else
+		{
+			SQLROWSETSIZE row_count;
+			SQLUSMALLINT row_status[prepared_rows_to_bind];
+			SQLSetStmtAttr(statement, SQL_ATTR_ROWS_FETCHED_PTR, &row_count, 0);
+			SQLSetStmtAttr(statement, SQL_ATTR_ROW_STATUS_PTR, row_status, 0);
+			const auto ret = SQLFetchScroll(statement, SQL_FETCH_NEXT, 0);
 			if (ret == SQL_NO_DATA)
 			{
 				_resultset->_end_of_rows = true;
@@ -938,14 +1128,15 @@ namespace mssql
 			}
 			_resultset->_end_of_rows = false;
 			res = true;
+			if (!check_odbc_error(ret)) return false;
 			const auto column_count = static_cast<int>(_resultset->get_column_count());
 			for (auto c = 0; c < column_count; ++c) {
 				const auto& definition = _resultset->get_meta_data(c);
-				res = dispatch(definition.dataType, row_id, c);
+				res = dispatch_prepared(definition.dataType, definition.columnSize, row_count, c);
 				if (!res) {
 					break;
 				}
-			}
+			}			
 		}
 		return res;
 	}
@@ -1083,99 +1274,42 @@ namespace mssql
 		return true;
 	}
 
-	/*
-	bool OdbcStatement::lob(const size_t row_id, size_t column)
-	{
-		auto reading_column = true;
-		auto storage = make_shared<DatumStorage>();
-			
-		const auto size = sizeof(uint16_t);
-		const auto& statement = *_statement;	
-		const SQLLEN atomic_read = 24 * 1024;
-		auto bytes_to_read = atomic_read;
-		storage->ReserveUint16(atomic_read / size + 1);
-		auto & uint16_data = storage->uint16vec_ptr;
-		auto write_ptr = uint16_data->data();
-		bytes_to_read += size;	
-		SQLLEN total_bytes_to_read;
-		auto r = SQLGetData(statement, column + 1, SQL_C_WCHAR, write_ptr, bytes_to_read + size, &total_bytes_to_read);
-		
-		if (total_bytes_to_read == SQL_NULL_DATA)
-		{
-			_resultset->add_column(0, make_shared<NullColumn>(column));
-			return true;
-		}
-		if (!check_odbc_error(r)) return false;
-		auto status = false;
-		auto more = check_more_read(r, status);
-		if (!status)
-		{
-			return false;
-		}
-		const auto maxvarchar = total_bytes_to_read < 0;
-		if (maxvarchar)
-		{
-			total_bytes_to_read = bytes_to_read * 2;
-		}
-		auto n_items = total_bytes_to_read / size;
-		uint16_data->reserve(n_items + 1);
-		uint16_data->resize(n_items);
-			
-		if (total_bytes_to_read > bytes_to_read) {
-			total_bytes_to_read -= bytes_to_read;
-		}
-		write_ptr = uint16_data->data();
-		write_ptr += bytes_to_read / size;
-		
-		auto reads = 1;
-		while (more)
-		{
-			bytes_to_read = min(static_cast<SQLLEN>(atomic_read + size), total_bytes_to_read);
-			r = SQLGetData(statement, column + 1, SQL_C_WCHAR, write_ptr, bytes_to_read + size, &total_bytes_to_read);
-			++reads;
-			if (total_bytes_to_read < 0)
-			{
-				const int previous = uint16_data->size();
-				total_bytes_to_read = bytes_to_read * (reads + 1);
-				n_items = total_bytes_to_read / size;
-				uint16_data->reserve(n_items + 1);
-				uint16_data->resize(n_items);
-				write_ptr = uint16_data->data() + previous;
-			}else
-			{
-				write_ptr += bytes_to_read / size;
-			}
-			if (!check_odbc_error(r)) return false;
-			more = check_more_read(r, status);
-			if (!status)
-			{
-				return false;
-			}	
-		}
-		auto last = uint16_data->size() - 1;
-		if (maxvarchar)
-		{
-			while ((*uint16_data)[last] == 0)
-			{
-				--last;
-			}
-			if (last < uint16_data->size() - 1) {
-				uint16_data->resize(last + 1);
-			}
-		}
-		_resultset->add_column(row_id, make_shared<StringColumn>(column, storage, uint16_data->size()));
-		return true;
-	}*/
-
-	bool OdbcStatement::reserved_string(SQLLEN display_size, const size_t row_id, size_t column) const
+	bool OdbcStatement::reserved_string(const size_t row_count, const size_t column_size, const size_t column) const
 	{
 		auto& bound_datum = _preparedStorage->atIndex(column);
 		auto& ind = bound_datum->get_ind_vec();
 		const auto size = sizeof(uint16_t);
-		auto value_len = ind[0];
-		value_len /= size;
-		const auto value = make_shared<StringColumn>(column, bound_datum->get_storage(), value_len);
-		_resultset->add_column(row_id, value);
+		const auto storage = bound_datum->get_storage();			
+		for (size_t row_id = 0; row_id < row_count; ++row_id) {
+			const auto str_len_or_ind_ptr = ind[row_id];
+			if (str_len_or_ind_ptr == SQL_NULL_DATA)
+			{
+				_resultset->add_column(row_id, make_shared<NullColumn>(column));
+				continue;
+			}
+			auto offset = (column_size + 1) * row_id;
+			const auto value = make_shared<StringColumn>(column, storage->uint16vec_ptr, offset, ind[row_id] / size);
+			_resultset->add_column(row_id, value);
+		}
+		return true;
+	}
+
+	bool OdbcStatement::reserved_binary(const size_t row_count, const size_t column_size, const size_t column) const
+	{
+		auto& bound_datum = _preparedStorage->atIndex(column);
+		auto& ind = bound_datum->get_ind_vec();
+		const auto storage = bound_datum->get_storage();
+		for (size_t row_id = 0; row_id < row_count; ++row_id) {
+			const auto str_len_or_ind_ptr = ind[row_id];
+			if (str_len_or_ind_ptr == SQL_NULL_DATA)
+			{
+				_resultset->add_column(row_id, make_shared<NullColumn>(column));
+				continue;
+			}
+			auto offset = column_size * row_id;
+			const auto value = make_shared<BinaryColumn>(column, storage, offset, ind[row_id]);
+			_resultset->add_column(row_id, value);
+		}
 		return true;
 	}
 
@@ -1227,7 +1361,7 @@ namespace mssql
 
 		if (display_size >= 1 && display_size <= SQL_SERVER_MAX_STRING_SIZE)
 		{
-			return _prepared ? reserved_string(display_size, row_id, column) : bounded_string(display_size, row_id, column);
+			return bounded_string(display_size, row_id, column);
 		}
 
 		return false;

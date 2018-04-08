@@ -13,12 +13,12 @@ namespace mssql
 		_bindings = make_shared<param_bindings>();
 	}
 
-	bool BoundDatumSet::reserve(const shared_ptr<ResultSet> &set) const
+	bool BoundDatumSet::reserve(const shared_ptr<ResultSet> &set, const size_t row_count) const
 	{
 		for (uint32_t i = 0; i < set->get_column_count(); ++i) {
 			auto binding = make_shared<BoundDatum>();
 			auto & def = set->get_meta_data(i);
-			binding->reserve_column_type(def.dataType, def.columnSize);
+			binding->reserve_column_type(def.dataType, def.columnSize, row_count);
 			_bindings->push_back(binding);
 		}
 		return true;

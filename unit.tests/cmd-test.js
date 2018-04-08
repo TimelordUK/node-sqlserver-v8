@@ -57,29 +57,46 @@ class Benchmark {
     run(conn_str, argv) {
         let delay = argv.delay || 500;
         let repeats = argv.repeats || 10;
+        let prepared = argv.hasOwnProperty('prepared') || false;
         let table = argv.table || 'syscomments';
-        let cycle = argv.hasOwnProperty('cycle') || false;
         let query = `select * from master..${table}`;
         console.log(`Benchmark query ${query}`);
         let runs = 0;
         let total = 0;
-        let cycles = cycle ? [
-            'sysobjects',
-            'syscomments',
-            'syscolumns'
-        ] : [table];
-        sql.open(conn_str, (err, conn) => {
+        let statement = null;
+        function get_ready(done) {
+            sql.open(conn_str, (err, conn) => {
+                if (err) {
+                    console.log(err);
+                    throw err;
+                }
+                if (prepared) {
+                    conn.prepare(query, function (err, statement) {
+                        done(err, conn, statement);
+                    });
+                }
+                else {
+                    done(err, conn);
+                }
+            });
+        }
+        function get_data(conn, cb) {
+            if (prepared) {
+                statement.preparedQuery([], cb);
+            }
+            else {
+                conn.query(query, cb);
+            }
+        }
+        get_ready((err, conn, ps) => {
             if (err) {
                 console.log(err);
                 throw err;
             }
+            statement = ps;
             let repeatId = setInterval(() => {
                 let d = new Date();
-                if (cycle) {
-                    table = cycles[runs % cycles.length];
-                    query = `select * from master..${table}`;
-                }
-                conn.query(query, function (err, rows) {
+                get_data(conn, function (err, rows) {
                     if (err) {
                         console.log(err.message);
                         return;

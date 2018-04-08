@@ -1,4 +1,4 @@
-import {ProcedureSummary, SqlClient, Connection, ProcedureManager} from 'msnodesqlv8';
+import {ProcedureSummary, SqlClient, Connection, ProcedureManager, PreparedStatement, QueryCb} from 'msnodesqlv8';
 
 const sql: SqlClient = require('msnodesqlv8');
 
@@ -69,33 +69,48 @@ class Benchmark implements SimpleTest {
     public run(conn_str: string, argv: any): void {
         let delay: number = argv.delay || 500;
         let repeats: number = argv.repeats || 10;
+        let prepared: boolean = argv.hasOwnProperty('prepared') || false;
         let table: string = argv.table || 'syscomments';
-        let cycle: boolean = argv.hasOwnProperty('cycle') || false;
         let query = `select * from master..${table}`;
         console.log(`Benchmark query ${query}`);
         let runs = 0;
         let total = 0;
+        let statement: PreparedStatement = null;
 
-        let cycles = cycle ? [
-            'sysobjects',
-            'syscomments',
-            'syscolumns'
-        ] : [table];
+        function get_ready(done:Function) {
+            sql.open(conn_str, (err, conn) => {
+                if (err) {
+                    console.log(err);
+                    throw err;
+                }
 
-        sql.open(conn_str, (err, conn) => {
+                if (prepared) {
+                    conn.prepare(query, function (err, statement) {
+                        done(err, conn, statement)
+                    })
+                } else {
+                    done(err, conn)
+                }
+            })
+        }
+
+        function get_data(conn:Connection, cb:QueryCb) {
+            if (prepared) {
+                statement.preparedQuery([], cb);
+            }else {
+                conn.query(query, cb);
+            }
+        }
+
+        get_ready((err:Error, conn:Connection, ps:PreparedStatement) => {
             if (err) {
                 console.log(err);
                 throw err;
             }
+            statement = ps;
             let repeatId = setInterval(() => {
                 let d = new Date();
-
-                if (cycle) {
-                    table = cycles[runs % cycles.length];
-                    query = `select * from master..${table}`;
-                }
-
-                conn.query(query, function (err, rows) {
+                get_data( conn, function (err, rows) {
                     if (err) {
                         console.log(err.message);
                         return

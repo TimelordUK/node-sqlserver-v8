@@ -10,7 +10,7 @@ namespace mssql
 	class BoundDatum {
 	public:
 		bool bind(Local<Value> &p);
-		void reserve_column_type(SQLSMALLINT type, size_t len);
+		void reserve_column_type(SQLSMALLINT type, const size_t len, const size_t row_count);
 
 		bool get_defined_precision() const {
 			return definedPrecision;

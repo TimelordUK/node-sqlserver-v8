@@ -192,6 +192,19 @@ suite('prepared', function () {
     })
   }
 
+  test('use prepared to reserve and read multiple rows.', function (testDone) {
+    var sql = 'select text from master..syscomments'
+    theConnection.prepare(sql, function (err, preparedQuery) {
+      assert.ifError(err)
+      preparedQuery.preparedQuery([], function (err, res) {
+        assert(res != null)
+        assert(res.length > 0)
+        assert.ifError(err)
+      })
+      testDone()
+    })
+  })
+
   test('use prepared statement twice with no parameters.', function (testDone) {
     var select = prepared.scan
     var meta = select.getMeta()

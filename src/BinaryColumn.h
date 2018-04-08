@@ -14,7 +14,12 @@ namespace mssql
     {
     public:
 		BinaryColumn(int id, shared_ptr<DatumStorage> storage, size_t l) : Column(id)
-			, len(l), raw(clone(storage->charvec_ptr, l))
+			, len(l), offset(0), raw(clone(storage->charvec_ptr, offset, l))
+		{
+		}
+
+		BinaryColumn(int id, shared_ptr<DatumStorage> storage, size_t offset, size_t l) : Column(id)
+			, len(l), offset(offset), raw(clone(storage->charvec_ptr, offset, l))
 		{
 		}
 
@@ -29,10 +34,10 @@ namespace mssql
 
     private:
 
-		static char *clone(shared_ptr<DatumStorage::char_vec_t> sp, size_t len)
+		static char *clone(shared_ptr<DatumStorage::char_vec_t> sp, size_t offset, size_t len)
 		{
 			char *dest = new char[len];
-			memcpy(dest, sp->data(), len);
+			memcpy(dest, sp->data() + offset, len);
 			return dest;
 		}
 
@@ -43,6 +48,7 @@ namespace mssql
 		}
 
 		size_t len;
+		size_t offset;
 		char *raw;
     };
 }

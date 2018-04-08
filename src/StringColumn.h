@@ -26,12 +26,16 @@ namespace mssql
 	   {
 	   }
 
+	   StringColumn(int id, shared_ptr<DatumStorage::uint16_t_vec_t> s, size_t offset, size_t size) : Column(id), offset(offset), size(size), storage(s)
+	   {
+	   }
+
 	   Handle<Value> ToValue() override
 	   {
 		  nodeTypeFactory fact;
 		  auto ptr = storage->data();
 		  auto len = size;
-		  auto s = fact.from_two_byte(static_cast<const uint16_t*>(ptr), len);
+		  auto s = fact.from_two_byte(static_cast<const uint16_t*>(ptr + offset), len);
 		  return s;
 	   }
 
@@ -39,5 +43,6 @@ namespace mssql
 
 		shared_ptr<DatumStorage::uint16_t_vec_t> storage;
 		size_t size;
+		size_t offset = 0;
     };
 }
