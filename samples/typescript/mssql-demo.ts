@@ -3,7 +3,7 @@ import {Connection, Error, PreparedStatement, Query, SqlClient, QueryDescription
 // require the module so it can be used in your node JS code.
 export const sql: SqlClient = require('msnodesqlv8');
 
-let supp = require('./');
+let supp = require('./demo-support');
 
 /*
  This demo assumes a SQL server database is available.  Modify the connection string below
@@ -71,7 +71,7 @@ supp.GlobalConn.init(sql, (co: any) => {
         procedureHelper.setVerbose(false);
         let async = co.async;
         helper = co.helper;
-        parsedJSON = helper.getJSON('../../unit.tests');
+        parsedJSON = helper.getJSON('../../unit.tests/json');
 
         console.log(conn_str);
         async.series(demos, () => {

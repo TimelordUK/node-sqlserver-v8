@@ -296,11 +296,11 @@ class LargeStringSelect {
                         return;
                     ++x;
                 });
+                q.on('row', (row) => {
+                    console.log(`[column:${x}]: row = ${row}`);
+                });
                 q.on('column', (col, data, more) => {
                     console.log(`[column:${x}]: col = ${col} data.length ${data.length}, more : ${more} p.length ${p.length}`);
-                });
-                q.on('partial', (col, data, more) => {
-                    console.log(`[partial:${x}]: col = ${col} data.length ${data.length}, more : ${more} p.length ${p.length}`);
                 });
             }, delay);
         });
