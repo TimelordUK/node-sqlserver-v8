@@ -71,7 +71,11 @@ class Benchmark implements SimpleTest {
         let repeats: number = argv.repeats || 10;
         let prepared: boolean = argv.hasOwnProperty('prepared') || false;
         let table: string = argv.table || 'syscomments';
-        let query = `select * from master..${table}`;
+        let columns:string = argv.columns || '*';
+        let top:number = argv.top || -1;
+        let query = top < 0 ?
+            `select ${columns} from master..${table}` :
+            `select top ${top} ${columns} from master..${table}`;
         console.log(`Benchmark query ${query}`);
         let runs = 0;
         let total = 0;
@@ -85,7 +89,10 @@ class Benchmark implements SimpleTest {
                 }
 
                 if (prepared) {
+                    console.log(`preparing query ${query}`);
                     conn.prepare(query, function (err, statement) {
+                        let cols = statement.getMeta().map(x=>x.name).join();
+                        console.log(cols);
                         done(err, conn, statement)
                     })
                 } else {

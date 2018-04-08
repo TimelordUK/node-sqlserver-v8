@@ -59,7 +59,11 @@ class Benchmark {
         let repeats = argv.repeats || 10;
         let prepared = argv.hasOwnProperty('prepared') || false;
         let table = argv.table || 'syscomments';
-        let query = `select * from master..${table}`;
+        let columns = argv.columns || '*';
+        let top = argv.top || -1;
+        let query = top < 0 ?
+            `select ${columns} from master..${table}` :
+            `select top ${top} ${columns} from master..${table}`;
         console.log(`Benchmark query ${query}`);
         let runs = 0;
         let total = 0;
@@ -71,7 +75,10 @@ class Benchmark {
                     throw err;
                 }
                 if (prepared) {
+                    console.log(`preparing query ${query}`);
                     conn.prepare(query, function (err, statement) {
+                        let cols = statement.getMeta().map(x => x.name).join();
+                        console.log(cols);
                         done(err, conn, statement);
                     });
                 }

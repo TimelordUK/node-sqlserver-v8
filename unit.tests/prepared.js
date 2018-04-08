@@ -193,7 +193,7 @@ suite('prepared', function () {
   }
 
   test('use prepared to reserve and read multiple rows.', function (testDone) {
-    var sql = 'select text from master..syscomments'
+    var sql = 'select * from master..syscomments'
     theConnection.prepare(sql, function (err, preparedQuery) {
       assert.ifError(err)
       preparedQuery.preparedQuery([], function (err, res) {

@@ -654,8 +654,6 @@ namespace mssql
 
 	bool OdbcStatement::dispatch(const SQLSMALLINT t, const size_t row_id, const size_t column)
 	{
-		const auto& statement = *_statement;
-
 		bool res;
 		switch (t)
 		{
@@ -671,11 +669,11 @@ namespace mssql
 		case SQL_WLONGVARCHAR:
 		case SQL_SS_XML:
 		case SQL_GUID:
-			res = d_string(row_id, column);
+			res = try_read_string(false, row_id, column);
 			break;
 
 		case SQL_BIT:
-			res = d_bit(row_id, column);
+			res = get_data_bit(row_id, column);
 			break;
 
 		case SQL_SMALLINT:
@@ -687,7 +685,7 @@ namespace mssql
 		case SQL_C_ULONG:
 		case SQL_C_USHORT:
 		case SQL_C_UTINYINT:
-			res = d_integer(row_id, column);
+			res = get_data_long(row_id, column);
 			break;
 
 		case SQL_DECIMAL:
@@ -696,18 +694,18 @@ namespace mssql
 		case SQL_FLOAT:
 		case SQL_DOUBLE:
 		case SQL_BIGINT:
-			res = d_decimal(row_id, column);
+			res = get_data_decimal(row_id, column);
 			break;
 
 		case SQL_BINARY:
 		case SQL_VARBINARY:
 		case SQL_LONGVARBINARY:
 		case SQL_SS_UDT:
-			res = d_binary(row_id, column);
+			res = get_data_binary(row_id, column);
 			break;
 
 		case SQL_SS_TIMESTAMPOFFSET:
-			res = d_timestamp_offset(row_id, column);
+			res = get_data_timestamp_offset(row_id, column);
 			break;
 
 		case SQL_TYPE_TIME:
@@ -719,11 +717,11 @@ namespace mssql
 		case SQL_DATETIME:
 		case SQL_TYPE_TIMESTAMP:
 		case SQL_TYPE_DATE:
-			res = d_timestamp(row_id, column);
+			res = get_data_timestamp(row_id, column);
 			break;
 
 		default:
-			res = d_string(row_id, column);
+			res = res = try_read_string(false, row_id, column);
 			break;
 		}
 
@@ -798,12 +796,6 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::d_timestamp_offset(const size_t row_id, const size_t column)
-	{
-		get_data_timestamp_offset(row_id, column);
-		return true;
-	}
-
 	bool OdbcStatement::get_data_timestamp(const size_t row_id, const size_t column)
 	{
 		const auto& statement = *_statement;
@@ -818,12 +810,6 @@ namespace mssql
 			return true; // break
 		}
 		_resultset->add_column(row_id, make_shared<TimestampColumn>(column, v));
-		return true;
-	}
-
-	bool OdbcStatement::d_timestamp(const size_t row_id, const size_t column)
-	{
-		get_data_timestamp(row_id, column);
 		return true;
 	}
 
@@ -843,18 +829,6 @@ namespace mssql
 		}
 		_resultset->add_column(row_id, make_shared<IntColumn>(column, v));
 		return true;
-	}
-
-	bool OdbcStatement::d_integer(const size_t row_id, const size_t column)
-	{
-		get_data_long(row_id, column);
-		return true;
-	}
-
-	bool OdbcStatement::d_string(const size_t row_id, const size_t column)
-	{
-		const auto read = try_read_string(false, row_id, column);
-		return read;
 	}
 
 	bool OdbcStatement::get_data_bit(const size_t row_id, const size_t column)
@@ -994,12 +968,6 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::d_bit(const size_t row_id, const size_t column)
-	{
-		get_data_bit(row_id, column);
-		return true;
-	}
-
 	bool OdbcStatement::get_data_decimal(const size_t row_id, const size_t column)
 	{
 		const auto& statement = *_statement;
@@ -1015,11 +983,6 @@ namespace mssql
 		}
 		_resultset->add_column(row_id, make_shared<NumberColumn>(column, v));
 		return true;
-	}
-
-	bool OdbcStatement::d_decimal(const size_t row_id, const size_t column)
-	{
-		return get_data_decimal(row_id, column);
 	}
 
 	bool OdbcStatement::get_data_binary(const size_t row_id, const size_t column)
@@ -1070,31 +1033,14 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::d_binary(const size_t row_id, const size_t column)
-	{
-		if (_prepared)
-		{
-			auto& datum = _preparedStorage->atIndex(column);
-			auto storage = datum->get_storage();
-			auto& ind = datum->get_ind_vec();
-			auto amount = ind[0];
-			_resultset->add_column(row_id, make_shared<BinaryColumn>(column, storage, amount));
-			return true;
-		}
-
-		return get_data_binary(row_id, column);
-	}
-
 	bool OdbcStatement::try_read_columns(const size_t number_rows)
 	{
 		//fprintf(stderr, "TryReadColumn %d\n", column);
 		_resultset->start_results();
 		const auto& statement = *_statement;
-		auto res = false;
-		const auto row_fetches = _prepared ? 1 : number_rows;
-		
+		auto res = false;		
 		if (!_prepared) {
-			for (size_t row_id = 0; row_id < row_fetches; ++row_id) {
+			for (size_t row_id = 0; row_id < number_rows; ++row_id) {
 				const auto ret = SQLFetch(statement);
 				if (ret == SQL_NO_DATA)
 				{
@@ -1117,9 +1063,7 @@ namespace mssql
 		else
 		{
 			SQLROWSETSIZE row_count;
-			SQLUSMALLINT row_status[prepared_rows_to_bind];
 			SQLSetStmtAttr(statement, SQL_ATTR_ROWS_FETCHED_PTR, &row_count, 0);
-			SQLSetStmtAttr(statement, SQL_ATTR_ROW_STATUS_PTR, row_status, 0);
 			const auto ret = SQLFetchScroll(statement, SQL_FETCH_NEXT, 0);
 			if (ret == SQL_NO_DATA)
 			{
@@ -1134,6 +1078,7 @@ namespace mssql
 				const auto& definition = _resultset->get_meta_data(c);
 				res = dispatch_prepared(definition.dataType, definition.columnSize, row_count, c);
 				if (!res) {
+					res = false;
 					break;
 				}
 			}			

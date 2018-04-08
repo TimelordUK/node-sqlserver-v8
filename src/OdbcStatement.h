@@ -94,6 +94,8 @@ namespace mssql
 		bool start_reading_results();
 		SQLRETURN query_timeout(int timeout);
 		bool d_variant(size_t row, size_t col);
+		bool d_time(size_t row, size_t col);
+		/*
 		bool d_string(size_t row, size_t col);
 		bool d_bit(size_t row, size_t col);
 		bool d_integer(size_t row, size_t col);
@@ -102,6 +104,7 @@ namespace mssql
 		bool d_timestamp_offset(size_t row, size_t col);
 		bool d_timestamp(size_t row, size_t col);
 		bool d_time(size_t row, size_t col);
+		*/
 		bool bounded_string(SQLLEN display_size, size_t row, size_t column);
 		bool reserved_string(const size_t rows_read, const size_t column_size, size_t const column) const;
 		bool reserved_binary(const size_t rows_read, const size_t column_size, size_t const column) const;
