@@ -10,16 +10,16 @@
 1. captures return code from stored procedure.
 1. will obtain meta data describing parameters.
 1. compatibe with Node 4, 5, 6, 7, 8 and 9
+1. electron supported.
 1. includes 64 bit/ia32 precompiled libraries.
 1. npm install with npm install msnodesqlv8
-1. new features to be made available over coming months.
 1. bulk table operations insert, delete, update
 1. prepared statements
 1. table value parameters
 
 ## Node JS support for SQL server 
 
-Based on node-sqlserver, this version will compile in Visual Studio 2015/2017 and is built against the v8 node module API.  The module will work against node version 0.12.x. and >= 4.1.x.    Included in the repository are pre compiled binaries for both x64 and x86 targets.  
+Based on node-sqlserver, this version will compile in Visual Studio 2015/2017 and is built against the v8 node module API.  Included in the repository are pre compiled binaries for both x64 and x86 targets.
 
 Functionally the API should work exactly as the existing library. All versions of node are supported.
 
@@ -321,7 +321,7 @@ note if you wish to run the code through an IDE such as PHPStorm, the following 
 
     -- change path as required to unit test file, set breakpoint and run via IDE
     
-    mocha.addFile('node_modules/node-sqlserver-v8/test/huge-bulk.js');
+    mocha.addFile('node_modules/node-sqlserver-v8/test/query.js');
 
     mocha.run(function (failures) {
         process.on('exit', function () {
