@@ -47,12 +47,15 @@ namespace mssql
 
 		bool failed;
 		shared_ptr<OdbcError> failure;
-
+		clock_capture timer;
+		int error(Local<Value> args[]);
+		int success(Local<Value> args[]);
+		
 	public:
 
 		OdbcOperation(size_t queryId, Local<Object> cb);
-		OdbcOperation(shared_ptr<OdbcConnection> connection, size_t queryId, Local<Object>);
-		OdbcOperation(shared_ptr<OdbcConnection> connection, Local<Object> cb);
+		OdbcOperation(const shared_ptr<OdbcConnection> &connection, size_t queryId, Local<Object>);
+		OdbcOperation(const shared_ptr<OdbcConnection> &connection, Local<Object> cb);
 
 		virtual ~OdbcOperation();
 		virtual bool TryInvokeOdbc() = 0;
@@ -60,8 +63,6 @@ namespace mssql
 
 		void getFailure();
 		void invoke_background() override;
-		int Error(Local<Value> args[]);
-		int Success(Local<Value> args[]);
 		void complete_foreground() override;
 	};
 }

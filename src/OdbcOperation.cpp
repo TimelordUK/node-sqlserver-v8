@@ -22,6 +22,7 @@
 #include <OdbcConnection.h>
 #include <OdbcStatement.h>
 #include <OdbcStatementCache.h>
+#include <iostream>
 
 namespace mssql
 {
@@ -39,7 +40,7 @@ namespace mssql
 		_output_param = fact.null();
 	}
 
-	OdbcOperation::OdbcOperation(const shared_ptr<OdbcConnection> connection, const size_t query_id, Local<Object> cb)
+	OdbcOperation::OdbcOperation(const shared_ptr<OdbcConnection> &connection, const size_t query_id, Local<Object> cb)
 		: 
 		_connection(connection),
 		_statement(nullptr),
@@ -53,7 +54,7 @@ namespace mssql
 		_output_param = fact.null();
 	}
 
-	OdbcOperation::OdbcOperation(const shared_ptr<OdbcConnection> connection, Local<Object> cb)
+	OdbcOperation::OdbcOperation(const shared_ptr<OdbcConnection> & connection, Local<Object> cb)
 		:
 		_connection(connection),
 		_statement(nullptr),
@@ -93,14 +94,15 @@ namespace mssql
 
 	void OdbcOperation::invoke_background()
 	{
+		// std::cout << " invoke_background .... " << timer.get_counter() << endl;
 		failed = !TryInvokeOdbc();
-
+		// std::cout << " .... invoke_background " << timer.get_counter() << endl;
 		if (failed) {
 			getFailure();
 		}
 	}
 
-	int OdbcOperation::Error(Local<Value> args[])
+	int OdbcOperation::error(Local<Value> args[])
 	{
 		nodeTypeFactory fact;
 		auto err = fact.error(failure->Message());
@@ -128,7 +130,7 @@ namespace mssql
 		return argc;
 	}
 
-	int OdbcOperation::Success(Local<Value> args[])
+	int OdbcOperation::success(Local<Value> args[])
 	{
 		nodeTypeFactory fact;
 
@@ -147,11 +149,13 @@ namespace mssql
 		HandleScope scope(isolate);
 		nodeTypeFactory fact;
 		if (_callback.IsEmpty()) return;
-		Local<Value> args[3];
-		const auto argc = failed ? Error(args) : Success(args);
+		Local<Value> args[4];
+		const auto argc = failed ? error(args) : success(args);
 		auto cons = fact.newCallbackFunction(_callback);		
 		auto context = isolate->GetCurrentContext();
 		const auto global = context->Global();
+		// std::cout << " complete_foreground " << timer.get_counter() << endl;
+		args[argc] = fact.new_number(timer.get_counter());
 		cons->Call(global, argc, args);
 	}
 }

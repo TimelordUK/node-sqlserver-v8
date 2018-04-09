@@ -83,6 +83,8 @@ namespace mssql
 		bool try_read_next_result();
 
 	private:
+		bool fetch_read(const size_t number_rows);
+		bool prepared_read();
 		SQLRETURN poll_check(SQLRETURN ret, bool direct);
 		bool get_data_binary(size_t row, size_t column);
 		bool get_data_decimal(size_t row, size_t column);
@@ -160,6 +162,5 @@ namespace mssql
 		mutex g_i_mutex;
 
 		const static size_t prepared_rows_to_bind = 50;
-		
 	};
 }

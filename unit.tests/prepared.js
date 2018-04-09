@@ -201,7 +201,9 @@ suite('prepared', function () {
         assert(res.length > 0)
         assert.ifError(err)
       })
-      testDone()
+      preparedQuery.free(function () {
+        testDone()
+      })
     })
   })
 

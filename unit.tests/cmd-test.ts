@@ -1,4 +1,12 @@
-import {ProcedureSummary, SqlClient, Connection, ProcedureManager, PreparedStatement, QueryCb} from 'msnodesqlv8';
+import {
+    ProcedureSummary,
+    SqlClient,
+    Connection,
+    ProcedureManager,
+    PreparedStatement,
+    QueryCb,
+    Query
+} from 'msnodesqlv8';
 
 const sql: SqlClient = require('msnodesqlv8');
 
@@ -70,6 +78,7 @@ class Benchmark implements SimpleTest {
         let delay: number = argv.delay || 500;
         let repeats: number = argv.repeats || 10;
         let prepared: boolean = argv.hasOwnProperty('prepared') || false;
+        let stats: boolean = argv.hasOwnProperty('stats') || false;
         let table: string = argv.table || 'syscomments';
         let columns:string = argv.columns || '*';
         let top:number = argv.top || -1;
@@ -102,10 +111,22 @@ class Benchmark implements SimpleTest {
         }
 
         function get_data(conn:Connection, cb:QueryCb) {
+            let q: Query = null;
             if (prepared) {
-                statement.preparedQuery([], cb);
+                q = statement.preparedQuery([], cb);
+                if (stats) {
+                    q.on('stats', function (read_ms: Number) {
+                        console.log(`${read_ms} ms`)
+                    });
+                    stats = false;
+                }
             }else {
-                conn.query(query, cb);
+                q = conn.query(query, cb);
+                if (stats) {
+                    q.on('stats', function (read_ms: Number) {
+                        console.log(`read rows : ${read_ms} ms`)
+                    });
+                }
             }
         }
 
@@ -127,7 +148,11 @@ class Benchmark implements SimpleTest {
                     total += elapsed;
                     console.log(`[${table}\t] rows.length ${rows.length} \t elapsed ${elapsed}\t ms [ runs ${runs} avg ${total / runs} ]`);
                     if (runs == repeats) {
-                        clearInterval(repeatId)
+                        clearInterval(repeatId);
+                        if (prepared) {
+                            statement.free(function() {
+                            })
+                        }
                     }
                 })
             }, delay);

@@ -71,6 +71,98 @@ namespace mssql
 		{
 		}
 	}
+	
+	bool OdbcStatement::try_read_columns(const size_t number_rows)
+	{
+		//fprintf(stderr, "TryReadColumn %d\n", column);
+		bool res;
+		_resultset->start_results();
+		if (!_prepared) {
+			res = fetch_read(number_rows);
+		}
+		else {
+			res = prepared_read();
+		}
+		return res;
+	}
+
+	bool OdbcStatement::fetch_read(const size_t number_rows)
+	{
+		const auto& statement = *_statement;
+		auto res = false;
+		for (size_t row_id = 0; row_id < number_rows; ++row_id) {
+			const auto ret = SQLFetch(statement);
+			if (ret == SQL_NO_DATA)
+			{
+				_resultset->_end_of_rows = true;
+				return true;
+			}
+			_resultset->_end_of_rows = false;
+			res = true;
+
+			const auto column_count = static_cast<int>(_resultset->get_column_count());
+			for (auto c = 0; c < column_count; ++c) {
+				const auto& definition = _resultset->get_meta_data(c);
+				res = dispatch(definition.dataType, row_id, c);
+				if (!res) {
+					break;
+				}
+			}
+		}
+		return res;
+	}
+
+	bool OdbcStatement::prepared_read()
+	{
+		const auto& statement = *_statement;
+		SQLROWSETSIZE row_count;
+		SQLSetStmtAttr(statement, SQL_ATTR_ROWS_FETCHED_PTR, &row_count, 0);
+		const auto ret = SQLFetchScroll(statement, SQL_FETCH_NEXT, 0);
+		if (ret == SQL_NO_DATA)
+		{
+			_resultset->_end_of_rows = true;
+			return true;
+		}
+		_resultset->_end_of_rows = false;
+		auto res = true;
+		if (!check_odbc_error(ret)) return false;
+		const auto column_count = static_cast<int>(_resultset->get_column_count());
+		for (auto c = 0; c < column_count; ++c) {
+			const auto& definition = _resultset->get_meta_data(c);
+			// having bound a block, will collect 50 rows worth of data in 1 call.
+			res = dispatch_prepared(definition.dataType, definition.columnSize, row_count, c);
+			if (!res) {
+				res = false;
+				break;
+			}
+		}
+		return res;
+	}
+
+	Handle<Value> OdbcStatement::get_column_values() const
+	{
+		nodeTypeFactory fact;
+		auto result = fact.new_object();
+		if (_resultset->EndOfRows())
+		{
+			result->Set(fact.from_two_byte(L"end_rows"), fact.new_boolean(true));
+		}
+
+		const auto number_rows = _resultset->get_result_count();
+		const auto column_count = static_cast<int>(_resultset->get_column_count());
+		auto results_array = fact.new_array(number_rows);
+		result->Set(fact.from_two_byte(L"data"), results_array);
+		for (size_t row_id = 0; row_id < number_rows; ++row_id) {
+			auto row_array = fact.new_array(column_count);
+			results_array->Set(row_id, row_array);
+			for (auto c = 0; c < column_count; ++c)
+			{
+				row_array->Set(c, _resultset->get_column(row_id, c)->ToValue());
+			}
+		}
+
+		return result;
+	}
 
 	void OdbcStatement::apply_precision(const shared_ptr<BoundDatum>& datum, const int current_param) const
 	{
@@ -176,14 +268,6 @@ namespace mssql
 		tvps.emplace_back(current_param, cols);
 	}
 
-	/*
-	SQLHDESC hdesc = nullptr;
-	SQLGetStmtAttr(statement, SQL_ATTR_IMP_PARAM_DESC, &hdesc, 0, nullptr);
-	const auto char_vec = (*datum).get_storage()->uint16vec_ptr;
-	const auto d = char_vec->data();
-	SQLSetDescField(hdesc, current_param, SQL_CA_SS_TYPE_NAME, static_cast<SQLPOINTER>(d), char_vec->size() * sizeof(WCHAR));
-	*/
-
 	// bind all the parameters in the array
 	bool OdbcStatement::bind_params(const shared_ptr<BoundDatumSet> &params)
 	{
@@ -246,35 +330,6 @@ namespace mssql
 	{
 		nodeTypeFactory fact;
 		return fact.new_boolean(_resultset->EndOfRows());
-	}
-
-	Handle<Value> OdbcStatement::get_column_values() const
-	{
-		//const auto start = std::clock();
-
-		nodeTypeFactory fact;
-		auto result = fact.new_object();
-		if (_resultset->EndOfRows())
-		{
-			result->Set(fact.from_two_byte(L"end_rows"), fact.new_boolean(true));
-		}
-
-		const auto number_rows = _resultset->get_result_count();
-		const auto column_count = static_cast<int>(_resultset->get_column_count());
-		auto results_array = fact.new_array(number_rows);
-		result->Set(fact.from_two_byte(L"data"), results_array);
-		for (size_t row_id = 0; row_id < number_rows; ++row_id) {
-			auto row_array = fact.new_array(column_count);
-			results_array->Set(row_id, row_array);
-			for (auto c = 0; c < column_count; ++c)
-			{
-				row_array->Set(c, _resultset->get_column(row_id, c)->ToValue());
-			}
-		}
-
-		// std::cout << "Time: " << (std::clock() - start) / static_cast<double>(CLOCKS_PER_SEC / 1000) << " ms" << std::endl;
-
-		return result;
 	}
 
 	bool OdbcStatement::return_odbc_error()
@@ -474,7 +529,6 @@ namespace mssql
 	bool OdbcStatement::bind_fetch(const shared_ptr<BoundDatumSet> & param_set)
 	{
 		const auto& statement = *_statement;
-
 		bool polling_mode;
 		{
 			lock_guard<mutex> lock(g_i_mutex);
@@ -490,6 +544,7 @@ namespace mssql
 		{
 			SQLSetStmtAttr(statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
 		}
+	
 		auto ret = SQLExecute(statement);
 		if (polling_mode)
 		{
@@ -578,7 +633,7 @@ namespace mssql
 
 	bool OdbcStatement::dispatch_prepared(const SQLSMALLINT t, const size_t column_size, const size_t rows_read, const size_t column) const
 	{
-		bool res;
+		auto res = false;
 		switch (t)
 		{
 		case SQL_SS_VARIANT:
@@ -1033,58 +1088,6 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::try_read_columns(const size_t number_rows)
-	{
-		//fprintf(stderr, "TryReadColumn %d\n", column);
-		_resultset->start_results();
-		const auto& statement = *_statement;
-		auto res = false;		
-		if (!_prepared) {
-			for (size_t row_id = 0; row_id < number_rows; ++row_id) {
-				const auto ret = SQLFetch(statement);
-				if (ret == SQL_NO_DATA)
-				{
-					_resultset->_end_of_rows = true;
-					return true;
-				}
-				_resultset->_end_of_rows = false;
-				res = true;
-
-				const auto column_count = static_cast<int>(_resultset->get_column_count());
-				for (auto c = 0; c < column_count; ++c) {
-					const auto& definition = _resultset->get_meta_data(c);
-					res = dispatch(definition.dataType, row_id, c);
-					if (!res) {
-						break;
-					}
-				}
-			}
-		}
-		else
-		{
-			SQLROWSETSIZE row_count;
-			SQLSetStmtAttr(statement, SQL_ATTR_ROWS_FETCHED_PTR, &row_count, 0);
-			const auto ret = SQLFetchScroll(statement, SQL_FETCH_NEXT, 0);
-			if (ret == SQL_NO_DATA)
-			{
-				_resultset->_end_of_rows = true;
-				return true;
-			}
-			_resultset->_end_of_rows = false;
-			res = true;
-			if (!check_odbc_error(ret)) return false;
-			const auto column_count = static_cast<int>(_resultset->get_column_count());
-			for (auto c = 0; c < column_count; ++c) {
-				const auto& definition = _resultset->get_meta_data(c);
-				res = dispatch_prepared(definition.dataType, definition.columnSize, row_count, c);
-				if (!res) {
-					res = false;
-					break;
-				}
-			}			
-		}
-		return res;
-	}
 
 	bool OdbcStatement::check_more_read(SQLRETURN r, bool & status)
 	{

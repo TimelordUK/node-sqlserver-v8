@@ -22,6 +22,7 @@
 #include <sstream>
 #include <map>
 #include <mutex>
+#include <ctime>
 
 namespace mssql
 {
@@ -37,6 +38,35 @@ namespace mssql
 	void encode_numeric_struct(double v, int precision, int upscaleLimit, SQL_NUMERIC_STRUCT & numeric);
 
     string w2a(const wchar_t* input);
+
+	struct clock_capture
+	{
+		double pc_freq = 0.0;
+		__int64 counter_start = 0;
+		bool status = true;
+		const double conversion = 1000.0;
+
+		clock_capture()
+		{
+			start_counter();
+		}
+
+		void start_counter()
+		{
+			LARGE_INTEGER li;
+			status = QueryPerformanceFrequency(&li);
+			pc_freq = double(li.QuadPart) / conversion;
+			QueryPerformanceCounter(&li);
+			counter_start = li.QuadPart;
+		}
+
+		double get_counter() const
+		{
+			LARGE_INTEGER li;
+			QueryPerformanceCounter(&li);
+			return double(li.QuadPart - counter_start) / pc_freq;
+		}
+	};
 
     struct nodeTypeFactory
     {

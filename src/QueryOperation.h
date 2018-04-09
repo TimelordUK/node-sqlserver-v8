@@ -45,7 +45,6 @@ namespace mssql
 		Local<Value> CreateCompletionArg() override;
 
 	protected:
-	
 		shared_ptr<QueryOperationParams> _query;
 		shared_ptr<BoundDatumSet> _params;
 		int output_param_count;

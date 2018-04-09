@@ -58,6 +58,7 @@ class Benchmark {
         let delay = argv.delay || 500;
         let repeats = argv.repeats || 10;
         let prepared = argv.hasOwnProperty('prepared') || false;
+        let stats = argv.hasOwnProperty('stats') || false;
         let table = argv.table || 'syscomments';
         let columns = argv.columns || '*';
         let top = argv.top || -1;
@@ -88,11 +89,23 @@ class Benchmark {
             });
         }
         function get_data(conn, cb) {
+            let q = null;
             if (prepared) {
-                statement.preparedQuery([], cb);
+                q = statement.preparedQuery([], cb);
+                if (stats) {
+                    q.on('stats', function (read_ms) {
+                        console.log(`${read_ms} ms`);
+                    });
+                    stats = false;
+                }
             }
             else {
-                conn.query(query, cb);
+                q = conn.query(query, cb);
+                if (stats) {
+                    q.on('stats', function (read_ms) {
+                        console.log(`read rows : ${read_ms} ms`);
+                    });
+                }
             }
         }
         get_ready((err, conn, ps) => {
@@ -114,6 +127,10 @@ class Benchmark {
                     console.log(`[${table}\t] rows.length ${rows.length} \t elapsed ${elapsed}\t ms [ runs ${runs} avg ${total / runs} ]`);
                     if (runs == repeats) {
                         clearInterval(repeatId);
+                        if (prepared) {
+                            statement.free(function () {
+                            });
+                        }
                     }
                 });
             }, delay);
