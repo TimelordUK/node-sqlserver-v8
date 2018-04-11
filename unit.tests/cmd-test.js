@@ -113,25 +113,33 @@ class Benchmark {
                 console.log(err);
                 throw err;
             }
+            let repeatId = null;
+            function once(d, err, rows) {
+                if (err) {
+                    console.log(err.message);
+                    throw err;
+                }
+                let elapsed = new Date().getTime() - d.getTime();
+                ++runs;
+                total += elapsed;
+                console.log(`[${table}\t] rows.length ${rows.length} \t elapsed ${elapsed}\t ms [ runs ${runs} avg ${total / runs} ]`);
+                if (runs == repeats) {
+                    clearInterval(repeatId);
+                    if (prepared) {
+                        statement.free(function () {
+                        });
+                    }
+                }
+            }
             statement = ps;
-            let repeatId = setInterval(() => {
+            repeatId = setInterval(() => {
                 let d = new Date();
-                get_data(conn, function (err, rows) {
-                    if (err) {
-                        console.log(err.message);
-                        return;
-                    }
-                    let elapsed = new Date().getTime() - d.getTime();
-                    ++runs;
-                    total += elapsed;
-                    console.log(`[${table}\t] rows.length ${rows.length} \t elapsed ${elapsed}\t ms [ runs ${runs} avg ${total / runs} ]`);
-                    if (runs == repeats) {
-                        clearInterval(repeatId);
-                        if (prepared) {
-                            statement.free(function () {
-                            });
-                        }
-                    }
+                get_data(conn, (err, rows) => {
+                    once(d, err, rows);
+                    d = new Date();
+                    get_data(conn, (err, rows) => {
+                        once(d, err, rows);
+                    });
                 });
             }, delay);
         });
