@@ -163,6 +163,10 @@ class Benchmark implements SimpleTest {
                     d = new Date();
                     get_data( conn, (err, rows)  => {
                         once(d, err, rows);
+                        d = new Date();
+                        get_data( conn, (err, rows)  => {
+                            once(d, err, rows);
+                        })
                     })
                 })
             }, delay);

@@ -74,13 +74,13 @@ export interface TableColumn {
     type_id: string
     declaration: string
     nullable: string
-    length: number
+    max_length: number
     precision: number
     scale: 0
     collation: string
     is_output: number
     system_type_id: number
-    type:TableColumnType
+    type:string
 }
 
 export interface Connection {

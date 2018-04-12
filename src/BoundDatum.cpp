@@ -771,7 +771,7 @@ namespace mssql
 	{
 		auto arr = Local<Array>::Cast(p);
 		const auto len = arr->Length();
-		reserve_uint32(len);
+		reserve_integer(len);
 		auto& vec = *_storage->int64vec_ptr;
 		for (uint32_t i = 0; i < len; ++i)
 		{
