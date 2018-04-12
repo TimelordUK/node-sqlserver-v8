@@ -80,11 +80,12 @@ class Benchmark implements SimpleTest {
         let prepared: boolean = argv.hasOwnProperty('prepared') || false;
         let stats: boolean = argv.hasOwnProperty('stats') || false;
         let table: string = argv.table || 'syscomments';
+        let schema: string = argv.schema || 'master.';
         let columns:string = argv.columns || '*';
         let top:number = argv.top || -1;
         let query = top < 0 ?
-            `select ${columns} from master..${table}` :
-            `select top ${top} ${columns} from master..${table}`;
+            `select ${columns} from ${schema}.${table}` :
+            `select top ${top} ${columns} from ${schema}.${table}`;
         console.log(`Benchmark query ${query}`);
         let runs = 0;
         let total = 0;

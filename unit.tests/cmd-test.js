@@ -60,11 +60,12 @@ class Benchmark {
         let prepared = argv.hasOwnProperty('prepared') || false;
         let stats = argv.hasOwnProperty('stats') || false;
         let table = argv.table || 'syscomments';
+        let schema = argv.schema || 'master.';
         let columns = argv.columns || '*';
         let top = argv.top || -1;
         let query = top < 0 ?
-            `select ${columns} from master..${table}` :
-            `select top ${top} ${columns} from master..${table}`;
+            `select ${columns} from ${schema}.${table}` :
+            `select top ${top} ${columns} from ${schema}.${table}`;
         console.log(`Benchmark query ${query}`);
         let runs = 0;
         let total = 0;
