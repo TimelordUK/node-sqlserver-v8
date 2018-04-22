@@ -168,6 +168,7 @@ class TableGenerator {
                 console.log(`drop table ${inst.dropSql}`);
                 yield connection.getCommand().sql(inst.dropSql).execute();
                 console.log('create table');
+                console.log(`${inst.defSql}`);
                 yield connection.getCommand().sql(inst.defSql).execute();
                 console.log('close connection');
                 yield connection.close();
@@ -281,6 +282,7 @@ class TableGenerator {
     }
 
     public generate(argv: any): void {
+
         let columns: number = argv.columns || 10;
         let schema: string = argv.schema || 'dbo';
         let table: string = argv.table || 'test_table';
@@ -306,8 +308,15 @@ CREATE TABLE ${this.qualifiedName} (
     }
 }
 
-let g = new TableGenerator();
-g.run();
-let s = g.defSql;
-console.log(s);
+let help:boolean = argv.h || argv.help || false;
+if (help) {
+    console.log('create a test definition and / or populate with n rows of random data');
+    console.log('node samples\\typescript\\table-gen.js --create --populate=30000 --columns=40');
+    console.log('node samples\\typescript\\table-gen.js --schema=dbo --table=test_table --create --populate=30000 --columns=40');
+}else {
+    let g = new TableGenerator();
+    g.run();
+    let s = g.defSql;
+    console.log(s);
+}
 
