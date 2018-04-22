@@ -33,6 +33,8 @@ npm install msnodesqlv8 --save
 
 ## Getting started
 
+please see [wiki](https://github.com/TimelordUK/node-sqlserver-v8/wiki) for documentation.
+
 ### JavaScript
 
 Require the module, and write a simple program link this:
