@@ -9,7 +9,7 @@
 1. supports input/output parameters.
 1. captures return code from stored procedure.
 1. will obtain meta data describing parameters.
-1. compatibe with Node 4, 5, 6, 7, 8 and 9
+1. compatibe with Node 4, 5, 6, 7, 8, 9 and 10
 1. electron supported.
 1. includes 64 bit/ia32 precompiled libraries.
 1. npm install with npm install msnodesqlv8

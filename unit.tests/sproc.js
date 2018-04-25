@@ -26,7 +26,7 @@ suite('sproc', function () {
       helper.setVerbose(false)
       sql.open(connStr, function (err, conn) {
         theConnection = conn
-        assert.ifError(err)
+        assert(err === false)
         testDone()
       })
     }, global.conn_str)

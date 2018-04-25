@@ -85,7 +85,7 @@ suite('prepared', function () {
     // open a connection.
     function (asyncDone) {
       sql.open(connStr, function (err, newConn) {
-        assert.ifError(err)
+        assert(err === null || err === false)
         theConnection = newConn
         asyncDone()
       })
@@ -187,7 +187,7 @@ suite('prepared', function () {
 
   function employeePrepare (query, done) {
     theConnection.prepare(query, function (err, ps) {
-      assert.ifError(err)
+      assert(err === null || err === false)
       done(ps)
     })
   }
@@ -195,7 +195,7 @@ suite('prepared', function () {
   test('use prepared to reserve and read multiple rows.', function (testDone) {
     var sql = 'select * from master..syscomments'
     theConnection.prepare(sql, function (err, preparedQuery) {
-      assert.ifError(err)
+      assert(err === null || err === false)
       preparedQuery.preparedQuery([], function (err, res) {
         assert(res != null)
         assert(res.length > 0)

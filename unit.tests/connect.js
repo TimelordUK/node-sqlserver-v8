@@ -50,7 +50,7 @@ suite('open', function () {
         var expected = [{
           n: 1
         }]
-        assert.ifError(err)
+        assert(err === null || err === false)
         conn.query('SELECT 1 as n', function (err, results) {
           assert.ifError(err)
           assert.deepEqual(results, expected)
@@ -64,7 +64,7 @@ suite('open', function () {
   test('trusted connection to a server', function (done) {
     sql.open(connStr,
       function (err, conn) {
-        assert.ifError(err)
+        assert(err === null || err === false)
         assert(typeof conn === 'object')
         conn.close(function () {
           done()
@@ -74,7 +74,7 @@ suite('open', function () {
 
   test('verify closed connection throws an exception', function (done) {
     sql.open(connStr, function (err, conn) {
-      assert.ifError(err)
+      assert(err === null || err === false)
       conn.close(function () {
         var thrown = false
         try {
@@ -93,15 +93,15 @@ suite('open', function () {
 
   test('verify connection is not closed prematurely until a query is complete', function (done) {
     sql.open(connStr, function (err, conn) {
-      assert.ifError(err)
+      assert(err === null || err === false)
       var stmt = conn.queryRaw('select 1')
       stmt.on('meta', function (m) {
       })
       stmt.on('column', function (c, d) {
         assert(c === 0 && d === 1)
       })
-      stmt.on('error', function (e) {
-        assert.ifError(e)
+      stmt.on('error', function (err) {
+        assert(err === null || err === false)
       })
       stmt.on('row', function (r) {
         assert(r === 0)
@@ -114,11 +114,11 @@ suite('open', function () {
 
   test('verify that close immediately flag only accepts booleans', function (done) {
     sql.open(connStr, function (err, conn) {
-      assert.ifError(err)
+      assert(err === null || err === false)
       var thrown = false
       try {
         conn.close('SELECT 1', function (err) {
-          assert.ifError(err)
+          assert(err === null || err === false)
         })
       } catch (e) {
         assert.deepEqual(e, new Error('[msnodesql] Invalid parameters passed to close.'))

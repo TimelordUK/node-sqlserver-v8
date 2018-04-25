@@ -24,7 +24,7 @@ suite('bulk', function () {
       helper = co.helper
       helper.setVerbose(false)
       sql.open(connStr, function (err, newConn) {
-        assert.ifError(err)
+        assert(err === null || err === false)
         theConnection = newConn
         testDone()
       })
@@ -33,7 +33,7 @@ suite('bulk', function () {
 
   teardown(function (done) {
     theConnection.close(function (err) {
-      assert.ifError(err)
+      assert(err === null || err === false || err === undefined)
       done()
     })
   })
@@ -107,7 +107,7 @@ suite('bulk', function () {
       function (asyncDone) {
         bulkMgr.setBatchSize(totalObjectsForInsert)
         bulkMgr.insertRows(vec, function (err, res) {
-          assert.ifError(err)
+          assert(err === null || err === false)
           assert(res.length === 0)
           asyncDone()
         })
@@ -197,7 +197,7 @@ suite('bulk', function () {
 
       function (asyncDone) {
         bulkMgr.selectRows(keys, function (err, results) {
-          assert.ifError(err)
+          assert(err === null || err === false)
           assert(results.length === parsedJSON.length)
           assert.deepEqual(results, parsedJSON, 'results didn\'t match')
           selected = results
@@ -243,7 +243,7 @@ suite('bulk', function () {
         var keys = helper.extractKey(parsedJSON, 'LoginID')
         bulkMgr.setWhereCols(whereCols)
         bulkMgr.selectRows(keys, function (err, results) {
-          assert.ifError(err)
+          assert(err === null || err === false)
           assert(results.length === parsedJSON.length)
           assert.deepEqual(results, parsedJSON, 'results didn\'t match')
           asyncDone()
@@ -303,7 +303,7 @@ suite('bulk', function () {
       function (asyncDone) {
         var keys = helper.extractKey(parsedJSON, 'BusinessEntityID')
         bulkMgr.selectRows(keys, function (err, results) {
-          assert.ifError(err)
+          assert(err === null || err === false)
           assert(results.length === parsedJSON.length)
           assert.deepEqual(results, parsedJSON, 'results didn\'t match')
           asyncDone()

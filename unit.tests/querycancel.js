@@ -26,7 +26,7 @@ suite('querycancel', function () {
       helper = co.helper
       helper.setVerbose(false)
       sql.open(connStr, function (err, newConn) {
-        assert.ifError(err)
+        assert(err === false)
         theConnection = newConn
         done()
       })
@@ -201,39 +201,6 @@ suite('querycancel', function () {
     })
   })
 
-  test('cancel a prepared call that waits', function (testDone) {
-    var s = 'waitfor delay ?;'
-    var prepared
-
-    var fns = [
-      function (asyncDone) {
-        theConnection.prepare(sql.PollingQuery(s), function (err, pq) {
-          assert(!err)
-          prepared = pq
-          asyncDone()
-        })
-      },
-
-      function (asyncDone) {
-        var q = prepared.preparedQuery(['00:00:20'], function (err) {
-          assert(err)
-          assert(err.message.indexOf('Operation canceled') > 0)
-          asyncDone()
-        })
-
-        q.on('submitted', function () {
-          q.cancelQuery(function (err) {
-            assert.ifError(err)
-          })
-        })
-      }
-    ]
-
-    async.series(fns, function () {
-      testDone()
-    })
-  })
-
   test('cancel a call to proc that waits for delay of input param.', function (testDone) {
     var spName = 'test_spwait_for'
 
@@ -264,6 +231,39 @@ suite('querycancel', function () {
         q.on('submitted', function () {
           q.cancelQuery(function (err) {
             assert(!err)
+          })
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
+  test('cancel a prepared call that waits', function (testDone) {
+    var s = 'waitfor delay ?;'
+    var prepared
+
+    var fns = [
+      function (asyncDone) {
+        theConnection.prepare(sql.PollingQuery(s), function (err, pq) {
+          assert(err === false)
+          prepared = pq
+          asyncDone()
+        })
+      },
+
+      function (asyncDone) {
+        var q = prepared.preparedQuery(['00:00:20'], function (err) {
+          assert(err)
+          assert(err.message.indexOf('Operation canceled') > 0)
+          asyncDone()
+        })
+
+        q.on('submitted', function () {
+          q.cancelQuery(function (err) {
+            assert(err === false)
           })
         })
       }

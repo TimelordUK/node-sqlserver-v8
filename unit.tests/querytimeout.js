@@ -18,7 +18,7 @@ suite('querytimeout', function () {
       helper = co.helper
       helper.setVerbose(false)
       sql.open(connStr, function (err, newConn) {
-        assert.ifError(err)
+        assert(err === false)
         theConnection = newConn
         testDone()
       })

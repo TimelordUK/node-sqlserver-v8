@@ -241,7 +241,7 @@ suite('geography', function () {
       helper.setVerbose(false)
       geographyHelper = new GeographyHelper()
       sql.open(connStr, function (err, newConn) {
-        assert.ifError(err)
+        assert(err === false)
         theConnection = newConn
         testDone()
       })
@@ -534,28 +534,28 @@ suite('geography', function () {
       },
       function (asyncDone) {
         theConnection.prepare(geographyHelper.insertPointsSql, function (err, prepared) {
-          assert.ifError(err)
+          assert(err === false)
           preparedPoint = prepared
           asyncDone()
         })
       },
       function (asyncDone) {
         preparedPoint.preparedQuery([geographyHelper.points[0]], function (err, res) {
-          assert.ifError(err)
+          assert(err === null)
           assert(res.length === 0)
           asyncDone()
         })
       },
       function (asyncDone) {
         preparedPoint.preparedQuery([geographyHelper.points[1]], function (err, res) {
-          assert.ifError(err)
+          assert(err === null)
           assert(res.length === 0)
           asyncDone()
         })
       },
       function (asyncDone) {
         theConnection.query(geographyHelper.selectSql, function (err, res) {
-          assert.ifError(err)
+          assert(err === null)
           assert(res.length === geographyHelper.expectedPoints.length)
           assert.deepEqual(res, geographyHelper.expectedPoints)
           asyncDone()

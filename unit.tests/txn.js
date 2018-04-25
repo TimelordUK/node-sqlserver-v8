@@ -42,7 +42,7 @@ suite('txn', function () {
       helper = co.helper
       helper.setVerbose(false)
       sql.open(connStr, function (err, newConn) {
-        assert.ifError(err)
+        assert(err === false)
         theConnection = newConn
         testDone()
       })
@@ -89,9 +89,11 @@ suite('txn', function () {
   })
 
   test('begin a transaction and rollback with no query', function (done) {
-    theConnection.beginTransaction(function (err) { assert.ifError(err) })
+    theConnection.beginTransaction(function (err) {
+      assert(err === false)
+    })
     theConnection.rollback(function (err) {
-      assert.ifError(err)
+      assert(err === false)
       done()
     })
   })
@@ -100,11 +102,11 @@ suite('txn', function () {
     try {
       theConnection.beginTransaction()
       theConnection.rollback(function (err) {
-        assert.ifError(err)
+        assert(err === false)
         done()
       })
     } catch (e) {
-      assert.ifError(e)
+      assert(e === false)
     }
   })
 
@@ -113,34 +115,34 @@ suite('txn', function () {
 
       function (asyncDone) {
         theConnection.beginTransaction(function (err) {
-          assert.ifError(err)
+          assert(err === false)
           asyncDone()
         })
       },
 
       function (asyncDone) {
         theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Anne\')', function (err, results) {
-          assert.ifError(err)
+          assert(err === null || err === false)
           assert.deepEqual(results, {meta: null, rowcount: 1}, 'Insert results don\'t match')
           asyncDone()
         })
       },
       function (asyncDone) {
         theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Bob\')', function (err, results) {
-          assert.ifError(err)
+          assert(err === null || err === false)
           assert.deepEqual(results, {meta: null, rowcount: 1}, 'Insert results don\'t match')
           asyncDone()
         })
       },
       function (asyncDone) {
         theConnection.commit(function (err) {
-          assert.ifError(err)
+          assert(err === null || err === false)
           asyncDone()
         })
       },
       function (asyncDone) {
         theConnection.queryRaw('select * from test_txn', function (err, results) {
-          assert.ifError(err)
+          assert(err === null || err === false)
 
           // verify results
           var expected = {
@@ -170,33 +172,33 @@ suite('txn', function () {
 
       function (asyncDone) {
         theConnection.beginTransaction(function (err) {
-          assert.ifError(err)
+          assert(err === null || err === false)
           asyncDone()
         })
       },
       function (asyncDone) {
         theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Carl\')', function (err, results) {
-          assert.ifError(err)
+          assert(err === null || err === false)
           assert.deepEqual(results, {meta: null, rowcount: 1}, 'Insert results don\'t match')
           asyncDone()
         })
       },
       function (asyncDone) {
         theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Dana\')', function (err, results) {
-          assert.ifError(err)
+          assert(err === null || err === false)
           assert.deepEqual(results, {meta: null, rowcount: 1}, 'Insert results don\'t match')
           asyncDone()
         })
       },
       function (asyncDone) {
         theConnection.rollback(function (err) {
-          assert.ifError(err)
+          assert(err === null || err === false)
           asyncDone()
         })
       },
       function (asyncDone) {
         theConnection.queryRaw('select * from test_txn', function (err, results) {
-          assert.ifError(err)
+          assert(err === null || err === false)
 
           // verify results
           var expected = {
@@ -226,7 +228,7 @@ suite('txn', function () {
     var fns = [
       function (asyncDone) {
         theConnection.beginTransaction(function (err) {
-          assert.ifError(err)
+          assert(err === null || err === false)
           asyncDone()
         })
       },
@@ -242,7 +244,7 @@ suite('txn', function () {
           assert.deepEqual(err, expected, 'Transaction should have caused an error')
 
           theConnection.rollback(function (err) {
-            assert.ifError(err)
+            assert(err === null || err === false)
             asyncDone()
           })
         })
@@ -250,8 +252,7 @@ suite('txn', function () {
 
       function (asyncDone) {
         theConnection.queryRaw('select * from test_txn', function (err, results) {
-          assert.ifError(err)
-          assert.ifError(err)
+          assert(err === null || err === false)
 
           // verify results
           var expected = {
@@ -279,23 +280,23 @@ suite('txn', function () {
 
   test('begin a transaction and commit (with no async support)', function (testDone) {
     theConnection.beginTransaction(function (err) {
-      assert.ifError(err)
+      assert(err === null || err === false)
     })
 
     theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Anne\')', function (err) {
-      assert.ifError(err)
+      assert(err === null || err === false)
     })
 
     theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Bob\')', function (err) {
-      assert.ifError(err)
+      assert(err === null || err === false)
     })
 
     theConnection.commit(function (err) {
-      assert.ifError(err)
+      assert(err === null || err === false)
     })
 
     theConnection.queryRaw('select * from test_txn', function (err, results) {
-      assert.ifError(err)
+      assert(err === null || err === false)
 
       // verify results
       var expected = {
