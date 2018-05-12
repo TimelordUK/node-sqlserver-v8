@@ -78,7 +78,7 @@ class Benchmark implements SimpleTest {
         let delay: number = argv.delay || 500;
         let repeats: number = argv.repeats || 10;
         let prepared: boolean = argv.hasOwnProperty('prepared') || false;
-        let stats: boolean = argv.hasOwnProperty('stats') || false;
+        let stream: boolean = argv.hasOwnProperty('stream') || false;
         let table: string = argv.table || 'syscomments';
         let schema: string = argv.schema || 'master.';
         let columns:string = argv.columns || '*';
@@ -112,21 +112,30 @@ class Benchmark implements SimpleTest {
         }
 
         function get_data(conn:Connection, cb:QueryCb) {
-            let q: Query = null;
+            let rows:any[] = [];
             if (prepared) {
-                q = statement.preparedQuery([], cb);
-                if (stats) {
-                    q.on('stats', function (read_ms: Number) {
-                        console.log(`${read_ms} ms`)
+                if (stream) {
+                    let q = statement.preparedQuery([]);
+                    q.on('done', ()=> {
+                        cb(null, rows)
                     });
-                    stats = false;
+                    q.on('row', ()=> {
+                        rows[rows.length] = []
+                    });
+                } else {
+                    statement.preparedQuery([], cb);
                 }
-            }else {
-                q = conn.query(query, cb);
-                if (stats) {
-                    q.on('stats', function (read_ms: Number) {
-                        console.log(`read rows : ${read_ms} ms`)
+            } else {
+                if (stream) {
+                    let q = conn.query(query);
+                    q.on('done', ()=> {
+                        cb(null, rows)
                     });
+                    q.on('row', ()=> {
+                        rows[rows.length] = []
+                    });
+                }else {
+                    conn.query(query, cb);
                 }
             }
         }
@@ -157,19 +166,26 @@ class Benchmark implements SimpleTest {
             }
 
             statement = ps;
+
             repeatId = setInterval(() => {
                 let d = new Date();
-                get_data( conn, (err, rows)  => {
-                    once(d, err, rows);
-                    d = new Date();
-                    get_data( conn, (err, rows)  => {
+                if (stream) {
+                    get_data(conn, (err, rows) => {
+                        once(d, err, rows);
+                    })
+                } else {
+                    get_data(conn, (err, rows) => {
                         once(d, err, rows);
                         d = new Date();
-                        get_data( conn, (err, rows)  => {
+                        get_data(conn, (err, rows) => {
                             once(d, err, rows);
+                            d = new Date();
+                            get_data(conn, (err, rows) => {
+                                once(d, err, rows);
+                            })
                         })
                     })
-                })
+                }
             }, delay);
         });
     }

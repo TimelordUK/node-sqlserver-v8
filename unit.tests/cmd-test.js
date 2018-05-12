@@ -58,7 +58,7 @@ class Benchmark {
         let delay = argv.delay || 500;
         let repeats = argv.repeats || 10;
         let prepared = argv.hasOwnProperty('prepared') || false;
-        let stats = argv.hasOwnProperty('stats') || false;
+        let stream = argv.hasOwnProperty('stream') || false;
         let table = argv.table || 'syscomments';
         let schema = argv.schema || 'master.';
         let columns = argv.columns || '*';
@@ -90,22 +90,33 @@ class Benchmark {
             });
         }
         function get_data(conn, cb) {
-            let q = null;
+            let rows = [];
             if (prepared) {
-                q = statement.preparedQuery([], cb);
-                if (stats) {
-                    q.on('stats', function (read_ms) {
-                        console.log(`${read_ms} ms`);
+                if (stream) {
+                    let q = statement.preparedQuery([]);
+                    q.on('done', () => {
+                        cb(null, rows);
                     });
-                    stats = false;
+                    q.on('row', () => {
+                        rows[rows.length] = [];
+                    });
+                }
+                else {
+                    statement.preparedQuery([], cb);
                 }
             }
             else {
-                q = conn.query(query, cb);
-                if (stats) {
-                    q.on('stats', function (read_ms) {
-                        console.log(`read rows : ${read_ms} ms`);
+                if (stream) {
+                    let q = conn.query(query);
+                    q.on('done', () => {
+                        cb(null, rows);
                     });
+                    q.on('row', () => {
+                        rows[rows.length] = [];
+                    });
+                }
+                else {
+                    conn.query(query, cb);
                 }
             }
         }
@@ -135,17 +146,24 @@ class Benchmark {
             statement = ps;
             repeatId = setInterval(() => {
                 let d = new Date();
-                get_data(conn, (err, rows) => {
-                    once(d, err, rows);
-                    d = new Date();
+                if (stream) {
+                    get_data(conn, (err, rows) => {
+                        once(d, err, rows);
+                    });
+                }
+                else {
                     get_data(conn, (err, rows) => {
                         once(d, err, rows);
                         d = new Date();
                         get_data(conn, (err, rows) => {
                             once(d, err, rows);
+                            d = new Date();
+                            get_data(conn, (err, rows) => {
+                                once(d, err, rows);
+                            });
                         });
                     });
-                });
+                }
             }, delay);
         });
     }

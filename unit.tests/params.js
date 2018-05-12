@@ -116,6 +116,70 @@ suite('params', function () {
       })
   }
 
+  function runTest (columnDef, len, testDone) {
+    testBoilerPlate('test_large_insert', {'large_insert': columnDef},
+      function (done) {
+        var largeText = repeat('A', len)
+        theConnection.query('INSERT INTO test_large_insert (large_insert) VALUES (?)', [largeText], function (e) {
+          assert.ifError(e, 'Error inserting large string')
+          done()
+        })
+      },
+
+      function (done) {
+        theConnection.query('SELECT large_insert FROM test_large_insert', function (e, r) {
+          assert.ifError(e)
+          assert(r[0].large_insert.length === len, 'Incorrect length for large insert')
+          done()
+        })
+      },
+      function () {
+        testDone()
+      })
+  }
+
+  test('insert string 2 x 1024 * 1024 in varchar(max)', function (testDone) {
+    runTest('varchar(max)', 2 * 1024 * 1024, function () {
+      testDone()
+    })
+  })
+
+  test('insert string 60 x 1024 in varchar(max)', function (testDone) {
+    runTest('varchar(max)', 60 * 1024, function () {
+      testDone()
+    })
+  })
+
+  test('insert string 100 in nchar(100)', function (testDone) {
+    runTest('nchar(100)', 100, function () {
+      testDone()
+    })
+  })
+
+  test('insert string 500 in nvarchar(1000)', function (testDone) {
+    runTest('nvarchar(1000)', 500, function () {
+      testDone()
+    })
+  })
+
+  test('insert string 4 x 1024 in varchar(8000)', function (testDone) {
+    runTest('varchar(8000)', 4 * 1024, function () {
+      testDone()
+    })
+  })
+
+  test('insert string 6 x 1024 in varchar(8000)', function (testDone) {
+    runTest('varchar(8000)', 6 * 1024, function () {
+      testDone()
+    })
+  })
+
+  test('insert string 30 x 1024 in varchar(max)', function (testDone) {
+    runTest('varchar(max)', 30 * 1024, function () {
+      testDone()
+    })
+  })
+
   test('verify empty string is sent as empty string, not null', function (testDone) {
     theConnection.query('declare @s NVARCHAR(MAX) = ?; select @s as data', [''], function (err, res) {
       assert.ifError(err)
@@ -223,8 +287,6 @@ suite('params', function () {
       })
   })
 
-
-
   test('select a long string using callback', function (testDone) {
     function repeat (a, num) {
       return new Array(num + 1).join(a)
@@ -314,28 +376,6 @@ suite('params', function () {
   function repeat (a, num) {
     return new Array(num + 1).join(a)
   }
-
-  test('insert large string into max column using user binding WLongVarChar', function (testDone) {
-    testBoilerPlate('test_large_insert', {'large_insert': 'nvarchar(max) '},
-      function (done) {
-        var largeText = repeat('A', 10000)
-        theConnection.query('INSERT INTO test_large_insert (large_insert) VALUES (?)', [sql.WLongVarChar(largeText)], function (e) {
-          assert.ifError(e, 'Error inserting large string')
-          done()
-        })
-      },
-
-      function (done) {
-        theConnection.query('SELECT large_insert FROM test_large_insert', function (e, r) {
-          assert.ifError(e)
-          assert(r[0].large_insert.length === 10000, 'Incorrect length for large insert')
-          done()
-        })
-      },
-      function () {
-        testDone()
-      })
-  })
 
   test('verify null string is sent as null, not empty string', function (testDone) {
     theConnection.query('declare @s NVARCHAR(MAX) = ?; select @s as data', [null], function (err, res) {

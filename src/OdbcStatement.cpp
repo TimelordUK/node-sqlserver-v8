@@ -1149,6 +1149,7 @@ namespace mssql
 				uint16_data->reserve(n_items + 1);
 				uint16_data->resize(n_items);
 				write_ptr = uint16_data->data() + previous;
+				memset(write_ptr, 0, uint16_data->data() + uint16_data->size() - write_ptr);
 			}
 			else
 			{
@@ -1207,7 +1208,7 @@ namespace mssql
 		capture.on_first_read();
 		while (more)
 		{
-			capture.bytes_to_read = min(static_cast<SQLLEN>(capture.atomic_read_bytes + capture.item_size), capture.total_bytes_to_read);
+			capture.bytes_to_read = min(static_cast<SQLLEN>(capture.atomic_read_bytes), capture.total_bytes_to_read);
 			r = SQLGetData(statement, column + 1, SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
 			capture.on_next_read();
 			if (!check_odbc_error(r)) return false;
