@@ -138,14 +138,18 @@ suite('params', function () {
       })
   }
 
-  test('insert string 2 x 1024 * 1024 in varchar(max)', function (testDone) {
-    runTest('varchar(max)', 2 * 1024 * 1024, function () {
-      testDone()
-    })
-  })
+  // declare @str nvarchar (MAX);set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @s AS s;
 
-  test('insert string 60 x 1024 in varchar(max)', function (testDone) {
-    runTest('varchar(max)', 60 * 1024, function () {
+  test('mssql set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @s AS s', function (testDone) {
+    var STR_LEN = 2001
+    var str = '1'.repeat(STR_LEN)
+    //  [sql.WLongVarChar(str)]
+    theConnection.query('declare @str nvarchar (MAX);set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @str AS data', [str], function (err, res) {
+      assert.ifError(err)
+      var expected = [{
+        data: str
+      }]
+      assert.deepEqual(expected, res)
       testDone()
     })
   })
@@ -176,6 +180,18 @@ suite('params', function () {
 
   test('insert string 30 x 1024 in varchar(max)', function (testDone) {
     runTest('varchar(max)', 30 * 1024, function () {
+      testDone()
+    })
+  })
+
+  test('insert string 2 x 1024 * 1024 in varchar(max)', function (testDone) {
+    runTest('varchar(max)', 2 * 1024 * 1024, function () {
+      testDone()
+    })
+  })
+
+  test('insert string 60 x 1024 in varchar(max)', function (testDone) {
+    runTest('varchar(max)', 60 * 1024, function () {
       testDone()
     })
   })
