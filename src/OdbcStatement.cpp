@@ -813,7 +813,7 @@ namespace mssql
 		if (!check_odbc_error(ret)) return false;
 		if (str_len_or_ind_ptr == SQL_NULL_DATA)
 		{
-			_resultset->add_column(0, make_shared<NullColumn>(column));
+			_resultset->add_column(row_id, make_shared<NullColumn>(column));
 			return true;
 		}
 
@@ -949,7 +949,7 @@ namespace mssql
 			const auto str_len_or_ind_ptr = ind[row_id];
 			if (str_len_or_ind_ptr == SQL_NULL_DATA)
 			{
-				_resultset->add_column(0, make_shared<NullColumn>(column));
+				_resultset->add_column(row_id, make_shared<NullColumn>(column));
 				continue;
 			}
 			_resultset->add_column(row_id, make_shared<NumberColumn>(column, v));
@@ -1195,7 +1195,7 @@ namespace mssql
 		auto r = SQLGetData(statement, column + 1, SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
 		if (capture.total_bytes_to_read == SQL_NULL_DATA)
 		{
-			_resultset->add_column(0, make_shared<NullColumn>(column));
+			_resultset->add_column(row_id, make_shared<NullColumn>(column));
 			return true;
 		}
 		if (!check_odbc_error(r)) return false;

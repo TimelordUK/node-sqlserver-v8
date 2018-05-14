@@ -58,6 +58,87 @@ suite('compoundqueries', function () {
     })
   })
 
+  testname = 'test 001 - batched query: SELECT....; INSERT ....; SELECT....;'
+  test(testname, function (done) {
+    var testcolumnsize = 100
+    var testcolumntype = ' varchar(' + testcolumnsize + ')'
+    var testcolumnclienttype = 'text'
+    var testcolumnsqltype = 'varchar'
+    var testcolumnname = 'col2'
+    var testdata1 = null
+    var testdata2Expected = 'string data row 2'
+    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+    var tsql = 'SELECT * FROM ' + tablename + ' ORDER BY id;  INSERT INTO ' + tablename + ' (' + testcolumnname + ') VALUES (' + testdata1 + ');SELECT * FROM ' + tablename + ' ORDER BY id;'
+
+    var expected1 = {
+      meta: [
+        {name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+        {
+          name: testcolumnname,
+          size: testcolumnsize,
+          nullable: true,
+          type: testcolumnclienttype,
+          sqlType: testcolumnsqltype
+        }
+      ],
+      rows: [
+        [1, null],
+        [2, testdata2Expected]
+      ]
+    }
+
+    var expected2 = {
+      meta:
+        null,
+      rowcount:
+        -1
+    }
+
+    var expected3 = {
+      meta: [
+        {name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+        {
+          name: testcolumnname,
+          size: testcolumnsize,
+          nullable: true,
+          type: testcolumnclienttype,
+          sqlType: testcolumnsqltype
+        }
+      ],
+      rows: [[1, null],
+        [2, testdata2Expected],
+        [3, null]]
+    }
+
+    var fns =
+      [
+        function (asyncDone) {
+          commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
+            asyncDone()
+          })
+        },
+        function (asyncDone) {
+          commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
+            asyncDone()
+          })
+        },
+        function (asyncDone) {
+          commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
+            asyncDone()
+          })
+        },
+        function (asyncDone) {
+          commonTestFns.compoundQueryTSQL(theConnection, tsql, expected1, expected2, expected3, testname, function () {
+            asyncDone()
+          })
+        }
+      ]
+
+    async.series(fns, function () {
+      done()
+    }) // end of async.series()
+  }) // end of test()
+
   test('check row count emission is as expected for compound queries 1 insert', function (testDone) {
     var expected = [1]
     var received = []
@@ -141,86 +222,7 @@ suite('compoundqueries', function () {
     })
   })
 
-  testname = 'test 001 - batched query: SELECT....; INSERT ....; SELECT....;'
-  test(testname, function (done) {
-    var testcolumnsize = 100
-    var testcolumntype = ' varchar(' + testcolumnsize + ')'
-    var testcolumnclienttype = 'text'
-    var testcolumnsqltype = 'varchar'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = 'string data row 2'
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
-    var tsql = 'SELECT * FROM ' + tablename + ' ORDER BY id;  INSERT INTO ' + tablename + ' (' + testcolumnname + ') VALUES (' + testdata1 + ');SELECT * FROM ' + tablename + ' ORDER BY id;'
 
-    var expected1 = {
-      meta: [
-        {name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumnsqltype
-        }
-      ],
-      rows: [
-        [1, null],
-        [2, testdata2Expected]
-      ]
-    }
-
-    var expected2 = {
-      meta:
-        null,
-      rowcount:
-        -1
-    }
-
-    var expected3 = {
-      meta: [
-        {name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumnsqltype
-        }
-      ],
-      rows: [[1, null],
-        [2, testdata2Expected],
-        [3, null]]
-    }
-
-    var fns =
-      [
-        function (asyncDone) {
-          commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
-            asyncDone()
-          })
-        },
-        function (asyncDone) {
-          commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
-            asyncDone()
-          })
-        },
-        function (asyncDone) {
-          commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
-            asyncDone()
-          })
-        },
-        function (asyncDone) {
-          commonTestFns.compoundQueryTSQL(theConnection, tsql, expected1, expected2, expected3, testname, function () {
-            asyncDone()
-          })
-        }
-      ]
-
-    async.series(fns, function () {
-      done()
-    }) // end of async.series()
-  }) // end of test()
 
   /*
   testname = 'test 002 - batched query: SELECT....; PRINT ....; SELECT....;'

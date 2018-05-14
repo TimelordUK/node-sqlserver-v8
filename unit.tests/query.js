@@ -57,6 +57,37 @@ suite('query', function () {
     })
   })
 
+  test('object_name query ', function (done) {
+    theConnection.query('select object_name(c.object_id), (select dc.definition from sys.default_constraints as dc where dc.object_id = c.default_object_id) as DefaultValueExpression from sys.columns as c', function (err, results) {
+      assert.ifError(err)
+      assert(results.length > 0)
+      done()
+    })
+  })
+
+  test('select nulls union all nulls', function (done) {
+    var nullObj = {
+      testdate: null,
+      testint: null,
+      testchar: null,
+      testbit: null,
+      testdecimal: null,
+      testbinary: null,
+      testtime: null
+    }
+    var expected = [nullObj, nullObj, nullObj]
+    theConnection.query('select cast(null as datetime) as testdate, cast(null as int) as testint, cast(null as varchar(max)) as testchar, cast(null as bit) as testbit, cast(null as decimal) as testdecimal, cast(null as varbinary) as testbinary, cast(null as time) as testtime\n' +
+      'union all\n' +
+      'select cast(null as datetime) as testdate, cast(null as int) as testint, cast(null as varchar(max)) as testchar, cast(null as bit) as testbit, cast(null as decimal) as testdecimal, cast(null as varbinary) as testbinary, cast(null as time) as testtime\n' +
+      'union all\n' +
+      'select cast(null as datetime) as testdate, cast(null as int) as testint, cast(null as varchar(max)) as testchar, cast(null as bit) as testbit, cast(null as decimal) as testdecimal, cast(null as varbinary) as testbinary, cast(null as time) as testtime', function (err, results) {
+      assert.ifError(err)
+      assert(results.length === 3)
+      assert.deepEqual(results, expected)
+      done()
+    })
+  })
+
   test('test function parameter validation', function (testDone) {
     // test the module level open, query and queryRaw functions
     var thrown
