@@ -61,13 +61,13 @@
   },
   "devDependencies": {
     "@types/electron": "^1.4.31",
-    "@types/node": "^9.6.6",
+    "@types/node": "^10.5.2",
     "asynquence": "^0.10.2",
     "asynquence-contrib": "^0.28.2",
-    "electron": "^1.8.6",
+    "electron": "^2.0.4",
     "minimist": "^1.2.0",
-    "mocha": "^5.1.1",
-    "standard": "^11.0.0"
+    "mocha": "^5.2.0",
+    "standard": "^11.0.1"
   },
   "os": [
     "win32"
