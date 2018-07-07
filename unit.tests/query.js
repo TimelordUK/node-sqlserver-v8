@@ -57,6 +57,39 @@ suite('query', function () {
     })
   })
 
+  test('verify empty results retrieved properly', function (testDone) {
+    var fns = [
+      function (asyncDone) {
+        theConnection.queryRaw('drop table test_sql_no_data', function () {
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.queryRaw('create table test_sql_no_data (id int identity, name varchar(20))', function (err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.queryRaw('create clustered index index_nodata on test_sql_no_data (id)', function (err) {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.queryRaw('delete from test_sql_no_data where 1=0', function (err, results) {
+          assert.ifError(err)
+          var expectedResults = {meta: null, rowcount: 0}
+          assert.deepEqual(results, expectedResults)
+          asyncDone()
+        })
+      }
+    ]
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
   test('object_name query ', function (done) {
     theConnection.query('select object_name(c.object_id), (select dc.definition from sys.default_constraints as dc where dc.object_id = c.default_object_id) as DefaultValueExpression from sys.columns as c', function (err, results) {
       assert.ifError(err)
@@ -571,38 +604,7 @@ suite('query', function () {
       })
   })
 
-  test('verify empty results retrieved properly', function (testDone) {
-    var fns = [
-      function (asyncDone) {
-        theConnection.queryRaw('drop table test_sql_no_data', function () {
-          asyncDone()
-        })
-      },
-      function (asyncDone) {
-        theConnection.queryRaw('create table test_sql_no_data (id int identity, name varchar(20))', function (err) {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-      function (asyncDone) {
-        theConnection.queryRaw('create clustered index index_nodata on test_sql_no_data (id)', function (err) {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-      function (asyncDone) {
-        theConnection.queryRaw('delete from test_sql_no_data where 1=0', function (err, results) {
-          assert.ifError(err)
-          var expectedResults = {meta: null, rowcount: 0}
-          assert.deepEqual(results, expectedResults)
-          asyncDone()
-        })
-      }
-    ]
-    async.series(fns, function () {
-      testDone()
-    })
-  })
+
 
   test('test retrieving a string with null embedded', function (testDone) {
     var embeddedNull = String.fromCharCode(65, 66, 67, 68, 0, 69, 70)

@@ -45,18 +45,12 @@ namespace mssql
 
 	OdbcStatement::~OdbcStatement()
 	{
-		//auto id = getStatementId();
-		//fprintf(stderr, "destruct OdbcStatement ID = %ld\n ", id);
-		//if (statement) {
-		//	statement->Free();
-		//}
 		_statementState = STATEMENT_CLOSED;
 	}
 
 	OdbcStatement::OdbcStatement(const long statement_id, const shared_ptr<OdbcConnectionHandle> c)
 		:
 		_connection(c),
-		_error(nullptr),
 		_endOfResults(true),
 		_statementId(static_cast<long>(statement_id)),
 		_prepared(false),
@@ -67,6 +61,7 @@ namespace mssql
 	{
 		//fprintf(stderr, "OdbcStatement::OdbcStatement OdbcStatement ID = %ld\n ", statementId);
 		_statement = make_shared<OdbcStatementHandle>();
+		_errors = make_shared<vector<shared_ptr<OdbcError>>>();
 		if (!_statement->alloc(*_connection))
 		{
 		}
@@ -188,7 +183,7 @@ namespace mssql
 		SQLINTEGER native_error = -1;
 		auto c_state = "CANCEL";
 		auto c_msg = "Error: [msnodesql] cancel only supported for statements where polling is enabled.";
-		_error = make_shared<OdbcError>(c_state, c_msg, native_error);
+		_errors->push_back(make_shared<OdbcError>(c_state, c_msg, native_error));
 		return false;
 	}
 
@@ -233,7 +228,9 @@ namespace mssql
 		const auto r = SQLBindParameter(statement, current_param, datum->param_type, datum->c_type, datum->sql_type,
 		                                datum->param_size, datum->digits, datum->buffer, datum->buffer_len,
 		                                datum->get_ind_vec().data());
-		if (!check_odbc_error(r)) return false;
+		if (!check_odbc_error(r)) {
+			return false;
+		}
 		if (datum->get_defined_precision())
 		{
 			apply_precision(datum, current_param);
@@ -279,7 +276,9 @@ namespace mssql
 		if (size > 1)
 		{
 			const auto ret = SQLSetStmtAttr(statement, SQL_ATTR_PARAMSET_SIZE, reinterpret_cast<SQLPOINTER>(size), 0);
-			if (!check_odbc_error(ret)) return false;
+			if (!check_odbc_error(ret)) {
+				return false;
+			}
 		}
 		auto current_param = 1;
 
@@ -287,7 +286,10 @@ namespace mssql
 		for (auto itr = ps.begin(); itr != ps.end(); ++itr)
 		{
 			auto& datum = *itr;
-			bind_datum(current_param, datum);
+			if (!bind_datum(current_param, datum))
+			{
+				return false;
+			}
 			if (datum->is_tvp)
 			{
 				queue_tvp(current_param, itr, datum, tvps);
@@ -335,9 +337,7 @@ namespace mssql
 	bool OdbcStatement::return_odbc_error()
 	{
 		if (!_statement) return false;
-		_error = _statement->read_errors();
-		//fprintf(stderr, "%s\n", error->Message());
-		// fprintf(stderr, "RETURN_ODBC_ERROR - free statement handle\n\n");
+		_statement->read_errors(_errors);
 		return false;
 	}
 
@@ -560,9 +560,6 @@ namespace mssql
 	void OdbcStatement::cancel_handle()
 	{
 		SQLINTEGER native_error = -1;
-		auto c_state = "CANCEL";
-		auto c_msg = "Error: [msnodesql] Operation canceled.";
-		_error2 = make_shared<OdbcError>(c_state, c_msg, native_error);
 		auto hnd = *_statement;
 		const auto ret2 = SQLCancelHandle(hnd.HandleType, hnd.get());
 		if (!check_odbc_error(ret2))
@@ -577,6 +574,7 @@ namespace mssql
 
 	bool OdbcStatement::try_execute_direct(const shared_ptr<QueryOperationParams> &q, const shared_ptr<BoundDatumSet> &param_set)
 	{
+		_errors->clear();
 		_query = q;
 		const auto timeout = q->timeout();
 		const auto bound = bind_params(param_set);
@@ -607,14 +605,27 @@ namespace mssql
 			ret = poll_check(ret, true);
 		}
 
-		const auto c1 = ret != SQL_NO_DATA && !SQL_SUCCEEDED(ret);
-		if (ret == SQL_SUCCESS_WITH_INFO || c1)
+		if (ret == SQL_NO_DATA)
+		{
+			const auto res = start_reading_results();
+			_resultset = make_unique<ResultSet>(0);
+			_resultset->_end_of_rows = true;
+			return true;
+		}
+
+		if (!SQL_SUCCEEDED(ret))
+		{
+			return_odbc_error();
+			_resultset = make_unique<ResultSet>(0);
+			_resultset->_end_of_rows = true;
+			return false;
+		}
+		
+		if (ret == SQL_SUCCESS_WITH_INFO)
 		{
 			return_odbc_error();
 			_boundParamsSet = param_set;
-			const auto saved_errors = _error;
 			const auto res = start_reading_results();
-			_error = saved_errors;
 			if (res)
 			{
 				_resultset->_end_of_rows = false;
@@ -1347,7 +1358,6 @@ namespace mssql
 		case SQL_SUCCESS_WITH_INFO:
 			{
 				return_odbc_error();
-				auto saved_errors = _error;
 				const auto res = start_reading_results();
 				if (res)
 				{

@@ -22,7 +22,6 @@
 #include <OdbcConnection.h>
 #include <OdbcStatement.h>
 #include <OdbcStatementCache.h>
-#include <iostream>
 
 namespace mssql
 {
@@ -33,7 +32,7 @@ namespace mssql
 		_callback(Isolate::GetCurrent(), cb.As<Function>()),
 		_cb(cb),
 		failed(false),
-		failure(nullptr)
+		failures(nullptr)
 	{
 		_statementId = static_cast<long>(query_id);
 		nodeTypeFactory fact;
@@ -47,7 +46,7 @@ namespace mssql
 		_callback(Isolate::GetCurrent(), cb.As<Function>()),
 		_cb(cb),
 		failed(false),
-		failure(nullptr)
+		failures(nullptr)
 	{
 		_statementId = static_cast<long>(query_id);
 		nodeTypeFactory fact;
@@ -61,7 +60,7 @@ namespace mssql
 		_callback(Isolate::GetCurrent(), cb.As<Function>()),
 		_cb(cb),
 		failed(false),
-		failure(nullptr)
+		failures(nullptr)
 	{
 		_statementId = -1;
 		nodeTypeFactory fact;
@@ -81,14 +80,15 @@ namespace mssql
 	void OdbcOperation::getFailure()
 	{
 		if (_connection) {
-			failure = _connection->LastError();
+			failures = _connection->errors();
 		}
-		if (!failure && _statement) {
-			failure = _statement->get_last_error();
+		if (!failures && _statement) {
+			failures = _statement->errors();
 		}
-		if (!failure)
+		if (!failures)
 		{
-			failure = make_shared<OdbcError>("unknown", "internal error", -1);
+			failures = make_shared<vector<shared_ptr<OdbcError>>>();
+			failures->push_back(make_shared<OdbcError>("unknown", "internal error", -1));
 		}
 	}
 
@@ -105,10 +105,17 @@ namespace mssql
 	int OdbcOperation::error(Local<Value> args[])
 	{
 		nodeTypeFactory fact;
-		auto err = fact.error(failure->Message());
-		err->Set(fact.new_string("sqlstate"), fact.new_string(failure->SqlState()));
-		err->Set(fact.new_string("code"), fact.new_integer(failure->Code()));
-
+		const auto error_count = failures ? failures->size() : 0;
+		const auto errors = fact.new_array(error_count);
+		for (unsigned int i = 0; i < error_count; ++i)
+		{
+			const auto failure = (*failures)[i];
+			auto err = fact.error(failure->Message());
+			err->Set(fact.new_string("sqlstate"), fact.new_string(failure->SqlState()));
+			err->Set(fact.new_string("code"), fact.new_integer(failure->Code()));
+			errors->Set(i, err);
+		}
+		
 		auto more = false;
 		if (_statement)
 		{
@@ -116,7 +123,7 @@ namespace mssql
 			if (rs) more = !rs->EndOfRows();
 		}
 
-		args[0] = err;
+		args[0] = errors;
 		if (more) {
 			const auto arg = CreateCompletionArg();
 			args[1] = fact.new_local_value(arg);

@@ -69,10 +69,9 @@ namespace mssql
 		Handle<Value> get_column_values() const;
 		bool set_polling(bool mode);
 
-		shared_ptr<OdbcError> get_last_error(void) const
+		shared_ptr<vector<shared_ptr<OdbcError>>> errors(void) const
 		{
-			if (_error) return _error;
-			return _error2;
+			return _errors;
 		}
 	
 		bool try_prepare(const shared_ptr<QueryOperationParams> &q);
@@ -97,16 +96,6 @@ namespace mssql
 		SQLRETURN query_timeout(int timeout);
 		bool d_variant(size_t row, size_t col);
 		bool d_time(size_t row, size_t col);
-		/*
-		bool d_string(size_t row, size_t col);
-		bool d_bit(size_t row, size_t col);
-		bool d_integer(size_t row, size_t col);
-		bool d_decimal(size_t row, size_t col);
-		bool d_binary(size_t row, size_t col);
-		bool d_timestamp_offset(size_t row, size_t col);
-		bool d_timestamp(size_t row, size_t col);
-		bool d_time(size_t row, size_t col);
-		*/
 		bool bounded_string(SQLLEN display_size, size_t row, size_t column);
 		bool reserved_string(const size_t rows_read, const size_t column_size, size_t const column) const;
 		bool reserved_binary(const size_t rows_read, const size_t column_size, size_t const column) const;
@@ -142,8 +131,7 @@ namespace mssql
 		// any error that occurs when a Try* function returns false is stored here
 		// and may be retrieved via the Error function below.
 
-		shared_ptr<OdbcError> _error;
-		shared_ptr<OdbcError> _error2;
+		shared_ptr<vector<shared_ptr<OdbcError>>> _errors;
 
 		bool _endOfResults;
 		long _statementId;

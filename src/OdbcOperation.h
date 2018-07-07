@@ -46,7 +46,7 @@ namespace mssql
 	private:
 
 		bool failed;
-		shared_ptr<OdbcError> failure;
+		shared_ptr<vector<shared_ptr<OdbcError>>> failures;
 		clock_capture timer;
 		int error(Local<Value> args[]);
 		int success(Local<Value> args[]);

@@ -138,7 +138,36 @@ suite('params', function () {
       })
   }
 
-  // declare @str nvarchar (MAX);set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @s AS s;
+  test('select a long string using streaming - ensure no fragmentation', function (testDone) {
+    function repeat (a, num) {
+      return new Array(num + 1).join(a)
+    }
+    var longString = repeat('a', 40 * 1024)
+    var expected = [
+      {
+        long_string: longString
+      }
+    ]
+    var res = []
+    var colNames = []
+    var query = theConnection.query('declare @str nvarchar (MAX);set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @str AS long_string', [longString])
+    query.on('column', function (c, d) {
+      assert(c === 0)
+      var obj = {}
+      obj[colNames[c]] = d
+      res.push(obj)
+    })
+    query.on('error', function (e) {
+      assert(e)
+    })
+    query.on('meta', function (m) {
+      colNames.push(m[0].name)
+    })
+    query.on('done', function () {
+      assert.deepEqual(expected, res)
+      testDone()
+    })
+  })
 
   test('mssql set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @s AS s', function (testDone) {
     var STR_LEN = 2001
@@ -153,6 +182,8 @@ suite('params', function () {
       testDone()
     })
   })
+
+  // declare @str nvarchar (MAX);set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @s AS s;
 
   test('insert string 100 in nchar(100)', function (testDone) {
     runTest('nchar(100)', 100, function () {
@@ -338,36 +369,7 @@ suite('params', function () {
     })
   })
 
-  test('select a long string using streaming - ensure no fragmentation', function (testDone) {
-    function repeat (a, num) {
-      return new Array(num + 1).join(a)
-    }
-    var longString = repeat('a', 50000)
-    var expected = [
-      {
-        long_string: longString
-      }
-    ]
-    var res = []
-    var colNames = []
-    var query = theConnection.query('select ? as long_string', [longString])
-    query.on('column', function (c, d) {
-      assert(c === 0)
-      var obj = {}
-      obj[colNames[c]] = d
-      res.push(obj)
-    })
-    query.on('error', function (e) {
-      assert(e)
-    })
-    query.on('meta', function (m) {
-      colNames.push(m[0].name)
-    })
-    query.on('done', function () {
-      assert.deepEqual(expected, res)
-      testDone()
-    })
-  })
+
 
   test('verify buffer longer than column causes error', function (testDone) {
     var b = Buffer.from('0102030405060708090a', 'hex')

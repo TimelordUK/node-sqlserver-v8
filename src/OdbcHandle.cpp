@@ -77,32 +77,29 @@ namespace mssql
 		return handle;
 	} 
 
-	shared_ptr<OdbcError> OdbcHandle::read_errors() const
+	void OdbcHandle::read_errors(shared_ptr<vector<shared_ptr<OdbcError>>> & errors) const
 	{
-		shared_ptr<OdbcError> first;
-
 		SQLSMALLINT msg_len;
 		SQLRETURN      rc2;
 		SQLINTEGER    native_error;
 		SQLWCHAR        msg[2 * 1024];
 		SQLWCHAR sql_state[6];
-
 		// Get the status records.  
 		SQLSMALLINT i = 1;
 		while ((rc2 = SQLGetDiagRec(HandleType, handle, i, sql_state, &native_error, msg, sizeof(msg) / sizeof(SQLWCHAR), &msg_len)) != SQL_NO_DATA) {
 			const wstring sqlstate(sql_state);
 			const wstring message(msg);
-
+		     if (rc2 < 0) {
+				 break;
+		     }
 			//setup converter
 			using convert_type = codecvt_utf8<wchar_t>;
 			wstring_convert<convert_type, wchar_t> converter;
-			//use converter (.to_bytes: wstr->str, .from_bytes: str->wstr)
 			auto c_state = converter.to_bytes(sqlstate);
 			auto c_msg = converter.to_bytes(message);
 			const auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), native_error);
-			if (i == 1) first = last;
+			errors->push_back(last);
 			i++;
 		}
-		return  first;
 	}
 }

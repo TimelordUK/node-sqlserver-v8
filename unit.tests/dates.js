@@ -89,13 +89,15 @@ suite('date tests', function () {
       },
       // test valid dates
       function (asyncDone) {
+        theConnection.setUseUTC(false)
         theConnection.queryRaw('SELECT test_date FROM date_test', function (e, r) {
           assert.ifError(e)
           var expectedDates = []
           for (var i in testDates) {
-            var expectedDate = new Date(testDates[i])
-            expectedDate.setUTCHours(0, 0, 0, 0)
-            expectedDate.nanosecondsDelta = 0
+            const d = new Date(testDates[i])
+            var now_utc =  Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(),
+              d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds())
+            var expectedDate = new Date(now_utc)
             expectedDates.push([expectedDate])
           }
           var expectedResults = {

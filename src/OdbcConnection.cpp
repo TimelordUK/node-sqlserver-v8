@@ -49,9 +49,9 @@ namespace mssql
 
 	OdbcConnection::OdbcConnection() :
 		statements(nullptr),
-		error(nullptr),
 		connectionState(Closed)		
 	{
+		_errors = shared_ptr<vector<shared_ptr<OdbcError>>>();
 		ops = make_shared<OperationManager>();
 	}
 
@@ -79,7 +79,8 @@ namespace mssql
 
 	bool OdbcConnection::ReturnOdbcError()
 	{
-		error = connection->read_errors();
+		_errors->clear();
+		connection->read_errors(_errors);
 		// fprintf(stderr, "RETURN_ODBC_ERROR - free connection handle\n\n");
 		TryClose();
 		return false;
@@ -115,7 +116,8 @@ namespace mssql
 		this->connection = make_shared<OdbcConnectionHandle>();
 	
 		if (!connection->alloc(environment)) {
-			error = environment.read_errors();
+			_errors->clear();
+			environment.read_errors(_errors);
 			//fprintf(stderr, "RETURN_ODBC_ERROR - free environment handle\n\n");
 			environment.free();
 			return false;

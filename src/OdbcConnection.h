@@ -42,7 +42,7 @@ namespace mssql
 		void send(const shared_ptr<OdbcOperation> & op) const;
 		bool try_end_tran(SQLSMALLINT completionType);
 		bool try_open(const wstring& connectionString, int timeout);
-		shared_ptr<OdbcError> LastError(void) const { return error; }
+		shared_ptr<vector<shared_ptr<OdbcError>>> errors(void) const { return _errors; }
 		bool TryClose();
 		shared_ptr<OdbcStatementCache> statements;
 		shared_ptr<OperationManager> ops;
@@ -60,7 +60,7 @@ namespace mssql
 		// any error that occurs when a Try* function returns false is stored here
 		// and may be retrieved via the Error function below.
 
-		shared_ptr<OdbcError> error;
+		shared_ptr<vector<shared_ptr<OdbcError>>> _errors;
 	
 		enum ConnectionStates
 		{

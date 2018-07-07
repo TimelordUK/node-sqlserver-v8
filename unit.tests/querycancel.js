@@ -248,7 +248,7 @@ suite('querycancel', function () {
     var fns = [
       function (asyncDone) {
         theConnection.prepare(sql.PollingQuery(s), function (err, pq) {
-          assert(err === false)
+          assert(!err)
           prepared = pq
           asyncDone()
         })
@@ -263,7 +263,7 @@ suite('querycancel', function () {
 
         q.on('submitted', function () {
           q.cancelQuery(function (err) {
-            assert(err === false)
+            assert(!err)
           })
         })
       }

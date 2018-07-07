@@ -122,6 +122,22 @@ suite('userbind', function () {
     assert.deepEqual(res, expected)
   }
 
+  test('user bind DateTime2 to sql type datetime2(7) - with scale set to illegal value, should error', function (testDone) {
+    var now = new Date()
+    var params = {
+      query: 'declare @v DATETIME2(7) = ?; select @v as v',
+      min: now,
+      max: now,
+      setter: function (v) {
+        return sql.DateTime2(v, 8) // set scale illegal
+      }
+    }
+    testUserBind(params, function (err) {
+      assert(err)
+      testDone()
+    })
+  })
+
   test('user bind DateTime2 to sql type datetime2(7) - with scale set too low, should error', function (testDone) {
     var jsonDate = '2011-05-26T07:56:00.123Z'
     var then = new Date(jsonDate)
@@ -273,22 +289,6 @@ suite('userbind', function () {
     testUserBind(params, function (err, res) {
       assert.ifError(err)
       compare(params, res)
-      testDone()
-    })
-  })
-
-  test('user bind DateTime2 to sql type datetime2(7) - with scale set to illegal value, should error', function (testDone) {
-    var now = new Date()
-    var params = {
-      query: 'declare @v DATETIME2(7) = ?; select @v as v',
-      min: now,
-      max: now,
-      setter: function (v) {
-        return sql.DateTime2(v, 8) // set scale illegal
-      }
-    }
-    testUserBind(params, function (err) {
-      assert(err)
       testDone()
     })
   })
