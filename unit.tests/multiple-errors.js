@@ -53,6 +53,7 @@ suite('multiple errors', function () {
 
   test('non trusted invalid user', function (done) {
     var adjusted = connStr.replace('Trusted_Connection=Yes', 'Trusted_Connection=No;Uid=test;Database=test;Pwd=...')
+    adjusted = adjusted.replace('Uid=sa', 'Uid=JohnSnow')
     sql.open(adjusted,
       function (err) {
         assert(err)
