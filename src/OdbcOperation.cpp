@@ -82,10 +82,10 @@ namespace mssql
 		if (_connection) {
 			failures = _connection->errors();
 		}
-		if (!failures && _statement) {
+		if (!failures || failures->empty() && _statement) {
 			failures = _statement->errors();
 		}
-		if (!failures)
+		if (!failures || failures->empty())
 		{
 			failures = make_shared<vector<shared_ptr<OdbcError>>>();
 			failures->push_back(make_shared<OdbcError>("unknown", "internal error", -1));

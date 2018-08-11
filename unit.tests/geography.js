@@ -202,7 +202,7 @@ function GeographyHelper () {
     return expected
   }
 
-  var api = {
+  return {
     asExpected: asExpected,
     asLines: asLines,
     asPoly: asPoly,
@@ -219,8 +219,6 @@ function GeographyHelper () {
     lines: lines,
     points: points
   }
-
-  return api
 }
 
 suite('geography', function () {
@@ -252,6 +250,28 @@ suite('geography', function () {
     theConnection.close(function (err) {
       assert.ifError(err)
       done()
+    })
+  })
+
+  test('show a geography .Net error is reported back from driver', function (testDone) {
+    var fns = [
+
+      function (asyncDone) {
+        geographyHelper.createGeographyTable(async, theConnection, function () {
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.query(geographyHelper.insertPointsSql, ['PINT (-89.349 -55.349)'], function (err, res) { // deliberate error
+          assert(err)
+          assert(err.message.indexOf('Expected "POINT" at position 1') > 0)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
     })
   })
 
@@ -562,28 +582,6 @@ suite('geography', function () {
         })
       }
     ]
-    async.series(fns, function () {
-      testDone()
-    })
-  })
-
-  test('show a geography .Net error is reported back from driver', function (testDone) {
-    var fns = [
-
-      function (asyncDone) {
-        geographyHelper.createGeographyTable(async, theConnection, function () {
-          asyncDone()
-        })
-      },
-      function (asyncDone) {
-        theConnection.query(geographyHelper.insertPointsSql, ['PINT (-89.349 -55.349)'], function (err, res) { // deliberate error
-          assert(err)
-          assert(err.message.indexOf('Expected "POINT" at position 1') > 0)
-          asyncDone()
-        })
-      }
-    ]
-
     async.series(fns, function () {
       testDone()
     })

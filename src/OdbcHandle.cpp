@@ -21,6 +21,7 @@
 #include "stdafx.h"
 #include <locale>
 #include <codecvt>
+#include <set>
 
 namespace mssql
 {
@@ -84,21 +85,26 @@ namespace mssql
 		SQLINTEGER    native_error;
 		SQLWCHAR        msg[2 * 1024];
 		SQLWCHAR sql_state[6];
+		set<string> received;
 		// Get the status records.  
 		SQLSMALLINT i = 1;
 		while ((rc2 = SQLGetDiagRec(HandleType, handle, i, sql_state, &native_error, msg, sizeof(msg) / sizeof(SQLWCHAR), &msg_len)) != SQL_NO_DATA) {
 			const wstring sqlstate(sql_state);
 			const wstring message(msg);
-		     if (rc2 < 0) {
-				 break;
-		     }
+			if (rc2 < 0) {
+				break;
+			}
 			//setup converter
 			using convert_type = codecvt_utf8<wchar_t>;
 			wstring_convert<convert_type, wchar_t> converter;
 			auto c_state = converter.to_bytes(sqlstate);
 			auto c_msg = converter.to_bytes(message);
-			const auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), native_error);
-			errors->push_back(last);
+			const auto m = string(c_msg);
+			if (received.find(m) == received.end()) {
+				const auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), native_error);
+				errors->push_back(last);
+				received.insert(m);
+			}
 			i++;
 		}
 	}

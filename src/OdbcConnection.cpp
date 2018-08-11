@@ -51,7 +51,7 @@ namespace mssql
 		statements(nullptr),
 		connectionState(Closed)		
 	{
-		_errors = shared_ptr<vector<shared_ptr<OdbcError>>>();
+		_errors = make_shared<vector<shared_ptr<OdbcError>>>();
 		ops = make_shared<OperationManager>();
 	}
 
@@ -112,7 +112,7 @@ namespace mssql
 	bool OdbcConnection::try_open(const wstring& connection_string, const int timeout)
 	{
 		assert(connectionState == Closed);
-
+		_errors->clear();
 		this->connection = make_shared<OdbcConnectionHandle>();
 	
 		if (!connection->alloc(environment)) {
