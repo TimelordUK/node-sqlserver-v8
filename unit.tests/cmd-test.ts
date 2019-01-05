@@ -372,8 +372,8 @@ class BusyConnection implements SimpleTest {
             }
             let x = 1;
             setInterval(() => {
-                let query = `RAISERROR('User JS Error', ${severity}, 1);SELECT ${x}+${x};`;
-
+                let query = `RAISERROR('User JS Error ${severity}', ${severity}, 1);SELECT ${x}+${x};`;
+                console.log(query);
                 conn.queryRaw(query, (err, results, more) => {
                     console.log(">> queryRaw");
                     console.log(err);

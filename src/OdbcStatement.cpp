@@ -398,7 +398,8 @@ namespace mssql
 		if (!check_odbc_error(ret)) return false;
 
 		auto& current = _resultset->get_meta_data(column);
-		vector<wchar_t> buffer(name_length + 1);
+		auto l = name_length + static_cast<SQLSMALLINT>(1);
+		vector<wchar_t> buffer(l);
 		ret = SQLDescribeCol(statement, index, buffer.data(), name_length + 1, &name_length, &current.dataType,
 		                     &current.columnSize, &current.decimalDigits, &current.nullable);
 		if (!check_odbc_error(ret)) return false;

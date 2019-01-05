@@ -27,7 +27,8 @@
     "microsoft",
     "msnodesql",
     "node-sqlserver",
-    "tvp"
+    "tvp",
+    "sequelize"
   ],
   "homepage": "https://github.com/TimelordUK/node-sqlserver-v8",
   "bugs": {
@@ -61,13 +62,16 @@
   },
   "devDependencies": {
     "@types/electron": "^1.4.31",
-    "@types/node": "^10.11.4",
+    "@types/node": "^10.12.18",
+    "@types/sequelize": "^4.27.33",
     "asynquence": "^0.10.2",
     "asynquence-contrib": "^0.28.2",
-    "electron": "^3.0.3",
+    "electron": "^4.0.1",
     "minimist": "^1.2.0",
     "mocha": "^5.2.0",
-    "standard": "^12.0.1"
+    "sequelize": "^4.42.0",
+    "standard": "^12.0.1",
+    "tedious": "^3.0.1"
   },
   "os": [
     "win32"

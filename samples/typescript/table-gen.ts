@@ -315,8 +315,11 @@ if (help) {
     console.log('node samples\\typescript\\table-gen.js --schema=dbo --table=test_table --create --populate=30000 --columns=40');
 }else {
     let g = new TableGenerator();
-    g.run();
-    let s = g.defSql;
-    console.log(s);
+    g.run().then(() => {
+        let s = g.defSql;
+        console.log(s);
+    }).catch(e => {
+        console.log(e)
+    });
 }
 
