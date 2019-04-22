@@ -253,28 +253,6 @@ suite('geography', function () {
     })
   })
 
-  test('show a geography .Net error is reported back from driver', function (testDone) {
-    var fns = [
-
-      function (asyncDone) {
-        geographyHelper.createGeographyTable(async, theConnection, function () {
-          asyncDone()
-        })
-      },
-      function (asyncDone) {
-        theConnection.query(geographyHelper.insertPointsSql, ['PINT (-89.349 -55.349)'], function (err, res) { // deliberate error
-          assert(err)
-          assert(err.message.indexOf('Expected "POINT" at position 1') > 0)
-          asyncDone()
-        })
-      }
-    ]
-
-    async.series(fns, function () {
-      testDone()
-    })
-  })
-
   test('use tvp to insert geography LINES using pm', function (testDone) {
     var table
     var procedure
@@ -316,6 +294,28 @@ suite('geography', function () {
           assert.ifError(err)
           assert(res.length === lines.length)
           assert.deepEqual(res, expected)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, function () {
+      testDone()
+    })
+  })
+
+  test('show a geography .Net error is reported back from driver', function (testDone) {
+    var fns = [
+
+      function (asyncDone) {
+        geographyHelper.createGeographyTable(async, theConnection, function () {
+          asyncDone()
+        })
+      },
+      function (asyncDone) {
+        theConnection.query(geographyHelper.insertPointsSql, ['PINT (-89.349 -55.349)'], function (err, res) { // deliberate error
+          assert(err)
+          assert(err.message.indexOf('Expected "POINT" at position 1') > 0)
           asyncDone()
         })
       }

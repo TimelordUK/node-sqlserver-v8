@@ -56,12 +56,8 @@ namespace mssql
 		nodeTypeFactory node;
 		auto context = node.isolate->GetCurrentContext();
 		auto maybe = is_user_defined->BooleanValue(context);
-		bool local;
-		if (maybe.FromMaybe(&local))
-		{
-			return local;
-		}
-		return false;
+		bool local = maybe.FromMaybe(false);
+		return local;
 	}
 
 	bool BoundDatum::bind(Local<Value>& p)
@@ -414,7 +410,7 @@ namespace mssql
 	{
 		wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
 		//string narrow = converter.to_bytes(wide_utf16_source_string);
-
+		//fprintf(stderr, "bind tvp\n");
 		is_tvp = true;
 		param_type = SQL_PARAM_INPUT;
 		c_type = SQL_C_DEFAULT;
@@ -1734,6 +1730,7 @@ namespace mssql
 
 	bool BoundDatum::bind_object(Local<Value>& p)
 	{
+		// fprintf(stderr, "bind obj\n");
 		nodeTypeFactory fact;
 		auto context = fact.isolate->GetCurrentContext();
 		auto maybe_object = p->ToObject(context);

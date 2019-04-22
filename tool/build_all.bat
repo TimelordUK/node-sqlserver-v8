@@ -6,5 +6,5 @@ call build.bat
 call nvm use 11.14.0
 call build.bat
 
-call build-electron.bat
-call build-electron.bat
+rem call build-electron.bat
+rem call build-electron.bat
