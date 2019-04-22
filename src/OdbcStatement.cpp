@@ -59,7 +59,7 @@ namespace mssql
 		_resultset(nullptr),
 		_boundParamsSet(nullptr)
 	{
-		//fprintf(stderr, "OdbcStatement::OdbcStatement OdbcStatement ID = %ld\n ", statementId);
+		// fprintf(stderr, "OdbcStatement::OdbcStatement OdbcStatement ID = %ld\n ", statement_id);
 		_statement = make_shared<OdbcStatementHandle>();
 		_errors = make_shared<vector<shared_ptr<OdbcError>>>();
 		if (!_statement->alloc(*_connection))
@@ -69,7 +69,7 @@ namespace mssql
 	
 	bool OdbcStatement::try_read_columns(const size_t number_rows)
 	{
-		//fprintf(stderr, "TryReadColumn %d\n", column);
+		// fprintf(stderr, "try_read_columns %d\n", number_rows);
 		bool res;
 		_resultset->start_results();
 		if (!_prepared) {
@@ -83,6 +83,7 @@ namespace mssql
 
 	bool OdbcStatement::fetch_read(const size_t number_rows)
 	{
+		// fprintf(stderr, "fetch_read %d\n", number_rows);
 		const auto& statement = *_statement;
 		auto res = false;
 		for (size_t row_id = 0; row_id < number_rows; ++row_id) {
@@ -109,6 +110,7 @@ namespace mssql
 
 	bool OdbcStatement::prepared_read()
 	{
+		// fprintf(stderr, "prepared_read");
 		const auto& statement = *_statement;
 		SQLROWSETSIZE row_count;
 		SQLSetStmtAttr(statement, SQL_ATTR_ROWS_FETCHED_PTR, &row_count, 0);
@@ -269,7 +271,7 @@ namespace mssql
 	bool OdbcStatement::bind_params(const shared_ptr<BoundDatumSet> &params)
 	{
 		auto& ps = *params;
-		//fprintf(stderr, "BindParams\n");
+		// fprintf(stderr, "bind_params\n");
 		const auto size = get_size(ps);
 		if (size <= 0) return true;
 		const auto& statement = *_statement;
@@ -575,6 +577,7 @@ namespace mssql
 
 	bool OdbcStatement::try_execute_direct(const shared_ptr<QueryOperationParams> &q, const shared_ptr<BoundDatumSet> &param_set)
 	{
+		// fprintf(stderr, "try_execute_direct\n");
 		_errors->clear();
 		_query = q;
 		const auto timeout = q->timeout();
@@ -599,6 +602,7 @@ namespace mssql
 		{
 			SQLSetStmtAttr(*_statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
 		}
+		// fprintf(stderr, "SQLExecDirect\n");
 		ret = SQLExecDirect(*_statement, sql_str, SQL_NTS);
 
 		if (polling_mode)

@@ -44,7 +44,7 @@ namespace mssql
 
 	OdbcConnectionBridge::OdbcConnectionBridge()
 	{
-		connection = make_shared<OdbcConnection>();		
+		connection = make_shared<OdbcConnection>();
 	}
 
 	OdbcConnectionBridge::~OdbcConnectionBridge()
@@ -60,7 +60,7 @@ namespace mssql
 		nodeTypeFactory fact;
 		return fact.null();
 	}
-	
+
 	void OdbcConnectionBridge::collect()
 	{
 		const auto op = make_shared<CollectOperation>(connection);
@@ -102,9 +102,58 @@ namespace mssql
 		return fact.null();
 	}
 
+	int32_t getint32(Handle<Number> l)
+	{
+		nodeTypeFactory fact;
+		auto context = fact.isolate->GetCurrentContext();
+		if (!l->IsNull())
+		{
+			auto maybe = l->ToInt32(context);
+			Local<Int32> local;
+			if (maybe.ToLocal(&local))
+			{
+				return local->Value();
+			}
+		}
+		return 0;
+	}
+
+	bool getbool(Handle<Boolean> l)
+	{
+		nodeTypeFactory fact;
+		auto context = fact.isolate->GetCurrentContext();
+		if (!l->IsNull())
+		{
+			auto maybe = l->ToBoolean(context);
+			Local<Boolean> local;
+			if (maybe.ToLocal(&local))
+			{
+				return local->Value();
+			}
+		}
+		return false;
+	}
+
+	Local<String> getstring(Local<Value> l)
+	{
+		nodeTypeFactory fact;
+		auto context = fact.isolate->GetCurrentContext();
+		if (!l->IsNull())
+		{
+			auto maybe = l->ToString(context);
+			Local<String> local;
+			if (maybe.ToLocal(&local))
+			{
+				return local;
+			}
+		}
+		Local<String> s;
+		return s;
+	}
+
 	Handle<Value> OdbcConnectionBridge::query_prepared(const Handle<Number> query_id, Handle<Array> params, Handle<Object> callback) const
 	{
-		auto id = query_id->IntegerValue();
+		auto id = getint32(query_id);
 		const auto operation = make_shared<QueryPreparedOperation>(connection, id, 0, callback);
 		if (operation->bind_parameters(params)) {
 			connection->send(operation);
@@ -136,7 +185,7 @@ namespace mssql
 
 	Handle<Value> OdbcConnectionBridge::unbind_parameters(const Handle<Number> query_id, Handle<Object> callback)
 	{
-		auto id = query_id->IntegerValue();
+		auto id = getint32(query_id);
 		const auto op = make_shared<UnbindOperation>(connection, id, callback);
 		connection->send(op);
 		nodeTypeFactory fact;
@@ -145,7 +194,7 @@ namespace mssql
 
 	Handle<Value> OdbcConnectionBridge::cancel(const Handle<Number> query_id, Handle<Object> callback)
 	{
-		auto id = query_id->IntegerValue();
+		auto id = getint32(query_id);
 		//fprintf(stderr, "cancel %lld", id);
 		const auto op = make_shared<CancelOperation>(connection, id, callback);
 		connection->send(op);
@@ -155,8 +204,8 @@ namespace mssql
 
 	Handle<Value> OdbcConnectionBridge::polling_mode(const Handle<Number> query_id, const Handle<Boolean> mode, Handle<Object> callback)
 	{
-		auto id = query_id->IntegerValue();
-		auto polling = mode->BooleanValue();
+		auto id = getint32(query_id);
+		auto polling = getbool(mode);
 
 		const auto op = make_shared<PollingModeOperation>(connection, id, polling, callback);
 		connection->send(op);
@@ -166,10 +215,10 @@ namespace mssql
 
 	Handle<Value> OdbcConnectionBridge::free_statement(const Handle<Number> query_id, Handle<Object> callback)
 	{
-		auto id = static_cast<long>(query_id->IntegerValue());
+		auto id = static_cast<long>(getint32(query_id));
 		nodeTypeFactory fact;
 		auto op = make_shared<FreeStatementOperation>(connection, id, callback);
-		connection->statements->checkin(id);	
+		connection->statements->checkin(id);
 		op->mgr = connection->ops;
 		connection->ops->add(op);
 
@@ -178,7 +227,7 @@ namespace mssql
 
 	Handle<Value> OdbcConnectionBridge::read_next_result(const Handle<Number> query_id, Handle<Object> callback) const
 	{
-		auto id = query_id->IntegerValue();
+		auto id = getint32(query_id);
 		const auto op = make_shared<ReadNextResultOperation>(connection, id, callback);
 		connection->send(op);
 		nodeTypeFactory fact;
@@ -187,14 +236,14 @@ namespace mssql
 
 	Handle<Value> OdbcConnectionBridge::read_column(const Handle<Number> query_id, const Handle<Number> number_rows, Handle<Object> callback) const
 	{
-		auto id = query_id->IntegerValue();
-		const auto op = make_shared<ReadColumnOperation>(connection, id, number_rows->Int32Value(), callback);
+		auto id = getint32(query_id);
+		const auto op = make_shared<ReadColumnOperation>(connection, id, getint32(number_rows), callback);
 		connection->send(op);
 		nodeTypeFactory fact;
 		return fact.null();
 	}
 
-	Local<Value> OdbcConnectionBridge::get(Local<Object> o, const char *v)
+	Local<Value> OdbcConnectionBridge::get(Local<Object> o, const char* v)
 	{
 		nodeTypeFactory fact;
 		const auto vp = fact.new_string(v);
@@ -204,12 +253,21 @@ namespace mssql
 
 	Handle<Value> OdbcConnectionBridge::open(const Handle<Object> connection_object, Handle<Object> callback, Handle<Object> backpointer)
 	{
-		const auto connection_string = get(connection_object, "conn_str")->ToString();
-		auto timeout = get(connection_object, "conn_timeout")->Int32Value();
+		nodeTypeFactory fact;
+		auto context = fact.isolate->GetCurrentContext();
+		auto cs = get(connection_object, "conn_str");
+		const auto connection_string = getstring(cs);
+		auto to = get(connection_object, "conn_timeout");
+		auto maybe_to = to->ToInt32(context);
+		Local<Int32> local;
+		int timeout = 0;
+		if (maybe_to.ToLocal(&local)) {
+			timeout = local->Value();
+		}
 		auto op = make_shared<OpenOperation>(connection, FromV8String(connection_string), timeout, callback, backpointer);
 		op->mgr = connection->ops;
 		connection->ops->add(op);
-		nodeTypeFactory fact;
+
 		return fact.null();
 	}
 }

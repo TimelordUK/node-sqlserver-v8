@@ -5,26 +5,26 @@
 
 namespace mssql
 {
-	BoundDatumSet::BoundDatumSet() : 
-		err(nullptr), 
-		first_error(0), 
+	BoundDatumSet::BoundDatumSet() :
+		err(nullptr),
+		first_error(0),
 		_output_param_count(-1)
 	{
 		_bindings = make_shared<param_bindings>();
 	}
 
-	bool BoundDatumSet::reserve(const shared_ptr<ResultSet> &set, const size_t row_count) const
+	bool BoundDatumSet::reserve(const shared_ptr<ResultSet>& set, const size_t row_count) const
 	{
 		for (uint32_t i = 0; i < set->get_column_count(); ++i) {
 			auto binding = make_shared<BoundDatum>();
-			auto & def = set->get_meta_data(i);
+			auto& def = set->get_meta_data(i);
 			binding->reserve_column_type(def.dataType, def.columnSize, row_count);
 			_bindings->push_back(binding);
 		}
 		return true;
 	}
 
-	Local<Value> get(Local<Object> o, const char *v)
+	Local<Value> get(Local<Object> o, const char* v)
 	{
 		nodeTypeFactory fact;
 		const auto vp = fact.new_string(v);
@@ -32,7 +32,7 @@ namespace mssql
 		return val;
 	}
 
-	int get_tvp_col_count(Local<Value> &v)
+	int get_tvp_col_count(Local<Value>& v)
 	{
 		auto tvp_columns = get(v.As<Object>(), "table_value_param");
 		const auto cols = tvp_columns.As<Array>();
@@ -40,7 +40,7 @@ namespace mssql
 		return count;
 	}
 
-	bool BoundDatumSet::tvp(Local<Value> &v) const
+	bool BoundDatumSet::tvp(Local<Value>& v) const
 	{
 		auto tvp_columns = get(v.As<Object>(), "table_value_param");
 		if (tvp_columns->IsNull()) return false;
@@ -48,7 +48,7 @@ namespace mssql
 
 		const auto cols = tvp_columns.As<Array>();
 		const auto count = cols->Length();
-	
+
 		for (uint32_t i = 0; i < count; ++i) {
 			auto binding = make_shared<BoundDatum>();
 			auto p = cols->Get(i);
@@ -59,7 +59,7 @@ namespace mssql
 		return true;
 	}
 
-	bool BoundDatumSet::bind(Handle<Array> &node_params)
+	bool BoundDatumSet::bind(Handle<Array>& node_params)
 	{
 		const auto count = node_params->Length();
 		auto res = true;
@@ -107,22 +107,22 @@ namespace mssql
 		const auto arr = fact.new_array(_output_param_count);
 		auto i = 0;
 
-		std::for_each(_bindings->begin(), _bindings->end(), [&](shared_ptr<BoundDatum>& param) mutable
-		{
-			switch (param->param_type)
+		std::for_each(_bindings->begin(), _bindings->end(), [&](shared_ptr<BoundDatum> & param) mutable
 			{
-			case SQL_PARAM_OUTPUT:
-			case SQL_PARAM_INPUT_OUTPUT:
-			{
-				auto v = param->unbind();
-				arr->Set(i++, v);
-			}
-			break;
-
-			default:
+				switch (param->param_type)
+				{
+				case SQL_PARAM_OUTPUT:
+				case SQL_PARAM_INPUT_OUTPUT:
+				{
+					auto v = param->unbind();
+					arr->Set(i++, v);
+				}
 				break;
-			}
-		});
+
+				default:
+					break;
+				}
+			});
 		return arr;
 	}
 }
