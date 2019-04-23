@@ -20,8 +20,8 @@
 /* global suite teardown teardown test setup */
 'use strict'
 
-var supp = require('../samples/typescript/demo-support')
-var assert = require('assert')
+const supp = require('../samples/typescript/demo-support')
+const assert = require('assert')
 
 function empSelectSQL () {
   return 'SELECT [BusinessEntityID] ' +
@@ -70,18 +70,19 @@ function empNoParamsSQL () {
 }
 
 suite('prepared', function () {
-  var connStr
-  var theConnection
-  var support
-  var async
-  var helper
-  var procedureHelper
-  var prepared
-  var parsedJSON
-  var sql = global.native_sql
+  const tableName = 'Employee'
+  let connStr
+  let theConnection
+  let support
+  let async
+  let helper
+  let procedureHelper
+  let prepared
+  let parsedJSON
+  const sql = global.native_sql
   this.timeout(10000)
 
-  var actions = [
+  const actions = [
     // open a connection.
     function (asyncDone) {
       sql.open(connStr, function (err, newConn) {
@@ -102,7 +103,7 @@ suite('prepared', function () {
 
     // insert test set using bulk insert
     function (asyncDone) {
-      var tm = theConnection.tableMgr()
+      const tm = theConnection.tableMgr()
       tm.bind(tableName, function (bulkMgr) {
         bulkMgr.insertRows(parsedJSON, function () {
           asyncDone()
@@ -135,8 +136,6 @@ suite('prepared', function () {
     }
   ]
 
-  var tableName = 'Employee'
-
   setup(function (testDone) {
     prepared = {
       select: null,
@@ -161,7 +160,7 @@ suite('prepared', function () {
   })
 
   teardown(function (done) {
-    var fns = [
+    const fns = [
       function (asyncDone) {
         prepared.select.free(function () {
           asyncDone()
@@ -193,7 +192,7 @@ suite('prepared', function () {
   }
 
   test('use prepared to reserve and read multiple rows.', function (testDone) {
-    var sql = 'select * from master..syscomments'
+    const sql = 'select * from master..syscomments'
     theConnection.prepare(sql, function (err, preparedQuery) {
       assert(err === null || err === false)
       preparedQuery.preparedQuery([], function (err, res) {
@@ -208,27 +207,27 @@ suite('prepared', function () {
   })
 
   test('use prepared statement twice with no parameters.', function (testDone) {
-    var select = prepared.scan
-    var meta = select.getMeta()
+    const select = prepared.scan
+    const meta = select.getMeta()
     assert(meta.length > 0)
     select.preparedQuery(function (err, res1) {
       assert.ifError(err)
-      assert.deepEqual(parsedJSON, res1, 'results didn\'t match')
+      assert.deepStrictEqual(parsedJSON, res1, 'results didn\'t match')
       select.preparedQuery(function (err, res2) {
         assert.ifError(err)
-        assert.deepEqual(parsedJSON, res2, 'results didn\'t match')
+        assert.deepStrictEqual(parsedJSON, res2, 'results didn\'t match')
         testDone()
       })
     })
   })
 
   test('use prepared statements to select a row, then delete it over each row.', function (testDone) {
-    var select = prepared.select
-    var meta = select.getMeta()
+    const select = prepared.select
+    const meta = select.getMeta()
     assert(meta.length > 0)
-    var remove = prepared.delete
-    var max = parsedJSON[parsedJSON.length - 1].BusinessEntityID
-    var businessId = 1
+    const remove = prepared.delete
+    const max = parsedJSON[parsedJSON.length - 1].BusinessEntityID
+    let businessId = 1
     next(businessId, iterate)
 
     function iterate () {
@@ -248,8 +247,8 @@ suite('prepared', function () {
     function next (businessId, done) {
       select.preparedQuery([businessId], function (err, res1) {
         assert.ifError(err)
-        var fetched = parsedJSON[businessId - 1]
-        assert.deepEqual(fetched, res1[0], 'results didn\'t match')
+        const fetched = parsedJSON[businessId - 1]
+        assert.deepStrictEqual(fetched, res1[0], 'results didn\'t match')
         remove.preparedQuery([businessId], function (err) {
           assert.ifError(err)
           done()
@@ -259,13 +258,13 @@ suite('prepared', function () {
   })
 
   test('stress test prepared statement with 500 invocations cycling through primary key', function (testDone) {
-    var select = prepared.select
-    var meta = select.getMeta()
+    const select = prepared.select
+    const meta = select.getMeta()
     assert(meta.length > 0)
-    var businessId = 1
-    var iteration = 0
-    var totalIterations = 500
-    var max = parsedJSON[parsedJSON.length - 1].BusinessEntityID
+    let businessId = 1
+    let iteration = 0
+    const totalIterations = 500
+    const max = parsedJSON[parsedJSON.length - 1].BusinessEntityID
     next(businessId, iterate)
 
     function iterate () {
@@ -290,20 +289,20 @@ suite('prepared', function () {
   })
 
   test('use prepared statement twice with different params.', function (testDone) {
-    var select = prepared.select
-    var meta = select.getMeta()
-    var id1 = 2
-    var id2 = 3
+    const select = prepared.select
+    const meta = select.getMeta()
+    const id1 = 2
+    const id2 = 3
     assert(meta.length > 0)
     select.preparedQuery([id1], function (err, res1) {
       assert.ifError(err)
       select.preparedQuery([id2], function (err, res2) {
         assert.ifError(err)
-        var o1 = parsedJSON[id1 - 1]
-        assert.deepEqual(o1, res1[0], 'results didn\'t match')
+        const o1 = parsedJSON[id1 - 1]
+        assert.deepStrictEqual(o1, res1[0], 'results didn\'t match')
 
-        var o2 = parsedJSON[id2 - 1]
-        assert.deepEqual(o2, res2[0], 'results didn\'t match')
+        const o2 = parsedJSON[id2 - 1]
+        assert.deepStrictEqual(o2, res2[0], 'results didn\'t match')
         testDone()
       })
     })

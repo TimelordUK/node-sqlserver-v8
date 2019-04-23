@@ -21,18 +21,18 @@
 
 'use strict'
 
-var assert = require('assert')
-var supp = require('../samples/typescript/demo-support')
+const assert = require('assert')
+const supp = require('../samples/typescript/demo-support')
 
 suite('txn', function () {
-  var theConnection
+  let theConnection
   this.timeout(20000)
-  var connStr
-  var async
-  var helper
-  var driver
+  let connStr
+  let async
+  let helper
+  let driver
 
-  var sql = global.native_sql
+  const sql = global.native_sql
 
   setup(function (testDone) {
     supp.GlobalConn.init(sql, function (co) {
@@ -58,7 +58,7 @@ suite('txn', function () {
   test('setup for tests', function (testDone) {
     // single setup necessary for the test
 
-    var fns = [
+    const fns = [
 
       function (asyncDone) {
         try {
@@ -111,7 +111,7 @@ suite('txn', function () {
   })
 
   test('begin a transaction and commit', function (testDone) {
-    var fns = [
+    const fns = [
 
       function (asyncDone) {
         theConnection.beginTransaction(function (err) {
@@ -123,14 +123,14 @@ suite('txn', function () {
       function (asyncDone) {
         theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Anne\')', function (err, results) {
           assert(err === null || err === false)
-          assert.deepEqual(results, {meta: null, rowcount: 1}, 'Insert results don\'t match')
+          assert.deepStrictEqual(results, { meta: null, rowcount: 1 }, 'Insert results don\'t match')
           asyncDone()
         })
       },
       function (asyncDone) {
         theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Bob\')', function (err, results) {
           assert(err === null || err === false)
-          assert.deepEqual(results, {meta: null, rowcount: 1}, 'Insert results don\'t match')
+          assert.deepStrictEqual(results, { meta: null, rowcount: 1 }, 'Insert results don\'t match')
           asyncDone()
         })
       },
@@ -145,7 +145,7 @@ suite('txn', function () {
           assert(err === null || err === false)
 
           // verify results
-          var expected = {
+          const expected = {
             'meta': [{
               'name': 'id',
               'size': 10,
@@ -153,11 +153,11 @@ suite('txn', function () {
               'type': 'number',
               sqlType: 'int identity'
             },
-            {'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar'}],
+            { 'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar' }],
             'rows': [[1, 'Anne'], [2, 'Bob']]
           }
 
-          assert.deepEqual(results, expected, 'Transaction not committed properly')
+          assert.deepStrictEqual(results, expected, 'Transaction not committed properly')
           asyncDone()
         })
       }
@@ -168,7 +168,7 @@ suite('txn', function () {
   })
 
   test('begin a transaction and rollback', function (testDone) {
-    var fns = [
+    const fns = [
 
       function (asyncDone) {
         theConnection.beginTransaction(function (err) {
@@ -179,14 +179,14 @@ suite('txn', function () {
       function (asyncDone) {
         theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Carl\')', function (err, results) {
           assert(err === null || err === false)
-          assert.deepEqual(results, {meta: null, rowcount: 1}, 'Insert results don\'t match')
+          assert.deepStrictEqual(results, { meta: null, rowcount: 1 }, 'Insert results don\'t match')
           asyncDone()
         })
       },
       function (asyncDone) {
         theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Dana\')', function (err, results) {
           assert(err === null || err === false)
-          assert.deepEqual(results, {meta: null, rowcount: 1}, 'Insert results don\'t match')
+          assert.deepStrictEqual(results, { meta: null, rowcount: 1 }, 'Insert results don\'t match')
           asyncDone()
         })
       },
@@ -201,7 +201,7 @@ suite('txn', function () {
           assert(err === null || err === false)
 
           // verify results
-          var expected = {
+          const expected = {
             'meta': [{
               'name': 'id',
               'size': 10,
@@ -209,11 +209,11 @@ suite('txn', function () {
               'type': 'number',
               sqlType: 'int identity'
             },
-            {'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar'}],
+            { 'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar' }],
             'rows': [[1, 'Anne'], [2, 'Bob']]
           }
 
-          assert.deepEqual(results, expected, 'Transaction not rolled back properly')
+          assert.deepStrictEqual(results, expected, 'Transaction not rolled back properly')
           asyncDone()
         })
       }
@@ -225,7 +225,7 @@ suite('txn', function () {
   })
 
   test('begin a transaction and then query with an error', function (testDone) {
-    var fns = [
+    const fns = [
       function (asyncDone) {
         theConnection.beginTransaction(function (err) {
           assert(err === null || err === false)
@@ -234,14 +234,14 @@ suite('txn', function () {
       },
 
       function (asyncDone) {
-        var q = theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Carl\')\'m with STUPID')
+        const q = theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Carl\')\'m with STUPID')
         // events are emitted before callbacks are called currently
         q.on('error', function (err) {
-          var expected = new Error('[Microsoft][' + driver + '][SQL Server]Unclosed quotation mark after the character string \'m with STUPID\'.')
+          const expected = new Error('[Microsoft][' + driver + '][SQL Server]Unclosed quotation mark after the character string \'m with STUPID\'.')
           expected.sqlstate = '42000'
           expected.code = 105
 
-          assert.deepEqual(err, expected, 'Transaction should have caused an error')
+          assert.deepStrictEqual(err, expected, 'Transaction should have caused an error')
 
           theConnection.rollback(function (err) {
             assert(err === null || err === false)
@@ -255,7 +255,7 @@ suite('txn', function () {
           assert(err === null || err === false)
 
           // verify results
-          var expected = {
+          const expected = {
             'meta': [{
               'name': 'id',
               'size': 10,
@@ -263,11 +263,11 @@ suite('txn', function () {
               'type': 'number',
               sqlType: 'int identity'
             },
-            {'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar'}],
+            { 'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar' }],
             'rows': [[1, 'Anne'], [2, 'Bob']]
           }
 
-          assert.deepEqual(results, expected, 'Transaction not rolled back properly')
+          assert.deepStrictEqual(results, expected, 'Transaction not rolled back properly')
           asyncDone()
         })
       }
@@ -299,17 +299,17 @@ suite('txn', function () {
       assert(err === null || err === false)
 
       // verify results
-      var expected = {
+      const expected = {
         'meta': [
-          {'name': 'id', 'size': 10, 'nullable': false, 'type': 'number', sqlType: 'int identity'},
-          {'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar'}
+          { 'name': 'id', 'size': 10, 'nullable': false, 'type': 'number', sqlType: 'int identity' },
+          { 'name': 'name', 'size': 100, 'nullable': true, 'type': 'text', sqlType: 'varchar' }
         ],
         'rows': [
           [1, 'Anne'], [2, 'Bob'], [5, 'Anne'], [6, 'Bob']
         ]
       }
 
-      assert.deepEqual(results, expected, 'Transaction not committed properly')
+      assert.deepStrictEqual(results, expected, 'Transaction not committed properly')
 
       testDone()
     })

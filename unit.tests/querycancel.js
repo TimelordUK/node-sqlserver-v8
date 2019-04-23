@@ -2,19 +2,19 @@
 /* global suite teardown teardown test setup */
 'use strict'
 
-var assert = require('assert')
-var supp = require('../samples/typescript/demo-support')
+const assert = require('assert')
+const supp = require('../samples/typescript/demo-support')
 
 suite('querycancel', function () {
   this.timeout(30 * 1000)
-  var sql = global.native_sql
+  const sql = global.native_sql
 
-  var theConnection
-  var connStr
-  var support
-  var async
-  var helper
-  var procedureHelper
+  let theConnection
+  let connStr
+  let support
+  let async
+  let helper
+  let procedureHelper
 
   setup(function (done) {
     supp.GlobalConn.init(sql, function (co) {
@@ -41,7 +41,7 @@ suite('querycancel', function () {
   })
 
   test('cancel single query from notifier using tmp connection - expect Operation canceled', function (testDone) {
-    var q = sql.query(connStr, sql.PollingQuery('waitfor delay \'00:00:59\';'), function (err) {
+    const q = sql.query(connStr, sql.PollingQuery('waitfor delay \'00:00:59\';'), function (err) {
       assert(err)
       assert(err.message.indexOf('Operation canceled') > 0)
       testDone()
@@ -54,7 +54,7 @@ suite('querycancel', function () {
   })
 
   test('cancel single waitfor - expect Operation canceled', function (testDone) {
-    var q = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:20\';'), function (err) {
+    const q = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:20\';'), function (err) {
       assert(err)
       assert(err.message.indexOf('Operation canceled') > 0)
       testDone()
@@ -66,7 +66,7 @@ suite('querycancel', function () {
   })
 
   test('cancel single waitfor on non polling query - expect cancel error and query to complete', function (testDone) {
-    var q = theConnection.query('waitfor delay \'00:00:3\';', function (err) {
+    const q = theConnection.query('waitfor delay \'00:00:3\';', function (err) {
       assert(!err)
       testDone()
     })
@@ -78,7 +78,7 @@ suite('querycancel', function () {
   })
 
   test('cancel single waitfor using notifier - expect Operation canceled', function (testDone) {
-    var q = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:20\';'), function (err) {
+    const q = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:20\';'), function (err) {
       assert(err)
       assert(err.message.indexOf('Operation canceled') > 0)
       testDone()
@@ -90,9 +90,9 @@ suite('querycancel', function () {
   })
 
   test('nested cancel - expect Operation canceled on both', function (testDone) {
-    var q1 = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:50\';'), function (err) {
+    const q1 = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:50\';'), function (err) {
       assert(err.message.indexOf('Operation canceled') > 0)
-      var q2 = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:40\';'), function (err) {
+      const q2 = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:40\';'), function (err) {
         assert(err.message.indexOf('Operation canceled') > 0)
         testDone()
       })
@@ -108,7 +108,7 @@ suite('querycancel', function () {
   })
 
   test('cancel single query - expect Operation canceled', function (testDone) {
-    var q = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:20\';'), function (err) {
+    const q = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:20\';'), function (err) {
       assert(err)
       assert(err.message.indexOf('Operation canceled') > 0)
       testDone()
@@ -120,7 +120,7 @@ suite('querycancel', function () {
   })
 
   test('2 x cancel - expect Operation canceled on both', function (testDone) {
-    var hits = 0
+    let hits = 0
 
     function hit (err) {
       assert(err)
@@ -131,11 +131,11 @@ suite('querycancel', function () {
       }
     }
 
-    var q1 = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:20\';'), function (err) {
+    const q1 = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:20\';'), function (err) {
       hit(err)
     })
 
-    var q2 = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:20\';'), function (err) {
+    const q2 = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:20\';'), function (err) {
       hit(err)
     })
 
@@ -149,7 +149,7 @@ suite('querycancel', function () {
   })
 
   test('waitfor delay 20 and delayed cancel- expect Operation canceled', function (testDone) {
-    var q = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:20\';'), function (err) {
+    const q = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:20\';'), function (err) {
       assert(err)
       assert(err.message.indexOf('Operation canceled') > 0)
       testDone()
@@ -163,7 +163,7 @@ suite('querycancel', function () {
   })
 
   test('cancel single query and cancel again - expect Operation canceled and error', function (testDone) {
-    var q = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:20\';'), function (err) {
+    const q = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:20\';'), function (err) {
       assert(err)
       assert(err.message.indexOf('Operation canceled') > 0)
       setImmediate(function () {
@@ -182,12 +182,12 @@ suite('querycancel', function () {
   })
 
   test('cancel single query and submit new query to prove connection still valid', function (testDone) {
-    var q = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:20\';'), function (err) {
+    const q = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:20\';'), function (err) {
       assert(err)
       assert(err.message.indexOf('Operation canceled') > 0)
       theConnection.query('SELECT 1 as x', [], function (err, res) {
         assert(!err)
-        assert.deepEqual(res, [
+        assert.deepStrictEqual(res, [
           {
             x: 1
           }
@@ -202,9 +202,9 @@ suite('querycancel', function () {
   })
 
   test('cancel a call to proc that waits for delay of input param.', function (testDone) {
-    var spName = 'test_spwait_for'
+    const spName = 'test_spwait_for'
 
-    var def = 'alter PROCEDURE <name>' +
+    const def = 'alter PROCEDURE <name>' +
       '(\n' +
       '@timeout datetime' +
       '\n)' +
@@ -213,7 +213,7 @@ suite('querycancel', function () {
       'waitfor delay @timeout;' +
       'END\n'
 
-    var fns = [
+    const fns = [
       function (asyncDone) {
         procedureHelper.createProcedure(spName, def, function () {
           asyncDone()
@@ -221,9 +221,9 @@ suite('querycancel', function () {
       },
 
       function (asyncDone) {
-        var pm = theConnection.procedureMgr()
+        const pm = theConnection.procedureMgr()
         pm.setPolling(true)
-        var q = pm.callproc(spName, ['0:0:20'], function (err) {
+        const q = pm.callproc(spName, ['0:0:20'], function (err) {
           assert(err)
           assert(err.message.indexOf('Operation canceled') > 0)
           asyncDone()
@@ -242,10 +242,10 @@ suite('querycancel', function () {
   })
 
   test('cancel a prepared call that waits', function (testDone) {
-    var s = 'waitfor delay ?;'
-    var prepared
+    const s = 'waitfor delay ?;'
+    let prepared
 
-    var fns = [
+    const fns = [
       function (asyncDone) {
         theConnection.prepare(sql.PollingQuery(s), function (err, pq) {
           assert(!err)
@@ -255,7 +255,7 @@ suite('querycancel', function () {
       },
 
       function (asyncDone) {
-        var q = prepared.preparedQuery(['00:00:20'], function (err) {
+        const q = prepared.preparedQuery(['00:00:20'], function (err) {
           assert(err)
           assert(err.message.indexOf('Operation canceled') > 0)
           asyncDone()
