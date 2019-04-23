@@ -1,16 +1,16 @@
 /* global suite teardown teardown test setup */
 'use strict'
 
-var assert = require('assert')
-var supp = require('../samples/typescript/demo-support')
+const assert = require('assert')
+const supp = require('../samples/typescript/demo-support')
 
 suite('querytimeout', function () {
   this.timeout(20 * 1000)
-  var sql = global.native_sql
+  const sql = global.native_sql
 
-  var theConnection
-  var connStr
-  var helper
+  let theConnection
+  let connStr
+  let helper
 
   setup(function (testDone) {
     supp.GlobalConn.init(sql, function (co) {
@@ -33,7 +33,7 @@ suite('querytimeout', function () {
   })
 
   test('test timeout 2 secs on waitfor delay 10', function (testDone) {
-    var queryObj = {
+    const queryObj = {
       query_str: 'waitfor delay \'00:00:10\';',
       query_timeout: 2
     }
@@ -46,7 +46,7 @@ suite('querytimeout', function () {
   })
 
   test('test timeout 10 secs on waitfor delay 2', function (testDone) {
-    var queryObj = {
+    const queryObj = {
       query_str: 'waitfor delay \'00:00:2\';',
       query_timeout: 10
     }
@@ -58,7 +58,7 @@ suite('querytimeout', function () {
   })
 
   test('test timeout 0 secs on waitfor delay 4', function (testDone) {
-    var queryObj = {
+    const queryObj = {
       query_str: 'waitfor delay \'00:00:4\';'
     }
 

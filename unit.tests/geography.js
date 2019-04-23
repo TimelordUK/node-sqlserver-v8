@@ -1,9 +1,9 @@
 'use strict'
 /* global suite teardown teardown test setup */
 
-var supp = require('../samples/typescript/demo-support')
-var assert = require('assert')
-var path = require('path')
+const supp = require('../samples/typescript/demo-support')
+const assert = require('assert')
+const path = require('path')
 
 /*
 create PROCEDURE InsertGeographyTvp @tvp geographyTvpType READONLY
@@ -27,16 +27,16 @@ end )
  */
 function GeographyHelper () {
   function createGeographyTable (async, theConnection, done) {
-    var insertProcedureTypeName = 'InsertGeographyTvp'
-    var tableTypeName = 'geographyTvpType'
-    var createTableSql = 'CREATE TABLE spatial_test ( id int IDENTITY (1,1), GeogCol1 geography, GeogCol2 AS GeogCol1.STAsText() )'
-    var dropProcedureSql = 'IF EXISTS (SELECT * FROM sys.objects WHERE type = \'P\' AND OBJECT_ID = OBJECT_ID(\'' + insertProcedureTypeName + '\'))\n' +
+    const insertProcedureTypeName = 'InsertGeographyTvp'
+    const tableTypeName = 'geographyTvpType'
+    const createTableSql = 'CREATE TABLE spatial_test ( id int IDENTITY (1,1), GeogCol1 geography, GeogCol2 AS GeogCol1.STAsText() )'
+    const dropProcedureSql = 'IF EXISTS (SELECT * FROM sys.objects WHERE type = \'P\' AND OBJECT_ID = OBJECT_ID(\'' + insertProcedureTypeName + '\'))\n' +
       ' begin' +
       ' drop PROCEDURE ' + insertProcedureTypeName +
       ' end '
-    var dropTypeSql = 'IF TYPE_ID(N\'' + tableTypeName + '\') IS not NULL drop type ' + tableTypeName
-    var createType = 'create type ' + tableTypeName + ' AS TABLE ([GeogCol1] nvarchar (2048))'
-    var createProcedureSql = 'create PROCEDURE InsertGeographyTvp ' +
+    const dropTypeSql = 'IF TYPE_ID(N\'' + tableTypeName + '\') IS not NULL drop type ' + tableTypeName
+    const createType = 'create type ' + tableTypeName + ' AS TABLE ([GeogCol1] nvarchar (2048))'
+    const createProcedureSql = 'create PROCEDURE InsertGeographyTvp ' +
       '@tvp geographyTvpType READONLY\n' +
       '       AS \n' +
       '       BEGIN \n' +
@@ -55,8 +55,8 @@ function GeographyHelper () {
       'end)\n' +
       '  n FROM @tvp tvp\n' +
       '  END\n'
-    var table
-    var fns = [
+    let table
+    const fns = [
 
       function (asyncDone) {
         theConnection.query('DROP TABLE spatial_test', function () {
@@ -106,21 +106,21 @@ function GeographyHelper () {
     })
   }
 
-  var points = [
+  const points = [
     'POINT (-89.349 -55.349)',
     'POINT (1.349 -9.349)'
   ]
 
-  var lines = [
+  const lines = [
     'LINESTRING (-0.19535064697265625 51.509249951770364, -0.19148826599121094 51.5100245354003)'
   ]
 
-  var insertPolySql = 'INSERT INTO spatial_test (GeogCol1) VALUES (geography::STPolyFromText(?, 4326))'
-  var insertPointsSql = 'INSERT INTO spatial_test (GeogCol1) VALUES (geography::STPointFromText(?, 4326))'
-  var insertLinesSql = 'INSERT INTO spatial_test (GeogCol1) VALUES (geography::STLineFromText(?, 4326))'
-  var selectSql = 'select id, GeogCol2 from spatial_test'
+  const insertPolySql = 'INSERT INTO spatial_test (GeogCol1) VALUES (geography::STPolyFromText(?, 4326))'
+  const insertPointsSql = 'INSERT INTO spatial_test (GeogCol1) VALUES (geography::STPointFromText(?, 4326))'
+  const insertLinesSql = 'INSERT INTO spatial_test (GeogCol1) VALUES (geography::STLineFromText(?, 4326))'
+  const selectSql = 'select id, GeogCol2 from spatial_test'
 
-  var expectedPoints = [
+  const expectedPoints = [
     {
       id: 1,
       GeogCol2: points[0]
@@ -131,7 +131,7 @@ function GeographyHelper () {
     }
   ]
 
-  var expectedLines = [
+  const expectedLines = [
     {
       id: 1,
       GeogCol2: lines[0]
@@ -139,20 +139,20 @@ function GeographyHelper () {
   ]
 
   function getJSON (stem) {
-    var p = stem || './json'
-    var folder = path.join(__dirname, p)
-    var fs = require('fs')
+    const p = stem || './json'
+    const folder = path.join(__dirname, p)
+    const fs = require('fs')
 
     return JSON.parse(fs.readFileSync(folder + '/points.json', 'utf8'))
   }
 
   function getCoordinates () {
-    var json = getJSON()
+    const json = getJSON()
     return json.features[0].geometry.coordinates
   }
 
   function asPair (elem) {
-    var dp = 13
+    const dp = 13
     return +elem[0].toFixed(dp) + ' ' + +elem[1].toFixed(dp)
   }
 
@@ -160,7 +160,7 @@ function GeographyHelper () {
     // close the polygon
     coordinates = coordinates.slice(0)
     coordinates[coordinates.length] = coordinates[0]
-    var s = coordinates.map(function (elem) {
+    const s = coordinates.map(function (elem) {
       return asPair(elem)
     })
     return 'POLYGON ((' + s.join(', ') + '))'
@@ -172,12 +172,11 @@ function GeographyHelper () {
   }
 
   function asLines (coordinates) {
-    var i
-    var res = []
-    var step = 2
-    var max = Math.floor(coordinates.length / step)
-    for (i = 0; i < max * step; i += step) {
-      var sliced = coordinates.slice(i, i + step)
+    const res = []
+    const step = 2
+    const max = Math.floor(coordinates.length / step)
+    for (let i = 0; i < max * step; i += step) {
+      const sliced = coordinates.slice(i, i + step)
       res[res.length] = asLine(sliced)
     }
     return res
@@ -191,9 +190,8 @@ function GeographyHelper () {
   }
 
   function asExpected (geography) {
-    var i
-    var expected = []
-    for (i = 0; i < geography.length; ++i) {
+    const expected = []
+    for (let i = 0; i < geography.length; ++i) {
       expected[expected.length] = {
         id: i + 1,
         GeogCol2: geography[i]
@@ -222,14 +220,14 @@ function GeographyHelper () {
 }
 
 suite('geography', function () {
-  var theConnection
+  let theConnection
   this.timeout(20000)
-  var connStr
-  var async
-  var helper
-  var geographyHelper
+  let connStr
+  let async
+  let helper
+  let geographyHelper
 
-  var sql = global.native_sql
+  const sql = global.native_sql
 
   setup(function (testDone) {
     supp.GlobalConn.init(sql, function (co) {
@@ -254,12 +252,12 @@ suite('geography', function () {
   })
 
   test('use tvp to insert geography LINES using pm', function (testDone) {
-    var table
-    var procedure
-    var coordinates = geographyHelper.getCoordinates()
-    var lines = geographyHelper.asLines(coordinates)
-    var expected = geographyHelper.asExpected(lines)
-    var fns = [
+    let table
+    let procedure
+    const coordinates = geographyHelper.getCoordinates()
+    const lines = geographyHelper.asLines(coordinates)
+    const expected = geographyHelper.asExpected(lines)
+    const fns = [
 
       function (asyncDone) {
         geographyHelper.createGeographyTable(async, theConnection, function (t) {
@@ -269,7 +267,7 @@ suite('geography', function () {
       },
 
       function (asyncDone) {
-        var pm = theConnection.procedureMgr()
+        const pm = theConnection.procedureMgr()
         pm.get('InsertGeographyTvp', function (p) {
           assert(p)
           procedure = p
@@ -282,7 +280,7 @@ suite('geography', function () {
           // each row is represented as an array of columns
           table.rows[table.rows.length] = [l]
         })
-        var tp = sql.TvpFromTable(table)
+        const tp = sql.TvpFromTable(table)
         table.rows = []
         procedure.call([tp], function (err) {
           assert.ifError(err)
@@ -293,7 +291,7 @@ suite('geography', function () {
         theConnection.query(geographyHelper.selectSql, function (err, res) {
           assert.ifError(err)
           assert(res.length === lines.length)
-          assert.deepEqual(res, expected)
+          assert.deepStrictEqual(res, expected)
           asyncDone()
         })
       }
@@ -305,7 +303,7 @@ suite('geography', function () {
   })
 
   test('show a geography .Net error is reported back from driver', function (testDone) {
-    var fns = [
+    const fns = [
 
       function (asyncDone) {
         geographyHelper.createGeographyTable(async, theConnection, function () {
@@ -313,7 +311,7 @@ suite('geography', function () {
         })
       },
       function (asyncDone) {
-        theConnection.query(geographyHelper.insertPointsSql, ['PINT (-89.349 -55.349)'], function (err, res) { // deliberate error
+        theConnection.query(geographyHelper.insertPointsSql, ['PINT (-89.349 -55.349)'], function (err) { // deliberate error
           assert(err)
           assert(err.message.indexOf('Expected "POINT" at position 1') > 0)
           asyncDone()
@@ -327,15 +325,15 @@ suite('geography', function () {
   })
 
   test('use tvp to insert geography LINESTRING, POINT and POLYGON using pm in 1 call', function (testDone) {
-    var table
-    var procedure
-    var coordinates = geographyHelper.getCoordinates()
-    var lines = geographyHelper.asLines(coordinates)
-    var points = geographyHelper.asPoints(coordinates)
-    var polygon = geographyHelper.asPoly(coordinates)
-    var allGeography = lines.concat(points).concat(polygon)
-    var expected = geographyHelper.asExpected(allGeography)
-    var fns = [
+    let table
+    let procedure
+    const coordinates = geographyHelper.getCoordinates()
+    const lines = geographyHelper.asLines(coordinates)
+    const points = geographyHelper.asPoints(coordinates)
+    const polygon = geographyHelper.asPoly(coordinates)
+    const allGeography = lines.concat(points).concat(polygon)
+    const expected = geographyHelper.asExpected(allGeography)
+    const fns = [
 
       function (asyncDone) {
         geographyHelper.createGeographyTable(async, theConnection, function (t) {
@@ -345,7 +343,7 @@ suite('geography', function () {
       },
 
       function (asyncDone) {
-        var pm = theConnection.procedureMgr()
+        const pm = theConnection.procedureMgr()
         pm.get('InsertGeographyTvp', function (p) {
           assert(p)
           procedure = p
@@ -357,7 +355,7 @@ suite('geography', function () {
           // each row is represented as an array of columns
           table.rows[table.rows.length] = [l]
         })
-        var tp = sql.TvpFromTable(table)
+        const tp = sql.TvpFromTable(table)
         table.rows = []
         procedure.call([tp], function (err) {
           assert.ifError(err)
@@ -368,7 +366,7 @@ suite('geography', function () {
         theConnection.query(geographyHelper.selectSql, function (err, res) {
           assert.ifError(err)
           assert(res.length === allGeography.length)
-          assert.deepEqual(res, expected)
+          assert.deepStrictEqual(res, expected)
           asyncDone()
         })
       }
@@ -380,11 +378,11 @@ suite('geography', function () {
   })
 
   test('insert lines from json coordinates', function (testDone) {
-    var coordinates = geographyHelper.getCoordinates()
-    var lines = geographyHelper.asLines(coordinates)
-    var expected = geographyHelper.asExpected(lines)
+    const coordinates = geographyHelper.getCoordinates()
+    const lines = geographyHelper.asLines(coordinates)
+    const expected = geographyHelper.asExpected(lines)
 
-    var fns = [
+    const fns = [
 
       function (asyncDone) {
         geographyHelper.createGeographyTable(async, theConnection, function () {
@@ -402,7 +400,7 @@ suite('geography', function () {
         theConnection.query(geographyHelper.selectSql, function (err, res) {
           assert.ifError(err)
           assert(res.length === lines.length)
-          assert.deepEqual(res, expected)
+          assert.deepStrictEqual(res, expected)
           asyncDone()
         })
       }]
@@ -413,11 +411,11 @@ suite('geography', function () {
   })
 
   test('insert points from json coordinates', function (testDone) {
-    var coordinates = geographyHelper.getCoordinates()
-    var points = geographyHelper.asPoints(coordinates)
-    var expected = geographyHelper.asExpected(points)
+    const coordinates = geographyHelper.getCoordinates()
+    const points = geographyHelper.asPoints(coordinates)
+    const expected = geographyHelper.asExpected(points)
 
-    var fns = [
+    const fns = [
 
       function (asyncDone) {
         geographyHelper.createGeographyTable(async, theConnection, function () {
@@ -435,7 +433,7 @@ suite('geography', function () {
         theConnection.query(geographyHelper.selectSql, function (err, res) {
           assert.ifError(err)
           assert(res.length === points.length)
-          assert.deepEqual(expected, res)
+          assert.deepStrictEqual(expected, res)
           asyncDone()
         })
       }]
@@ -446,16 +444,16 @@ suite('geography', function () {
   })
 
   test('insert a polygon from json coordinates', function (testDone) {
-    var coordinates = geographyHelper.getCoordinates()
-    var poly = geographyHelper.asPoly(coordinates)
-    var expectedPoly = [
+    const coordinates = geographyHelper.getCoordinates()
+    const poly = geographyHelper.asPoly(coordinates)
+    const expectedPoly = [
       {
         id: 1,
         GeogCol2: poly
       }
     ]
 
-    var fns = [
+    const fns = [
 
       function (asyncDone) {
         geographyHelper.createGeographyTable(async, theConnection, function () {
@@ -473,7 +471,7 @@ suite('geography', function () {
         theConnection.query(geographyHelper.selectSql, function (err, res) {
           assert.ifError(err)
           assert(res.length === expectedPoly.length)
-          assert.deepEqual(res, expectedPoly)
+          assert.deepStrictEqual(res, expectedPoly)
           asyncDone()
         })
       }
@@ -485,7 +483,7 @@ suite('geography', function () {
   })
 
   test('insert an array of geography lines', function (testDone) {
-    var fns = [
+    const fns = [
 
       function (asyncDone) {
         geographyHelper.createGeographyTable(async, theConnection, function () {
@@ -503,7 +501,7 @@ suite('geography', function () {
         theConnection.query(geographyHelper.selectSql, function (err, res) {
           assert.ifError(err)
           assert(res.length === geographyHelper.expectedLines.length)
-          assert.deepEqual(res, geographyHelper.expectedLines)
+          assert.deepStrictEqual(res, geographyHelper.expectedLines)
           asyncDone()
         })
       }
@@ -514,7 +512,7 @@ suite('geography', function () {
   })
 
   test('insert an array of geography points', function (testDone) {
-    var fns = [
+    const fns = [
 
       function (asyncDone) {
         geographyHelper.createGeographyTable(async, theConnection, function () {
@@ -532,7 +530,7 @@ suite('geography', function () {
         theConnection.query(geographyHelper.selectSql, function (err, res) {
           assert.ifError(err)
           assert(res.length === geographyHelper.expectedPoints.length)
-          assert.deepEqual(res, geographyHelper.expectedPoints)
+          assert.deepStrictEqual(res, geographyHelper.expectedPoints)
           asyncDone()
         })
       }
@@ -543,9 +541,9 @@ suite('geography', function () {
   })
 
   test('prepare a geography point statement for repeat invocations', function (testDone) {
-    var preparedPoint = null
+    let preparedPoint = null
 
-    var fns = [
+    const fns = [
 
       function (asyncDone) {
         geographyHelper.createGeographyTable(async, theConnection, function () {
@@ -577,7 +575,7 @@ suite('geography', function () {
         theConnection.query(geographyHelper.selectSql, function (err, res) {
           assert(err === null)
           assert(res.length === geographyHelper.expectedPoints.length)
-          assert.deepEqual(res, geographyHelper.expectedPoints)
+          assert.deepStrictEqual(res, geographyHelper.expectedPoints)
           asyncDone()
         })
       }
