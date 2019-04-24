@@ -1,25 +1,25 @@
 /* global suite teardown teardown test setup */
 'use strict'
 
-var assert = require('assert')
-var supp = require('../samples/typescript/demo-support')
+const assert = require('assert')
+const supp = require('../samples/typescript/demo-support')
 
 suite('concurrent', function () {
-  var theConnection
+  let theConnection
   this.timeout(20000)
-  var connStr
-  var async
-  var helper
+  let connStr
+  let async
+  let helper
 
-  var sql = global.native_sql
+  const sql = global.native_sql
 
-  setup(function (testDone) {
-    supp.GlobalConn.init(sql, function (co) {
+  setup(testDone => {
+    supp.GlobalConn.init(sql, co => {
       connStr = global.conn_str || co.conn_str
       async = co.async
       helper = co.helper
       helper.setVerbose(false)
-      sql.open(connStr, function (err, newConn) {
+      sql.open(connStr, (err, newConn) => {
         assert(err === false)
         theConnection = newConn
         testDone()
@@ -27,27 +27,75 @@ suite('concurrent', function () {
     }, global.conn_str)
   })
 
-  teardown(function (done) {
-    theConnection.close(function () {
+  teardown(done => {
+    theConnection.close(() => {
       done()
     })
   })
 
-  var open = function (done) {
-    sql.open(connStr, function (err, conn) {
-      assert.ifError(err)
+  test('open connections in sequence and prove distinct connection objects created', testDone => {
+    const connections = []
+
+    open(conn1 => {
+      connections.push(conn1)
+      open(conn2 => {
+        connections.push(conn2)
+        open(conn3 => {
+          connections.push(conn3)
+          done()
+        })
+      })
+    })
+
+    function done () {
+      const c0 = connections[0]
+      const c1 = connections[1]
+      const c2 = connections[2]
+
+      const t1 = c0 === c1 && c1 === c2
+      assert(t1 === false)
+      assert(c0.id !== c1.id)
+      assert(c1.id !== c2.id)
+
+      const clean = [
+        asyncDone => {
+          c0.close(() => {
+            asyncDone()
+          })
+        },
+        asyncDone => {
+          c1.close(() => {
+            asyncDone()
+          })
+        },
+        asyncDone => {
+          c2.close(() => {
+            asyncDone()
+          })
+        }
+      ]
+
+      async.series(clean, () => {
+        testDone()
+      })
+    }
+  })
+
+  const open = done => {
+    sql.open(connStr, (err, conn) => {
+      assert(err === false)
       done(conn)
     })
   }
 
-  test('check for blocked calls to api with event emission', function (testDone) {
-    var delays = []
-    var start = Date.now()
-    var expected = ['a', 'b', 'c', 'd']
-    var seq = []
+  test('check for blocked calls to api with event emission', testDone => {
+    const delays = []
+    const start = Date.now()
+    const expected = ['a', 'b', 'c', 'd']
+    const seq = []
 
     function test () {
-      assert.deepEqual(expected, seq)
+      assert.deepStrictEqual(expected, seq)
       testDone()
     }
 
@@ -59,224 +107,176 @@ suite('concurrent', function () {
       }
     }
 
-    var req = theConnection.query('waitfor delay \'00:00:02\';')
+    const req = theConnection.query('waitfor delay \'00:00:02\';')
     req.on('done', function () {
       pushTest('a')
-      process.nextTick(function () {
+      process.nextTick(() => {
         pushTest('b')
       })
-      setImmediate(function () {
+      setImmediate(() => {
         pushTest('d')
       })
-      process.nextTick(function () {
+      process.nextTick(() => {
         pushTest('c')
       })
     })
   })
 
-  test('open connections in sequence and prove distinct connection objects created', function (testDone) {
-    var connections = []
-
-    open(function (conn1) {
-      connections.push(conn1)
-      open(function (conn2) {
-        connections.push(conn2)
-        open(function (conn3) {
-          connections.push(conn3)
-          done()
-        })
-      })
-    })
-
-    function done () {
-      var c0 = connections[0]
-      var c1 = connections[1]
-      var c2 = connections[2]
-
-      var t1 = c0 === c1 && c1 === c2
-      assert(t1 === false)
-      assert(c0.id !== c1.id)
-      assert(c1.id !== c2.id)
-
-      var clean = [
-        function (asyncDone) {
-          c0.close(function () {
-            asyncDone()
-          })
-        },
-        function (asyncDone) {
-          c1.close(function () {
-            asyncDone()
-          })
-        },
-        function (asyncDone) {
-          c2.close(function () {
-            asyncDone()
-          })
-        }
-      ]
-
-      async.series(clean, function () {
-        testDone()
-      })
-    }
-  })
-
-  test('check for blocked calls to api', function (testDone) {
-    var seq = []
-    var delays = []
-    var start = Date.now()
-    var expected = ['a', 'b', 'c', 'd', 'e']
+  test('check for blocked calls to api', testDone => {
+    const seq = []
+    const delays = []
+    const start = Date.now()
+    const expected = ['a', 'b', 'c', 'd', 'e']
 
     function pushTest (c) {
       seq.push(c)
       delays.push(Date.now() - start)
       if (seq.length === expected.length) {
-        assert.deepEqual(expected, seq)
+        assert.deepStrictEqual(expected, seq)
         testDone()
       }
     }
 
     pushTest('a')
-    process.nextTick(function () {
+    process.nextTick(() => {
       pushTest('c')
     })
 
-    theConnection.query('waitfor delay \'00:00:02\';', function () {
+    theConnection.query('waitfor delay \'00:00:02\';', () => {
       pushTest('e')
     })
 
     pushTest('b')
-    process.nextTick(function () {
+    process.nextTick(() => {
       pushTest('d')
     })
   })
 
-  test('check for blocked calls to api with nested query', function (testDone) {
-    var seq = []
-    var delays = []
-    var start = Date.now()
-    var expected = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
+  test('check for blocked calls to api with nested query', testDone => {
+    const seq = []
+    const delays = []
+    const start = Date.now()
+    const expected = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
 
     function pushTest (c) {
       seq.push(c)
       delays.push(Date.now() - start)
       if (seq.length === expected.length) {
-        assert.deepEqual(expected, seq)
+        assert.deepStrictEqual(expected, seq)
         testDone()
       }
     }
 
     pushTest('a')
-    process.nextTick(function () {
+    process.nextTick(() => {
       pushTest('c')
     })
-    theConnection.query('waitfor delay \'00:00:02\';', [], function () {
+    theConnection.query('waitfor delay \'00:00:02\';', [], () => {
       pushTest('e')
       pushTest('f')
       process.nextTick(function () {
         pushTest('h')
       })
-      theConnection.query('waitfor delay \'00:00:02\';', [], function () {
+      theConnection.query('waitfor delay \'00:00:02\';', [], () => {
         pushTest('j')
       })
       pushTest('g')
-      process.nextTick(function () {
+      process.nextTick(() => {
         pushTest('i')
       })
     })
     pushTest('b')
-    process.nextTick(function () {
+    process.nextTick(() => {
       pushTest('d')
     })
   })
 
-  test('open connections simultaneously and prove distinct connection objects created', function (testDone) {
-    var connections = []
+  test('open connections simultaneously and prove distinct connection objects created', testDone => {
+    const connections = []
 
-    open(function (conn1) {
+    open(conn1 => {
       connections.push(conn1)
       if (connections.length === 3) done()
     })
 
-    open(function (conn2) {
+    open(conn2 => {
       connections.push(conn2)
       if (connections.length === 3) done()
     })
 
-    open(function (conn3) {
+    open(conn3 => {
       connections.push(conn3)
       if (connections.length === 3) done()
     })
 
     function done () {
-      var c0 = connections[0]
-      var c1 = connections[1]
-      var c2 = connections[2]
+      const c0 = connections[0]
+      const c1 = connections[1]
+      const c2 = connections[2]
 
-      var t1 = c0 === c1 && c1 === c2
+      const t1 = c0 === c1 && c1 === c2
       assert(t1 === false)
       assert(c0.id !== c1.id)
       assert(c1.id !== c2.id)
 
-      var clean = [
-        function (asyncDone) {
-          c0.close(function () {
+      const clean = [
+        asyncDone => {
+          c0.close(() => {
             asyncDone()
           })
         },
-        function (asyncDone) {
-          c1.close(function () {
+        asyncDone => {
+          c1.close(() => {
             asyncDone()
           })
         },
-        function (asyncDone) {
-          c2.close(function () {
+        asyncDone => {
+          c2.close(() => {
             asyncDone()
           })
         }
       ]
 
-      async.series(clean, function () {
+      async.series(clean, () => {
         testDone()
       })
     }
   })
 
-  test('make sure two concurrent connections each have unique spid ', function (testDone) {
-    var spid1
-    var spid2
+  test('make sure two concurrent connections each have unique spid ', testDone => {
+    let spid1
+    let spid2
 
     open(function (c1) {
       open(function (c2) {
-        c1.query('select @@SPID as id, CURRENT_USER as name', function (err, res) {
+        c1.query('select @@SPID as id, CURRENT_USER as name', (err, res) => {
           assert.ifError(err)
           assert(res.length === 1)
           spid1 = res[0]['id']
           assert(spid1 !== null)
 
-          c2.query('select @@SPID as id, CURRENT_USER as name', function (err, res) {
+          c2.query('select @@SPID as id, CURRENT_USER as name', (err, res) => {
             assert.ifError(err)
             assert(res.length === 1)
             spid2 = res[0]['id']
             assert(spid2 !== null)
             assert(spid1 !== spid2)
 
-            var clean = [
+            const clean = [
 
-              function (asyncDone) {
-                c1.close(function () {
+              asyncDone => {
+                c1.close(() => {
                   asyncDone()
                 })
               },
-              function (asyncDone) {
-                c2.close(function () {
+              asyncDone => {
+                c2.close(() => {
                   asyncDone()
                 })
               }
             ]
 
-            async.series(clean, function () {
+            async.series(clean, () => {
               testDone()
             })
           })
