@@ -13,7 +13,7 @@ suite('userbind', function () {
 
   const sql = global.native_sql
 
-  setup( testDone => {
+  setup(testDone => {
     supp.GlobalConn.init(sql, co => {
       connStr = global.conn_str || co.conn_str
       async = co.async
@@ -303,7 +303,7 @@ suite('userbind', function () {
         return sql.DateTime(v)
       }
     }
-    testUserBind(params,  (err, res) => {
+    testUserBind(params, (err, res) => {
       assert.ifError(err)
       compare(params, res)
       testDone()
@@ -336,7 +336,7 @@ suite('userbind', function () {
         return sql.UniqueIdentifier(v)
       }
     }
-    testUserBind(params,  (err, res) => {
+    testUserBind(params, (err, res) => {
       assert.ifError(err)
       compare(params, res)
       testDone()
