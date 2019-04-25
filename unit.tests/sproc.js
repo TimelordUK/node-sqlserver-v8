@@ -15,8 +15,8 @@ suite('sproc', function () {
 
   this.timeout(20000)
 
-  setup(function (testDone) {
-    supp.GlobalConn.init(sql, function (co) {
+  setup(testDone => {
+    supp.GlobalConn.init(sql, co => {
       connStr = global.conn_str || co.conn_str
       support = co.support
       procedureHelper = new support.ProcedureHelper(connStr)
@@ -24,7 +24,7 @@ suite('sproc', function () {
       async = co.async
       helper = co.helper
       helper.setVerbose(false)
-      sql.open(connStr, function (err, conn) {
+      sql.open(connStr, (err, conn) => {
         theConnection = conn
         assert(err === false)
         testDone()
@@ -32,14 +32,14 @@ suite('sproc', function () {
     }, global.conn_str)
   })
 
-  teardown(function (done) {
-    theConnection.close(function (err) {
+  teardown(done => {
+    theConnection.close(err => {
       assert.ifError(err)
       done()
     })
   })
 
-  test('get proc and call multiple times synchronously with changing params i.e. prove each call is independent', function (testDone) {
+  test('get proc and call multiple times synchronously with changing params i.e. prove each call is independent', testDone => {
     const spName = 'test_sp_get_int_int'
 
     const def = 'alter PROCEDURE <name>' +
@@ -55,15 +55,15 @@ suite('sproc', function () {
       'END\n'
 
     const fns = [
-      function (asyncDone) {
-        procedureHelper.createProcedure(spName, def, function () {
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const pm = theConnection.procedureMgr()
-        pm.get(spName, function (proc) {
+        pm.get(spName, proc => {
           const count = pm.getCount()
           assert.strictEqual(count, 1)
           let i
@@ -79,7 +79,7 @@ suite('sproc', function () {
           }
 
           function next (i) {
-            proc.call([i, i], function (err, results, output) {
+            proc.call([i, i], (err, results, output) => {
               assert.ifError(err)
               received[received.length] = output
               if (received.length === iterations) {
@@ -95,12 +95,12 @@ suite('sproc', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', function (testDone) {
+  test('get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
     const spName = 'test_sp_get_int_int'
 
     const def = 'alter PROCEDURE <name>' +
@@ -116,15 +116,15 @@ suite('sproc', function () {
       'END\n'
 
     const fns = [
-      function (asyncDone) {
-        procedureHelper.createProcedure(spName, def, function () {
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const pm = theConnection.procedureMgr()
-        pm.get(spName, function (procedure) {
+        pm.get(spName, procedure => {
           const count = pm.getCount()
           assert.strictEqual(count, 1)
           const received = []
@@ -139,7 +139,7 @@ suite('sproc', function () {
           }
 
           for (let i = 0; i < iterations; ++i) {
-            procedure.call([i, i], function (err, results, output) {
+            procedure.call([i, i], (err, results, output) => {
               assert.ifError(err)
               received[received.length] = output
               if (received.length === iterations) {
@@ -151,12 +151,12 @@ suite('sproc', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('call proc that has 2 output string params + return code', function (testDone) {
+  test('call proc that has 2 output string params + return code', testDone => {
     const spName = 'test_sp_get_str_str'
 
     const def = 'alter PROCEDURE <name>' +
@@ -173,15 +173,15 @@ suite('sproc', function () {
       'END\n'
 
     const fns = [
-      function (asyncDone) {
-        procedureHelper.createProcedure(spName, def, function () {
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const pm = theConnection.procedureMgr()
-        pm.callproc(spName, [1], function (err, results, output) {
+        pm.callproc(spName, [1], (err, results, output) => {
           assert.ifError(err)
           const expected = [99, 'name', 'company']
           assert.deepStrictEqual(output, expected, 'results didn\'t match')
@@ -190,12 +190,12 @@ suite('sproc', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('get proc and call  - should not error', function (testDone) {
+  test('get proc and call  - should not error', testDone => {
     const spName = 'test_sp_get_int_int'
 
     const def = 'alter PROCEDURE <name>' +
@@ -211,18 +211,18 @@ suite('sproc', function () {
       'END\n'
 
     const fns = [
-      function (asyncDone) {
-        procedureHelper.createProcedure(spName, def, function () {
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const pm = theConnection.procedureMgr()
-        pm.get(spName, function (proc) {
+        pm.get(spName, proc => {
           const count = pm.getCount()
           assert.strictEqual(count, 1)
-          proc.call([10, 5], function (err, results, output) {
+          proc.call([10, 5], (err, results, output) => {
             const expected = [99, 15]
             assert.ifError(err)
             assert.deepStrictEqual(output, expected, 'results didn\'t match')
@@ -232,12 +232,12 @@ suite('sproc', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('stream call proc no callback', function (testDone) {
+  test('stream call proc no callback', testDone => {
     const spName = 'test_len_of_sp'
 
     const def = 'alter PROCEDURE <name> @param VARCHAR(50) \n' +
@@ -247,25 +247,25 @@ suite('sproc', function () {
       ' END \n'
 
     const fns = [
-      function (asyncDone) {
-        procedureHelper.createProcedure(spName, def, function () {
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const pm = theConnection.procedureMgr()
         const rows = []
-        pm.get(spName, function (proc) {
+        pm.get(spName, proc => {
           const qp = proc.call(['javascript'])
-          qp.on('column', function (c, data) {
+          qp.on('column', (c, data) => {
             const l = c.toString()
             const r = {}
             r[l] = data
             rows.push(r)
           })
 
-          qp.on('done', function () {
+          qp.on('done', () => {
             assert(rows.length === 1)
             const expected = [
               {
@@ -279,12 +279,12 @@ suite('sproc', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('call proc that waits for delay of input param - wait 2, timeout 5 - should not error', function (testDone) {
+  test('call proc that waits for delay of input param - wait 2, timeout 5 - should not error', testDone => {
     const spName = 'test_spwait_for'
 
     const def = 'alter PROCEDURE <name>' +
@@ -297,28 +297,28 @@ suite('sproc', function () {
       'END\n'
 
     const fns = [
-      function (asyncDone) {
-        procedureHelper.createProcedure(spName, def, function () {
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const pm = theConnection.procedureMgr()
         pm.setTimeout(5)
-        pm.callproc(spName, ['0:0:2'], function (err) {
+        pm.callproc(spName, ['0:0:2'], err => {
           assert.ifError(err)
           asyncDone()
         })
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('call proc that returns length of input string and decribes itself in results', function (testDone) {
+  test('call proc that returns length of input string and decribes itself in results', testDone => {
     const spName = 'test_sp'
 
     const def = 'alter PROCEDURE <name> @param VARCHAR(50) \n' +
@@ -329,15 +329,15 @@ suite('sproc', function () {
       ' END \n'
 
     const fns = [
-      function (asyncDone) {
-        procedureHelper.createProcedure(spName, def, function () {
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const pm = theConnection.procedureMgr()
-        pm.callproc(spName, ['US of A!'], function (err, results, output) {
+        pm.callproc(spName, ['US of A!'], (err, results, output) => {
           assert.ifError(err)
           let expected = [8]
           assert.deepStrictEqual(output, expected, 'results didn\'t match')
@@ -353,12 +353,12 @@ suite('sproc', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('call proc that returns length of input string', function (testDone) {
+  test('call proc that returns length of input string', testDone => {
     const spName = 'test_sp'
 
     const def = 'alter PROCEDURE <name> @param VARCHAR(50) \n' +
@@ -368,16 +368,16 @@ suite('sproc', function () {
       ' END \n'
 
     const fns = [
-      function (asyncDone) {
-        procedureHelper.createProcedure(spName, def, function () {
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const pm = theConnection.procedureMgr()
-        pm.get(spName, function (proc) {
-          proc.call(['US of A!'], function (err, results, output) {
+        pm.get(spName, proc => {
+          proc.call(['US of A!'], (err, results, output) => {
             assert.ifError(err)
             const expected = [8]
             assert.deepStrictEqual(output, expected, 'results didn\'t match')
@@ -387,12 +387,12 @@ suite('sproc', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('call proc that has 2 input params + 1 output', function (testDone) {
+  test('call proc that has 2 input params + 1 output', testDone => {
     const spName = 'test_sp_get_int_int'
 
     const def = 'alter PROCEDURE <name>' +
@@ -408,15 +408,15 @@ suite('sproc', function () {
       'END\n'
 
     const fns = [
-      function (asyncDone) {
-        procedureHelper.createProcedure(spName, def, function () {
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const pm = theConnection.procedureMgr()
-        pm.callproc(spName, [10, 5], function (err, results, output) {
+        pm.callproc(spName, [10, 5], (err, results, output) => {
           assert.ifError(err)
           const expected = [99, 15]
           assert.deepStrictEqual(output, expected, 'results didn\'t match')
@@ -425,12 +425,12 @@ suite('sproc', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('test asselect on proc', function (testDone) {
+  test('test asselect on proc', testDone => {
     const spName = 'test_sp_get_int_int'
 
     const def = 'alter PROCEDURE <name>' +
@@ -446,19 +446,19 @@ suite('sproc', function () {
       'END\n'
 
     const fns = [
-      function (asyncDone) {
-        procedureHelper.createProcedure(spName, def, function () {
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const pm = theConnection.procedureMgr()
-        pm.get(spName, function (proc) {
+        pm.get(spName, proc => {
           const meta = proc.getMeta()
           // use an mssql style select
           const s = meta.select
-          theConnection.query(s, [10, 5], function (err, results) {
+          theConnection.query(s, [10, 5], (err, results) => {
             assert.ifError(err)
             const expected = [{
               num3: 15,
@@ -471,7 +471,7 @@ suite('sproc', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })

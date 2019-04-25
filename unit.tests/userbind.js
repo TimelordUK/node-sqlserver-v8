@@ -145,11 +145,11 @@ suite('userbind', function () {
       query: 'declare @v DATETIME2(7) = ?; select @v as v',
       min: then,
       max: then,
-      setter: function (v) {
+      setter: v => {
         return sql.DateTime2(v, 1) // set scale too low
       }
     }
-    testUserBind(params, function (err) {
+    testUserBind(params, err => {
       assert.ok(err.message.indexOf('Fractional second precision exceeds the scale specified') > 0)
       testDone()
     })
@@ -204,7 +204,7 @@ suite('userbind', function () {
         return sql.DateTimeOffset(v, scale, offset)
       }
     }
-    testUserBind(params, function (err, res) {
+    testUserBind(params, (err, res) => {
       assert.ifError(err)
       compare(params, res)
       testDone()
@@ -228,7 +228,7 @@ suite('userbind', function () {
         return sql.DateTimeOffset(v)
       }
     }
-    testUserBind(params, function (err, res) {
+    testUserBind(params, (err, res) => {
       assert.ifError(err)
       compare(params, res)
       testDone()

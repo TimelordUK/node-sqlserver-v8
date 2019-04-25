@@ -12,12 +12,12 @@ suite('querytimeout', function () {
   let connStr
   let helper
 
-  setup(function (testDone) {
-    supp.GlobalConn.init(sql, function (co) {
+  setup(testDone => {
+    supp.GlobalConn.init(sql, co => {
       connStr = global.conn_str || co.conn_str
       helper = co.helper
       helper.setVerbose(false)
-      sql.open(connStr, function (err, newConn) {
+      sql.open(connStr, (err, newConn) => {
         assert(err === false)
         theConnection = newConn
         testDone()
@@ -25,44 +25,44 @@ suite('querytimeout', function () {
     }, global.conn_str)
   })
 
-  teardown(function (done) {
-    theConnection.close(function (err) {
+  teardown(done => {
+    theConnection.close(err => {
       assert.ifError(err)
       done()
     })
   })
 
-  test('test timeout 2 secs on waitfor delay 10', function (testDone) {
+  test('test timeout 2 secs on waitfor delay 10', testDone => {
     const queryObj = {
       query_str: 'waitfor delay \'00:00:10\';',
       query_timeout: 2
     }
 
-    theConnection.query(queryObj, function (err) {
+    theConnection.query(queryObj, err => {
       assert(err)
       assert(err.message.indexOf('Query timeout expired') > 0)
       testDone()
     })
   })
 
-  test('test timeout 10 secs on waitfor delay 2', function (testDone) {
+  test('test timeout 10 secs on waitfor delay 2', testDone => {
     const queryObj = {
       query_str: 'waitfor delay \'00:00:2\';',
       query_timeout: 10
     }
 
-    theConnection.query(queryObj, function (err) {
+    theConnection.query(queryObj, err => {
       assert.ifError(err)
       testDone()
     })
   })
 
-  test('test timeout 0 secs on waitfor delay 4', function (testDone) {
+  test('test timeout 0 secs on waitfor delay 4', testDone => {
     const queryObj = {
       query_str: 'waitfor delay \'00:00:4\';'
     }
 
-    theConnection.query(queryObj, function (err) {
+    theConnection.query(queryObj, err => {
       assert.ifError(err)
       testDone()
     })

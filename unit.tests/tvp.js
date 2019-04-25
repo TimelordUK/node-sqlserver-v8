@@ -13,13 +13,13 @@ suite('tvp', function () {
 
   const sql = global.native_sql
 
-  setup(function (testDone) {
-    supp.GlobalConn.init(sql, function (co) {
+  setup(testDone => {
+    supp.GlobalConn.init(sql, co => {
       connStr = global.conn_str || co.conn_str
       async = co.async
       helper = co.helper
       helper.setVerbose(false)
-      sql.open(connStr, function (err, newConn) {
+      sql.open(connStr, (err, newConn) => {
         assert(err === false)
         theConnection = newConn
         testDone()
@@ -27,8 +27,8 @@ suite('tvp', function () {
     }, global.conn_str)
   })
 
-  teardown(function (done) {
-    theConnection.close(function (err) {
+  teardown(done => {
+    theConnection.close(err => {
       assert.ifError(err)
       done()
     })
@@ -93,57 +93,57 @@ suite('tvp', function () {
 
     const fns = [
 
-      function (asyncDone) {
-        theConnection.query(createSchemaSql, function (err) {
+      asyncDone => {
+        theConnection.query(createSchemaSql, err => {
           assert.ifError(err)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        theConnection.query(dropProcedureSql, function (err) {
+      asyncDone => {
+        theConnection.query(dropProcedureSql, err => {
           assert.ifError(err)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        theConnection.query(dropTableSql, function (err) {
+      asyncDone => {
+        theConnection.query(dropTableSql, err => {
           assert.ifError(err)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        theConnection.query(createTableSql, function (err) {
+      asyncDone => {
+        theConnection.query(createTableSql, err => {
           assert.ifError(err)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        theConnection.query(dropTypeSql, function (err) {
+      asyncDone => {
+        theConnection.query(dropTypeSql, err => {
           assert.ifError(err)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        theConnection.query(createTypeSql, function (err) {
+      asyncDone => {
+        theConnection.query(createTypeSql, err => {
           assert.ifError(err)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        theConnection.query(insertProcedureSql, function (err) {
+      asyncDone => {
+        theConnection.query(insertProcedureSql, err => {
           assert.ifError(err)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        theConnection.getUserTypeTable(tableTypeName, function (err, t) {
+      asyncDone => {
+        theConnection.getUserTypeTable(tableTypeName, (err, t) => {
           assert.ifError(err)
           table = t
           assert(table.columns.length === 3)
@@ -152,7 +152,7 @@ suite('tvp', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       done(table)
     })
   }
@@ -170,41 +170,41 @@ suite('tvp', function () {
     }
   ]
 
-  test('use tvp simple test type insert test using pm', function (testDone) {
+  test('use tvp simple test type insert test using pm', testDone => {
     const tableName = 'TestTvp'
     let table
     let procedure
 
     const fns = [
 
-      function (asyncDone) {
-        setupSimpleType(tableName, function (t) {
+      asyncDone => {
+        setupSimpleType(tableName, t => {
           table = t
           table.addRowsFromObjects(vec)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const pm = theConnection.procedureMgr()
-        pm.get('insertTestTvp', function (p) {
+        pm.get('insertTestTvp', p => {
           assert(p)
           procedure = p
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const tp = sql.TvpFromTable(table)
         table.rows = []
-        procedure.call([tp], function (err) {
+        procedure.call([tp], err => {
           assert.ifError(err)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        theConnection.query('select * from ' + tableName, function (err, res) {
+      asyncDone => {
+        theConnection.query(`select * from ${tableName}`, (err, res) => {
           assert.ifError(err)
           assert.deepStrictEqual(vec, res)
           asyncDone()
@@ -212,29 +212,29 @@ suite('tvp', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('non dbo schema use tvp simple test type select test', function (testDone) {
+  test('non dbo schema use tvp simple test type select test', testDone => {
     const tableName = 'TestSchema.TestTvp'
     let table
 
     const fns = [
 
-      function (asyncDone) {
-        setupSimpleType(tableName, function (t) {
+      asyncDone => {
+        setupSimpleType(tableName, t => {
           table = t
           table.addRowsFromObjects(vec)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const tp = sql.TvpFromTable(table)
         table.rows = []
-        theConnection.query('select * from ?;', [tp], function (err, res) {
+        theConnection.query('select * from ?;', [tp], (err, res) => {
           assert.ifError(err)
           assert.deepStrictEqual(res, vec)
           asyncDone()
@@ -242,29 +242,29 @@ suite('tvp', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('use tvp simple test type select test', function (testDone) {
+  test('use tvp simple test type select test', testDone => {
     const tableName = 'TestTvp'
     let table
 
     const fns = [
 
-      function (asyncDone) {
-        setupSimpleType(tableName, function (t) {
+      asyncDone => {
+        setupSimpleType(tableName, t => {
           table = t
           table.addRowsFromObjects(vec)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const tp = sql.TvpFromTable(table)
         table.rows = []
-        theConnection.query('select * from ?;', [tp], function (err, res) {
+        theConnection.query('select * from ?;', [tp], (err, res) => {
           assert.ifError(err)
           assert.deepStrictEqual(res, vec)
           asyncDone()
@@ -272,36 +272,36 @@ suite('tvp', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('use tvp simple test type insert test', function (testDone) {
+  test('use tvp simple test type insert test', testDone => {
     const tableName = 'TestTvp'
     let table
 
     const fns = [
 
-      function (asyncDone) {
-        setupSimpleType(tableName, function (t) {
+      asyncDone => {
+        setupSimpleType(tableName, t => {
           table = t
           table.addRowsFromObjects(vec)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const tp = sql.TvpFromTable(table)
         table.rows = []
-        theConnection.query('exec insertTestTvp @tvp = ?;', [tp], function (err) {
+        theConnection.query('exec insertTestTvp @tvp = ?;', [tp], err => {
           assert.ifError(err)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        theConnection.query('select * from ' + tableName, function (err, res) {
+      asyncDone => {
+        theConnection.query(`select * from ${tableName}`, (err, res) => {
           assert.ifError(err)
           assert.deepStrictEqual(vec, res)
           asyncDone()
@@ -309,51 +309,51 @@ suite('tvp', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('use tvp to select from table type complex object Employee type', function (testDone) {
+  test('use tvp to select from table type complex object Employee type', testDone => {
     const tableName = 'Employee'
     let bulkMgr
 
     const fns = [
 
-      function (asyncDone) {
+      asyncDone => {
         helper.dropCreateTable({
           tableName: tableName
-        }, function () {
+        }, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const tm = theConnection.tableMgr()
-        tm.bind(tableName, function (bulk) {
+        tm.bind(tableName, bulk => {
           bulkMgr = bulk
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         let sql = 'IF TYPE_ID(N\'EmployeeType\') IS not NULL'
         sql += ' drop type EmployeeType'
-        theConnection.query(sql, function (err) {
+        theConnection.query(sql, err => {
           assert.ifError(err)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const sql = bulkMgr.asUserType()
-        theConnection.query(sql, function (err) {
+        theConnection.query(sql, err => {
           assert.ifError(err)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const parsedJSON = helper.getJSON()
         // construct a table type based on a table definition.
         const table = bulkMgr.asTableType()
@@ -361,7 +361,7 @@ suite('tvp', function () {
         table.addRowsFromObjects(parsedJSON)
         // use a type the native driver can understand, using column based bulk binding.
         const tp = sql.TvpFromTable(table)
-        theConnection.query('select * from ?;', [tp], function (err, res) {
+        theConnection.query('select * from ?;', [tp], (err, res) => {
           assert.ifError(err)
           assert.deepEqual(res, parsedJSON)
           asyncDone()
@@ -369,52 +369,52 @@ suite('tvp', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('employee use tm to get a table value type representing table and create that user table type', function (testDone) {
+  test('employee use tm to get a table value type representing table and create that user table type', testDone => {
     const tableName = 'Employee'
     let bulkMgr
 
     const fns = [
 
-      function (asyncDone) {
+      asyncDone => {
         helper.dropCreateTable({
           tableName: tableName
-        }, function () {
+        }, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const tm = theConnection.tableMgr()
-        tm.bind(tableName, function (bulk) {
+        tm.bind(tableName, bulk => {
           bulkMgr = bulk
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         let sql = 'IF TYPE_ID(N\'EmployeeType\') IS not NULL'
         sql += ' drop type EmployeeType'
-        theConnection.query(sql, function (err) {
+        theConnection.query(sql, err => {
           assert.ifError(err)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const sql = bulkMgr.asUserType()
-        theConnection.query(sql, function (err) {
+        theConnection.query(sql, err => {
           assert.ifError(err)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        theConnection.getUserTypeTable('EmployeeType', function (err, def) {
+      asyncDone => {
+        theConnection.getUserTypeTable('EmployeeType', (err, def) => {
           assert.ifError(err)
           const summary = bulkMgr.getSummary()
           assert(def.columns.length = summary.columns.length)
@@ -425,7 +425,7 @@ suite('tvp', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
