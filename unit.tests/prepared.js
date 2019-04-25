@@ -84,8 +84,8 @@ suite('prepared', function () {
 
   const actions = [
     // open a connection.
-    function (asyncDone) {
-      sql.open(connStr, function (err, newConn) {
+    asyncDone => {
+      sql.open(connStr, (err, newConn) => {
         assert(err === null || err === false)
         theConnection = newConn
         asyncDone()
@@ -93,57 +93,57 @@ suite('prepared', function () {
     },
 
     // drop / create an Employee table.
-    function (asyncDone) {
+    asyncDone => {
       helper.dropCreateTable({
         tableName: tableName
-      }, function () {
+      }, () => {
         asyncDone()
       })
     },
 
     // insert test set using bulk insert
-    function (asyncDone) {
+    asyncDone => {
       const tm = theConnection.tableMgr()
-      tm.bind(tableName, function (bulkMgr) {
-        bulkMgr.insertRows(parsedJSON, function () {
+      tm.bind(tableName, bulkMgr => {
+        bulkMgr.insertRows(parsedJSON, () => {
           asyncDone()
         })
       })
     },
 
     // prepare a select statement.
-    function (asyncDone) {
-      employeePrepare(empSelectSQL(), function (ps) {
+    asyncDone => {
+      employeePrepare(empSelectSQL(), ps => {
         prepared.select = ps
         asyncDone()
       })
     },
 
     // prepare a select all statement.
-    function (asyncDone) {
-      employeePrepare(empNoParamsSQL(), function (ps) {
+    asyncDone => {
+      employeePrepare(empNoParamsSQL(), ps => {
         prepared.scan = ps
         asyncDone()
       })
     },
 
     // prepare a delete statement.
-    function (asyncDone) {
-      employeePrepare(empDeleteSQL(), function (ps) {
+    asyncDone => {
+      employeePrepare(empDeleteSQL(), ps => {
         prepared.delete = ps
         asyncDone()
       })
     }
   ]
 
-  setup(function (testDone) {
+  setup(testDone => {
     prepared = {
       select: null,
       delete: null,
       scan: null
     }
 
-    supp.GlobalConn.init(sql, function (co) {
+    supp.GlobalConn.init(sql, co => {
       connStr = global.conn_str || co.conn_str
       support = co.support
       procedureHelper = new support.ProcedureHelper(connStr)
@@ -153,67 +153,67 @@ suite('prepared', function () {
       helper.setVerbose(false)
       parsedJSON = helper.getJSON()
       async.series(actions,
-        function () {
+        () => {
           testDone()
         })
     }, global.conn_str)
   })
 
-  teardown(function (done) {
+  teardown(done => {
     const fns = [
-      function (asyncDone) {
-        prepared.select.free(function () {
+      asyncDone => {
+        prepared.select.free(() => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        prepared.delete.free(function () {
+      asyncDone => {
+        prepared.delete.free(() => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.close(function (err) {
+      asyncDone => {
+        theConnection.close((err) => {
           assert.ifError(err)
           asyncDone()
         })
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       done()
     })
   })
 
   function employeePrepare (query, done) {
-    theConnection.prepare(query, function (err, ps) {
+    theConnection.prepare(query, (err, ps) => {
       assert(err === null || err === false)
       done(ps)
     })
   }
 
-  test('use prepared to reserve and read multiple rows.', function (testDone) {
+  test('use prepared to reserve and read multiple rows.', testDone => {
     const sql = 'select * from master..syscomments'
-    theConnection.prepare(sql, function (err, preparedQuery) {
+    theConnection.prepare(sql, (err, preparedQuery) => {
       assert(err === null || err === false)
-      preparedQuery.preparedQuery([], function (err, res) {
+      preparedQuery.preparedQuery([], (err, res) => {
         assert(res != null)
         assert(res.length > 0)
         assert.ifError(err)
       })
-      preparedQuery.free(function () {
+      preparedQuery.free(() => {
         testDone()
       })
     })
   })
 
-  test('use prepared statement twice with no parameters.', function (testDone) {
+  test('use prepared statement twice with no parameters.', testDone => {
     const select = prepared.scan
     const meta = select.getMeta()
     assert(meta.length > 0)
-    select.preparedQuery(function (err, res1) {
+    select.preparedQuery((err, res1) => {
       assert.ifError(err)
       assert.deepEqual(parsedJSON, res1, 'results didn\'t match')
-      select.preparedQuery(function (err, res2) {
+      select.preparedQuery((err, res2) => {
         assert.ifError(err)
         assert.deepEqual(parsedJSON, res2, 'results didn\'t match')
         testDone()
@@ -221,7 +221,7 @@ suite('prepared', function () {
     })
   })
 
-  test('use prepared statements to select a row, then delete it over each row.', function (testDone) {
+  test('use prepared statements to select a row, then delete it over each row.', testDone => {
     const select = prepared.select
     const meta = select.getMeta()
     assert(meta.length > 0)
@@ -237,7 +237,7 @@ suite('prepared', function () {
     }
 
     function check () {
-      theConnection.query('select count(*) as rows from Employee', function (err, res) {
+      theConnection.query('select count(*) as rows from Employee', (err, res) => {
         assert.ifError(err)
         assert(res[0].rows === 0)
         testDone()
@@ -245,11 +245,11 @@ suite('prepared', function () {
     }
 
     function next (businessId, done) {
-      select.preparedQuery([businessId], function (err, res1) {
+      select.preparedQuery([businessId], (err, res1) => {
         assert.ifError(err)
         const fetched = parsedJSON[businessId - 1]
         assert.deepEqual(fetched, res1[0], 'results didn\'t match')
-        remove.preparedQuery([businessId], function (err) {
+        remove.preparedQuery([businessId], (err) => {
           assert.ifError(err)
           done()
         })
@@ -257,7 +257,7 @@ suite('prepared', function () {
     }
   })
 
-  test('stress test prepared statement with 500 invocations cycling through primary key', function (testDone) {
+  test('stress test prepared statement with 500 invocations cycling through primary key', testDone => {
     const select = prepared.select
     const meta = select.getMeta()
     assert(meta.length > 0)
@@ -280,7 +280,7 @@ suite('prepared', function () {
 
     function next (businessId, done) {
       select.preparedQuery([businessId],
-        function (err, res1) {
+        (err, res1) => {
           assert.ifError(err)
           assert(res1[0].BusinessEntityID === businessId)
           done()
@@ -288,15 +288,15 @@ suite('prepared', function () {
     }
   })
 
-  test('use prepared statement twice with different params.', function (testDone) {
+  test('use prepared statement twice with different params.', testDone => {
     const select = prepared.select
     const meta = select.getMeta()
     const id1 = 2
     const id2 = 3
     assert(meta.length > 0)
-    select.preparedQuery([id1], function (err, res1) {
+    select.preparedQuery([id1], (err, res1) => {
       assert.ifError(err)
-      select.preparedQuery([id2], function (err, res2) {
+      select.preparedQuery([id2], (err, res2) => {
         assert.ifError(err)
         const o1 = parsedJSON[id1 - 1]
         assert.deepEqual(o1, res1[0], 'results didn\'t match')

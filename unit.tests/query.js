@@ -35,15 +35,15 @@ suite('query', function () {
   this.timeout(20000)
   const sql = global.native_sql
 
-  setup(function (testDone) {
-    supp.GlobalConn.init(sql, function (co) {
+  setup(testDone => {
+    supp.GlobalConn.init(sql, co => {
       connStr = global.conn_str || co.conn_str
       async = co.async
       helper = co.helper
       driver = co.driver
       // database = co.database
       helper.setVerbose(false)
-      sql.open(connStr, function (err, conn) {
+      sql.open(connStr, (err, conn) => {
         theConnection = conn
         assert(err === false)
         testDone()
@@ -51,33 +51,33 @@ suite('query', function () {
     }, global.conn_str)
   })
 
-  teardown(function (done) {
-    theConnection.close(function () {
+  teardown(done => {
+    theConnection.close(() => {
       done()
     })
   })
 
-  test('verify empty results retrieved properly', function (testDone) {
+  test('verify empty results retrieved properly', testDone => {
     const fns = [
-      function (asyncDone) {
-        theConnection.queryRaw('drop table test_sql_no_data', function () {
+      asyncDone => {
+        theConnection.queryRaw('drop table test_sql_no_data', () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.queryRaw('create table test_sql_no_data (id int identity, name varchar(20))', function (err) {
+      asyncDone => {
+        theConnection.queryRaw('create table test_sql_no_data (id int identity, name varchar(20))', err => {
           assert.ifError(err)
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.queryRaw('create clustered index index_nodata on test_sql_no_data (id)', function (err) {
+      asyncDone => {
+        theConnection.queryRaw('create clustered index index_nodata on test_sql_no_data (id)', err => {
           assert.ifError(err)
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.queryRaw('delete from test_sql_no_data where 1=0', function (err, results) {
+      asyncDone => {
+        theConnection.queryRaw('delete from test_sql_no_data where 1=0', (err, results) => {
           assert.ifError(err)
           const expectedResults = { meta: null, rowcount: 0 }
           assert.deepStrictEqual(results, expectedResults)
@@ -85,20 +85,20 @@ suite('query', function () {
         })
       }
     ]
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('object_name query ', function (done) {
-    theConnection.query('select object_name(c.object_id), (select dc.definition from sys.default_constraints as dc where dc.object_id = c.default_object_id) as DefaultValueExpression from sys.columns as c', function (err, results) {
+  test('object_name query ', done => {
+    theConnection.query('select object_name(c.object_id), (select dc.definition from sys.default_constraints as dc where dc.object_id = c.default_object_id) as DefaultValueExpression from sys.columns as c', (err, results) => {
       assert.ifError(err)
       assert(results.length > 0)
       done()
     })
   })
 
-  test('select nulls union all nulls', function (done) {
+  test('select nulls union all nulls', done => {
     const nullObj = {
       testdate: null,
       testint: null,
@@ -113,7 +113,7 @@ suite('query', function () {
       'union all\n' +
       'select cast(null as datetime) as testdate, cast(null as int) as testint, cast(null as varchar(max)) as testchar, cast(null as bit) as testbit, cast(null as decimal) as testdecimal, cast(null as varbinary) as testbinary, cast(null as time) as testtime\n' +
       'union all\n' +
-      'select cast(null as datetime) as testdate, cast(null as int) as testint, cast(null as varchar(max)) as testchar, cast(null as bit) as testbit, cast(null as decimal) as testdecimal, cast(null as varbinary) as testbinary, cast(null as time) as testtime', function (err, results) {
+      'select cast(null as datetime) as testdate, cast(null as int) as testint, cast(null as varchar(max)) as testchar, cast(null as bit) as testbit, cast(null as decimal) as testdecimal, cast(null as varbinary) as testbinary, cast(null as time) as testtime', (err, results) => {
       assert.ifError(err)
       assert(results.length === 3)
       assert.deepStrictEqual(results, expected)
@@ -121,15 +121,15 @@ suite('query', function () {
     })
   })
 
-  test('test function parameter validation', function (testDone) {
+  test('test function parameter validation', testDone => {
     // test the module level open, query and queryRaw functions
     let thrown
     const fns =
       [
-        function (asyncDone) {
+        asyncDone => {
           thrown = false
           try {
-            sql.query(connStr, function () {
+            sql.query(connStr, () => {
               return 5
             })
           } catch (e) {
@@ -140,7 +140,7 @@ suite('query', function () {
           asyncDone()
         },
 
-        function (asyncDone) {
+        asyncDone => {
           thrown = false
           try {
             sql.queryRaw(connStr, ['This', 'is', 'a', 'test'])
@@ -152,7 +152,7 @@ suite('query', function () {
           asyncDone()
         },
 
-        function (asyncDone) {
+        asyncDone => {
           thrown = false
           try {
             sql.queryRaw(['This', 'is', 'a', 'test'], 'SELECT 1')
@@ -164,7 +164,7 @@ suite('query', function () {
           asyncDone()
         },
 
-        function (asyncDone) {
+        asyncDone => {
           thrown = false
           // test the module level open, query and queryRaw functions
           try {
@@ -177,7 +177,7 @@ suite('query', function () {
           asyncDone()
         },
 
-        function (asyncDone) {
+        asyncDone => {
           let thrown = false
           try {
             sql.open(1, 'SELECT 1')
@@ -189,10 +189,10 @@ suite('query', function () {
           asyncDone()
         },
 
-        function (asyncDone) {
+        asyncDone => {
           thrown = false
           try {
-            sql.query(function () {
+            sql.query(() => {
               return 1
             }, 'SELECT 1')
           } catch (e) {
@@ -203,48 +203,48 @@ suite('query', function () {
           asyncDone()
         },
 
-        function (asyncDone) {
-          sql.queryRaw(connStr, 'SELECT 1', function (e) {
+        asyncDone => {
+          sql.queryRaw(connStr, 'SELECT 1', e => {
             assert.ifError(e)
             asyncDone()
           })
         },
 
-        function (asyncDone) {
-          sql.queryRaw(connStr, 'SELECT 1', [], function (e) {
+        asyncDone => {
+          sql.queryRaw(connStr, 'SELECT 1', [], e => {
             assert.ifError(e)
             asyncDone()
           })
         },
 
-        function (asyncDone) {
-          sql.queryRaw(connStr, 'SELECT 1', null, function (e) {
+        asyncDone => {
+          sql.queryRaw(connStr, 'SELECT 1', null, e => {
             assert.ifError(e)
             asyncDone()
           })
         },
 
-        function (asyncDone) {
+        asyncDone => {
           const stmt = sql.queryRaw(connStr, 'SELECT 1', [])
-          stmt.on('error', function (e) {
+          stmt.on('error', e => {
             assert.ifError(e)
           })
-          stmt.on('closed', function () {
+          stmt.on('closed', () => {
             asyncDone()
           })
         },
 
-        function (asyncDone) {
+        asyncDone => {
           const stmt = sql.queryRaw(connStr, 'SELECT 1', null)
-          stmt.on('error', function (e) {
+          stmt.on('error', e => {
             assert.ifError(e)
           })
-          stmt.on('closed', function () {
+          stmt.on('closed', () => {
             asyncDone()
           })
         },
 
-        function (asyncDone) {
+        asyncDone => {
           let thrown = false
           try {
             sql.queryRaw(connStr, 'SELECT 1', 1)
@@ -256,10 +256,10 @@ suite('query', function () {
           asyncDone()
         },
 
-        function (asyncDone) {
+        asyncDone => {
           let thrown = false
           try {
-            sql.queryRaw(connStr, 'SELECT 1', { a: 1, b: '2' }, function (a) {
+            sql.queryRaw(connStr, 'SELECT 1', { a: 1, b: '2' }, () => {
             })
           } catch (e) {
             thrown = true
@@ -269,7 +269,7 @@ suite('query', function () {
           asyncDone()
         },
 
-        function (asyncDone) {
+        asyncDone => {
           let thrown = false
           try {
             theConnection.query(1)
@@ -281,10 +281,10 @@ suite('query', function () {
           asyncDone()
         },
 
-        function (asyncDone) {
+        asyncDone => {
           let thrown = false
           try {
-            theConnection.queryRaw(function () {
+            theConnection.queryRaw(() => {
               return 1
             })
           } catch (e) {
@@ -296,37 +296,37 @@ suite('query', function () {
         }
       ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('test retrieving a LOB string larger than max string size', function (testDone) {
+  test('test retrieving a LOB string larger than max string size', testDone => {
     const stmt = theConnection.query('SELECT REPLICATE(CAST(\'B\' AS varchar(max)), 20000) AS \'LOB String\'')
     let len = 0
-    stmt.on('column', function (c, d, m) {
+    stmt.on('column', (c, d) => {
       assert(c === 0)
       if (d) {
         len = d.length
       }
     })
-    stmt.on('done', function () {
+    stmt.on('done', () => {
       assert(len === 20000)
       testDone()
     })
-    stmt.on('error', function (e) {
+    stmt.on('error', e => {
       assert.ifError(e)
     })
   })
 
-  test('query with errors', function (done) {
+  test('query with errors', done => {
     const expectedError = new Error('[Microsoft][' + driver + '][SQL Server]Unclosed quotation mark after the character string \'m with NOBODY\'.')
     expectedError.sqlstate = '42000'
     expectedError.code = 105
     const fns = [
-      function (asyncDone) {
-        assert.doesNotThrow(function () {
-          theConnection.queryRaw('I\'m with NOBODY', function (e) {
+      asyncDone => {
+        assert.doesNotThrow(() => {
+          theConnection.queryRaw('I\'m with NOBODY', e => {
             assert(e instanceof Error)
             assert.deepStrictEqual(e, expectedError, 'Unexpected error returned')
             asyncDone()
@@ -334,10 +334,10 @@ suite('query', function () {
         })
       },
 
-      function (asyncDone) {
-        assert.doesNotThrow(function () {
+      asyncDone => {
+        assert.doesNotThrow(() => {
           const s = theConnection.queryRaw('I\'m with NOBODY')
-          s.on('error', function (e) {
+          s.on('error', e => {
             assert(e instanceof Error)
             assert.deepStrictEqual(e, expectedError, 'Unexpected error returned')
             asyncDone()
@@ -346,13 +346,13 @@ suite('query', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       done()
     })
   })
 
-  test('simple query', function (done) {
-    theConnection.query('SELECT 1 as X, \'ABC\', 0x0123456789abcdef ', function (err, results) {
+  test('simple query', done => {
+    theConnection.query('SELECT 1 as X, \'ABC\', 0x0123456789abcdef ', (err, results) => {
       assert.ifError(err)
       const buffer = Buffer.from('0123456789abcdef', 'hex')
       const expected = [{ 'X': 1, 'Column1': 'ABC', 'Column2': buffer }]
@@ -361,8 +361,8 @@ suite('query', function () {
     })
   })
 
-  test('simple rawFormat query', function (done) {
-    theConnection.queryRaw('SELECT 1 as X, \'ABC\', 0x0123456789abcdef ', function (err, results) {
+  test('simple rawFormat query', done => {
+    theConnection.queryRaw('SELECT 1 as X, \'ABC\', 0x0123456789abcdef ', (err, results) => {
       assert.ifError(err)
       const buffer = Buffer.from('0123456789abcdef', 'hex')
       const expected = {
@@ -376,9 +376,9 @@ suite('query', function () {
     })
   })
 
-  test('simple query of types like var%', function (done) {
+  test('simple query of types like var%', done => {
     const like = 'var%'
-    theConnection.query('SELECT name FROM sys.types WHERE name LIKE ?', [like], function (err, results) {
+    theConnection.query('SELECT name FROM sys.types WHERE name LIKE ?', [like], (err, results) => {
       assert.ifError(err)
       for (let row = 0; row < results.length; ++row) {
         assert(results[row].name.substr(0, 3) === 'var')
@@ -387,32 +387,32 @@ suite('query', function () {
     })
   })
 
-  test('streaming test', function (done) {
+  test('streaming test', done => {
     const like = 'var%'
     let currentRow = 0
     const metaExpected = [{ name: 'name', size: 128, nullable: false, type: 'text', sqlType: 'nvarchar' }]
 
     const stmt = theConnection.query('select name FROM sys.types WHERE name LIKE ?', [like])
 
-    stmt.on('meta', function (meta) {
+    stmt.on('meta', meta => {
       assert.deepStrictEqual(meta, metaExpected)
     })
-    stmt.on('row', function (idx) {
+    stmt.on('row', idx => {
       assert(idx === currentRow)
       ++currentRow
     })
-    stmt.on('column', function (idx, data) {
+    stmt.on('column', (idx, data) => {
       assert(data.substr(0, 3) === 'var')
     })
-    stmt.on('done', function () {
+    stmt.on('done', () => {
       done()
     })
-    stmt.on('error', function (err) {
+    stmt.on('error', err => {
       assert.ifError(err)
     })
   })
 
-  test('serialized queries', function (done) {
+  test('serialized queries', done => {
     const expected = [
       {
         meta: [{ name: '', size: 10, nullable: false, type: 'number', sqlType: 'int' }],
@@ -438,27 +438,27 @@ suite('query', function () {
 
     const results = []
 
-    theConnection.queryRaw('SELECT 1', function (e, r) {
+    theConnection.queryRaw('SELECT 1', (e, r) => {
       assert.ifError(e)
       results.push(r)
     })
 
-    theConnection.queryRaw('SELECT 2', function (e, r) {
+    theConnection.queryRaw('SELECT 2', (e, r) => {
       assert.ifError(e)
       results.push(r)
     })
 
-    theConnection.queryRaw('SELECT 3', function (e, r) {
+    theConnection.queryRaw('SELECT 3', (e, r) => {
       assert.ifError(e)
       results.push(r)
     })
 
-    theConnection.queryRaw('SELECT 4', function (e, r) {
+    theConnection.queryRaw('SELECT 4', (e, r) => {
       assert.ifError(e)
       results.push(r)
     })
 
-    theConnection.queryRaw('SELECT 5', function (e, r) {
+    theConnection.queryRaw('SELECT 5', (e, r) => {
       assert.ifError(e)
       results.push(r)
       assert.deepStrictEqual(expected, results)
@@ -466,16 +466,16 @@ suite('query', function () {
     })
   })
 
-  test('query with errors', function (done) {
+  test('query with errors', done => {
     const expectedError = new Error('[Microsoft][' + driver + '][SQL Server]Unclosed quotation mark after the character string \'m with NOBODY\'.')
     expectedError.sqlstate = '42000'
     expectedError.code = 105
 
     const fns = [
 
-      function (asyncDone) {
-        assert.doesNotThrow(function () {
-          theConnection.queryRaw('I\'m with NOBODY', function (e) {
+      asyncDone => {
+        assert.doesNotThrow(() => {
+          theConnection.queryRaw('I\'m with NOBODY', e => {
             assert(e instanceof Error)
             assert.deepStrictEqual(e, expectedError, 'Unexpected error returned')
             asyncDone()
@@ -483,10 +483,10 @@ suite('query', function () {
         })
       },
 
-      function (asyncDone) {
-        assert.doesNotThrow(function () {
+      asyncDone => {
+        assert.doesNotThrow(() => {
           const s = theConnection.queryRaw('I\'m with NOBODY')
-          s.on('error', function (e) {
+          s.on('error', e => {
             assert(e instanceof Error)
             assert.deepStrictEqual(e, expectedError, 'Unexpected error returned')
             asyncDone()
@@ -495,12 +495,12 @@ suite('query', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       done()
     })
   })
 
-  test('multiple results from query in callback', function (done) {
+  test('multiple results from query in callback', done => {
     let moreShouldBe = true
     let called = 0
     let buffer
@@ -541,7 +541,7 @@ suite('query', function () {
       })
   })
 
-  test('multiple results from query in events', function (done) {
+  test('multiple results from query in events', done => {
     const r = theConnection.queryRaw('SELECT 1 as X, \'ABC\', 0x0123456789abcdef; SELECT 2 AS Y, \'DEF\', 0xfedcba9876543210')
 
     const expected = [
@@ -581,18 +581,18 @@ suite('query', function () {
     r.on('column', function (idx, data, more) {
       received.push({ column: idx, data: data, more: more })
     })
-    r.on('done', function () {
+    r.on('done', () => {
       assert.deepStrictEqual(received, expected)
       done()
     })
-    r.on('error', function (e) {
+    r.on('error', e => {
       assert.ifError(e)
     })
   })
 
-  test('boolean return value from query', function (done) {
+  test('boolean return value from query', done => {
     theConnection.queryRaw('SELECT CONVERT(bit, 1) AS bit_true, CONVERT(bit, 0) AS bit_false',
-      function (err, results) {
+      (err, results) => {
         assert.ifError(err)
         const expected = {
           meta: [{ name: 'bit_true', size: 1, nullable: true, type: 'boolean', sqlType: 'bit' },
@@ -604,39 +604,39 @@ suite('query', function () {
       })
   })
 
-  test('test retrieving a string with null embedded', function (testDone) {
+  test('test retrieving a string with null embedded', testDone => {
     const embeddedNull = String.fromCharCode(65, 66, 67, 68, 0, 69, 70)
 
     const fns = [
-      function (asyncDone) {
-        theConnection.queryRaw('DROP TABLE null_in_string_test', function () {
+      asyncDone => {
+        theConnection.queryRaw('DROP TABLE null_in_string_test', () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         theConnection.queryRaw('CREATE TABLE null_in_string_test (id int IDENTITY, null_in_string varchar(100) NOT NULL)',
-          function (e) {
+          e => {
             assert.ifError(e)
             asyncDone()
           })
       },
-      function (asyncDone) {
-        theConnection.queryRaw('CREATE CLUSTERED INDEX ix_null_in_string_test ON null_in_string_Test (id)', function (err) {
+      asyncDone => {
+        theConnection.queryRaw('CREATE CLUSTERED INDEX ix_null_in_string_test ON null_in_string_Test (id)', err => {
           assert.ifError(err)
           asyncDone()
         })
       },
-      function (asyncDone) {
+      asyncDone => {
         theConnection.queryRaw('INSERT INTO null_in_string_test (null_in_string) VALUES (?)', [embeddedNull],
-          function (e) {
+          e => {
             assert.ifError(e)
             asyncDone()
           })
       },
 
-      function (asyncDone) {
-        theConnection.queryRaw('SELECT null_in_string FROM null_in_string_test', function (e, r) {
+      asyncDone => {
+        theConnection.queryRaw('SELECT null_in_string FROM null_in_string_test', (e, r) => {
           assert.ifError(e)
           assert(r.rows[0][0] === embeddedNull)
           asyncDone()
@@ -644,25 +644,25 @@ suite('query', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('test retrieving a non-LOB string of max size', function (testDone) {
+  test('test retrieving a non-LOB string of max size', testDone => {
     function repeat (c, num) {
       return new Array(num + 1).join(c)
     }
 
-    theConnection.query('SELECT REPLICATE(\'A\', 8000) AS \'NONLOB String\'', function (e, r) {
+    theConnection.query('SELECT REPLICATE(\'A\', 8000) AS \'NONLOB String\'', (e, r) => {
       assert.ifError(e)
       assert(r[0]['NONLOB String'] === repeat('A', 8000))
       testDone()
     })
   })
 
-  test('test retrieving an empty string', function (testDone) {
-    theConnection.query('SELECT \'\' AS \'Empty String\'', function (e, r) {
+  test('test retrieving an empty string', testDone => {
+    theConnection.query('SELECT \'\' AS \'Empty String\'', (e, r) => {
       assert.ifError(e)
       assert(r[0]['Empty String'] === '')
       testDone()
@@ -670,12 +670,12 @@ suite('query', function () {
   })
 
   /*
-  test('test login failure', function (done) {
+  test('test login failure', done => {
     // construct a connection string that will fail due to
     // the database not existing
     var badConnection = connStr.replace('Database={' + database + '}', 'Database={DNE}')
 
-    sql.query(badConnection, 'SELECT 1 as X', function (err) {
+    sql.query(badConnection, 'SELECT 1 as X', err => {
       // verify we get the expected error when the login fails
       assert.ok(err.message.indexOf('Login failed for user') > 0)
       assert.equal(err.sqlstate, 28000)
@@ -684,11 +684,11 @@ suite('query', function () {
   })
   */
 
-  test('test function parameter validation', function (testDone) {
+  test('test function parameter validation', testDone => {
     let thrown = false
 
     const fns = [
-      function (asyncDone) {
+      asyncDone => {
         // test the module level open, query and queryRaw functions
         try {
           sql.open(1, 'SELECT 1')
@@ -700,10 +700,10 @@ suite('query', function () {
         asyncDone()
       },
 
-      function (asyncDone) {
+      asyncDone => {
         thrown = false
         try {
-          sql.query(function () {
+          sql.query(() => {
             return 1
           }, 'SELECT 1')
         } catch (e) {
@@ -714,7 +714,7 @@ suite('query', function () {
         asyncDone()
       },
 
-      function (asyncDone) {
+      asyncDone => {
         thrown = false
         try {
           sql.queryRaw(['This', 'is', 'a', 'test'], 'SELECT 1')
@@ -726,7 +726,7 @@ suite('query', function () {
         asyncDone()
       },
 
-      function (asyncDone) {
+      asyncDone => {
         thrown = false
         // test the module level open, query and queryRaw functions
         try {
@@ -739,10 +739,10 @@ suite('query', function () {
         asyncDone()
       },
 
-      function (asyncDone) {
+      asyncDone => {
         thrown = false
         try {
-          sql.query(connStr, function () {
+          sql.query(connStr, () => {
             return 5
           })
         } catch (e) {
@@ -753,7 +753,7 @@ suite('query', function () {
         asyncDone()
       },
 
-      function (asyncDone) {
+      asyncDone => {
         thrown = false
         try {
           sql.queryRaw(connStr, ['This', 'is', 'a', 'test'])
@@ -765,58 +765,58 @@ suite('query', function () {
         asyncDone()
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const stmt = sql.queryRaw(connStr, 'SELECT 1')
-        stmt.on('error', function (e) {
+        stmt.on('error', e => {
           assert.ifError(e)
         })
-        stmt.on('closed', function () {
+        stmt.on('closed', () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        sql.queryRaw(connStr, 'SELECT 1', function (e) {
-          assert.ifError(e)
-          asyncDone()
-        })
-      },
-
-      function (asyncDone) {
-        sql.queryRaw(connStr, 'SELECT 1', [], function (e) {
+      asyncDone => {
+        sql.queryRaw(connStr, 'SELECT 1', e => {
           assert.ifError(e)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        sql.queryRaw(connStr, 'SELECT 1', null, function (e) {
+      asyncDone => {
+        sql.queryRaw(connStr, 'SELECT 1', [], e => {
           assert.ifError(e)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
+        sql.queryRaw(connStr, 'SELECT 1', null, e => {
+          assert.ifError(e)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
         const stmt = sql.queryRaw(connStr, 'SELECT 1', [])
-        stmt.on('error', function (e) {
+        stmt.on('error', e => {
           assert.ifError(e)
         })
-        stmt.on('closed', function () {
+        stmt.on('closed', () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const stmt = sql.queryRaw(connStr, 'SELECT 1', null)
-        stmt.on('error', function (e) {
+        stmt.on('error', e => {
           assert.ifError(e)
         })
-        stmt.on('closed', function () {
+        stmt.on('closed', () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         thrown = false
         try {
           sql.queryRaw(connStr, 'SELECT 1', 1)
@@ -828,10 +828,10 @@ suite('query', function () {
         asyncDone()
       },
 
-      function (asyncDone) {
+      asyncDone => {
         thrown = false
         try {
-          sql.queryRaw(connStr, 'SELECT 1', { a: 1, b: '2' }, function (a) {
+          sql.queryRaw(connStr, 'SELECT 1', { a: 1, b: '2' }, () => {
           })
         } catch (e) {
           thrown = true
@@ -841,7 +841,7 @@ suite('query', function () {
         asyncDone()
       },
 
-      function (asyncDone) {
+      asyncDone => {
         thrown = false
         try {
           theConnection.query(1)
@@ -853,10 +853,10 @@ suite('query', function () {
         asyncDone()
       },
 
-      function (asyncDone) {
+      asyncDone => {
         thrown = false
         try {
-          theConnection.queryRaw(function () {
+          theConnection.queryRaw(() => {
             return 1
           })
         } catch (e) {
@@ -868,40 +868,40 @@ suite('query', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('verify metadata is retrieved for udt/geography types', function (testDone) {
+  test('verify metadata is retrieved for udt/geography types', testDone => {
     const fns = [
 
-      function (asyncDone) {
-        theConnection.query('DROP TABLE spatial_test', function () {
+      asyncDone => {
+        theConnection.query('DROP TABLE spatial_test', () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query('CREATE TABLE spatial_test ( id int IDENTITY (1,1), GeogCol1 geography, GeogCol2 AS GeogCol1.STAsText() )', function (e) {
+      asyncDone => {
+        theConnection.query('CREATE TABLE spatial_test ( id int IDENTITY (1,1), GeogCol1 geography, GeogCol2 AS GeogCol1.STAsText() )', e => {
           assert.ifError(e)
           asyncDone()
         })
       },
-      function (asyncDone) {
+      asyncDone => {
         theConnection.query('INSERT INTO spatial_test (GeogCol1) VALUES (geography::STGeomFromText(\'LINESTRING(-122.360 47.656, -122.343 47.656 )\', 4326))',
-          function (e) {
+          e => {
             assert.ifError(e)
             asyncDone()
           })
       },
-      function (asyncDone) {
-        theConnection.query('INSERT INTO spatial_test (GeogCol1) VALUES (geography::STGeomFromText(\'POLYGON((-122.358 47.653 , -122.348 47.649, -122.348 47.658, -122.358 47.658, -122.358 47.653))\', 4326))', function (e) {
+      asyncDone => {
+        theConnection.query('INSERT INTO spatial_test (GeogCol1) VALUES (geography::STGeomFromText(\'POLYGON((-122.358 47.653 , -122.348 47.649, -122.348 47.658, -122.358 47.658, -122.358 47.653))\', 4326))', e => {
           assert.ifError(e)
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.queryRaw('SELECT GeogCol1 FROM spatial_test', function (e, r) {
+      asyncDone => {
+        theConnection.queryRaw('SELECT GeogCol1 FROM spatial_test', (e, r) => {
           assert.ifError(e)
           const expectedResults = {
             meta: [{
@@ -921,7 +921,7 @@ suite('query', function () {
         })
       }
     ]
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })

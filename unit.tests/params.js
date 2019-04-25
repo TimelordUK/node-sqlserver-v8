@@ -41,7 +41,7 @@ suite('params', function () {
   let helper
   const sql = global.native_sql
 
-  setup(function (testDone) {
+  setup(testDone => {
     supp.GlobalConn.init(sql, function (co) {
       connStr = global.conn_str || co.conn_str
       async = co.async
@@ -55,7 +55,7 @@ suite('params', function () {
     }, global.conn_str)
   })
 
-  teardown(function (done) {
+  teardown(done => {
     theConnection.close(function (err) {
       assert.ifError(err)
       done()
@@ -75,70 +75,70 @@ suite('params', function () {
 
     const sequence = [
 
-      function (asyncDone) {
+      asyncDone => {
         const dropQuery = 'DROP TABLE ' + tableName
-        theConnection.query(dropQuery, function () {
+        theConnection.query(dropQuery, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const createQuery = 'CREATE TABLE ' + tableName + tableFieldsSql
         theConnection.query(createQuery,
-          function (e) {
+          e => {
             assert.ifError(e, 'Error creating table')
             asyncDone()
           })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const clusteredIndexSql = ['CREATE CLUSTERED INDEX IX_', tableName, ' ON ', tableName, ' (id)'].join('')
         theConnection.query(clusteredIndexSql,
-          function (e) {
+          e => {
             assert.ifError(e, 'Error creating index')
             asyncDone()
           })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         insertFunction(asyncDone)
       },
 
-      function (asyncDone) {
-        verifyFunction(function () {
+      asyncDone => {
+        verifyFunction(() => {
           asyncDone()
         })
       }]
 
     async.series(sequence,
-      function () {
+      () => {
         doneFunction()
       })
   }
 
   function runTest (columnDef, len, testDone) {
     testBoilerPlate('test_large_insert', { 'large_insert': columnDef },
-      function (done) {
+      done => {
         const largeText = repeat('A', len)
-        theConnection.query('INSERT INTO test_large_insert (large_insert) VALUES (?)', [largeText], function (e) {
+        theConnection.query('INSERT INTO test_large_insert (large_insert) VALUES (?)', [largeText], e => {
           assert.ifError(e, 'Error inserting large string')
           done()
         })
       },
 
-      function (done) {
-        theConnection.query('SELECT large_insert FROM test_large_insert', function (e, r) {
+      done => {
+        theConnection.query('SELECT large_insert FROM test_large_insert', (e, r) => {
           assert.ifError(e)
           assert(r[0].large_insert.length === len, 'Incorrect length for large insert')
           done()
         })
       },
-      function () {
+      () => {
         testDone()
       })
   }
 
-  test('select a long string using streaming - ensure no fragmentation', function (testDone) {
+  test('select a long string using streaming - ensure no fragmentation', testDone => {
     function repeat (a, num) {
       return new Array(num + 1).join(a)
     }
@@ -158,23 +158,23 @@ suite('params', function () {
       obj[colNames[c]] = d
       res.push(obj)
     })
-    query.on('error', function (e) {
+    query.on('error', e => {
       assert(e)
     })
     query.on('meta', function (m) {
       colNames.push(m[0].name)
     })
-    query.on('done', function () {
+    query.on('done', () => {
       assert.deepStrictEqual(expected, res)
       testDone()
     })
   })
 
-  test('mssql set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @s AS s', function (testDone) {
+  test('mssql set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @s AS s', testDone => {
     const STR_LEN = 2001
     const str = '1'.repeat(STR_LEN)
     //  [sql.WLongVarChar(str)]
-    theConnection.query('declare @str nvarchar (MAX);set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @str AS data', [str], function (err, res) {
+    theConnection.query('declare @str nvarchar (MAX);set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @str AS data', [str], (err, res) => {
       assert.ifError(err)
       const expected = [{
         data: str
@@ -186,50 +186,50 @@ suite('params', function () {
 
   // declare @str nvarchar (MAX);set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @s AS s;
 
-  test('insert string 100 in nchar(100)', function (testDone) {
-    runTest('nchar(100)', 100, function () {
+  test('insert string 100 in nchar(100)', testDone => {
+    runTest('nchar(100)', 100, () => {
       testDone()
     })
   })
 
-  test('insert string 500 in nvarchar(1000)', function (testDone) {
-    runTest('nvarchar(1000)', 500, function () {
+  test('insert string 500 in nvarchar(1000)', testDone => {
+    runTest('nvarchar(1000)', 500, () => {
       testDone()
     })
   })
 
-  test('insert string 4 x 1024 in varchar(8000)', function (testDone) {
-    runTest('varchar(8000)', 4 * 1024, function () {
+  test('insert string 4 x 1024 in varchar(8000)', testDone => {
+    runTest('varchar(8000)', 4 * 1024, () => {
       testDone()
     })
   })
 
-  test('insert string 6 x 1024 in varchar(8000)', function (testDone) {
-    runTest('varchar(8000)', 6 * 1024, function () {
+  test('insert string 6 x 1024 in varchar(8000)', testDone => {
+    runTest('varchar(8000)', 6 * 1024, () => {
       testDone()
     })
   })
 
-  test('insert string 30 x 1024 in varchar(max)', function (testDone) {
-    runTest('varchar(max)', 30 * 1024, function () {
+  test('insert string 30 x 1024 in varchar(max)', testDone => {
+    runTest('varchar(max)', 30 * 1024, () => {
       testDone()
     })
   })
 
-  test('insert string 2 x 1024 * 1024 in varchar(max)', function (testDone) {
-    runTest('varchar(max)', 2 * 1024 * 1024, function () {
+  test('insert string 2 x 1024 * 1024 in varchar(max)', testDone => {
+    runTest('varchar(max)', 2 * 1024 * 1024, () => {
       testDone()
     })
   })
 
-  test('insert string 60 x 1024 in varchar(max)', function (testDone) {
-    runTest('varchar(max)', 60 * 1024, function () {
+  test('insert string 60 x 1024 in varchar(max)', testDone => {
+    runTest('varchar(max)', 60 * 1024, () => {
       testDone()
     })
   })
 
-  test('verify empty string is sent as empty string, not null', function (testDone) {
-    theConnection.query('declare @s NVARCHAR(MAX) = ?; select @s as data', [''], function (err, res) {
+  test('verify empty string is sent as empty string, not null', testDone => {
+    theConnection.query('declare @s NVARCHAR(MAX) = ?; select @s as data', [''], (err, res) => {
       assert.ifError(err)
       const expected = [{
         data: ''
@@ -239,12 +239,12 @@ suite('params', function () {
     })
   })
 
-  test('verify that non-Buffer object parameter returns an error', function (testDone) {
+  test('verify that non-Buffer object parameter returns an error', testDone => {
     const o = { field1: 'value1', field2: -1 }
     testBoilerPlate('non_buffer_object',
       { 'object_col': 'varbinary(100)' },
-      function (asyncDone) {
-        theConnection.queryRaw('INSERT INTO non_buffer_object (object_col) VALUES (?)', [o], function (e) {
+      asyncDone => {
+        theConnection.queryRaw('INSERT INTO non_buffer_object (object_col) VALUES (?)', [o], e => {
           const expectedError = new Error('IMNOD: [msnodesql] Parameter 1: Invalid parameter type')
           expectedError.code = -1
           expectedError.sqlstate = 'IMNOD'
@@ -252,72 +252,72 @@ suite('params', function () {
           asyncDone()
         })
       },
-      function (done) {
+      done => {
         done()
       },
-      function () {
+      () => {
         testDone()
       })
   })
 
-  test('verify Buffer objects as input parameters', function (testDone) {
+  test('verify Buffer objects as input parameters', testDone => {
     const b = Buffer.from('0102030405060708090a', 'hex')
     testBoilerPlate(
       'buffer_param_test',
       { 'buffer_param': 'varbinary(100)' },
 
-      function (done) {
-        theConnection.queryRaw('INSERT INTO buffer_param_test (buffer_param) VALUES (?)', [b], function (e) {
+      done => {
+        theConnection.queryRaw('INSERT INTO buffer_param_test (buffer_param) VALUES (?)', [b], e => {
           assert.ifError(e)
           done()
         })
       },
 
-      function (done) {
-        theConnection.queryRaw('SELECT buffer_param FROM buffer_param_test WHERE buffer_param = ?', [b], function (e, r) {
+      done => {
+        theConnection.queryRaw('SELECT buffer_param FROM buffer_param_test WHERE buffer_param = ?', [b], (e, r) => {
           assert.ifError(e)
           assert(r.rows.length = 1)
           assert.deepStrictEqual(r.rows[0][0], b)
           done()
         })
       },
-      function () {
+      () => {
         testDone()
       })
   })
 
-  test('insert min and max number values', function (testDone) {
+  test('insert min and max number values', testDone => {
     testBoilerPlate(
       'minmax_test',
       { 'f': 'float' },
 
-      function (done) {
+      done => {
         const fns =
           [
-            function (asyncDone) {
+            asyncDone => {
               theConnection.queryRaw('INSERT INTO minmax_test (f) VALUES (?)', [Number.MAX_VALUE],
-                function (e) {
+                e => {
                   assert.ifError(e)
                   asyncDone()
                 })
             },
 
-            function (asyncDone) {
+            asyncDone => {
               theConnection.queryRaw('INSERT INTO minmax_test (f) VALUES (?)', [-Number.MAX_VALUE],
-                function (e) {
+                e => {
                   assert.ifError(e)
                   asyncDone()
                 })
             }
           ]
 
-        async.series(fns, function () {
+        async.series(fns, () => {
           done()
         })
       },
 
-      function (done) {
-        theConnection.queryRaw('SELECT f FROM minmax_test order by id', function (e, r) {
+      done => {
+        theConnection.queryRaw('SELECT f FROM minmax_test order by id', (e, r) => {
           assert.ifError(e)
           const expected = {
             meta: [
@@ -330,12 +330,12 @@ suite('params', function () {
           done()
         })
       },
-      function () {
+      () => {
         testDone()
       })
   })
 
-  test('select a long string using callback', function (testDone) {
+  test('select a long string using callback', testDone => {
     function repeat (a, num) {
       return new Array(num + 1).join(a)
     }
@@ -346,14 +346,14 @@ suite('params', function () {
         long_string: longString
       }
     ]
-    theConnection.query('select ? as long_string', [longString], function (err, res) {
+    theConnection.query('select ? as long_string', [longString], (err, res) => {
       assert.ifError(err)
       assert.deepStrictEqual(res, expected)
       testDone()
     })
   })
 
-  test('select a long buffer using callback', function (testDone) {
+  test('select a long buffer using callback', testDone => {
     function repeat (a, num) {
       return new Array(num + 1).join(a)
     }
@@ -365,18 +365,18 @@ suite('params', function () {
         long_binary: longBuffer
       }
     ]
-    theConnection.query('select ? as long_binary', [longBuffer], function (err, res) {
+    theConnection.query('select ? as long_binary', [longBuffer], (err, res) => {
       assert.ifError(err)
       assert.deepStrictEqual(res, expected)
       testDone()
     })
   })
 
-  test('verify buffer longer than column causes error', function (testDone) {
+  test('verify buffer longer than column causes error', testDone => {
     const b = Buffer.from('0102030405060708090a', 'hex')
     testBoilerPlate('buffer_param_test', { 'buffer_param': 'varbinary(5)' },
-      function (done) {
-        theConnection.queryRaw('INSERT INTO buffer_param_test (buffer_param) VALUES (?)', [b], function (e) {
+      done => {
+        theConnection.queryRaw('INSERT INTO buffer_param_test (buffer_param) VALUES (?)', [b], e => {
           const expectedError = new Error('[Microsoft][SQL Server Native Client 11.0][SQL Server]String or binary data would be truncated.')
           expectedError.sqlstate = '22001'
           expectedError.code = 8152
@@ -384,10 +384,10 @@ suite('params', function () {
           done()
         })
       },
-      function (done) {
+      done => {
         done()
       },
-      function () {
+      () => {
         testDone()
       })
   })
@@ -396,8 +396,8 @@ suite('params', function () {
     return new Array(num + 1).join(a)
   }
 
-  test('verify null string is sent as null, not empty string', function (testDone) {
-    theConnection.query('declare @s NVARCHAR(MAX) = ?; select @s as data', [null], function (err, res) {
+  test('verify null string is sent as null, not empty string', testDone => {
+    theConnection.query('declare @s NVARCHAR(MAX) = ?; select @s as data', [null], (err, res) => {
       assert.ifError(err)
       const expected = [{
         data: null
@@ -407,8 +407,8 @@ suite('params', function () {
     })
   })
 
-  test('verify single char string param', function (testDone) {
-    theConnection.query('declare @s NVARCHAR(MAX) = ?; select @s as data', ['p'], function (err, res) {
+  test('verify single char string param', testDone => {
+    theConnection.query('declare @s NVARCHAR(MAX) = ?; select @s as data', ['p'], (err, res) => {
       assert.ifError(err)
       const expected = [{
         data: 'p'
@@ -418,8 +418,8 @@ suite('params', function () {
     })
   })
 
-  test('verify bool (true) to sql_variant', function (testDone) {
-    theConnection.query('select cast(CAST(\'TRUE\' as bit) as sql_variant) as data;', function (err, res) {
+  test('verify bool (true) to sql_variant', testDone => {
+    theConnection.query('select cast(CAST(\'TRUE\' as bit) as sql_variant) as data;', (err, res) => {
       assert.ifError(err)
       const expected = [{
         data: true
@@ -429,8 +429,8 @@ suite('params', function () {
     })
   })
 
-  test('verify bool (false) to sql_variant', function (testDone) {
-    theConnection.query('select cast(CAST(\'FALSE\' as bit) as sql_variant) as data;', function (err, res) {
+  test('verify bool (false) to sql_variant', testDone => {
+    theConnection.query('select cast(CAST(\'FALSE\' as bit) as sql_variant) as data;', (err, res) => {
       assert.ifError(err)
       const expected = [{
         data: false
@@ -440,8 +440,8 @@ suite('params', function () {
     })
   })
 
-  test('verify varchar to sql_variant', function (testDone) {
-    theConnection.query('select cast(\'hello\' as sql_variant) as data;', function (err, res) {
+  test('verify varchar to sql_variant', testDone => {
+    theConnection.query('select cast(\'hello\' as sql_variant) as data;', (err, res) => {
       assert.ifError(err)
       const expected = [{
         data: 'hello'
@@ -451,8 +451,8 @@ suite('params', function () {
     })
   })
 
-  test('verify numeric decimal to sql_variant', function (testDone) {
-    theConnection.query('select cast(11.77 as sql_variant) as data;', function (err, res) {
+  test('verify numeric decimal to sql_variant', testDone => {
+    theConnection.query('select cast(11.77 as sql_variant) as data;', (err, res) => {
       assert.ifError(err)
       const expected = [{
         data: 11.77
@@ -462,8 +462,8 @@ suite('params', function () {
     })
   })
 
-  test('verify int to sql_variant', function (testDone) {
-    theConnection.query('select cast(10000 as sql_variant) as data;', function (err, res) {
+  test('verify int to sql_variant', testDone => {
+    theConnection.query('select cast(10000 as sql_variant) as data;', (err, res) => {
       assert.ifError(err)
       const expected = [{
         data: 10000
@@ -485,9 +485,9 @@ suite('params', function () {
         0))
   }
 
-  test('verify getdate (datetime) to sql_variant', function (testDone) {
+  test('verify getdate (datetime) to sql_variant', testDone => {
     const smalldt = toUTC(new Date())
-    theConnection.query('select cast(convert(datetime, ?) as sql_variant) as data', [smalldt], function (err, res) {
+    theConnection.query('select cast(convert(datetime, ?) as sql_variant) as data', [smalldt], (err, res) => {
       assert.ifError(err)
       let date = res[0].data
       assert(date instanceof Date)
@@ -499,8 +499,8 @@ suite('params', function () {
     })
   })
 
-  test('verify getdate to sql_variant', function (testDone) {
-    theConnection.query('select cast(getdate() as sql_variant) as data;', function (err, res) {
+  test('verify getdate to sql_variant', testDone => {
+    theConnection.query('select cast(getdate() as sql_variant) as data;', (err, res) => {
       assert.ifError(err)
       const date = res[0].data
       assert(date instanceof Date)
@@ -508,19 +508,19 @@ suite('params', function () {
     })
   })
 
-  test('insert null as parameter', function (testDone) {
+  test('insert null as parameter', testDone => {
     testBoilerPlate(
       'null_param_test',
       { 'null_test': 'varchar(1)' },
-      function (done) {
-        theConnection.queryRaw('INSERT INTO null_param_test (null_test) VALUES (?)', [null], function (e) {
+      done => {
+        theConnection.queryRaw('INSERT INTO null_param_test (null_test) VALUES (?)', [null], e => {
           assert.ifError(e)
           done()
         })
       },
 
-      function (done) {
-        theConnection.queryRaw('SELECT null_test FROM null_param_test', function (e, r) {
+      done => {
+        theConnection.queryRaw('SELECT null_test FROM null_param_test', (e, r) => {
           assert.ifError(e)
           const expected = {
             meta: [{ name: 'null_test', size: 1, nullable: true, type: 'text', sqlType: 'varchar' }],
@@ -530,15 +530,15 @@ suite('params', function () {
           done()
         })
       },
-      function () {
+      () => {
         testDone()
       })
   })
 
-  test('invalid numbers cause errors', function (testDone) {
+  test('invalid numbers cause errors', testDone => {
     const sequence = [
-      function (asyncDone) {
-        theConnection.queryRaw('INSERT INTO invalid_numbers_test (f) VALUES (?)', [Number.POSITIVE_INFINITY], function (e) {
+      asyncDone => {
+        theConnection.queryRaw('INSERT INTO invalid_numbers_test (f) VALUES (?)', [Number.POSITIVE_INFINITY], e => {
           const expectedError = new Error('IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
           expectedError.code = -1
           expectedError.sqlstate = 'IMNOD'
@@ -547,8 +547,8 @@ suite('params', function () {
         })
       },
 
-      function (asyncDone) {
-        theConnection.queryRaw('INSERT INTO invalid_numbers_test (f) VALUES (?)', [Number.NEGATIVE_INFINITY], function (e) {
+      asyncDone => {
+        theConnection.queryRaw('INSERT INTO invalid_numbers_test (f) VALUES (?)', [Number.NEGATIVE_INFINITY], e => {
           const expectedError = new Error('IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
           expectedError.code = -1
           expectedError.sqlstate = 'IMNOD'
@@ -562,33 +562,33 @@ suite('params', function () {
     testBoilerPlate(
       'invalid_numbers_test',
       { 'f': 'float' },
-      function (done) {
-        async.series(sequence, function () {
+      done => {
+        async.series(sequence, () => {
           done()
         })
       },
-      function (done) {
+      done => {
         done()
       },
-      function () {
+      () => {
         testDone()
       }
     )
   })
 
-  test('insert string as parameter', function (testDone) {
+  test('insert string as parameter', testDone => {
     testBoilerPlate(
       'string_param_test',
       { 'string_test': 'nvarchar(100)' },
-      function (done) {
-        theConnection.queryRaw('INSERT INTO string_param_test (string_test) VALUES (?)', ['This is a test'], function (e) {
+      done => {
+        theConnection.queryRaw('INSERT INTO string_param_test (string_test) VALUES (?)', ['This is a test'], e => {
           assert.ifError(e)
           done()
         })
       },
 
-      function (done) {
-        theConnection.queryRaw('SELECT string_test FROM string_param_test', function (e, r) {
+      done => {
+        theConnection.queryRaw('SELECT string_test FROM string_param_test', (e, r) => {
           assert.ifError(e)
           const expected = {
             meta: [{ name: 'string_test', size: 100, nullable: true, type: 'text', sqlType: 'nvarchar' }],
@@ -598,24 +598,24 @@ suite('params', function () {
           done()
         })
       },
-      function () {
+      () => {
         testDone()
       })
   })
 
-  test('insert a bool as a parameter', function (testDone) {
+  test('insert a bool as a parameter', testDone => {
     testBoilerPlate('bool_param_test',
       { 'bool_test': 'bit' },
 
-      function (done) {
-        theConnection.queryRaw('INSERT INTO bool_param_test (bool_test) VALUES (?)', [true], function (e) {
+      done => {
+        theConnection.queryRaw('INSERT INTO bool_param_test (bool_test) VALUES (?)', [true], e => {
           assert.ifError(e)
           done()
         })
       },
 
-      function (done) {
-        theConnection.queryRaw('SELECT bool_test FROM bool_param_test', function (e, r) {
+      done => {
+        theConnection.queryRaw('SELECT bool_test FROM bool_param_test', (e, r) => {
           assert.ifError(e)
           const expected = {
             meta: [{ name: 'bool_test', size: 1, nullable: true, type: 'boolean', sqlType: 'bit' }],
@@ -626,22 +626,22 @@ suite('params', function () {
         })
       },
 
-      function () {
+      () => {
         testDone()
       })
   })
 
-  test('insert largest positive int as parameter', function (testDone) {
+  test('insert largest positive int as parameter', testDone => {
     testBoilerPlate('int_param_test', { 'int_test': 'int' },
-      function (done) {
-        theConnection.queryRaw('INSERT INTO int_param_test (int_test) VALUES (?)', [0x7fffffff], function (e) {
+      done => {
+        theConnection.queryRaw('INSERT INTO int_param_test (int_test) VALUES (?)', [0x7fffffff], e => {
           assert.ifError(e)
           done()
         })
       },
 
-      function (done) {
-        theConnection.queryRaw('SELECT int_test FROM int_param_test', function (e, r) {
+      done => {
+        theConnection.queryRaw('SELECT int_test FROM int_param_test', (e, r) => {
           assert.ifError(e)
           const expected = {
             meta: [{ name: 'int_test', size: 10, nullable: true, type: 'number', sqlType: 'int' }],
@@ -651,23 +651,23 @@ suite('params', function () {
           done()
         })
       },
-      function () {
+      () => {
         testDone()
       })
   })
 
-  test('insert largest negative int as parameter', function (testDone) {
+  test('insert largest negative int as parameter', testDone => {
     testBoilerPlate('int_param_test', { 'int_test': 'int' },
 
-      function (done) {
-        theConnection.queryRaw('INSERT INTO int_param_test (int_test) VALUES (?)', [-0x80000000], function (e) {
+      done => {
+        theConnection.queryRaw('INSERT INTO int_param_test (int_test) VALUES (?)', [-0x80000000], e => {
           assert.ifError(e)
           done()
         })
       },
 
-      function (done) {
-        theConnection.queryRaw('SELECT int_test FROM int_param_test', function (e, r) {
+      done => {
+        theConnection.queryRaw('SELECT int_test FROM int_param_test', (e, r) => {
           assert.ifError(e)
           const expected = {
             meta: [{ name: 'int_test', size: 10, nullable: true, type: 'number', sqlType: 'int' }],
@@ -677,22 +677,22 @@ suite('params', function () {
           done()
         })
       },
-      function () {
+      () => {
         testDone()
       })
   })
 
-  test('insert bigint as parameter', function (testDone) {
+  test('insert bigint as parameter', testDone => {
     testBoilerPlate('bigint_param_test', { 'bigint_test': 'bigint' },
-      function (done) {
-        theConnection.queryRaw('INSERT INTO bigint_param_test (bigint_test) VALUES (?)', [0x80000000], function (e) {
+      done => {
+        theConnection.queryRaw('INSERT INTO bigint_param_test (bigint_test) VALUES (?)', [0x80000000], e => {
           assert.ifError(e)
           done()
         })
       },
 
-      function (done) {
-        theConnection.queryRaw('SELECT bigint_test FROM bigint_param_test', function (e, r) {
+      done => {
+        theConnection.queryRaw('SELECT bigint_test FROM bigint_param_test', (e, r) => {
           assert.ifError(e)
           const expected = {
             meta: [{ name: 'bigint_test', size: 19, nullable: true, type: 'number', sqlType: 'bigint' }],
@@ -703,22 +703,22 @@ suite('params', function () {
         })
       },
 
-      function () {
+      () => {
         testDone()
       })
   })
 
-  test('insert largest bigint as parameter', function (testDone) {
+  test('insert largest bigint as parameter', testDone => {
     testBoilerPlate('bigint_param_test', { 'bigint_test': 'bigint' },
-      function (done) {
-        theConnection.queryRaw('INSERT INTO bigint_param_test (bigint_test) VALUES (?)', [0x4fffffffffffffff], function (e) {
+      done => {
+        theConnection.queryRaw('INSERT INTO bigint_param_test (bigint_test) VALUES (?)', [0x4fffffffffffffff], e => {
           assert.ifError(e)
           done()
         })
       },
 
-      function (done) {
-        theConnection.queryRaw('SELECT bigint_test FROM bigint_param_test', function (e, r) {
+      done => {
+        theConnection.queryRaw('SELECT bigint_test FROM bigint_param_test', (e, r) => {
           assert.ifError(e)
           const expected = {
             meta: [{ name: 'bigint_test', size: 19, nullable: true, type: 'number', sqlType: 'bigint' }],
@@ -729,24 +729,24 @@ suite('params', function () {
         })
       },
 
-      function () {
+      () => {
         testDone()
       })
   })
 
-  test('insert decimal as parameter', function (testDone) {
+  test('insert decimal as parameter', testDone => {
     testBoilerPlate('decimal_param_test', { 'decimal_test': 'decimal(18,7)' },
 
-      function (done) {
+      done => {
         theConnection.queryRaw('INSERT INTO decimal_param_test (decimal_test) VALUES (?)', [3.141593],
-          function (e) {
+          e => {
             assert.ifError(e)
             done()
           })
       },
 
-      function (done) {
-        theConnection.queryRaw('SELECT decimal_test FROM decimal_param_test', function (e, r) {
+      done => {
+        theConnection.queryRaw('SELECT decimal_test FROM decimal_param_test', (e, r) => {
           assert.ifError(e)
           const expected = {
             meta: [{
@@ -762,23 +762,23 @@ suite('params', function () {
           done()
         })
       },
-      function () {
+      () => {
         testDone()
       })
   })
 
-  test('insert decimal as bigint parameter', function (testDone) {
+  test('insert decimal as bigint parameter', testDone => {
     testBoilerPlate('decimal_as_bigint_param_test', { 'decimal_bigint': 'bigint' },
-      function (done) {
+      done => {
         theConnection.queryRaw('INSERT INTO decimal_as_bigint_param_test (decimal_bigint) VALUES (?)', [123456789.0],
-          function (e) {
+          e => {
             assert.ifError(e)
             done()
           })
       },
 
-      function (done) {
-        theConnection.queryRaw('SELECT decimal_bigint FROM decimal_as_bigint_param_test', function (e, r) {
+      done => {
+        theConnection.queryRaw('SELECT decimal_bigint FROM decimal_as_bigint_param_test', (e, r) => {
           assert.ifError(e)
           const expected = {
             meta: [{
@@ -795,36 +795,36 @@ suite('params', function () {
         })
       },
 
-      function () {
+      () => {
         testDone()
       })
   })
 
-  test('insert date as parameter', function (testDone) {
+  test('insert date as parameter', testDone => {
     testBoilerPlate('date_param_test', { 'date_test': 'datetimeoffset' },
 
-      function (done) {
+      done => {
         theConnection.queryRaw('INSERT INTO date_param_test (date_test) VALUES (?)', [utcDate],
-          function (e) {
+          e => {
             assert.ifError(e)
             done()
           })
       },
 
-      function (done) {
-        theConnection.queryRaw('SELECT date_test FROM date_param_test', function (e, r) {
+      done => {
+        theConnection.queryRaw('SELECT date_test FROM date_param_test', (e, r) => {
           assert.ifError(e)
           assert.strictEqual(utcDate.toISOString(), r.rows[0][0].toISOString(), 'dates are not equal')
           assert.strictEqual(r.rows[0][0].nanosecondsDelta, 0, 'nanoseconds not 0')
           done()
         })
       },
-      function () {
+      () => {
         testDone()
       })
   })
 
-  test('verify js date inserted into datetime field', function (testDone) {
+  test('verify js date inserted into datetime field', testDone => {
     const localDate = new Date()
     const utcDate = new Date(Date.UTC(localDate.getUTCFullYear(),
       localDate.getUTCMonth(),
@@ -835,73 +835,73 @@ suite('params', function () {
       localDate.getUTCMilliseconds()))
 
     testBoilerPlate('datetime_test', { 'datetime_test': 'datetime' },
-      function (done) {
-        theConnection.queryRaw('INSERT INTO datetime_test (datetime_test) VALUES (?)', [utcDate], function (e, r) {
+      done => {
+        theConnection.queryRaw('INSERT INTO datetime_test (datetime_test) VALUES (?)', [utcDate], (e, r) => {
           assert.ifError(e)
           assert(r.rowcount === 1)
           done()
         })
       },
 
-      function (done) {
-        theConnection.queryRaw('SELECT * FROM datetime_test', function (e, r) {
+      done => {
+        theConnection.queryRaw('SELECT * FROM datetime_test', (e, r) => {
           assert.ifError(e)
           assert(r.rows[0][0], utcDate)
           done()
         })
       },
-      function () {
+      () => {
         testDone()
       })
   })
 
-  test('verify empty string inserted into nvarchar field', function (testDone) {
+  test('verify empty string inserted into nvarchar field', testDone => {
     testBoilerPlate('emptystring_test', { 'emptystring_test': 'nvarchar(1)' },
-      function (done) {
-        theConnection.queryRaw('INSERT INTO emptystring_test (emptystring_test) VALUES (?)', [''], function (e, r) {
+      done => {
+        theConnection.queryRaw('INSERT INTO emptystring_test (emptystring_test) VALUES (?)', [''], (e, r) => {
           assert.ifError(e)
           assert(r.rowcount === 1)
           done()
         })
       },
 
-      function (done) {
-        theConnection.queryRaw('SELECT * FROM emptystring_test', function (e, r) {
+      done => {
+        theConnection.queryRaw('SELECT * FROM emptystring_test', (e, r) => {
           assert.ifError(e)
           assert(r.rows[0][0], '')
           done()
         })
       },
 
-      function () {
+      () => {
         testDone()
       })
   })
 
-  test('insert large string into max column', function (testDone) {
+  test('insert large string into max column', testDone => {
     testBoilerPlate('test_large_insert', { 'large_insert': 'nvarchar(max) ' },
-      function (done) {
+      done => {
         const largeText = repeat('A', 10000)
-        theConnection.query('INSERT INTO test_large_insert (large_insert) VALUES (?)', [largeText], function (e) {
+        theConnection.query('INSERT INTO test_large_insert (large_insert) VALUES (?)', [largeText], e => {
           assert.ifError(e, 'Error inserting large string')
           done()
         })
       },
 
-      function (done) {
-        theConnection.query('SELECT large_insert FROM test_large_insert', function (e, r) {
+      done => {
+        theConnection.query('SELECT large_insert FROM test_large_insert', (e, r) => {
           assert.ifError(e)
           assert(r[0].large_insert.length === 10000, 'Incorrect length for large insert')
           done()
         })
       },
 
-      function () {
+      () => {
         testDone()
       })
   })
 
-  test('verify js date inserted into datetime field', function (testDone) {
+  test('verify js date inserted into datetime field', testDone => {
     const localDate = new Date()
     const utcDate = new Date(Date.UTC(localDate.getUTCFullYear(),
       localDate.getUTCMonth(),
@@ -913,27 +913,27 @@ suite('params', function () {
 
     testBoilerPlate('datetime_test', { 'datetime_test': 'datetime' },
 
-      function (done) {
-        theConnection.queryRaw('INSERT INTO datetime_test (datetime_test) VALUES (?)', [utcDate], function (e, r) {
+      done => {
+        theConnection.queryRaw('INSERT INTO datetime_test (datetime_test) VALUES (?)', [utcDate], (e, r) => {
           assert.ifError(e)
           assert(r.rowcount === 1)
           done()
         })
       },
 
-      function (done) {
-        theConnection.queryRaw('SELECT * FROM datetime_test', function (e, r) {
+      done => {
+        theConnection.queryRaw('SELECT * FROM datetime_test', (e, r) => {
           assert.ifError(e)
           assert(r.rows[0][0], utcDate)
           done()
         })
       },
-      function () {
+      () => {
         testDone()
       })
   })
 
-  test('verify js date before 1970 inserted into datetime field', function (testDone) {
+  test('verify js date before 1970 inserted into datetime field', testDone => {
     const ancientDate = new Date(1492, 10, 11, 6, 32, 46, 578)
     const utcDate = new Date(Date.UTC(ancientDate.getUTCFullYear(),
       ancientDate.getUTCMonth(),
@@ -945,42 +945,42 @@ suite('params', function () {
 
     testBoilerPlate('datetime_test', { 'datetime_test': 'datetimeoffset(3)' },
 
-      function (done) {
-        theConnection.queryRaw('INSERT INTO datetime_test (datetime_test) VALUES (?)', [utcDate], function (e, r) {
+      done => {
+        theConnection.queryRaw('INSERT INTO datetime_test (datetime_test) VALUES (?)', [utcDate], (e, r) => {
           assert.ifError(e)
           assert(r.rowcount === 1)
           done()
         })
       },
 
-      function (done) {
-        theConnection.queryRaw('SELECT datetime_test FROM datetime_test', function (e, r) {
+      done => {
+        theConnection.queryRaw('SELECT datetime_test FROM datetime_test', (e, r) => {
           assert.ifError(e)
           assert.strictEqual(r.rows[0][0].valueOf(), utcDate.valueOf())
           done()
         })
       },
-      function () {
+      () => {
         testDone()
       })
   })
 
   // verify fix for a bug that would return the wrong day when a datetimeoffset was inserted where the date
   // was before 1/1/1970 and the time was midnight.
-  test('verify dates with midnight time', function (testDone) {
+  test('verify dates with midnight time', testDone => {
     const midnightDate = new Date(Date.parse('2030-08-13T00:00:00.000Z'))
 
     testBoilerPlate('midnight_date_test', { 'midnight_date_test': 'datetimeoffset(3)' },
-      function (done) {
+      done => {
         const insertQuery = 'INSERT INTO midnight_date_test (midnight_date_test) VALUES (?);'
-        theConnection.queryRaw(insertQuery, [midnightDate], function (e) {
+        theConnection.queryRaw(insertQuery, [midnightDate], e => {
           assert.ifError(e)
           done()
         })
       },
       // test valid dates
-      function (done) {
-        theConnection.queryRaw('SELECT midnight_date_test FROM midnight_date_test', function (e, r) {
+      done => {
+        theConnection.queryRaw('SELECT midnight_date_test FROM midnight_date_test', (e, r) => {
           assert.ifError(e)
           const expectedDates = []
           expectedDates.push([midnightDate])
@@ -1004,26 +1004,26 @@ suite('params', function () {
           done()
         })
       },
-      function () {
+      () => {
         testDone()
       })
   })
 
-  test('verify bug fix for last day of the year error', function (testDone) {
+  test('verify bug fix for last day of the year error', testDone => {
     const eoyDate = new Date(Date.parse('1960-12-31T11:12:13.000Z'))
 
     testBoilerPlate('eoy_date_test', { 'eoy_date_test': 'datetimeoffset(3)' },
-      function (done) {
+      done => {
         const insertQuery = 'INSERT INTO eoy_date_test (eoy_date_test) VALUES (?);'
-        theConnection.queryRaw(insertQuery, [eoyDate], function (e) {
+        theConnection.queryRaw(insertQuery, [eoyDate], e => {
           assert.ifError(e)
           done()
         })
       },
 
       // test valid dates
-      function (done) {
-        theConnection.queryRaw('SELECT eoy_date_test FROM eoy_date_test', function (e, r) {
+      done => {
+        theConnection.queryRaw('SELECT eoy_date_test FROM eoy_date_test', (e, r) => {
           assert.ifError(e)
           const expectedDates = []
           expectedDates.push([eoyDate])
@@ -1047,13 +1047,13 @@ suite('params', function () {
           done()
         })
       },
-      function () {
+      () => {
         testDone()
       })
   })
 
-  test('bind a null to binary using sqlTypes.asVarBinary(null)', function (testDone) {
-    theConnection.query('declare @bin binary(4) = ?; select @bin as bin', [sql.VarBinary(null)], function (err, res) {
+  test('bind a null to binary using sqlTypes.asVarBinary(null)', testDone => {
+    theConnection.query('declare @bin binary(4) = ?; select @bin as bin', [sql.VarBinary(null)], (err, res) => {
       assert.ifError(err)
       const expected = [{
         'bin': null
@@ -1063,8 +1063,8 @@ suite('params', function () {
     })
   })
 
-  test('bind a Buffer([0,1,2,3])] to binary', function (testDone) {
-    theConnection.query('declare @bin binary(4) = ?; select @bin as bin', [Buffer.from([0, 1, 2, 3])], function (err, res) {
+  test('bind a Buffer([0,1,2,3])] to binary', testDone => {
+    theConnection.query('declare @bin binary(4) = ?; select @bin as bin', [Buffer.from([0, 1, 2, 3])], (err, res) => {
       assert.ifError(err)
       const expected = [{
         'bin': Buffer.from([0, 1, 2, 3])
