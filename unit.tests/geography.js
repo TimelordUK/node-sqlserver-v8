@@ -58,50 +58,50 @@ function GeographyHelper () {
     let table
     const fns = [
 
-      function (asyncDone) {
-        theConnection.query('DROP TABLE spatial_test', function () {
+      asyncDone => {
+        theConnection.query('DROP TABLE spatial_test', () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query(createTableSql, function (e) {
+      asyncDone => {
+        theConnection.query(createTableSql, e => {
           assert.ifError(e)
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query(dropProcedureSql, function (e) {
+      asyncDone => {
+        theConnection.query(dropProcedureSql, e => {
           assert.ifError(e)
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query(dropTypeSql, function (e) {
+      asyncDone => {
+        theConnection.query(dropTypeSql, e => {
           assert.ifError(e)
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query(createType, function (e) {
+      asyncDone => {
+        theConnection.query(createType, e => {
           assert.ifError(e)
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query(createProcedureSql, function (e) {
+      asyncDone => {
+        theConnection.query(createProcedureSql, e => {
           assert.ifError(e)
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.getUserTypeTable(tableTypeName, function (err, t) {
+      asyncDone => {
+        theConnection.getUserTypeTable(tableTypeName, (err, t) => {
           assert.ifError(err)
           table = t
           asyncDone()
         })
       }
     ]
-    async.series(fns, function () {
+    async.series(fns, () => {
       done(table)
     })
   }
@@ -229,14 +229,14 @@ suite('geography', function () {
 
   const sql = global.native_sql
 
-  setup(function (testDone) {
-    supp.GlobalConn.init(sql, function (co) {
+  setup(testDone => {
+    supp.GlobalConn.init(sql, co => {
       connStr = global.conn_str || co.conn_str
       async = co.async
       helper = co.helper
       helper.setVerbose(false)
       geographyHelper = new GeographyHelper()
-      sql.open(connStr, function (err, newConn) {
+      sql.open(connStr, (err, newConn) => {
         assert(err === false)
         theConnection = newConn
         testDone()
@@ -245,13 +245,13 @@ suite('geography', function () {
   })
 
   teardown(function (done) {
-    theConnection.close(function (err) {
+    theConnection.close(err => {
       assert.ifError(err)
       done()
     })
   })
 
-  test('use tvp to insert geography LINES using pm', function (testDone) {
+  test('use tvp to insert geography LINES using pm', testDone => {
     let table
     let procedure
     const coordinates = geographyHelper.getCoordinates()
@@ -259,36 +259,36 @@ suite('geography', function () {
     const expected = geographyHelper.asExpected(lines)
     const fns = [
 
-      function (asyncDone) {
-        geographyHelper.createGeographyTable(async, theConnection, function (t) {
+      asyncDone => {
+        geographyHelper.createGeographyTable(async, theConnection, t => {
           table = t
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const pm = theConnection.procedureMgr()
-        pm.get('InsertGeographyTvp', function (p) {
+        pm.get('InsertGeographyTvp', p => {
           assert(p)
           procedure = p
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        lines.forEach(function (l) {
+      asyncDone => {
+        lines.forEach(l => {
           // each row is represented as an array of columns
           table.rows[table.rows.length] = [l]
         })
         const tp = sql.TvpFromTable(table)
         table.rows = []
-        procedure.call([tp], function (err) {
+        procedure.call([tp], err => {
           assert.ifError(err)
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query(geographyHelper.selectSql, function (err, res) {
+      asyncDone => {
+        theConnection.query(geographyHelper.selectSql, (err, res) => {
           assert.ifError(err)
           assert(res.length === lines.length)
           assert.deepStrictEqual(res, expected)
@@ -297,21 +297,21 @@ suite('geography', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('show a geography .Net error is reported back from driver', function (testDone) {
+  test('show a geography .Net error is reported back from driver', testDone => {
     const fns = [
 
-      function (asyncDone) {
-        geographyHelper.createGeographyTable(async, theConnection, function () {
+      asyncDone => {
+        geographyHelper.createGeographyTable(async, theConnection, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query(geographyHelper.insertPointsSql, ['PINT (-89.349 -55.349)'], function (err) { // deliberate error
+      asyncDone => {
+        theConnection.query(geographyHelper.insertPointsSql, ['PINT (-89.349 -55.349)'], err => { // deliberate error
           assert(err)
           assert(err.message.indexOf('Expected "POINT" at position 1') > 0)
           asyncDone()
@@ -319,12 +319,12 @@ suite('geography', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('use tvp to insert geography LINESTRING, POINT and POLYGON using pm in 1 call', function (testDone) {
+  test('use tvp to insert geography LINESTRING, POINT and POLYGON using pm in 1 call', testDone => {
     let table
     let procedure
     const coordinates = geographyHelper.getCoordinates()
@@ -335,35 +335,35 @@ suite('geography', function () {
     const expected = geographyHelper.asExpected(allGeography)
     const fns = [
 
-      function (asyncDone) {
-        geographyHelper.createGeographyTable(async, theConnection, function (t) {
+      asyncDone => {
+        geographyHelper.createGeographyTable(async, theConnection, t => {
           table = t
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         const pm = theConnection.procedureMgr()
-        pm.get('InsertGeographyTvp', function (p) {
+        pm.get('InsertGeographyTvp', p => {
           assert(p)
           procedure = p
           asyncDone()
         })
       },
-      function (asyncDone) {
-        allGeography.forEach(function (l) {
+      asyncDone => {
+        allGeography.forEach(l => {
           // each row is represented as an array of columns
           table.rows[table.rows.length] = [l]
         })
         const tp = sql.TvpFromTable(table)
         table.rows = []
-        procedure.call([tp], function (err) {
+        procedure.call([tp], err => {
           assert.ifError(err)
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query(geographyHelper.selectSql, function (err, res) {
+      asyncDone => {
+        theConnection.query(geographyHelper.selectSql, (err, res) => {
           assert.ifError(err)
           assert(res.length === allGeography.length)
           assert.deepStrictEqual(res, expected)
@@ -372,32 +372,32 @@ suite('geography', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('insert lines from json coordinates', function (testDone) {
+  test('insert lines from json coordinates', testDone => {
     const coordinates = geographyHelper.getCoordinates()
     const lines = geographyHelper.asLines(coordinates)
     const expected = geographyHelper.asExpected(lines)
 
     const fns = [
 
-      function (asyncDone) {
-        geographyHelper.createGeographyTable(async, theConnection, function () {
+      asyncDone => {
+        geographyHelper.createGeographyTable(async, theConnection, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query(geographyHelper.insertLinesSql, [lines], function (err, res) {
+      asyncDone => {
+        theConnection.query(geographyHelper.insertLinesSql, [lines], (err, res) => {
           assert.ifError(err)
           assert(res.length === 0)
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query(geographyHelper.selectSql, function (err, res) {
+      asyncDone => {
+        theConnection.query(geographyHelper.selectSql, (err, res) => {
           assert.ifError(err)
           assert(res.length === lines.length)
           assert.deepStrictEqual(res, expected)
@@ -405,32 +405,32 @@ suite('geography', function () {
         })
       }]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('insert points from json coordinates', function (testDone) {
+  test('insert points from json coordinates', testDone => {
     const coordinates = geographyHelper.getCoordinates()
     const points = geographyHelper.asPoints(coordinates)
     const expected = geographyHelper.asExpected(points)
 
     const fns = [
 
-      function (asyncDone) {
-        geographyHelper.createGeographyTable(async, theConnection, function () {
+      asyncDone => {
+        geographyHelper.createGeographyTable(async, theConnection, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query(geographyHelper.insertPointsSql, [points], function (err, res) {
+      asyncDone => {
+        theConnection.query(geographyHelper.insertPointsSql, [points], (err, res) => {
           assert.ifError(err)
           assert(res.length === 0)
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query(geographyHelper.selectSql, function (err, res) {
+      asyncDone => {
+        theConnection.query(geographyHelper.selectSql, (err, res) => {
           assert.ifError(err)
           assert(res.length === points.length)
           assert.deepStrictEqual(expected, res)
@@ -438,12 +438,12 @@ suite('geography', function () {
         })
       }]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('insert a polygon from json coordinates', function (testDone) {
+  test('insert a polygon from json coordinates', testDone => {
     const coordinates = geographyHelper.getCoordinates()
     const poly = geographyHelper.asPoly(coordinates)
     const expectedPoly = [
@@ -455,20 +455,20 @@ suite('geography', function () {
 
     const fns = [
 
-      function (asyncDone) {
-        geographyHelper.createGeographyTable(async, theConnection, function () {
+      asyncDone => {
+        geographyHelper.createGeographyTable(async, theConnection, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query(geographyHelper.insertPolySql, [poly], function (err, res) {
+      asyncDone => {
+        theConnection.query(geographyHelper.insertPolySql, [poly], (err, res) => {
           assert.ifError(err)
           assert(res.length === 0)
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query(geographyHelper.selectSql, function (err, res) {
+      asyncDone => {
+        theConnection.query(geographyHelper.selectSql, (err, res) => {
           assert.ifError(err)
           assert(res.length === expectedPoly.length)
           assert.deepStrictEqual(res, expectedPoly)
@@ -477,28 +477,28 @@ suite('geography', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('insert an array of geography lines', function (testDone) {
+  test('insert an array of geography lines', testDone => {
     const fns = [
 
-      function (asyncDone) {
-        geographyHelper.createGeographyTable(async, theConnection, function () {
+      asyncDone => {
+        geographyHelper.createGeographyTable(async, theConnection, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query(geographyHelper.insertLinesSql, [geographyHelper.lines], function (err, res) {
+      asyncDone => {
+        theConnection.query(geographyHelper.insertLinesSql, [geographyHelper.lines], (err, res) => {
           assert.ifError(err)
           assert(res.length === 0)
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query(geographyHelper.selectSql, function (err, res) {
+      asyncDone => {
+        theConnection.query(geographyHelper.selectSql, (err, res) => {
           assert.ifError(err)
           assert(res.length === geographyHelper.expectedLines.length)
           assert.deepStrictEqual(res, geographyHelper.expectedLines)
@@ -506,28 +506,28 @@ suite('geography', function () {
         })
       }
     ]
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('insert an array of geography points', function (testDone) {
+  test('insert an array of geography points', testDone => {
     const fns = [
 
-      function (asyncDone) {
-        geographyHelper.createGeographyTable(async, theConnection, function () {
+      asyncDone => {
+        geographyHelper.createGeographyTable(async, theConnection, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query(geographyHelper.insertPointsSql, [geographyHelper.points], function (err, res) {
+      asyncDone => {
+        theConnection.query(geographyHelper.insertPointsSql, [geographyHelper.points], (err, res) => {
           assert.ifError(err)
           assert(res.length === 0)
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query(geographyHelper.selectSql, function (err, res) {
+      asyncDone => {
+        theConnection.query(geographyHelper.selectSql, (err, res) => {
           assert.ifError(err)
           assert(res.length === geographyHelper.expectedPoints.length)
           assert.deepStrictEqual(res, geographyHelper.expectedPoints)
@@ -535,44 +535,44 @@ suite('geography', function () {
         })
       }
     ]
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('prepare a geography point statement for repeat invocations', function (testDone) {
+  test('prepare a geography point statement for repeat invocations', testDone => {
     let preparedPoint = null
 
     const fns = [
 
-      function (asyncDone) {
-        geographyHelper.createGeographyTable(async, theConnection, function () {
+      asyncDone => {
+        geographyHelper.createGeographyTable(async, theConnection, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.prepare(geographyHelper.insertPointsSql, function (err, prepared) {
+      asyncDone => {
+        theConnection.prepare(geographyHelper.insertPointsSql, (err, prepared) => {
           assert(err === false)
           preparedPoint = prepared
           asyncDone()
         })
       },
-      function (asyncDone) {
-        preparedPoint.preparedQuery([geographyHelper.points[0]], function (err, res) {
+      asyncDone => {
+        preparedPoint.preparedQuery([geographyHelper.points[0]], (err, res) => {
           assert(err === null)
           assert(res.length === 0)
           asyncDone()
         })
       },
-      function (asyncDone) {
-        preparedPoint.preparedQuery([geographyHelper.points[1]], function (err, res) {
+      asyncDone => {
+        preparedPoint.preparedQuery([geographyHelper.points[1]], (err, res) => {
           assert(err === null)
           assert(res.length === 0)
           asyncDone()
         })
       },
-      function (asyncDone) {
-        theConnection.query(geographyHelper.selectSql, function (err, res) {
+      asyncDone => {
+        theConnection.query(geographyHelper.selectSql, (err, res) => {
           assert(err === null)
           assert(res.length === geographyHelper.expectedPoints.length)
           assert.deepStrictEqual(res, geographyHelper.expectedPoints)
@@ -580,7 +580,7 @@ suite('geography', function () {
         })
       }
     ]
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
