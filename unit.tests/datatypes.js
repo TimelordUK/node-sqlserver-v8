@@ -19,33 +19,33 @@
 
 'use strict'
 
-var assert = require('assert')
-var commonTestFns = require('./CommonTestFunctions')
-var supp = require('../samples/typescript/demo-support')
+const assert = require('assert')
+const commonTestFns = require('./CommonTestFunctions')
+const supp = require('../samples/typescript/demo-support')
 
 /* global suite teardown teardown test setup */
 
 suite('datatypes', function () {
-  var tablename = 'types_table'
-  var testname = 'not set yet'
+  const tablename = 'types_table'
+  let testname = 'not set yet'
 
-  var theConnection
+  let theConnection
   this.timeout(20000)
-  var connStr
-  var async
-  var helper
-  var driver
+  let connStr
+  let async
+  let helper
+  let driver
 
-  var sql = global.native_sql
+  const sql = global.native_sql
 
-  setup(function (testDone) {
-    supp.GlobalConn.init(sql, function (co) {
+  setup(testDone => {
+    supp.GlobalConn.init(sql, co => {
       connStr = global.conn_str || co.conn_str
       driver = co.driver
       async = co.async
       helper = co.helper
       helper.setVerbose(false)
-      sql.open(connStr, function (err, newConn) {
+      sql.open(connStr, (err, newConn) => {
         assert(err === false)
         theConnection = newConn
         testDone()
@@ -53,45 +53,45 @@ suite('datatypes', function () {
     }, global.conn_str)
   })
 
-  teardown(function (done) {
-    theConnection.close(function () {
+  teardown(done => {
+    theConnection.close(() => {
       done()
     })
   })
 
   testname = 'test 023a - fetch large varbinary in chunks \'varbinary(max)\', fetch as binary'
-  test(testname, function (done) {
-    var testcolumntype = ' varbinary(' + 'max' + ')'
-    var testcolumnname = 'col2'
+  test(testname, done => {
+    const testcolumntype = ' varbinary(' + 'max' + ')'
+    const testcolumnname = 'col2'
 
-    var buffer = []
-    var i
+    const buffer = []
+    let i
     for (i = 0; i < 2 * 1024 * 1024; ++i) {
       buffer[buffer.length] = i % 255
     }
 
-    var binaryBuffer = Buffer.from(buffer)
+    const binaryBuffer = Buffer.from(buffer)
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
-        var s = 'insert into ' + tablename + ' (' + testcolumnname + ' ) ' + ' values ( ? )'
-        theConnection.query(s, [binaryBuffer], function (err, res) {
+      asyncDone => {
+        const s = `insert into ${tablename} (${testcolumnname} )  values ( ? )`
+        theConnection.query(s, [binaryBuffer], (err, res) => {
           assert.ifError(err)
           assert(res)
           assert(res.length === 0)
           asyncDone()
         })
       },
-      function (asyncDone) {
-        var s = 'select ' + testcolumnname + ' from ' + tablename
-        theConnection.query(s, [binaryBuffer], function (err, res) {
+      asyncDone => {
+        const s = `select ${testcolumnname} from ${tablename}`
+        theConnection.query(s, [binaryBuffer], (err, res) => {
           assert.ifError(err)
-          var b = res[0].col2
-          assert.deepEqual(b, binaryBuffer)
+          const b = res[0].col2
+          assert.deepStrictEqual(b, binaryBuffer)
           asyncDone()
         })
       },
@@ -103,51 +103,51 @@ suite('datatypes', function () {
   })
 
   testname = 'test 001 - verify functionality of data type \'smalldatetime\', fetch as date'
-  test(testname, function (done) {
+  test(testname, done => {
     //  var testcolumnsize = 16
-    var testcolumntype = ' smalldatetime'
+    const testcolumntype = ' smalldatetime'
     //  var testcolumnclienttype = 'date'
-    var testcolumnname = 'col2'
-    var rowWithNullData = 1
+    const testcolumnname = 'col2'
+    const rowWithNullData = 1
     // test date = 1955-12-13 12:43:00
-    var year = 1955
-    var month = 12
-    var day = 13
-    var hour = 12
-    var minute = 43
-    var second = 0
-    var nanosecond = 0
-    var testdata2Expected = '' + year + '-' + month + '-' + day + ' ' + hour + ':' + minute + ':' + second
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+    const year = 1955
+    const month = 12
+    const day = 13
+    const hour = 12
+    const minute = 43
+    const second = 0
+    const nanosecond = 0
+    const testdata2Expected = `${year}-${month}-${day} ${hour}:${minute}:${second}`
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
     // Month in JS is 0-based, so expected will be month minus 1
-    var jsDateExpected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
+    const jsDateExpected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
 
-    var actions =
+    const actions =
       [
-        function (asyncDone) {
+        asyncDone => {
           // console.log("createTable");
-          commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
+          commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, () => {
             // console.log("run");
             asyncDone()
           })
         },
-        function (asyncDone) {
+        asyncDone => {
           // console.log("insertDataTSQL");
-          commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, null, function () {
+          commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, null, () => {
             // console.log("run");
             asyncDone()
           })
         },
-        function (asyncDone) {
+        asyncDone => {
           // console.log("insertDataTSQL");
-          commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
+          commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
             // console.log("run");
             asyncDone()
           })
         },
-        function (asyncDone) {
+        asyncDone => {
           // console.log("verifyData_Datetime");
-          commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, function () {
+          commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
             // console.log("run");
             asyncDone()
           })
@@ -155,500 +155,500 @@ suite('datatypes', function () {
       ]
 
     async.series(actions,
-      function () {
+      () => {
         // console.log("all done ... end each");
         done()
       })
   })
 
   testname = 'test 002 - verify functionality of data type \'datetime\', fetch as date'
-  test(testname, function (done) {
+  test(testname, done => {
     // var testcolumnsize = 23
-    var testcolumntype = ' datetime'
+    const testcolumntype = ' datetime'
     //  var testcolumnclienttype = 'date'
-    var testcolumnname = 'col2'
-    var rowWithNullData = 2
+    const testcolumnname = 'col2'
+    const rowWithNullData = 2
     // test date = 2007-05-08 12:35:29.123
-    var year = 2007
-    var month = 5
-    var day = 8
-    var hour = 12
-    var minute = 35
-    var second = 29.123
-    var nanosecond = 0
-    var testdata2Expected = '' + year + '-' + month + '-' + day + ' ' + hour + ':' + minute + ':' + second
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+    const year = 2007
+    const month = 5
+    const day = 8
+    const hour = 12
+    const minute = 35
+    const second = 29.123
+    const nanosecond = 0
+    const testdata2Expected = `${year}-${month}-${day} ${hour}:${minute}:${second}`
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
     // Month in JS is 0-based, so expected will be month minus 1
-    var jsDateExpected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
+    const jsDateExpected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
 
-    var fns = [
-      function (asyncDone) {
-        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
+    const fns = [
+      asyncDone => {
+        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
+      asyncDone => {
+        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, null, function () {
+      asyncDone => {
+        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, null, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, function () {
+      asyncDone => {
+        commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
           asyncDone()
         })
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       done()
     }) // end of async.series()
   }) // end of test(
 
   testname = 'test 003_a - insert valid data into time(7) via TSQL, fetch as date'
-  test(testname, function (done) {
+  test(testname, done => {
     //  var testcolumnsize = 16
-    var testdatetimescale = 7
-    var testcolumntype = ' time(' + testdatetimescale + ')'
+    const testdatetimescale = 7
+    const testcolumntype = ` time(${testdatetimescale})`
     //  var testcolumnclienttype = 'date'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var rowWithNullData = 1
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const rowWithNullData = 1
     // test date = <default date> 12:10:05.1234567
-    var year = 1900
-    var month = 1
-    var day = 1
-    var hour = 12
-    var minute = 10
-    var second = 5
-    var nanosecond = 0
+    const year = 1900
+    const month = 1
+    const day = 1
+    const hour = 12
+    const minute = 10
+    const second = 5
+    const nanosecond = 0
     // Month in JS is 0-based, so expected will be month minus 1
-    var jsDateExpected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
-    var testdata2Expected = '12:10:05.1234567'
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+    const jsDateExpected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
+    const testdata2Expected = '12:10:05.1234567'
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    var fns = [
+    const fns = [
 
-      function (asyncDone) {
-        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
+      asyncDone => {
+        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
+      asyncDone => {
+        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
+      asyncDone => {
+        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, function () {
+      asyncDone => {
+        commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
           asyncDone()
         })
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       done()
     })
   }) // end of test()
 
   testname = 'test 003_b - insert valid data into time(0) via TSQL, fetch as date'
-  test(testname, function (done) {
+  test(testname, done => {
     //  var testcolumnsize = 16
-    var testdatetimescale = 0
-    var testcolumntype = ' time(' + testdatetimescale + ')'
+    const testdatetimescale = 0
+    const testcolumntype = ` time(${testdatetimescale})`
     //  var testcolumnclienttype = 'date'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var rowWithNullData = 1
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const rowWithNullData = 1
     // test date = <default date> 12:10:05
-    var year = 1900
-    var month = 1
-    var day = 1
-    var hour = 12
-    var minute = 10
-    var second = 5
-    var nanosecond = 0
+    const year = 1900
+    const month = 1
+    const day = 1
+    const hour = 12
+    const minute = 10
+    const second = 5
+    const nanosecond = 0
     // Month in JS is 0-based, so expected will be month minus 1
-    var jsDateExpected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
-    var testdata2Expected = '12:10:05.1234567'
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+    const jsDateExpected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
+    const testdata2Expected = '12:10:05.1234567'
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    var fns =
+    const fns =
       [
-        function (asyncDone) {
-          commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
+        asyncDone => {
+          commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, () => {
             asyncDone()
           })
         },
-        function (asyncDone) {
-          commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
+        asyncDone => {
+          commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, () => {
             asyncDone()
           })
         },
-        function (asyncDone) {
-          commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
+        asyncDone => {
+          commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
             asyncDone()
           })
         },
-        function (asyncDone) {
-          commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, function () {
+        asyncDone => {
+          commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
             asyncDone()
           })
         }
       ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       done()
     }) // end of async.series()
   }) // end of test()
 
   testname = 'test 004_a - insert valid data into datetime2(7) via TSQL, fetch as date'
-  test(testname, function (done) {
+  test(testname, done => {
     //  var testcolumnsize = 27
-    var testdatetimescale = 7
-    var testcolumntype = ' datetime2(' + testdatetimescale + ')'
+    const testdatetimescale = 7
+    const testcolumntype = ` datetime2(${testdatetimescale})`
     //  var testcolumnclienttype = 'date'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var rowWithNullData = 1
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const rowWithNullData = 1
     // test date = 2001-04-10 10:12:59.1234567
-    var year = 2001
-    var month = 4
-    var day = 10
-    var hour = 10
-    var minute = 12
-    var second = 59.1234567
-    var nanosecond = 0
+    const year = 2001
+    const month = 4
+    const day = 10
+    const hour = 10
+    const minute = 12
+    const second = 59.1234567
+    const nanosecond = 0
     // Month in JS is 0-based, so expected will be month minus 1
-    var jsDateExpected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
-    var testdata2Expected = '2001-04-10 10:12:59.1234567'
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+    const jsDateExpected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
+    const testdata2Expected = '2001-04-10 10:12:59.1234567'
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    var fns =
+    const fns =
       [
-        function (asyncDone) {
-          commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
+        asyncDone => {
+          commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, () => {
             asyncDone()
           })
         },
-        function (asyncDone) {
-          commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
+        asyncDone => {
+          commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, () => {
             asyncDone()
           })
         },
-        function (asyncDone) {
-          commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
+        asyncDone => {
+          commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
             asyncDone()
           })
         },
-        function (asyncDone) {
-          commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, function () {
+        asyncDone => {
+          commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
             asyncDone()
           })
         }
       ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       done()
     }) // end of async.series()
   })
 
   testname = 'test 004_b - insert valid data into datetime2(0) via TSQL, fetch as date'
-  test(testname, function (done) {
+  test(testname, done => {
     //  var testcolumnsize = 19
-    var testdatetimescale = 0
-    var testcolumntype = ' datetime2(' + testdatetimescale + ')'
+    const testdatetimescale = 0
+    const testcolumntype = ` datetime2(${testdatetimescale})`
     //  var testcolumnclienttype = 'date'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var rowWithNullData = 1
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const rowWithNullData = 1
     // test date = 2001-04-10 10:12:59.1234567
-    var year = 2001
-    var month = 4
-    var day = 10
-    var hour = 10
-    var minute = 12
-    var second = 59
-    var nanosecond = 0
+    const year = 2001
+    const month = 4
+    const day = 10
+    const hour = 10
+    const minute = 12
+    const second = 59
+    const nanosecond = 0
     // Month in JS is 0-based, so expected will be month minus 1
-    var jsDateExpected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
-    var testdata2Expected = '2001-04-10 10:12:59.1234567'
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+    const jsDateExpected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
+    const testdata2Expected = '2001-04-10 10:12:59.1234567'
+    const testdata2TsqlInsert = '\'' + testdata2Expected + '\''
 
-    var fns = [
+    const fns = [
 
-      function (asyncDone) {
-        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
+      asyncDone => {
+        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
+      asyncDone => {
+        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
+      asyncDone => {
+        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, function () {
+      asyncDone => {
+        commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
           asyncDone()
         })
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       done()
     })
   }) // end of test()
 
   testname = 'test 005_a - insert valid data into datetimeoffset(7) via TSQL, fetch as date'
-  test(testname, function (done) {
+  test(testname, done => {
     //  var testcolumnsize = 34
-    var testdatetimescale = 7
-    var testcolumntype = ' datetimeoffset(' + testdatetimescale + ')'
+    const testdatetimescale = 7
+    const testcolumntype = ` datetimeoffset(${testdatetimescale})`
     //  var testcolumnclienttype = 'date'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var rowWithNullData = 1
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const rowWithNullData = 1
     // test date = 2001-04-10 10:12:59.1234567 +13:30
-    var year = 2001
-    var month = 4
-    var day = 10
-    var hour = 10
-    var minute = 12
-    var second = 59.1234567
-    var nanosecond = 0
-    var offsetHours = 13
-    var offsetMinutes = 30
+    const year = 2001
+    const month = 4
+    const day = 10
+    const hour = 10
+    const minute = 12
+    const second = 59.1234567
+    const nanosecond = 0
+    const offsetHours = 13
+    const offsetMinutes = 30
     // Month in JS is 0-based, so expected will be month minus 1
 
-    var jsDateExpected = new Date(year, month - 1, day, hour, minute, second, nanosecond)
+    const jsDateExpected = new Date(year, month - 1, day, hour, minute, second, nanosecond)
     jsDateExpected.setHours(jsDateExpected.getHours() - commonTestFns.getTimezoneOffsetInHours(year, month, day))
     jsDateExpected.setHours(jsDateExpected.getHours() - offsetHours)
     jsDateExpected.setMinutes(jsDateExpected.getMinutes() - offsetMinutes)
 
-    var testdata2Expected = '2001-04-10 10:12:59.1234567 +' + offsetHours + ':' + offsetMinutes
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+    const testdata2Expected = `2001-04-10 10:12:59.1234567 +${offsetHours}:${offsetMinutes}`
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    var fns = [
+    const fns = [
 
-      function (asyncDone) {
-        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
+      asyncDone => {
+        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
+      asyncDone => {
+        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
+      asyncDone => {
+        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, function () {
+      asyncDone => {
+        commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
           asyncDone()
         })
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       done()
     })
   }) // end of test()
 
   testname = 'test 005_b - insert valid data into datetimeoffset(0) via TSQL, fetch as date'
-  test(testname, function (done) {
+  test(testname, done => {
     //  var testcolumnsize = 26
-    var testdatetimescale = 0
-    var testcolumntype = ' datetimeoffset(' + testdatetimescale + ')'
+    const testdatetimescale = 0
+    const testcolumntype = ` datetimeoffset(${testdatetimescale})`
     //  var testcolumnclienttype = 'date'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var rowWithNullData = 1
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const rowWithNullData = 1
     // test date = 2001-04-10 10:12:59 +13:30
-    var year = 2001
-    var month = 4
-    var day = 10
-    var hour = 10
-    var minute = 12
-    var second = 59
-    var nanosecond = 0
-    var offsetHours = 13
-    var offsetMinutes = 30
+    const year = 2001
+    const month = 4
+    const day = 10
+    const hour = 10
+    const minute = 12
+    const second = 59
+    const nanosecond = 0
+    const offsetHours = 13
+    const offsetMinutes = 30
     // Month in JS is 0-based, so expected will be month minus 1
 
-    var jsDateExpected = new Date(year, month - 1, day, hour, minute, second, nanosecond)
+    const jsDateExpected = new Date(year, month - 1, day, hour, minute, second, nanosecond)
     jsDateExpected.setHours(jsDateExpected.getHours() - commonTestFns.getTimezoneOffsetInHours(year, month, day))
     jsDateExpected.setHours(jsDateExpected.getHours() - offsetHours)
     jsDateExpected.setMinutes(jsDateExpected.getMinutes() - offsetMinutes)
 
-    var testdata2Expected = '2001-04-10 10:12:59.1234567 +' + offsetHours + ':' + offsetMinutes
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+    const testdata2Expected = `2001-04-10 10:12:59.1234567 +${offsetHours}:${offsetMinutes}`
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    var fns = [
+    const fns = [
 
-      function (asyncDone) {
-        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
+      asyncDone => {
+        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
+      asyncDone => {
+        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
+      asyncDone => {
+        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, function () {
+      asyncDone => {
+        commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
           asyncDone()
         })
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       done()
     })
   }) // end of test()
 
   testname = 'test 006_a - insert valid data into datetimeoffset(7) via TSQL, fetch as date UTC'
-  test(testname, function (done) {
+  test(testname, done => {
     //  var testcolumnsize = 34
-    var testdatetimescale = 7
-    var testcolumntype = ' datetimeoffset(' + testdatetimescale + ')'
+    const testdatetimescale = 7
+    const testcolumntype = ` datetimeoffset(${testdatetimescale})`
     //  var testcolumnclienttype = 'date'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var rowWithNullData = 1
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const rowWithNullData = 1
     // test date = 2001-04-10 10:12:59 +13:30
-    var year = 2001
-    var month = 4
-    var day = 10
-    var hour = 10
-    var minute = 12
-    var second = 59
-    var nanosecond = 0
-    var offsetHours = 13
-    var offsetMinutes = 30
+    const year = 2001
+    const month = 4
+    const day = 10
+    const hour = 10
+    const minute = 12
+    const second = 59
+    const nanosecond = 0
+    const offsetHours = 13
+    const offsetMinutes = 30
     // Month in JS is 0-based, so expected will be month minus 1
 
-    var jsDateExpected = new Date(Date.UTC(year, month - 1, day, hour, minute, second, nanosecond))
+    const jsDateExpected = new Date(Date.UTC(year, month - 1, day, hour, minute, second, nanosecond))
     jsDateExpected.setHours(jsDateExpected.getHours() - offsetHours)
     jsDateExpected.setMinutes(jsDateExpected.getMinutes() - offsetMinutes)
 
-    var testdata2Expected = '2001-04-10 10:12:59.1234567 +' + offsetHours + ':' + offsetMinutes
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+    const testdata2Expected = `2001-04-10 10:12:59.1234567 +${offsetHours}:${offsetMinutes}`
+    const testdata2TsqlInsert = '\'' + testdata2Expected + '\''
 
-    var fns = [
+    const fns = [
 
-      function (asyncDone) {
-        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
+      asyncDone => {
+        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
+      asyncDone => {
+        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
+      asyncDone => {
+        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, function () {
+      asyncDone => {
+        commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
           asyncDone()
         })
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       done()
     })
   }) // end of test()
 
   testname = 'test 007 - insert valid data into date via TSQL, fetch as date'
-  test(testname, function (done) {
+  test(testname, done => {
     //  var testcolumnsize = 10
     //  var testdatetimescale = 0
-    var testcolumntype = ' date'
+    const testcolumntype = ' date'
     //  var testcolumnclienttype = 'date'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var rowWithNullData = 1
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const rowWithNullData = 1
     // test date = 2005-12-21
-    var year = 2005
-    var month = 12
-    var day = 21
-    var hour = 0
-    var minute = 0
-    var second = 0
-    var nanosecond = 0
-    var testdata2Expected = '2005-12-21'
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
-    var jsDateExpected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
+    const year = 2005
+    const month = 12
+    const day = 21
+    const hour = 0
+    const minute = 0
+    const second = 0
+    const nanosecond = 0
+    const testdata2Expected = '2005-12-21'
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
+    const jsDateExpected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
 
-    var fns = [
+    const fns = [
 
-      function (asyncDone) {
-        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, function () {
+      asyncDone => {
+        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, function () {
+      asyncDone => {
+        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, function () {
+      asyncDone => {
+        commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
           asyncDone()
         })
       },
-      function (asyncDone) {
-        commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, function () {
+      asyncDone => {
+        commonTestFns.verifyData_Datetime(theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
           asyncDone()
         })
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       done()
     })
   }) // end of test()
 
   testname = 'test 008 - insert null into varchar(max) via TSQL, fetch as text'
-  test(testname, function (done) {
-    var testcolumnsize = 0
-    var testcolumntype = ' varchar(' + 'max' + ')'
-    var testcolumnclienttype = 'text'
-    var testcolumnsqltype = 'varchar'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = 'string data row 2'
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+  test(testname, done => {
+    const testcolumnsize = 0
+    const testcolumntype = ' varchar(' + 'max' + ')'
+    const testcolumnclienttype = 'text'
+    const testcolumnsqltype = 'varchar'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = 'string data row 2'
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -662,16 +662,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -680,20 +680,20 @@ suite('datatypes', function () {
 
   // currently, buffer size is 2048 characters, so a 2048 char string should not call 'more' in the OdbcConnection.cpp, but fetch entire result set at once.
   testname = 'test 008_bndryCheck_VC - insert 2048 char string into varchar(max) via TSQL, fetch as text'
-  test(testname, function (done) {
-    var testcolumnsize = 0
-    var testcolumntype = ' varchar(' + 'max' + ')'
-    var testcolumnclienttype = 'text'
-    var testcolumnsqltype = 'varchar'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var A100CharacterString = '0234567890123456789022345678903234567890423456789052345678906234567890723456789082345678909234567890'
-    var A2000CharacterString = A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString
-    var testdata2Expected = 'AStringWith2048Characters_aaaa5aaa10aaa15aaa20aa' + A2000CharacterString
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+  test(testname, done => {
+    const testcolumnsize = 0
+    const testcolumntype = ' varchar(' + 'max' + ')'
+    const testcolumnclienttype = 'text'
+    const testcolumnsqltype = 'varchar'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const A100CharacterString = '0234567890123456789022345678903234567890423456789052345678906234567890723456789082345678909234567890'
+    const A2000CharacterString = A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString
+    const testdata2Expected = 'AStringWith2048Characters_aaaa5aaa10aaa15aaa20aa' + A2000CharacterString
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -707,16 +707,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -725,20 +725,20 @@ suite('datatypes', function () {
 
   // currently, buffer size is 2048 characters, so a 2049 char string should call 'more' in the OdbcConnection.cpp and concatenate to correctly return larger data
   testname = 'test 008_bndryCheck_NVC - insert 2049 char string into nvarchar(max) via TSQL, fetch as text'
-  test(testname, function (done) {
-    var testcolumnsize = 0
-    var testcolumntype = ' nvarchar(' + 'max' + ')'
-    var testcolumnclienttype = 'text'
-    var testcolumnsqltype = 'nvarchar'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var A100CharacterString = '0234567890123456789022345678903234567890423456789052345678906234567890723456789082345678909234567890'
-    var A2000CharacterString = A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString
-    var testdata2Expected = 'AStringWith2049Characters_aaaa5aaa10aaa15aaa20aaa' + A2000CharacterString
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+  test(testname, done => {
+    const testcolumnsize = 0
+    const testcolumntype = ' nvarchar(' + 'max' + ')'
+    const testcolumnclienttype = 'text'
+    const testcolumnsqltype = 'nvarchar'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const A100CharacterString = '0234567890123456789022345678903234567890423456789052345678906234567890723456789082345678909234567890'
+    const A2000CharacterString = A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString
+    const testdata2Expected = `AStringWith2049Characters_aaaa5aaa10aaa15aaa20aaa${A2000CharacterString}`
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -752,16 +752,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -769,17 +769,17 @@ suite('datatypes', function () {
   })
 
   testname = 'test 009 - verify functionality of data type \'guid\', fetch as text'
-  test(testname, function (done) {
-    var testcolumnsize = 36
-    var testcolumntype = ' uniqueidentifier'
-    var testcolumnclienttype = 'text'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = '0E984725-C51C-4BF4-9960-E1C80E27ABA0'
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+  test(testname, done => {
+    const testcolumnsize = 36
+    const testcolumntype = ' uniqueidentifier'
+    const testcolumnclienttype = 'text'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = '0E984725-C51C-4BF4-9960-E1C80E27ABA0'
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -795,16 +795,16 @@ suite('datatypes', function () {
       done()
     } else {
       async.series([
-        function (asyncDone) {
+        asyncDone => {
           commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
         },
-        function (asyncDone) {
+        asyncDone => {
           commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
         },
-        function (asyncDone) {
+        asyncDone => {
           commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
         },
-        function () {
+        () => {
           commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
         }
       ]) // end of async.series()
@@ -813,17 +813,17 @@ suite('datatypes', function () {
   })
 
   testname = 'test 010 - verify functionality of data type \'tinyint\', fetch as number'
-  test(testname, function (done) {
-    var testcolumnsize = 3
-    var testcolumntype = ' tinyint'
-    var testcolumnclienttype = 'number'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = 255
-    var testdata2TsqlInsert = testdata2Expected
+  test(testname, done => {
+    const testcolumnsize = 3
+    const testcolumntype = ' tinyint'
+    const testcolumnclienttype = 'number'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = 255
+    const testdata2TsqlInsert = testdata2Expected
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -837,16 +837,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -854,17 +854,17 @@ suite('datatypes', function () {
   })
 
   testname = 'test 011 - verify functionality of data type \'smallint\', fetch as number'
-  test(testname, function (done) {
-    var testcolumnsize = 5
-    var testcolumntype = ' smallint'
-    var testcolumnclienttype = 'number'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = 32767
-    var testdata2TsqlInsert = testdata2Expected
+  test(testname, done => {
+    const testcolumnsize = 5
+    const testcolumntype = ' smallint'
+    const testcolumnclienttype = 'number'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = 32767
+    const testdata2TsqlInsert = testdata2Expected
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -878,16 +878,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -895,17 +895,17 @@ suite('datatypes', function () {
   })
 
   testname = 'test 012 - verify functionality of data type \'int\', fetch as number'
-  test(testname, function (done) {
-    var testcolumnsize = 10
-    var testcolumntype = ' int'
-    var testcolumnclienttype = 'number'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = -2147483648
-    var testdata2TsqlInsert = testdata2Expected
+  test(testname, done => {
+    const testcolumnsize = 10
+    const testcolumntype = ' int'
+    const testcolumnclienttype = 'number'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = -2147483648
+    const testdata2TsqlInsert = testdata2Expected
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -919,16 +919,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -936,17 +936,17 @@ suite('datatypes', function () {
   })
 
   testname = 'test 013 - verify functionality of data type \'bigint\', fetch as number'
-  test(testname, function (done) {
-    var testcolumnsize = 19
-    var testcolumntype = ' bigint'
-    var testcolumnclienttype = 'number'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = -9223372036854775808
-    var testdata2TsqlInsert = testdata2Expected
+  test(testname, done => {
+    const testcolumnsize = 19
+    const testcolumntype = ' bigint'
+    const testcolumnclienttype = 'number'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = -9223372036854775808
+    const testdata2TsqlInsert = testdata2Expected
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -963,16 +963,16 @@ suite('datatypes', function () {
     } else {
       async.series([
 
-        function (asyncDone) {
+        asyncDone => {
           commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
         },
-        function (asyncDone) {
+        asyncDone => {
           commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
         },
-        function (asyncDone) {
+        asyncDone => {
           commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
         },
-        function () {
+        () => {
           commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
         }
       ]) // end of async.series()
@@ -981,17 +981,17 @@ suite('datatypes', function () {
   })
 
   testname = 'test 014 - verify functionality of data type \'smallmoney\', fetch as number'
-  test(testname, function (done) {
-    var testcolumnsize = 10
-    var testcolumntype = ' smallmoney'
-    var testcolumnclienttype = 'number'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = 214748.3647
-    var testdata2TsqlInsert = testdata2Expected
+  test(testname, done => {
+    const testcolumnsize = 10
+    const testcolumntype = ' smallmoney'
+    const testcolumnclienttype = 'number'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = 214748.3647
+    const testdata2TsqlInsert = testdata2Expected
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -1005,16 +1005,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -1022,31 +1022,31 @@ suite('datatypes', function () {
   })
 
   testname = 'test 015 - verify functionality of data type \'money\', fetch as number'
-  test(testname, function (done) {
+  test(testname, done => {
     //  var testcolumnsize = 19
-    var testcolumntype = ' money'
+    const testcolumntype = ' money'
     //  var testcolumnclienttype = 'number'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2TsqlInsert = -922337203685477.5808
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2TsqlInsert = -922337203685477.5808
 
-    var tsql = 'SELECT * FROM types_table ORDER BY id'
-    var expectedError = '[Microsoft][' + driver + '][SQL Server]Arithmetic overflow'
+    const tsql = 'SELECT * FROM types_table ORDER BY id'
+    const expectedError = `[Microsoft][${driver}][SQL Server]Arithmetic overflow`
 
     if (commonTestFns.SKIP_FAILING_HANGING_TEST_CASES === true) {
       done()
     } else {
       async.series([
-        function (asyncDone) {
+        asyncDone => {
           commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
         },
-        function (asyncDone) {
+        asyncDone => {
           commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
         },
-        function (asyncDone) {
+        asyncDone => {
           commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
         },
-        function () {
+        () => {
           commonTestFns.invalidQueryTSQL(theConnection, tsql, expectedError, testname, done)
           //                commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
         }
@@ -1056,18 +1056,18 @@ suite('datatypes', function () {
   })
 
   testname = 'test 016 - verify functionality of data type \'numeric(7,3)\', fetch as number'
-  test(testname, function (done) {
-    var testcolumnsize = 7
-    var testcolumntype = ' numeric(7,3)'
-    var testcolumnclienttype = 'number'
-    var testcolumnsqltype = 'numeric'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = 1234.567
-    var testdata2TsqlInsert = testdata2Expected
+  test(testname, done => {
+    const testcolumnsize = 7
+    const testcolumntype = ' numeric(7,3)'
+    const testcolumnclienttype = 'number'
+    const testcolumnsqltype = 'numeric'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = 1234.567
+    const testdata2TsqlInsert = testdata2Expected
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -1081,16 +1081,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -1098,18 +1098,18 @@ suite('datatypes', function () {
   })
 
   testname = 'test 017 - verify functionality of data type \'decimal(7,3)\', fetch as number'
-  test(testname, function (done) {
-    var testcolumnsize = 7
-    var testcolumntype = ' decimal(7,3)'
-    var testcolumnclienttype = 'number'
-    var testcolumnsqltype = 'decimal'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = 1234.567
-    var testdata2TsqlInsert = testdata2Expected
+  test(testname, done => {
+    const testcolumnsize = 7
+    const testcolumntype = ' decimal(7,3)'
+    const testcolumnclienttype = 'number'
+    const testcolumnsqltype = 'decimal'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = 1234.567
+    const testdata2TsqlInsert = testdata2Expected
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -1123,16 +1123,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -1140,16 +1140,16 @@ suite('datatypes', function () {
   })
 
   testname = 'test 018 - verify functionality of data type \'bit\', fetch as number'
-  test(testname, function (done) {
-    var testcolumnsize = 1
-    var testcolumntype = ' bit'
-    var testcolumnclienttype = 'boolean'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2TsqlInsert = 1
+  test(testname, done => {
+    const testcolumnsize = 1
+    const testcolumntype = ' bit'
+    const testcolumnclienttype = 'boolean'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2TsqlInsert = 1
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -1163,16 +1163,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -1180,18 +1180,18 @@ suite('datatypes', function () {
   })
 
   testname = 'test 019 - verify functionality of data type \'float(53)\', fetch as number'
-  test(testname, function (done) {
-    var testcolumnsize = 53
-    var testcolumntype = ' float(53)'
-    var testcolumnclienttype = 'number'
-    var testcolumnsqltype = 'float'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = '1.79E+308'
-    var testdata2TsqlInsert = testdata2Expected
+  test(testname, done => {
+    const testcolumnsize = 53
+    const testcolumntype = ' float(53)'
+    const testcolumnclienttype = 'number'
+    const testcolumnsqltype = 'float'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = '1.79E+308'
+    const testdata2TsqlInsert = testdata2Expected
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -1205,16 +1205,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -1222,17 +1222,17 @@ suite('datatypes', function () {
   })
 
   testname = 'test 020 - verify functionality of data type \'real\', fetch as number'
-  test(testname, function (done) {
-    var testcolumnsize = 24
-    var testcolumntype = ' real'
-    var testcolumnclienttype = 'number'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = '44.44000244140625'
-    var testdata2TsqlInsert = testdata2Expected
+  test(testname, done => {
+    const testcolumnsize = 24
+    const testcolumntype = ' real'
+    const testcolumnclienttype = 'number'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = '44.44000244140625'
+    const testdata2TsqlInsert = testdata2Expected
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -1246,16 +1246,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -1263,19 +1263,19 @@ suite('datatypes', function () {
   })
 
   testname = 'test 021 - verify functionality of data type \'binary(n)\', fetch as binary'
-  test(testname, function (done) {
-    var testcolumnsize = 10
-    var testcolumntype = ' binary(' + testcolumnsize + ')'
-    var testcolumnclienttype = 'binary'
-    var testcolumnsqltype = 'binary'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2TsqlInsert = 0x0123
+  test(testname, done => {
+    const testcolumnsize = 10
+    var testcolumntype = ` binary(${testcolumnsize})`
+    const testcolumnclienttype = 'binary'
+    const testcolumnsqltype = 'binary'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2TsqlInsert = 0x0123
 
-    var binaryBuffer = Buffer.from('00000000000000000123', 'hex')
+    const binaryBuffer = Buffer.from('00000000000000000123', 'hex')
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -1289,16 +1289,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -1306,19 +1306,19 @@ suite('datatypes', function () {
   })
 
   testname = 'test 022 - verify functionality of data type \'varbinary(n)\', fetch as binary'
-  test(testname, function (done) {
-    var testcolumnsize = 10
-    var testcolumntype = ' varbinary(' + testcolumnsize + ')'
-    var testcolumnclienttype = 'binary'
-    var testcolumnsqltype = 'varbinary'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2TsqlInsert = 0x0123
+  test(testname, done => {
+    const testcolumnsize = 10
+    const testcolumntype = ` varbinary(${testcolumnsize})`
+    const testcolumnclienttype = 'binary'
+    const testcolumnsqltype = 'varbinary'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2TsqlInsert = 0x0123
 
-    var binaryBuffer = Buffer.from('00000123', 'hex')
+    const binaryBuffer = Buffer.from('00000123', 'hex')
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -1332,16 +1332,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -1349,17 +1349,17 @@ suite('datatypes', function () {
   })
 
   testname = 'test 023 - verify functionality of data type \'varbinary(max)\', fetch as binary'
-  test(testname, function (done) {
-    var testcolumnsize = 0
-    var testcolumntype = ' varbinary(' + 'max' + ')'
-    var testcolumnclienttype = 'binary'
-    var testcolumnsqltype = 'varbinary'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2TsqlInsert = 'CONVERT(varbinary(max), 0x0123456789AB)'
-    var binaryBuffer = Buffer.from('0123456789AB', 'hex')
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+  test(testname, done => {
+    const testcolumnsize = 0
+    const testcolumntype = ' varbinary(' + 'max' + ')'
+    const testcolumnclienttype = 'binary'
+    const testcolumnsqltype = 'varbinary'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2TsqlInsert = 'CONVERT(varbinary(max), 0x0123456789AB)'
+    const binaryBuffer = Buffer.from('0123456789AB', 'hex')
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -1373,16 +1373,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -1390,18 +1390,18 @@ suite('datatypes', function () {
   })
 
   testname = 'test 024 - verify functionality of data type \'image\', fetch as binary'
-  test(testname, function (done) {
-    var testcolumnsize = 2147483647
-    var testcolumntype = ' image'
-    var testcolumnclienttype = 'binary'
-    var testcolumnname = 'col2'
-    var testdata1 = null
+  test(testname, done => {
+    const testcolumnsize = 2147483647
+    const testcolumntype = ' image'
+    const testcolumnclienttype = 'binary'
+    const testcolumnname = 'col2'
+    const testdata1 = null
     //  var testdata2Expected = 0x0123
-    var testdata2TsqlInsert = 'CONVERT(varbinary(50), 0x0123456789AB)'
-    var binaryBuffer = Buffer.from('0123456789AB', 'hex')
+    const testdata2TsqlInsert = 'CONVERT(varbinary(50), 0x0123456789AB)'
+    const binaryBuffer = Buffer.from('0123456789AB', 'hex')
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -1415,16 +1415,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -1432,17 +1432,17 @@ suite('datatypes', function () {
   })
 
   testname = 'test 025 - verify functionality of data type \'xml\', fetch as text'
-  test(testname, function (done) {
-    var testcolumnsize = 0
-    var testcolumntype = ' xml'
-    var testcolumnclienttype = 'text'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = '<data>zzzzz</data>'
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+  test(testname, done => {
+    const testcolumnsize = 0
+    const testcolumntype = ' xml'
+    const testcolumnclienttype = 'text'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = '<data>zzzzz</data>'
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -1458,16 +1458,16 @@ suite('datatypes', function () {
       done()
     } else {
       async.series([
-        function (asyncDone) {
+        asyncDone => {
           commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
         },
-        function (asyncDone) {
+        asyncDone => {
           commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
         },
-        function (asyncDone) {
+        asyncDone => {
           commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
         },
-        function () {
+        () => {
           commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
         }
       ]) // end of async.series()
@@ -1476,18 +1476,18 @@ suite('datatypes', function () {
   })
 
   testname = 'test 026 - verify functionality of data type \'char\', fetch as text'
-  test(testname, function (done) {
-    var testcolumnsize = 10
-    var testcolumntype = ' char(' + testcolumnsize + ')'
-    var testcolumnclienttype = 'text'
-    var testcolumnsqltype = 'char'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = 'char data '
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+  test(testname, done => {
+    const testcolumnsize = 10
+    const testcolumntype = ` char(${testcolumnsize})`
+    const testcolumnclienttype = 'text'
+    const testcolumnsqltype = 'char'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = 'char data '
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -1501,16 +1501,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -1518,18 +1518,18 @@ suite('datatypes', function () {
   })
 
   testname = 'test 027 - verify functionality of data type \'varchar(n)\', fetch as text'
-  test(testname, function (done) {
-    var testcolumnsize = 20
-    var testcolumntype = ' varchar(' + testcolumnsize + ')'
-    var testcolumnclienttype = 'text'
-    var testcolumnsqltype = 'varchar'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = 'varchar data'
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+  test(testname, done => {
+    const testcolumnsize = 20
+    const testcolumntype = ' varchar(' + testcolumnsize + ')'
+    const testcolumnclienttype = 'text'
+    const testcolumnsqltype = 'varchar'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = 'varchar data'
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -1543,16 +1543,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -1560,18 +1560,18 @@ suite('datatypes', function () {
   })
 
   testname = 'test 028 - verify functionality of data type \'varchar(max)\', fetch as text'
-  test(testname, function (done) {
-    var testcolumnsize = 0
-    var testcolumntype = ' varchar(' + 'max' + ')'
-    var testcolumnclienttype = 'text'
-    var testcolumnsqltype = 'varchar'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = 'varchar_max data'
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+  test(testname, done => {
+    const testcolumnsize = 0
+    const testcolumntype = ' varchar(' + 'max' + ')'
+    const testcolumnclienttype = 'text'
+    const testcolumnsqltype = 'varchar'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = 'varchar_max data'
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -1585,16 +1585,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -1602,17 +1602,17 @@ suite('datatypes', function () {
   })
 
   testname = 'test 029 - verify functionality of data type \'text\', fetch as text'
-  test(testname, function (done) {
-    var testcolumnsize = 2147483647
-    var testcolumntype = ' text'
-    var testcolumnclienttype = 'text'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = 'text data'
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+  test(testname, done => {
+    const testcolumnsize = 2147483647
+    const testcolumntype = ' text'
+    const testcolumnclienttype = 'text'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = 'text data'
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -1626,16 +1626,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -1643,18 +1643,18 @@ suite('datatypes', function () {
   })
 
   testname = 'test 030 - verify functionality of data type \'nchar\', fetch as text'
-  test(testname, function (done) {
-    var testcolumnsize = 10
-    var testcolumntype = ' nchar(' + testcolumnsize + ')'
-    var testcolumnclienttype = 'text'
-    var testcolumnsqltype = 'nchar'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = 'char data '
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+  test(testname, done => {
+    const testcolumnsize = 10
+    const testcolumntype = ' nchar(' + testcolumnsize + ')'
+    const testcolumnclienttype = 'text'
+    const testcolumnsqltype = 'nchar'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = 'char data '
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -1668,16 +1668,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -1685,18 +1685,18 @@ suite('datatypes', function () {
   })
 
   testname = 'test 031 - verify functionality of data type \'nvarchar(n)\', fetch as text'
-  test(testname, function (done) {
-    var testcolumnsize = 20
-    var testcolumntype = ' nvarchar(' + testcolumnsize + ')'
-    var testcolumnclienttype = 'text'
-    var testcolumnsqltype = 'nvarchar'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = 'nvarchar data'
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+  test(testname, done => {
+    const testcolumnsize = 20
+    const testcolumntype = ` nvarchar(${testcolumnsize})`
+    const testcolumnclienttype = 'text'
+    const testcolumnsqltype = 'nvarchar'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = 'nvarchar data'
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -1710,16 +1710,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -1727,18 +1727,18 @@ suite('datatypes', function () {
   })
 
   testname = 'test 032 - verify functionality of data type \'nvarchar(max)\', fetch as text'
-  test(testname, function (done) {
-    var testcolumnsize = 0
-    var testcolumntype = ' nvarchar(' + 'max' + ')'
-    var testcolumnclienttype = 'text'
-    var testcolumnsqltype = 'nvarchar'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = 'nvarchar_max data'
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+  test(testname, done => {
+    const testcolumnsize = 0
+    const testcolumntype = ' nvarchar(' + 'max' + ')'
+    const testcolumnclienttype = 'text'
+    const testcolumnsqltype = 'nvarchar'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = 'nvarchar_max data'
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -1752,16 +1752,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -1769,17 +1769,17 @@ suite('datatypes', function () {
   })
 
   testname = 'test 033 - verify functionality of data type \'ntext\', fetch as text'
-  test(testname, function (done) {
-    var testcolumnsize = 1073741823
-    var testcolumntype = ' ntext'
-    var testcolumnclienttype = 'text'
-    var testcolumnname = 'col2'
-    var testdata1 = null
-    var testdata2Expected = 'ntext data'
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+  test(testname, done => {
+    const testcolumnsize = 1073741823
+    const testcolumntype = ' ntext'
+    const testcolumnclienttype = 'text'
+    const testcolumnname = 'col2'
+    const testdata1 = null
+    const testdata2Expected = 'ntext data'
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    var expected = {
-      meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+    const expected = {
+      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -1793,16 +1793,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ]) // end of async.series()
@@ -1810,20 +1810,20 @@ suite('datatypes', function () {
   })
 
   testname = 'test 034 - verify functionality of data type \'sysname\', fetch as text'
-  test(testname, function (done) {
-    var testcolumnsize = 128
-    var testcolumntype = ' sysname'
-    var testcolumnclienttype = 'text'
-    var testcolumnsqltype = 'nvarchar'
-    var testcolumnname = 'col2'
-    var testdata1Expected = ''
-    var testdata1TsqlInsert = '\'' + testdata1Expected + '\''
-    var testdata2Expected = 'sysname data'
-    var testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+  test(testname, done => {
+    const testcolumnsize = 128
+    const testcolumntype = ' sysname'
+    const testcolumnclienttype = 'text'
+    const testcolumnsqltype = 'nvarchar'
+    const testcolumnname = 'col2'
+    const testdata1Expected = ''
+    const testdata1TsqlInsert = `'${testdata1Expected}'`
+    const testdata2Expected = 'sysname data'
+    const testdata2TsqlInsert = '\'' + testdata2Expected + '\''
 
-    var expected =
+    const expected =
       {
-        meta: [{name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'},
+        meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
           {
             name: testcolumnname,
             size: testcolumnsize,
@@ -1837,16 +1837,16 @@ suite('datatypes', function () {
 
     async.series([
 
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata1TsqlInsert, asyncDone)
       },
-      function (asyncDone) {
+      asyncDone => {
         commonTestFns.insertDataTSQL(theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
       },
-      function () {
+      () => {
         commonTestFns.verifyData(theConnection, tablename, testcolumnname, expected, testname, done)
       }
     ])

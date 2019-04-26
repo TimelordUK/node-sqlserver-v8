@@ -18,28 +18,38 @@
 //  ---------------------------------------------------------------------------------------------------------------------------------
 'use strict'
 
-var sql = require('../')
-var assert = require('assert')
-var supp = require('../samples/typescript/demo-support')
-var util = require('util')
+const sql = require('../')
+const assert = require('assert')
+const supp = require('../samples/typescript/demo-support')
+const util = require('util')
 
 // Need to change this to false when parameters are supported
-var SKIP_BINDPARAM_TEST_CASES = true
+const SKIP_BINDPARAM_TEST_CASES = true
 
 // Need to change this to false to verify failing/haning tests are fixed
-var SKIP_FAILING_HANGING_TEST_CASES = true
+const SKIP_FAILING_HANGING_TEST_CASES = true
 
 // To print extended debugging information regarding what test cases are doing, set this parameter to 'true', else false
-var writeDebugComments = false
+const writeDebugComments = false
 
 // Here are some commonly used phrases that can be shared to prevent unnecessary duplication of comments
-var dataComparisonFailed = 'Results do not match expected values'
+const dataComparisonFailed = 'Results do not match expected values'
 
 function dataComparisonFailedMessage (testname, expected, actual, done) {
-  errorComments('\nTEST FAILED, ' + dataComparisonFailed + ', Test Case: \n\'' + testname + '\' \n')
-  errorComments('\nExpected: \n' + util.inspect(expected))
-  errorComments('\nReceived: \n' + util.inspect(actual))
-  done(new Error('\nxxxTEST FAILED, ' + dataComparisonFailed + ', Test Case: \n\'' + testname + '\' \n'))
+  errorComments(`
+TEST FAILED, ${dataComparisonFailed}, Test Case: 
+'${testname}' 
+`)
+  errorComments(`
+Expected: 
+${util.inspect(expected)}`)
+  errorComments(`
+Received: 
+${util.inspect(actual)}`)
+  done(new Error(`
+xxxTEST FAILED, ${dataComparisonFailed}, Test Case: 
+'${testname}' 
+`))
 }
 
 //   non-optional message
@@ -56,43 +66,49 @@ function debugComments (Message) {
 
 // For datetime types, the tests need to know the current offset (in hours) this machine's time zone is from GMT:
 function getTimezoneOffsetInHours (year, month, day) {
-  var jsDateExpectedTemp = new Date(year, month - 1, day, 0, 0, 0, 0)
+  const jsDateExpectedTemp = new Date(year, month - 1, day, 0, 0, 0, 0)
   return jsDateExpectedTemp.getTimezoneOffset() / 60
 }
 
 //    Create table for test data
 function createTable (Connection, TableName, ColumnName, TestType, done) {
-  var support = new supp.DemoSupport(sql, '')
-  var async = new support.Async()
+  const support = new supp.DemoSupport(sql, '')
+  const async = new support.Async()
 
-  var actions = [
-    function (asyncDone) {
+  const actions = [
+    asyncDone => {
       // console.log("in item 1");
-      var tsql = 'if exists (SELECT * FROM sys.tables WHERE name = \'' + TableName + '\') DROP TABLE ' + TableName
-      debugComments('\ntest note createTable1_CommonTestFunctions.js ... executing: \n' + tsql)
+      const tsql = `if exists (SELECT * FROM sys.tables WHERE name = '${TableName}') DROP TABLE ${TableName}`
+      debugComments(`
+test note createTable1_CommonTestFunctions.js ... executing: 
+${tsql}`)
       // console.log(tsql);
-      Connection.queryRaw(tsql, function (e) {
+      Connection.queryRaw(tsql, e => {
         // console.log("....createTable run 1");
         assert.ifError(e)
         asyncDone()
       })
     },
-    function (asyncDone) {
+    asyncDone => {
       // console.log("in item 2");
-      var tsql = 'CREATE TABLE ' + TableName + ' (id int identity, ' + ColumnName + ' ' + TestType + ')'
-      debugComments('\ntest note createTable2_CommonTestFunctions.js ... executing: \n' + tsql)
+      const tsql = `CREATE TABLE ${TableName} (id int identity, ${ColumnName} ${TestType})`
+      debugComments(`
+test note createTable2_CommonTestFunctions.js ... executing: 
+${tsql}`)
       // console.log(tsql);
-      Connection.queryRaw(tsql, function (e) {
+      Connection.queryRaw(tsql, e => {
         // console.log("....createTable run 2");
         assert.ifError(e)
         asyncDone()
       })
     },
-    function (asyncDone) {
+    asyncDone => {
       // console.log("in item 3");
-      var tsql = 'CREATE CLUSTERED INDEX IX_' + TableName + '_id  ON ' + TableName + '  (id) '
-      debugComments('\ntest note createTable2_CommonTestFunctions.js ... executing: \n' + tsql)
-      Connection.queryRaw(tsql, function (e) {
+      const tsql = `CREATE CLUSTERED INDEX IX_${TableName}_id  ON ${TableName}  (id) `
+      debugComments(`
+test note createTable2_CommonTestFunctions.js ... executing: 
+${tsql}`)
+      Connection.queryRaw(tsql, e => {
         // console.log("....createTable run 3");
         assert.ifError(e)
         asyncDone()
@@ -100,12 +116,14 @@ function createTable (Connection, TableName, ColumnName, TestType, done) {
     }]
 
   async.series(actions,
-    function () {
+    () => {
       // console.log("all done .... finish each loop.");
       done()
     })
 
-  debugComments('\ntest note createTable3_CommonTestFunctions.js ... returning \n')
+  debugComments(`
+test note createTable3_CommonTestFunctions.js ... returning 
+`)
 }
 
 //    insert test data via parameters
@@ -113,9 +131,11 @@ function insertDataBP (Connection, TableName, ColumnName, TestData, done) {
   if (SKIP_BINDPARAM_TEST_CASES === true) {
     done()
   } else {
-    var tsql = 'INSERT INTO ' + TableName + ' (' + ColumnName + ') VALUES (?)'
-    debugComments('\ntest note insertDataBP_CommonTestFunctions.js ... executing: \n' + tsql)
-    Connection.queryRaw(tsql, [TestData], function (e) {
+    const tsql = `INSERT INTO ${TableName} (${ColumnName}) VALUES (?)`
+    debugComments(`
+test note insertDataBP_CommonTestFunctions.js ... executing: 
+${tsql}`)
+    Connection.queryRaw(tsql, [TestData], e => {
       assert.ifError(e)
       done()
     })
@@ -124,11 +144,13 @@ function insertDataBP (Connection, TableName, ColumnName, TestData, done) {
 
 //    insert test data via TSQL
 function insertDataTSQL (Connection, TableName, ColumnName, TestData, done) {
-  var tsql = 'INSERT INTO ' + TableName + ' (' + ColumnName + ') VALUES (' + TestData + ')'
+  const tsql = `INSERT INTO ${TableName} (${ColumnName}) VALUES (${TestData})`
   // console.log(tsql);
-  debugComments('\ntest note insertDataTSQL_CommonTestFunctions.js ... executing: \n' + tsql)
+  debugComments(`
+test note insertDataTSQL_CommonTestFunctions.js ... executing: 
+${tsql}`)
   try {
-    Connection.queryRaw(tsql, function (e) {
+    Connection.queryRaw(tsql, e => {
       if (e) {
         console.log(e)
       }
@@ -138,16 +160,20 @@ function insertDataTSQL (Connection, TableName, ColumnName, TestData, done) {
     })
   } catch (assert) {
     console.log('error ' + assert)
-    done(new Error('\nTEST FAILED, Insert into table failed (insertDataTSQL_CommonTestFunctions.js) with this error message:\n' + assert.toString()))
+    done(new Error(`
+TEST FAILED, Insert into table failed (insertDataTSQL_CommonTestFunctions.js) with this error message:
+${assert.toString()}`))
   }
 }
 
 //    batched query comprised of (currently) 3 TSQL queries
 function compoundQueryTSQL (Connection, tsql, ExpectedData1, ExpectedData2, ExpectedData3, testname, done) {
-  debugComments('\ntest note compoundQueryTSQL_CommonTestFunctions.js ... executing: \n' + tsql)
-  var called = 0
-  var NewExpectedData = ExpectedData1
-  Connection.queryRaw(tsql, [], function (e, r, more) {
+  debugComments(`
+test note compoundQueryTSQL_CommonTestFunctions.js ... executing: 
+${tsql}`)
+  let called = 0
+  let NewExpectedData = ExpectedData1
+  Connection.queryRaw(tsql, [], (e, r, more) => {
     ++called
     assert.ifError(e)
     if (called === 3) {
@@ -159,7 +185,7 @@ function compoundQueryTSQL (Connection, tsql, ExpectedData1, ExpectedData2, Expe
     if (more) {
       try {
         debugComments('\ntest note compoundQueryTSQL01_CommonTestFunctions.js ... now in try{ } \n')
-        assert.deepEqual(r, NewExpectedData, dataComparisonFailed)
+        assert.deepStrictEqual(r, NewExpectedData, dataComparisonFailed)
       } catch (assert) {
         debugComments('\ntest note compoundQueryTSQL02_CommonTestFunctions.js ... now in catch (assert): \n')
         dataComparisonFailedMessage(testname, NewExpectedData, r, done)
@@ -168,7 +194,7 @@ function compoundQueryTSQL (Connection, tsql, ExpectedData1, ExpectedData2, Expe
     } else {
       try {
         debugComments('\ntest note compoundQueryTSQL03_CommonTestFunctions.js ... now in try{ } \n')
-        assert.deepEqual(r, NewExpectedData, dataComparisonFailed)
+        assert.deepStrictEqual(r, NewExpectedData, dataComparisonFailed)
       } catch (assert) {
         debugComments('\ntest note compoundQueryTSQL04_CommonTestFunctions.js ... now in catch (assert): \n')
         dataComparisonFailedMessage(testname, NewExpectedData, r, done)
@@ -183,10 +209,12 @@ function compoundQueryTSQL (Connection, tsql, ExpectedData1, ExpectedData2, Expe
 
 //    batched query comprised of (currently) 3 TSQL queries
 function compoundQueryTSQLNewConnection (ConnectionString, tsql, ExpectedData1, ExpectedData2, ExpectedData3, testname, done) {
-  debugComments('\ntest note compoundQueryTSQL_CommonTestFunctions.js ... executing: \n' + tsql)
-  var called = 0
-  var NewExpectedData = ExpectedData1
-  sql.queryRaw(ConnectionString, tsql, [], function (e, r, more) {
+  debugComments(`
+test note compoundQueryTSQL_CommonTestFunctions.js ... executing: 
+${tsql}`)
+  let called = 0
+  let NewExpectedData = ExpectedData1
+  sql.queryRaw(ConnectionString, tsql, [], (e, r, more) => {
     assert.ifError(e)
 
     ++called
@@ -197,19 +225,27 @@ function compoundQueryTSQLNewConnection (ConnectionString, tsql, ExpectedData1, 
     }
     if (more) {
       try {
-        debugComments('\ntest note compoundQueryTSQLNewConnection01_CommonTestFunctions.js ... now in try{ } \n')
-        assert.deepEqual(r, NewExpectedData, dataComparisonFailed)
+        debugComments(`
+test note compoundQueryTSQLNewConnection01_CommonTestFunctions.js ... now in try{ } 
+`)
+        assert.deepStrictEqual(r, NewExpectedData, dataComparisonFailed)
       } catch (assert) {
-        debugComments('\ntest note compoundQueryTSQLNewConnection02_CommonTestFunctions.js ... now in catch (assert): \n')
+        debugComments(`
+test note compoundQueryTSQLNewConnection02_CommonTestFunctions.js ... now in catch (assert): 
+`)
         dataComparisonFailedMessage(testname, NewExpectedData, r, done)
         return
       }
     } else {
       try {
-        debugComments('\ntest note compoundQueryTSQLNewConnection03_CommonTestFunctions.js ... now in try{ } \n')
-        assert.deepEqual(r, NewExpectedData, dataComparisonFailed)
+        debugComments(`
+test note compoundQueryTSQLNewConnection03_CommonTestFunctions.js ... now in try{ } 
+`)
+        assert.deepStrictEqual(r, NewExpectedData, dataComparisonFailed)
       } catch (assert) {
-        debugComments('\ntest note compoundQueryTSQLNewConnection04_CommonTestFunctions.js ... now in catch (assert): \n')
+        debugComments(`
+test note compoundQueryTSQLNewConnection04_CommonTestFunctions.js ... now in catch (assert): 
+`)
         dataComparisonFailedMessage(testname, NewExpectedData, r, done)
         return
       }
@@ -222,10 +258,14 @@ function compoundQueryTSQLNewConnection (ConnectionString, tsql, ExpectedData1, 
 
 //  'tsql' contains an invalid and should fail with the error 'ExpectedError'
 function invalidQueryTSQL (Connection, tsql, ExpectedError, testname, done) {
-  debugComments('\ntest note invalidQueryTSQL_CommonTestFunctions.js ... executing: \n' + tsql)
-  Connection.queryRaw(tsql, [], function (e) {
+  debugComments(`
+test note invalidQueryTSQL_CommonTestFunctions.js ... executing: 
+${tsql}`)
+  Connection.queryRaw(tsql, [], e => {
     if (e) {
-      debugComments('\ninvalid query failed as expected \n')
+      debugComments(`
+invalid query failed as expected 
+`)
       done()
       e = null
     }
@@ -235,16 +275,20 @@ function invalidQueryTSQL (Connection, tsql, ExpectedError, testname, done) {
 // compare fetched results from an ordered SELECT stmt against expected results. If comparison fails,
 // increment 'test failed' counter without causing tests to not respond via unhandled assert.
 function verifyData (Connection, TableName, ColumnName, ExpectedData, testname, done) {
-  var tsql = 'SELECT * FROM ' + TableName + ' ORDER BY id'
+  const tsql = 'SELECT * FROM ' + TableName + ' ORDER BY id'
   debugComments('\ntest note verifyData_CommonTestFunctions.js ... executing: \n' + tsql)
   try {
     Connection.queryRaw(tsql, function (e, r) {
       if (e) {
-        done(new Error('\nTEST FAILED, SELECT FROM table failed (verifyData_CommonTestFunctions.js) with this error message:\n' + e.toString()))
+        done(new Error(`
+TEST FAILED, SELECT FROM table failed (verifyData_CommonTestFunctions.js) with this error message:
+${e.toString()}`))
         return
       }
       try {
-        debugComments('\ntest note verifyData_CommonTestFunctions.js returned results: \n' + util.inspect(r.rows[1]))
+        debugComments(`
+test note verifyData_CommonTestFunctions.js returned results: 
+${util.inspect(r.rows[1])}`)
         assert.deepEqual(r, ExpectedData, dataComparisonFailed)
       } catch (assert) {
         dataComparisonFailedMessage(testname, ExpectedData, r, done)
@@ -254,7 +298,9 @@ function verifyData (Connection, TableName, ColumnName, ExpectedData, testname, 
     })
   } catch (e) {
     if (e) {
-      done(new Error('\nTEST FAILED, SELECT FROM table failed (verifyData_CommonTestFunctions.js) with this error message:\n' + e.toString()))
+      done(new Error(`
+TEST FAILED, SELECT FROM table failed (verifyData_CommonTestFunctions.js) with this error message:
+${e.toString()}`))
     }
   }
 }
@@ -262,16 +308,20 @@ function verifyData (Connection, TableName, ColumnName, ExpectedData, testname, 
 // datetime types specific data verification function...
 // compare fetched results from an ordered SELECT stmt against expected results. If comparison fails,
 // increment 'test failed' counter without causing tests to not respond via unhandled assert.
-function verifyData_Datetime (Connection, TableName, ColumnName, RowWithNullData, ExpectedData, testname, done) {
-  var tsql = 'SELECT col2 FROM ' + TableName + ' ORDER BY id'
-  var row = 23
-  var numberOfRows = 72
-  var numberOfRowsFetched = 0
-  debugComments('\ntest note verifyData_Datetime_CommonTestFunctions.js ... executing: \n' + tsql)
+function verifyDataDatetime (Connection, TableName, ColumnName, RowWithNullData, ExpectedData, testname, done) {
+  const tsql = 'SELECT col2 FROM ' + TableName + ' ORDER BY id'
+  let row = 23
+  let numberOfRows = 72
+  let numberOfRowsFetched = 0
+  debugComments(`
+test note verifyData_Datetime_CommonTestFunctions.js ... executing: 
+${tsql}`)
   try {
-    Connection.queryRaw(tsql, function (e, r) {
+    Connection.queryRaw(tsql, (e, r) => {
       if (e) {
-        done(new Error('\nTEST FAILED, SELECT FROM table failed (verifyData_Datetime_CommonTestFunctions.js) with this error message:\n' + e.toString()))
+        done(new Error(`
+TEST FAILED, SELECT FROM table failed (verifyData_Datetime_CommonTestFunctions.js) with this error message:
+${e.toString()}`))
         return
       }
       numberOfRows = r.rows.length
@@ -283,16 +333,18 @@ function verifyData_Datetime (Connection, TableName, ColumnName, RowWithNullData
           // debugComments("\ntest note verifyData_Datetime02_CommonTestFunctions.js ... data in row " + row + " is null \n");
           // convert 1-based row with null data to 0-based index value...
           if (row !== (RowWithNullData - 1)) {
-            done(new Error('\nTEST FAILED, SELECT FROM table failed ... null not received as expected:\n'))
+            done(new Error(`
+TEST FAILED, SELECT FROM table failed ... null not received as expected:
+`))
             return
           }
         } else {
-          var re = new Date(r.rows[row])
+          const re = new Date(r.rows[row])
           try {
             // debugComments("\ntest note verifyData_Datetime03_CommonTestFunctions.js ... data in row " + row + " is not null \n");
             assert.deepEqual(re, ExpectedData, dataComparisonFailed)
           } catch (assert) {
-            console.log('test results re = ' + re + ' ExpectedData = ' + ExpectedData)
+            console.log(`test results re = ${re} ExpectedData = ${ExpectedData}`)
             dataComparisonFailedMessage(testname, ExpectedData, re, done)
             return
           }
@@ -300,14 +352,18 @@ function verifyData_Datetime (Connection, TableName, ColumnName, RowWithNullData
       }
       // debugComments("\ntest note verifyData_Datetime01J_CommonTestFunctions.js ...Now examining data 'numberOfRowsFetched = " + numberOfRowsFetched + " ... \n");
       if (row !== numberOfRowsFetched) {
-        done(new Error('\nTEST FAILED, incorrect number of rows fetched ... expected ' + row + ' but fetched ' + numberOfRowsFetched + ' rows\n'))
+        done(new Error(`
+TEST FAILED, incorrect number of rows fetched ... expected ${row} but fetched ${numberOfRowsFetched} rows
+`))
         return
       }
       done()
     })
   } catch (e) {
     if (e) {
-      done(new Error('\nTEST FAILED, SELECT FROM table failed (verifyData_Datetime_CommonTestFunctions.js) with this error message:\n' + e.toString()))
+      done(new Error(`
+TEST FAILED, SELECT FROM table failed (verifyData_Datetime_CommonTestFunctions.js) with this error message:
+${e.toString()}`))
     }
   }
 }
@@ -322,6 +378,6 @@ exports.compoundQueryTSQL = compoundQueryTSQL
 exports.compoundQueryTSQLNewConnection = compoundQueryTSQLNewConnection
 exports.invalidQueryTSQL = invalidQueryTSQL
 exports.verifyData = verifyData
-exports.verifyData_Datetime = verifyData_Datetime
+exports.verifyData_Datetime = verifyDataDatetime
 exports.SKIP_BINDPARAM_TEST_CASES = SKIP_BINDPARAM_TEST_CASES
 exports.SKIP_FAILING_HANGING_TEST_CASES = SKIP_FAILING_HANGING_TEST_CASES

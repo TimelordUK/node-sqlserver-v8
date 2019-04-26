@@ -108,7 +108,7 @@ suite('concurrent', function () {
     }
 
     const req = theConnection.query('waitfor delay \'00:00:02\';')
-    req.on('done', function () {
+    req.on('done', () => {
       pushTest('a')
       process.nextTick(() => {
         pushTest('b')
@@ -174,7 +174,7 @@ suite('concurrent', function () {
     theConnection.query('waitfor delay \'00:00:02\';', [], () => {
       pushTest('e')
       pushTest('f')
-      process.nextTick(function () {
+      process.nextTick(() => {
         pushTest('h')
       })
       theConnection.query('waitfor delay \'00:00:02\';', [], () => {
@@ -247,8 +247,8 @@ suite('concurrent', function () {
     let spid1
     let spid2
 
-    open(function (c1) {
-      open(function (c2) {
+    open(c1 => {
+      open(c2 => {
         c1.query('select @@SPID as id, CURRENT_USER as name', (err, res) => {
           assert.ifError(err)
           assert(res.length === 1)

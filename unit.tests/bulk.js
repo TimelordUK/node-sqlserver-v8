@@ -1,29 +1,29 @@
 'use strict'
 /* global suite teardown teardown test setup */
 
-var supp = require('../samples/typescript/demo-support')
-var assert = require('assert')
+const supp = require('../samples/typescript/demo-support')
+const assert = require('assert')
 
 suite('bulk', function () {
-  var theConnection
+  let theConnection
   this.timeout(100000)
-  var tm
-  var connStr
-  var totalObjectsForInsert = 10
-  var test1BatchSize = 1
-  var test2BatchSize = 10
-  var async
-  var helper
+  let tm
+  let connStr
+  const totalObjectsForInsert = 10
+  const test1BatchSize = 1
+  const test2BatchSize = 10
+  let async
+  let helper
 
-  var sql = global.native_sql
+  const sql = global.native_sql
 
-  setup(function (testDone) {
-    supp.GlobalConn.init(sql, function (co) {
+  setup(testDone => {
+    supp.GlobalConn.init(sql, co => {
       connStr = global.conn_str || co.conn_str
       async = co.async
       helper = co.helper
       helper.setVerbose(false)
-      sql.open(connStr, function (err, newConn) {
+      sql.open(connStr, (err, newConn) => {
         assert(err === null || err === false)
         theConnection = newConn
         testDone()
@@ -31,47 +31,47 @@ suite('bulk', function () {
     }, global.conn_str)
   })
 
-  teardown(function (done) {
-    theConnection.close(function (err) {
+  teardown(done => {
+    theConnection.close(err => {
       assert(err === null || err === false || err === undefined)
       done()
     })
   })
 
-  test('employee tmp table complex json object array bulk operations', function (testDone) {
-    var tableName = '#Employee'
+  test('employee tmp table complex json object array bulk operations', testDone => {
+    const tableName = '#Employee'
 
-    var fns = [
+    const fns = [
 
-      function (asyncDone) {
+      asyncDone => {
         helper.dropCreateTable({
           tableName: tableName,
           theConnection: theConnection
-        }, function () {
+        }, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        bindInsert(tableName, function () {
+      asyncDone => {
+        bindInsert(tableName, () => {
           asyncDone()
         })
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('bulk insert simple multi-column object - default a nullable column ' + test2BatchSize, function (testDone) {
+  test(`bulk insert simple multi-column object - default a nullable column ${test2BatchSize}`, testDone => {
     function buildTest (count) {
-      var arr = []
-      var str = '-'
-      for (var i = 0; i < count; ++i) {
+      const arr = []
+      let str = '-'
+      for (let i = 0; i < count; ++i) {
         str = str + i
         if (i % 10 === 0) str = '-'
-        var inst = {
+        const inst = {
           pkid: i,
           num1: i * 3,
           num2: i * 4,
@@ -83,30 +83,30 @@ suite('bulk', function () {
       return arr
     }
 
-    var tableName = 'BulkTest'
-    var bulkMgr
-    var vec = buildTest(totalObjectsForInsert)
+    const tableName = 'BulkTest'
+    let bulkMgr
+    const vec = buildTest(totalObjectsForInsert)
 
-    var fns = [
-      function (asyncDone) {
+    const fns = [
+      asyncDone => {
         helper.dropCreateTable({
           tableName: tableName
-        }, function () {
+        }, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        var tm = theConnection.tableMgr()
-        tm.bind(tableName, function (bm) {
+      asyncDone => {
+        const tm = theConnection.tableMgr()
+        tm.bind(tableName, bm => {
           bulkMgr = bm
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         bulkMgr.setBatchSize(totalObjectsForInsert)
-        bulkMgr.insertRows(vec, function (err, res) {
+        bulkMgr.insertRows(vec, (err, res) => {
           assert(err === null || err === false)
           assert(res.length === 0)
           asyncDone()
@@ -114,89 +114,89 @@ suite('bulk', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('bulk insert/update/select int column of signed batchSize ' + test2BatchSize, function (testDone) {
-    signedTest(test2BatchSize, true, true, function () {
+  test(`bulk insert/update/select int column of signed batchSize ${test2BatchSize}`, testDone => {
+    signedTest(test2BatchSize, true, true, () => {
       testDone()
     })
   })
 
-  test('bulk insert/select varbinary column batchSize ' + test1BatchSize, function (testDone) {
-    varbinaryTest(test1BatchSize, true, function () {
+  test(`bulk insert/select varbinary column batchSize ${test1BatchSize}`, testDone => {
+    varbinaryTest(test1BatchSize, true, () => {
       testDone()
     })
   })
 
-  test('bulk insert/select varbinary column batchSize ' + test2BatchSize, function (testDone) {
-    varbinaryTest(test2BatchSize, true, function () {
+  test(`bulk insert/select varbinary column batchSize ${test2BatchSize}`, testDone => {
+    varbinaryTest(test2BatchSize, true, () => {
       testDone()
     })
   })
 
-  test('bulk insert/select null column of datetime batchSize ' + test2BatchSize, function (testDone) {
-    nullTest(test2BatchSize, false, function () {
+  test(`bulk insert/select null column of datetime batchSize ${test2BatchSize}`, testDone => {
+    nullTest(test2BatchSize, false, () => {
       testDone()
     })
   })
 
-  test('bulk insert/select null column of datetime batchSize ' + test1BatchSize, function (testDone) {
-    nullTest(test1BatchSize, false, function () {
+  test(`bulk insert/select null column of datetime batchSize ${test1BatchSize}`, testDone => {
+    nullTest(test1BatchSize, false, () => {
       testDone()
     })
   })
 
-  test('employee complex json object array bulk operations', function (testDone) {
-    var tableName = 'Employee'
+  test('employee complex json object array bulk operations', testDone => {
+    const tableName = 'Employee'
 
-    var fns = [
+    const fns = [
 
-      function (asyncDone) {
+      asyncDone => {
         helper.dropCreateTable({
           tableName: tableName
-        }, function () {
+        }, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        bindInsert(tableName, function () {
+      asyncDone => {
+        bindInsert(tableName, () => {
           asyncDone()
         })
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
   function bindInsert (tableName, done) {
-    var bulkMgr
-    var parsedJSON = helper.getJSON()
-    var keys = helper.extractKey(parsedJSON, 'BusinessEntityID')
-    var selected
+    let bulkMgr
+    const parsedJSON = helper.getJSON()
+    const keys = helper.extractKey(parsedJSON, 'BusinessEntityID')
+    let selected
 
-    var fns = [
-      function (asyncDone) {
-        var tm = theConnection.tableMgr()
-        tm.bind(tableName, function (bulk) {
+    const fns = [
+      asyncDone => {
+        const tm = theConnection.tableMgr()
+        tm.bind(tableName, bulk => {
           bulkMgr = bulk
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        bulkMgr.insertRows(parsedJSON, function () {
+      asyncDone => {
+        bulkMgr.insertRows(parsedJSON, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        bulkMgr.selectRows(keys, function (err, results) {
+      asyncDone => {
+        bulkMgr.selectRows(keys, (err, results) => {
           assert(err === null || err === false)
           assert(results.length === parsedJSON.length)
           assert.deepEqual(results, parsedJSON, 'results didn\'t match')
@@ -211,38 +211,38 @@ suite('bulk', function () {
     })
   }
 
-  test('employee insert/select with non primary key', function (testDone) {
-    var tableName = 'Employee'
-    var parsedJSON
-    var whereCols = [
+  test('employee insert/select with non primary key', testDone => {
+    const tableName = 'Employee'
+    let parsedJSON
+    const whereCols = [
       {
         name: 'LoginID'
       }
     ]
 
-    var bulkMgr
-    var fns = [
+    let bulkMgr
+    const fns = [
 
-      function (asyncDone) {
+      asyncDone => {
         helper.dropCreateTable({
           tableName: tableName
-        }, function () {
+        }, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        bindInsert(tableName, function (bm, selected) {
+      asyncDone => {
+        bindInsert(tableName, (bm, selected) => {
           bulkMgr = bm
           parsedJSON = selected
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        var keys = helper.extractKey(parsedJSON, 'LoginID')
+      asyncDone => {
+        const keys = helper.extractKey(parsedJSON, 'LoginID')
         bulkMgr.setWhereCols(whereCols)
-        bulkMgr.selectRows(keys, function (err, results) {
+        bulkMgr.selectRows(keys, (err, results) => {
           assert(err === null || err === false)
           assert(results.length === parsedJSON.length)
           assert.deepEqual(results, parsedJSON, 'results didn\'t match')
@@ -251,43 +251,43 @@ suite('bulk', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
-  test('employee insert - update a single column', function (testDone) {
-    var tableName = 'Employee'
-    var parsedJSON
-    var updateCols = []
+  test('employee insert - update a single column', testDone => {
+    const tableName = 'Employee'
+    let parsedJSON
+    const updateCols = []
 
     updateCols.push({
       name: 'ModifiedDate'
     })
-    var newDate = new Date('2015-01-01T00:00:00.000Z')
-    var modifications = []
+    const newDate = new Date('2015-01-01T00:00:00.000Z')
+    const modifications = []
 
-    var bulkMgr
-    var fns = [
+    let bulkMgr
+    const fns = [
 
-      function (asyncDone) {
+      asyncDone => {
         helper.dropCreateTable({
           tableName: tableName
-        }, function () {
+        }, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        bindInsert(tableName, function (bm, selected) {
+      asyncDone => {
+        bindInsert(tableName, (bm, selected) => {
           bulkMgr = bm
           parsedJSON = selected
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        parsedJSON.forEach(function (emp) {
+      asyncDone => {
+        parsedJSON.forEach(emp => {
           emp.ModifiedDate = newDate
           modifications.push({
             BusinessEntityID: emp.BusinessEntityID,
@@ -295,14 +295,14 @@ suite('bulk', function () {
           })
         })
         bulkMgr.setUpdateCols(updateCols)
-        bulkMgr.updateRows(modifications, function () {
+        bulkMgr.updateRows(modifications, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        var keys = helper.extractKey(parsedJSON, 'BusinessEntityID')
-        bulkMgr.selectRows(keys, function (err, results) {
+      asyncDone => {
+        const keys = helper.extractKey(parsedJSON, 'BusinessEntityID')
+        bulkMgr.selectRows(keys, (err, results) => {
           assert(err === null || err === false)
           assert(results.length === parsedJSON.length)
           assert.deepEqual(results, parsedJSON, 'results didn\'t match')
@@ -311,74 +311,68 @@ suite('bulk', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       testDone()
     })
   })
 
   function bitTestStrictColumn (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
-    var params = {
+    const params = {
       columnType: 'bit',
       columnName: 'Key',
-      buildFunction: function (i) {
-        return i % 2 === 0
-      },
-      updateFunction: runUpdateFunction ? function (i) {
-        return i % 3 === 0
-      } : null,
+      buildFunction: i => i % 2 === 0,
+      updateFunction: runUpdateFunction ? i => i % 3 === 0 : null,
       check: selectAfterInsert,
       deleteAfterTest: false,
       batchSize: batchSize
     }
 
-    simpleColumnBulkTest(params, function () {
+    simpleColumnBulkTest(params, () => {
       testDone()
     })
   }
 
-  test('bulk insert/update/select bit strict column ' + test2BatchSize, function (testDone) {
-    bitTestStrictColumn(test2BatchSize, true, true, function () {
+  test('bulk insert/update/select bit strict column ' + test2BatchSize, testDone => {
+    bitTestStrictColumn(test2BatchSize, true, true, () => {
       testDone()
     })
   })
 
   test('bulk insert/select bit strict column batchSize ' + test1BatchSize, function (testDone) {
-    bitTestStrictColumn(test1BatchSize, true, false, function () {
+    bitTestStrictColumn(test1BatchSize, true, false, () => {
       testDone()
     })
   })
 
   test('bulk insert/select bit strict column ' + test2BatchSize, function (testDone) {
-    bitTestStrictColumn(test2BatchSize, true, false, function () {
+    bitTestStrictColumn(test2BatchSize, true, false, () => {
       testDone()
     })
   })
 
   function nullTest (batchSize, selectAfterInsert, testDone) {
-    var params = {
+    const params = {
       columnType: 'datetime',
-      buildFunction: function () {
-        return null
-      },
+      buildFunction: () => null,
       updateFunction: null,
       check: selectAfterInsert,
       deleteAfterTest: false,
       batchSize: batchSize
     }
 
-    simpleColumnBulkTest(params, function () {
+    simpleColumnBulkTest(params, () => {
       testDone()
     })
   }
 
   function dateTest (batchSize, selectAfterInsert, testDone) {
-    var dt = new Date('2002-02-06T00:00:00.000Z')
+    const dt = new Date('2002-02-06T00:00:00.000Z')
 
-    var params = {
+    const params = {
       columnType: 'datetime',
-      buildFunction: function () {
+      buildFunction: () => {
         dt.setTime(dt.getTime() + 86400000)
-        var nt = new Date()
+        const nt = new Date()
         nt.setTime(dt.getTime())
         return nt
       },
@@ -391,132 +385,116 @@ suite('bulk', function () {
     simpleColumnBulkTest(params, testDone)
   }
 
-  test('bulk insert/select datetime column batchSize ' + test1BatchSize, function (testDone) {
+  test(`bulk insert/select datetime column batchSize ${test1BatchSize}`, testDone => {
     dateTest(test1BatchSize, true, function () {
       testDone()
     })
   })
 
-  test('bulk insert/select datetime column batchSize ' + test2BatchSize, function (testDone) {
+  test(`bulk insert/select datetime column batchSize ${test2BatchSize}`, testDone => {
     dateTest(test2BatchSize, true, function () {
       testDone()
     })
   })
 
   function signedTest (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
-    var params = {
+    const params = {
       columnType: 'int',
-      buildFunction: function (i) {
-        return i % 2 === 0 ? -i : i
-      },
-      updateFunction: runUpdateFunction ? function (i) {
-        return i % 2 === 0 ? -i * 3 : i * 3
-      } : null,
+      buildFunction: i => i % 2 === 0 ? -i : i,
+      updateFunction: runUpdateFunction ? i => i % 2 === 0 ? -i * 3 : i * 3 : null,
       check: selectAfterInsert,
       deleteAfterTest: false,
       batchSize: batchSize
     }
 
-    simpleColumnBulkTest(params, function () {
+    simpleColumnBulkTest(params, () => {
       testDone()
     })
   }
 
-  test('bulk insert/select int column of signed batchSize ' + test1BatchSize, function (testDone) {
-    signedTest(test1BatchSize, true, false, function () {
+  test(`bulk insert/select int column of signed batchSize ${test1BatchSize}`, testDone => {
+    signedTest(test1BatchSize, true, false, () => {
       testDone()
     })
   })
 
-  test('bulk insert/select int column of signed batchSize ' + test2BatchSize, function (testDone) {
-    signedTest(test2BatchSize, true, false, function () {
+  test(`bulk insert/select int column of signed batchSize ${test2BatchSize}`, testDone => {
+    signedTest(test2BatchSize, true, false, () => {
       testDone()
     })
   })
 
   function unsignedTest (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
-    var params = {
+    const params = {
       columnType: 'int',
-      buildFunction: function (i) {
-        return i * 2
-      },
-      updateFunction: runUpdateFunction ? function (i) {
-        return i * 3
-      } : null,
+      buildFunction: i => i * 2,
+      updateFunction: runUpdateFunction ? i => i * 3 : null,
       check: selectAfterInsert,
       deleteAfterTest: false,
       batchSize: batchSize
     }
 
-    simpleColumnBulkTest(params, function () {
+    simpleColumnBulkTest(params, () => {
       testDone()
     })
   }
 
-  test('bulk insert/select int column of unsigned batchSize ' + test1BatchSize, function (testDone) {
-    unsignedTest(test1BatchSize, true, false, function () {
+  test(`bulk insert/select int column of unsigned batchSize ${test1BatchSize}`, testDone => {
+    unsignedTest(test1BatchSize, true, false, () => {
       testDone()
     })
   })
 
-  test('bulk insert/select int column of unsigned batchSize ' + test2BatchSize, function (testDone) {
-    unsignedTest(test2BatchSize, true, false, function () {
+  test(`bulk insert/select int column of unsigned batchSize ${test2BatchSize}`, testDone => {
+    unsignedTest(test2BatchSize, true, false, () => {
       testDone()
     })
   })
 
-  test('bulk insert/select/update int column of unsigned batchSize ' + test2BatchSize, function (testDone) {
-    unsignedTest(test2BatchSize, true, true, function () {
+  test(`bulk insert/select/update int column of unsigned batchSize ${test2BatchSize}`, testDone => {
+    unsignedTest(test2BatchSize, true, true, () => {
       testDone()
     })
   })
 
   function bitTest (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
-    var params = {
+    const params = {
       columnType: 'bit',
-      buildFunction: function (i) {
-        return i % 2 === 0
-      },
-      updateFunction: runUpdateFunction ? function (i) {
-        return i % 3 === 0
-      } : null,
+      buildFunction: i => i % 2 === 0,
+      updateFunction: runUpdateFunction ? i => i % 3 === 0 : null,
       check: selectAfterInsert,
       deleteAfterTest: false,
       batchSize: batchSize
     }
 
-    simpleColumnBulkTest(params, function () {
+    simpleColumnBulkTest(params, () => {
       testDone()
     })
   }
 
-  test('bulk insert/select bit column batchSize ' + test1BatchSize, function (testDone) {
-    bitTest(test1BatchSize, true, false, function () {
+  test(`bulk insert/select bit column batchSize ${test1BatchSize}`, testDone => {
+    bitTest(test1BatchSize, true, false, () => {
       testDone()
     })
   })
 
-  test('bulk insert/select bit column ' + test2BatchSize, function (testDone) {
-    bitTest(test2BatchSize, true, false, function () {
+  test(`bulk insert/select bit column ${test2BatchSize}`, testDone => {
+    bitTest(test2BatchSize, true, false, () => {
       testDone()
     })
   })
 
-  test('bulk insert/update/select bit column ' + test2BatchSize, function (testDone) {
-    bitTest(test2BatchSize, true, true, function () {
+  test(`bulk insert/update/select bit column ${test2BatchSize}`, testDone => {
+    bitTest(test2BatchSize, true, true, () => {
       testDone()
     })
   })
 
   function decimalTest (batchSize, selectAfterInsert, deleteAfterTest, runUpdateFunction, testDone) {
-    var params = {
+    const params = {
       columnType: 'decimal(18,4)',
-      buildFunction: function (i) {
-        return (i * 10) + (i * 0.1)
-      },
-      updateFunction: runUpdateFunction ? function (i) {
-        return (i * 1) + (i * 0.2)
-      } : null,
+      buildFunction: i => (i * 10) + (i * 0.1),
+      updateFunction: runUpdateFunction ? i => (i * 1) + (i * 0.2) : null,
       check: selectAfterInsert,
       deleteAfterTest: deleteAfterTest,
       batchSize: batchSize
@@ -525,38 +503,38 @@ suite('bulk', function () {
     simpleColumnBulkTest(params, testDone)
   }
 
-  test('bulk insert/select decimal column batchSize ' + test1BatchSize, function (testDone) {
+  test(`bulk insert/select decimal column batchSize ${test1BatchSize}`, testDone => {
     decimalTest(test1BatchSize, true, false, false, testDone)
   })
 
-  test('bulk insert/select decimal column batchSize ' + test2BatchSize, function (testDone) {
+  test(`bulk insert/select decimal column batchSize ${test2BatchSize}`, testDone => {
     decimalTest(test2BatchSize, true, false, false, testDone)
   })
 
-  test('bulk insert/select/delete decimal column batchSize ' + test2BatchSize, function (testDone) {
+  test(`bulk insert/select/delete decimal column batchSize ${test2BatchSize}`, testDone => {
     decimalTest(test2BatchSize, true, true, false, testDone)
   })
 
-  test('bulk insert/update/select decimal column batchSize ' + test2BatchSize, function (testDone) {
+  test(`bulk insert/update/select decimal column batchSize ${test2BatchSize}`, testDone => {
     decimalTest(test2BatchSize, true, false, true, testDone)
   })
 
   function varcharTest (batchSize, selectAfterInsert, deleteAfterTest, runUpdateFunction, testDone) {
-    var arr = []
-    var str = ''
-    for (var i = 0; i < 10; ++i) {
+    const arr = []
+    let str = ''
+    for (let i = 0; i < 10; ++i) {
       str = str + i
       arr.push(str)
     }
 
-    var params = {
+    const params = {
       columnType: 'varchar(100)',
-      buildFunction: function (i) {
-        var idx = i % 10
+      buildFunction: i => {
+        const idx = i % 10
         return arr[idx]
       },
-      updateFunction: runUpdateFunction ? function (i) {
-        var idx = 9 - (i % 10)
+      updateFunction: runUpdateFunction ? i => {
+        const idx = 9 - (i % 10)
         return arr[idx]
       } : null,
       check: selectAfterInsert,
@@ -567,34 +545,34 @@ suite('bulk', function () {
     simpleColumnBulkTest(params, testDone)
   }
 
-  test('bulk insert/select varchar column batchSize ' + test1BatchSize, function (testDone) {
+  test(`bulk insert/select varchar column batchSize ${test1BatchSize}`, testDone => {
     varcharTest(test1BatchSize, true, false, false, testDone)
   })
 
-  test('bulk insert/select varchar column batchSize ' + test2BatchSize, function (testDone) {
+  test(`bulk insert/select varchar column batchSize ${test2BatchSize}`, testDone => {
     varcharTest(test2BatchSize, true, false, false, testDone)
   })
 
-  test('bulk insert/select/delete varchar column batchSize ' + test2BatchSize, function (testDone) {
+  test(`bulk insert/select/delete varchar column batchSize ${test2BatchSize}`, testDone => {
     varcharTest(test2BatchSize, true, true, false, testDone)
   })
 
-  test('bulk insert/update/select varchar column batchSize ' + test2BatchSize, function (testDone) {
+  test(`bulk insert/update/select varchar column batchSize ${test2BatchSize}`, testDone => {
     varcharTest(test2BatchSize, true, false, true, testDone)
   })
 
-  test('bulk insert/update/select/delete varchar column batchSize ' + test2BatchSize, function (testDone) {
+  test(`bulk insert/update/select/delete varchar column batchSize ${test2BatchSize}`, testDone => {
     varcharTest(test2BatchSize, true, true, true, testDone)
   })
 
-  test('bulk insert simple multi-column object in batches ' + test2BatchSize, function (testDone) {
+  test(`bulk insert simple multi-column object in batches ${test2BatchSize}`, testDone => {
     function buildTest (count) {
-      var arr = []
-      var str = '-'
-      for (var i = 0; i < count; ++i) {
+      const arr = []
+      let str = '-'
+      for (let i = 0; i < count; ++i) {
         str = str + i
         if (i % 10 === 0) str = '-'
-        var inst = {
+        const inst = {
           pkid: i,
           num1: i * 3,
           num2: i * 4,
@@ -606,28 +584,28 @@ suite('bulk', function () {
       return arr
     }
 
-    var tableName = 'BulkTest'
+    const tableName = 'BulkTest'
 
     helper.dropCreateTable({
       tableName: tableName
     }, go)
 
     function go () {
-      var tm = theConnection.tableMgr()
+      const tm = theConnection.tableMgr()
       tm.bind(tableName, test)
     }
 
     function test (bulkMgr) {
-      var batch = totalObjectsForInsert
-      var vec = buildTest(batch)
+      const batch = totalObjectsForInsert
+      const vec = buildTest(batch)
       bulkMgr.insertRows(vec, insertDone)
 
       function insertDone (err, res) {
         assert.ifError(err)
         assert(res.length === 0)
-        var s = 'select count(*) as count from ' + tableName
-        theConnection.query(s, function (err, results) {
-          var expected = [{
+        const s = 'select count(*) as count from ' + tableName
+        theConnection.query(s, (err, results) => {
+          const expected = [{
             count: batch
           }]
           assert.ifError(err)
@@ -639,20 +617,20 @@ suite('bulk', function () {
   })
 
   function simpleColumnBulkTest (params, completeFn) {
-    var type = params.columnType
-    var buildFunction = params.buildFunction
-    var updateFunction = params.updateFunction
-    var check = params.check
-    var batchSize = params.batchSize
-    var deleteAfterTest = params.deleteAfterTest
-    var tableName = 'bulkColumn'
-    var columnName = params.columnName || 'col1'
+    const type = params.columnType
+    const buildFunction = params.buildFunction
+    const updateFunction = params.updateFunction
+    const check = params.check
+    const batchSize = params.batchSize
+    const deleteAfterTest = params.deleteAfterTest
+    const tableName = 'bulkColumn'
+    const columnName = params.columnName || 'col1'
 
     function buildTestObjects (batch, functionToRun) {
-      var arr = []
+      const arr = []
 
-      for (var i = 0; i < batch; ++i) {
-        var o = {
+      for (let i = 0; i < batch; ++i) {
+        const o = {
           pkid: i
         }
         o[columnName] = functionToRun(i)
@@ -661,45 +639,45 @@ suite('bulk', function () {
       return arr
     }
 
-    var batch = totalObjectsForInsert
-    var toUpdate
-    var toInsert = buildTestObjects(batch, buildFunction)
+    let batch = totalObjectsForInsert
+    let toUpdate
+    const toInsert = buildTestObjects(batch, buildFunction)
     if (updateFunction) toUpdate = buildTestObjects(batch, updateFunction)
-    var skip = false
-    var bulkMgr
+    let skip = false
+    let bulkMgr
 
-    var fns = [
+    const fns = [
 
-      function (asyncDone) {
+      asyncDone => {
         helper.dropCreateTable({
           tableName: tableName,
           columnName: columnName,
           type: type
-        }, function () {
+        }, () => {
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         tm = theConnection.tableMgr()
-        tm.bind(tableName, function (bm) {
+        tm.bind(tableName, bm => {
           bulkMgr = bm
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         bulkMgr.setBatchSize(batchSize)
-        bulkMgr.insertRows(toInsert, function (err) {
+        bulkMgr.insertRows(toInsert, err => {
           assert.ifError(err)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
-        var s = 'select count(*) as count from ' + tableName
-        theConnection.query(s, function (err, results) {
-          var expected = [{
+      asyncDone => {
+        const s = `select count(*) as count from ${tableName}`
+        theConnection.query(s, (err, results) => {
+          const expected = [{
             count: batch
           }]
           assert.ifError(err)
@@ -708,12 +686,12 @@ suite('bulk', function () {
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         if (!updateFunction) {
           skip = true
           asyncDone()
         } else {
-          bulkMgr.updateRows(toUpdate, function (err, res) {
+          bulkMgr.updateRows(toUpdate, (err, res) => {
             assert.ifError(err)
             assert(res.length === 0)
             asyncDone()
@@ -721,7 +699,7 @@ suite('bulk', function () {
         }
       },
 
-      function (asyncDone) {
+      asyncDone => {
         if (skip) {
           asyncDone()
           return
@@ -731,20 +709,20 @@ suite('bulk', function () {
           asyncDone()
           return
         }
-        var fetch = []
-        for (var i = 0; i < toUpdate.length; ++i) {
+        const fetch = []
+        for (let i = 0; i < toUpdate.length; ++i) {
           fetch.push({
             pkid: i
           })
         }
-        bulkMgr.selectRows(fetch, function (err, results) {
+        bulkMgr.selectRows(fetch, (err, results) => {
           assert.ifError(err)
           assert.deepEqual(results, toUpdate, 'results didn\'t match')
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         if (skip) {
           asyncDone()
           return
@@ -754,21 +732,21 @@ suite('bulk', function () {
           asyncDone()
           return
         }
-        bulkMgr.deleteRows(toInsert, function (err, res) {
+        bulkMgr.deleteRows(toInsert, (err, res) => {
           assert.ifError(err)
           assert(res.length === 0)
           asyncDone()
         })
       },
 
-      function (asyncDone) {
+      asyncDone => {
         if (skip) {
           asyncDone()
           return
         }
-        var s = 'select count(*) as count from ' + tableName
-        theConnection.query(s, function (err, results) {
-          var expected = [{
+        const s = `select count(*) as count from ${tableName}`
+        theConnection.query(s, (err, results) => {
+          const expected = [{
             count: 0
           }]
           assert.ifError(err)
@@ -778,15 +756,15 @@ suite('bulk', function () {
       }
     ]
 
-    async.series(fns, function () {
+    async.series(fns, () => {
       completeFn()
     })
   }
 
-  var arr = []
+  const arr = []
 
   function varbinaryTest (batchSize, selectAfterInsert, testDone) {
-    var strings = [
+    const strings = [
       'one',
       'two',
       'three',
@@ -799,14 +777,14 @@ suite('bulk', function () {
       'ten'
     ]
 
-    for (var i = 0; i < 10; ++i) {
+    for (let i = 0; i < 10; ++i) {
       arr.push(Buffer.from(strings[i]))
     }
 
-    var params = {
+    const params = {
       columnType: 'varbinary(10)',
-      buildFunction: function (i) {
-        var idx = i % 10
+      buildFunction: i => {
+        const idx = i % 10
         return arr[idx]
       },
       updateFunction: null,

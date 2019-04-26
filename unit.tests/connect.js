@@ -20,20 +20,20 @@
 /* global suite test setup */
 'use strict'
 
-var assert = require('assert')
-var supp = require('../samples/typescript/demo-support')
+const assert = require('assert')
+const supp = require('../samples/typescript/demo-support')
 
 suite('open', function () {
-  var connStr
-  var support
-  var helper
-  var procedureHelper
-  var sql = global.native_sql
+  let connStr
+  let support
+  let helper
+  let procedureHelper
+  const sql = global.native_sql
 
   this.timeout(20000)
 
-  setup(function (testDone) {
-    supp.GlobalConn.init(sql, function (co) {
+  setup(testDone => {
+    supp.GlobalConn.init(sql, co => {
       connStr = global.conn_str || co.conn_str
       support = co.support
       procedureHelper = new support.ProcedureHelper(connStr)
@@ -44,45 +44,45 @@ suite('open', function () {
     }, global.conn_str)
   })
 
-  test('connection closes OK in sequence with query', function (done) {
+  test('connection closes OK in sequence with query', done => {
     sql.open(connStr,
-      function (err, conn) {
-        var expected = [{
+      (err, conn) => {
+        const expected = [{
           n: 1
         }]
         assert(err === null || err === false)
-        conn.query('SELECT 1 as n', function (err, results) {
+        conn.query('SELECT 1 as n', (err, results) => {
           assert.ifError(err)
-          assert.deepEqual(results, expected)
-          conn.close(function () {
+          assert.deepStrictEqual(results, expected)
+          conn.close(() => {
             done()
           })
         })
       })
   })
 
-  test('trusted connection to a server', function (done) {
+  test('trusted connection to a server', done => {
     sql.open(connStr,
       function (err, conn) {
         assert(err === null || err === false)
         assert(typeof conn === 'object')
-        conn.close(function () {
+        conn.close(() => {
           done()
         })
       })
   })
 
-  test('verify closed connection throws an exception', function (done) {
-    sql.open(connStr, function (err, conn) {
+  test('verify closed connection throws an exception', done => {
+    sql.open(connStr, (err, conn) => {
       assert(err === null || err === false)
-      conn.close(function () {
-        var thrown = false
+      conn.close(() => {
+        let thrown = false
         try {
-          conn.query('SELECT 1', function (err) {
+          conn.query('SELECT 1', err => {
             assert.ifError(err)
           })
         } catch (e) {
-          assert.deepEqual(e, new Error('[msnodesql] Connection is closed.'))
+          assert.deepStrictEqual(e, new Error('[msnodesql] Connection is closed.'))
           thrown = true
         }
         assert(thrown)
@@ -91,40 +91,40 @@ suite('open', function () {
     })
   })
 
-  test('verify connection is not closed prematurely until a query is complete', function (done) {
-    sql.open(connStr, function (err, conn) {
+  test('verify connection is not closed prematurely until a query is complete', done => {
+    sql.open(connStr, (err, conn) => {
       assert(err === null || err === false)
-      var stmt = conn.queryRaw('select 1')
-      stmt.on('meta', function (m) {
+      const stmt = conn.queryRaw('select 1')
+      stmt.on('meta', () => {
       })
-      stmt.on('column', function (c, d) {
+      stmt.on('column', (c, d) => {
         assert(c === 0 && d === 1)
       })
-      stmt.on('error', function (err) {
+      stmt.on('error', err => {
         assert(err === null || err === false)
       })
-      stmt.on('row', function (r) {
+      stmt.on('row', r => {
         assert(r === 0)
-        conn.close(function () {
+        conn.close(() => {
           done()
         })
       })
     })
   })
 
-  test('verify that close immediately flag only accepts booleans', function (done) {
-    sql.open(connStr, function (err, conn) {
+  test('verify that close immediately flag only accepts booleans', done => {
+    sql.open(connStr, (err, conn) => {
       assert(err === null || err === false)
-      var thrown = false
+      let thrown = false
       try {
-        conn.close('SELECT 1', function (err) {
+        conn.close('SELECT 1', err => {
           assert(err === null || err === false)
         })
       } catch (e) {
-        assert.deepEqual(e, new Error('[msnodesql] Invalid parameters passed to close.'))
+        assert.deepStrictEqual(e, new Error('[msnodesql] Invalid parameters passed to close.'))
         thrown = true
       }
-      conn.close(function () {
+      conn.close(() => {
         assert(thrown)
         done()
       })
