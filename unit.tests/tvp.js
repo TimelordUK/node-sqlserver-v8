@@ -42,54 +42,51 @@ suite('tvp', function () {
       schemaName = tableName.substr(0, schemaIndex)
       unqualifiedTableName = tableName.substr(schemaIndex + 1)
     }
-    const createSchemaSql = 'IF NOT EXISTS (\n' +
-      'SELECT schema_name\n' +
-      'FROM  information_schema.schemata\n' +
-      'WHERE schema_name = \'' + schemaName + '\')\n' +
-      'BEGIN\n' +
-      ' EXEC sp_executesql N\'CREATE SCHEMA ' + schemaName + '\'\n' +
-      'END'
+    const createSchemaSql = `IF NOT EXISTS (
+SELECT schema_name
+FROM  information_schema.schemata
+WHERE schema_name = '${schemaName}')
+BEGIN
+ EXEC sp_executesql N'CREATE SCHEMA ${schemaName}'
+END`
 
     const tableTypeName = tableName + 'Type'
     const insertProcedureTypeName = schemaName + '.Insert' + unqualifiedTableName
     let table
 
-    const dropTableSql = 'IF OBJECT_ID(\'' + tableName + '\', \'U\') IS NOT NULL \n' +
-      '  DROP TABLE ' + tableName + ';'
+    const dropTableSql = `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL 
+  DROP TABLE ${tableName};`
 
-    const dropProcedureSql = 'IF EXISTS (SELECT * FROM sys.objects WHERE type = \'P\' AND OBJECT_ID = OBJECT_ID(\'' + insertProcedureTypeName + '\'))\n' +
-      ' begin' +
-      ' drop PROCEDURE ' + insertProcedureTypeName +
-      ' end '
+    const dropProcedureSql = `IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('${insertProcedureTypeName}'))
+ begin drop PROCEDURE ${insertProcedureTypeName} end `
 
-    const createTableSql = 'create TABLE ' + tableName + '(\n' +
-      '\tusername nvarchar(30), \n' +
-      '\tage int, \n' +
-      '\tsalary real\n' +
-      ')'
+    const createTableSql = `create TABLE ${tableName}(
+\tusername nvarchar(30), 
+\tage int, 
+\tsalary real
+)`
 
-    const dropTypeSql = 'IF TYPE_ID(N\'' + tableTypeName + '\') IS not NULL drop type ' + tableTypeName
+    const dropTypeSql = `IF TYPE_ID(N'${tableTypeName}') IS not NULL drop type ${tableTypeName}`
 
-    const createTypeSql = 'CREATE TYPE ' + tableTypeName + ' AS TABLE (username nvarchar(30), age int, salary real)'
+    const createTypeSql = `CREATE TYPE ${tableTypeName} AS TABLE (username nvarchar(30), age int, salary real)`
 
-    const insertProcedureSql = 'create PROCEDURE ' + insertProcedureTypeName + '\n' +
-      '@tvp ' + tableTypeName + ' READONLY\n' +
-      'AS\n' +
-      'BEGIN\n' +
-      ' set nocount on\n' +
-      ' INSERT INTO ' + tableName + '\n' +
-      '(\n' +
-      '   [username],\n' +
-      '   [age],\n' +
-      '   [salary]\n' +
-      ' )\n' +
-      ' SELECT \n' +
-      ' [username],\n' +
-      ' [age],\n' +
-      ' [salary]\n' +
-      'n' +
-      ' FROM @tvp tvp\n' +
-      'END'
+    const insertProcedureSql = `create PROCEDURE ${insertProcedureTypeName}
+@tvp ${tableTypeName} READONLY
+AS
+BEGIN
+ set nocount on
+ INSERT INTO ${tableName}
+(
+   [username],
+   [age],
+   [salary]
+ )
+ SELECT 
+ [username],
+ [age],
+ [salary]
+n FROM @tvp tvp
+END`
 
     const fns = [
 
