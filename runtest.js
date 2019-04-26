@@ -1,15 +1,15 @@
-var Mocha = require('mocha')
-var sql = require('msnodesqlv8')
-var path = require('path')
+const Mocha = require('mocha')
+const sql = require('msnodesqlv8')
+const path = require('path')
 
 runTest()
 
 function runTest () {
-  var argv = require('minimist')(process.argv.slice(2))
+  const argv = require('minimist')(process.argv.slice(2))
   console.log(argv)
-  var connStr = null
+  let connStr = null
 
-  var toRun
+  let toRun
   if (argv.hasOwnProperty('t')) {
     toRun = argv['t']
   }
@@ -23,19 +23,19 @@ function runTest () {
     toRun = [toRun]
   }
 
-  run(toRun, function (e) {
+  run(toRun, e => {
     console.log(e)
     process.exit(e)
   })
 
   function run (files, done) {
-    var mocha = new Mocha(
+    const mocha = new Mocha(
       {
         ui: 'tdd'
       }
     )
 
-    mocha.suite.on('pre-require', function (g) {
+    mocha.suite.on('pre-require', g => {
       g.native_sql = sql
       if (connStr) {
         console.log('override conn_str')
@@ -43,20 +43,20 @@ function runTest () {
       }
     })
 
-    mocha.suite.on('require', function (a, b, c) {
+    mocha.suite.on('require', (a, b, c) => {
     })
 
-    files.forEach(function (f) {
-      var p = path.join('unit.tests', f)
+    files.forEach(f => {
+      const p = path.join('unit.tests', f)
       mocha.addFile(p)
     })
 
-    mocha.run(function (failures) {
-      process.on('uncaughtException', function (err) {
+    mocha.run(failures => {
+      process.on('uncaughtException', err => {
         console.log(err)
       })
 
-      process.on('exit', function () {
+      process.on('exit', () => {
         done(failures)
       })
     })

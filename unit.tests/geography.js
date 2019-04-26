@@ -151,16 +151,14 @@ end)
 
   function asPair (elem) {
     const dp = 13
-    return +elem[0].toFixed(dp) + ' ' + +elem[1].toFixed(dp)
+    return `${+elem[0].toFixed(dp)} ${+elem[1].toFixed(dp)}`
   }
 
   function asPoly (coordinates) {
     // close the polygon
     coordinates = coordinates.slice(0)
     coordinates[coordinates.length] = coordinates[0]
-    const s = coordinates.map(function (elem) {
-      return asPair(elem)
-    })
+    const s = coordinates.map(elem => asPair(elem))
     return `POLYGON ((${s.join(', ')}))`
   }
 
@@ -182,9 +180,7 @@ end)
 
   function asPoints (coordinates) {
     // 'POINT (-89.349 -55.349)',
-    return coordinates.map(function (elem) {
-      return `POINT (${asPair(elem)})`
-    })
+    return coordinates.map(elem => `POINT (${asPair(elem)})`)
   }
 
   function asExpected (geography) {
@@ -242,7 +238,7 @@ suite('geography', function () {
     }, global.conn_str)
   })
 
-  teardown(function (done) {
+  teardown(done => {
     theConnection.close(err => {
       assert.ifError(err)
       done()

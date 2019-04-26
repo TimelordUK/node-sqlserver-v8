@@ -506,7 +506,7 @@ suite('query', function () {
     let buffer
     let expected
 
-    theConnection.queryRaw('SELECT 1 as X, \'ABC\', 0x0123456789abcdef; SELECT 2 AS Y, \'DEF\', 0xfedcba9876543210',
+    theConnection.queryRaw(`SELECT 1 as X, 'ABC', 0x0123456789abcdef; SELECT 2 AS Y, 'DEF', 0xfedcba9876543210`,
       function (err, results, more) {
         assert.ifError(err)
         assert.strictEqual(more, moreShouldBe)
@@ -542,7 +542,7 @@ suite('query', function () {
   })
 
   test('multiple results from query in events', done => {
-    const r = theConnection.queryRaw('SELECT 1 as X, \'ABC\', 0x0123456789abcdef; SELECT 2 AS Y, \'DEF\', 0xfedcba9876543210')
+    const r = theConnection.queryRaw(`SELECT 1 as X, 'ABC', 0x0123456789abcdef; SELECT 2 AS Y, 'DEF', 0xfedcba9876543210`)
 
     const expected = [
       [{ name: 'X', size: 10, nullable: false, type: 'number', sqlType: 'int' },
@@ -662,7 +662,7 @@ suite('query', function () {
   })
 
   test('test retrieving an empty string', testDone => {
-    theConnection.query('SELECT \'\' AS \'Empty String\'', (e, r) => {
+    theConnection.query(`SELECT '' AS 'Empty String'`, (e, r) => {
       assert.ifError(e)
       assert(r[0]['Empty String'] === '')
       testDone()
