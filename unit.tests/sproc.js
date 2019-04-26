@@ -42,17 +42,17 @@ suite('sproc', function () {
   test('get proc and call multiple times synchronously with changing params i.e. prove each call is independent', testDone => {
     const spName = 'test_sp_get_int_int'
 
-    const def = 'alter PROCEDURE <name>' +
-      '(\n' +
-      '@num1 INT,\n' +
-      '@num2 INT,\n' +
-      '@num3 INT OUTPUT\n' +
-      '\n)' +
-      'AS\n' +
-      'BEGIN\n' +
-      '   SET @num3 = @num1 + @num2\n' +
-      '   RETURN 99;\n' +
-      'END\n'
+    const def = `alter PROCEDURE <name>(
+@num1 INT,
+@num2 INT,
+@num3 INT OUTPUT
+
+)AS
+BEGIN
+   SET @num3 = @num1 + @num2
+   RETURN 99;
+END
+`
 
     const fns = [
       asyncDone => {
@@ -103,17 +103,17 @@ suite('sproc', function () {
   test('get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
     const spName = 'test_sp_get_int_int'
 
-    const def = 'alter PROCEDURE <name>' +
-      '(\n' +
-      '@num1 INT,\n' +
-      '@num2 INT,\n' +
-      '@num3 INT OUTPUT\n' +
-      '\n)' +
-      'AS\n' +
-      'BEGIN\n' +
-      '   SET @num3 = @num1 + @num2\n' +
-      '   RETURN 99;\n' +
-      'END\n'
+    const def = `alter PROCEDURE <name>(
+@num1 INT,
+@num2 INT,
+@num3 INT OUTPUT
+
+)AS
+BEGIN
+   SET @num3 = @num1 + @num2
+   RETURN 99;
+END
+`
 
     const fns = [
       asyncDone => {
@@ -159,18 +159,18 @@ suite('sproc', function () {
   test('call proc that has 2 output string params + return code', testDone => {
     const spName = 'test_sp_get_str_str'
 
-    const def = 'alter PROCEDURE <name>' +
-      '(\n' +
-      '@id INT,\n' +
-      '@name varchar(20) OUTPUT,\n' +
-      '@company varchar(20) OUTPUT\n' +
-      '\n)' +
-      'AS\n' +
-      'BEGIN\n' +
-      '   SET @name = \'name\'\n' +
-      '   SET @company = \'company\'\n' +
-      '   RETURN 99;\n' +
-      'END\n'
+    const def = `alter PROCEDURE <name>(
+@id INT,
+@name varchar(20) OUTPUT,
+@company varchar(20) OUTPUT
+
+)AS
+BEGIN
+   SET @name = 'name'
+   SET @company = 'company'
+   RETURN 99;
+END
+`
 
     const fns = [
       asyncDone => {
@@ -198,17 +198,17 @@ suite('sproc', function () {
   test('get proc and call  - should not error', testDone => {
     const spName = 'test_sp_get_int_int'
 
-    const def = 'alter PROCEDURE <name>' +
-      '(\n' +
-      '@num1 INT,\n' +
-      '@num2 INT,\n' +
-      '@num3 INT OUTPUT\n' +
-      '\n)' +
-      'AS\n' +
-      'BEGIN\n' +
-      '   SET @num3 = @num1 + @num2\n' +
-      '   RETURN 99;\n' +
-      'END\n'
+    const def = `alter PROCEDURE <name>(
+@num1 INT,
+@num2 INT,
+@num3 INT OUTPUT
+
+)AS
+BEGIN
+   SET @num3 = @num1 + @num2
+   RETURN 99;
+END
+`
 
     const fns = [
       asyncDone => {
@@ -240,11 +240,12 @@ suite('sproc', function () {
   test('stream call proc no callback', testDone => {
     const spName = 'test_len_of_sp'
 
-    const def = 'alter PROCEDURE <name> @param VARCHAR(50) \n' +
-      ' AS \n' +
-      ' BEGIN \n' +
-      '     select LEN(@param) as len; \n' +
-      ' END \n'
+    const def = `alter PROCEDURE <name> @param VARCHAR(50) 
+ AS 
+ BEGIN 
+     select LEN(@param) as len; 
+ END 
+`
 
     const fns = [
       asyncDone => {
@@ -287,14 +288,12 @@ suite('sproc', function () {
   test('call proc that waits for delay of input param - wait 2, timeout 5 - should not error', testDone => {
     const spName = 'test_spwait_for'
 
-    const def = 'alter PROCEDURE <name>' +
-      '(\n' +
-      '@timeout datetime' +
-      '\n)' +
-      'AS\n' +
-      'BEGIN\n' +
-      'waitfor delay @timeout;' +
-      'END\n'
+    const def = `alter PROCEDURE <name>(
+@timeout datetime
+)AS
+BEGIN
+waitfor delay @timeout;END
+`
 
     const fns = [
       asyncDone => {
@@ -321,12 +320,12 @@ suite('sproc', function () {
   test('call proc that returns length of input string and decribes itself in results', testDone => {
     const spName = 'test_sp'
 
-    const def = 'alter PROCEDURE <name> @param VARCHAR(50) \n' +
-      ' AS \n' +
-      ' BEGIN \n' +
-      '     SELECT name, type, type_desc  FROM sys.objects WHERE type = \'P\' AND name = \'<name>\'' +
-      '     RETURN LEN(@param); \n' +
-      ' END \n'
+    const def = `alter PROCEDURE <name> @param VARCHAR(50) 
+ AS 
+ BEGIN 
+     SELECT name, type, type_desc  FROM sys.objects WHERE type = 'P' AND name = '<name>'     RETURN LEN(@param); 
+ END 
+`
 
     const fns = [
       asyncDone => {
@@ -361,11 +360,12 @@ suite('sproc', function () {
   test('call proc that returns length of input string', testDone => {
     const spName = 'test_sp'
 
-    const def = 'alter PROCEDURE <name> @param VARCHAR(50) \n' +
-      ' AS \n' +
-      ' BEGIN \n' +
-      '     RETURN LEN(@param); \n' +
-      ' END \n'
+    const def = `alter PROCEDURE <name> @param VARCHAR(50) 
+ AS 
+ BEGIN 
+     RETURN LEN(@param); 
+ END 
+`
 
     const fns = [
       asyncDone => {
@@ -395,17 +395,17 @@ suite('sproc', function () {
   test('call proc that has 2 input params + 1 output', testDone => {
     const spName = 'test_sp_get_int_int'
 
-    const def = 'alter PROCEDURE <name>' +
-      '(\n' +
-      '@num1 INT,\n' +
-      '@num2 INT,\n' +
-      '@num3 INT OUTPUT\n' +
-      '\n)' +
-      'AS\n' +
-      'BEGIN\n' +
-      '   SET @num3 = @num1 + @num2\n' +
-      '   RETURN 99;\n' +
-      'END\n'
+    const def = `alter PROCEDURE <name>(
+@num1 INT,
+@num2 INT,
+@num3 INT OUTPUT
+
+)AS
+BEGIN
+   SET @num3 = @num1 + @num2
+   RETURN 99;
+END
+`
 
     const fns = [
       asyncDone => {
@@ -433,17 +433,17 @@ suite('sproc', function () {
   test('test asselect on proc', testDone => {
     const spName = 'test_sp_get_int_int'
 
-    const def = 'alter PROCEDURE <name>' +
-      '(\n' +
-      '@num1 INT,\n' +
-      '@num2 INT,\n' +
-      '@num3 INT OUTPUT\n' +
-      '\n)' +
-      'AS\n' +
-      'BEGIN\n' +
-      '   SET @num3 = @num1 + @num2\n' +
-      '   RETURN 99;\n' +
-      'END\n'
+    const def = `alter PROCEDURE <name>(
+@num1 INT,
+@num2 INT,
+@num3 INT OUTPUT
+
+)AS
+BEGIN
+   SET @num3 = @num1 + @num2
+   RETURN 99;
+END
+`
 
     const fns = [
       asyncDone => {

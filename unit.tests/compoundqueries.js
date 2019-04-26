@@ -291,14 +291,14 @@ suite('compoundqueries', function () {
   testname = 'test 003 - batched query: SELECT....; SELECT (with no results) ....; SELECT....;'
   test(testname, done => {
     const testcolumnsize = 100
-    const testcolumntype = ' varchar(' + testcolumnsize + ')'
+    const testcolumntype = ` varchar(${testcolumnsize})`
     const testcolumnclienttype = 'text'
     const testcolumnsqltype = 'varchar'
     const testcolumnname = 'col2'
     const testdata1 = null
     const testdata2Expected = 'string data row 2'
-    const testdata2TsqlInsert = '\'' + testdata2Expected + '\''
-    const tsql = 'SELECT * FROM ' + tablename + ' ORDER BY id;  SELECT * FROM ' + tablename + ' WHERE 1=2; SELECT * FROM ' + tablename + ' ORDER BY id;'
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
+    const tsql = `SELECT * FROM ${tablename} ORDER BY id;  SELECT * FROM ${tablename} WHERE 1=2; SELECT * FROM ${tablename} ORDER BY id;`
 
     const expected1 = {
       meta: [

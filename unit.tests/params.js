@@ -42,12 +42,12 @@ suite('params', function () {
   const sql = global.native_sql
 
   setup(testDone => {
-    supp.GlobalConn.init(sql, function (co) {
+    supp.GlobalConn.init(sql, co => {
       connStr = global.conn_str || co.conn_str
       async = co.async
       helper = co.helper
       helper.setVerbose(false)
-      sql.open(connStr, function (err, newConn) {
+      sql.open(connStr, (err, newConn) => {
         assert(err === false)
         theConnection = newConn
         testDone()
@@ -56,7 +56,7 @@ suite('params', function () {
   })
 
   teardown(done => {
-    theConnection.close(function (err) {
+    theConnection.close(err => {
       assert.ifError(err)
       done()
     })
@@ -152,7 +152,7 @@ suite('params', function () {
     const res = []
     const colNames = []
     const query = theConnection.query('declare @str nvarchar (MAX);set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @str AS long_string', [longString])
-    query.on('column', function (c, d) {
+    query.on('column', (c, d) => {
       assert(c === 0)
       const obj = {}
       obj[colNames[c]] = d
@@ -161,7 +161,7 @@ suite('params', function () {
     query.on('error', e => {
       assert(e)
     })
-    query.on('meta', function (m) {
+    query.on('meta', m => {
       colNames.push(m[0].name)
     })
     query.on('done', () => {

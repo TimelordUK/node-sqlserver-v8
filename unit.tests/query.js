@@ -572,13 +572,13 @@ suite('query', function () {
     ]
     const received = []
 
-    r.on('meta', function (m) {
+    r.on('meta', m => {
       received.push(m)
     })
-    r.on('row', function (idx) {
+    r.on('row', idx => {
       received.push({ row: idx })
     })
-    r.on('column', function (idx, data, more) {
+    r.on('column', (idx, data, more) => {
       received.push({ column: idx, data: data, more: more })
     })
     r.on('done', () => {

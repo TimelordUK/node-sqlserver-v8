@@ -107,7 +107,7 @@ suite('concurrent', function () {
       }
     }
 
-    const req = theConnection.query('waitfor delay \'00:00:02\';')
+    const req = theConnection.query(`waitfor delay '00:00:02';`)
     req.on('done', () => {
       pushTest('a')
       process.nextTick(() => {
@@ -142,7 +142,7 @@ suite('concurrent', function () {
       pushTest('c')
     })
 
-    theConnection.query('waitfor delay \'00:00:02\';', () => {
+    theConnection.query(`waitfor delay '00:00:02';`, () => {
       pushTest('e')
     })
 
@@ -171,13 +171,13 @@ suite('concurrent', function () {
     process.nextTick(() => {
       pushTest('c')
     })
-    theConnection.query('waitfor delay \'00:00:02\';', [], () => {
+    theConnection.query(`waitfor delay '00:00:02';`, [], () => {
       pushTest('e')
       pushTest('f')
       process.nextTick(() => {
         pushTest('h')
       })
-      theConnection.query('waitfor delay \'00:00:02\';', [], () => {
+      theConnection.query(`waitfor delay '00:00:02';`, [], () => {
         pushTest('j')
       })
       pushTest('g')

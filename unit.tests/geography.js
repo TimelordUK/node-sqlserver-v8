@@ -30,31 +30,29 @@ function GeographyHelper () {
     const insertProcedureTypeName = 'InsertGeographyTvp'
     const tableTypeName = 'geographyTvpType'
     const createTableSql = 'CREATE TABLE spatial_test ( id int IDENTITY (1,1), GeogCol1 geography, GeogCol2 AS GeogCol1.STAsText() )'
-    const dropProcedureSql = 'IF EXISTS (SELECT * FROM sys.objects WHERE type = \'P\' AND OBJECT_ID = OBJECT_ID(\'' + insertProcedureTypeName + '\'))\n' +
-      ' begin' +
-      ' drop PROCEDURE ' + insertProcedureTypeName +
-      ' end '
-    const dropTypeSql = 'IF TYPE_ID(N\'' + tableTypeName + '\') IS not NULL drop type ' + tableTypeName
-    const createType = 'create type ' + tableTypeName + ' AS TABLE ([GeogCol1] nvarchar (2048))'
-    const createProcedureSql = 'create PROCEDURE InsertGeographyTvp ' +
-      '@tvp geographyTvpType READONLY\n' +
-      '       AS \n' +
-      '       BEGIN \n' +
-      '       set nocount on\n' +
-      '       INSERT INTO spatial_test \n' +
-      '       ( \n' +
-      '          GeogCol1\n' +
-      '        )\n' +
-      'SELECT  (case\n' +
-      'when GeogCol1 like \'POINT%\'\n' +
-      ' then geography::STPointFromText([GeogCol1], 4326)\n' +
-      'when GeogCol1 like \'LINE%\'\n' +
-      ' then geography::STLineFromText([GeogCol1], 4326)\n' +
-      'when GeogCol1 like \'POLY%\'\n' +
-      'then geography::STPolyFromText([GeogCol1], 4326)\n' +
-      'end)\n' +
-      '  n FROM @tvp tvp\n' +
-      '  END\n'
+    const dropProcedureSql = `IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('${insertProcedureTypeName}'))
+ begin drop PROCEDURE ${insertProcedureTypeName} end `
+    const dropTypeSql = `IF TYPE_ID(N'${tableTypeName}') IS not NULL drop type ${tableTypeName}`
+    const createType = `create type ${tableTypeName} AS TABLE ([GeogCol1] nvarchar (2048))`
+    const createProcedureSql = `create PROCEDURE InsertGeographyTvp @tvp geographyTvpType READONLY
+       AS 
+       BEGIN 
+       set nocount on
+       INSERT INTO spatial_test 
+       ( 
+          GeogCol1
+        )
+SELECT  (case
+when GeogCol1 like 'POINT%'
+ then geography::STPointFromText([GeogCol1], 4326)
+when GeogCol1 like 'LINE%'
+ then geography::STLineFromText([GeogCol1], 4326)
+when GeogCol1 like 'POLY%'
+then geography::STPolyFromText([GeogCol1], 4326)
+end)
+  n FROM @tvp tvp
+  END
+`
     let table
     const fns = [
 
@@ -163,12 +161,12 @@ function GeographyHelper () {
     const s = coordinates.map(function (elem) {
       return asPair(elem)
     })
-    return 'POLYGON ((' + s.join(', ') + '))'
+    return `POLYGON ((${s.join(', ')}))`
   }
 
   function asLine (coords) {
     // 'LINESTRING (-0.19535064697265625 51.509249951770364, -0.19148826599121094 51.5100245354003)'
-    return 'LINESTRING (' + asPair(coords[0]) + ', ' + asPair(coords[1]) + ')'
+    return `LINESTRING (${asPair(coords[0])}, ${asPair(coords[1])})`
   }
 
   function asLines (coordinates) {
@@ -185,7 +183,7 @@ function GeographyHelper () {
   function asPoints (coordinates) {
     // 'POINT (-89.349 -55.349)',
     return coordinates.map(function (elem) {
-      return 'POINT (' + asPair(elem) + ')'
+      return `POINT (${asPair(elem)})`
     })
   }
 

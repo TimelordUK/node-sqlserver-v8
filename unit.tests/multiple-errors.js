@@ -32,7 +32,7 @@ suite('multiple errors', function () {
   this.timeout(20000)
   const sql = global.native_sql
 
-  setup(function (testDone) {
+  setup(testDone => {
     supp.GlobalConn.init(sql, co => {
       connStr = global.conn_str || co.conn_str
       helper = co.helper

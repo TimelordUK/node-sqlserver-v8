@@ -1729,7 +1729,7 @@ suite('datatypes', function () {
   testname = 'test 032 - verify functionality of data type \'nvarchar(max)\', fetch as text'
   test(testname, done => {
     const testcolumnsize = 0
-    const testcolumntype = ' nvarchar(' + 'max' + ')'
+    const testcolumntype = ' nvarchar(max)'
     const testcolumnclienttype = 'text'
     const testcolumnsqltype = 'nvarchar'
     const testcolumnname = 'col2'
