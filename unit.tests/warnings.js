@@ -218,7 +218,7 @@ suite('warnings', function () {
 
   test('print raises warning not error', testDone => {
     const fns = [
-      function (asyncDone) {
+      asyncDone => {
         const warnings = []
         const err = new Error('[Microsoft][SQL Server Native Client 11.0][SQL Server]print error')
         err.code = 0

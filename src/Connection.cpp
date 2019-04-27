@@ -233,7 +233,9 @@ namespace mssql
 		const auto callback = info[2].As<Object>();
 		auto connection = Unwrap<Connection>(info.This());
 		const nodeTypeFactory fact;
-		const auto i32 = v1->Int32Value();
+		const auto context = fact.isolate->GetCurrentContext();
+		auto maybe = v1->Int32Value(context);
+		const auto i32 = maybe.FromMaybe(0);
 		const auto b1 = fact.new_boolean(i32 > 0);
 
 		const auto ret = connection->connectionBridge->polling_mode(query_id, b1, callback);

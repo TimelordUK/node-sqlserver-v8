@@ -34,14 +34,14 @@ namespace mssql
 	public:		
 		OdbcStatementCache(const shared_ptr<OdbcConnectionHandle> &connection);
 		~OdbcStatementCache();
-		shared_ptr<OdbcStatement> checkout(long statementId);
-		void checkin(long statementId);
+		shared_ptr<OdbcStatement> checkout(long statement_id);
+		void checkin(long statement_id);
 		size_t size() const { return statements.size(); } 
 		void clear();
 
 	private:
-		shared_ptr<OdbcStatement> find(long statementId);
-		shared_ptr<OdbcStatement> store(shared_ptr<OdbcStatement> st);
+		shared_ptr<OdbcStatement> find(long statement_id);
+		shared_ptr<OdbcStatement> store(shared_ptr<OdbcStatement> statement);
 
 		typedef map<long, shared_ptr<OdbcStatement>> map_statements_t;
 

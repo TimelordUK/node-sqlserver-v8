@@ -20,7 +20,7 @@ namespace mssql
 		_params = make_shared<BoundDatumSet>();
 	}
 
-	bool QueryOperation::ParameterErrorToUserCallback(const uint32_t param, const char* error) const
+	bool QueryOperation::parameter_error_to_user_callback(const uint32_t param, const char* error) const
 	{
 		nodeTypeFactory fact;
 
@@ -48,7 +48,7 @@ namespace mssql
 		const auto res = _params->bind(node_params);
 		if (!res)
 		{
-			ParameterErrorToUserCallback(_params->first_error, _params->err);
+			parameter_error_to_user_callback(_params->first_error, _params->err);
 		}
 
 		return res;

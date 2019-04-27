@@ -202,7 +202,7 @@ namespace mssql
 		for (auto& tvp : tvps)
 		{
 			auto tvpret = SQLSetStmtAttr(statement, SQL_SOPT_SS_PARAM_FOCUS,
-			                             reinterpret_cast<SQLPOINTER>(tvp.first), SQL_IS_INTEGER);
+			                             reinterpret_cast<SQLPOINTER>(static_cast<ULONG>(tvp.first)), SQL_IS_INTEGER);
 			if (!check_odbc_error(tvpret))
 			{
 				return false;
@@ -400,7 +400,7 @@ namespace mssql
 		if (!check_odbc_error(ret)) return false;
 
 		auto& current = _resultset->get_meta_data(column);
-		auto l = name_length + static_cast<SQLSMALLINT>(1);
+		const auto l = name_length + static_cast<SQLSMALLINT>(1);
 		vector<wchar_t> buffer(l);
 		ret = SQLDescribeCol(statement, index, buffer.data(), name_length + 1, &name_length, &current.dataType,
 		                     &current.columnSize, &current.decimalDigits, &current.nullable);
@@ -501,7 +501,7 @@ namespace mssql
 			{
 				if (direct)
 				{
-					ret = SQLExecDirect(statement, reinterpret_cast<SQLWCHAR*>(""), SQL_NTS);
+					ret = SQLExecDirect(statement, reinterpret_cast<SQLWCHAR*>(L""), SQL_NTS);
 				}
 				else
 				{
@@ -561,8 +561,7 @@ namespace mssql
 	}
 
 	void OdbcStatement::cancel_handle()
-	{
-		SQLINTEGER native_error = -1;
+	{		
 		auto hnd = *_statement;
 		const auto ret2 = SQLCancelHandle(hnd.HandleType, hnd.get());
 		if (!check_odbc_error(ret2))

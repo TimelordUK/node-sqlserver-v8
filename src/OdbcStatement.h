@@ -49,7 +49,7 @@ namespace mssql
 		bool created() { return  _statementState == STATEMENT_CREATED; }
 		bool cancel();
 		
-		OdbcStatement(long statementId, shared_ptr<OdbcConnectionHandle> c);
+		OdbcStatement(long statement_id, shared_ptr<OdbcConnectionHandle> c);
 		virtual ~OdbcStatement();
 		SQLLEN get_row_count() const { return _resultset != nullptr ? _resultset->row_count() : -1; }
 		shared_ptr<ResultSet> get_result_set() const
@@ -85,20 +85,20 @@ namespace mssql
 		bool fetch_read(const size_t number_rows);
 		bool prepared_read();
 		SQLRETURN poll_check(SQLRETURN ret, bool direct);
-		bool get_data_binary(size_t row, size_t column);
-		bool get_data_decimal(size_t row, size_t column);
-		bool get_data_bit(size_t row, size_t column);
+		bool get_data_binary(size_t row_id, size_t column);
+		bool get_data_decimal(size_t row_id, size_t column);
+		bool get_data_bit(size_t row_id, size_t column);
 		bool get_data_timestamp(size_t row, size_t column);
-		bool get_data_long(size_t row, size_t column);
-		bool get_data_timestamp_offset(size_t row, size_t column);
+		bool get_data_long(size_t row_id, size_t column);
+		bool get_data_timestamp_offset(size_t row_id, size_t column);
 
 		bool start_reading_results();
 		SQLRETURN query_timeout(int timeout);
-		bool d_variant(size_t row, size_t col);
-		bool d_time(size_t row, size_t col);
+		bool d_variant(size_t row_id, size_t col);
+		bool d_time(size_t row_id, size_t col);
 		bool bounded_string(SQLLEN display_size, size_t row, size_t column);
-		bool reserved_string(const size_t rows_read, const size_t column_size, size_t const column) const;
-		bool reserved_binary(const size_t rows_read, const size_t column_size, size_t const column) const;
+		bool reserved_string(const size_t row_count, const size_t column_size, size_t const column) const;
+		bool reserved_binary(const size_t row_count, const size_t column_size, size_t const column) const;
 		bool reserved_bit(const size_t rows_read, const size_t column) const;
 		bool reserved_int(const size_t rows_read, const size_t column) const;
 		bool reserved_decimal(const size_t rows_read, const size_t column) const;
@@ -119,7 +119,7 @@ namespace mssql
 		bool bind_datum(int current_param, const shared_ptr<BoundDatum> &datum);
 		bool bind_params(const shared_ptr<BoundDatumSet> & params);
 		void queue_tvp(int current_param, param_bindings::iterator &itr, shared_ptr<BoundDatum> &datum, vector <tvp_t> & tvps);
-		bool try_read_string(bool binary, size_t row, size_t column);
+		bool try_read_string(bool binary, size_t row_id, size_t column);
 
 		bool return_odbc_error();
 		bool check_odbc_error(SQLRETURN ret);

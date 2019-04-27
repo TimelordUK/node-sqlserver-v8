@@ -221,14 +221,14 @@ class ProcedureOut implements SimpleTest {
             let s1: string = ProcedureOut.makeid();
             let s2: string = ProcedureOut.makeid();
 
-            let def = 'alter PROCEDURE <name>' +
-                '(\n' +
-                '@id INT,\n' +
-                '@name varchar(20) OUTPUT,\n' +
-                '@company varchar(20) OUTPUT\n' +
-                '\n)' +
-                'AS\n' +
-                'BEGIN\n' +
+            let def = `alter PROCEDURE <name>(
+@id INT,
+@name varchar(20) OUTPUT,
+@company varchar(20) OUTPUT
+
+)AS
+BEGIN
+` +
                 `   SET @name = \'${s1}\'\n` +
                 `   SET @company = \'${s2}\'\n` +
                 '   RETURN 99;\n' +

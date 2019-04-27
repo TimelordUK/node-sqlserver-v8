@@ -43,7 +43,7 @@ function runTest () {
       }
     })
 
-    mocha.suite.on('require', (a, b, c) => {
+    mocha.suite.on('require', () => {
     })
 
     files.forEach(f => {

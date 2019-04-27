@@ -50,8 +50,8 @@ BEGIN
  EXEC sp_executesql N'CREATE SCHEMA ${schemaName}'
 END`
 
-    const tableTypeName = tableName + 'Type'
-    const insertProcedureTypeName = schemaName + '.Insert' + unqualifiedTableName
+    const tableTypeName = `${tableName}Type`
+    const insertProcedureTypeName = `${schemaName}.Insert${unqualifiedTableName}`
     let table
 
     const dropTableSql = `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL 

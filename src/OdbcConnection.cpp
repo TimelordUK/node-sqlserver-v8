@@ -64,7 +64,7 @@ namespace mssql
 	{
 		if (connectionState != Closed)  // fast fail before critical section
 		{			
-			ScopedCriticalSectionLock critSecLock(closeCriticalSection);
+			ScopedCriticalSectionLock crit_sec_lock(closeCriticalSection);
 			//fprintf(stderr, "TryClose - %llu\n", statements->size());
 			statements->clear();
 			if (connectionState != Closed)
@@ -86,7 +86,7 @@ namespace mssql
 		return false;
 	}
 
-	bool OdbcConnection::CheckOdbcError(SQLRETURN ret)
+	bool OdbcConnection::CheckOdbcError(const SQLRETURN ret)
 	{
 		if (!SQL_SUCCEEDED(ret))
 		{

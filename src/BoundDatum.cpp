@@ -12,9 +12,9 @@ namespace mssql
 	static Local<Boolean> get_as_bool(const Local<Value> o, const char* v)
 	{
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		const auto vp = fact.new_string(v);
-		auto false_val = fact.new_boolean(false);
+		const auto false_val = fact.new_boolean(false);
 		if (o->IsNull())
 		{
 			return false_val;
@@ -54,9 +54,9 @@ namespace mssql
 		const auto is_user_defined = get_as_bool(p, "is_user_defined");
 		if (is_user_defined->IsNull()) return false;
 		nodeTypeFactory node;
-		auto context = node.isolate->GetCurrentContext();
+		const auto context = node.isolate->GetCurrentContext();
 		auto maybe = is_user_defined->BooleanValue(context);
-		bool local = maybe.FromMaybe(false);
+		const auto local = maybe.FromMaybe(false);
 		return local;
 	}
 
@@ -91,8 +91,8 @@ namespace mssql
 	static Local<String> get_as_string(const Local<Value> o, const char* v)
 	{
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
-		auto vp = fact.new_string(v);
+		const auto context = fact.isolate->GetCurrentContext();
+		const auto vp = fact.new_string(v);
 		auto maybe = o->ToObject(context);
 		Local<Object> local;
 		if (maybe.ToLocal(&local))
@@ -102,7 +102,7 @@ namespace mssql
 			if (maybe_value.ToLocal(&local_value))
 			{
 				auto maybe_string = local_value->ToString(context);
-				auto default_string = String::Empty(fact.isolate);
+				const auto default_string = String::Empty(fact.isolate);
 				return maybe_string.FromMaybe(default_string);
 			}
 		}
@@ -149,7 +149,7 @@ namespace mssql
 	void BoundDatum::bind_w_var_char(const Local<Value>& p)
 	{
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		auto maybe = p->ToString(context);
 		Local<String> str_param;
 		if (maybe.ToLocal(&str_param)) {
@@ -165,7 +165,7 @@ namespace mssql
 	void BoundDatum::bind_var_char(const Local<Value>& p)
 	{
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		auto maybe = p->ToString(context);
 		Local<String> local;
 		if (maybe.ToLocal(&local)) {
@@ -195,7 +195,7 @@ namespace mssql
 		if (!p->IsNull())
 		{
 			nodeTypeFactory fact;
-			auto context = fact.isolate->GetCurrentContext();
+			const auto context = fact.isolate->GetCurrentContext();
 			auto maybe = p->ToString(context);
 			Local<String> str_param;
 			if (maybe.ToLocal(&str_param)) {
@@ -211,11 +211,11 @@ namespace mssql
 		auto arr = Local<Array>::Cast(p);
 		const auto len = arr->Length();
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			auto maybe_value = arr->Get(context, i);
-			Local<String> local;
+			
 			Local<Value> local_value;
 			if (maybe_value.ToLocal(&local_value))
 			{
@@ -253,7 +253,7 @@ namespace mssql
 		const auto size = sizeof(uint16_t);
 		reserve_w_var_char_array(max_str_len, array_len);
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		auto itr = _storage->uint16vec_ptr->begin();
 		for (uint32_t i = 0; i < array_len; ++i)
 		{
@@ -262,7 +262,7 @@ namespace mssql
 			if (!elem->IsNull())
 			{
 				auto maybe_value = arr->Get(context, i);
-				Local<String> local;
+				
 				Local<Value> local_value;
 				if (maybe_value.ToLocal(&local_value))
 				{
@@ -285,7 +285,7 @@ namespace mssql
 		const auto size = sizeof(uint16_t);
 		reserve_w_var_char_array(max_str_len, 1);
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
@@ -314,7 +314,7 @@ namespace mssql
 		auto arr = Local<Array>::Cast(p);
 		const auto len = arr->Length();
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			auto maybe = arr->Get(context, i);
@@ -378,7 +378,7 @@ namespace mssql
 	{
 		auto rows = 1;
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		auto maybe_object = p->ToObject(context);
 		Local<Object> local;
 		if (maybe_object.ToLocal(&local)) {
@@ -396,7 +396,7 @@ namespace mssql
 
 	wstring wide_from_js_string(const Local<String> s)
 	{
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
 		char tmp[1 * 1024];
 		const auto precision = min(1024, s->Length() + 1);
@@ -409,8 +409,8 @@ namespace mssql
 	void BoundDatum::bind_tvp(Local<Value>& p)
 	{
 		wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
-		//string narrow = converter.to_bytes(wide_utf16_source_string);
-		//fprintf(stderr, "bind tvp\n");
+		// string narrow = converter.to_bytes(wide_utf16_source_string);
+		// fprintf(stderr, "bind tvp\n");
 		is_tvp = true;
 		param_type = SQL_PARAM_INPUT;
 		c_type = SQL_C_DEFAULT;
@@ -418,7 +418,7 @@ namespace mssql
 		const auto rows = get_row_count(p);
 		const auto type_id_str = get_as_string(p, "type_id");
 		const auto schema_str = get_as_string(p, "schema");
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		if (!schema_str->IsNull())
 		{
 			_storage->schema = wide_from_js_string(schema_str);
@@ -463,7 +463,7 @@ namespace mssql
 		reserve_var_binary_array(max_obj_len, array_len);
 		auto itr = _storage->charvec_ptr->data();
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		for (uint32_t i = 0; i < array_len; ++i)
 		{
 			_indvec[i] = SQL_NULL_DATA;
@@ -494,9 +494,9 @@ namespace mssql
 		if (!p->IsNull())
 		{
 			nodeTypeFactory fact;
-			auto context = fact.isolate->GetCurrentContext();
+			const auto context = fact.isolate->GetCurrentContext();
 			auto maybe = p->BooleanValue(context);
-			auto v = maybe.FromMaybe(false);
+			const auto v = maybe.FromMaybe(false);
 			vec[0] = !v ? 0 : 1;
 			_indvec[0] = 0;
 		}
@@ -509,7 +509,7 @@ namespace mssql
 		reserve_boolean(len);
 		auto& vec = *_storage->charvec_ptr;
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			_indvec[i] = SQL_NULL_DATA;
@@ -517,7 +517,7 @@ namespace mssql
 			if (!elem->IsNull())
 			{
 				auto maybe = elem->BooleanValue(context);
-				auto v = maybe.FromMaybe(false);
+				const auto v = maybe.FromMaybe(false);
 				const auto b = !v ? 0 : 1;
 				vec[i] = b;
 				_indvec[i] = 0;
@@ -547,7 +547,7 @@ namespace mssql
 		if (!p->IsNull())
 		{
 			nodeTypeFactory fact;
-			auto context = fact.isolate->GetCurrentContext();
+			const auto context = fact.isolate->GetCurrentContext();
 			auto maybe = p->ToNumber(context);
 			Local<Number> local;
 			if (maybe.ToLocal(&local)) {
@@ -574,11 +574,11 @@ namespace mssql
 			_indvec[i] = SQL_NULL_DATA;
 			const auto elem = arr->Get(i);
 			nodeTypeFactory fact;
-			auto context = fact.isolate->GetCurrentContext();
+			const auto context = fact.isolate->GetCurrentContext();
 			if (!elem->IsNull())
 			{
 				auto maybe = elem->ToNumber(context);
-				Local<Number> local;
+				const Local<Number> local;
 				const auto d = local->Value();
 				encode_numeric_struct(d, static_cast<int>(param_size), digits, ns);
 				param_size = ns.precision;
@@ -618,14 +618,14 @@ namespace mssql
 		_indvec[0] = SQL_NULL_DATA;
 		auto& vec = *_storage->int32vec_ptr;
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		vec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
 			auto maybe = p->ToInt32(context);
 			Local<Int32> local;
 			if (maybe.ToLocal(&local)) {
-				auto d = local->Value();
+				const auto d = local->Value();
 				vec[0] = d;
 				_indvec[0] = 0;
 			}
@@ -639,7 +639,7 @@ namespace mssql
 		reserve_int32(len);
 		auto& vec = *_storage->int32vec_ptr;
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		for (auto i = 0; i < len; ++i)
 		{
 			_indvec[i] = SQL_NULL_DATA;
@@ -679,7 +679,7 @@ namespace mssql
 		auto& vec = *_storage->uint32vec_ptr;
 		_indvec[0] = SQL_NULL_DATA;
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		if (!p->IsNull())
 		{
 			auto maybe = p->ToUint32(context);
@@ -698,7 +698,7 @@ namespace mssql
 		reserve_uint32(len);
 		auto& vec = *_storage->uint32vec_ptr;
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			_indvec[i] = SQL_NULL_DATA;
@@ -740,7 +740,7 @@ namespace mssql
 		if (!p->IsNull())
 		{
 			nodeTypeFactory fact;
-			auto context = fact.isolate->GetCurrentContext();
+			const auto context = fact.isolate->GetCurrentContext();
 			auto date_object = Handle<Date>::Cast<Value>(p);
 			assert(!date_object.IsEmpty());
 			// dates in JS are stored internally as ms count from Jan 1, 1970
@@ -781,7 +781,7 @@ namespace mssql
 		if (!p->IsNull())
 		{
 			nodeTypeFactory fact;
-			auto context = fact.isolate->GetCurrentContext();
+			const auto context = fact.isolate->GetCurrentContext();
 			auto date_object = Handle<Date>::Cast<Value>(p);
 			assert(!date_object.IsEmpty());
 			// dates in JS are stored internally as ms count from Jan 1, 1970
@@ -819,7 +819,7 @@ namespace mssql
 		// Since JS dates have no timezone context, all dates are assumed to be UTC
 		_indvec[0] = SQL_NULL_DATA;
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		if (!p->IsNull())
 		{
 			auto date_object = Handle<Date>::Cast<Value>(p);
@@ -858,7 +858,7 @@ namespace mssql
 		// Since JS dates have no timezone context, all dates are assumed to be UTC
 		_indvec[0] = SQL_NULL_DATA;
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		if (!p->IsNull())
 		{
 			auto date_object = Handle<Date>::Cast<Value>(p);
@@ -899,7 +899,7 @@ namespace mssql
 		auto& vec = *_storage->timestampoffsetvec_ptr;
 		buffer_len = sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT);
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			_indvec[i] = SQL_NULL_DATA;
@@ -922,7 +922,7 @@ namespace mssql
 	void BoundDatum::bind_integer(const Local<Value>& p)
 	{
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		reserve_integer(1);
 		auto& vec = *_storage->int64vec_ptr;
 		_indvec[0] = SQL_NULL_DATA;
@@ -954,7 +954,7 @@ namespace mssql
 	void BoundDatum::bind_integer_array(const Local<Value>& p)
 	{
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		auto arr = Local<Array>::Cast(p);
 		const auto len = arr->Length();
 		reserve_integer(len);
@@ -990,7 +990,7 @@ namespace mssql
 	void BoundDatum::bind_double(const Local<Value>& p)
 	{
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		reserve_double(1);
 		auto& vec = *_storage->doublevec_ptr;
 		_indvec[0] = SQL_NULL_DATA;
@@ -1025,7 +1025,7 @@ namespace mssql
 		const auto len = arr->Length();
 		reserve_double(len);
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		auto& vec = *_storage->doublevec_ptr;
 		for (uint32_t i = 0; i < len; ++i)
 		{
@@ -1051,7 +1051,7 @@ namespace mssql
 		// numbers can be either integers or doubles.  We attempt to determine which it is through a simple
 		// cast and equality check
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		auto maybe = p->ToNumber(context);
 		Local<Number> local;
 		if (maybe.ToLocal(&local)) {
@@ -1072,7 +1072,7 @@ namespace mssql
 	void BoundDatum::bind_number_array(const Local<Value>& pp)
 	{
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		auto arr = Local<Array>::Cast(pp);
 		auto maybe_elem = arr->Get(context, 0);
 		Local<Value> p;
@@ -1080,7 +1080,7 @@ namespace mssql
 			auto maybe = p->ToNumber(context);
 			Local<Number> local;
 			if (maybe.ToLocal(&local)) {
-				auto d = local->Value();
+				const auto d = local->Value();
 				if (d == floor(d) &&
 					d >= numeric_limits<int64_t>::min() &&
 					d <= numeric_limits<int64_t>::max())
@@ -1182,7 +1182,7 @@ namespace mssql
 		return res;
 	}
 
-	bool sql_type_s_maps_totring(const Local<Value> p)
+	bool sql_type_s_maps_to_string(const Local<Value> p)
 	{
 		const auto str = get_as_string(p, "type_id");
 		const auto v = FromV8String(str);
@@ -1209,7 +1209,7 @@ namespace mssql
 	bool BoundDatum::bind_datum_type(Local<Value>& p)
 	{
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		if (p->IsNull())
 		{
 			bind_null(p);
@@ -1232,10 +1232,10 @@ namespace mssql
 		}
 		else if (p->IsNumber())
 		{
-			MaybeLocal<Number> maybe = p->ToNumber(context);
+			auto maybe = p->ToNumber(context);
 			Local<Number> local;
 			if (maybe.ToLocal(&local)) {
-				auto d = local->Value();
+				const auto d = local->Value();
 				if (_isnan(d) || !_finite(d))
 				{
 					err = static_cast<char*>("Invalid number parameter");
@@ -1290,10 +1290,10 @@ namespace mssql
 		{
 			pval = fact.new_date();
 		}
-		else if (sql_type_s_maps_totring(p))
+		else if (sql_type_s_maps_to_string(p))
 		{
 			vector<char> b;
-			b.resize(size + 1);
+			b.resize(static_cast<size_t>(size + 1));
 			pval = fact.new_string(b.data(), size + 1);
 		}
 		else
@@ -1306,7 +1306,7 @@ namespace mssql
 	bool BoundDatum::proc_bind(Local<Value>& p, Local<Value>& v)
 	{
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		auto maybe_is_output = v->ToInteger(context);
 		Local<Integer> is_output;
 		if (!maybe_is_output.ToLocal(&is_output))
@@ -1355,7 +1355,7 @@ namespace mssql
 	void BoundDatum::assign_precision(Local<Object>& pv)
 	{
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		const auto precision = get_as_value(pv, "precision");
 		if (!precision->IsUndefined())
 		{
@@ -1621,9 +1621,9 @@ namespace mssql
 	bool BoundDatum::user_bind(Local<Value>& p, Local<Value>& v)
 	{
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		auto maybe_sql_type = v->Int32Value(fact.isolate->GetCurrentContext());
-		auto local_sql_type = maybe_sql_type.FromMaybe(0);
+		const auto local_sql_type = maybe_sql_type.FromMaybe(0);
 		if (local_sql_type == 0) return false;
 		sql_type = local_sql_type;
 		param_type = SQL_PARAM_INPUT;
@@ -1732,7 +1732,7 @@ namespace mssql
 	{
 		// fprintf(stderr, "bind obj\n");
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		auto maybe_object = p->ToObject(context);
 		Local<Object> po;
 		if (!maybe_object.ToLocal(&po))

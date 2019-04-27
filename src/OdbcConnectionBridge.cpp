@@ -105,7 +105,7 @@ namespace mssql
 	int32_t getint32(Handle<Number> l)
 	{
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		if (!l->IsNull())
 		{
 			auto maybe = l->ToInt32(context);
@@ -118,10 +118,10 @@ namespace mssql
 		return 0;
 	}
 
-	bool getbool(Handle<Boolean> l)
+	bool getbool(const Handle<Boolean> l)
 	{
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		if (!l->IsNull())
 		{
 			auto maybe = l->ToBoolean(context);
@@ -134,10 +134,10 @@ namespace mssql
 		return false;
 	}
 
-	Local<String> getstring(Local<Value> l)
+	Local<String> getstring(const Local<Value> l)
 	{
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const auto context = fact.isolate->GetCurrentContext();
 		if (!l->IsNull())
 		{
 			auto maybe = l->ToString(context);
@@ -147,7 +147,7 @@ namespace mssql
 				return local;
 			}
 		}
-		Local<String> s;
+		const Local<String> s;
 		return s;
 	}
 
@@ -254,13 +254,13 @@ namespace mssql
 	Handle<Value> OdbcConnectionBridge::open(const Handle<Object> connection_object, Handle<Object> callback, Handle<Object> backpointer)
 	{
 		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
-		auto cs = get(connection_object, "conn_str");
+		const auto context = fact.isolate->GetCurrentContext();
+		const auto cs = get(connection_object, "conn_str");
 		const auto connection_string = getstring(cs);
-		auto to = get(connection_object, "conn_timeout");
+		const auto to = get(connection_object, "conn_timeout");
 		auto maybe_to = to->ToInt32(context);
 		Local<Int32> local;
-		int timeout = 0;
+		auto timeout = 0;
 		if (maybe_to.ToLocal(&local)) {
 			timeout = local->Value();
 		}

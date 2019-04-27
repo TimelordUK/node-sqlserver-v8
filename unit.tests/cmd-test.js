@@ -192,14 +192,14 @@ class ProcedureOut {
             let spName = 'test_sp_get_str_str';
             let s1 = ProcedureOut.makeid();
             let s2 = ProcedureOut.makeid();
-            let def = 'alter PROCEDURE <name>' +
-                '(\n' +
-                '@id INT,\n' +
-                '@name varchar(20) OUTPUT,\n' +
-                '@company varchar(20) OUTPUT\n' +
-                '\n)' +
-                'AS\n' +
-                'BEGIN\n' +
+            let def = `alter PROCEDURE <name>(
+@id INT,
+@name varchar(20) OUTPUT,
+@company varchar(20) OUTPUT
+
+)AS
+BEGIN
+` +
                 `   SET @name = \'${s1}\'\n` +
                 `   SET @company = \'${s2}\'\n` +
                 '   RETURN 99;\n' +

@@ -71,7 +71,7 @@ function getTimezoneOffsetInHours (year, month, day) {
 }
 
 //    Create table for test data
-function createTable (Connection, TableName, ColumnName, TestType, done) {
+const createTable = (Connection, TableName, ColumnName, TestType, done) => {
   const support = new supp.DemoSupport(sql, '')
   const async = new support.Async()
 
@@ -127,7 +127,7 @@ test note createTable3_CommonTestFunctions.js ... returning
 }
 
 //    insert test data via parameters
-function insertDataBP (Connection, TableName, ColumnName, TestData, done) {
+const insertDataBP = (Connection, TableName, ColumnName, TestData, done) => {
   if (SKIP_BINDPARAM_TEST_CASES === true) {
     done()
   } else {
@@ -143,7 +143,7 @@ ${tsql}`)
 }
 
 //    insert test data via TSQL
-function insertDataTSQL (Connection, TableName, ColumnName, TestData, done) {
+const insertDataTSQL = (Connection, TableName, ColumnName, TestData, done) => {
   const tsql = `INSERT INTO ${TableName} (${ColumnName}) VALUES (${TestData})`
   // console.log(tsql);
   debugComments(`
@@ -167,7 +167,7 @@ ${assert.toString()}`))
 }
 
 //    batched query comprised of (currently) 3 TSQL queries
-function compoundQueryTSQL (Connection, tsql, ExpectedData1, ExpectedData2, ExpectedData3, testname, done) {
+const compoundQueryTSQL = (Connection, tsql, ExpectedData1, ExpectedData2, ExpectedData3, testname, done) => {
   debugComments(`
 test note compoundQueryTSQL_CommonTestFunctions.js ... executing: 
 ${tsql}`)
@@ -208,7 +208,7 @@ ${tsql}`)
 }
 
 //    batched query comprised of (currently) 3 TSQL queries
-function compoundQueryTSQLNewConnection (ConnectionString, tsql, ExpectedData1, ExpectedData2, ExpectedData3, testname, done) {
+const compoundQueryTSQLNewConnection = (ConnectionString, tsql, ExpectedData1, ExpectedData2, ExpectedData3, testname, done) => {
   debugComments(`
 test note compoundQueryTSQL_CommonTestFunctions.js ... executing: 
 ${tsql}`)
@@ -257,7 +257,7 @@ test note compoundQueryTSQLNewConnection04_CommonTestFunctions.js ... now in cat
 }
 
 //  'tsql' contains an invalid and should fail with the error 'ExpectedError'
-function invalidQueryTSQL (Connection, tsql, ExpectedError, testname, done) {
+const invalidQueryTSQL = (Connection, tsql, ExpectedError, testname, done) => {
   debugComments(`
 test note invalidQueryTSQL_CommonTestFunctions.js ... executing: 
 ${tsql}`)
@@ -274,7 +274,7 @@ invalid query failed as expected
 
 // compare fetched results from an ordered SELECT stmt against expected results. If comparison fails,
 // increment 'test failed' counter without causing tests to not respond via unhandled assert.
-function verifyData (Connection, TableName, ColumnName, ExpectedData, testname, done) {
+const verifyData = (Connection, TableName, ColumnName, ExpectedData, testname, done) => {
   const tsql = 'SELECT * FROM ' + TableName + ' ORDER BY id'
   debugComments('\ntest note verifyData_CommonTestFunctions.js ... executing: \n' + tsql)
   try {
@@ -308,7 +308,7 @@ ${e.toString()}`))
 // datetime types specific data verification function...
 // compare fetched results from an ordered SELECT stmt against expected results. If comparison fails,
 // increment 'test failed' counter without causing tests to not respond via unhandled assert.
-function verifyDataDatetime (Connection, TableName, ColumnName, RowWithNullData, ExpectedData, testname, done) {
+const verifyDataDatetime = (Connection, TableName, ColumnName, RowWithNullData, ExpectedData, testname, done) => {
   const tsql = 'SELECT col2 FROM ' + TableName + ' ORDER BY id'
   let row = 23
   let numberOfRows = 72

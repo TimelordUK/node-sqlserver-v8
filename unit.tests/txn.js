@@ -236,7 +236,7 @@ suite('txn', function () {
         const q = theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Carl\')\'m with STUPID')
         // events are emitted before callbacks are called currently
         q.on('error', err => {
-          const expected = new Error('[Microsoft][' + driver + '][SQL Server]Unclosed quotation mark after the character string \'m with STUPID\'.')
+          const expected = new Error(`[Microsoft][${driver}][SQL Server]Unclosed quotation mark after the character string 'm with STUPID'.`)
           expected.sqlstate = '42000'
           expected.code = 105
 

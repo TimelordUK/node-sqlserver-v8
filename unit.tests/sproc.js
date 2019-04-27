@@ -8,6 +8,7 @@ suite('sproc', function () {
   let connStr
   let theConnection
   let support
+  let driver
   let async
   let helper
   let procedureHelper
@@ -19,6 +20,7 @@ suite('sproc', function () {
     supp.GlobalConn.init(sql, co => {
       connStr = global.conn_str || co.conn_str
       support = co.support
+      driver = co.driver
       procedureHelper = new support.ProcedureHelper(connStr)
       procedureHelper.setVerbose(false)
       async = co.async
@@ -70,7 +72,7 @@ END
           const received = []
           const iterations = 10
 
-          function check () {
+          const check = () => {
             for (i = 0; i < iterations; ++i) {
               const expected = [99, i * 2]
               assert.deepStrictEqual(received[i], expected, 'results didn\'t match')
@@ -130,7 +132,7 @@ END
           const received = []
           const iterations = 1000
 
-          function check () {
+          const check = () => {
             for (let i = 0; i < iterations; ++i) {
               const expected = [99, i * 2]
               assert.deepStrictEqual(received[i], expected, 'results didn\'t match')
@@ -285,19 +287,19 @@ END
     })
   })
 
-  test('call proc that waits for delay of input param - wait 2, timeout 5 - should not error', testDone => {
-    const spName = 'test_spwait_for'
-
-    const def = `alter PROCEDURE <name>(
+  const waitProcDef = `alter PROCEDURE <name>(
 @timeout datetime
 )AS
 BEGIN
 waitfor delay @timeout;END
 `
 
+  test('call proc that waits for delay of input param - wait 2, timeout 5 - should not error', testDone => {
+    const spName = 'test_spwait_for'
+
     const fns = [
       asyncDone => {
-        procedureHelper.createProcedure(spName, def, () => {
+        procedureHelper.createProcedure(spName, waitProcDef, () => {
           asyncDone()
         })
       },
@@ -307,6 +309,74 @@ waitfor delay @timeout;END
         pm.setTimeout(5)
         pm.callproc(spName, ['0:0:2'], err => {
           assert.ifError(err)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('call proc that waits for delay of input param - wait 5, timeout 2 - should error', testDone => {
+    const spName = 'test_spwait_for'
+
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, waitProcDef, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const expected = new Error(`[Microsoft][${driver}]Query timeout expired`)
+        expected.sqlstate = 'HYT00'
+        expected.code = 0
+        const pm = theConnection.procedureMgr()
+        pm.setTimeout(2)
+        pm.callproc(spName, ['0:0:5'], err => {
+          assert.deepStrictEqual(err, expected)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('call proc error with timeout then query on same connection', testDone => {
+    const spName = 'test_spwait_for'
+
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, waitProcDef, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const expected = new Error(`[Microsoft][${driver}]Query timeout expired`)
+        expected.sqlstate = 'HYT00'
+        expected.code = 0
+        const pm = theConnection.procedureMgr()
+        pm.setTimeout(2)
+        pm.callproc(spName, ['0:0:5'], err => {
+          assert.deepStrictEqual(err, expected)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const expected = [
+          {
+            n: 1
+          }]
+        sql.query(connStr, 'SELECT 1 as n', (err, res) => {
+          assert.ifError(err)
+          assert.deepStrictEqual(expected, res)
           asyncDone()
         })
       }

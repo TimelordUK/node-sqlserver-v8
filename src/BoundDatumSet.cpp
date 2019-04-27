@@ -114,7 +114,7 @@ namespace mssql
 				case SQL_PARAM_OUTPUT:
 				case SQL_PARAM_INPUT_OUTPUT:
 				{
-					auto v = param->unbind();
+					const auto v = param->unbind();
 					arr->Set(i++, v);
 				}
 				break;

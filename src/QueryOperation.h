@@ -40,7 +40,7 @@ namespace mssql
 			Handle<Object> callback);
 		bool bind_parameters(Handle<Array> & node_params) const;
 		// called by BindParameters when an error occurs.  It passes a node.js error to the user's callback.
-		bool ParameterErrorToUserCallback(uint32_t param, const char* error) const;
+		bool parameter_error_to_user_callback(uint32_t param, const char* error) const;
 		bool TryInvokeOdbc() override;
 		Local<Value> CreateCompletionArg() override;
 

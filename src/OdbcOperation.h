@@ -31,6 +31,20 @@ namespace mssql
 
 	class OdbcOperation : public Operation
 	{
+	public:
+
+		OdbcOperation(size_t query_id, Local<Object> cb);
+		OdbcOperation(const shared_ptr<OdbcConnection>& connection, size_t query_id, Local<Object>);
+		OdbcOperation(const shared_ptr<OdbcConnection>& connection, Local<Object> cb);
+
+		virtual ~OdbcOperation();
+		virtual bool TryInvokeOdbc() = 0;
+		virtual Local<Value> CreateCompletionArg() = 0;
+
+		void getFailure();
+		void invoke_background() override;
+		void complete_foreground() override;
+
 	protected:
 
 		friend OdbcConnection;
@@ -50,20 +64,6 @@ namespace mssql
 		clock_capture timer;
 		int error(Local<Value> args[]);
 		int success(Local<Value> args[]);
-		
-	public:
-
-		OdbcOperation(size_t queryId, Local<Object> cb);
-		OdbcOperation(const shared_ptr<OdbcConnection> &connection, size_t queryId, Local<Object>);
-		OdbcOperation(const shared_ptr<OdbcConnection> &connection, Local<Object> cb);
-
-		virtual ~OdbcOperation();
-		virtual bool TryInvokeOdbc() = 0;
-		virtual Local<Value> CreateCompletionArg() = 0;
-
-		void getFailure();
-		void invoke_background() override;
-		void complete_foreground() override;
 	};
 }
 
