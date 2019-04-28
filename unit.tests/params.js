@@ -76,14 +76,14 @@ suite('params', function () {
     const sequence = [
 
       asyncDone => {
-        const dropQuery = 'DROP TABLE ' + tableName
+        const dropQuery = `DROP TABLE ${tableName}`
         theConnection.query(dropQuery, () => {
           asyncDone()
         })
       },
 
       asyncDone => {
-        const createQuery = 'CREATE TABLE ' + tableName + tableFieldsSql
+        const createQuery = `CREATE TABLE ${tableName}${tableFieldsSql}`
         theConnection.query(createQuery,
           e => {
             assert.ifError(e, 'Error creating table')
