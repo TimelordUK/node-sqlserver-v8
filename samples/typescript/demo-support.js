@@ -1,15 +1,15 @@
 'use strict'
 
-var fs = require('fs')
-var path = require('path')
+const fs = require('fs')
+const path = require('path')
 const assert = require('assert')
 
-var GlobalConn = (function () {
-  var connStr = 'set global connection here'
+const GlobalConn = (() => {
+  const connStr = 'set global connection here'
 
   function getSqlLocalDbPipe (done) {
-    var childProcess = require('child_process')
-    var oldSpawn = childProcess.spawn
+    const childProcess = require('child_process')
+    const oldSpawn = childProcess.spawn
 
     function mySpawn () {
       //  console.log('spawn called');
@@ -19,61 +19,61 @@ var GlobalConn = (function () {
 
     childProcess.spawn = mySpawn
 
-    function extract (a) {
+    const extract = a => {
       a = a.trim()
-      var idx = a.indexOf('np:')
+      const idx = a.indexOf('np:')
       if (idx > 0) {
         a = a.substr(idx)
       }
       return a
     }
 
-    var child = childProcess.spawn('sqllocaldb', ['info', 'node'])
-    child.stdout.on('data', function (data) {
-      var str = data.toString()
-      var arr = str.split('\r')
-      arr.forEach(function (a) {
-        var idx = a.indexOf('np:')
+    const child = childProcess.spawn('sqllocaldb', ['info', 'node'])
+    child.stdout.on('data', data => {
+      const str = data.toString()
+      const arr = str.split('\r')
+      arr.forEach(a => {
+        const idx = a.indexOf('np:')
         if (idx > 0) {
-          var pipe = extract(a)
-          setImmediate(function () {
+          const pipe = extract(a)
+          setImmediate(() => {
             done(pipe)
           })
         }
       })
       //  Here is where the output goes
     })
-    child.stderr.on('data', function (data) {
+    child.stderr.on('data', data => {
       console.log('stderr: ' + data)
       //  Here is where the error output goes
     })
-    child.on('close', function (code) {
+    child.on('close', () => {
       //  console.log('closing code: ' + code);
       //  Here you can get the exit code of the script
     })
-    child.on('error', function (code) {
+    child.on('error', code => {
       console.log('closing code: ' + code)
       process.exit()
       //  Here you can get the exit code of the script
     })
   }
 
-  var driver = 'SQL Server Native Client 11.0'
-  var database = 'scratch'
+  const driver = 'SQL Server Native Client 11.0'
+  const database = 'scratch'
 
   function getLocalConnStr (done) {
-    getSqlLocalDbPipe(function (pipe) {
-      var conn = 'Driver={' + driver + '}; Server=' + pipe + '; Database={' + database + '}; Trusted_Connection=Yes;'
+    getSqlLocalDbPipe(pipe => {
+      const conn = `Driver={${driver}}; Server=${pipe}; Database={${database}}; Trusted_Connection=Yes;`
       done(conn)
     })
   }
 
   function init (sql, done, candidateConnStr) {
-    var ds = new DemoSupport()
+    const ds = new DemoSupport()
 
     if (!candidateConnStr) {
-      getLocalConnStr(function (cs) {
-        var ret = {
+      getLocalConnStr(cs => {
+        const ret = {
           driver: driver,
           database: database,
           conn_str: cs,
@@ -84,7 +84,7 @@ var GlobalConn = (function () {
         done(ret)
       })
     } else {
-      var ret = {
+      const ret = {
         driver: driver,
         database: database,
         conn_str: candidateConnStr,
@@ -107,7 +107,7 @@ var GlobalConn = (function () {
 })()
 
 function DemoSupport (native) {
-  var sql = native
+  const sql = native
 
   function Assert () {
     function ifError (err) {
@@ -130,11 +130,11 @@ function DemoSupport (native) {
 
   function Async () {
     function series (suite, done) {
-      var i = 0
+      let i = 0
       next()
 
       function next () {
-        var fn = suite[i]
+        const fn = suite[i]
         fn(function () {
           iterate()
         })
@@ -152,25 +152,25 @@ function DemoSupport (native) {
   }
 
   function ProcedureHelper (conn) {
-    var connStr = conn
-    var async = new Async()
-    var assert = new Assert()
-    var verbose = true
+    let connStr = conn
+    const async = new Async()
+    const assert = new Assert()
+    let verbose = true
 
     function createProcedure (procedureName, procedureSql, doneFunction) {
       procedureSql = procedureSql.replace(/<name>/g, procedureName)
 
-      var sequence = [
-        function (asyncDone) {
-          var createSql = 'IF NOT EXISTS (SELECT *  FROM sys.objects WHERE type = \'P\' AND name = \'' + procedureName + '\')'
-          createSql += ' EXEC (\'CREATE PROCEDURE ' + procedureName + ' AS BEGIN SET nocount ON; END\')'
+      const sequence = [
+        asyncDone => {
+          let createSql = `IF NOT EXISTS (SELECT *  FROM sys.objects WHERE type = 'P' AND name = '${procedureName}')`
+          createSql += ` EXEC ('CREATE PROCEDURE ${procedureName} AS BEGIN SET nocount ON; END')`
           if (verbose) console.log(createSql)
-          sql.query(connStr, createSql, function () {
+          sql.query(connStr, createSql, () => {
             asyncDone()
           })
         },
 
-        function (asyncDone) {
+        asyncDone => {
           sql.query(connStr, procedureSql,
             function (e) {
               assert.ifError(e, 'Error creating procedure.')
@@ -180,7 +180,7 @@ function DemoSupport (native) {
       ]
 
       async.series(sequence,
-        function () {
+        () => {
           doneFunction()
         })
     }
@@ -194,18 +194,18 @@ function DemoSupport (native) {
   }
 
   function EmployeeHelper (native, cstr) {
-    var connStr = cstr
-    var sql = native
-    var verbose = true
+    const connStr = cstr
+    const sql = native
+    let verbose = true
 
     function setVerbose (v) {
       verbose = v
     }
 
     function extractKey (parsedJSON, key) {
-      var keys = []
-      parsedJSON.forEach(function (emp) {
-        var obj = {}
+      const keys = []
+      parsedJSON.forEach(emp => {
+        const obj = {}
         obj[key] = emp[key]
         keys.push(obj)
       })
@@ -213,22 +213,22 @@ function DemoSupport (native) {
     }
 
     function dropCreateTable (params, doneFunction) {
-      var async = new Async()
-      var tableName = params.tableName
-      var rootPath = params.rootPath || '../../unit.tests'
-      var columnName = params.columnName || 'col1'
-      var type = params.type
-      var theConnection = params.theConnection
-      var insert = false
+      const async = new Async()
+      const tableName = params.tableName
+      const rootPath = params.rootPath || '../../unit.tests'
+      const columnName = params.columnName || 'col1'
+      const type = params.type
+      const theConnection = params.theConnection
+      let insert = false
       if (params.hasOwnProperty('insert')) {
         insert = params.insert
       }
-      var assert = new Assert()
-      var conn
+      const assert = new Assert()
+      let conn
 
       function readFile (f, done) {
         if (verbose) console.log('reading ' + f)
-        fs.readFile(f, 'utf8', function (err, data) {
+        fs.readFile(f, 'utf8', (err, data) => {
           if (err) {
             done(err)
           } else {
@@ -237,7 +237,7 @@ function DemoSupport (native) {
         })
       }
 
-      var sequence = [
+      const sequence = [
 
         function (asyncDone) {
           if (theConnection) {
@@ -253,7 +253,7 @@ function DemoSupport (native) {
         },
 
         function (asyncDone) {
-          var dropSql = 'DROP TABLE ' + tableName
+          const dropSql = 'DROP TABLE ' + tableName
           if (verbose) console.log(dropSql)
           conn.query(dropSql, function () {
             asyncDone()
@@ -261,16 +261,16 @@ function DemoSupport (native) {
         },
 
         function (asyncDone) {
-          var folder = path.join(__dirname, rootPath)
-          var fileName = tableName
+          const folder = path.join(__dirname, rootPath)
+          let fileName = tableName
           if (fileName.charAt(0) === '#') {
             fileName = fileName.substr(1)
           }
-          var file = folder + '/sql/' + fileName
+          let file = folder + '/sql/' + fileName
           file += '.sql'
 
           function inChunks (arr, callback) {
-            var i = 0
+            let i = 0
             if (verbose) console.log(arr[i])
             conn.query(arr[i], next)
 
@@ -280,7 +280,7 @@ function DemoSupport (native) {
               ++i
               if (i < arr.length) {
                 if (verbose) console.log(arr[i])
-                conn.query(arr[i], function (err, res) {
+                conn.query(arr[i], (err, res) => {
                   next(err, res)
                 })
               } else {
@@ -290,31 +290,31 @@ function DemoSupport (native) {
           }
 
           // submit the SQL one chunk at a time to create table with constraints.
-          readFile(file, function (createSql) {
+          readFile(file, createSql => {
             createSql = createSql.replace(/<name>/g, tableName)
             createSql = createSql.replace(/<type>/g, type)
             createSql = createSql.replace(/<col_name>/g, columnName)
-            var arr = createSql.split('GO')
-            for (var i = 0; i < arr.length; ++i) {
+            const arr = createSql.split('GO')
+            for (let i = 0; i < arr.length; ++i) {
               arr[i] = arr[i].replace(/^\s+|\s+$/g, '')
             }
-            inChunks(arr, function () {
+            inChunks(arr, () => {
               asyncDone()
             })
           })
         },
 
-        function (asyncDone) {
+        asyncDone => {
           if (!insert) {
             asyncDone()
           }
         },
 
-        function (asyncDone) {
+        asyncDone => {
           if (theConnection) {
             asyncDone()
           } else {
-            conn.close(function () {
+            conn.close(() => {
               asyncDone()
             })
           }
@@ -322,7 +322,7 @@ function DemoSupport (native) {
       ]
 
       async.series(sequence,
-        function () {
+        () => {
           doneFunction()
         })
     }
@@ -358,13 +358,13 @@ function DemoSupport (native) {
     }
 
     function getJSON (stem) {
-      var p = stem || '../../unit.tests/json'
-      var folder = path.join(__dirname, p)
-      var fs = require('fs')
+      const p = stem || '../../unit.tests/json'
+      const folder = path.join(__dirname, p)
+      const fs = require('fs')
 
-      var parsedJSON = JSON.parse(fs.readFileSync(folder + '/employee.json', 'utf8'))
+      const parsedJSON = JSON.parse(fs.readFileSync(folder + '/employee.json', 'utf8'))
 
-      for (var i = 0; i < parsedJSON.length; ++i) {
+      for (let i = 0; i < parsedJSON.length; ++i) {
         const rec = parsedJSON[i]
         rec.OrganizationNode = Buffer.from(rec.OrganizationNode.data, 'utf8')
         rec.BirthDate = new Date(rec.BirthDate)
