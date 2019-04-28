@@ -382,7 +382,7 @@ suite('datatypes', function () {
     // Month in JS is 0-based, so expected will be month minus 1
     const jsDateExpected = new Date(year, month - 1, day, hour - commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
     const testdata2Expected = '2001-04-10 10:12:59.1234567'
-    const testdata2TsqlInsert = '\'' + testdata2Expected + '\''
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
 
     const fns = [
 
@@ -639,7 +639,7 @@ suite('datatypes', function () {
   testname = 'test 008 - insert null into varchar(max) via TSQL, fetch as text'
   test(testname, done => {
     const testcolumnsize = 0
-    const testcolumntype = ' varchar(' + 'max' + ')'
+    const testcolumntype = ' varchar(max)'
     const testcolumnclienttype = 'text'
     const testcolumnsqltype = 'varchar'
     const testcolumnname = 'col2'
@@ -682,7 +682,7 @@ suite('datatypes', function () {
   testname = 'test 008_bndryCheck_VC - insert 2048 char string into varchar(max) via TSQL, fetch as text'
   test(testname, done => {
     const testcolumnsize = 0
-    const testcolumntype = ' varchar(' + 'max' + ')'
+    const testcolumntype = ' varchar(max)'
     const testcolumnclienttype = 'text'
     const testcolumnsqltype = 'varchar'
     const testcolumnname = 'col2'
@@ -727,7 +727,7 @@ suite('datatypes', function () {
   testname = 'test 008_bndryCheck_NVC - insert 2049 char string into nvarchar(max) via TSQL, fetch as text'
   test(testname, done => {
     const testcolumnsize = 0
-    const testcolumntype = ' nvarchar(' + 'max' + ')'
+    const testcolumntype = ' nvarchar(max)'
     const testcolumnclienttype = 'text'
     const testcolumnsqltype = 'nvarchar'
     const testcolumnname = 'col2'
@@ -1351,7 +1351,7 @@ suite('datatypes', function () {
   testname = 'test 023 - verify functionality of data type \'varbinary(max)\', fetch as binary'
   test(testname, done => {
     const testcolumnsize = 0
-    const testcolumntype = ' varbinary(' + 'max' + ')'
+    const testcolumntype = ' varbinary(max)'
     const testcolumnclienttype = 'binary'
     const testcolumnsqltype = 'varbinary'
     const testcolumnname = 'col2'
@@ -1520,7 +1520,7 @@ suite('datatypes', function () {
   testname = 'test 027 - verify functionality of data type \'varchar(n)\', fetch as text'
   test(testname, done => {
     const testcolumnsize = 20
-    const testcolumntype = ' varchar(' + testcolumnsize + ')'
+    const testcolumntype = ` varchar(${testcolumnsize})`
     const testcolumnclienttype = 'text'
     const testcolumnsqltype = 'varchar'
     const testcolumnname = 'col2'
@@ -1562,7 +1562,7 @@ suite('datatypes', function () {
   testname = 'test 028 - verify functionality of data type \'varchar(max)\', fetch as text'
   test(testname, done => {
     const testcolumnsize = 0
-    const testcolumntype = ' varchar(' + 'max' + ')'
+    const testcolumntype = ' varchar(max)'
     const testcolumnclienttype = 'text'
     const testcolumnsqltype = 'varchar'
     const testcolumnname = 'col2'
@@ -1645,7 +1645,7 @@ suite('datatypes', function () {
   testname = 'test 030 - verify functionality of data type \'nchar\', fetch as text'
   test(testname, done => {
     const testcolumnsize = 10
-    const testcolumntype = ' nchar(' + testcolumnsize + ')'
+    const testcolumntype = ` nchar(${testcolumnsize})`
     const testcolumnclienttype = 'text'
     const testcolumnsqltype = 'nchar'
     const testcolumnname = 'col2'

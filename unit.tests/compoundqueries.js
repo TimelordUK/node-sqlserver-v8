@@ -68,7 +68,7 @@ suite('compoundqueries', function () {
     const testdata1 = null
     const testdata2Expected = 'string data row 2'
     const testdata2TsqlInsert = '\'' + testdata2Expected + '\''
-    const tsql = 'SELECT * FROM ' + tablename + ' ORDER BY id;  INSERT INTO ' + tablename + ' (' + testcolumnname + ') VALUES (' + testdata1 + ');SELECT * FROM ' + tablename + ' ORDER BY id;'
+    const tsql = `SELECT * FROM ${tablename} ORDER BY id;  INSERT INTO ${tablename} (${testcolumnname}) VALUES (${testdata1});SELECT * FROM ${tablename} ORDER BY id;`
 
     const expected1 = {
       meta: [
@@ -363,14 +363,14 @@ suite('compoundqueries', function () {
 
   testname = 'test 004 - batched query: SELECT....; INSERT (invalid...should fail) ....; SELECT....;'
   test(testname, done => {
-    const invalidtablename = 'invalid' + tablename
+    const invalidtablename = `invalid${tablename}`
     const testcolumnsize = 100
-    const testcolumntype = ' varchar(' + testcolumnsize + ')'
+    const testcolumntype = ` varchar(${testcolumnsize})`
     const testcolumnname = 'col2'
     const testdata1 = null
     const testdata2Expected = 'string data row 2'
-    const testdata2TsqlInsert = '\'' + testdata2Expected + '\''
-    const tsql = 'SELECT * FROM ' + tablename + ' ORDER BY id;  INSERT INTO ' + invalidtablename + ' (' + testcolumnname + ') VALUES (' + testdata1 + ');SELECT * FROM ' + tablename + ' ORDER BY id;'
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
+    const tsql = `SELECT * FROM ${tablename} ORDER BY id;  INSERT INTO ${invalidtablename} (${testcolumnname}) VALUES (${testdata1});SELECT * FROM ${tablename} ORDER BY id;`
 
     const expectedError = new Error('[Microsoft][' + driver + '][SQL Server]Invalid object name \'' + invalidtablename + '\'.')
     expectedError.sqlstate = '42S02'
