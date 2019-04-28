@@ -212,10 +212,10 @@ suite('prepared', function () {
     assert(meta.length > 0)
     select.preparedQuery((err, res1) => {
       assert.ifError(err)
-      assert.deepEqual(parsedJSON, res1, 'results didn\'t match')
+      assert.deepStrictEqual(parsedJSON, res1, 'results didn\'t match')
       select.preparedQuery((err, res2) => {
         assert.ifError(err)
-        assert.deepEqual(parsedJSON, res2, 'results didn\'t match')
+        assert.deepStrictEqual(parsedJSON, res2, 'results didn\'t match')
         testDone()
       })
     })
@@ -248,7 +248,7 @@ suite('prepared', function () {
       select.preparedQuery([businessId], (err, res1) => {
         assert.ifError(err)
         const fetched = parsedJSON[businessId - 1]
-        assert.deepEqual(fetched, res1[0], 'results didn\'t match')
+        assert.deepStrictEqual(fetched, res1[0], 'results didn\'t match')
         remove.preparedQuery([businessId], (err) => {
           assert.ifError(err)
           done()
@@ -299,10 +299,10 @@ suite('prepared', function () {
       select.preparedQuery([id2], (err, res2) => {
         assert.ifError(err)
         const o1 = parsedJSON[id1 - 1]
-        assert.deepEqual(o1, res1[0], 'results didn\'t match')
+        assert.deepStrictEqual(o1, res1[0], 'results didn\'t match')
 
         const o2 = parsedJSON[id2 - 1]
-        assert.deepEqual(o2, res2[0], 'results didn\'t match')
+        assert.deepStrictEqual(o2, res2[0], 'results didn\'t match')
         testDone()
       })
     })

@@ -38,7 +38,7 @@ function TestHelper (native, cstr) {
       },
 
       asyncDone => {
-        var dropSql = 'DROP TABLE ' + name
+        const dropSql = `DROP TABLE ${name}`
         conn.query(dropSql, () => {
           asyncDone()
         })
@@ -68,8 +68,8 @@ function TestHelper (native, cstr) {
         readFile(file, createSql => {
           createSql = createSql.replace(/<name>/g, name)
           createSql = createSql.replace(/<type>/g, type)
-          var arr = createSql.split('GO')
-          for (var i = 0; i < arr.length; ++i) {
+          const arr = createSql.split('GO')
+          for (let i = 0; i < arr.length; ++i) {
             arr[i] = arr[i].replace(/^\s+|\s+$/g, '')
           }
           inChunks(arr, () => {

@@ -275,10 +275,12 @@ invalid query failed as expected
 // compare fetched results from an ordered SELECT stmt against expected results. If comparison fails,
 // increment 'test failed' counter without causing tests to not respond via unhandled assert.
 const verifyData = (Connection, TableName, ColumnName, ExpectedData, testname, done) => {
-  const tsql = 'SELECT * FROM ' + TableName + ' ORDER BY id'
-  debugComments('\ntest note verifyData_CommonTestFunctions.js ... executing: \n' + tsql)
+  const tsql = `SELECT * FROM ${TableName} ORDER BY id`
+  debugComments(`
+test note verifyData_CommonTestFunctions.js ... executing: 
+${tsql}`)
   try {
-    Connection.queryRaw(tsql, function (e, r) {
+    Connection.queryRaw(tsql, (e, r) => {
       if (e) {
         done(new Error(`
 TEST FAILED, SELECT FROM table failed (verifyData_CommonTestFunctions.js) with this error message:
@@ -309,7 +311,7 @@ ${e.toString()}`))
 // compare fetched results from an ordered SELECT stmt against expected results. If comparison fails,
 // increment 'test failed' counter without causing tests to not respond via unhandled assert.
 const verifyDataDatetime = (Connection, TableName, ColumnName, RowWithNullData, ExpectedData, testname, done) => {
-  const tsql = 'SELECT col2 FROM ' + TableName + ' ORDER BY id'
+  const tsql = `SELECT col2 FROM ${TableName} ORDER BY id`
   let row = 23
   let numberOfRows = 72
   let numberOfRowsFetched = 0

@@ -1265,7 +1265,7 @@ suite('datatypes', function () {
   testname = 'test 021 - verify functionality of data type \'binary(n)\', fetch as binary'
   test(testname, done => {
     const testcolumnsize = 10
-    var testcolumntype = ` binary(${testcolumnsize})`
+    const testcolumntype = ` binary(${testcolumnsize})`
     const testcolumnclienttype = 'binary'
     const testcolumnsqltype = 'binary'
     const testcolumnname = 'col2'
