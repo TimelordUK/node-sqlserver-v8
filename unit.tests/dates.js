@@ -105,10 +105,10 @@ suite('date tests', function () {
             meta: [{ name: 'test_date', size: 10, nullable: true, type: 'date', sqlType: 'date' }],
             rows: expectedDates
           }
-          assert.deepEqual(expectedResults.meta, r.meta)
+          assert.deepStrictEqual(expectedResults.meta, r.meta)
           for (const row in r.rows) {
             for (const d in row) {
-              assert.deepEqual(expectedResults.rows[row][d], r.rows[row][d])
+              assert.deepStrictEqual(expectedResults.rows[row][d], r.rows[row][d])
             }
           }
           asyncDone()
@@ -251,7 +251,7 @@ suite('date tests', function () {
             assert(!more)
             const expectedDate = new Date(Date.UTC(1900, 0, 1, expectedHour, 0, 0, 0))
             expectedDate.nanosecondsDelta = 0
-            assert.deepEqual(d, expectedDate)
+            assert.deepStrictEqual(d, expectedDate)
           })
           stmt.on('done', () => {
             assert(expectedHour === 23)
@@ -293,7 +293,7 @@ suite('date tests', function () {
             assert(!more)
             var expectedDate = new Date(Date.UTC(1900, 0, 1, randomHour, expectedMinute, 0, 0))
             expectedDate.nanosecondsDelta = 0
-            assert.deepEqual(d, expectedDate)
+            assert.deepStrictEqual(d, expectedDate)
           })
           stmt.on('done', () => {
             assert(expectedMinute === 59)
@@ -335,7 +335,7 @@ suite('date tests', function () {
             assert(!more)
             const expectedDate = new Date(Date.UTC(1900, 0, 1, randomHour, randomMinute, expectedSecond, 0))
             expectedDate.nanosecondsDelta = 0
-            assert.deepEqual(d, expectedDate)
+            assert.deepStrictEqual(d, expectedDate)
           })
           stmt.on('done', () => {
             assert(expectedSecond === 59)
@@ -380,7 +380,7 @@ suite('date tests', function () {
             assert(!more)
             const expectedDate = new Date(Date.UTC(1900, 0, 1, randomHour, randomMinute, randomSecond, randomMs[msCount]))
             expectedDate.nanosecondsDelta = 0
-            assert.deepEqual(d, expectedDate, 'Milliseconds didn\'t match')
+            assert.deepStrictEqual(d, expectedDate, 'Milliseconds didn\'t match')
           })
           stmt.on('done', () => {
             assert(msCount === 50)
@@ -423,7 +423,7 @@ suite('date tests', function () {
             assert(!more)
             const expectedDate = new Date(Date.UTC(1900, 0, 1, randomHour, randomMinute, randomSecond, nanoseconds[nsCount] * 1000))
             expectedDate.nanosecondsDelta = nanosecondsDeltaExpected[nsCount]
-            assert.deepEqual(d, expectedDate, 'Nanoseconds didn\'t match')
+            assert.deepStrictEqual(d, expectedDate, 'Nanoseconds didn\'t match')
           })
           stmt.on('done', () => {
             assert(nsCount === 2)
