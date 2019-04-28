@@ -16,8 +16,8 @@ namespace mssql
 	bool BoundDatumSet::reserve(const shared_ptr<ResultSet>& set, const size_t row_count) const
 	{
 		for (uint32_t i = 0; i < set->get_column_count(); ++i) {
-			auto binding = make_shared<BoundDatum>();
-			auto& def = set->get_meta_data(i);
+			const auto binding = make_shared<BoundDatum>();
+			const auto& def = set->get_meta_data(i);
 			binding->reserve_column_type(def.dataType, def.columnSize, row_count);
 			_bindings->push_back(binding);
 		}
@@ -26,7 +26,7 @@ namespace mssql
 
 	Local<Value> get(Local<Object> o, const char* v)
 	{
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		const auto vp = fact.new_string(v);
 		const auto val = o->Get(vp);
 		return val;
@@ -34,7 +34,7 @@ namespace mssql
 
 	int get_tvp_col_count(Local<Value>& v)
 	{
-		auto tvp_columns = get(v.As<Object>(), "table_value_param");
+		const auto tvp_columns = get(v.As<Object>(), "table_value_param");
 		const auto cols = tvp_columns.As<Array>();
 		const auto count = cols->Length();
 		return count;
@@ -42,7 +42,7 @@ namespace mssql
 
 	bool BoundDatumSet::tvp(Local<Value>& v) const
 	{
-		auto tvp_columns = get(v.As<Object>(), "table_value_param");
+		const auto tvp_columns = get(v.As<Object>(), "table_value_param");
 		if (tvp_columns->IsNull()) return false;
 		if (!tvp_columns->IsArray()) return false;
 
@@ -50,7 +50,7 @@ namespace mssql
 		const auto count = cols->Length();
 
 		for (uint32_t i = 0; i < count; ++i) {
-			auto binding = make_shared<BoundDatum>();
+			const auto binding = make_shared<BoundDatum>();
 			auto p = cols->Get(i);
 			const auto res = binding->bind(p);
 			if (!res) break;
@@ -59,14 +59,14 @@ namespace mssql
 		return true;
 	}
 
-	bool BoundDatumSet::bind(Handle<Array>& node_params)
+	bool BoundDatumSet::bind(Local<Array>& node_params)
 	{
 		const auto count = node_params->Length();
 		auto res = true;
 		_output_param_count = 0;
 		if (count > 0) {
 			for (uint32_t i = 0; i < count; ++i) {
-				auto binding = make_shared<BoundDatum>();
+				const auto binding = make_shared<BoundDatum>();
 				auto v = node_params->Get(i);
 				res = binding->bind(v);
 

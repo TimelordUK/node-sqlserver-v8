@@ -136,7 +136,7 @@ namespace mssql
 		return res;
 	}
 
-	Handle<Value> OdbcStatement::get_column_values() const
+	Local<Value> OdbcStatement::get_column_values() const
 	{
 		nodeTypeFactory fact;
 		auto result = fact.new_object();
@@ -147,7 +147,7 @@ namespace mssql
 
 		const auto number_rows = _resultset->get_result_count();
 		const auto column_count = static_cast<int>(_resultset->get_column_count());
-		auto results_array = fact.new_array(number_rows);
+		const auto results_array = fact.new_array(number_rows);
 		result->Set(fact.from_two_byte(L"data"), results_array);
 		for (size_t row_id = 0; row_id < number_rows; ++row_id) {
 			auto row_array = fact.new_array(column_count);
@@ -202,7 +202,7 @@ namespace mssql
 		for (auto& tvp : tvps)
 		{
 			auto tvpret = SQLSetStmtAttr(statement, SQL_SOPT_SS_PARAM_FOCUS,
-			                             reinterpret_cast<SQLPOINTER>(static_cast<ULONG>(tvp.first)), SQL_IS_INTEGER);
+			                             reinterpret_cast<SQLPOINTER>(static_cast<long long>(tvp.first)), SQL_IS_INTEGER);
 			if (!check_odbc_error(tvpret))
 			{
 				return false;
@@ -257,7 +257,7 @@ namespace mssql
 			if (!check_odbc_error(r)) return;
 		}
 		tvp_t tvp;
-		auto cols = make_shared<BoundDatumSet::param_bindings>();
+		const auto cols = make_shared<BoundDatumSet::param_bindings>();
 		for (auto c = 1; c <= datum->tvp_no_cols; ++c)
 		{
 			++itr;
@@ -309,12 +309,12 @@ namespace mssql
 		{
 			return _boundParamsSet->unbind();
 		}
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		const auto arr = fact.new_array(0);
 		return arr;
 	}
 
-	Handle<Value> OdbcStatement::get_meta_value() const
+	Local<Value> OdbcStatement::get_meta_value() const
 	{
 		return _resultset->meta_to_value();
 	}
@@ -324,15 +324,15 @@ namespace mssql
 		return _endOfResults;
 	}
 
-	Handle<Value> OdbcStatement::handle_end_of_results() const
+	Local<Value> OdbcStatement::handle_end_of_results() const
 	{
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		return fact.new_boolean(_endOfResults);
 	}
 
-	Handle<Value> OdbcStatement::end_of_rows() const
+	Local<Value> OdbcStatement::end_of_rows() const
 	{
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		return fact.new_boolean(_resultset->EndOfRows());
 	}
 
@@ -453,7 +453,7 @@ namespace mssql
 	{
 		const auto& statement = *_statement;
 		_query = q;
-		auto query = q->query_string();
+		const auto query = q->query_string();
 		auto* sql_str = const_cast<SQLWCHAR *>(query.c_str());
 		SQLSMALLINT num_cols;
 		
@@ -611,7 +611,7 @@ namespace mssql
 
 		if (ret == SQL_NO_DATA)
 		{
-			const auto res = start_reading_results();
+			start_reading_results();
 			_resultset = make_unique<ResultSet>(0);
 			_resultset->_end_of_rows = true;
 			return true;
@@ -850,7 +850,7 @@ namespace mssql
 	bool OdbcStatement::get_data_timestamp_offset(const size_t row_id, const size_t column)
 	{
 		const auto& statement = *_statement;
-		auto storage = make_shared<DatumStorage>();
+		const auto storage = make_shared<DatumStorage>();
 		storage->ReserveTimestampOffset(1);
 		SQLLEN str_len_or_ind_ptr;
 
@@ -920,7 +920,7 @@ namespace mssql
 
 	bool OdbcStatement::reserved_bit(const size_t row_count, const size_t column) const
 	{
-		auto& bound_datum = _preparedStorage->atIndex(column);
+		const auto& bound_datum = _preparedStorage->atIndex(column);
 		auto& ind = bound_datum->get_ind_vec();
 		const auto storage = bound_datum->get_storage();
 		for (size_t row_id = 0; row_id < row_count; ++row_id) {			
@@ -938,7 +938,7 @@ namespace mssql
 
 	bool OdbcStatement::reserved_int(const size_t row_count, const size_t column) const
 	{
-		auto& bound_datum = _preparedStorage->atIndex(column);
+		const auto& bound_datum = _preparedStorage->atIndex(column);
 		auto& ind = bound_datum->get_ind_vec();
 		const auto storage = bound_datum->get_storage();
 		for (size_t row_id = 0; row_id < row_count; ++row_id) {
@@ -956,7 +956,7 @@ namespace mssql
 	
 	bool OdbcStatement::reserved_decimal(const size_t row_count, const size_t column) const
 	{
-		auto& bound_datum = _preparedStorage->atIndex(column);
+		const auto& bound_datum = _preparedStorage->atIndex(column);
 		auto& ind = bound_datum->get_ind_vec();
 		const auto storage = bound_datum->get_storage();
 		for (size_t row_id = 0; row_id < row_count; ++row_id) {
@@ -974,7 +974,7 @@ namespace mssql
 
 	bool OdbcStatement::reserved_timestamp(const size_t row_count, const size_t column) const
 	{
-		auto& bound_datum = _preparedStorage->atIndex(column);
+		const auto& bound_datum = _preparedStorage->atIndex(column);
 		auto& ind = bound_datum->get_ind_vec();
 		const auto storage = bound_datum->get_storage();
 		for (size_t row_id = 0; row_id < row_count; ++row_id) {
@@ -992,7 +992,7 @@ namespace mssql
 
 	bool OdbcStatement::reserved_timestamp_offset(const size_t row_count, const size_t column) const
 	{
-		auto& bound_datum = _preparedStorage->atIndex(column);
+		const auto& bound_datum = _preparedStorage->atIndex(column);
 		auto& ind = bound_datum->get_ind_vec();
 		const auto storage = bound_datum->get_storage();
 		for (size_t row_id = 0; row_id < row_count; ++row_id) {
@@ -1010,7 +1010,7 @@ namespace mssql
 
 	bool OdbcStatement::reserved_time(const size_t row_count, const size_t column) const
 	{
-		auto& bound_datum = _preparedStorage->atIndex(column);
+		const auto& bound_datum = _preparedStorage->atIndex(column);
 		auto& ind = bound_datum->get_ind_vec();
 		const auto storage = bound_datum->get_storage();
 		for (size_t row_id = 0; row_id < row_count; ++row_id) {
@@ -1240,7 +1240,7 @@ namespace mssql
 
 	bool OdbcStatement::reserved_string(const size_t row_count, const size_t column_size, const size_t column) const
 	{
-		auto& bound_datum = _preparedStorage->atIndex(column);
+		const auto& bound_datum = _preparedStorage->atIndex(column);
 		auto& ind = bound_datum->get_ind_vec();
 		const auto size = sizeof(uint16_t);
 		const auto storage = bound_datum->get_storage();			
@@ -1260,7 +1260,7 @@ namespace mssql
 
 	bool OdbcStatement::reserved_binary(const size_t row_count, const size_t column_size, const size_t column) const
 	{
-		auto& bound_datum = _preparedStorage->atIndex(column);
+		const auto& bound_datum = _preparedStorage->atIndex(column);
 		auto& ind = bound_datum->get_ind_vec();
 		const auto storage = bound_datum->get_storage();
 		for (size_t row_id = 0; row_id < row_count; ++row_id) {
@@ -1279,7 +1279,7 @@ namespace mssql
 
 	bool OdbcStatement::bounded_string(SQLLEN display_size, const size_t row_id, size_t column)
 	{
-		auto storage = make_shared<DatumStorage>();
+		const auto storage = make_shared<DatumStorage>();
 		const auto size = sizeof(uint16_t);
 		SQLLEN value_len = 0;
 

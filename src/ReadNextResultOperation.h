@@ -31,7 +31,7 @@ namespace mssql
 	class ReadNextResultOperation : public OdbcOperation
 	{
 	public:
-		ReadNextResultOperation(shared_ptr<OdbcConnection> connection, size_t queryId, Handle<Object> callback)
+		ReadNextResultOperation(shared_ptr<OdbcConnection> connection, size_t queryId, Local<Object> callback)
 			: OdbcOperation(connection, callback), preRowCount(-1), postRowCount(-1)
 		{
 			_statementId = queryId;

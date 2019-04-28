@@ -32,7 +32,7 @@ namespace mssql
 	{
 	public:
 		bool TryInvokeOdbc() override;
-		PrepareOperation(const shared_ptr<OdbcConnection> &connection, const shared_ptr<QueryOperationParams> &query, Handle<Object> callback);
+		PrepareOperation(const shared_ptr<OdbcConnection> &connection, const shared_ptr<QueryOperationParams> &query, Local<Object> callback);
 	};
 }
 

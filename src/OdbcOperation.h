@@ -52,7 +52,7 @@ namespace mssql
 		shared_ptr<OdbcConnection> _connection;
 		shared_ptr<OdbcStatement> _statement;
 		Persistent<Function> _callback;
-		Handle<Value> _output_param;
+		Local<Value> _output_param;
 		Local<Object> _cb;
 		void fetch_statement();
 		long _statementId;

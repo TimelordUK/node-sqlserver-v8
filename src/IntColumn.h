@@ -19,7 +19,7 @@ namespace mssql
 	   {
 	   }
 
-	   Handle<Value> ToValue() override
+	   Local<Value> ToValue() override
 	   {
 		  nodeTypeFactory fact;
 		  auto v = fact.new_long(value);

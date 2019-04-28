@@ -30,7 +30,7 @@ namespace mssql
     class Connection :node::ObjectWrap
     {
     public:
-		static void initialize(Handle<Object> exports);
+		static void initialize(Local<Object> exports);
 		Connection();
 		virtual ~Connection();
 

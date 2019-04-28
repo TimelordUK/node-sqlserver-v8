@@ -159,10 +159,10 @@ namespace mssql
 		Local<Value> args[4];
 		const auto argc = failed ? error(args) : success(args);
 		auto cons = fact.newCallbackFunction(_callback);		
-		auto context = isolate->GetCurrentContext();
+		const auto context = isolate->GetCurrentContext();
 		const auto global = context->Global();
 		// std::cout << " complete_foreground " << timer.get_counter() << endl;
 		args[argc] = fact.new_number(timer.get_counter());
-		cons->Call(global, argc, args);
+		cons->Call(context, global, argc, args);
 	}
 }

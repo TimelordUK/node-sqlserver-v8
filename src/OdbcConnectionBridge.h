@@ -34,23 +34,23 @@ namespace mssql
 
 		OdbcConnectionBridge();
 		~OdbcConnectionBridge();
-		Handle<Value> close(Handle<Object> callback);
+		Local<Value> close(Local<Object> callback);
 		void collect(void);
-		Handle<Value> begin_transaction(Handle<Object> callback);
-		Handle<Value> commit(Handle<Object> callback);
-		Handle<Value> rollback(Handle<Object> callback);
-		Handle<Value> query(Handle<Number> query_id, Handle<Object> query_object, Handle<Array> params, Handle<Object> callback) const;
-		Handle<Value> query_prepared(Handle<Number> query_id, Handle<Array> params, Handle<Object> callback) const;
-		Handle<Value> prepare(Handle<Number> query_id, Handle<Object> query_object, Handle<Object> callback) const;
-		Handle<Value> call_procedure(Handle<Number> query_id, Handle<Object> query_object, Handle<Array> params, Handle<Object> callback) const;
-		Handle<Value> unbind_parameters(Handle<Number> query_id, Handle<Object> callback);
-		Handle<Value> cancel(Handle<Number> query_id, Handle<Object> callback);
-		Handle<Value> polling_mode(Handle<Number> query_id, Handle<Boolean> mode, Handle<Object> callback);
-		Handle<Value> read_row(Handle<Number> query_id, Handle<Object> callback) const;
-		Handle<Value> read_next_result(Handle<Number> query_id, Handle<Object> callback) const;
-		Handle<Value> read_column(Handle<Number> query_id, Handle<Number> column, Handle<Object> callback) const;
-		Handle<Value> open(Handle<Object> connection_object, Handle<Object> callback, Handle<Object> backpointer);
-		Handle<Value> free_statement(Handle<Number> query_id, Handle<Object> callback);
+		Local<Value> begin_transaction(Local<Object> callback);
+		Local<Value> commit(Local<Object> callback);
+		Local<Value> rollback(Local<Object> callback);
+		Local<Value> query(Local<Number> query_id, Local<Object> query_object, Local<Array> params, Local<Object> callback) const;
+		Local<Value> query_prepared(Local<Number> query_id, Local<Array> params, Local<Object> callback) const;
+		Local<Value> prepare(Local<Number> query_id, Local<Object> query_object, Local<Object> callback) const;
+		Local<Value> call_procedure(Local<Number> query_id, Local<Object> query_object, Local<Array> params, Local<Object> callback) const;
+		Local<Value> unbind_parameters(Local<Number> query_id, Local<Object> callback);
+		Local<Value> cancel(Local<Number> query_id, Local<Object> callback);
+		Local<Value> polling_mode(Local<Number> query_id, Local<Boolean> mode, Local<Object> callback);
+		Local<Value> read_row(Local<Number> query_id, Local<Object> callback) const;
+		Local<Value> read_next_result(Local<Number> query_id, Local<Object> callback) const;
+		Local<Value> read_column(Local<Number> query_id, Local<Number> column, Local<Object> callback) const;
+		Local<Value> open(Local<Object> connection_object, Local<Object> callback, Local<Object> backpointer);
+		Local<Value> free_statement(Local<Number> query_id, Local<Object> callback);
 
 	private:
 		shared_ptr<OdbcConnection> connection;		

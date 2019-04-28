@@ -112,7 +112,7 @@ namespace mssql
 		return entry;
 	}
 
-    Handle<Value> ResultSet::meta_to_value()
+	Local<Value> ResultSet::meta_to_value()
     {
 	   const nodeTypeFactory fact;
 	   auto metadata = fact.new_array();

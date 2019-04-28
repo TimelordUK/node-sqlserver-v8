@@ -11,7 +11,7 @@ namespace mssql
 	QueryOperation::QueryOperation(
 		const shared_ptr<OdbcConnection> &connection, 
 		const shared_ptr<QueryOperationParams> &query, 
-		const Handle<Object> callback) :
+		const Local<Object> callback) :
 		OdbcOperation(connection, callback),
 		_query(query),
 		output_param_count(0)
@@ -43,7 +43,7 @@ namespace mssql
 		return false;
 	}
 
-	bool QueryOperation::bind_parameters(Handle<Array> &node_params) const
+	bool QueryOperation::bind_parameters(Local<Array> &node_params) const
 	{
 		const auto res = _params->bind(node_params);
 		if (!res)

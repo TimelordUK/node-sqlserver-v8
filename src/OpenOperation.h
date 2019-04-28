@@ -36,7 +36,7 @@ namespace mssql
 
 	public:
 		OpenOperation(const shared_ptr<OdbcConnection> &connection, const wstring& connectionString,
-			int timeout, Handle<Object> callback, Handle<Object> backpointer);	
+			int timeout, Local<Object> callback, Local<Object> backpointer);
 		virtual ~OpenOperation(void);
 		bool TryInvokeOdbc() override;
 		Local<Value> CreateCompletionArg() override;

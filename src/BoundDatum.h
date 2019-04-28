@@ -92,8 +92,8 @@ namespace mssql
 
 		void bind_w_long_var_char(const Local<Value> & p);
 		void bind_w_var_char(const Local<Value> & p);
-		void bind_w_var_char(const Local<Value>& p, int str_len);
-		void reserve_w_var_char_array(size_t maxStrLen, size_t  arrayLen);
+		void bind_w_var_char(const Local<Value>& p, int precision);
+		void reserve_w_var_char_array(size_t max_str_len, size_t  array_len);
 		void bind_w_var_char_array(const Local<Value> & p);
 
 		void bind_boolean(const Local<Value> & p);
@@ -155,7 +155,7 @@ namespace mssql
 
 		bool proc_bind(Local<Value> &p, Local<Value> &v);
 		void bind_char(const Local<Value> & pp);
-		void bind_var_char(const Local<Value> & pp);
+		void bind_var_char(const Local<Value> & p);
 		void bind_var_char(const Local<Value> & p, int precision);
 		void reserve_var_char(size_t precision);
 		bool user_bind(Local<Value> &p, Local<Value> &v);
@@ -181,13 +181,13 @@ namespace mssql
 		void sql_ss_timestampoffset(Local<Value> pp);
 		void sql_varbinary(Local<Value> pp);
 
-		static Handle<Value> unbind_null();
-		Handle<Value> unbind_string() const;
-		Handle<Value> unbind_double() const;
-		Handle<Value> unbind_boolean() const;
-		Handle<Value> unbind_int32() const;
-		Handle<Value> unbind_uint32() const;
-		Handle<Value> unbind_number() const;
-		Handle<Value> unbind_date() const;
+		static Local<Value> unbind_null();
+		Local<Value> unbind_string() const;
+		Local<Value> unbind_double() const;
+		Local<Value> unbind_boolean() const;
+		Local<Value> unbind_int32() const;
+		Local<Value> unbind_uint32() const;
+		Local<Value> unbind_number() const;
+		Local<Value> unbind_date() const;
 	};
 }

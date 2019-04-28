@@ -30,7 +30,7 @@ namespace mssql
 	   {
 	   }
 
-	   Handle<Value> ToValue() override
+	   Local<Value> ToValue() override
 	   {
 		  nodeTypeFactory fact;
 		  auto ptr = storage->data();

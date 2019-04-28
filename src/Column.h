@@ -34,7 +34,7 @@ namespace mssql
 		{			
 		}
 		virtual ~Column();		
-		virtual Handle<Value> ToValue() = 0;
+		virtual Local<Value> ToValue() = 0;
 		int Id() const { return _id; }
 	private:
 		int _id;

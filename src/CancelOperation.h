@@ -32,7 +32,7 @@ namespace mssql
 	{
 	public:
 
-		CancelOperation(shared_ptr<OdbcConnection> connection, size_t queryId, Handle<Object> callback)
+		CancelOperation(shared_ptr<OdbcConnection> connection, size_t queryId, Local<Object> callback)
 			: OdbcOperation(connection, callback)
 		{
 			_statementId = queryId;

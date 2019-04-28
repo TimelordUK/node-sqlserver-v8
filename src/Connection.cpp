@@ -51,10 +51,10 @@ namespace mssql
 		NODE_SET_PROTOTYPE_METHOD(tpl, "pollingMode", polling_mode);
 	}
 
-	void Connection::initialize(Handle<Object> exports)
+	void Connection::initialize(Local<Object> exports)
 	{
 		const auto initialized = OdbcConnection::InitializeEnvironment();
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		const auto connection = fact.new_string("Connection");
 		if (!initialized) {
 			exports->Set(connection, fact.undefined());
@@ -68,9 +68,13 @@ namespace mssql
 		tpl->SetClassName(connection);
 
 		api(tpl);
-		const auto fn = tpl->GetFunction();
-		constructor.Reset(Isolate::GetCurrent(), fn);
-		exports->Set(connection, fn);
+		const auto context = fact.isolate->GetCurrentContext();
+		const auto maybe = tpl->GetFunction(context);
+		Local<Function> local;
+		if (maybe.ToLocal(&local)) {
+			constructor.Reset(Isolate::GetCurrent(), local);
+			exports->Set(connection, local);
+		}
 	}
 
 	Connection::~Connection()
@@ -82,7 +86,7 @@ namespace mssql
 	void Connection::close(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto cb = info[0].As<Object>();
-		auto connection = Unwrap<Connection>(info.This());
+		const auto connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->close(cb);
 		info.GetReturnValue().Set(ret);
 	}
@@ -90,7 +94,7 @@ namespace mssql
 	void Connection::begin_transaction(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto cb = info[0].As<Object>();
-		auto connection = Unwrap<Connection>(info.This());
+		const auto connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->begin_transaction(cb);
 		info.GetReturnValue().Set(ret);
 	}
@@ -98,7 +102,7 @@ namespace mssql
 	void Connection::commit(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto cb = info[0].As<Object>();
-		auto connection = Unwrap<Connection>(info.This());
+		const auto connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->commit(cb);
 		info.GetReturnValue().Set(ret);
 	}
@@ -106,7 +110,7 @@ namespace mssql
 	void Connection::rollback(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto cb = info[0].As<Object>();
-		auto connection = Unwrap<Connection>(info.This());
+		const auto connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->rollback(cb);
 		info.GetReturnValue().Set(ret);
 	}
@@ -173,7 +177,7 @@ namespace mssql
 	{
 		const auto query_id = info[0].As<Number>();
 		const auto callback = info[1].As<Object>();
-		auto connection = Unwrap<Connection>(info.This());
+		const auto connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->unbind_parameters(query_id, callback);
 		info.GetReturnValue().Set(ret);
 	}
@@ -182,7 +186,7 @@ namespace mssql
 	{
 		const auto query_id = info[0].As<Number>();
 		const auto callback = info[1].As<Object>();
-		auto connection = Unwrap<Connection>(info.This());
+		const auto connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->free_statement(query_id, callback);
 		info.GetReturnValue().Set(ret);
 	}
@@ -211,7 +215,7 @@ namespace mssql
 		const auto connection_object = info[0].As<Object>();
 		const auto callback = info[1].As<Object>();
 
-		auto connection = Unwrap<Connection>(info.This());
+		const auto connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->open(connection_object, callback, info.This());
 		info.GetReturnValue().Set(ret);
 	}
@@ -220,7 +224,7 @@ namespace mssql
 	{
 		const auto query_id = info[0].As<Number>();
 		const auto callback = info[1].As<Object>();
-		auto connection = Unwrap<Connection>(info.This());
+		const auto connection = Unwrap<Connection>(info.This());
 
 		const auto ret = connection->connectionBridge->cancel(query_id, callback);
 		info.GetReturnValue().Set(ret);
@@ -231,10 +235,10 @@ namespace mssql
 		const auto query_id = info[0].As<Number>();
 		const auto v1 = info[1].As<Number>();
 		const auto callback = info[2].As<Object>();
-		auto connection = Unwrap<Connection>(info.This());
+		const auto connection = Unwrap<Connection>(info.This());
 		const nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
-		auto maybe = v1->Int32Value(context);
+		const auto maybe = v1->Int32Value(context);
 		const auto i32 = maybe.FromMaybe(0);
 		const auto b1 = fact.new_boolean(i32 > 0);
 

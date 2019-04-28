@@ -24,7 +24,7 @@ namespace mssql
 {
 	using namespace v8;
 
-	wstring FromV8String(const Handle<String> input)
+	wstring FromV8String(const Local<String> input)
 	{
 		wstring result;
 		const auto buffer_length = 256;
@@ -156,10 +156,11 @@ namespace mssql
 
 	void nodeTypeFactory::scopedCallback(const Persistent<Function> & callback, const int argc, Local<Value> args[]) const
 	{
+		nodeTypeFactory fact;
 		auto cons = newCallbackFunction(callback);
 		auto context = isolate->GetCurrentContext();
 		const auto global = context->Global();
-		cons->Call(global, argc, args);
+		cons->Call(context, global, argc, args);
 	}
 
 	Local<Integer> nodeTypeFactory::new_integer(const int32_t i) const
@@ -227,7 +228,7 @@ namespace mssql
 		return Array::New(isolate, count);
 	}
 
-	Local<Value> nodeTypeFactory::new_local_value(const Handle<Value> & v) const
+	Local<Value> nodeTypeFactory::new_local_value(const Local<Value> & v) const
 	{
 		return Local<Value>::New(isolate, v);
 	}
@@ -317,12 +318,12 @@ namespace mssql
 		return isolate->GetCurrentContext()->Global();
 	}
 
-	Handle<Primitive> nodeTypeFactory::null() const
+	Local<Primitive> nodeTypeFactory::null() const
 	{
 		return Null(isolate);
 	}
 
-	Handle<Primitive> nodeTypeFactory::undefined() const
+	Local<Primitive> nodeTypeFactory::undefined() const
 	{
 		return Undefined(isolate);
 	}

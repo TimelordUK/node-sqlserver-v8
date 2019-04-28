@@ -32,7 +32,7 @@ namespace mssql
 	{
 	public:
 		bool  _polling;
-		PollingModeOperation(shared_ptr<OdbcConnection> connection, size_t queryId, bool mode, Handle<Object> callback)
+		PollingModeOperation(shared_ptr<OdbcConnection> connection, size_t queryId, bool mode, Local<Object> callback)
 			: OdbcOperation(connection, callback)
 		{
 			_polling = mode;

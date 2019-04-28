@@ -62,11 +62,11 @@ namespace mssql
 		{ return _prepared; }
 
 		Local<Array> unbind_params() const;
-		Handle<Value> get_meta_value() const;
+		Local<Value> get_meta_value() const;
 		bool  end_of_results() const;
-		Handle<Value> handle_end_of_results() const;
-		Handle<Value> end_of_rows() const;
-		Handle<Value> get_column_values() const;
+		Local<Value> handle_end_of_results() const;
+		Local<Value> end_of_rows() const;
+		Local<Value> get_column_values() const;
 		bool set_polling(bool mode);
 
 		shared_ptr<vector<shared_ptr<OdbcError>>> errors(void) const
@@ -75,7 +75,7 @@ namespace mssql
 		}
 	
 		bool try_prepare(const shared_ptr<QueryOperationParams> &q);
-		bool bind_fetch(const shared_ptr<BoundDatumSet> &paramSet);
+		bool bind_fetch(const shared_ptr<BoundDatumSet> & param_set);
 		bool try_execute_direct(const shared_ptr<QueryOperationParams> &q, const shared_ptr<BoundDatumSet> &paramSet);
 		void cancel_handle();
 		bool try_read_columns(size_t number_rows);
@@ -88,27 +88,27 @@ namespace mssql
 		bool get_data_binary(size_t row_id, size_t column);
 		bool get_data_decimal(size_t row_id, size_t column);
 		bool get_data_bit(size_t row_id, size_t column);
-		bool get_data_timestamp(size_t row, size_t column);
+		bool get_data_timestamp(size_t row_id, size_t column);
 		bool get_data_long(size_t row_id, size_t column);
 		bool get_data_timestamp_offset(size_t row_id, size_t column);
 
 		bool start_reading_results();
 		SQLRETURN query_timeout(int timeout);
-		bool d_variant(size_t row_id, size_t col);
-		bool d_time(size_t row_id, size_t col);
+		bool d_variant(size_t row_id, size_t column);
+		bool d_time(size_t row_id, size_t column);
 		bool bounded_string(SQLLEN display_size, size_t row, size_t column);
 		bool reserved_string(const size_t row_count, const size_t column_size, size_t const column) const;
 		bool reserved_binary(const size_t row_count, const size_t column_size, size_t const column) const;
-		bool reserved_bit(const size_t rows_read, const size_t column) const;
-		bool reserved_int(const size_t rows_read, const size_t column) const;
-		bool reserved_decimal(const size_t rows_read, const size_t column) const;
-		bool reserved_time(const size_t rows_read, const size_t column) const;
-		bool reserved_timestamp(const size_t rows_read, const size_t column) const;
-		bool reserved_timestamp_offset(const size_t rows_read, const size_t column) const;
+		bool reserved_bit(const size_t row_count, const size_t column) const;
+		bool reserved_int(const size_t row_count, const size_t column) const;
+		bool reserved_decimal(const size_t row_count, const size_t column) const;
+		bool reserved_time(const size_t row_count, const size_t column) const;
+		bool reserved_timestamp(const size_t row_count, const size_t column) const;
+		bool reserved_timestamp_offset(const size_t row_count, const size_t column) const;
 		void apply_precision(const shared_ptr<BoundDatum> & datum, int current_param) const;
 		bool read_col_attributes(ResultSet::ColumnDefinition& current, int column);
 		bool read_next(int column);
-		bool check_more_read(SQLRETURN r, bool & more);
+		bool check_more_read(SQLRETURN r, bool & status);
 		bool lob(size_t, size_t column);
 		static OdbcEnvironmentHandle environment;
 		bool dispatch(SQLSMALLINT t, size_t row, size_t column);

@@ -17,7 +17,7 @@ namespace mssql
 		int32_t query_tz_adjustment() { return _query_tz_adjustment; }
 		bool polling() { return _polling; }
 
-		QueryOperationParams(Handle<Number> query_id, Handle<Object> query_object)
+		QueryOperationParams(Local<Number> query_id, Local<Object> query_object)
 		{
 			auto qs = get(query_object, "query_str");
 			nodeTypeFactory fact;
@@ -68,7 +68,7 @@ namespace mssql
 			return 0;
 		}
 
-		int64_t getint64(Handle<Number> l)
+		int64_t getint64(Local<Number> l)
 		{
 			nodeTypeFactory fact;
 			auto context = fact.isolate->GetCurrentContext();
@@ -84,7 +84,7 @@ namespace mssql
 			return 0;
 		}
 
-		int32_t getint32(Handle<Number> l)
+		int32_t getint32(Local<Number> l)
 		{
 			nodeTypeFactory fact;
 			auto context = fact.isolate->GetCurrentContext();

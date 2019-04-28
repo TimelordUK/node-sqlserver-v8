@@ -37,8 +37,8 @@ namespace mssql
 		QueryOperation(
 			const shared_ptr<OdbcConnection> &connection, 
 			const shared_ptr<QueryOperationParams> &query, 
-			Handle<Object> callback);
-		bool bind_parameters(Handle<Array> & node_params) const;
+			Local<Object> callback);
+		bool bind_parameters(Local<Array> & node_params) const;
 		// called by BindParameters when an error occurs.  It passes a node.js error to the user's callback.
 		bool parameter_error_to_user_callback(uint32_t param, const char* error) const;
 		bool TryInvokeOdbc() override;

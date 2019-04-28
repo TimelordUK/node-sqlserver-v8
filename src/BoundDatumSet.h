@@ -13,7 +13,7 @@ namespace mssql
 		typedef vector<shared_ptr<BoundDatum>> param_bindings;
 		BoundDatumSet();
 		bool reserve(const shared_ptr<ResultSet> &set, size_t row_count) const;
-		bool bind(Handle<Array> &node_params);
+		bool bind(Local<Array> &node_params);
 		Local<Array> unbind();	
 		void clear() { _bindings->clear(); }
 		size_t size() { return _bindings->size(); }

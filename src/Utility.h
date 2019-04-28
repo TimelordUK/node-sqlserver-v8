@@ -34,7 +34,7 @@ namespace mssql
 	   return String::NewFromTwoByte(Isolate::GetCurrent(), reinterpret_cast<const uint16_t*>(text));
     }
 
-    wstring FromV8String(Handle<String> input);
+    wstring FromV8String(Local<String> input);
 	void encode_numeric_struct(double v, int precision, int upscaleLimit, SQL_NUMERIC_STRUCT & numeric);
 
     string w2a(const wchar_t* input);
@@ -90,7 +90,7 @@ namespace mssql
 	   Local<String> new_string(const char *cstr, int size) const;
 	   Local<Array> new_array() const;
 	   Local<Array> new_array(int count) const;
-	   Local<Value> new_local_value(const Handle<Value> & v) const;
+	   Local<Value> new_local_value(const Local<Value> & v) const;
 	   Local<Function> newCallbackFunction(const Persistent<Function> & callback) const;
 	   Local<FunctionTemplate> new_template(const FunctionCallback & callback) const;
 	   Local<Object> new_object(const Persistent <Object> & bp) const;
@@ -103,8 +103,8 @@ namespace mssql
 	   Local<Value> new_date() const;
 	   Local<Value> new_date(double milliseconds, int32_t nanoseconds_delta) const;
 	   Local<Value> global() const;
-	   Handle<Primitive> null() const;
-	   Handle<Primitive> undefined() const;
+	   Local<Primitive> null() const;
+	   Local<Primitive> undefined() const;
 	   void throwError(const char * err) const;
 	};
 }

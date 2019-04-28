@@ -9,7 +9,7 @@ namespace mssql
 	QueryPreparedOperation::QueryPreparedOperation(
 		const shared_ptr<OdbcConnection> &connection, 
 		const size_t query_id, const u_int timeout, 
-		const Handle<Object> callback) :
+		const Local<Object> callback) :
 		OdbcOperation(connection, callback),
 		_timeout(timeout),
 		_output_param_count(0)
@@ -41,7 +41,7 @@ namespace mssql
 		return false;
 	}
 
-	bool QueryPreparedOperation::bind_parameters(Handle<Array> &node_params) const
+	bool QueryPreparedOperation::bind_parameters(Local<Array> &node_params) const
 	{
 		const auto res = _params->bind(node_params);
 		if (!res)

@@ -40,7 +40,7 @@
 #include "OdbcError.h"
 #include "OdbcHandle.h"
 
-#define interface struct 	// for the COM interfaces in sqlncli.h and to avoid including extra files
+// #define interface struct 	// for the COM interfaces in sqlncli.h and to avoid including extra files
 #include "sqlncli.h"	 	// SQL Server specific constants
 
 // default values filled in for a JS date object when retrieving a SQL Server time field

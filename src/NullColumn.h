@@ -15,7 +15,7 @@ namespace mssql
 		{		
 		}
 
-	   Handle<Value> ToValue() override
+	   Local<Value> ToValue() override
 	   {
 		  nodeTypeFactory fact;
 		  return fact.null();

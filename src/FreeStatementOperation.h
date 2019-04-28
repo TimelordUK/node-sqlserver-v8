@@ -32,7 +32,7 @@ namespace mssql
 	{
 	public:
 
-		FreeStatementOperation(shared_ptr<OdbcConnection> connection, size_t queryId, Handle<Object> callback)
+		FreeStatementOperation(shared_ptr<OdbcConnection> connection, size_t queryId, Local<Object> callback)
 			: OdbcOperation(connection, queryId, callback)
 		{
 		}

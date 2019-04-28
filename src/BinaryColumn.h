@@ -23,7 +23,7 @@ namespace mssql
 		{
 		}
 
-	   Handle<Value> ToValue() override
+	   Local<Value> ToValue() override
 	   {
 		   return node::Buffer::New(Isolate::GetCurrent(), raw, len, deleteBuffer, raw)
 #ifdef NODE_GYP_V4 

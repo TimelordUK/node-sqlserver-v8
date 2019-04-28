@@ -50,7 +50,7 @@ namespace mssql
 		{
 		}
 
-		Handle<Value> ToValue() override
+		Local<Value> ToValue() override
 		{
 			nodeTypeFactory fact;
 			auto dd = fact.new_date(milliseconds, nanoseconds_delta);
