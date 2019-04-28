@@ -969,6 +969,7 @@ suite('params', function () {
   // was before 1/1/1970 and the time was midnight.
   test('verify dates with midnight time', testDone => {
     const midnightDate = new Date(Date.parse('2030-08-13T00:00:00.000Z'))
+    midnightDate.nanosecondsDelta = 0
 
     testBoilerPlate('midnight_date_test', { 'midnight_date_test': 'datetimeoffset(3)' },
       done => {
@@ -998,7 +999,7 @@ suite('params', function () {
           assert(r.rows.length === 1)
           for (const row in r.rows) {
             for (const d in row) {
-              assert.deepEqual(expectedResults.rows[row][d], r.rows[row][d])
+              assert.deepStrictEqual(expectedResults.rows[row][d], r.rows[row][d])
             }
           }
           done()
@@ -1011,7 +1012,7 @@ suite('params', function () {
 
   test('verify bug fix for last day of the year error', testDone => {
     const eoyDate = new Date(Date.parse('1960-12-31T11:12:13.000Z'))
-
+    eoyDate.nanosecondsDelta = 0
     testBoilerPlate('eoy_date_test', { 'eoy_date_test': 'datetimeoffset(3)' },
       done => {
         const insertQuery = 'INSERT INTO eoy_date_test (eoy_date_test) VALUES (?);'
@@ -1041,7 +1042,7 @@ suite('params', function () {
           assert(r.rows.length === 1)
           for (const row in r.rows) {
             for (const d in row) {
-              assert.deepEqual(expectedResults.rows[row][d], r.rows[row][d])
+              assert.deepStrictEqual(expectedResults.rows[row][d], r.rows[row][d])
             }
           }
           done()

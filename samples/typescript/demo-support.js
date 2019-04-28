@@ -2,6 +2,7 @@
 
 var fs = require('fs')
 var path = require('path')
+const assert = require('assert')
 
 var GlobalConn = (function () {
   var connStr = 'set global connection here'
@@ -326,6 +327,36 @@ function DemoSupport (native) {
         })
     }
 
+    function compareEmployee (res, parsedJSON) {
+      assert.strictEqual(res.length, parsedJSON.length)
+      for (let i = 0; i < res.length; ++i) {
+        let lhs = res[i]
+        let rhs = parsedJSON[i]
+        rhs.ModifiedDate.nanosecondsDelta = 0
+        rhs.BirthDate.nanosecondsDelta = 0
+        rhs.HireDate.nanosecondsDelta = 0
+        assert.strictEqual(lhs.BusinessEntityID, rhs.BusinessEntityID)
+        assert.strictEqual(lhs.NationalIDNumber, rhs.NationalIDNumber)
+        assert.strictEqual(lhs.LoginID, rhs.LoginID)
+        assert.strictEqual(lhs.OrganizationNode.length, rhs.OrganizationNode.length)
+        for (let j = 0; i < lhs.OrganizationNode.length; ++j) {
+          assert.strictEqual(lhs.OrganizationNode[j], rhs.OrganizationNode[j])
+        }
+        assert.strictEqual(lhs.OrganizationLevel, rhs.OrganizationLevel)
+        assert.strictEqual(lhs.JobTitle, rhs.JobTitle)
+        assert.strictEqual(lhs.MaritalStatus, rhs.MaritalStatus)
+        assert.strictEqual(lhs.Gender, rhs.Gender)
+        assert.strictEqual(lhs.SalariedFlag, rhs.SalariedFlag)
+        assert.strictEqual(lhs.VacationHours, rhs.VacationHours)
+        assert.strictEqual(lhs.SickLeaveHours, rhs.SickLeaveHours)
+        assert.strictEqual(lhs.CurrentFlag, rhs.CurrentFlag)
+        assert.deepStrictEqual(lhs.ModifiedDate, rhs.ModifiedDate)
+        assert.deepStrictEqual(lhs.BirthDate, rhs.BirthDate)
+        assert.deepStrictEqual(lhs.HireDate, rhs.HireDate)
+        assert.strictEqual(lhs.rowguid, rhs.rowguid)
+      }
+    }
+
     function getJSON (stem) {
       var p = stem || '../../unit.tests/json'
       var folder = path.join(__dirname, p)
@@ -334,14 +365,19 @@ function DemoSupport (native) {
       var parsedJSON = JSON.parse(fs.readFileSync(folder + '/employee.json', 'utf8'))
 
       for (var i = 0; i < parsedJSON.length; ++i) {
-        parsedJSON[i].OrganizationNode = Buffer.from(parsedJSON[i].OrganizationNode.data, 'utf8')
-        parsedJSON[i].BirthDate = new Date(parsedJSON[i].BirthDate)
-        parsedJSON[i].HireDate = new Date(parsedJSON[i].HireDate)
-        parsedJSON[i].ModifiedDate = new Date(parsedJSON[i].ModifiedDate)
+        const rec = parsedJSON[i]
+        rec.OrganizationNode = Buffer.from(rec.OrganizationNode.data, 'utf8')
+        rec.BirthDate = new Date(rec.BirthDate)
+        rec.BirthDate.nanosecondsDelta = 0
+        rec.HireDate = new Date(rec.HireDate)
+        rec.HireDate.nanosecondsDelta = 0
+        rec.ModifiedDate = new Date(rec.ModifiedDate)
+        rec.ModifiedDate.nanosecondsDelta = 0
       }
       return parsedJSON
     }
 
+    this.compareEmployee = compareEmployee
     this.getJSON = getJSON
     this.dropCreateTable = dropCreateTable
     this.extractKey = extractKey

@@ -119,8 +119,41 @@ suite('userbind', function () {
       })
     }
 
-    assert.deepEqual(res, expected)
+    assert.deepStrictEqual(res, expected)
   }
+
+  test('user bind DateTimeOffset to sql type DateTimeOffset - provide offset of 60 minutes', testDone => {
+    const offset = 60
+    const scale = 7
+    const now = new Date()
+    const smalldt = new Date(Date.UTC(now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      14,
+      0,
+      0,
+      0))
+
+    const expected = new Date(smalldt.getTime() - offset * 60000)
+    expected.nanosecondsDelta = 0
+    const params = {
+      query: 'declare @v DateTimeOffset = ?; select @v as v',
+      min: smalldt,
+      max: smalldt,
+      expected: [
+        expected,
+        expected
+      ],
+      setter: v => {
+        return sql.DateTimeOffset(v, scale, offset)
+      }
+    }
+    testUserBind(params, (err, res) => {
+      assert.ifError(err)
+      compare(params, res)
+      testDone()
+    })
+  })
 
   test('user bind DateTime2 to sql type datetime2(7) - with scale set to illegal value, should error', testDone => {
     const now = new Date()
@@ -178,39 +211,6 @@ suite('userbind', function () {
     })
   })
 
-  test('user bind DateTimeOffset to sql type DateTimeOffset - provide offset of 60 minutes', testDone => {
-    const offset = 60
-    const scale = 7
-    const now = new Date()
-    const smalldt = new Date(Date.UTC(now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate(),
-      14,
-      0,
-      0,
-      0))
-
-    const expected = new Date(smalldt.getTime() - offset * 60000)
-
-    const params = {
-      query: 'declare @v DateTimeOffset = ?; select @v as v',
-      min: smalldt,
-      max: smalldt,
-      expected: [
-        expected,
-        expected
-      ],
-      setter: v => {
-        return sql.DateTimeOffset(v, scale, offset)
-      }
-    }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
-  })
-
   test('user bind DateTimeOffset to sql type DateTimeOffset - no offset ', testDone => {
     const now = new Date()
     const smalldt = new Date(Date.UTC(now.getUTCFullYear(),
@@ -220,6 +220,7 @@ suite('userbind', function () {
       0,
       0,
       0))
+    smalldt.nanosecondsDelta = 0
     const params = {
       query: 'declare @v DateTimeOffset = ?; select @v as v',
       min: smalldt,
@@ -244,6 +245,7 @@ suite('userbind', function () {
       now.getUTCMinutes(),
       0,
       0))
+    smalldt.nanosecondsDelta = 0
     const params = {
       query: 'declare @v smalldatetime = ?; select @v as v',
       min: smalldt,
@@ -261,6 +263,7 @@ suite('userbind', function () {
 
   test('user bind DateTime2 to sql type datetime2(7) default scale', testDone => {
     const now = new Date()
+    now.nanosecondsDelta = 0
     const params = {
       query: 'declare @v DATETIME2(7) = ?; select @v as v',
       min: now,
@@ -278,6 +281,7 @@ suite('userbind', function () {
 
   test('user bind DateTime2 to sql type datetime2(7) - with scale set correctly, should pass', testDone => {
     const now = new Date()
+    now.nanosecondsDelta = 0
     const params = {
       query: 'declare @v DATETIME2(7) = ?; select @v as v',
       min: now,
@@ -295,6 +299,7 @@ suite('userbind', function () {
 
   test('user bind DateTime to sql type datetime2(7)', testDone => {
     const now = new Date()
+    now.nanosecondsDelta = 0
     const params = {
       query: 'declare @v DATETIME2(7) = ?; select @v as v',
       min: now,
@@ -312,6 +317,7 @@ suite('userbind', function () {
 
   test('user bind DateTime to sql type datetime - driver currently only supports 10ms accuracy with datetime', testDone => {
     const now = sql.DateRound()
+    now.nanosecondsDelta = 0
     const params = {
       query: 'declare @v DATETIME2(7) = ?; select @v as v',
       min: now,
@@ -352,6 +358,8 @@ suite('userbind', function () {
       today.getUTCMinutes(),
       today.getUTCSeconds(),
       today.getUTCMilliseconds()))
+    timeOnly.nanosecondsDelta = 0
+
     const params = {
       query: 'declare @v time = ?; select @v as v',
       min: today,
@@ -380,6 +388,7 @@ suite('userbind', function () {
       0,
       0,
       0))
+    dateOnly.nanosecondsDelta = 0
     const params = {
       query: 'declare @v date = ?; select @v as v',
       min: today,

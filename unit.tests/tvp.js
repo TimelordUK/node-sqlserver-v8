@@ -360,7 +360,7 @@ END`
         const tp = sql.TvpFromTable(table)
         theConnection.query('select * from ?;', [tp], (err, res) => {
           assert.ifError(err)
-          assert.deepEqual(res, parsedJSON)
+          helper.compareEmployee(res, parsedJSON)
           asyncDone()
         })
       }

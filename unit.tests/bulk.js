@@ -199,7 +199,7 @@ suite('bulk', function () {
         bulkMgr.selectRows(keys, (err, results) => {
           assert(err === null || err === false)
           assert(results.length === parsedJSON.length)
-          assert.deepEqual(results, parsedJSON, 'results didn\'t match')
+          assert.deepStrictEqual(results, parsedJSON, 'results didn\'t match')
           selected = results
           asyncDone()
         })
@@ -245,7 +245,7 @@ suite('bulk', function () {
         bulkMgr.selectRows(keys, (err, results) => {
           assert(err === null || err === false)
           assert(results.length === parsedJSON.length)
-          assert.deepEqual(results, parsedJSON, 'results didn\'t match')
+          assert.deepStrictEqual(results, parsedJSON, 'results didn\'t match')
           asyncDone()
         })
       }
@@ -305,7 +305,7 @@ suite('bulk', function () {
         bulkMgr.selectRows(keys, (err, results) => {
           assert(err === null || err === false)
           assert(results.length === parsedJSON.length)
-          assert.deepEqual(results, parsedJSON, 'results didn\'t match')
+          helper.compareEmployee(results, parsedJSON)
           asyncDone()
         })
       }
@@ -609,7 +609,7 @@ suite('bulk', function () {
             count: batch
           }]
           assert.ifError(err)
-          assert.deepEqual(results, expected, 'results didn\'t match')
+          assert.deepStrictEqual(results, expected, 'results didn\'t match')
           testDone()
         })
       }
@@ -681,7 +681,7 @@ suite('bulk', function () {
             count: batch
           }]
           assert.ifError(err)
-          assert.deepEqual(results, expected, 'results didn\'t match')
+          assert.deepStrictEqual(results, expected, 'results didn\'t match')
           asyncDone()
         })
       },
@@ -750,7 +750,7 @@ suite('bulk', function () {
             count: 0
           }]
           assert.ifError(err)
-          assert.deepEqual(results, expected, 'results didn\'t match')
+          assert.deepStrictEqual(results, expected, 'results didn\'t match')
           asyncDone()
         })
       }

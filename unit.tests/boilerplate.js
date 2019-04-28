@@ -96,10 +96,14 @@ function TestHelper (native, cstr) {
     const parsedJSON = JSON.parse(fs.readFileSync(folder + '/json/employee.json', 'utf8'))
 
     for (let i = 0; i < parsedJSON.length; ++i) {
-      parsedJSON[i].OrganizationNode = Buffer.from(parsedJSON[i].OrganizationNode.data, 'utf8')
-      parsedJSON[i].BirthDate = new Date(parsedJSON[i].BirthDate)
-      parsedJSON[i].HireDate = new Date(parsedJSON[i].HireDate)
-      parsedJSON[i].ModifiedDate = new Date(parsedJSON[i].ModifiedDate)
+      const rec = parsedJSON[i]
+      rec.OrganizationNode = Buffer.from(parsedJSON[i].OrganizationNode.data, 'utf8')
+      rec.BirthDate = new Date(parsedJSON[i].BirthDate)
+      rec.BirthDate.nanosecondsDelta = 0
+      rec.HireDate = new Date(parsedJSON[i].HireDate)
+      rec.HireDate.nanosecondsDelta = 0
+      rec.ModifiedDate = new Date(parsedJSON[i].ModifiedDate)
+      rec.ModifiedDate.nanosecondsDelta = 0
     }
     return parsedJSON
   }
