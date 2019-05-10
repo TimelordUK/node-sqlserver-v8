@@ -15,7 +15,7 @@ namespace mssql
 
 	Local<Value> ReadNextResultOperation::CreateCompletionArg()
 	{
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		auto more_meta = fact.new_object();
 		more_meta->Set(fact.new_string("endOfResults"), _statement->handle_end_of_results());
 		more_meta->Set(fact.new_string("meta"), _statement->get_meta_value());

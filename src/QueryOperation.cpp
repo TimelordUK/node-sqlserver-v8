@@ -22,7 +22,7 @@ namespace mssql
 
 	bool QueryOperation::parameter_error_to_user_callback(const uint32_t param, const char* error) const
 	{
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 
 		_params->clear();
 

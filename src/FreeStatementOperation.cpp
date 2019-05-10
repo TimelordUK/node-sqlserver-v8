@@ -12,7 +12,7 @@ namespace mssql
 
 	Local<Value> FreeStatementOperation::CreateCompletionArg()
 	{
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		return fact.null();
 	}
 }

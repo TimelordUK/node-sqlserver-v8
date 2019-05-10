@@ -16,7 +16,7 @@ namespace mssql
 
 	Local<Value> CollectOperation::CreateCompletionArg()
 	{
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		return fact.null();
 	}
 

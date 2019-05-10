@@ -93,15 +93,15 @@ namespace mssql
 		const nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
 		const auto vp = fact.new_string(v);
-		auto maybe = o->ToObject(context);
+		const auto maybe = o->ToObject(context);
 		Local<Object> local;
 		if (maybe.ToLocal(&local))
 		{
-			auto maybe_value = local->Get(context, vp);
+			const auto maybe_value = local->Get(context, vp);
 			Local<Value> local_value;
 			if (maybe_value.ToLocal(&local_value))
 			{
-				auto maybe_string = local_value->ToString(context);
+				const auto maybe_string = local_value->ToString(context);
 				const auto default_string = String::Empty(fact.isolate);
 				return maybe_string.FromMaybe(default_string);
 			}
@@ -150,7 +150,7 @@ namespace mssql
 	{
 		const nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
-		auto maybe = p->ToString(context);
+		const auto maybe = p->ToString(context);
 		Local<String> str_param;
 		if (maybe.ToLocal(&str_param)) {
 			bind_w_var_char(p, str_param->Length());
@@ -166,7 +166,7 @@ namespace mssql
 	{
 		const nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
-		auto maybe = p->ToString(context);
+		const auto maybe = p->ToString(context);
 		Local<String> local;
 		if (maybe.ToLocal(&local)) {
 			SQLULEN precision = local->Length();
@@ -196,7 +196,7 @@ namespace mssql
 		{
 			const nodeTypeFactory fact;
 			const auto context = fact.isolate->GetCurrentContext();
-			auto maybe = p->ToString(context);
+			const auto maybe = p->ToString(context);
 			Local<String> str_param;
 			if (maybe.ToLocal(&str_param)) {
 				str_param->WriteUtf8(fact.isolate, _storage->charvec_ptr->data(), precision);
@@ -289,7 +289,7 @@ namespace mssql
 		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
-			auto maybe = p->ToString(context);
+			const auto maybe = p->ToString(context);
 			Local<String> str_param;
 			if (maybe.ToLocal(&str_param)) {
 				const auto first_p = _storage->uint16vec_ptr->data();
@@ -379,13 +379,13 @@ namespace mssql
 		auto rows = 1;
 		const nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
-		auto maybe_object = p->ToObject(context);
+		const auto maybe_object = p->ToObject(context);
 		Local<Object> local;
 		if (maybe_object.ToLocal(&local)) {
 			const auto row_count_int = get_as_value(local, "row_count");
 			if (!row_count_int->IsNull())
 			{
-				auto maybe = row_count_int->Int32Value(context);
+				const auto maybe = row_count_int->Int32Value(context);
 				if (!maybe.IsNothing()) {
 					rows = maybe.ToChecked();
 				}
@@ -619,7 +619,7 @@ namespace mssql
 		vec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
-			auto maybe = p->ToInt32(context);
+			const auto maybe = p->ToInt32(context);
 			Local<Int32> local;
 			if (maybe.ToLocal(&local)) {
 				const auto d = local->Value();
@@ -738,14 +738,14 @@ namespace mssql
 		{
 			const nodeTypeFactory fact;
 			const auto context = fact.isolate->GetCurrentContext();
-			auto date_object = Local<Date>::Cast<Value>(p);
+			const auto date_object = Local<Date>::Cast<Value>(p);
 			assert(!date_object.IsEmpty());
 			// dates in JS are stored internally as ms count from Jan 1, 1970
 			const auto maybe = date_object->ToNumber(context);
 			Local<Number> local;
 			if (maybe.ToLocal(&local)) {
 				const auto d = local->Value();
-				TimestampColumn sql_date(-1, d);
+				const TimestampColumn sql_date(-1, d);
 				auto& dt = (*_storage->datevec_ptr)[0];
 				sql_date.ToDateStruct(dt);
 				_indvec[0] = buffer_len;
@@ -785,7 +785,7 @@ namespace mssql
 			const auto maybe = date_object->ToNumber(context);
 			Local<Number> local;
 			if (maybe.ToLocal(&local)) {
-				TimestampColumn sql_date(-1, local->Value());
+				const TimestampColumn sql_date(-1, local->Value());
 				auto& time2 = (*_storage->time2vec_ptr)[0];
 				sql_date.ToTime2Struct(time2);
 				_indvec[0] = buffer_len;
@@ -819,13 +819,13 @@ namespace mssql
 		const auto context = fact.isolate->GetCurrentContext();
 		if (!p->IsNull())
 		{
-			auto date_object = Local<Date>::Cast<Value>(p);
+			const auto date_object = Local<Date>::Cast<Value>(p);
 			assert(!date_object.IsEmpty());
 			// dates in JS are stored internally as ms count from Jan 1, 1970
 			const auto maybe = date_object->ToNumber(context);
 			Local<Number> local;
 			if (maybe.ToLocal(&local)) {
-				TimestampColumn sql_date(-1, local->Value());
+				const TimestampColumn sql_date(-1, local->Value());
 				auto& timestamp = (*_storage->timestampvec_ptr)[0];
 				sql_date.to_timestamp_struct(timestamp);
 				_indvec[0] = buffer_len;
@@ -858,14 +858,14 @@ namespace mssql
 		const auto context = fact.isolate->GetCurrentContext();
 		if (!p->IsNull())
 		{
-			auto date_object = Local<Date>::Cast<Value>(p);
+			const auto date_object = Local<Date>::Cast<Value>(p);
 			assert(!date_object.IsEmpty());
 			// dates in JS are stored internally as ms count from Jan 1, 1970
 			const auto maybe = date_object->ToNumber(context);
 			Local<Number> local;
 			if (maybe.ToLocal(&local)) {
 				auto& ts = (*_storage->timestampoffsetvec_ptr)[0];
-				TimestampColumn sql_date(-1, local->Value(), 0, offset);
+				const TimestampColumn sql_date(-1, local->Value(), 0, offset);
 				sql_date.to_timestamp_offset(ts);
 				_indvec[0] = buffer_len;
 			}
@@ -925,7 +925,7 @@ namespace mssql
 		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
-			auto maybe = p->ToNumber(context);
+			const auto maybe = p->ToNumber(context);
 			Local<Number> local;
 			if (maybe.ToLocal(&local)) {
 				vec[0] = static_cast<long long>(local->Value());
@@ -1074,7 +1074,7 @@ namespace mssql
 		const auto maybe_elem = arr->Get(context, 0);
 		Local<Value> p;
 		if (maybe_elem.ToLocal(&p)) {
-			auto maybe = p->ToNumber(context);
+			const auto maybe = p->ToNumber(context);
 			Local<Number> local;
 			if (maybe.ToLocal(&local)) {
 				const auto d = local->Value();
@@ -1229,7 +1229,7 @@ namespace mssql
 		}
 		else if (p->IsNumber())
 		{
-			auto maybe = p->ToNumber(context);
+			const auto maybe = p->ToNumber(context);
 			Local<Number> local;
 			if (maybe.ToLocal(&local)) {
 				const auto d = local->Value();
@@ -1356,21 +1356,21 @@ namespace mssql
 		const auto precision = get_as_value(pv, "precision");
 		if (!precision->IsUndefined())
 		{
-			auto maybe_param_size = precision->Int32Value(context);
+			const auto maybe_param_size = precision->Int32Value(context);
 			param_size = maybe_param_size.FromMaybe(0);
 		}
 
 		const auto scale = get_as_value(pv, "scale");
 		if (!scale->IsUndefined())
 		{
-			auto maybe_digits = scale->Int32Value(context);
+			const auto maybe_digits = scale->Int32Value(context);
 			digits = maybe_digits.FromMaybe(0);
 		}
 
 		const auto off = get_as_value(pv, "offset");
 		if (!off->IsUndefined())
 		{
-			auto maybe_offset = off->Int32Value(context);
+			const auto maybe_offset = off->Int32Value(context);
 			offset = maybe_offset.FromMaybe(0);
 		}
 	}
@@ -1625,7 +1625,7 @@ namespace mssql
 		sql_type = local_sql_type;
 		param_type = SQL_PARAM_INPUT;
 
-		auto maybe_local = p->ToObject(context);
+		const auto maybe_local = p->ToObject(context);
 		Local<Object> as_local;
 		if (!maybe_local.ToLocal(&as_local))
 		{

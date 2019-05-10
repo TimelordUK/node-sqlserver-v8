@@ -138,7 +138,7 @@ namespace mssql
 
 	Local<Value> OdbcStatement::get_column_values() const
 	{
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		auto result = fact.new_object();
 		if (_resultset->EndOfRows())
 		{
@@ -248,7 +248,7 @@ namespace mssql
 		SQLTCHAR parameter_type_name[256];
 		auto r = SQLGetStmtAttr(statement, SQL_ATTR_IMP_PARAM_DESC, &ipd, SQL_IS_POINTER, &string_length);
 		if (!check_odbc_error(r)) return;
-		auto schema = datum->get_storage()->schema;		
+		const auto schema = datum->get_storage()->schema;		
 		if (!schema.empty()) {
 			const auto schema_ptr = const_cast<wchar_t*>(schema.c_str());
 			r = SQLSetDescField(ipd, current_param, SQL_CA_SS_SCHEMA_NAME, reinterpret_cast<SQLPOINTER>(schema_ptr), schema.size() * sizeof(wchar_t));
@@ -561,8 +561,8 @@ namespace mssql
 	}
 
 	void OdbcStatement::cancel_handle()
-	{		
-		auto hnd = *_statement;
+	{
+		const auto hnd = *_statement;
 		const auto ret2 = SQLCancelHandle(hnd.HandleType, hnd.get());
 		if (!check_odbc_error(ret2))
 		{
@@ -594,7 +594,7 @@ namespace mssql
 		_endOfResults = true; // reset 
 		auto ret = query_timeout(timeout);
 		if (!check_odbc_error(ret)) return false;
-		auto query = q->query_string();
+		const auto query = q->query_string();
 		auto* sql_str = const_cast<wchar_t *>(query.c_str());
 		_statementState = STATEMENT_SUBMITTED;
 		if (polling_mode)

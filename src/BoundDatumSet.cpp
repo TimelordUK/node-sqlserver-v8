@@ -103,7 +103,7 @@ namespace mssql
 
 	Local<Array> BoundDatumSet::unbind()
 	{
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		const auto arr = fact.new_array(_output_param_count);
 		auto i = 0;
 

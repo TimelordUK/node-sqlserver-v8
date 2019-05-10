@@ -57,7 +57,7 @@ namespace mssql
 		const auto op = make_shared<CloseOperation>(connection, callback);
 		connection->send(op);
 		//fprintf(stderr, "CloseOperation operationId=%llu\n", op->OperationID);
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
@@ -71,7 +71,7 @@ namespace mssql
 	{
 		const auto op = make_shared<BeginTranOperation>(connection, callback);
 		connection->send(op);
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
@@ -79,7 +79,7 @@ namespace mssql
 	{
 		const auto op = make_shared<EndTranOperation>(connection, SQL_COMMIT, callback);
 		connection->send(op);
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
@@ -87,7 +87,7 @@ namespace mssql
 	{
 		const auto op = make_shared<EndTranOperation>(connection, SQL_ROLLBACK, callback);
 		connection->send(op);
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
@@ -98,7 +98,7 @@ namespace mssql
 		if (operation->bind_parameters(params)) {
 			connection->send(operation);
 		}
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
@@ -108,7 +108,7 @@ namespace mssql
 		const auto context = fact.isolate->GetCurrentContext();
 		if (!l->IsNull())
 		{
-			auto maybe = l->ToInt32(context);
+			const auto maybe = l->ToInt32(context);
 			Local<Int32> local;
 			if (maybe.ToLocal(&local))
 			{
@@ -124,7 +124,7 @@ namespace mssql
 		const auto context = fact.isolate->GetCurrentContext();
 		if (!l->IsNull())
 		{
-			auto maybe = l->ToBoolean(context);
+			const auto maybe = l->ToBoolean(context);
 			Local<Boolean> local;
 			if (maybe.ToLocal(&local))
 			{
@@ -140,7 +140,7 @@ namespace mssql
 		const auto context = fact.isolate->GetCurrentContext();
 		if (!l->IsNull())
 		{
-			auto maybe = l->ToString(context);
+			const auto maybe = l->ToString(context);
 			Local<String> local;
 			if (maybe.ToLocal(&local))
 			{
@@ -158,7 +158,7 @@ namespace mssql
 		if (operation->bind_parameters(params)) {
 			connection->send(operation);
 		}
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
@@ -167,7 +167,7 @@ namespace mssql
 		auto q = make_shared<QueryOperationParams>(query_id, query_object);
 		const auto operation = make_shared<PrepareOperation>(connection, q, callback);
 		connection->send(operation);
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
@@ -179,7 +179,7 @@ namespace mssql
 		if (operation->bind_parameters(params)) {
 			connection->send(operation);
 		}
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		return fact.new_int64(operation->OperationID);
 	}
 
@@ -188,7 +188,7 @@ namespace mssql
 		auto id = getint32(query_id);
 		const auto op = make_shared<UnbindOperation>(connection, id, callback);
 		connection->send(op);
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
@@ -198,7 +198,7 @@ namespace mssql
 		//fprintf(stderr, "cancel %lld", id);
 		const auto op = make_shared<CancelOperation>(connection, id, callback);
 		connection->send(op);
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
@@ -209,14 +209,14 @@ namespace mssql
 
 		const auto op = make_shared<PollingModeOperation>(connection, id, polling, callback);
 		connection->send(op);
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
 	Local<Value> OdbcConnectionBridge::free_statement(const Local<Number> query_id, Local<Object> callback)
 	{
 		auto id = static_cast<long>(getint32(query_id));
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		auto op = make_shared<FreeStatementOperation>(connection, id, callback);
 		connection->statements->checkin(id);
 		op->mgr = connection->ops;
@@ -230,7 +230,7 @@ namespace mssql
 		auto id = getint32(query_id);
 		const auto op = make_shared<ReadNextResultOperation>(connection, id, callback);
 		connection->send(op);
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
@@ -239,13 +239,13 @@ namespace mssql
 		auto id = getint32(query_id);
 		const auto op = make_shared<ReadColumnOperation>(connection, id, getint32(number_rows), callback);
 		connection->send(op);
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
 	Local<Value> OdbcConnectionBridge::get(Local<Object> o, const char* v)
 	{
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		const auto vp = fact.new_string(v);
 		const auto val = o->Get(vp);
 		return val;
@@ -258,7 +258,7 @@ namespace mssql
 		const auto cs = get(connection_object, "conn_str");
 		const auto connection_string = getstring(cs);
 		const auto to = get(connection_object, "conn_timeout");
-		auto maybe_to = to->ToInt32(context);
+		const auto maybe_to = to->ToInt32(context);
 		Local<Int32> local;
 		auto timeout = 0;
 		if (maybe_to.ToLocal(&local)) {

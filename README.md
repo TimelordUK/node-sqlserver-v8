@@ -11,7 +11,7 @@
 1. captures return code from stored procedure.
 1. will obtain meta data describing parameters.
 1. compatibe with Node 10, 11, 12
-1. electron 4 supported.
+1. electron 4, 5 supported.
 1. includes 64 bit/ia32 precompiled libraries.
 1. npm install with npm install msnodesqlv8
 1. bulk table operations insert, delete, update
@@ -23,8 +23,6 @@
 Based on node-sqlserver, this version will compile in Visual Studio 2015/2017 and is built against the v8 node module API.  Included in the repository are pre compiled binaries for both x64 and x86 targets.
 
 This library only works with Node versions greater than 10.0
-
-Functionally the API should work exactly as the existing library. All versions of node are supported.
 
 ## Installing
 

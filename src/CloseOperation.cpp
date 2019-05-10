@@ -20,7 +20,7 @@ namespace mssql
 
 	Local<Value> CloseOperation::CreateCompletionArg()
 	{
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		return fact.null();
 	}
 }

@@ -286,7 +286,7 @@ namespace mssql
 
 	Local<Value> nodeTypeFactory::new_date() const
 	{
-		auto dd = Date::New(isolate->GetCurrentContext(), 0.0);
+		const auto dd = Date::New(isolate->GetCurrentContext(), 0.0);
 		Local<Value> d;
 		if (dd.ToLocal(&d))
 		{
@@ -298,13 +298,13 @@ namespace mssql
 	Local<Value> nodeTypeFactory::new_date(const double milliseconds, const int32_t nanoseconds_delta) const
 	{
 		const auto ns = String::NewFromUtf8(isolate, "nanosecondsDelta");
-		auto n = Number::New(isolate, nanoseconds_delta / (NANOSECONDS_PER_MS * 1000.0));
+		const auto n = Number::New(isolate, nanoseconds_delta / (NANOSECONDS_PER_MS * 1000.0));
 		// include the properties for items in a DATETIMEOFFSET that are not included in a JS Date object
 		const auto context = isolate->GetCurrentContext();
-		auto dd = Date::New(context, milliseconds);
+		const auto dd = Date::New(context, milliseconds);
 		Local<Value> d;
 		if (dd.ToLocal(&d)) {
-			auto maybe = d->ToObject(context);
+			const auto maybe = d->ToObject(context);
 			Local<Object> local;
 			if (maybe.ToLocal(&local)) {
 				local->Set(ns, n);
