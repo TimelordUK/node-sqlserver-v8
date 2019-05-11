@@ -53,149 +53,6 @@ suite('date tests', function () {
     })
   })
 
-  // this test simply verifies dates round trip.  It doesn't try to verify illegal dates vs. legal dates.
-  // SQL Server is assumed to be only returning valid times and dates.
-  test('date retrieval verification', testDone => {
-    const testDates = ['1-1-1970', '12-31-1969', '2-29-1904', '2-29-2000']
-    const fns = [
-      asyncDone => {
-        theConnection.queryRaw('DROP TABLE date_test', () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        theConnection.queryRaw('CREATE TABLE date_test (id int identity, test_date date)', e => {
-          assert.ifError(e)
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        theConnection.queryRaw('CREATE CLUSTERED INDEX IX_date_test ON date_test(id)', e => {
-          assert.ifError(e)
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        let insertQuery = 'INSERT INTO date_test (test_date) VALUES '
-        for (const testDate of testDates) {
-          insertQuery += '(\'' + testDate + '\'),'
-        }
-        insertQuery = insertQuery.substr(0, insertQuery.length - 1)
-        insertQuery += ';'
-        theConnection.queryRaw(insertQuery, e => {
-          assert.ifError(e)
-          asyncDone()
-        })
-      },
-      // test valid dates
-      asyncDone => {
-        theConnection.setUseUTC(false)
-        theConnection.queryRaw('SELECT test_date FROM date_test', (e, r) => {
-          assert.ifError(e)
-          const expectedDates = []
-          for (const testDate of testDates) {
-            const d = new Date(testDate)
-            // eslint-disable-next-line camelcase
-            const now_utc = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(),
-              d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds())
-            const expectedDate = new Date(now_utc)
-            expectedDates.push([expectedDate])
-          }
-          const expectedResults = {
-            meta: [{ name: 'test_date', size: 10, nullable: true, type: 'date', sqlType: 'date' }],
-            rows: expectedDates
-          }
-          assert.deepStrictEqual(expectedResults.meta, r.meta)
-          for (const row in r.rows) {
-            for (const d in row) {
-              assert.deepStrictEqual(expectedResults.rows[row][d], r.rows[row][d])
-            }
-          }
-          asyncDone()
-        })
-      }
-    ]
-
-    async.series(fns, () => {
-      testDone()
-    })
-  })
-
-  test('test timezone offset correctly offsets js date type', testDone => {
-    theConnection.query('select convert(datetimeoffset(7), \'2014-02-14 22:59:59.9999999 +05:00\') as dto1, convert(datetimeoffset(7), \'2014-02-14 17:59:59.9999999 +00:00\') as dto2',
-      function (err, res) {
-        assert.ifError(err)
-        const dto1 = res['dto1']
-        const dto2 = res['dto2']
-        assert(dto1 === dto2)
-        testDone()
-      })
-  })
-
-  // this test simply verifies dates round trip.  It doesn't try to verify illegal dates vs. legal dates.
-  // SQL Server is assumed to be only returning valid times and dates.
-
-  test('date to millisecond verification', testDone => {
-    const testDates = [{ date1: '1-1-1900', date2: '1-1-1901', milliseconds: 31536000000 },
-      { date1: '2-28-1900', date2: '3-1-1900', milliseconds: 86400000 },
-      { date1: '2-28-1904', date2: '3-1-1904', milliseconds: 172800000 },
-      { date1: '2-28-2000', date2: '3-1-2000', milliseconds: 172800000 },
-      { date1: '1-1-1970', date2: '12-31-1969', milliseconds: -86400000 },
-      { date1: '1-1-1969', date2: '1-1-1968', milliseconds: -(31536000000 + 86400000) },
-      { date1: '2-3-4567', date2: '2-3-4567', milliseconds: 0 }]
-
-    const fns = [
-      asyncDone => {
-        theConnection.queryRaw('DROP TABLE date_diff_test', () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        theConnection.queryRaw('CREATE TABLE date_diff_test (id int identity, date1 datetime2, date2 datetime2)', e => {
-          assert.ifError(e)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        theConnection.queryRaw('CREATE CLUSTERED INDEX IX_date_diff_test ON date_diff_test(id)', e => {
-          assert.ifError(e)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        let insertQuery = 'INSERT INTO date_diff_test (date1, date2) VALUES '
-        for (const i in testDates) {
-          insertQuery += ['(\'', testDates[i].date1, '\',\'', testDates[i].date2, '\'),'].join('')
-        }
-        insertQuery = insertQuery.substr(0, insertQuery.length - 1)
-        insertQuery = insertQuery + ';'
-        theConnection.queryRaw(insertQuery, e => {
-          assert.ifError(e)
-          asyncDone()
-        })
-      },
-
-      // test valid dates
-      asyncDone => {
-        theConnection.queryRaw('SELECT date1, date2 FROM date_diff_test ORDER BY id', (e, r) => {
-          assert.ifError(e)
-          for (const d in r.rows) {
-            const timeDiff = r.rows[d][1].getTime() - r.rows[d][0].getTime()
-            assert(timeDiff === testDates[d].milliseconds)
-          }
-          asyncDone()
-        })
-      }
-    ]
-
-    async.series(fns, () => {
-      testDone()
-    })
-  })
-
   test('time to millisecond components', testDone => {
     const randomHour = Math.floor(Math.random() * 24)
     const randomMinute = Math.floor(Math.random() * 60)
@@ -431,6 +288,149 @@ suite('date tests', function () {
           })
         }
       ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  // this test simply verifies dates round trip.  It doesn't try to verify illegal dates vs. legal dates.
+  // SQL Server is assumed to be only returning valid times and dates.
+  test('date retrieval verification', testDone => {
+    const testDates = ['1-1-1970', '12-31-1969', '2-29-1904', '2-29-2000']
+    const fns = [
+      asyncDone => {
+        theConnection.queryRaw('DROP TABLE date_test', () => {
+          asyncDone()
+        })
+      },
+      asyncDone => {
+        theConnection.queryRaw('CREATE TABLE date_test (id int identity, test_date date)', e => {
+          assert.ifError(e)
+          asyncDone()
+        })
+      },
+      asyncDone => {
+        theConnection.queryRaw('CREATE CLUSTERED INDEX IX_date_test ON date_test(id)', e => {
+          assert.ifError(e)
+          asyncDone()
+        })
+      },
+      asyncDone => {
+        let insertQuery = 'INSERT INTO date_test (test_date) VALUES '
+        for (const testDate of testDates) {
+          insertQuery += '(\'' + testDate + '\'),'
+        }
+        insertQuery = insertQuery.substr(0, insertQuery.length - 1)
+        insertQuery += ';'
+        theConnection.queryRaw(insertQuery, e => {
+          assert.ifError(e)
+          asyncDone()
+        })
+      },
+      // test valid dates
+      asyncDone => {
+        theConnection.setUseUTC(false)
+        theConnection.queryRaw('SELECT test_date FROM date_test', (e, r) => {
+          assert.ifError(e)
+          const expectedDates = []
+          for (const testDate of testDates) {
+            const d = new Date(testDate)
+            // eslint-disable-next-line camelcase
+            const now_utc = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(),
+              d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds())
+            const expectedDate = new Date(now_utc)
+            expectedDates.push([expectedDate])
+          }
+          const expectedResults = {
+            meta: [{ name: 'test_date', size: 10, nullable: true, type: 'date', sqlType: 'date' }],
+            rows: expectedDates
+          }
+          assert.deepStrictEqual(expectedResults.meta, r.meta)
+          for (const row in r.rows) {
+            for (const d in row) {
+              assert.deepStrictEqual(expectedResults.rows[row][d], r.rows[row][d])
+            }
+          }
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('test timezone offset correctly offsets js date type', testDone => {
+    theConnection.query('select convert(datetimeoffset(7), \'2014-02-14 22:59:59.9999999 +05:00\') as dto1, convert(datetimeoffset(7), \'2014-02-14 17:59:59.9999999 +00:00\') as dto2',
+      function (err, res) {
+        assert.ifError(err)
+        const dto1 = res['dto1']
+        const dto2 = res['dto2']
+        assert(dto1 === dto2)
+        testDone()
+      })
+  })
+
+  // this test simply verifies dates round trip.  It doesn't try to verify illegal dates vs. legal dates.
+  // SQL Server is assumed to be only returning valid times and dates.
+
+  test('date to millisecond verification', testDone => {
+    const testDates = [{ date1: '1-1-1900', date2: '1-1-1901', milliseconds: 31536000000 },
+      { date1: '2-28-1900', date2: '3-1-1900', milliseconds: 86400000 },
+      { date1: '2-28-1904', date2: '3-1-1904', milliseconds: 172800000 },
+      { date1: '2-28-2000', date2: '3-1-2000', milliseconds: 172800000 },
+      { date1: '1-1-1970', date2: '12-31-1969', milliseconds: -86400000 },
+      { date1: '1-1-1969', date2: '1-1-1968', milliseconds: -(31536000000 + 86400000) },
+      { date1: '2-3-4567', date2: '2-3-4567', milliseconds: 0 }]
+
+    const fns = [
+      asyncDone => {
+        theConnection.queryRaw('DROP TABLE date_diff_test', () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.queryRaw('CREATE TABLE date_diff_test (id int identity, date1 datetime2, date2 datetime2)', e => {
+          assert.ifError(e)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.queryRaw('CREATE CLUSTERED INDEX IX_date_diff_test ON date_diff_test(id)', e => {
+          assert.ifError(e)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        let insertQuery = 'INSERT INTO date_diff_test (date1, date2) VALUES '
+        for (const i in testDates) {
+          insertQuery += ['(\'', testDates[i].date1, '\',\'', testDates[i].date2, '\'),'].join('')
+        }
+        insertQuery = insertQuery.substr(0, insertQuery.length - 1)
+        insertQuery = insertQuery + ';'
+        theConnection.queryRaw(insertQuery, e => {
+          assert.ifError(e)
+          asyncDone()
+        })
+      },
+
+      // test valid dates
+      asyncDone => {
+        theConnection.queryRaw('SELECT date1, date2 FROM date_diff_test ORDER BY id', (e, r) => {
+          assert.ifError(e)
+          for (const d in r.rows) {
+            const timeDiff = r.rows[d][1].getTime() - r.rows[d][0].getTime()
+            assert(timeDiff === testDates[d].milliseconds)
+          }
+          asyncDone()
+        })
+      }
+    ]
 
     async.series(fns, () => {
       testDone()
