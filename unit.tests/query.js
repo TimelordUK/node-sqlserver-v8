@@ -57,6 +57,47 @@ suite('query', function () {
     })
   })
 
+  test('multiple results from query in callback', done => {
+    let moreShouldBe = true
+    let called = 0
+    let buffer
+    let expected
+
+    theConnection.queryRaw(`SELECT 1 as X, 'ABC', 0x0123456789abcdef; SELECT 2 AS Y, 'DEF', 0xfedcba9876543210`,
+      function (err, results, more) {
+        assert.ifError(err)
+        assert.strictEqual(more, moreShouldBe)
+        ++called
+
+        if (more) {
+          buffer = Buffer.from('0123456789abcdef', 'hex')
+          expected = {
+            meta: [{ name: 'X', size: 10, nullable: false, type: 'number', sqlType: 'int' },
+              { name: '', size: 3, nullable: false, type: 'text', sqlType: 'varchar' },
+              { name: '', size: 8, nullable: false, type: 'binary', sqlType: 'varbinary' }],
+            rows: [[1, 'ABC', buffer]]
+          }
+
+          assert.deepStrictEqual(results, expected, 'Result 1 does not match expected')
+
+          assert(called === 1)
+          moreShouldBe = false
+        } else {
+          buffer = Buffer.from('fedcba9876543210', 'hex')
+          expected = {
+            meta: [{ name: 'Y', size: 10, nullable: false, type: 'number', sqlType: 'int' },
+              { name: '', size: 3, nullable: false, type: 'text', sqlType: 'varchar' },
+              { name: '', size: 8, nullable: false, type: 'binary', sqlType: 'varbinary' }],
+            rows: [[2, 'DEF', buffer]]
+          }
+
+          assert.deepStrictEqual(results, expected, 'Result 2 does not match expected')
+          assert(called === 2)
+          done()
+        }
+      })
+  })
+
   test('verify empty results retrieved properly', testDone => {
     const fns = [
       asyncDone => {
@@ -498,47 +539,6 @@ suite('query', function () {
     async.series(fns, () => {
       done()
     })
-  })
-
-  test('multiple results from query in callback', done => {
-    let moreShouldBe = true
-    let called = 0
-    let buffer
-    let expected
-
-    theConnection.queryRaw(`SELECT 1 as X, 'ABC', 0x0123456789abcdef; SELECT 2 AS Y, 'DEF', 0xfedcba9876543210`,
-      function (err, results, more) {
-        assert.ifError(err)
-        assert.strictEqual(more, moreShouldBe)
-        ++called
-
-        if (more) {
-          buffer = Buffer.from('0123456789abcdef', 'hex')
-          expected = {
-            meta: [{ name: 'X', size: 10, nullable: false, type: 'number', sqlType: 'int' },
-              { name: '', size: 3, nullable: false, type: 'text', sqlType: 'varchar' },
-              { name: '', size: 8, nullable: false, type: 'binary', sqlType: 'varbinary' }],
-            rows: [[1, 'ABC', buffer]]
-          }
-
-          assert.deepStrictEqual(results, expected, 'Result 1 does not match expected')
-
-          assert(called === 1)
-          moreShouldBe = false
-        } else {
-          buffer = Buffer.from('fedcba9876543210', 'hex')
-          expected = {
-            meta: [{ name: 'Y', size: 10, nullable: false, type: 'number', sqlType: 'int' },
-              { name: '', size: 3, nullable: false, type: 'text', sqlType: 'varchar' },
-              { name: '', size: 8, nullable: false, type: 'binary', sqlType: 'varbinary' }],
-            rows: [[2, 'DEF', buffer]]
-          }
-
-          assert.deepStrictEqual(results, expected, 'Result 2 does not match expected')
-          assert(called === 2)
-          done()
-        }
-      })
   })
 
   test('multiple results from query in events', done => {
