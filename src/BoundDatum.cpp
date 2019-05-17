@@ -199,7 +199,7 @@ namespace mssql
 			const auto maybe = p->ToString(context);
 			Local<String> str_param;
 			if (maybe.ToLocal(&str_param)) {
-				str_param->WriteUtf8(fact.isolate, _storage->charvec_ptr->data(), precision);
+				str_param->WriteUtf8(_storage->charvec_ptr->data(), precision);
 				_indvec[0] = precision;
 			}
 		}
@@ -271,7 +271,7 @@ namespace mssql
 					if (maybe_string.ToLocal(&str)) {
 						const auto width = str->Length() * size;
 						_indvec[i] = width;
-						str->Write(fact.isolate, &*itr, 0, max_str_len);
+						str->Write(&*itr, 0, max_str_len);
 					}
 				}
 			}
@@ -293,7 +293,7 @@ namespace mssql
 			Local<String> str_param;
 			if (maybe.ToLocal(&str_param)) {
 				const auto first_p = _storage->uint16vec_ptr->data();
-				str_param->Write(fact.isolate, first_p, 0, precision);
+				str_param->Write(first_p, 0, precision);
 				buffer_len = precision * size;
 				if (precision > 4000)
 				{
@@ -400,7 +400,7 @@ namespace mssql
 		wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
 		char tmp[1 * 1024];
 		const auto precision = min(1024, s->Length() + 1);
-		s->WriteUtf8(fact.isolate, tmp, precision);
+		s->WriteUtf8(tmp, precision);
 		const string narrow(tmp);
 		const auto wide = converter.from_bytes(narrow);
 		return wide;
@@ -428,7 +428,7 @@ namespace mssql
 		_storage->ReserveChars(precision + 1);
 		_storage->ReserveUint16(precision + 1);
 		auto* itr_p = _storage->charvec_ptr->data();
-		type_id_str->WriteUtf8(fact.isolate, itr_p, precision);
+		type_id_str->WriteUtf8(itr_p, precision);
 		const string narrow = _storage->charvec_ptr->data();
 		const auto wide = converter.from_bytes(narrow);
 		memcpy(static_cast<void*>(_storage->uint16vec_ptr->data()), wide.c_str(), precision * sizeof(uint16_t));
@@ -963,10 +963,10 @@ namespace mssql
 			if (!elem->IsNull())
 			{
 				_indvec[i] = 0;
-				const auto maybe = elem->ToBigInt(context);
-				Local<BigInt> local;
+				const auto maybe = elem->ToInt32(context);
+				Local<Int32> local;
 				if (maybe.ToLocal(&local)) {
-					vec[i] = local->Int64Value();
+					vec[i] = local->Int32Value();
 				}
 			}
 		}

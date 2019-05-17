@@ -37,7 +37,7 @@ namespace mssql
 		while (read < length)
 		{
 			const auto toread = min(buffer_length, length - read);
-			const auto actual = input->Write(fact.isolate, buffer, read, toread);
+			const auto actual = input->Write(buffer, read, toread);
 			result.append(reinterpret_cast<const wchar_t*>(buffer), actual);
 			read += actual;
 		}

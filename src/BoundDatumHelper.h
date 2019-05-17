@@ -146,15 +146,6 @@ namespace mssql
 			else if (p->IsUint32()) {
 				++uint32Count;
 			}
-			else if (p->IsBigInt())
-			{
-				MaybeLocal<BigInt> maybe = p->ToBigInt(context);
-				Local<BigInt> local;
-				if (maybe.ToLocal(&local))
-				{
-					++int64Count;
-				}
-			}
 			else if (p->IsNumber()) {
 				MaybeLocal<Number> maybe = p->ToNumber(context);
 				Local<Number> local;

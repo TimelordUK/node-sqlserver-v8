@@ -58,11 +58,11 @@ namespace mssql
 			auto l = get(query_object, v);
 			if (!l->IsNull())
 			{
-				auto maybe = l->ToBigInt(context);
-				Local<BigInt> local;
+				auto maybe = l->ToInt32(context);
+				Local<Int32> local;
 				if (maybe.ToLocal(&local))
 				{
-					return local->Int64Value();
+					return local->Int32Value();
 				}
 			}
 			return 0;
@@ -74,11 +74,11 @@ namespace mssql
 			auto context = fact.isolate->GetCurrentContext();
 			if (!l->IsNull())
 			{
-				auto maybe = l->ToBigInt(context);
-				Local<BigInt> local;
+				auto maybe = l->ToInt32(context);
+				Local<Int32> local;
 				if (maybe.ToLocal(&local))
 				{
-					return local->Int64Value();
+					return local->Int32Value();
 				}
 			}
 			return 0;
