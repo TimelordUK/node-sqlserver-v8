@@ -55,7 +55,7 @@ namespace mssql
 		if (is_user_defined->IsNull()) return false;
 		const nodeTypeFactory node;
 		const auto context = node.isolate->GetCurrentContext();
-		auto maybe = is_user_defined->BooleanValue(context);
+		const auto maybe = is_user_defined->BooleanValue(context);
 		const auto local = maybe.FromMaybe(false);
 		return local;
 	}
@@ -425,8 +425,8 @@ namespace mssql
 		}
 		_indvec.resize(1);
 		const auto precision = type_id_str->Length();
-		_storage->ReserveChars(precision + 1);
-		_storage->ReserveUint16(precision + 1);
+		_storage->ReserveChars(static_cast<size_t>(precision) + 1);
+		_storage->ReserveUint16(static_cast<size_t>(precision) + 1);
 		auto* itr_p = _storage->charvec_ptr->data();
 		type_id_str->WriteUtf8(fact.isolate, itr_p, precision);
 		const string narrow = _storage->charvec_ptr->data();
@@ -1290,7 +1290,7 @@ namespace mssql
 		else if (sql_type_s_maps_to_string(p))
 		{
 			vector<char> b;
-			b.resize(static_cast<size_t>(size + 1));
+			b.resize(static_cast<size_t>(size) + 1);
 			pval = fact.new_string(b.data(), size + 1);
 		}
 		else

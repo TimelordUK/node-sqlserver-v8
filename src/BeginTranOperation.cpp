@@ -15,7 +15,7 @@ namespace mssql
 
 	Local<Value> BeginTranOperation::CreateCompletionArg()
 	{
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		return fact.null();
 	}
 }

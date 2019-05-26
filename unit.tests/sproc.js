@@ -41,6 +41,74 @@ suite('sproc', function () {
     })
   })
 
+  test('stream call proc no callback with print in proc', testDone => {
+    const spName = 'test_len_of_sp'
+
+    const def = `alter PROCEDURE <name> @param VARCHAR(50) 
+ AS 
+ BEGIN 
+     raiserror('a print in proc message',0,0) with nowait;
+     select LEN(@param) as len; 
+ END 
+`
+
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        const rows = []
+        let info = null
+        let submitted = false
+        pm.get(spName, proc => {
+          const qp = proc.call(['javascript'])
+          qp.on('column', (c, data) => {
+            const l = c.toString()
+            const r = {}
+            r[l] = data
+            rows.push(r)
+          })
+
+          qp.on('done', () => {
+            // console.log('done ....')
+            assert(rows.length === 1)
+            assert.strictEqual(true, submitted)
+            assert.strictEqual('[Microsoft][SQL Server Native Client 11.0][SQL Server]a print in proc message', info)
+            const expected = [
+              {
+                '0': 10
+              }
+            ]
+            assert.deepStrictEqual(expected, rows)
+            asyncDone()
+          })
+
+          qp.on('error', (e) => {
+            assert.ifError(e)
+          })
+
+          qp.on('submitted', (q) => {
+            // console.log('submitted')
+            submitted = true
+          })
+
+          qp.on('info', (i) => {
+            // console.log(`info ${i}`)
+            info = i.message
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test('get proc and call multiple times synchronously with changing params i.e. prove each call is independent', testDone => {
     const spName = 'test_sp_get_int_int'
 
