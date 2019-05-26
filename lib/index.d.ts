@@ -114,6 +114,8 @@ export interface Query {
     on(name: string, cb: EventCb): void
     on(name: string, cb: EventColumnCb): void
     cancelQuery(qcb?: StatusCb): void
+    pauseQuery(qcb?: StatusCb): void
+    resumeQuery(qcb?: StatusCb): void
 }
 
 export interface ConnectDescription {

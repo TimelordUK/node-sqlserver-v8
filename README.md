@@ -6,6 +6,7 @@
 
 # msnodesqlv8
 
+1. pause/resume long running query
 1. sequelize support directly included
 1. supports input/output parameters.
 1. captures return code from stored procedure.
