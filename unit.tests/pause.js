@@ -75,4 +75,21 @@ suite('pause', function () {
       testDone()
     })
   })
+
+  test('pause a large query to only get 100 rows', testDone => {
+    const q = theConnection.query(`select * from syscolumns`)
+    q.on('error', (e) => {
+      assert.ifError(e)
+    })
+    q.on('row', () => {
+      ++rows
+      if (rows % 100 === 0) {
+        q.pauseQuery()
+        setTimeout(() => {
+          assert.strictEqual(expected, rows)
+          testDone()
+        }, 200)
+      }
+    })
+  })
 })
