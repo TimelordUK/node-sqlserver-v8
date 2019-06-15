@@ -67,7 +67,7 @@ suite('pause', function () {
         q.pauseQuery()
         setTimeout(() => {
           q.resumeQuery()
-        }, 200)
+        }, 50)
       }
     })
     q.on('done', () => {
