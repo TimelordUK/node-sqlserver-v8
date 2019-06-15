@@ -52,12 +52,12 @@ suite('pause', function () {
 
   test('pause a large query every 100 rows', testDone => {
     let expected = 0
-    const q0 = theConnection.query(`select * from syscolumns`)
+    const q0 = theConnection.query(`select top 3000 * from syscolumns`)
     q0.on('row', () => {
       ++expected
     })
     let rows = 0
-    const q = theConnection.query(`select * from syscolumns`)
+    const q = theConnection.query(`select top 3000 * from syscolumns`)
     q.on('error', (e) => {
       assert.ifError(e)
     })
