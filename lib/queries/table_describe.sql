@@ -25,18 +25,21 @@ t_name_cte(full_name, table_name) AS
 		LEFT OUTER JOIN t_exact_cte AS e ON e.id = f.id
 )
 SELECT
-	sc.table_catalog,
+    sc.table_catalog,
 	sc.table_schema,
 	sc.table_name,
-  c.name name,
-  t.Name type,
-  c.max_length,
-  c.precision,
-  c.scale,
-  c.is_nullable,
-  c.is_computed,
-  c.is_identity,
-  c.object_id,
+    c.name name,
+    t.Name type,
+    c.max_length,
+    c.precision,
+    c.scale,
+    c.is_nullable,
+    c.is_computed,
+    c.is_identity,
+    c.object_id,
+    c.generated_always_type,
+    c.generated_always_type_desc,
+    c.is_hidden,
   (
   CASE
   WHEN CONSTRAINT_NAME IN (SELECT NAME
