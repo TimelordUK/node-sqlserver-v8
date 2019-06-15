@@ -80,7 +80,10 @@ export interface TableColumn {
     collation: string
     is_output: number
     system_type_id: number
-    type:string
+    type:string,
+    is_hidden: number,
+    generated_always_type: number,
+    generated_always_desc: string
 }
 
 export interface Connection {
