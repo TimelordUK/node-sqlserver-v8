@@ -38,32 +38,6 @@ suite('bulk', function () {
     })
   })
 
-  test('employee tmp table complex json object array bulk operations', testDone => {
-    const tableName = '#Employee'
-
-    const fns = [
-
-      asyncDone => {
-        helper.dropCreateTable({
-          tableName: tableName,
-          theConnection: theConnection
-        }, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        bindInsert(tableName, () => {
-          asyncDone()
-        })
-      }
-    ]
-
-    async.series(fns, () => {
-      testDone()
-    })
-  })
-
   test(`bulk insert simple multi-column object - default a nullable column ${test2BatchSize}`, testDone => {
     function buildTest (count) {
       const arr = []
@@ -109,6 +83,32 @@ suite('bulk', function () {
         bulkMgr.insertRows(vec, (err, res) => {
           assert(err === null || err === false)
           assert(res.length === 0)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('employee tmp table complex json object array bulk operations', testDone => {
+    const tableName = '#Employee'
+
+    const fns = [
+
+      asyncDone => {
+        helper.dropCreateTable({
+          tableName: tableName,
+          theConnection: theConnection
+        }, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        bindInsert(tableName, () => {
           asyncDone()
         })
       }
