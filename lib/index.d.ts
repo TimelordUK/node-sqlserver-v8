@@ -81,6 +81,8 @@ export interface TableColumn {
     is_output: number
     system_type_id: number
     type:string,
+    is_identity: number,
+    is_computed: number,
     is_hidden: number,
     generated_always_type: number,
     generated_always_desc: string
