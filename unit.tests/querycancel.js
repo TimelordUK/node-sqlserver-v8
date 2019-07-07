@@ -40,6 +40,35 @@ suite('querycancel', function () {
     })
   })
 
+  test('2 x cancel - expect Operation canceled on both', testDone => {
+    let hits = 0
+
+    function hit (err) {
+      assert(err)
+      assert(err.message.indexOf('Operation canceled') > 0)
+      hits++
+      if (hits === 2) {
+        testDone()
+      }
+    }
+
+    const q1 = theConnection.query(sql.PollingQuery(`waitfor delay '00:00:20';`), err => {
+      hit(err)
+    })
+
+    const q2 = theConnection.query(sql.PollingQuery(`waitfor delay '00:00:20';`), err => {
+      hit(err)
+    })
+
+    theConnection.cancelQuery(q1, err => {
+      assert(!err)
+    })
+
+    theConnection.cancelQuery(q2, err => {
+      assert(!err)
+    })
+  })
+
   test('cancel single query from notifier using tmp connection - expect Operation canceled', testDone => {
     const q = sql.query(connStr, sql.PollingQuery(`waitfor delay '00:00:59';`), err => {
       assert(err)
@@ -115,35 +144,6 @@ suite('querycancel', function () {
     })
 
     theConnection.cancelQuery(q, err => {
-      assert(!err)
-    })
-  })
-
-  test('2 x cancel - expect Operation canceled on both', testDone => {
-    let hits = 0
-
-    function hit (err) {
-      assert(err)
-      assert(err.message.indexOf('Operation canceled') > 0)
-      hits++
-      if (hits === 2) {
-        testDone()
-      }
-    }
-
-    const q1 = theConnection.query(sql.PollingQuery(`waitfor delay '00:00:20';`), err => {
-      hit(err)
-    })
-
-    const q2 = theConnection.query(sql.PollingQuery(`waitfor delay '00:00:20';`), err => {
-      hit(err)
-    })
-
-    theConnection.cancelQuery(q1, err => {
-      assert(!err)
-    })
-
-    theConnection.cancelQuery(q2, err => {
       assert(!err)
     })
   })
