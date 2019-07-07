@@ -38,6 +38,30 @@ suite('pause', function () {
     })
   })
 
+  test('pause a large query to only get 10 rows then submit new query whilst other paused (first killed)', testDone => {
+    const q = theConnection.query(`select top 3000 * from syscolumns`)
+    const pauseAt = 10
+    let rows = 0
+    q.on('error', (e) => {
+      assert.ifError(e)
+    })
+    q.on('row', () => {
+      ++rows
+      if (rows % 10 === 0) {
+        q.pauseQuery()
+        setTimeout(() => {
+          assert.strictEqual(pauseAt, rows)
+          // submit a new query will kill previous
+          theConnection.query(`select top 3000 * from syscolumns`, (err, res) => {
+            assert.ifError(err)
+            assert(Array.isArray(res))
+            testDone()
+          })
+        }, 200)
+      }
+    })
+  })
+
   test('pause a large query to only get 10 rows', testDone => {
     const q = theConnection.query(`select top 3000 * from syscolumns`)
     const pauseAt = 10
@@ -51,6 +75,7 @@ suite('pause', function () {
         q.pauseQuery()
         setTimeout(() => {
           assert.strictEqual(pauseAt, rows)
+          // close connection will move to top of work q and paused query will be terminated
           testDone()
         }, 200)
       }
