@@ -38,6 +38,171 @@ suite('bulk', function () {
     })
   })
 
+  test('non null varchar write empty string', testDone => {
+    const tableName = 'emptyString'
+    let boundTable = null
+    const fns = [
+
+      asyncDone => {
+        helper.dropCreateTable({
+          tableName: tableName,
+          theConnection: theConnection,
+          columnName: 'test_field',
+          type: 'nvarchar(12)'
+        }, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const tm = theConnection.tableMgr()
+        tm.bind(tableName, t => {
+          const meta = t.getMeta()
+          boundTable = t
+          assert(boundTable !== null)
+          const select = meta.getSelectSignature()
+          assert(select.indexOf('select') >= 0)
+
+          const insert = meta.getInsertSignature()
+          assert(insert.indexOf('insert') >= 0)
+
+          const del = meta.getDeleteSignature()
+          assert(del.indexOf('delete') >= 0)
+
+          const update = meta.getUpdateSignature()
+          assert(update.indexOf('update') >= 0)
+
+          const assignable = meta.getAssignableColumns()
+          assert(Array.isArray(assignable))
+          assert(assignable.length > 0)
+
+          const updateColumns = meta.getUpdateColumns()
+          assert(Array.isArray(updateColumns))
+          assert(updateColumns.length > 0)
+
+          const primaryColumns = meta.getPrimaryColumns()
+          assert(Array.isArray(primaryColumns))
+          assert(primaryColumns.length > 0)
+
+          const whereColumns = meta.getWhereColumns()
+          assert(Array.isArray(whereColumns))
+          assert(whereColumns.length > 0)
+
+          const byName = meta.getColumnsByName()
+          assert(byName !== null)
+
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const vec = [
+          {
+            pkid: 1,
+            test_field: ''
+          },
+          {
+            pkid: 2,
+            test_field: ''
+          }
+        ]
+        boundTable.insertRows(vec, (err, res) => {
+          assert(err === null || err === false)
+          assert(res.length === 0)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.query(`select len(test_field) as len  from [dbo].${tableName}`, (err, res) => {
+          assert(err == null)
+          assert(Array.isArray(res))
+          assert(res.length === 2)
+          const expected = [
+            {
+              len: 0
+            },
+            {
+              len: 0
+            }
+          ]
+          assert.deepStrictEqual(expected, res)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('employee table complex json object test api', testDone => {
+    const tableName = 'Employee'
+
+    const fns = [
+
+      asyncDone => {
+        helper.dropCreateTable({
+          tableName: tableName,
+          theConnection: theConnection
+        }, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        bindInsert(tableName, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const tm = theConnection.tableMgr()
+        tm.bind(tableName, t => {
+          const meta = t.getMeta()
+
+          const select = meta.getSelectSignature()
+          assert(select.indexOf('select') >= 0)
+
+          const insert = meta.getInsertSignature()
+          assert(insert.indexOf('insert') >= 0)
+
+          const del = meta.getDeleteSignature()
+          assert(del.indexOf('delete') >= 0)
+
+          const update = meta.getUpdateSignature()
+          assert(update.indexOf('update') >= 0)
+
+          const assignable = meta.getAssignableColumns()
+          assert(Array.isArray(assignable))
+          assert(assignable.length > 0)
+
+          const updateColumns = meta.getUpdateColumns()
+          assert(Array.isArray(updateColumns))
+          assert(updateColumns.length > 0)
+
+          const primaryColumns = meta.getPrimaryColumns()
+          assert(Array.isArray(primaryColumns))
+          assert(primaryColumns.length > 0)
+
+          const whereColumns = meta.getWhereColumns()
+          assert(Array.isArray(whereColumns))
+          assert(whereColumns.length > 0)
+
+          const byName = meta.getColumnsByName()
+          assert(byName !== null)
+
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test(`bulk insert simple multi-column object - default a nullable column ${test2BatchSize}`, testDone => {
     function buildTest (count) {
       const arr = []

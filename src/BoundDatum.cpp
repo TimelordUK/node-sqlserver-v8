@@ -247,7 +247,7 @@ namespace mssql
 
 	void BoundDatum::bind_w_var_char_array(const Local<Value>& p)
 	{
-		const auto max_str_len = get_max_str_len(p);
+		const auto max_str_len = max(1, get_max_str_len(p));
 		auto arr = Local<Array>::Cast(p);
 		const auto array_len = arr->Length();
 		const auto size = sizeof(uint16_t);

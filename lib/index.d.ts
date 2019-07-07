@@ -193,6 +193,8 @@ export interface BulkMgrSummary {
     deleteSignature: string
     updateSignature: string
     columns: TableColumn[]
+    primaryColumns: TableColumn[]
+    assignableColumns: TableColumn
 }
 
 export interface BulkTableMgr {
@@ -205,6 +207,15 @@ export interface BulkTableMgr {
     setBatchSize(size: number): void
     setWhereCols(cols: any[]): void
     setUpdateCols(cols: any[]): void
+    getInsertSignature(): string
+    getSelectSignature(): string
+    getDeleteSignature(): string
+    getUpdateSignature(): string
+    getColumnsByName(): TableColumn[]
+    getWhereColumns(): TableColumn[]
+    getUpdateColumns(): TableColumn[]
+    getPrimaryColumns(): TableColumn[]
+    getAssignableColumns(): TableColumn[]
 }
 
 export interface TableValueParam {

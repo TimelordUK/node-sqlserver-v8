@@ -38,6 +38,27 @@ suite('pause', function () {
     })
   })
 
+  test('pause a large query to only get 10 rows', testDone => {
+    const q = theConnection.query(`select top 3000 * from syscolumns`)
+    const pauseAt = 10
+    let rows = 0
+    q.on('error', (e) => {
+      assert.ifError(e)
+    })
+    q.on('row', () => {
+      ++rows
+      if (rows % 10 === 0) {
+        q.pauseQuery()
+        setTimeout(() => {
+          assert.strictEqual(pauseAt, rows)
+          q.cancelQuery(() => {
+            testDone()
+          })
+        }, 200)
+      }
+    })
+  })
+
   test('run a large query', testDone => {
     const q = theConnection.query(`select * from syscolumns`)
     q.on('error', (e) => {
