@@ -51,9 +51,7 @@ suite('pause', function () {
         q.pauseQuery()
         setTimeout(() => {
           assert.strictEqual(pauseAt, rows)
-          q.cancelQuery(() => {
-            testDone()
-          })
+          testDone()
         }, 200)
       }
     })

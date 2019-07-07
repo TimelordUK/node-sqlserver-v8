@@ -62,14 +62,14 @@
   },
   "devDependencies": {
     "@types/electron": "^1.4.31",
-    "@types/node": "^12.0.0",
-    "@types/sequelize": "^4.27.49",
+    "@types/node": "^12.0.12",
+    "@types/sequelize": "^4.28.3",
     "asynquence": "^0.10.2",
     "asynquence-contrib": "^0.28.2",
-    "electron": "^5.0.1",
+    "electron": "^5.0.6",
     "minimist": "^1.2.0",
     "mocha": "^6.1.4",
-    "sequelize": "^5.8.5",
+    "sequelize": "^5.9.4",
     "standard": "^12.0.1",
     "tedious": "^6.1.1"
   },
