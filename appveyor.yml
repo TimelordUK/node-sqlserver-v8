@@ -11,6 +11,10 @@ platform:
   - x86
   - x64
 
+before_test:
+  - sc config sqlbrowser start= auto
+  - net start sqlbrowser
+
 install:
 - ps: Install-Product node $env:nodejs_version $env:platform
 - npm install
@@ -18,7 +22,7 @@ install:
 build_script:
 - cmd: tool\build.bat
 test_script:
-- cmd: >-
+- cmd: |
     SET MSSQL_VERSION=2016
     powershell tool\appveyor.ps1 SQL2016
     node --version
