@@ -167,6 +167,122 @@ END`
     }
   ]
 
+  test('use tvp to select from table type complex object Employee type', testDone => {
+    const tableName = 'Employee'
+    let bulkMgr
+
+    const fns = [
+
+      asyncDone => {
+        helper.dropCreateTable({
+          tableName: tableName
+        }, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const tm = theConnection.tableMgr()
+        tm.bind(tableName, bulk => {
+          bulkMgr = bulk
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        let sql = 'IF TYPE_ID(N\'EmployeeType\') IS not NULL'
+        sql += ' drop type EmployeeType'
+        theConnection.query(sql, err => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const sql = bulkMgr.asUserType()
+        theConnection.query(sql, err => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const parsedJSON = helper.getJSON()
+        // construct a table type based on a table definition.
+        const table = bulkMgr.asTableType()
+        // convert a set of objects to rows
+        table.addRowsFromObjects(parsedJSON)
+        // use a type the native driver can understand, using column based bulk binding.
+        const tp = sql.TvpFromTable(table)
+        theConnection.query('select * from ?;', [tp], (err, res) => {
+          assert.ifError(err)
+          helper.compareEmployee(res, parsedJSON)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('employee use tm to get a table value type representing table and create that user table type', testDone => {
+    const tableName = 'Employee'
+    let bulkMgr
+
+    const fns = [
+
+      asyncDone => {
+        helper.dropCreateTable({
+          tableName: tableName
+        }, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const tm = theConnection.tableMgr()
+        tm.bind(tableName, bulk => {
+          bulkMgr = bulk
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        let sql = 'IF TYPE_ID(N\'EmployeeType\') IS not NULL'
+        sql += ' drop type EmployeeType'
+        theConnection.query(sql, err => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const sql = bulkMgr.asUserType()
+        theConnection.query(sql, err => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.getUserTypeTable('EmployeeType', (err, def) => {
+          assert.ifError(err)
+          const summary = bulkMgr.getSummary()
+          assert(def.columns.length = summary.columns.length)
+          const t = bulkMgr.asTableType()
+          assert(t.columns.length === summary.columns.length)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test('use tvp simple test type insert test using pm', testDone => {
     const tableName = 'TestTvp'
     let table
@@ -301,122 +417,6 @@ END`
         theConnection.query(`select * from ${tableName}`, (err, res) => {
           assert.ifError(err)
           assert.deepStrictEqual(vec, res)
-          asyncDone()
-        })
-      }
-    ]
-
-    async.series(fns, () => {
-      testDone()
-    })
-  })
-
-  test('use tvp to select from table type complex object Employee type', testDone => {
-    const tableName = 'Employee'
-    let bulkMgr
-
-    const fns = [
-
-      asyncDone => {
-        helper.dropCreateTable({
-          tableName: tableName
-        }, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const tm = theConnection.tableMgr()
-        tm.bind(tableName, bulk => {
-          bulkMgr = bulk
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        let sql = 'IF TYPE_ID(N\'EmployeeType\') IS not NULL'
-        sql += ' drop type EmployeeType'
-        theConnection.query(sql, err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const sql = bulkMgr.asUserType()
-        theConnection.query(sql, err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const parsedJSON = helper.getJSON()
-        // construct a table type based on a table definition.
-        const table = bulkMgr.asTableType()
-        // convert a set of objects to rows
-        table.addRowsFromObjects(parsedJSON)
-        // use a type the native driver can understand, using column based bulk binding.
-        const tp = sql.TvpFromTable(table)
-        theConnection.query('select * from ?;', [tp], (err, res) => {
-          assert.ifError(err)
-          helper.compareEmployee(res, parsedJSON)
-          asyncDone()
-        })
-      }
-    ]
-
-    async.series(fns, () => {
-      testDone()
-    })
-  })
-
-  test('employee use tm to get a table value type representing table and create that user table type', testDone => {
-    const tableName = 'Employee'
-    let bulkMgr
-
-    const fns = [
-
-      asyncDone => {
-        helper.dropCreateTable({
-          tableName: tableName
-        }, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const tm = theConnection.tableMgr()
-        tm.bind(tableName, bulk => {
-          bulkMgr = bulk
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        let sql = 'IF TYPE_ID(N\'EmployeeType\') IS not NULL'
-        sql += ' drop type EmployeeType'
-        theConnection.query(sql, err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const sql = bulkMgr.asUserType()
-        theConnection.query(sql, err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        theConnection.getUserTypeTable('EmployeeType', (err, def) => {
-          assert.ifError(err)
-          const summary = bulkMgr.getSummary()
-          assert(def.columns.length = summary.columns.length)
-          const t = bulkMgr.asTableType()
-          assert(t.columns.length === summary.columns.length)
           asyncDone()
         })
       }
