@@ -21,6 +21,7 @@ install:
 
 build_script:
 - cmd: tool\build.bat
+
 test_script:
 - cmd: |
     SET MSSQL_VERSION=2016
