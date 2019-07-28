@@ -15,7 +15,8 @@ function runTest () {
   }
 
   if (argv.hasOwnProperty('a')) {
-    connStr = 'Driver={SQL Server Native Client 11.0}; Server=tcp:(local); Database={master}; Uid=sa; Pwd=Password12!'
+    const appVeyorVersion = argv['a']
+    connStr = `Driver={SQL Server Native Client 11.0}; Server=tcp:(local)\\SQL${appVeyorVersion}; Database={master}; Uid=sa; Pwd=Password12!`
     console.log('set connStr as ' + connStr)
   }
 
