@@ -8,7 +8,7 @@ SELECT
      WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '12%' THEN 2014
      WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '13%' THEN 2016
      WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '14%' THEN 2017
-     ELSE 2019
+     ELSE 0
   END AS MajorVersion,
   SERVERPROPERTY('ProductLevel') AS ProductLevel,
   SERVERPROPERTY('Edition') AS Edition,
