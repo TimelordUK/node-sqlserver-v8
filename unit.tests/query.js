@@ -57,6 +57,49 @@ suite('query', function () {
     })
   })
 
+  test('test retrieving a large decimal as a string', testDone => {
+    const precision = 21
+    const scale = 7
+    const numString = '1234567891011.1213141'
+    const fns = [
+      asyncDone => {
+        theConnection.queryRaw('DROP TABLE TestLargeDecimal', () => {
+          asyncDone()
+        })
+      },
+      asyncDone => {
+        theConnection.queryRaw(`CREATE TABLE TestLargeDecimal (
+          id VARCHAR(12) NOT NULL,
+          testfield DECIMAL(${precision},${scale}) NOT NULL,
+          PRIMARY KEY (id)
+          )`,
+        e => {
+          assert.ifError(e)
+          asyncDone()
+        })
+      },
+      asyncDone => {
+        theConnection.query(`INSERT INTO [dbo].[TestLargeDecimal] (id, testfield) VALUES (1, ${numString})`,
+          e => {
+            assert.ifError(e)
+            asyncDone()
+          })
+      },
+
+      asyncDone => {
+        theConnection.query(`select id, cast(testfield as varchar(${numString.length})) as big_d_as_s from TestLargeDecimal`, (e, r) => {
+          assert.ifError(e)
+          assert.strictEqual(numString, r[0].big_d_as_s)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test('multiple results from query in callback', done => {
     let moreShouldBe = true
     let called = 0

@@ -3,30 +3,26 @@ image: Visual Studio 2017
 clone_folder: c:\projects\node_modules\msnodesqlv8
 environment:
   matrix:
-  - nodejs_version: 10
-  - nodejs_version: 11
+  - nodejs_version: "10"
+  - nodejs_version: "11"
+  - nodejs_version: "12"
 
 platform:
   - x86
   - x64
 
-services:
-  - mssql2017
-
 install:
 - ps: Install-Product node $env:nodejs_version $env:platform
+- del binding.gyp
+- npm install
+
 build_script:
 - cmd: tool\build.bat
 test_script:
 - cmd: >-
+    powershell tool\appveyor.ps1 SQL2016
     node --version
-
     netstat -a | findstr 1433
-
     sqlcmd.exe -S "(local)" -U "sa" -P "Password12!" -Q "select getdate()"
-
-    del binding.gyp
-
-    npm install
-
     node unit.tests\cmd-test.js -a -t benchmark --repeats=20 --delay=4500 2>&1 & node unit.tests\cmd-test.js -a -t benchmark --table=syscolumns --delay=5000 --repeats=10 2>&1 & node runtest -a -t pause -t concurrent -t multiple-errors -t geography -t tvp -t warnings.js -t compoundqueries.js -t querycancel.js -t txn.js -t datatypes.js -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t sproc.js -t prepared.js -t userbind.js -t dates.js 2>&1
+    net stop MSSQL$SQL2016

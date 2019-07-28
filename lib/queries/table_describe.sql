@@ -1,4 +1,19 @@
-WITH t_fuzzy_cte(id, full_name, table_name) AS
+with server_generation(supports_hidden) as
+(
+SELECT
+  CASE
+     WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '8%' THEN 'N'
+     WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '9%' THEN 'N'
+     WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '10.0%' THEN 'N'
+     WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '10.5%' THEN 'N'
+     WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '11%' THEN 'N'
+     WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '12%' THEN 'N'
+     WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '13%' THEN 'Y'
+     WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '14%' THEN 'Y'
+     ELSE 'Y'
+  END AS supports_hidden
+),
+t_fuzzy_cte(id, full_name, table_name) AS
 (SELECT  TOP (1)
 	0 AS id,
 	TABLE_CATALOG + '..' + TABLE_NAME AS full_name,
@@ -37,9 +52,27 @@ SELECT
     c.is_computed,
     c.is_identity,
     c.object_id,
-    c.generated_always_type,
-    c.generated_always_type_desc,
-    c.is_hidden,
+(
+  CASE
+  WHEN 'Y' IN (SELECT supports_hidden
+                           FROM server_generation)
+    THEN c.generated_always_type
+  ELSE 0
+  END) as generated_always_type,
+  (
+  CASE
+  WHEN 'Y' IN (SELECT supports_hidden
+                           FROM server_generation)
+    THEN c.generated_always_type_desc
+  ELSE 'NOT_APPLICABLE'
+  END) as generated_always_type,
+  	(
+  CASE
+  WHEN 'Y' IN (SELECT supports_hidden
+                           FROM server_generation)
+    THEN c.is_hidden
+  ELSE 0
+  END) as is_hidden,
   (
   CASE
   WHEN CONSTRAINT_NAME IN (SELECT NAME
