@@ -12,4 +12,5 @@ SELECT
   END AS MajorVersion,
   SERVERPROPERTY('ProductLevel') AS ProductLevel,
   SERVERPROPERTY('Edition') AS Edition,
-  SERVERPROPERTY('ProductVersion') AS ProductVersion
+  SERVERPROPERTY('ProductVersion') AS ProductVersion,
+  DB_NAME() as Cat
