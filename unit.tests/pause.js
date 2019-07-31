@@ -82,6 +82,23 @@ suite('pause', function () {
     })
   })
 
+  test('queries can start off paused', testDone => {
+    const q = theConnection.query(`select top 3000 * from syscolumns`)
+    q.pauseQuery()
+    let rows = 0
+    q.on('error', (e) => {
+      assert.ifError(e)
+    })
+    q.on('row', () => {
+      ++rows
+    })
+    setTimeout(() => {
+      // make sure no rows were received
+      assert.strictEqual(0, rows)
+      testDone()
+    }, 200)
+  })
+
   test('run a large query', testDone => {
     const q = theConnection.query(`select * from syscolumns`)
     q.on('error', (e) => {
