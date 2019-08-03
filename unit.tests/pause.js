@@ -136,4 +136,99 @@ suite('pause', function () {
       testDone()
     })
   })
+
+  test('pause a large query every 100 rows - submit new query', testDone => {
+    let expected = 0
+    const sql1 = 'select top 3000 * from syscolumns'
+    const q0 = theConnection.query(sql1)
+    q0.on('row', () => {
+      ++expected
+    })
+    let rows = 0
+    const q = theConnection.query(sql1)
+    q.on('error', (e) => {
+      assert.ifError(e)
+    })
+    q.on('row', () => {
+      ++rows
+      if (rows % 100 === 0) {
+        q.pauseQuery()
+        setTimeout(() => {
+          q.resumeQuery()
+        }, 50)
+      }
+    })
+    q.on('done', () => {
+      assert.strictEqual(expected, rows)
+      theConnection.query(sql1, (err, res) => {
+        assert.ifError(err)
+        assert.strictEqual(expected, res.length)
+        testDone()
+      })
+    })
+  })
+
+  test('close connection with paused query pending a resume', testDone => {
+    sql.open(connStr, (err, newConn) => {
+      assert(err === false)
+      const q = newConn.query(`select top 3000 * from syscolumns`)
+      q.pauseQuery()
+      let rows = 0
+      q.on('error', (e) => {
+        assert.ifError(e)
+      })
+      q.on('row', () => {
+        ++rows
+      })
+      setTimeout(() => {
+        // make sure no rows were received
+        assert.strictEqual(0, rows)
+        newConn.close(() => {
+          testDone()
+        })
+      }, 1000)
+    })
+  })
+
+  test('pause a large query and cancel without resume', testDone => {
+    let rows = 0
+    const q = theConnection.query(`select top 3000 * from syscolumns`)
+    q.on('error', (e) => {
+      assert.ifError(e)
+    })
+    q.on('row', () => {
+      ++rows
+      if (rows % 100 === 0) {
+        q.pauseQuery()
+        setTimeout(() => {
+          q.cancelQuery(() => {
+            testDone()
+          })
+        }, 50)
+      }
+    })
+  })
+
+  test('pause a large query and cancel without resume - submit new query', testDone => {
+    let rows = 0
+    const q = theConnection.query(`select top 3000 * from syscolumns`)
+    q.on('error', (e) => {
+      assert.ifError(e)
+    })
+    q.on('row', () => {
+      ++rows
+      if (rows % 100 === 0) {
+        q.pauseQuery()
+        setTimeout(() => {
+          q.cancelQuery(() => {
+            theConnection.query(`select top 3000 * from syscolumns`, (err, res) => {
+              assert.ifError(err)
+              assert(res.length > 0)
+              testDone()
+            })
+          })
+        }, 50)
+      }
+    })
+  })
 })

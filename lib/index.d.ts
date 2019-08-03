@@ -121,6 +121,7 @@ export interface Query {
     cancelQuery(qcb?: StatusCb): void
     pauseQuery(qcb?: StatusCb): void
     resumeQuery(qcb?: StatusCb): void
+    isPaused(): boolean
 }
 
 export interface ConnectDescription {
