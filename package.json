@@ -47,7 +47,7 @@
     "url": "git+https://github.com/TimelordUK/node-sqlserver-v8.git"
   },
   "engines": {
-    "node": ">=0.12"
+    "node": ">=10"
   },
   "maintainers": [
     {
@@ -61,42 +61,27 @@
     }
   },
   "devDependencies": {
+    "mocha": "^6.2.0",
     "@types/electron": "^1.4.31",
-    "@types/node": "^12.0.12",
-    "@types/sequelize": "^4.28.3",
+    "@types/node": "^12.6.9",
+    "@types/sequelize": "^4.28.4",
     "asynquence": "^0.10.2",
     "asynquence-contrib": "^0.28.2",
     "electron": "^5.0.6",
     "minimist": "^1.2.0",
-    "mocha": "^6.1.4",
-    "sequelize": "^5.9.4",
-    "standard": "^12.0.1",
-    "tedious": "^6.1.1"
+    "sequelize": "^4.44.2",
+    "standard": "^13.1.0",
+    "tedious": "^6.2.0",
+    "node-gyp": "^4.0.0"
   },
   "os": [
     "win32"
   ],
   "gitHead": "e025462083dd1140eed2519c449bc257482bc61b",
-  "_id": "msnodesqlv8@0.1.35",
   "scripts": {
     "build": "call tool/build.bat",
     "test": "call tool/testonce.bat"
   },
-  "_shasum": "7ef7b229b0abf09aeeb847df6eb249626b626669",
-  "_from": "msnodesqlv8@*",
-  "_resolved": "https://registry.npmjs.org/msnodesqlv8/-/msnodesqlv8-0.1.35.tgz",
-  "_npmVersion": "2.14.7",
-  "_nodeVersion": "4.2.3",
-  "_npmUser": {
-    "name": "timelorduk",
-    "email": "sjames8888@gmail.com"
-  },
-  "dist": {
-    "shasum": "7ef7b229b0abf09aeeb847df6eb249626b626669",
-    "tarball": "http://registry.npmjs.org/msnodesqlv8/-/msnodesqlv8-0.1.35.tgz"
-  },
   "directories": {},
-  "dependencies": {
-    "node-gyp": "^4.0.0"
-  }
+  "dependencies": {}
 }

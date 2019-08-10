@@ -1,17 +1,17 @@
 const Sequelize = require('sequelize')
 
-let sequelize = new Sequelize({
+const sequelize = new Sequelize({
   dialect: 'mssql',
   dialectModulePath: 'msnodesqlv8/lib/sequelize',
   dialectOptions: {
-    'user': '',
-    'password': '',
-    'database': 'scratch',
-    'connectionString': 'Driver={SQL Server Native Client 11.0};Server= np:\\\\.\\pipe\\LOCALDB#2DD5ECA9\\tsql\\query;Database=scratch;Trusted_Connection=yes;',
-    'options': {
-      'driver': 'SQL Server Native Client 11.0',
-      'trustedConnection': true,
-      'instanceName': ''
+    user: '',
+    password: '',
+    database: 'scratch',
+    connectionString: 'Driver={SQL Server Native Client 11.0};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;',
+    options: {
+      driver: 'SQL Server Native Client 11.0',
+      trustedConnection: true,
+      instanceName: ''
     }
   },
   pool: {
@@ -34,7 +34,7 @@ function createUserModel () {
 
 function userModel () {
   return new Promise(async (resolve, reject) => {
-    let user = createUserModel()
+    const user = createUserModel()
     // force: true will drop the table if it already exists
     await user.sync({ force: true })
     await Promise.all([
@@ -52,18 +52,18 @@ function userModel () {
       })
     ]).catch((e) => reject(e))
 
-    let id1 = await user.findByPk(3)
+    const id1 = await user.findByPk(3)
     console.log(JSON.stringify(id1, null, 4))
 
-    let agile = await user.findOne({
+    const agile = await user.findOne({
       where: { job: 'Agile Leader' }
     })
     console.log(JSON.stringify(agile, null, 4))
 
-    let all = await user.findAll()
+    const all = await user.findAll()
     console.log(JSON.stringify(all, null, 4))
 
-    let programmers = await user
+    const programmers = await user
       .findAndCountAll({
         where: {
           job: {
