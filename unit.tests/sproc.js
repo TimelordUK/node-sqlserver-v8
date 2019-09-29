@@ -41,6 +41,69 @@ suite('sproc', function () {
     })
   })
 
+  test('proc with multiple select  - should callback with each', testDone => {
+    const spName = 'test_sp_select_select'
+
+    const def = `alter PROCEDURE <name>(
+@num1 INT,
+@num2 INT,
+@num3 INT OUTPUT
+
+)AS
+BEGIN
+BEGIN
+    select top 5 'syscolumns' as table_name, name, id, xtype, length from syscolumns
+    select top 5 'sysobjects' as table_name, name, id, xtype, category from sysobjects
+END
+END
+`
+
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const aggregate = []
+          const reducer = (arr) => {
+            return arr.reduce((t, latest) => {
+              t.push(latest.table_name)
+              return t
+            }, [])
+          }
+          proc.call([], (err, results, output) => {
+            assert.ifError(err)
+            aggregate.push(results)
+            if (output) {
+              assert.strictEqual(2, aggregate.length, 'results didn\'t match')
+              assert.strictEqual(true, Array.isArray(aggregate[0]))
+              assert.strictEqual(true, Array.isArray(aggregate[1]))
+              const tableNames0 = reducer(aggregate[0])
+              tableNames0.forEach(s => {
+                assert.strictEqual('syscolumns', s)
+              })
+              const tableNames1 = reducer(aggregate[1])
+              tableNames1.forEach(s => {
+                assert.strictEqual('sysobjects', s)
+              })
+              asyncDone()
+            }
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test('stream call proc no callback with print in proc', testDone => {
     const spName = 'test_len_of_sp'
 
@@ -80,7 +143,7 @@ suite('sproc', function () {
             assert.strictEqual('[Microsoft][SQL Server Native Client 11.0][SQL Server]a print in proc message', info)
             const expected = [
               {
-                '0': 10
+                0: 10
               }
             ]
             assert.deepStrictEqual(expected, rows)
@@ -340,7 +403,7 @@ END
             assert(rows.length === 1)
             const expected = [
               {
-                '0': 10
+                0: 10
               }
             ]
             assert.deepStrictEqual(expected, rows)
