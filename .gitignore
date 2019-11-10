@@ -62,5 +62,3 @@ typings/
 
 # compiled javascript
 dist/
-/lib/bin/sqlserverv8.node.v12.13.0.ia32.node
-/lib/bin/sqlserverv8.node.v12.13.0.x64.node
