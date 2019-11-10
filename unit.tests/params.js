@@ -117,7 +117,7 @@ suite('params', function () {
   }
 
   function runTest (columnDef, len, testDone) {
-    testBoilerPlate('test_large_insert', { 'large_insert': columnDef },
+    testBoilerPlate('test_large_insert', { large_insert: columnDef },
       done => {
         const largeText = repeat('A', len)
         theConnection.query('INSERT INTO test_large_insert (large_insert) VALUES (?)', [largeText], e => {
@@ -242,7 +242,7 @@ suite('params', function () {
   test('verify that non-Buffer object parameter returns an error', testDone => {
     const o = { field1: 'value1', field2: -1 }
     testBoilerPlate('non_buffer_object',
-      { 'object_col': 'varbinary(100)' },
+      { object_col: 'varbinary(100)' },
       asyncDone => {
         theConnection.queryRaw('INSERT INTO non_buffer_object (object_col) VALUES (?)', [o], e => {
           const expectedError = new Error('IMNOD: [msnodesql] Parameter 1: Invalid parameter type')
@@ -264,7 +264,7 @@ suite('params', function () {
     const b = Buffer.from('0102030405060708090a', 'hex')
     testBoilerPlate(
       'buffer_param_test',
-      { 'buffer_param': 'varbinary(100)' },
+      { buffer_param: 'varbinary(100)' },
 
       done => {
         theConnection.queryRaw('INSERT INTO buffer_param_test (buffer_param) VALUES (?)', [b], e => {
@@ -289,7 +289,7 @@ suite('params', function () {
   test('insert min and max number values', testDone => {
     testBoilerPlate(
       'minmax_test',
-      { 'f': 'float' },
+      { f: 'float' },
 
       done => {
         const fns =
@@ -374,7 +374,7 @@ suite('params', function () {
 
   test('verify buffer longer than column causes error', testDone => {
     const b = Buffer.from('0102030405060708090a', 'hex')
-    testBoilerPlate('buffer_param_test', { 'buffer_param': 'varbinary(5)' },
+    testBoilerPlate('buffer_param_test', { buffer_param: 'varbinary(5)' },
       done => {
         theConnection.queryRaw('INSERT INTO buffer_param_test (buffer_param) VALUES (?)', [b], e => {
           const expectedError = new Error('[Microsoft][SQL Server Native Client 11.0][SQL Server]String or binary data would be truncated.')
@@ -511,7 +511,7 @@ suite('params', function () {
   test('insert null as parameter', testDone => {
     testBoilerPlate(
       'null_param_test',
-      { 'null_test': 'varchar(1)' },
+      { null_test: 'varchar(1)' },
       done => {
         theConnection.queryRaw('INSERT INTO null_param_test (null_test) VALUES (?)', [null], e => {
           assert.ifError(e)
@@ -561,7 +561,7 @@ suite('params', function () {
 
     testBoilerPlate(
       'invalid_numbers_test',
-      { 'f': 'float' },
+      { f: 'float' },
       done => {
         async.series(sequence, () => {
           done()
@@ -579,7 +579,7 @@ suite('params', function () {
   test('insert string as parameter', testDone => {
     testBoilerPlate(
       'string_param_test',
-      { 'string_test': 'nvarchar(100)' },
+      { string_test: 'nvarchar(100)' },
       done => {
         theConnection.queryRaw('INSERT INTO string_param_test (string_test) VALUES (?)', ['This is a test'], e => {
           assert.ifError(e)
@@ -605,7 +605,7 @@ suite('params', function () {
 
   test('insert a bool as a parameter', testDone => {
     testBoilerPlate('bool_param_test',
-      { 'bool_test': 'bit' },
+      { bool_test: 'bit' },
 
       done => {
         theConnection.queryRaw('INSERT INTO bool_param_test (bool_test) VALUES (?)', [true], e => {
@@ -632,7 +632,7 @@ suite('params', function () {
   })
 
   test('insert largest positive int as parameter', testDone => {
-    testBoilerPlate('int_param_test', { 'int_test': 'int' },
+    testBoilerPlate('int_param_test', { int_test: 'int' },
       done => {
         theConnection.queryRaw('INSERT INTO int_param_test (int_test) VALUES (?)', [0x7fffffff], e => {
           assert.ifError(e)
@@ -657,7 +657,7 @@ suite('params', function () {
   })
 
   test('insert largest negative int as parameter', testDone => {
-    testBoilerPlate('int_param_test', { 'int_test': 'int' },
+    testBoilerPlate('int_param_test', { int_test: 'int' },
 
       done => {
         theConnection.queryRaw('INSERT INTO int_param_test (int_test) VALUES (?)', [-0x80000000], e => {
@@ -683,7 +683,7 @@ suite('params', function () {
   })
 
   test('insert bigint as parameter', testDone => {
-    testBoilerPlate('bigint_param_test', { 'bigint_test': 'bigint' },
+    testBoilerPlate('bigint_param_test', { bigint_test: 'bigint' },
       done => {
         theConnection.queryRaw('INSERT INTO bigint_param_test (bigint_test) VALUES (?)', [0x80000000], e => {
           assert.ifError(e)
@@ -709,7 +709,7 @@ suite('params', function () {
   })
 
   test('insert largest bigint as parameter', testDone => {
-    testBoilerPlate('bigint_param_test', { 'bigint_test': 'bigint' },
+    testBoilerPlate('bigint_param_test', { bigint_test: 'bigint' },
       done => {
         theConnection.queryRaw('INSERT INTO bigint_param_test (bigint_test) VALUES (?)', [0x4fffffffffffffff], e => {
           assert.ifError(e)
@@ -735,7 +735,7 @@ suite('params', function () {
   })
 
   test('insert decimal as parameter', testDone => {
-    testBoilerPlate('decimal_param_test', { 'decimal_test': 'decimal(18,7)' },
+    testBoilerPlate('decimal_param_test', { decimal_test: 'decimal(18,7)' },
 
       done => {
         theConnection.queryRaw('INSERT INTO decimal_param_test (decimal_test) VALUES (?)', [3.141593],
@@ -768,7 +768,7 @@ suite('params', function () {
   })
 
   test('insert decimal as bigint parameter', testDone => {
-    testBoilerPlate('decimal_as_bigint_param_test', { 'decimal_bigint': 'bigint' },
+    testBoilerPlate('decimal_as_bigint_param_test', { decimal_bigint: 'bigint' },
       done => {
         theConnection.queryRaw('INSERT INTO decimal_as_bigint_param_test (decimal_bigint) VALUES (?)', [123456789.0],
           e => {
@@ -801,7 +801,7 @@ suite('params', function () {
   })
 
   test('insert date as parameter', testDone => {
-    testBoilerPlate('date_param_test', { 'date_test': 'datetimeoffset' },
+    testBoilerPlate('date_param_test', { date_test: 'datetimeoffset' },
 
       done => {
         theConnection.queryRaw('INSERT INTO date_param_test (date_test) VALUES (?)', [utcDate],
@@ -834,7 +834,7 @@ suite('params', function () {
       localDate.getUTCSeconds(),
       localDate.getUTCMilliseconds()))
 
-    testBoilerPlate('datetime_test', { 'datetime_test': 'datetime' },
+    testBoilerPlate('datetime_test', { datetime_test: 'datetime' },
       done => {
         theConnection.queryRaw('INSERT INTO datetime_test (datetime_test) VALUES (?)', [utcDate], (e, r) => {
           assert.ifError(e)
@@ -856,7 +856,7 @@ suite('params', function () {
   })
 
   test('verify empty string inserted into nvarchar field', testDone => {
-    testBoilerPlate('emptystring_test', { 'emptystring_test': 'nvarchar(1)' },
+    testBoilerPlate('emptystring_test', { emptystring_test: 'nvarchar(1)' },
       done => {
         theConnection.queryRaw('INSERT INTO emptystring_test (emptystring_test) VALUES (?)', [''], (e, r) => {
           assert.ifError(e)
@@ -879,7 +879,7 @@ suite('params', function () {
   })
 
   test('insert large string into max column', testDone => {
-    testBoilerPlate('test_large_insert', { 'large_insert': 'nvarchar(max) ' },
+    testBoilerPlate('test_large_insert', { large_insert: 'nvarchar(max) ' },
       done => {
         const largeText = repeat('A', 10000)
         theConnection.query('INSERT INTO test_large_insert (large_insert) VALUES (?)', [largeText], e => {
@@ -911,7 +911,7 @@ suite('params', function () {
       localDate.getUTCSeconds(),
       localDate.getUTCMilliseconds()))
 
-    testBoilerPlate('datetime_test', { 'datetime_test': 'datetime' },
+    testBoilerPlate('datetime_test', { datetime_test: 'datetime' },
 
       done => {
         theConnection.queryRaw('INSERT INTO datetime_test (datetime_test) VALUES (?)', [utcDate], (e, r) => {
@@ -943,7 +943,7 @@ suite('params', function () {
       ancientDate.getUTCSeconds(),
       ancientDate.getUTCMilliseconds()))
 
-    testBoilerPlate('datetime_test', { 'datetime_test': 'datetimeoffset(3)' },
+    testBoilerPlate('datetime_test', { datetime_test: 'datetimeoffset(3)' },
 
       done => {
         theConnection.queryRaw('INSERT INTO datetime_test (datetime_test) VALUES (?)', [utcDate], (e, r) => {
@@ -971,7 +971,7 @@ suite('params', function () {
     const midnightDate = new Date(Date.parse('2030-08-13T00:00:00.000Z'))
     midnightDate.nanosecondsDelta = 0
 
-    testBoilerPlate('midnight_date_test', { 'midnight_date_test': 'datetimeoffset(3)' },
+    testBoilerPlate('midnight_date_test', { midnight_date_test: 'datetimeoffset(3)' },
       done => {
         const insertQuery = 'INSERT INTO midnight_date_test (midnight_date_test) VALUES (?);'
         theConnection.queryRaw(insertQuery, [midnightDate], e => {
@@ -1013,7 +1013,7 @@ suite('params', function () {
   test('verify bug fix for last day of the year error', testDone => {
     const eoyDate = new Date(Date.parse('1960-12-31T11:12:13.000Z'))
     eoyDate.nanosecondsDelta = 0
-    testBoilerPlate('eoy_date_test', { 'eoy_date_test': 'datetimeoffset(3)' },
+    testBoilerPlate('eoy_date_test', { eoy_date_test: 'datetimeoffset(3)' },
       done => {
         const insertQuery = 'INSERT INTO eoy_date_test (eoy_date_test) VALUES (?);'
         theConnection.queryRaw(insertQuery, [eoyDate], e => {
@@ -1057,7 +1057,7 @@ suite('params', function () {
     theConnection.query('declare @bin binary(4) = ?; select @bin as bin', [sql.VarBinary(null)], (err, res) => {
       assert.ifError(err)
       const expected = [{
-        'bin': null
+        bin: null
       }]
       assert.deepStrictEqual(expected, res)
       testDone()
@@ -1068,7 +1068,7 @@ suite('params', function () {
     theConnection.query('declare @bin binary(4) = ?; select @bin as bin', [Buffer.from([0, 1, 2, 3])], (err, res) => {
       assert.ifError(err)
       const expected = [{
-        'bin': Buffer.from([0, 1, 2, 3])
+        bin: Buffer.from([0, 1, 2, 3])
       }]
       assert.deepStrictEqual(expected, res)
       testDone()

@@ -804,7 +804,7 @@ suite('bulk', function () {
       return arr
     }
 
-    let batch = totalObjectsForInsert
+    const batch = totalObjectsForInsert
     let toUpdate
     const toInsert = buildTestObjects(batch, buildFunction)
     if (updateFunction) toUpdate = buildTestObjects(batch, updateFunction)

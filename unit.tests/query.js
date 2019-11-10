@@ -439,7 +439,7 @@ suite('query', function () {
     theConnection.query('SELECT 1 as X, \'ABC\', 0x0123456789abcdef ', (err, results) => {
       assert.ifError(err)
       const buffer = Buffer.from('0123456789abcdef', 'hex')
-      const expected = [{ 'X': 1, 'Column1': 'ABC', 'Column2': buffer }]
+      const expected = [{ X: 1, Column1: 'ABC', Column2: buffer }]
       assert.deepStrictEqual(results, expected, 'Results don\'t match')
       done()
     })

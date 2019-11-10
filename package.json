@@ -67,7 +67,7 @@
     "@types/sequelize": "^4.28.4",
     "asynquence": "^0.10.2",
     "asynquence-contrib": "^0.28.2",
-    "electron": "^5.0.6",
+    "electron": "^5.0.12",
     "minimist": "^1.2.0",
     "sequelize": "^4.44.2",
     "standard": "^13.1.0",

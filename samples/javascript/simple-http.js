@@ -3,26 +3,26 @@ const hostname = 'localhost'
 const port = 2020
 const sql = require('msnodesqlv8')
 
-const connectionString = 'driver={SQL Server Native Client 11.0};server=np:\\\\.\\pipe\\LOCALDB#56F88C0F\\tsql\\query;trusted_connection=yes;database=scratch;'
+const connectionString = 'driver={SQL Server Native Client 11.0};server=(localdb)\\node;trusted_connection=yes;database=scratch;'
 const query = 'select top 50 object_name(c.object_id), (select dc.definition from sys.default_constraints as dc where dc.object_id = c.default_object_id) as DefaultValueExpression from sys.columns as c'
 
 function toPromise (f) {
   return function (args) {
     return new Promise((resolve, reject) => {
       function handler (err, res) {
-      if (err) {
-        reject(err)
-      } else {
-        resolve(res)
+        if (err) {
+          reject(err)
+        } else {
+          resolve(res)
+        }
       }
-    }
 
-    if (args) {
-      f(args, handler)
-    } else {
-      f(handler)
-    }
-  })
+      if (args) {
+        f(args, handler)
+      } else {
+        f(handler)
+      }
+    })
   }
 }
 
@@ -31,21 +31,21 @@ async function test (request, response) {
   response.setHeader('Content-Type', 'text/plain')
 
   console.log('>> test')
-  let sqlOpen = toPromise(sql.open)
+  const sqlOpen = toPromise(sql.open)
   try {
     console.log('sqlOpen ....')
-    let connection = await sqlOpen(connectionString)
+    const connection = await sqlOpen(connectionString)
     console.log('..... sqlOpen')
-    let connectionQuery = toPromise(connection.queryRaw)
+    const connectionQuery = toPromise(connection.queryRaw)
     try {
-      let d = new Date()
+      const d = new Date()
       console.log('connectionQuery 1 ....')
-      let data = await connectionQuery(query)
+      const data = await connectionQuery(query)
       console.log('... connectionQuery 1')
-      let elapsed = new Date() - d
-      console.log('rows.length ' + data.rows.length + ' elapsed ' + elapsed)
+      const elapsed = new Date() - d
+      console.log(`rows.length ${data.rows.length} elapsed ${elapsed}`)
       response.end(JSON.stringify(data, null, 4))
-      let close = toPromise(sql.close)
+      const close = toPromise(sql.close)
       console.log('close ...')
       await close()
       console.log('... close')

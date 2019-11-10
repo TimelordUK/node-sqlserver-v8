@@ -151,7 +151,7 @@ namespace mssql
 		bool bind_datum_type(Local<Value>& p);
 		bool bind(Local<Object> o, const char* if_str, uint16_t type);
 		bool bind_object(Local<Value> &p);
-		bool bind_array(Local<Value> &p);
+		bool bind_array(Local<Value> &pp);
 
 		bool proc_bind(Local<Value> &p, Local<Value> &v);
 		void bind_char(const Local<Value> & pp);

@@ -22,6 +22,7 @@
 const assert = require('assert')
 const commonTestFns = require('./CommonTestFunctions')
 const supp = require('../samples/typescript/demo-support')
+const fs = require('fs')
 
 /* global suite teardown teardown test setup */
 
@@ -62,7 +63,7 @@ suite('datatypes', function () {
   testname = 'test 023a - fetch large varbinary in chunks \'varbinary(max)\', fetch as binary'
   test(testname, done => {
     const testcolumntype = ' varbinary(' + 'max' + ')'
-    const testcolumnname = 'col2'
+    const testcolumnname = 'col1'
 
     const buffer = []
     let i
@@ -90,7 +91,7 @@ suite('datatypes', function () {
         const s = `select ${testcolumnname} from ${tablename}`
         theConnection.query(s, [binaryBuffer], (err, res) => {
           assert.ifError(err)
-          const b = res[0].col2
+          const b = res[0].col1
           assert.deepStrictEqual(b, binaryBuffer)
           asyncDone()
         })
@@ -100,6 +101,69 @@ suite('datatypes', function () {
       }
     ]) // end of async.series()
     // end of test():
+  })
+
+  test('write / read an image column', done => {
+    const testcolumntype = ' Image'
+    const testcolumnname = 'col1'
+    const path = require('path')
+    let binaryBuffer
+
+    function readFile (f) {
+      return new Promise((resolve, reject) => {
+        fs.readFile(f, 'utf8', (err, contents) => {
+          if (err) {
+            reject(err)
+          } else {
+            resolve(contents)
+          }
+        })
+      })
+    }
+
+    function readAsBinary (file) {
+      return new Promise((resolve, reject) => {
+        const p = path.join(__dirname, 'data', file)
+        readFile(p).then(d => {
+          resolve(Buffer.from(d))
+        }).catch(e => {
+          reject(e)
+        })
+      })
+    }
+
+    async.series([
+      asyncDone => {
+        commonTestFns.createTable(theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
+      },
+      asyncDone => {
+        readAsBinary('SampleJPGImage_50kbmb.jpg').then(x => {
+          binaryBuffer = x
+          asyncDone()
+        })
+      },
+      asyncDone => {
+        const s = `insert into ${tablename} (${testcolumnname} )  values ( ? )`
+        theConnection.query(s, [sql.LongVarBinary(binaryBuffer)], (err, res) => {
+          assert.ifError(err)
+          assert(res)
+          assert(res.length === 0)
+          asyncDone()
+        })
+      },
+      asyncDone => {
+        const s = `select ${testcolumnname} from ${tablename}`
+        theConnection.query(s, [], (err, res) => {
+          assert.ifError(err)
+          const b = res[0].col1
+          assert.deepStrictEqual(b, binaryBuffer)
+          asyncDone()
+        })
+      },
+      function () {
+        done()
+      }
+    ]) // end of async.series()
   })
 
   testname = 'test 001 - verify functionality of data type \'smalldatetime\', fetch as date'
