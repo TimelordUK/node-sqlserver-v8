@@ -44,7 +44,7 @@
         'src',
       ],
 
-     'defines': [ 'NODE_GYP_V4', 'PRE_V13'],
+     'defines': [ 'NODE_GYP_V4', '_PRE_V13'],
 
       'conditions': [
         [ 'OS=="win"', {

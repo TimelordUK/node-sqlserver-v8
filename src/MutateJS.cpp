@@ -157,15 +157,6 @@ namespace mssql
 	}
 
 #else
-	bool MutateJS::as_boolean(const Local<Value>& as_val) {
-		if (!as_val->IsNull())
-		{
-			const nodeTypeFactory fact;
-			const auto context = fact.isolate->GetCurrentContext();
-			return as_val->BooleanValue(context->GetIsolate());
-		}
-		return false;
-	}
  
 	 Local<Value> MutateJS::get_property_as_value(const Local<Object>& o, const char* v)
 	 {
@@ -202,24 +193,6 @@ namespace mssql
 		 o->Set(context, p, v);
 	 }
 	
-	 Local<Value> MutateJS::from_two_byte(const wchar_t* text)
-	 {
-		 nodeTypeFactory fact;
-		 auto context = fact.isolate->GetCurrentContext();
-		 const auto maybe = String::NewFromTwoByte(context->GetIsolate(), reinterpret_cast<const uint16_t*>(text));
-		 const Local<Value> d;
-		 return maybe.FromMaybe(d);	
-	 }
-
-	 Local<Value> MutateJS::from_two_byte(const uint16_t* text)
-	 {
-		 nodeTypeFactory fact;
-		 auto context = fact.isolate->GetCurrentContext();
-		 const auto maybe = String::NewFromTwoByte(context->GetIsolate(), text);
-		 const Local<Value> d;
-		 return maybe.FromMaybe(d);
-	 }
-
 	 Local<Value> MutateJS::from_two_byte(const uint16_t* text, const size_t size)
 	 {
 		 nodeTypeFactory fact;
@@ -227,6 +200,34 @@ namespace mssql
 		 const auto maybe = String::NewFromTwoByte(context->GetIsolate(), text, NewStringType::kNormal, static_cast<int>(size));
 		 const Local<Value> d;
 		 return maybe.FromMaybe(d);
+	 }
+
+	 Local<Value> MutateJS::from_two_byte(const wchar_t* text)
+	 {
+		 nodeTypeFactory fact;
+		 auto context = fact.isolate->GetCurrentContext();
+		 const auto maybe = String::NewFromTwoByte(context->GetIsolate(), reinterpret_cast<const uint16_t*>(text), NewStringType::kNormal);
+		 const Local<Value> d;
+		 return maybe.FromMaybe(d);
+	 }
+
+	 Local<Value> MutateJS::from_two_byte(const uint16_t* text)
+	 {
+		 nodeTypeFactory fact;
+		 auto context = fact.isolate->GetCurrentContext();
+		 const auto maybe = String::NewFromTwoByte(context->GetIsolate(), text, NewStringType::kNormal);
+		 const Local<Value> d;
+		 return maybe.FromMaybe(d);
+	 }
+
+	 bool MutateJS::as_boolean(const Local<Value>& as_val) {
+		 if (!as_val->IsNull())
+		 {
+			 const nodeTypeFactory fact;
+			 const auto context = fact.isolate->GetCurrentContext();
+			 return as_val->BooleanValue(context->GetIsolate());
+		 }
+		 return false;
 	 }
 	
 #endif
