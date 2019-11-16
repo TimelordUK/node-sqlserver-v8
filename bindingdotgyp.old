@@ -3,6 +3,10 @@
     {
       'target_name': 'sqlserverv8',
 
+    'variables': {
+        'node_version': '<!(node -e "console.log(process.versions.node)")',
+    },
+
       'sources': [
         'src/QueryOperationParams.cpp',
         'src/OdbcHandle.cpp',
@@ -44,9 +48,15 @@
         'src',
       ],
 
-     'defines': [ 'NODE_GYP_V4', '_PRE_V13'],
+     'defines': [ 'NODE_GYP_V4'],
 
       'conditions': [
+         ['node_version < "13.0"', {
+                  'defines': [
+                    'PRE_V13',
+                  ],
+           }
+        ],
         [ 'OS=="win"', {
           'defines': [
             'UNICODE=1',
