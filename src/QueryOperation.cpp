@@ -5,6 +5,7 @@
 #include <QueryOperation.h>
 #include <QueryOperationParams.h>
 #include <BoundDatumSet.h>
+#include <MutateJS.h>
 
 namespace mssql
 {
@@ -29,16 +30,16 @@ namespace mssql
 		stringstream full_error;
 		full_error << "IMNOD: [msnodesql] Parameter " << param + 1 << ": " << error;
 
-		auto err = fact.error(full_error);
+		const auto err = fact.error(full_error);
 		const auto imn = fact.new_string("IMNOD");
-		err->Set(fact.new_string("sqlstate"), imn);
-		err->Set(fact.new_string("code"), fact.new_integer(-1));
+		MutateJS::set_property_value(err, fact.new_string("sqlstate"), imn);
+		MutateJS::set_property_value(err, fact.new_string("code"), fact.new_integer(-1));
 
 		Local<Value> args[1];
 		args[0] = err;
 		const auto argc = 1;
 
-		fact.scopedCallback(_callback, argc, args);
+		fact.scoped_callback(_callback, argc, args);
 
 		return false;
 	}

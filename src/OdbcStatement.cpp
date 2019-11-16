@@ -25,6 +25,7 @@
 #include <NodeColumns.h>
 #include <OdbcHelper.h>
 #include <QueryOperationParams.h>
+#include <MutateJS.h>
 
 namespace mssql
 {
@@ -139,22 +140,22 @@ namespace mssql
 	Local<Value> OdbcStatement::get_column_values() const
 	{
 		const nodeTypeFactory fact;
-		auto result = fact.new_object();
+		const auto result = fact.new_object();
 		if (_resultset->EndOfRows())
 		{
-			result->Set(fact.from_two_byte(L"end_rows"), fact.new_boolean(true));
+			MutateJS::set_property_value(result, MutateJS::from_two_byte(L"end_rows"), fact.new_boolean(true));
 		}
 
 		const auto number_rows = _resultset->get_result_count();
 		const auto column_count = static_cast<int>(_resultset->get_column_count());
 		const auto results_array = fact.new_array(number_rows);
-		result->Set(fact.from_two_byte(L"data"), results_array);
+		MutateJS::set_property_value(result, MutateJS::from_two_byte(L"data"), results_array);
 		for (size_t row_id = 0; row_id < number_rows; ++row_id) {
 			auto row_array = fact.new_array(column_count);
-			results_array->Set(row_id, row_array);
+			MutateJS::set_array_elelemt_at_index(results_array, row_id, row_array);
 			for (auto c = 0; c < column_count; ++c)
 			{
-				row_array->Set(c, _resultset->get_column(row_id, c)->ToValue());
+				MutateJS::set_array_elelemt_at_index(row_array, c, _resultset->get_column(row_id, c)->ToValue());
 			}
 		}
 

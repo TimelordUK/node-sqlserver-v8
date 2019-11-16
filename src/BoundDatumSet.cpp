@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include <BoundDatum.h>
 #include <BoundDatumSet.h>
+#include <MutateJS.h>
 #include <ResultSet.h>
 
 namespace mssql
@@ -24,11 +25,11 @@ namespace mssql
 		return true;
 	}
 
-	Local<Value> get(Local<Object> o, const char* v)
+	Local<Value> get(const Local<Object> o, const char* v)
 	{
 		const nodeTypeFactory fact;
 		const auto vp = fact.new_string(v);
-		const auto val = o->Get(vp);
+		const auto val = MutateJS::get_property_as_value(o, vp);
 		return val;
 	}
 
@@ -51,7 +52,7 @@ namespace mssql
 
 		for (uint32_t i = 0; i < count; ++i) {
 			const auto binding = make_shared<BoundDatum>();
-			auto p = cols->Get(i);
+			auto p = MutateJS::get_array_elelemt_at_index(cols, i);
 			const auto res = binding->bind(p);
 			if (!res) break;
 			_bindings->push_back(binding);
@@ -67,7 +68,7 @@ namespace mssql
 		if (count > 0) {
 			for (uint32_t i = 0; i < count; ++i) {
 				const auto binding = make_shared<BoundDatum>();
-				auto v = node_params->Get(i);
+				auto v = MutateJS::get_array_elelemt_at_index(node_params, i);
 				res = binding->bind(v);
 
 				switch (binding->param_type)
@@ -115,7 +116,7 @@ namespace mssql
 				case SQL_PARAM_INPUT_OUTPUT:
 				{
 					const auto v = param->unbind();
-					arr->Set(i++, v);
+					MutateJS::set_array_elelemt_at_index(arr, i++, v);
 				}
 				break;
 

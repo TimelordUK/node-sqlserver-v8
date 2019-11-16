@@ -48,12 +48,11 @@ namespace mssql
 		Local<Value> polling_mode(Local<Number> query_id, Local<Boolean> mode, Local<Object> callback);
 		Local<Value> read_row(Local<Number> query_id, Local<Object> callback) const;
 		Local<Value> read_next_result(Local<Number> query_id, Local<Object> callback) const;
-		Local<Value> read_column(Local<Number> query_id, Local<Number> column, Local<Object> callback) const;
+		Local<Value> read_column(Local<Number> query_id, Local<Number> number_rows, Local<Object> callback) const;
 		Local<Value> open(Local<Object> connection_object, Local<Object> callback, Local<Object> backpointer);
 		Local<Value> free_statement(Local<Number> query_id, Local<Object> callback);
 
 	private:
-		shared_ptr<OdbcConnection> connection;		
-		static Local<Value> get(Local<Object> o, const char *v);
+		shared_ptr<OdbcConnection> connection;
 	};
 }

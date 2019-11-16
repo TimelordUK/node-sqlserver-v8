@@ -6,6 +6,7 @@
 #include <v8.h>
 #include "Column.h"
 #include "BoundDatumHelper.h"
+#include <MutateJS.h>
 
 namespace mssql
 {
@@ -32,10 +33,9 @@ namespace mssql
 
 	   Local<Value> ToValue() override
 	   {
-		  nodeTypeFactory fact;
 		  auto ptr = storage->data();
 		  auto len = size;
-		  auto s = fact.from_two_byte(static_cast<const uint16_t*>(ptr + offset), len);
+		  auto s = MutateJS::from_two_byte(static_cast<const uint16_t*>(ptr + offset), len);
 		  return s;
 	   }
 

@@ -4,7 +4,9 @@
       'target_name': 'sqlserverv8',
 
       'sources': [
+        'src/QueryOperationParams.cpp',
         'src/OdbcHandle.cpp',
+        'src/MutateJS.cpp',
         'src/Column.cpp',
         'src/TimestampColumn.cpp',
         'src/Connection.cpp',
@@ -42,7 +44,7 @@
         'src',
       ],
 
-     'defines': [ 'NODE_GYP_V4'],
+     'defines': [ 'NODE_GYP_V4', 'PRE_V13'],
 
       'conditions': [
         [ 'OS=="win"', {

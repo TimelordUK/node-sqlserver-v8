@@ -20,6 +20,7 @@
 #include <v8.h>
 #include <Connection.h>
 #include <OdbcConnection.h>
+#include <MutateJS.h>
 
 namespace mssql
 {
@@ -51,13 +52,13 @@ namespace mssql
 		NODE_SET_PROTOTYPE_METHOD(tpl, "pollingMode", polling_mode);
 	}
 
-	void Connection::initialize(Local<Object> exports)
+	void Connection::initialize(const Local<Object> exports)
 	{
 		const auto initialized = OdbcConnection::InitializeEnvironment();
 		const nodeTypeFactory fact;
 		const auto connection = fact.new_string("Connection");
 		if (!initialized) {
-			exports->Set(connection, fact.undefined());
+			MutateJS::set_property_value(exports, connection, fact.undefined());
 			fact.throwError("Unable to initialize msnodesql");
 			return;
 		}
@@ -73,7 +74,7 @@ namespace mssql
 		Local<Function> local;
 		if (maybe.ToLocal(&local)) {
 			constructor.Reset(Isolate::GetCurrent(), local);
-			exports->Set(connection, local);
+			MutateJS::set_property_value(exports, connection, local);
 		}
 	}
 

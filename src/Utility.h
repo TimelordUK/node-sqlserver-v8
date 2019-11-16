@@ -29,13 +29,14 @@ namespace mssql
     using namespace std;
     using namespace v8;
 
+	/*
     inline Local<String> New(const wchar_t* text)
     {
 	   return String::NewFromTwoByte(Isolate::GetCurrent(), reinterpret_cast<const uint16_t*>(text));
-    }
+    }*/
 
     wstring FromV8String(Local<String> input);
-	void encode_numeric_struct(double v, int precision, int upscaleLimit, SQL_NUMERIC_STRUCT & numeric);
+	void encode_numeric_struct(double v, int precision, int upscale_limit, SQL_NUMERIC_STRUCT & numeric);
 
     string w2a(const wchar_t* input);
 
@@ -76,7 +77,7 @@ namespace mssql
 
 	   nodeTypeFactory();
 	   Local<Number> new_number(double d) const;
-	   void scopedCallback(const Persistent<Function> & callback, int argc, Local<Value> args[]) const;
+	   void scoped_callback(const Persistent<Function> & callback, int argc, Local<Value> args[]) const;
 	   Local<Integer> new_integer(int32_t i) const;
 	   Local<Integer> new_long(int64_t i) const;
 	   Local<Boolean> new_boolean(bool b) const;
@@ -94,9 +95,7 @@ namespace mssql
 	   Local<Function> newCallbackFunction(const Persistent<Function> & callback) const;
 	   Local<FunctionTemplate> new_template(const FunctionCallback & callback) const;
 	   Local<Object> new_object(const Persistent <Object> & bp) const;
-	   Local<Value> from_two_byte(const wchar_t* text) const;
-	   Local<Value> from_two_byte(const uint16_t* text) const;
-	   Local<Value> from_two_byte(const uint16_t* text, size_t size) const;
+
 	   Local<Value> new_buffer(int size) const;
 	   Local<Object> error(const stringstream &full_error) const;
 	   Local<Object> error(const char* full_error) const;

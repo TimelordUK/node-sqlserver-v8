@@ -22,6 +22,7 @@
 #include <OdbcConnection.h>
 #include <OdbcStatement.h>
 #include <OdbcStatementCache.h>
+#include <MutateJS.h>
 
 namespace mssql
 {
@@ -111,9 +112,9 @@ namespace mssql
 		{
 			const auto failure = (*failures)[i];
 			auto err = fact.error(failure->Message());
-			err->Set(fact.new_string("sqlstate"), fact.new_string(failure->SqlState()));
-			err->Set(fact.new_string("code"), fact.new_integer(failure->Code()));
-			errors->Set(i, err);
+			MutateJS::set_property_value(err, fact.new_string("sqlstate"), fact.new_string(failure->SqlState()));
+			MutateJS::set_property_value(err, fact.new_string("code"), fact.new_integer(failure->Code()));
+			MutateJS::set_array_elelemt_at_index(errors, i, err);
 		}
 		
 		auto more = false;

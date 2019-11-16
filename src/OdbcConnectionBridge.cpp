@@ -36,6 +36,7 @@
 #include <UnbindOperation.h>
 #include <OdbcStatementCache.h>
 #include <PollingModeOperation.h>
+#include <MutateJS.h>
 
 namespace mssql
 {
@@ -118,22 +119,6 @@ namespace mssql
 		return 0;
 	}
 
-	bool getbool(const Local<Boolean> l)
-	{
-		nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
-		if (!l->IsNull())
-		{
-			const auto maybe = l->ToBoolean(context);
-			Local<Boolean> local;
-			if (maybe.ToLocal(&local))
-			{
-				return local->Value();
-			}
-		}
-		return false;
-	}
-
 	Local<String> getstring(const Local<Value> l)
 	{
 		nodeTypeFactory fact;
@@ -205,8 +190,7 @@ namespace mssql
 	Local<Value> OdbcConnectionBridge::polling_mode(const Local<Number> query_id, const Local<Boolean> mode, Local<Object> callback)
 	{
 		auto id = getint32(query_id);
-		auto polling = getbool(mode);
-
+		auto polling = MutateJS::as_boolean(mode);
 		const auto op = make_shared<PollingModeOperation>(connection, id, polling, callback);
 		connection->send(op);
 		const nodeTypeFactory fact;
@@ -243,21 +227,13 @@ namespace mssql
 		return fact.null();
 	}
 
-	Local<Value> OdbcConnectionBridge::get(Local<Object> o, const char* v)
-	{
-		const nodeTypeFactory fact;
-		const auto vp = fact.new_string(v);
-		const auto val = o->Get(vp);
-		return val;
-	}
-
 	Local<Value> OdbcConnectionBridge::open(const Local<Object> connection_object, Local<Object> callback, Local<Object> backpointer)
 	{
 		nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
-		const auto cs = get(connection_object, "conn_str");
+		const auto cs = MutateJS::get_property_as_value(connection_object, "conn_str");
 		const auto connection_string = getstring(cs);
-		const auto to = get(connection_object, "conn_timeout");
+		const auto to = MutateJS::get_property_as_value(connection_object, "conn_timeout");
 		const auto maybe_to = to->ToInt32(context);
 		Local<Int32> local;
 		auto timeout = 0;

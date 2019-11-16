@@ -29,8 +29,7 @@ namespace mssql
 		wstring result;
 		const auto buffer_length = 256;
 		uint16_t buffer[buffer_length];
-		nodeTypeFactory fact;
-		auto context = fact.isolate->GetCurrentContext();
+		const nodeTypeFactory fact;
 		const auto length = input->Length();
 		result.reserve(length);
 		auto read = 0;
@@ -154,7 +153,7 @@ namespace mssql
 		return Number::New(isolate, d);
 	}
 
-	void nodeTypeFactory::scopedCallback(const Persistent<Function> & callback, const int argc, Local<Value> args[]) const
+	void nodeTypeFactory::scoped_callback(const Persistent<Function> & callback, const int argc, Local<Value> args[]) const
 	{
 		nodeTypeFactory fact;
 		auto cons = newCallbackFunction(callback);
@@ -208,6 +207,7 @@ namespace mssql
 		return Integer::New(isolate, n);
 	}
 
+#ifdef PRE_V13
 	Local<String> nodeTypeFactory::new_string(const char *cstr) const
 	{
 		return String::NewFromUtf8(isolate, cstr);
@@ -217,6 +217,23 @@ namespace mssql
 	{
 		return String::NewFromUtf8(isolate, cstr, String::NewStringType::kNormalString, size);
 	}
+#else
+	Local<String> nodeTypeFactory::new_string(const char* cstr) const
+	{
+		const auto maybe = String::NewFromUtf8(isolate, cstr);
+		const Local<String> d;
+		const auto v = maybe.FromMaybe(d);
+		return v;
+	}
+
+	Local<String> nodeTypeFactory::new_string(const char* cstr, const int size) const
+	{
+		const auto maybe = String::NewFromUtf8(isolate, cstr, NewStringType::kNormal, size);
+		const Local<String> d;
+		const auto v = maybe.FromMaybe(d);
+		return v;
+	}
+#endif
 
 	Local<Array> nodeTypeFactory::new_array() const
 	{
@@ -246,21 +263,6 @@ namespace mssql
 	Local<Object> nodeTypeFactory::new_object(const Persistent <Object> & bp) const
 	{
 		return Local<Object>::New(isolate, bp);
-	}
-
-	Local<Value> nodeTypeFactory::from_two_byte(const wchar_t* text) const
-	{
-		return String::NewFromTwoByte(isolate, reinterpret_cast<const uint16_t*>(text));
-	}
-
-	Local<Value> nodeTypeFactory::from_two_byte(const uint16_t* text) const
-	{
-		return String::NewFromTwoByte(isolate, text);
-	}
-
-	Local<Value> nodeTypeFactory::from_two_byte(const uint16_t* text, const size_t size) const
-	{
-		return String::NewFromTwoByte(isolate, text, String::NewStringType::kNormalString, static_cast<int>(size));
 	}
 
 	Local<Value> nodeTypeFactory::new_buffer(const int size) const
@@ -295,6 +297,7 @@ namespace mssql
 		return d;
 	}
 
+#ifdef PRE_V13
 	Local<Value> nodeTypeFactory::new_date(const double milliseconds, const int32_t nanoseconds_delta) const
 	{
 		const auto ns = String::NewFromUtf8(isolate, "nanosecondsDelta");
@@ -312,7 +315,27 @@ namespace mssql
 		}
 		return d;
 	}
-
+#else
+	Local<Value> nodeTypeFactory::new_date(const double milliseconds, const int32_t nanoseconds_delta) const
+	{
+		const auto ns = String::NewFromUtf8(isolate, "nanosecondsDelta");
+		const auto n = Number::New(isolate, nanoseconds_delta / (NANOSECONDS_PER_MS * 1000.0));
+		// include the properties for items in a DATETIMEOFFSET that are not included in a JS Date object
+		const auto context = isolate->GetCurrentContext();
+		const auto dd = Date::New(context, milliseconds);
+		Local<Value> d;
+		if (dd.ToLocal(&d)) {
+			const auto maybe = d->ToObject(context);
+			Local<Object> local;
+			if (maybe.ToLocal(&local)) {
+				const Local<String> ds;
+				const auto ls = ns.FromMaybe(ds);
+				local->Set(context, ls, n);
+			}
+		}
+		return d;
+	}
+#endif
 	Local<Value> nodeTypeFactory::global() const
 	{
 		return isolate->GetCurrentContext()->Global();

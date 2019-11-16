@@ -164,7 +164,7 @@ namespace mssql
 		void sql_longvarbinary(Local<Value> pp);
 		void sql_integer(Local<Value> pp);
 		void sql_wvarchar(Local<Value> pp);
-		void sql_wlongvarchar(Local<Value> p);
+		void sql_wlongvarchar(Local<Value> pp);
 		void sql_bit(Local<Value> pp);
 		void sql_bigint(Local<Value> pp);
 		void sql_double(Local<Value> pp);

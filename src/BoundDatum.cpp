@@ -1,5 +1,6 @@
 #include <TimestampColumn.h>
 #include <BoundDatum.h>
+#include <MutateJS.h>
 #include <codecvt>
 
 namespace mssql
@@ -41,11 +42,8 @@ namespace mssql
 		{
 			return false_val;
 		}
-		bool as_bool;
-		if (!as_val->BooleanValue(context).To(&as_bool))
-		{
-			return false_val;
-		}
+		
+		const auto as_bool = MutateJS::as_boolean(as_val);
 		return fact.new_boolean(as_bool);
 	}
 
@@ -53,11 +51,8 @@ namespace mssql
 	{
 		const auto is_user_defined = get_as_bool(p, "is_user_defined");
 		if (is_user_defined->IsNull()) return false;
-		const nodeTypeFactory node;
-		const auto context = node.isolate->GetCurrentContext();
-		const auto maybe = is_user_defined->BooleanValue(context);
-		const auto local = maybe.FromMaybe(false);
-		return local;
+		const auto as_bool = MutateJS::as_boolean(is_user_defined);	
+		return as_bool;
 	}
 
 	bool BoundDatum::bind(Local<Value>& p)
@@ -78,14 +73,6 @@ namespace mssql
 		}
 		if (!res) res = bind_datum_type(p);
 		return res;
-	}
-
-	static Local<Value> get_as_value(Local<Object> o, const char* v)
-	{
-		const nodeTypeFactory fact;
-		const auto vp = fact.new_string(v);
-		const auto val = o->Get(vp);
-		return val;
 	}
 
 	static Local<String> get_as_string(const Local<Value> o, const char* v)
@@ -258,7 +245,7 @@ namespace mssql
 		for (uint32_t i = 0; i < array_len; ++i)
 		{
 			_indvec[i] = SQL_NULL_DATA;
-			const auto elem = arr->Get(i);
+			const auto elem = MutateJS::get_array_elelemt_at_index(arr, i);
 			if (!elem->IsNull())
 			{
 				auto maybe_value = arr->Get(context, i);
@@ -382,7 +369,7 @@ namespace mssql
 		const auto maybe_object = p->ToObject(context);
 		Local<Object> local;
 		if (maybe_object.ToLocal(&local)) {
-			const auto row_count_int = get_as_value(local, "row_count");
+			const auto row_count_int = MutateJS::get_property_as_value(local, "row_count");
 			if (!row_count_int->IsNull())
 			{
 				const auto maybe = row_count_int->Int32Value(context);
@@ -493,10 +480,7 @@ namespace mssql
 		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
-			const nodeTypeFactory fact;
-			const auto context = fact.isolate->GetCurrentContext();
-			const auto maybe = p->BooleanValue(context);
-			const auto v = maybe.FromMaybe(false);
+			const auto v = MutateJS::as_boolean(p);
 			vec[0] = !v ? 0 : 1;
 			_indvec[0] = 0;
 		}
@@ -507,17 +491,14 @@ namespace mssql
 		const auto arr = Local<Array>::Cast(p);
 		const auto len = arr->Length();
 		reserve_boolean(len);
-		auto& vec = *_storage->charvec_ptr;
-		const nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
+		auto& vec = *_storage->charvec_ptr;	
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			_indvec[i] = SQL_NULL_DATA;
-			const auto elem = arr->Get(i);
+			const auto elem = MutateJS::get_array_elelemt_at_index(arr, i);
 			if (!elem->IsNull())
 			{
-				const auto maybe = elem->BooleanValue(context);
-				const auto v = maybe.FromMaybe(false);
+				const auto v = MutateJS::as_boolean(elem);
 				const auto b = !v ? 0 : 1;
 				vec[i] = b;
 				_indvec[i] = 0;
@@ -572,7 +553,7 @@ namespace mssql
 		{
 			auto& ns = vec[i];
 			_indvec[i] = SQL_NULL_DATA;
-			const auto elem = arr->Get(i);
+			const auto elem = MutateJS::get_array_elelemt_at_index(arr, i);
 			if (!elem->IsNull())
 			{
 				const Local<Number> local;
@@ -900,7 +881,7 @@ namespace mssql
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			_indvec[i] = SQL_NULL_DATA;
-			const auto elem = arr->Get(i);
+			const auto elem = MutateJS::get_array_elelemt_at_index(arr, i);
 			if (!elem->IsNull())
 			{
 				_indvec[i] = sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT);
@@ -959,7 +940,7 @@ namespace mssql
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			_indvec[i] = SQL_NULL_DATA;
-			const auto elem = arr->Get(i);
+			const auto elem = MutateJS::get_array_elelemt_at_index(arr, i);
 			if (!elem->IsNull())
 			{
 				_indvec[i] = 0;
@@ -1052,10 +1033,10 @@ namespace mssql
 		const auto maybe = p->ToNumber(context);
 		Local<Number> local;
 		if (maybe.ToLocal(&local)) {
-			const auto d = local->Value();
+			const auto d = static_cast<long double>(local->Value());
 			if (d == floor(d) &&
-				d >= numeric_limits<int64_t>::min() &&
-				d <= numeric_limits<int64_t>::max())
+				d >= static_cast<long double>(numeric_limits<int64_t>::min()) &&
+				d <= static_cast<long double>(numeric_limits<int64_t>::max()))
 			{
 				bind_integer(p);
 			}
@@ -1077,10 +1058,10 @@ namespace mssql
 			const auto maybe = p->ToNumber(context);
 			Local<Number> local;
 			if (maybe.ToLocal(&local)) {
-				const auto d = local->Value();
+				const auto d = static_cast<long double>(local->Value());
 				if (d == floor(d) &&
-					d >= numeric_limits<int64_t>::min() &&
-					d <= numeric_limits<int64_t>::max())
+					d >= static_cast<long double>(numeric_limits<int64_t>::min()) &&
+					d <= static_cast<long double>(numeric_limits<int64_t>::max()))
 				{
 					bind_integer_array(pp);
 				}
@@ -1094,7 +1075,7 @@ namespace mssql
 
 	bool BoundDatum::bind(const Local<Object> o, const char* if_str, const uint16_t type)
 	{
-		auto val = get_as_value(o, if_str);
+		auto val = MutateJS::get_property_as_value(o, if_str);
 		if (!val->IsUndefined())
 		{
 			param_type = type;
@@ -1318,7 +1299,7 @@ namespace mssql
 		{
 			return false;
 		}
-		const auto maybe_size = get_as_value(local_object, "max_length")->Int32Value(context);
+		const auto maybe_size = MutateJS::get_property_as_value(local_object, "max_length")->Int32Value(context);
 		int size;
 		if (!maybe_size.To(&size))
 		{
@@ -1343,7 +1324,7 @@ namespace mssql
 			{
 				return false;
 			}
-			pval = get_as_value(as_object, "val");
+			pval = MutateJS::get_property_as_value(as_object, "val");
 		}
 
 		return bind_datum_type(pval);
@@ -1353,21 +1334,21 @@ namespace mssql
 	{
 		const nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
-		const auto precision = get_as_value(pv, "precision");
+		const auto precision = MutateJS::get_property_as_value(pv, "precision");
 		if (!precision->IsUndefined())
 		{
 			const auto maybe_param_size = precision->Int32Value(context);
 			param_size = maybe_param_size.FromMaybe(0);
 		}
 
-		const auto scale = get_as_value(pv, "scale");
+		const auto scale = MutateJS::get_property_as_value(pv, "scale");
 		if (!scale->IsUndefined())
 		{
 			const auto maybe_digits = scale->Int32Value(context);
 			digits = maybe_digits.FromMaybe(0);
 		}
 
-		const auto off = get_as_value(pv, "offset");
+		const auto off = MutateJS::get_property_as_value(pv, "offset");
 		if (!off->IsUndefined())
 		{
 			const auto maybe_offset = off->Int32Value(context);
@@ -1632,7 +1613,7 @@ namespace mssql
 			return false;
 		}
 
-		const auto pp = get_as_value(as_local, "value");
+		const auto pp = MutateJS::get_property_as_value(as_local, "value");
 
 		assign_precision(as_local);
 
@@ -1737,13 +1718,13 @@ namespace mssql
 			return false;
 		}
 
-		auto v = get_as_value(po, "is_output");
+		auto v = MutateJS::get_property_as_value(po, "is_output");
 		if (!v->IsUndefined())
 		{
 			return proc_bind(p, v);
 		}
 
-		v = get_as_value(po, "sql_type");
+		v = MutateJS::get_property_as_value(po, "sql_type");
 		if (!v->IsUndefined())
 		{
 			return user_bind(p, v);
@@ -1754,12 +1735,12 @@ namespace mssql
 
 	bool BoundDatum::bind_array(Local<Value>& pp)
 	{
-		auto arr = Local<Array>::Cast(pp);
+		const auto arr = Local<Array>::Cast(pp);
 		nodeTypeCounter counts;
 
 		for (uint32_t i = 0; i < arr->Length(); ++i)
 		{
-			const auto p = arr->Get(i);
+			const auto p = MutateJS::get_array_elelemt_at_index(arr, i);
 			counts.Decode(p);
 		}
 
@@ -1821,8 +1802,7 @@ namespace mssql
 
 	Local<Value> BoundDatum::unbind_string() const
 	{
-		const nodeTypeFactory fact;
-		const auto s = fact.from_two_byte(_storage->uint16vec_ptr->data());
+		const auto s = MutateJS::from_two_byte(_storage->uint16vec_ptr->data());
 		return s;
 	}
 

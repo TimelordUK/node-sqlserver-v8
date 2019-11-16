@@ -19,6 +19,7 @@
 
 #include "stdafx.h"
 #include <ResultSet.h>
+#include <MutateJS.h>
 
 namespace mssql
 {
@@ -100,14 +101,14 @@ namespace mssql
 
 	Local<Object> ResultSet::get_entry(const nodeTypeFactory & fact, const ColumnDefinition & definition)  {
 		const auto type_name = map_type(definition.dataType);
-		auto entry = fact.new_object();
-		entry->Set(fact.from_two_byte(L"size"), fact.new_integer(static_cast<int32_t>(definition.columnSize)));
-		entry->Set(fact.from_two_byte(L"name"), fact.from_two_byte(definition.name.c_str()));
-		entry->Set(fact.from_two_byte(L"nullable"), fact.new_boolean(definition.nullable != 0));  
-		entry->Set(fact.from_two_byte(L"type"), fact.from_two_byte(type_name));
-		entry->Set(fact.from_two_byte(L"sqlType"), fact.from_two_byte(definition.dataTypeName.c_str()));
+		const auto entry = fact.new_object();
+		MutateJS::set_property_value(entry, MutateJS::from_two_byte(L"size"), fact.new_integer(static_cast<int32_t>(definition.columnSize)));
+		MutateJS::set_property_value(entry, MutateJS::from_two_byte(L"name"), MutateJS::from_two_byte(definition.name.c_str()));
+		MutateJS::set_property_value(entry, MutateJS::from_two_byte(L"nullable"), fact.new_boolean(definition.nullable != 0));
+		MutateJS::set_property_value(entry, MutateJS::from_two_byte(L"type"), MutateJS::from_two_byte(type_name));
+		MutateJS::set_property_value(entry, MutateJS::from_two_byte(L"sqlType"), MutateJS::from_two_byte(definition.dataTypeName.c_str()));
 		if (definition.dataType == SQL_SS_UDT) {
-			entry->Set(fact.from_two_byte(L"udtType"), fact.from_two_byte(definition.udtTypeName.c_str()));
+			MutateJS::set_property_value(entry, MutateJS::from_two_byte(L"udtType"), MutateJS::from_two_byte(definition.udtTypeName.c_str()));
 		}
 		return entry;
 	}
@@ -118,7 +119,7 @@ namespace mssql
 	   auto metadata = fact.new_array();
 
 	   for_each(this->_metadata.begin(), this->_metadata.end(), [fact, metadata](const ColumnDefinition & definition) {
-		  metadata->Set(metadata->Length(), get_entry(fact, definition));
+		   MutateJS::set_array_elelemt_at_index(metadata, metadata->Length(), get_entry(fact, definition));
 	   });
 
 	   return metadata;

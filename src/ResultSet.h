@@ -63,8 +63,8 @@ namespace mssql
 			_rows.clear();
         }
         Local<Value> meta_to_value();
-		void add_column(size_t row, const shared_ptr<Column> & column);
-		shared_ptr<Column> get_column(size_t row, size_t id) const;
+		void add_column(size_t row_id, const shared_ptr<Column> & column);
+		shared_ptr<Column> get_column(size_t row_id, size_t id) const;
 		size_t get_result_count() const
 		{
 			return  _rows.size();
