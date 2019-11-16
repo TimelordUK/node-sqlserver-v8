@@ -256,6 +256,7 @@ export interface ProcedureParam {
 
 export interface ProcedureDefinition
 {
+    paramsArray(params: any[]): any[]
     call(params?: any[], cb?: CallProcedureCb): Query
     setTimeout(to:number): void
     setPolling(polling: boolean) : void

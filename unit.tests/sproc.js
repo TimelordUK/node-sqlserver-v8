@@ -41,6 +41,59 @@ suite('sproc', function () {
     })
   })
 
+  test('check proc called as object paramater', testDone => {
+    const spName = 'test_sp_select_select'
+
+    const def = `alter PROCEDURE <name>(
+@num1 INT,
+@num2 INT,
+@num3 INT OUTPUT
+
+)AS
+BEGIN
+   SET @num3 = @num1 + @num2
+   RETURN 99;
+END
+`
+
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const o = {
+            num1: 10,
+            num2: 100
+          }
+          const p = proc.paramsArray(o)
+          proc.call(p, (err, results, output) => {
+            assert.ifError(err)
+            if (output) {
+              assert(Array.isArray(output))
+              const expected = [
+                99,
+                o.num1 + o.num2
+              ]
+              assert.deepStrictEqual(expected, output)
+              asyncDone()
+            }
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test('proc with multiple select  - should callback with each', testDone => {
     const spName = 'test_sp_select_select'
 
