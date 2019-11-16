@@ -40,6 +40,27 @@ suite('querycancel', function () {
     })
   })
 
+  test('pause a large query and cancel check done', testDone => {
+    let rows = 0
+    const q = theConnection.query(`select top 3000 * from syscolumns`)
+    q.on('error', (e) => {
+      assert.ifError(e)
+    })
+    q.on('row', () => {
+      ++rows
+      if (rows % 100 === 0) {
+        q.pauseQuery()
+        setTimeout(() => {
+          q.cancelQuery(() => {
+          })
+        }, 50)
+      }
+    })
+    q.on('done', () => {
+      testDone()
+    })
+  })
+
   test('2 x cancel - expect Operation canceled on both', testDone => {
     let hits = 0
 
