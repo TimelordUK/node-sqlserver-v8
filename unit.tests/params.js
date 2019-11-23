@@ -66,7 +66,7 @@ suite('params', function () {
     let tableFieldsSql = ' (id int identity, '
 
     for (const field in tableFields) {
-      if (tableFields.hasOwnProperty(field)) {
+      if (Object.prototype.hasOwnProperty.call(tableFields, field)) {
         tableFieldsSql += field + ' ' + tableFields[field] + ','
       }
     }

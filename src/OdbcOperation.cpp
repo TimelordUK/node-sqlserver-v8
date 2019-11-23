@@ -145,7 +145,7 @@ namespace mssql
 		args[0] = fact.new_local_value(fact.new_boolean(false));
 		const auto arg = CreateCompletionArg();
 		args[1] = fact.new_local_value(arg);
-		const int c = _output_param->IsNull() ? 0 : _output_param.As<Array>()->Length();
+		const auto c = _output_param->IsNull() ? 0 : _output_param.As<Array>()->Length();
 		if (c > 0) args[2] = _output_param;
 		const auto argc = c == 0 ? 2 : 3;
 		return argc;

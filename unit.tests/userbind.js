@@ -75,7 +75,7 @@ suite('userbind', function () {
           asyncDone()
           return
         }
-        if (params.hasOwnProperty('test_null')) {
+        if (Object.prototype.hasOwnProperty.call(params, 'test_null')) {
           if (!params.test_null) {
             asyncDone()
           }
@@ -109,7 +109,7 @@ suite('userbind', function () {
     ]
 
     let testNull = true
-    if (params.hasOwnProperty('test_null')) {
+    if (Object.prototype.hasOwnProperty.call(params, 'test_null')) {
       testNull = params.test_null
     }
 
