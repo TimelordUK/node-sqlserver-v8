@@ -38,6 +38,80 @@ suite('bulk', function () {
     })
   })
 
+  test('bulk insert condition failure', testDone => {
+    const createTableSql = 'CREATE TABLE Persons (Name varchar(255) NOT NULL)'
+    const runQuery = query => {
+      return new Promise((resolve, reject) => {
+        theConnection.query(query, (err, rows) => {
+          if (err) reject(err)
+          resolve(rows)
+        })
+      })
+    }
+    const fns = [
+
+      asyncDone => {
+        theConnection.query('DROP TABLE Persons', () => {
+          asyncDone()
+        })
+      },
+      asyncDone => {
+        theConnection.query(createTableSql, e => {
+          assert.ifError(e)
+          asyncDone()
+        })
+      },
+      // normal insert, runs fine
+      asyncDone => {
+        runQuery(`INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (N'John')`).then(() => {
+          asyncDone()
+        }).catch((e) => {
+          assert.ifError(e)
+        })
+      },
+      // failing insert, throws proper error
+      asyncDone => {
+        runQuery(`INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (null)`).then(() => {
+          assert(false)
+        }).catch((e) => {
+          assert(e.message.includes('Cannot insert the value NULL into column'))
+          asyncDone()
+        })
+      },
+      // bulk insert, throws proper error
+      asyncDone => {
+        runQuery(`INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (null), (N'John')`).then(() => {
+          assert(false)
+        }).catch((e) => {
+          assert(e.message.includes('Cannot insert the value NULL into column'))
+          asyncDone()
+        })
+      },
+      // Problematic statement:
+      // bulk insert with proper element first, does NOT throw an error
+      asyncDone => {
+        runQuery(`INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (null), (N'John')`).then(() => {
+          assert(false)
+        }).catch((e) => {
+          assert(e.message.includes('Cannot insert the value NULL into column'), 'Bulk insert should throw an error')
+          asyncDone()
+        })
+      },
+      asyncDone => {
+        runQuery(`INSERT INTO [Persons] ([Name]) VALUES (N'John'), (null)`).then(() => {
+          assert(false)
+        }).catch((e) => {
+          assert(e.message.includes('Cannot insert the value NULL into column'))
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test('non null varchar write empty string', testDone => {
     const tableName = 'emptyString'
     let boundTable = null
