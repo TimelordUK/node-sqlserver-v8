@@ -18,6 +18,7 @@
 1. bulk table operations insert, delete, update
 1. prepared statements
 1. table value parameters
+1. use with sequelize
 
 ## Node JS support for SQL server 
 
@@ -304,6 +305,35 @@ finally, to reset the signatures the summary can help :-
 ```
  
 Further enhancements will be made to the library over the coming months - please leave feedback or suggestions for required features.
+
+## Use with Sequelize
+
+This library now  direct support for sequelize, up to v5, the popular JS ORM. For sequelize v4: 
+
+```js
+const sequelize = new Sequelize({
+  dialect: 'mssql',
+  dialectModulePath: 'msnodesqlv8/lib/sequelize',
+  dialectOptions: {
+    connectionString: 'Driver={SQL Server Native Client 11.0};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;',
+  },
+})
+```
+
+For sequelize v5: 
+
+```js
+const sequelize = new Sequelize({
+  dialect: 'mssql',
+  dialectModule: require('./dialect-module'),
+  bindParam: false,
+  dialectOptions: {
+    options: {
+      connectionString: 'Driver={SQL Server Native Client 11.0};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;',
+    },
+  },
+})
+```
 
 ## Test
 
