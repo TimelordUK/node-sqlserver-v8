@@ -69,7 +69,7 @@
     "asynquence-contrib": "^0.28.2",
     "electron": "^6.1.4",
     "minimist": "^1.2.0",
-    "sequelize": "^4.44.2",
+    "sequelize": "^5.15.1",
     "standard": "^13.1.0",
     "tedious": "^6.2.0",
     "node-gyp": "^4.0.0"
