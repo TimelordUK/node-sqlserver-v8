@@ -23,7 +23,7 @@ if "%cmd%"=="node" (
         if "%cmd%"=="electron" (
         FOR /F "delims=" %%i IN ('node_modules\.bin\electron.cmd --version') DO set electron_ver=%%i
         echo "electron %electron_ver%"
-        call node-gyp rebuild --target=%electron_ver% --dist-url=https://atom.io/download/atom-shell --verbose --arch=%arch%
+        call node-gyp clean configure rebuild --target=%electron_ver% --dist-url=https://atom.io/download/atom-shell --verbose --arch=%arch%
         copy build\Release\sqlserverv8.node lib\bin\sqlserverv8.node.%node_ver%.electron.%electron_ver%.%arch%.node
     )
 )

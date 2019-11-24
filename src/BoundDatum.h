@@ -72,6 +72,7 @@ namespace mssql
 		uint32_t offset;
 		bool is_tvp;
 		int tvp_no_cols;
+		wstring name;
 
 
 	private:
@@ -83,7 +84,6 @@ namespace mssql
 
 		char * err;
 	
-
 		void bind_null(const Local<Value> & p);
 		void bind_null_array(const Local<Value> & p);
 		void reserve_null(SQLLEN len);

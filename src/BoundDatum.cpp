@@ -1730,6 +1730,14 @@ namespace mssql
 			return user_bind(p, v);
 		}
 
+		const auto n = get_as_string(p, "name");
+		if (!n->IsUndefined())
+		{
+			name = wide_from_js_string(n);
+			auto pp = MutateJS::get_property_as_value(po, "value");
+			return bind_datum_type(pp);
+		}
+		
 		return false;
 	}
 

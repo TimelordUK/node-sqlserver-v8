@@ -7,9 +7,9 @@ const sequelize = new Sequelize({
     user: '',
     password: '',
     database: 'scratch',
-    connectionString: 'Driver={SQL Server Native Client 11.0};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;',
     options: {
       driver: 'SQL Server Native Client 11.0',
+      connectionString: 'Driver={SQL Server Native Client 11.0};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;',
       trustedConnection: true,
       instanceName: ''
     }
@@ -79,6 +79,10 @@ function userModel () {
     }, [])
     console.log(dataValues)
 
+    const updated = await user.update(
+      { job: 'Scrum Master' },
+      { where: { id: 3 } })
+    console.log(updated)
     resolve()
   })
 }

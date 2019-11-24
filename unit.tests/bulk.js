@@ -49,7 +49,6 @@ suite('bulk', function () {
       })
     }
     const fns = [
-
       asyncDone => {
         theConnection.query('DROP TABLE Persons', () => {
           asyncDone()
@@ -69,6 +68,18 @@ suite('bulk', function () {
           assert.ifError(e)
         })
       },
+      // Problematic statement:
+      // bulk insert with proper element first, does NOT throw an error
+      asyncDone => {
+        runQuery(`INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (N'John'), (null)`).then(() => {
+          assert(false)
+          asyncDone()
+        }).catch((e) => {
+          assert(e.message.includes('Cannot insert the value NULL into column'), 'Bulk insert should throw an error')
+          asyncDone()
+        })
+      },
+
       // failing insert, throws proper error
       asyncDone => {
         runQuery(`INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (null)`).then(() => {
@@ -84,16 +95,6 @@ suite('bulk', function () {
           assert(false)
         }).catch((e) => {
           assert(e.message.includes('Cannot insert the value NULL into column'))
-          asyncDone()
-        })
-      },
-      // Problematic statement:
-      // bulk insert with proper element first, does NOT throw an error
-      asyncDone => {
-        runQuery(`INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (null), (N'John')`).then(() => {
-          assert(false)
-        }).catch((e) => {
-          assert(e.message.includes('Cannot insert the value NULL into column'), 'Bulk insert should throw an error')
           asyncDone()
         })
       },

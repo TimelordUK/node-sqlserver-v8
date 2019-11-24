@@ -61,18 +61,18 @@
     }
   },
   "devDependencies": {
-    "mocha": "^6.2.0",
     "@types/electron": "^1.4.31",
-    "@types/node": "^12.6.9",
-    "@types/sequelize": "^4.28.4",
+    "@types/node": "^12.12.12",
+    "@types/sequelize": "^4.28.7",
     "asynquence": "^0.10.2",
     "asynquence-contrib": "^0.28.2",
-    "electron": "^6.1.4",
+    "electron": "^6.1.5",
     "minimist": "^1.2.0",
-    "sequelize": "^5.15.1",
-    "standard": "^13.1.0",
-    "tedious": "^6.2.0",
-    "node-gyp": "^4.0.0"
+    "mocha": "^6.2.0",
+    "node-gyp": "^4.0.0",
+    "sequelize": "^5.21.2",
+    "standard": "^14.3.1",
+    "tedious": "^6.6.2"
   },
   "os": [
     "win32"

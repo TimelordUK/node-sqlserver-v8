@@ -94,6 +94,7 @@ namespace mssql
 				_resultset->_end_of_rows = true;
 				return true;
 			}
+			if (!check_odbc_error(ret)) return false;
 			_resultset->_end_of_rows = false;
 			res = true;
 
@@ -228,7 +229,7 @@ namespace mssql
 	bool OdbcStatement::bind_datum(const int current_param, const shared_ptr<BoundDatum> &datum)
 	{
 		const auto& statement = *_statement;
-		const auto r = SQLBindParameter(statement, current_param, datum->param_type, datum->c_type, datum->sql_type,
+		auto r = SQLBindParameter(statement, current_param, datum->param_type, datum->c_type, datum->sql_type,
 		                                datum->param_size, datum->digits, datum->buffer, datum->buffer_len,
 		                                datum->get_ind_vec().data());
 		if (!check_odbc_error(r)) {
@@ -238,6 +239,17 @@ namespace mssql
 		{
 			apply_precision(datum, current_param);
 		}
+		const auto name = datum->name;
+		if (!name.empty()) {
+			SQLINTEGER string_length;
+			SQLHANDLE ipd = nullptr;
+			const auto name_ptr = const_cast<wchar_t*>(name.c_str());
+			r = SQLGetStmtAttr(statement, SQL_ATTR_IMP_PARAM_DESC, &ipd, SQL_IS_POINTER, &string_length);
+			if (!check_odbc_error(r)) return false;
+			SQLSetDescField(ipd, current_param, SQL_DESC_NAME, reinterpret_cast<SQLPOINTER>(name_ptr), name.size() * sizeof(wchar_t));
+			if (!check_odbc_error(r)) return false;
+		}
+		
 		return true;
 	}
 
