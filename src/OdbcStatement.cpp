@@ -46,7 +46,7 @@ namespace mssql
 
 	OdbcStatement::~OdbcStatement()
 	{
-		_statementState = STATEMENT_CLOSED;
+		_statementState = OdbcStatementState::STATEMENT_CLOSED;
 	}
 
 	OdbcStatement::OdbcStatement(const long statement_id, const shared_ptr<OdbcConnectionHandle> c)
@@ -360,7 +360,7 @@ namespace mssql
 	{
 		if (!SQL_SUCCEEDED(ret))
 		{
-			_statementState = STATEMENT_ERROR;
+			_statementState = OdbcStatementState::STATEMENT_ERROR;
 			return return_odbc_error();
 		}
 		return true;
@@ -499,7 +499,7 @@ namespace mssql
 		_resultset->_end_of_rows = true;
 		_prepared = true;
 
-		_statementState = STATEMENT_PREPARED;
+		_statementState = OdbcStatementState::STATEMENT_PREPARED;
 
 		return true;
 	}
@@ -609,7 +609,7 @@ namespace mssql
 		if (!check_odbc_error(ret)) return false;
 		const auto query = q->query_string();
 		auto* sql_str = const_cast<wchar_t *>(query.c_str());
-		_statementState = STATEMENT_SUBMITTED;
+		_statementState = OdbcStatementState::STATEMENT_SUBMITTED;
 		if (polling_mode)
 		{
 			SQLSetStmtAttr(*_statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
@@ -847,7 +847,7 @@ namespace mssql
 
 		SQL_SS_TIMESTAMPOFFSET_STRUCT datetime;
 		// not necessary, but simple precaution
-		memset(&datetime, 0, sizeof(datetime));
+		memset(&datetime, 0, sizeof datetime);
 		datetime.year = SQL_SERVER_DEFAULT_YEAR;
 		datetime.month = SQL_SERVER_DEFAULT_MONTH;
 		datetime.day = SQL_SERVER_DEFAULT_DAY;
@@ -1349,12 +1349,12 @@ namespace mssql
 		//fprintf(stderr, "TryReadNextResult\n");
 		//fprintf(stderr, "TryReadNextResult ID = %llu\n ", getStatementId());
 		const auto state = _statementState;
-		if (state == STATEMENT_CANCELLED)
+		if (state == OdbcStatementState::STATEMENT_CANCELLED)
 		{
 			//fprintf(stderr, "TryReadNextResult - cancel mode.\n");
 			_resultset->_end_of_rows = true;
 			_endOfResults = true;
-			_statementState = STATEMENT_ERROR;
+			_statementState = OdbcStatementState::STATEMENT_ERROR;
 			return false;
 		}
 		const auto & statement = *_statement;

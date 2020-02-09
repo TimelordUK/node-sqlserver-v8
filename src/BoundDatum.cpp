@@ -162,23 +162,24 @@ namespace mssql
 		}
 	}
 
-	void BoundDatum::reserve_var_char(const size_t precision)
+	void BoundDatum::reserve_var_char(const size_t precision, const size_t array_len)
 	{
 		js_type = JS_STRING;
 		c_type = SQL_C_CHAR;
-		sql_type = SQL_VARCHAR;
+		sql_type = precision > 8000 ? SQL_WLONGVARCHAR : SQL_VARCHAR;
 		digits = 0;
 		_indvec[0] = SQL_NULL_DATA;
-		_storage->ReserveChars(max(1, static_cast<int>(precision)));
+		_indvec.resize(array_len);
+		_storage->ReserveChars(max(1, static_cast<int>(array_len * precision)));	
 		auto* itr_p = _storage->charvec_ptr->data();
 		buffer = itr_p;
 		buffer_len = precision;
 		param_size = max(buffer_len, static_cast<SQLLEN>(1));
 	}
-
+	
 	void BoundDatum::bind_var_char(const Local<Value>& p, const int precision)
 	{
-		reserve_var_char(precision);
+		reserve_var_char(precision, 1);
 		if (!p->IsNull())
 		{
 			const nodeTypeFactory fact;
@@ -191,7 +192,7 @@ namespace mssql
 			}
 		}
 	}
-
+	
 	int get_max_str_len(const Local<Value>& p)
 	{
 		auto str_len = 0;
@@ -218,6 +219,38 @@ namespace mssql
 		return str_len;
 	}
 
+	void BoundDatum::bind_var_char_array(const Local<Value>& p)
+	{
+		const auto max_str_len = max(1, get_max_str_len(p));
+		auto arr = Local<Array>::Cast(p);
+		const auto array_len = arr->Length();
+		reserve_var_char(max_str_len, array_len);
+		const nodeTypeFactory fact;
+		const auto context = fact.isolate->GetCurrentContext();
+		auto itr = _storage->charvec_ptr->begin();
+		for (uint32_t i = 0; i < array_len; ++i)
+		{
+			_indvec[i] = SQL_NULL_DATA;
+			const auto elem = MutateJS::get_array_elelemt_at_index(arr, i);
+			if (!elem->IsNull())
+			{
+				auto maybe_value = arr->Get(context, i);
+				Local<Value> local_value;
+				if (maybe_value.ToLocal(&local_value))
+				{
+					Local<String> str;
+					auto maybe_string = local_value->ToString(context);
+					if (maybe_string.ToLocal(&str)) {
+						const auto width = str->Length();
+						_indvec[i] = width;
+						str->WriteUtf8(fact.isolate, &*itr, max_str_len);
+					}
+				}
+			}
+			itr += max_str_len;
+		}
+	}
+	
 	void BoundDatum::reserve_w_var_char_array(const size_t max_str_len, const size_t array_len)
 	{
 		js_type = JS_STRING;
@@ -1520,7 +1553,7 @@ namespace mssql
 	{
 		if (pp->IsArray())
 		{
-			bind_w_var_char_array(pp);
+			bind_var_char_array(pp);
 		}
 		else
 		{

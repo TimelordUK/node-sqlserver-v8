@@ -61,6 +61,7 @@ END`
  begin drop PROCEDURE ${insertProcedureTypeName} end `
 
     const createTableSql = `create TABLE ${tableName}(
+\tdescription varchar(max),
 \tusername nvarchar(30), 
 \tage int, 
 \tsalary real
@@ -68,7 +69,7 @@ END`
 
     const dropTypeSql = `IF TYPE_ID(N'${tableTypeName}') IS not NULL drop type ${tableTypeName}`
 
-    const createTypeSql = `CREATE TYPE ${tableTypeName} AS TABLE (username nvarchar(30), age int, salary real)`
+    const createTypeSql = `CREATE TYPE ${tableTypeName} AS TABLE (description varchar(max), username nvarchar(30), age int, salary real)`
 
     const insertProcedureSql = `create PROCEDURE ${insertProcedureTypeName}
 @tvp ${tableTypeName} READONLY
@@ -77,11 +78,13 @@ BEGIN
  set nocount on
  INSERT INTO ${tableName}
 (
+   [description],
    [username],
    [age],
    [salary]
  )
  SELECT 
+ [description],
  [username],
  [age],
  [salary]
@@ -143,7 +146,7 @@ END`
         theConnection.getUserTypeTable(tableTypeName, (err, t) => {
           assert.ifError(err)
           table = t
-          assert(table.columns.length === 3)
+          assert(table.columns.length === 4)
           asyncDone()
         })
       }
@@ -154,18 +157,64 @@ END`
     })
   }
 
-  const vec = [
-    {
-      username: 'santa',
-      age: 1000,
-      salary: 0
-    },
-    {
-      username: 'md',
-      age: 28,
-      salary: 100000
-    }
-  ]
+  function repeat (a, num) {
+    return new Array(num + 1).join(a)
+  }
+
+  function getVec (descriptionLength) {
+    const longString = repeat('a', descriptionLength)
+    return [
+      {
+        description: longString,
+        username: 'santa',
+        age: 1000,
+        salary: 0
+      },
+      {
+        description: 'an entry',
+        username: 'md',
+        age: 28,
+        salary: 100000
+      }
+    ]
+  }
+
+  test('use tvp simple test type insert test long string 8 * 1024', testDone => {
+    const tableName = 'TestTvp'
+    let table
+    const vec = getVec(8 * 1024)
+    const fns = [
+
+      asyncDone => {
+        setupSimpleType(tableName, t => {
+          table = t
+          table.addRowsFromObjects(vec)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const tp = sql.TvpFromTable(table)
+        table.rows = []
+        theConnection.query('exec insertTestTvp @tvp = ?;', [tp], err => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.query(`select * from ${tableName}`, (err, res) => {
+          assert.ifError(err)
+          assert.deepStrictEqual(vec, res)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
 
   test('use tvp to select from table type complex object Employee type', testDone => {
     const tableName = 'Employee'
@@ -287,7 +336,7 @@ END`
     const tableName = 'TestTvp'
     let table
     let procedure
-
+    const vec = getVec(100)
     const fns = [
 
       asyncDone => {
@@ -333,7 +382,7 @@ END`
   test('non dbo schema use tvp simple test type select test', testDone => {
     const tableName = 'TestSchema.TestTvp'
     let table
-
+    const vec = getVec(100)
     const fns = [
 
       asyncDone => {
@@ -363,7 +412,7 @@ END`
   test('use tvp simple test type select test', testDone => {
     const tableName = 'TestTvp'
     let table
-
+    const vec = getVec(100)
     const fns = [
 
       asyncDone => {
@@ -393,7 +442,7 @@ END`
   test('use tvp simple test type insert test', testDone => {
     const tableName = 'TestTvp'
     let table
-
+    const vec = getVec(100)
     const fns = [
 
       asyncDone => {

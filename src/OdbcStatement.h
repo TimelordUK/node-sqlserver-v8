@@ -35,18 +35,18 @@ namespace mssql
 	{
 	public:
 
-		enum OdbcStatementState
+		enum class OdbcStatementState
 		{
-			STATEMENT_CREATED,
-			STATEMENT_PREPARED,
-			STATEMENT_SUBMITTED,
-			STATEMENT_FETCHING,
-			STATEMENT_CANCELLED,
-			STATEMENT_ERROR,
-			STATEMENT_CLOSED
+			STATEMENT_CREATED = 1,
+			STATEMENT_PREPARED = 2,
+			STATEMENT_SUBMITTED = 3,
+			STATEMENT_FETCHING = 4,
+			STATEMENT_CANCELLED = 5,
+			STATEMENT_ERROR = 6,
+			STATEMENT_CLOSED = 7
 		};
 
-		bool created() { return  _statementState == STATEMENT_CREATED; }
+		bool created() { return  _statementState == OdbcStatementState::STATEMENT_CREATED; }
 		bool cancel();
 		
 		OdbcStatement(long statement_id, shared_ptr<OdbcConnectionHandle> c);
@@ -139,7 +139,7 @@ namespace mssql
 		bool _cancelRequested;
 		bool _pollingEnabled;
 
-		OdbcStatementState _statementState = STATEMENT_CREATED;
+		OdbcStatementState _statementState = OdbcStatementState::STATEMENT_CREATED;
 
 		// set binary true if a binary Buffer should be returned instead of a JS string
 	

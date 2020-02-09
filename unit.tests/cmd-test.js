@@ -466,11 +466,12 @@ if (test != null) {
     let global_conn_str = null;
     if (argv.hasOwnProperty('a')) {
         const appVeyorVersion = argv['a'];
-        global_conn_str = `Driver={SQL Server Native Client 11.0}; Server=(local)\\SQL${appVeyorVersion}; Database={master}; Uid=sa; Pwd=Password12!`;
+        global_conn_str = `Driver={ODBC Driver 17 for SQL Server}; Server=(local)\\SQL${appVeyorVersion}; Database={master}; Uid=sa; Pwd=Password12!`;
         console.log(`set conn_str as ${global_conn_str}`);
     }
     supp.GlobalConn.init(sql, (co) => {
         let conn_str = co.conn_str || global_conn_str;
+        conn_str = 'Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;';
         console.log(`running test with ${conn_str}`);
         support = co.support;
         procedureHelper = new support.ProcedureHelper(conn_str);

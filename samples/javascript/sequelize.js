@@ -8,8 +8,8 @@ const sequelize = new Sequelize({
     password: '',
     database: 'scratch',
     options: {
-      driver: 'SQL Server Native Client 11.0',
-      connectionString: 'Driver={SQL Server Native Client 11.0};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;',
+      driver: '',
+      connectionString: 'Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;',
       trustedConnection: true,
       instanceName: ''
     }

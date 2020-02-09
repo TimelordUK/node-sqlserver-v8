@@ -146,7 +146,7 @@ namespace mssql
 
 		void bind_var_binary( Local<Value> & p);
 		void bind_var_binary_array(const Local<Value> & p);
-		void reserve_var_binary_array(size_t maxObjLen, size_t  arrayLen);
+		void reserve_var_binary_array(size_t max_obj_len, size_t  array_len);
 
 		bool bind_datum_type(Local<Value>& p);
 		bool bind(Local<Object> o, const char* if_str, uint16_t type);
@@ -156,8 +156,9 @@ namespace mssql
 		bool proc_bind(Local<Value> &p, Local<Value> &v);
 		void bind_char(const Local<Value> & pp);
 		void bind_var_char(const Local<Value> & p);
+		void bind_var_char_array(const Local<Value>& p);
 		void bind_var_char(const Local<Value> & p, int precision);
-		void reserve_var_char(size_t precision);
+		void reserve_var_char(size_t precision, size_t  array_len);
 		bool user_bind(Local<Value> &p, Local<Value> &v);
 		void assign_precision(Local<Object> &pv);
 
