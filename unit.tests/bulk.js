@@ -38,6 +38,42 @@ suite('bulk', function () {
     })
   })
 
+  test('bind to db with space', testDone => {
+    let conn = null
+    let bulkMgr = null
+    const tableName = 'bindTest'
+    const fns = [
+
+      asyncDone => {
+        const connectionString = 'Driver={SQL Server Native Client 11.0}; Server=(localdb)\\node; Database={scratch}; Trusted_Connection=Yes;'
+        sql.open(connectionString, function (err, c) {
+          assert(err === null || err === false)
+          conn = c
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        setupSimpleType(conn, tableName, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        tm = conn.tableMgr()
+        tm.bind(tableName, bm => {
+          bulkMgr = bm
+          assert(bulkMgr !== null)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test('bulk insert condition failure', testDone => {
     const createTableSql = 'CREATE TABLE Persons (Name varchar(255) NOT NULL)'
     const runQuery = query => {
@@ -62,7 +98,7 @@ suite('bulk', function () {
       },
       // normal insert, runs fine
       asyncDone => {
-        runQuery(`INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (N'John')`).then(() => {
+        runQuery('INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (N\'John\')').then(() => {
           asyncDone()
         }).catch((e) => {
           assert.ifError(e)
@@ -71,7 +107,7 @@ suite('bulk', function () {
       // Problematic statement:
       // bulk insert with proper element first, does NOT throw an error
       asyncDone => {
-        runQuery(`INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (N'John'), (null)`).then(() => {
+        runQuery('INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (N\'John\'), (null)').then(() => {
           assert(false)
           asyncDone()
         }).catch((e) => {
@@ -82,7 +118,7 @@ suite('bulk', function () {
 
       // failing insert, throws proper error
       asyncDone => {
-        runQuery(`INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (null)`).then(() => {
+        runQuery('INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (null)').then(() => {
           assert(false)
         }).catch((e) => {
           assert(e.message.includes('Cannot insert the value NULL into column'))
@@ -91,7 +127,7 @@ suite('bulk', function () {
       },
       // bulk insert, throws proper error
       asyncDone => {
-        runQuery(`INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (null), (N'John')`).then(() => {
+        runQuery('INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (null), (N\'John\')').then(() => {
           assert(false)
         }).catch((e) => {
           assert(e.message.includes('Cannot insert the value NULL into column'))
@@ -99,7 +135,7 @@ suite('bulk', function () {
         })
       },
       asyncDone => {
-        runQuery(`INSERT INTO [Persons] ([Name]) VALUES (N'John'), (null)`).then(() => {
+        runQuery('INSERT INTO [Persons] ([Name]) VALUES (N\'John\'), (null)').then(() => {
           assert(false)
         }).catch((e) => {
           assert(e.message.includes('Cannot insert the value NULL into column'))
@@ -1034,5 +1070,38 @@ suite('bulk', function () {
     }
 
     simpleColumnBulkTest(params, testDone)
+  }
+
+  function setupSimpleType (conn, tableName, done) {
+    const dropTableSql = `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL 
+  DROP TABLE ${tableName};`
+
+    const createTableSql = `create TABLE ${tableName}(
+\tdescription varchar(max),
+\tusername nvarchar(30), 
+\tage int, 
+\tsalary real
+)`
+
+    const fns = [
+
+      asyncDone => {
+        conn.query(dropTableSql, err => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        conn.query(createTableSql, err => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      done()
+    })
   }
 })

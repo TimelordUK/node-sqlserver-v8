@@ -39,7 +39,7 @@ suite('pause', function () {
   })
 
   test('pause a large query to only get 10 rows then submit new query whilst other paused (first killed)', testDone => {
-    const q = theConnection.query(`select top 3000 * from syscolumns`)
+    const q = theConnection.query('select top 3000 * from syscolumns')
     const pauseAt = 10
     let rows = 0
     q.on('error', (e) => {
@@ -52,7 +52,7 @@ suite('pause', function () {
         setTimeout(() => {
           assert.strictEqual(pauseAt, rows)
           // submit a new query will kill previous
-          theConnection.query(`select top 3000 * from syscolumns`, (err, res) => {
+          theConnection.query('select top 3000 * from syscolumns', (err, res) => {
             assert.ifError(err)
             assert(Array.isArray(res))
             testDone()
@@ -63,7 +63,7 @@ suite('pause', function () {
   })
 
   test('pause a large query to only get 10 rows', testDone => {
-    const q = theConnection.query(`select top 3000 * from syscolumns`)
+    const q = theConnection.query('select top 3000 * from syscolumns')
     const pauseAt = 10
     let rows = 0
     q.on('error', (e) => {
@@ -83,7 +83,7 @@ suite('pause', function () {
   })
 
   test('queries can start off paused', testDone => {
-    const q = theConnection.query(`select top 3000 * from syscolumns`)
+    const q = theConnection.query('select top 3000 * from syscolumns')
     q.pauseQuery()
     let rows = 0
     q.on('error', (e) => {
@@ -100,7 +100,7 @@ suite('pause', function () {
   })
 
   test('run a large query', testDone => {
-    const q = theConnection.query(`select * from syscolumns`)
+    const q = theConnection.query('select * from syscolumns')
     q.on('error', (e) => {
       assert.ifError(e)
     })
@@ -113,12 +113,12 @@ suite('pause', function () {
 
   test('pause a large query every 100 rows', testDone => {
     let expected = 0
-    const q0 = theConnection.query(`select top 3000 * from syscolumns`)
+    const q0 = theConnection.query('select top 3000 * from syscolumns')
     q0.on('row', () => {
       ++expected
     })
     let rows = 0
-    const q = theConnection.query(`select top 3000 * from syscolumns`)
+    const q = theConnection.query('select top 3000 * from syscolumns')
     q.on('error', (e) => {
       assert.ifError(e)
     })
@@ -171,7 +171,7 @@ suite('pause', function () {
   test('close connection with paused query pending a resume', testDone => {
     sql.open(connStr, (err, newConn) => {
       assert(err === false)
-      const q = newConn.query(`select top 3000 * from syscolumns`)
+      const q = newConn.query('select top 3000 * from syscolumns')
       q.pauseQuery()
       let rows = 0
       q.on('error', (e) => {
@@ -192,7 +192,7 @@ suite('pause', function () {
 
   test('pause a large query and cancel without resume', testDone => {
     let rows = 0
-    const q = theConnection.query(`select top 3000 * from syscolumns`)
+    const q = theConnection.query('select top 3000 * from syscolumns')
     q.on('error', (e) => {
       assert.ifError(e)
     })
@@ -211,7 +211,7 @@ suite('pause', function () {
 
   test('pause a large query and cancel without resume - submit new query', testDone => {
     let rows = 0
-    const q = theConnection.query(`select top 3000 * from syscolumns`)
+    const q = theConnection.query('select top 3000 * from syscolumns')
     q.on('error', (e) => {
       assert.ifError(e)
     })
@@ -221,7 +221,7 @@ suite('pause', function () {
         q.pauseQuery()
         setTimeout(() => {
           q.cancelQuery(() => {
-            theConnection.query(`select top 3000 * from syscolumns`, (err, res) => {
+            theConnection.query('select top 3000 * from syscolumns', (err, res) => {
               assert.ifError(err)
               assert(res.length > 0)
               testDone()

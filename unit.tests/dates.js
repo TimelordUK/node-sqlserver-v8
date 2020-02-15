@@ -366,8 +366,8 @@ suite('date tests', function () {
     theConnection.query('select convert(datetimeoffset(7), \'2014-02-14 22:59:59.9999999 +05:00\') as dto1, convert(datetimeoffset(7), \'2014-02-14 17:59:59.9999999 +00:00\') as dto2',
       function (err, res) {
         assert.ifError(err)
-        const dto1 = res['dto1']
-        const dto2 = res['dto2']
+        const dto1 = res.dto1
+        const dto2 = res.dto2
         assert(dto1 === dto2)
         testDone()
       })

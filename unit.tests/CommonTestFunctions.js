@@ -331,7 +331,7 @@ ${e.toString()}`))
       for (row = 0; row < numberOfRows; row++) {
         numberOfRowsFetched++
         // debugComments("\ntest note verifyData_Datetime01H_CommonTestFunctions.js ...Now examining data 'util.inspect(r.rows[row=" + row + "])' = " + util.inspect(r.rows[row]) + " ... \n");
-        if ((util.inspect(r.rows[row]) === util.inspect([null])) === true) {
+        if ((util.inspect(r.rows[row]) === util.inspect([null]))) {
           // debugComments("\ntest note verifyData_Datetime02_CommonTestFunctions.js ... data in row " + row + " is null \n");
           // convert 1-based row with null data to 0-based index value...
           if (row !== (RowWithNullData - 1)) {
