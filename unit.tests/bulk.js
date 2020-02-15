@@ -45,8 +45,8 @@ suite('bulk', function () {
     const fns = [
 
       asyncDone => {
-        const connectionString = 'Driver={SQL Server Native Client 11.0}; Server=(localdb)\\node; Database={scratch}; Trusted_Connection=Yes;'
-        sql.open(connectionString, function (err, c) {
+        // const connectionString = 'Driver={SQL Server Native Client 11.0}; Server=(localdb)\\node; Database={scratch 2}; Trusted_Connection=Yes;'
+        sql.open(connStr, function (err, c) {
           assert(err === null || err === false)
           conn = c
           asyncDone()
