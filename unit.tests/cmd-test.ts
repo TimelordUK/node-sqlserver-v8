@@ -537,7 +537,6 @@ if (test != null) {
     }
     supp.GlobalConn.init(sql, (co: any) => {
             let conn_str =  co.conn_str || global_conn_str;
-            conn_str = 'Driver={SQL Server Native Client 11.0};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;';
             console.log(`running test with ${conn_str}`);
             support = co.support;
             procedureHelper = new support.ProcedureHelper(conn_str);
