@@ -74,6 +74,19 @@ sql.query(connectionString, query, (err, rows) => {
 
 See our [TypeScript sample app](samples/typescript) for more details.
 
+### Webpack
+
+If you are using Webpack for your application, you need to:
+
+1. Add the [node-loader](https://webpack.js.org/loaders/node-loader/) as a dev dependency.
+2. Update your `webpack.config.js` to include the following under `module.rules`:
+    ```
+    {
+        test: /\.node$/,
+        use: 'node-loader'
+    }
+    ```
+
 ## Prepared Statements
 
 It is now possible to prepare one or more statements which can then be invoked
