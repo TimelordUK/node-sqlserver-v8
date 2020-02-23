@@ -256,13 +256,19 @@ namespace mssql
 		js_type = JS_STRING;
 		c_type = SQL_C_WCHAR;
 		sql_type = max_str_len > 2000 && max_str_len < 4000 ? SQL_WLONGVARCHAR : SQL_WVARCHAR;
-
 		const auto size = sizeof(uint16_t);
 		_indvec.resize(array_len);
 		_storage->ReserveUint16(array_len * max_str_len);
 		buffer = _storage->uint16vec_ptr->data();
 		buffer_len = max_str_len * size;
-		param_size = max_str_len;
+		if (max_str_len > 4000)
+		{
+			param_size = 0;
+		}
+		else
+		{
+			param_size = max(buffer_len, static_cast<SQLLEN>(1));
+		}
 	}
 
 	void BoundDatum::bind_w_var_char_array(const Local<Value>& p)
@@ -1553,11 +1559,11 @@ namespace mssql
 	{
 		if (pp->IsArray())
 		{
-			bind_var_char_array(pp);
+			bind_w_var_char_array(pp);
 		}
 		else
 		{
-			bind_var_char(pp);
+			bind_w_var_char(pp);
 		}
 	}
 
