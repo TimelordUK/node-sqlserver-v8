@@ -567,6 +567,13 @@ namespace mssql
 			ret = poll_check(ret, false);
 		}
 
+		if (ret == SQL_NO_DATA)
+		{
+			_resultset = make_unique<ResultSet>(0);
+			_resultset->_end_of_rows = true;
+			return true;
+		}
+		
 		if (!check_odbc_error(ret)) return false;
 
 		ret = SQLRowCount(statement, &_resultset->_row_count);
