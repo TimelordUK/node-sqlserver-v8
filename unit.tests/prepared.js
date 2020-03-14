@@ -44,6 +44,11 @@ function empSelectSQL () {
      ' WHERE BusinessEntityID = ? '
 }
 
+function empUpdateSQL () {
+  return 'UPDATE [dbo].[Employee] SET [LoginID] = ?' +
+    ' WHERE BusinessEntityID = ?'
+}
+
 function empDeleteSQL () {
   return 'DELETE FROM [dbo].[Employee] ' +
         'WHERE BusinessEntityID = ?'
@@ -133,11 +138,20 @@ suite('prepared', function () {
         prepared.delete = ps
         asyncDone()
       })
+    },
+
+    // prepare a update statement.
+    asyncDone => {
+      employeePrepare(empUpdateSQL(), ps => {
+        prepared.update = ps
+        asyncDone()
+      })
     }
   ]
 
   setup(testDone => {
     prepared = {
+      update: null,
       select: null,
       delete: null,
       scan: null
@@ -172,6 +186,11 @@ suite('prepared', function () {
         })
       },
       asyncDone => {
+        prepared.update.free(() => {
+          asyncDone()
+        })
+      },
+      asyncDone => {
         theConnection.close((err) => {
           assert.ifError(err)
           asyncDone()
@@ -190,6 +209,49 @@ suite('prepared', function () {
       done(ps)
     })
   }
+
+  test('use prepared statement with params updating 0 rows - expect no error', testDone => {
+    const update = prepared.update
+    const meta = update.getMeta()
+    const id1 = -1
+
+    assert(meta.length === 0)
+    update.preparedQuery(['login1', id1], (err, res) => {
+      assert.ifError(err)
+      assert(res != null)
+      assert(res.length === 0)
+      testDone()
+    })
+  })
+
+  test('use prepared statement with params returning 0 rows. - expect no error', testDone => {
+    const select = prepared.select
+    const meta = select.getMeta()
+    const id1 = -1
+
+    assert(meta.length > 0)
+    select.preparedQuery([id1], (err, res) => {
+      assert(res != null)
+      assert(res.length === 0)
+      assert.ifError(err)
+      testDone()
+    })
+  })
+
+  test('use prepared to select 0 rows - expect no error', testDone => {
+    const sql = 'select * from master..syscomments where 1=0'
+    theConnection.prepare(sql, (err, preparedQuery) => {
+      assert(err === null || err === false)
+      preparedQuery.preparedQuery([], (err, res) => {
+        assert(res != null)
+        assert(res.length === 0)
+        assert.ifError(err)
+      })
+      preparedQuery.free(() => {
+        testDone()
+      })
+    })
+  })
 
   test('use prepared to reserve and read multiple rows.', testDone => {
     const sql = 'select * from master..syscomments'
