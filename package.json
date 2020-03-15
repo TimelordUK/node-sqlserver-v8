@@ -66,7 +66,7 @@
     "@types/sequelize": "^4.28.8",
     "asynquence": "^0.10.2",
     "asynquence-contrib": "^0.28.2",
-    "electron": "^7.1.14",
+    "electron": "^6.1.9",
     "minimist": "^1.2.5",
     "mocha": "^7.1.0",
     "node-gyp": "^4.0.0",
