@@ -51,6 +51,61 @@ suite('multiple errors', function () {
     })
   })
 
+  test('use print statement capture print', done => {
+    const q = theConnection.query('print \'hello world!\'; select 1 as one')
+    const errors = []
+    const info = []
+    const rows = []
+    let currentRow = []
+    let metadata = null
+    let lastColumn = 0
+
+    const expectedInfo = [
+      {
+        sqlstate: '01000',
+        code: 0,
+        message: '[Microsoft][SQL Server Native Client 11.0][SQL Server]hello world!'
+      }
+    ]
+    q.on('error', e => {
+      errors.push(e)
+    })
+
+    q.on('info', m => {
+      info.push({
+        sqlstate: m.sqlstate,
+        code: m.code,
+        message: m.message
+      })
+    })
+
+    q.on('done', () => {
+      assert.deepStrictEqual(expectedInfo, info)
+      assert(errors.length === 0)
+      assert.deepStrictEqual(1, rows.length)
+      assert.deepStrictEqual(rows, [
+        [
+          1
+        ]
+      ])
+      done()
+    })
+
+    q.on('meta', (meta) => {
+      metadata = meta
+      currentRow = [metadata.length]
+      lastColumn = metadata.length - 1
+    })
+
+    q.on('column', (index, data) => {
+      currentRow[index] = data
+      if (index === lastColumn) {
+        rows.push(currentRow)
+        currentRow = [metadata.length]
+      }
+    })
+  })
+
   test('non trusted invalid user', done => {
     let adjusted = connStr.replace('Trusted_Connection=Yes', 'Trusted_Connection=No;Uid=test;Database=test;Pwd=...')
     adjusted = adjusted.replace('Uid=sa', 'Uid=JohnSnow')
