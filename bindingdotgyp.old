@@ -52,7 +52,7 @@
      'defines': [ 'NODE_GYP_V4'],
 
       'conditions': [
-         ['node_version < "13.0"', {
+         ['node_version < "5.0"', {
                   'defines': [
                     'PRE_V13',
                   ],
