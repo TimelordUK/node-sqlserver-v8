@@ -2,10 +2,10 @@
   'targets': [
     {
       'target_name': 'sqlserverv8',
-
-    'variables': {
-        'node_version': '<!(node -e "console.log(process.versions.node)")',
-    },
+      
+      'variables': {
+        'target%': '<!(node -e "console.log(process.versions.node)")', # Set the target variable only if it is not passed in by prebuild 
+      },
 
       'sources': [
         'src/QueryOperationParams.cpp',
@@ -43,7 +43,7 @@
         'src/UnbindOperation.cpp',
         'src/BoundDatumSet.cpp',
         'src/stdafx.cpp'
-		],
+		  ],
 
       'include_dirs': [
         'src',
@@ -52,7 +52,7 @@
      'defines': [ 'NODE_GYP_V4'],
 
       'conditions': [
-         ['node_version < "13.0"', {
+         ['target < "13.0"', {
                   'defines': [
                     'PRE_V13',
                   ],

@@ -11,8 +11,8 @@
 1. supports input/output parameters.
 1. captures return code from stored procedure.
 1. will obtain meta data describing parameters.
-1. compatibe with Node 10, 11, 12, 13
-1. electron 5, 6, 7 supported.
+1. compatible with Node 10, 11, 12, 13
+1. electron 5, 6, 7, 8 supported.
 1. includes 64 bit/ia32 precompiled libraries.
 1. npm install with npm install msnodesqlv8
 1. bulk table operations insert, delete, update
@@ -22,9 +22,10 @@
 
 ## Node JS support for SQL server 
 
-Based on node-sqlserver, this version will compile in Visual Studio 2015/2017 and is built against the v8 node module API.  Included in the repository are pre compiled binaries for both x64 and x86 targets.
+Based on node-sqlserver, this version will compile in Visual Studio 2015/2017 and is built against the v8 node module API. 
+Releases include pre-compiled binaries for both x64 and x86 targets for Node and Electron.
 
-This library only works with Node versions greater than 10.0
+This library only works with Node versions greater than 10.0.
 
 ## Installing
 
@@ -73,6 +74,10 @@ sql.query(connectionString, query, (err, rows) => {
 ```
 
 See our [TypeScript sample app](samples/typescript) for more details.
+
+### Electron
+
+Since this is a native module, you will likely need to run [electron-rebuild](https://github.com/electron/electron-rebuild) to rebuild the module for your version of Electron.
 
 ### Webpack
 
@@ -346,6 +351,16 @@ const sequelize = new Sequelize({
     },
   },
 })
+```
+
+## Building
+
+Pre-compiled binaries are provided for each release. If you are running a version of Node or Electron that a pre-compiled binary has not been provided for, 
+you can build your own module using [node-gyp](https://github.com/nodejs/node-gyp).
+
+```shell
+cd node_modules\msnodesqlv8
+node-gyp
 ```
 
 ## Test
