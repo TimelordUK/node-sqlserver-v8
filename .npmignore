@@ -1,5 +1,10 @@
-# publish samples for now as unit tests have a dependency on msnodesqlv8\samples\typescript\demo-support.js
-# samples/
-
-# don't want an npm install to try and compile the code.
-binding.gyp
+.idea/
+build/
+prebuilds/
+samples/
+test/
+tool/
+unit.tests/
+.npmignore
+appveyor.yml
+runtest.js
