@@ -62,3 +62,7 @@ typings/
 
 # compiled javascript
 dist/
+
+# Prebuilds
+prebuilds/
+build/
