@@ -456,10 +456,20 @@ class PrintSelect implements SimpleTest {
 
 class MemoryStress implements SimpleTest {
 
-    public run(conn_str: string, argv: any): void {
-        let delay: number = argv.delay || 5000;
+    private promised(conn: Connection, sql: string): Promise<any> {
+        return new Promise((accept, reject) => {
+            conn.queryRaw(sql, (err, results) => {
+                if (err) {
+                    reject(err)
+                }
+                accept(results)
+            });
+        })
+    }
 
-        sql.open(conn_str, (err, conn) => {
+    public run(conn_str: string, argv: any): void {
+        const iterations = argv.iterations || 10000;
+        sql.open(conn_str, async (err, conn) => {
             if (err) {
                 throw err;
             }
@@ -467,14 +477,14 @@ class MemoryStress implements SimpleTest {
             if (err) {
                 throw err;
             }
-            setInterval(() => {
-                conn.queryRaw(`SELECT ${x}+${x};`, (err, results) => {
-                    if (err) {
-                        throw err;
-                    }
+            let iteration = 0;
+            while (iteration++ < iterations) {
+                const results = await this.promised(conn, `SELECT ${x}+${x};`);
+                if (iteration % 1000 === 0) {
+                    console.log(`iteration = ${iteration} out of ${iterations}`);
                     console.log(results);
-                });
-            }, delay);
+                }
+            }
         });
     }
 }

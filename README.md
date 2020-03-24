@@ -12,7 +12,7 @@
 1. captures return code from stored procedure.
 1. will obtain meta data describing parameters.
 1. compatibe with Node 10, 11, 12, 13
-1. electron 5, 6 supported.
+1. electron 5, 6, 7 supported.
 1. includes 64 bit/ia32 precompiled libraries.
 1. npm install with npm install msnodesqlv8
 1. bulk table operations insert, delete, update
@@ -351,13 +351,32 @@ const sequelize = new Sequelize({
 ## Test
 
 Included are a few unit tests.  They require mocha, async, and assert to be 
-installed via npm.  Also, set the variables in test-config.js, then run the 
-tests as follows:
+installed via `npm install`.
+
+The unit test suite uses the SQLLocalDB utility provided by [SQL Server Express](https://docs.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-express-localdb).
+
+To run the tests:
+1. Install [SQL Server Express](https://docs.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-express-localdb) with the LocalDB option (it is not included in the default installation).
+2. From the command-line, run the following commands to create a SQL Server instance called "node":
 ```shell
-    cd test
-    node runtests.js
+sqllocaldb create node
+sqllocaldb start node
+sqllocaldb info node
 ```
-note if you wish to run the code through an IDE such as PHPStorm, the following fragment may help :-
+3. Copy the "Instance pipe name" value from the output of `sqllocaldb info node`. The format will be like `np:\\.\pipe\LOCALDB#<hash>\tsql\query`.
+4. Open [SQL Server Management Studio](https://docs.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms).
+5. In the "Connect to Server" dialog, paste the "Instance pipe name" you copied above and connect using "Windows Authentication".
+6. Create a new database, called `scratch`.
+
+You will now be able to run the tests using the following command:
+```
+npm run test
+```
+
+You must ensure the `node` SQLLocalDB instance is running before running the test command.
+
+
+Note if you wish to run the code through an IDE such as PHPStorm, the following fragment may help :-
 ```javascript
     function runTest() {
 

@@ -12,6 +12,7 @@
         'src/OdbcHandle.cpp',
         'src/MutateJS.cpp',
         'src/Column.cpp',
+        'src/BinaryColumn.cpp',
         'src/TimestampColumn.cpp',
         'src/Connection.cpp',
         'src/OdbcConnection.cpp',

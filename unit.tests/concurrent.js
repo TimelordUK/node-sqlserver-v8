@@ -107,7 +107,7 @@ suite('concurrent', function () {
       }
     }
 
-    const req = theConnection.query(`waitfor delay '00:00:02';`)
+    const req = theConnection.query('waitfor delay \'00:00:02\';')
     req.on('done', () => {
       pushTest('a')
       process.nextTick(() => {
@@ -142,7 +142,7 @@ suite('concurrent', function () {
       pushTest('c')
     })
 
-    theConnection.query(`waitfor delay '00:00:02';`, () => {
+    theConnection.query('waitfor delay \'00:00:02\';', () => {
       pushTest('e')
     })
 
@@ -171,13 +171,13 @@ suite('concurrent', function () {
     process.nextTick(() => {
       pushTest('c')
     })
-    theConnection.query(`waitfor delay '00:00:02';`, [], () => {
+    theConnection.query('waitfor delay \'00:00:02\';', [], () => {
       pushTest('e')
       pushTest('f')
       process.nextTick(() => {
         pushTest('h')
       })
-      theConnection.query(`waitfor delay '00:00:02';`, [], () => {
+      theConnection.query('waitfor delay \'00:00:02\';', [], () => {
         pushTest('j')
       })
       pushTest('g')
@@ -252,13 +252,13 @@ suite('concurrent', function () {
         c1.query('select @@SPID as id, CURRENT_USER as name', (err, res) => {
           assert.ifError(err)
           assert(res.length === 1)
-          spid1 = res[0]['id']
+          spid1 = res[0].id
           assert(spid1 !== null)
 
           c2.query('select @@SPID as id, CURRENT_USER as name', (err, res) => {
             assert.ifError(err)
             assert(res.length === 1)
-            spid2 = res[0]['id']
+            spid2 = res[0].id
             assert(spid2 !== null)
             assert(spid1 !== spid2)
 

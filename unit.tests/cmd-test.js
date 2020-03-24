@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const sql = require('msnodesqlv8');
 let supp = require('../samples/typescript/demo-support');
@@ -405,9 +414,19 @@ class PrintSelect {
     }
 }
 class MemoryStress {
+    promised(conn, sql) {
+        return new Promise((accept, reject) => {
+            conn.queryRaw(sql, (err, results) => {
+                if (err) {
+                    reject(err);
+                }
+                accept(results);
+            });
+        });
+    }
     run(conn_str, argv) {
-        let delay = argv.delay || 5000;
-        sql.open(conn_str, (err, conn) => {
+        const iterations = argv.iterations || 10000;
+        sql.open(conn_str, (err, conn) => __awaiter(this, void 0, void 0, function* () {
             if (err) {
                 throw err;
             }
@@ -415,15 +434,15 @@ class MemoryStress {
             if (err) {
                 throw err;
             }
-            setInterval(() => {
-                conn.queryRaw(`SELECT ${x}+${x};`, (err, results) => {
-                    if (err) {
-                        throw err;
-                    }
+            let iteration = 0;
+            while (iteration++ < iterations) {
+                const results = yield this.promised(conn, `SELECT ${x}+${x};`);
+                if (iteration % 1000 === 0) {
+                    console.log(`iteration = ${iteration} out of ${iterations}`);
                     console.log(results);
-                });
-            }, delay);
-        });
+                }
+            }
+        }));
     }
 }
 let test;
