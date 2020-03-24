@@ -12,7 +12,7 @@
       "name": "Stephen James"
     }
   ],
-  "version": "0.8.14",
+  "version": "1.0.0",
   "keywords": [
     "sql",
     "prepared",
@@ -60,16 +60,20 @@
       "node": true
     }
   },
+  "dependencies": {
+    "prebuild-install": "^5.3.3"
+  },
   "devDependencies": {
     "@types/electron": "^1.4.31",
     "@types/node": "^13.9.1",
     "@types/sequelize": "^4.28.8",
     "asynquence": "^0.10.2",
     "asynquence-contrib": "^0.28.2",
-    "electron": "^7.1.14",
+    "electron": "^8.1.1",
     "minimist": "^1.2.5",
     "mocha": "^7.1.0",
     "node-gyp": "^4.0.0",
+    "prebuild": "^10.0.0",
     "sequelize": "^5.21.5",
     "standard": "^14.3.1",
     "tedious": "^8.0.1"
@@ -77,11 +81,14 @@
   "os": [
     "win32"
   ],
-  "gitHead": "e025462083dd1140eed2519c449bc257482bc61b",
   "scripts": {
-    "build": "call tool/build.bat",
+    "install": "prebuild-install || node-gyp rebuild",
+    "prebuild-all": "npm run prebuild-node && npm run prebuild-node-ia32 && npm run prebuild-electron && npm run prebuild-electron-ia32",
+    "prebuild-node": "prebuild -t 10.16.0 -t 11.15.0 -t 12.13.1 -t 13.11.0 --strip",
+    "prebuild-node-ia32": "prebuild -t 10.16.0 -t 11.15.0 -t 12.13.1 -t 13.11.0 -a ia32 --strip",
+    "prebuild-electron": "prebuild -t 6.1.9 -t 7.1.14 -t 8.0.0 -r electron --strip",
+    "prebuild-electron-ia32": "prebuild -t 6.1.9 -t 7.1.14 -t 8.0.0 -r electron -a ia32 --strip",
     "test": "call tool/testonce.bat"
   },
-  "directories": {},
-  "dependencies": {}
+  "directories": {}
 }

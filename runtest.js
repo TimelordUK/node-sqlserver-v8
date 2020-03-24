@@ -1,5 +1,5 @@
 const Mocha = require('mocha')
-const sql = require('msnodesqlv8')
+const sql = require('./lib/sql.js')
 const path = require('path')
 
 runTest()

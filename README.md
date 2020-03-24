@@ -11,8 +11,8 @@
 1. supports input/output parameters.
 1. captures return code from stored procedure.
 1. will obtain meta data describing parameters.
-1. compatibe with Node 10, 11, 12, 13
-1. electron 5, 6 supported.
+1. compatible with Node 10, 11, 12, 13
+1. electron 5, 6, 7, 8 supported.
 1. includes 64 bit/ia32 precompiled libraries.
 1. npm install with npm install msnodesqlv8
 1. bulk table operations insert, delete, update
@@ -22,9 +22,10 @@
 
 ## Node JS support for SQL server 
 
-Based on node-sqlserver, this version will compile in Visual Studio 2015/2017 and is built against the v8 node module API.  Included in the repository are pre compiled binaries for both x64 and x86 targets.
+Based on node-sqlserver, this version will compile in Visual Studio 2015/2017 and is built against the v8 node module API. 
+Releases include pre-compiled binaries for both x64 and x86 targets for Node and Electron.
 
-This library only works with Node versions greater than 10.0
+This library only works with Node versions greater than 10.0.
 
 ## Installing
 
@@ -73,6 +74,10 @@ sql.query(connectionString, query, (err, rows) => {
 ```
 
 See our [TypeScript sample app](samples/typescript) for more details.
+
+### Electron
+
+Since this is a native module, you will likely need to run [electron-rebuild](https://github.com/electron/electron-rebuild) to rebuild the module for your version of Electron.
 
 ### Webpack
 
@@ -348,16 +353,45 @@ const sequelize = new Sequelize({
 })
 ```
 
+## Building
+
+Pre-compiled binaries are provided for each release. If you are running a version of Node or Electron that a pre-compiled binary has not been provided for, 
+you can build your own module using [node-gyp](https://github.com/nodejs/node-gyp).
+
+```shell
+cd node_modules\msnodesqlv8
+node-gyp
+```
+
 ## Test
 
 Included are a few unit tests.  They require mocha, async, and assert to be 
-installed via npm.  Also, set the variables in test-config.js, then run the 
-tests as follows:
+installed via `npm install`.
+
+The unit test suite uses the SQLLocalDB utility provided by [SQL Server Express](https://docs.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-express-localdb).
+
+To run the tests:
+1. Install [SQL Server Express](https://docs.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-express-localdb) with the LocalDB option (it is not included in the default installation).
+2. From the command-line, run the following commands to create a SQL Server instance called "node":
 ```shell
-    cd test
-    node runtests.js
+sqllocaldb create node
+sqllocaldb start node
+sqllocaldb info node
 ```
-note if you wish to run the code through an IDE such as PHPStorm, the following fragment may help :-
+3. Copy the "Instance pipe name" value from the output of `sqllocaldb info node`. The format will be like `np:\\.\pipe\LOCALDB#<hash>\tsql\query`.
+4. Open [SQL Server Management Studio](https://docs.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms).
+5. In the "Connect to Server" dialog, paste the "Instance pipe name" you copied above and connect using "Windows Authentication".
+6. Create a new database, called `scratch`.
+
+You will now be able to run the tests using the following command:
+```
+npm run test
+```
+
+You must ensure the `node` SQLLocalDB instance is running before running the test command.
+
+
+Note if you wish to run the code through an IDE such as PHPStorm, the following fragment may help :-
 ```javascript
     function runTest() {
 
