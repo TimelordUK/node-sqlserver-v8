@@ -36,7 +36,7 @@
   },
   "licenses": [
     {
-      "type": "Apache 2.0",
+      "type": "Apache-2.0",
       "url": "https://github.com/TimelordUK/node-sqlserver-v8/blob/master/LICENSE"
     }
   ],
