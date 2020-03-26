@@ -39,9 +39,9 @@ async function test (request, response) {
   }
 }
 
-const httpServer = http.createServer(function (request, response) {
+const httpServer = http.createServer((request, response) => {
   test(request, response)
 })
-httpServer.listen(port, hostname, function () {
+httpServer.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`)
 })
