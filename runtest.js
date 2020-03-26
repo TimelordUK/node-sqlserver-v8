@@ -10,12 +10,12 @@ function runTest () {
   let connStr = null
 
   let toRun
-  if (argv.hasOwnProperty('t')) {
-    toRun = argv['t']
+  if (Object.prototype.hasOwnProperty.call(argv, 't')) {
+    toRun = argv.t
   }
 
-  if (argv.hasOwnProperty('a')) {
-    const appVeyorVersion = argv['a']
+  if (Object.prototype.hasOwnProperty.call(argv, 'a')) {
+    const appVeyorVersion = argv.a
     connStr = `Driver={SQL Server Native Client 11.0}; Server=(local)\\SQL${appVeyorVersion}; Database={master}; Uid=sa; Pwd=Password12!`
     console.log('set connStr as ' + connStr)
   }

@@ -22,12 +22,12 @@
 
 namespace mssql {
 
-	BinaryColumn::BinaryColumn(const int id, shared_ptr<DatumStorage> s, const size_t l) : Column(id)
-	                                                                                       , storage(s->charvec_ptr), len(l), offset(0)
+	BinaryColumn::BinaryColumn(const int id, const shared_ptr<DatumStorage> s, const size_t l) : Column(id)
+	                                                                                             , storage(s->charvec_ptr), len(l), offset(0)
 	{
 	}
 
-	BinaryColumn::BinaryColumn(const int id, shared_ptr<DatumStorage> s, const size_t offset, const size_t l) : Column(id)                                                                                             , storage(s->charvec_ptr), len(l), offset(offset)
+	BinaryColumn::BinaryColumn(const int id, const shared_ptr<DatumStorage> s, const size_t offset, const size_t l) : Column(id)                                                                                             , storage(s->charvec_ptr), len(l), offset(offset)
 	{
 	}
 	
@@ -42,7 +42,7 @@ namespace mssql {
 	Local<Value> BinaryColumn::ToValue()
 	{
 		const auto ptr = storage->data() + offset;
-		char *str = new char[len];
+		const auto str = new char[len];
 		memcpy(str, ptr, len);
 		// fprintf(stderr, "[%d], ToValue len = %zu, offset = %zu, ptr = %p, destructed = %d\n", Id(), len, offset, str, destructed);
 		const auto buff = node::Buffer::New(Isolate::GetCurrent(), str, len, delete_buffer, nullptr)
