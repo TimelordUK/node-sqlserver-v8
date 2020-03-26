@@ -8,7 +8,7 @@ function dispatch (con, query) {
     let metadata = null
     let currentRow = null
     let lastColumn = 0
-
+    const d = new Date()
     const q = con.query(query)
     const rows = []
 
@@ -19,7 +19,8 @@ function dispatch (con, query) {
     })
 
     q.on('submitted', (m) => {
-      console.log(`submitted ${m.query_str}`)
+      const elapsed = new Date() - d
+      console.log(`submitted ${m.query_str} elapsed ${elapsed} ms`)
     })
 
     q.on('column', (index, data) => {
@@ -45,17 +46,13 @@ function dispatch (con, query) {
 }
 
 async function run () {
-  try {
-    const promised = util.promisify(sql.open)
-    const conn = await promised(connectionString)
-    const d = new Date()
-    const rows = await dispatch(conn, 'SELECT * FROM syscomments')
-    const elapsed = new Date() - d
-    console.log(`${rows.length} elapsed ${elapsed}`)
-    return rows
-  } catch (e) {
-    return e
-  }
+  const promised = util.promisify(sql.open)
+  const conn = await promised(connectionString)
+  const d = new Date()
+  const rows = await dispatch(conn, 'SELECT * FROM syscomments')
+  const elapsed = new Date() - d
+  console.log(`${rows.length} rows returned elapsed ${elapsed}`)
+  return rows
 }
 
 run(connectionString).then(() => {
