@@ -152,7 +152,7 @@ function DemoSupport (native) {
   }
 
   function ProcedureHelper (conn) {
-    let connStr = conn
+    const connStr = conn
     const async = new Async()
     const assert = new Assert()
     let verbose = true
@@ -220,7 +220,7 @@ function DemoSupport (native) {
       const type = params.type
       const theConnection = params.theConnection
       let insert = false
-      if (params.hasOwnProperty('insert')) {
+      if (Object.prototype.hasOwnProperty.call(params, 'insert')) {
         insert = params.insert
       }
       const assert = new Assert()
@@ -330,8 +330,8 @@ function DemoSupport (native) {
     function compareEmployee (res, parsedJSON) {
       assert.strictEqual(res.length, parsedJSON.length)
       for (let i = 0; i < res.length; ++i) {
-        let lhs = res[i]
-        let rhs = parsedJSON[i]
+        const lhs = res[i]
+        const rhs = parsedJSON[i]
         rhs.ModifiedDate.nanosecondsDelta = 0
         rhs.BirthDate.nanosecondsDelta = 0
         rhs.HireDate.nanosecondsDelta = 0
