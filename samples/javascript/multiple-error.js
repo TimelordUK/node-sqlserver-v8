@@ -14,7 +14,7 @@ sql.open(connectionString, function (err, con) {
     }
   } else {
     console.log('callback based multiple errors query')
-    con.query('select a;select b;', function (err, res, more) {
+    const q = con.query('select a;select b;', function (err, res, more) {
       if (err) {
         console.log(err.message + 'more = ' + more)
         if (!more) {
@@ -27,6 +27,13 @@ sql.open(connectionString, function (err, con) {
       } else {
         console.log(res)
       }
+    })
+    q.on('done', () => {
+      console.log('done')
+    })
+
+    q.on('free', () => {
+      console.log('free')
     })
   }
 })

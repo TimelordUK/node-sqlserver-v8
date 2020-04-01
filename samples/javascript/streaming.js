@@ -40,7 +40,12 @@ function dispatch (con, query) {
     })
 
     q.on('done', () => {
+      console.log('done')
       resolve(rows)
+    })
+
+    q.on('free', () => {
+      console.log('free')
     })
   })
 }

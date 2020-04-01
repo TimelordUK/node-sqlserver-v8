@@ -65,7 +65,7 @@
   },
   "devDependencies": {
     "@types/electron": "^1.4.31",
-    "@types/node": "^13.9.5",
+    "@types/node": "^13.9.8",
     "@types/sequelize": "^4.28.8",
     "asynquence": "^0.10.2",
     "asynquence-contrib": "^0.28.2",
