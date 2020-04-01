@@ -8,6 +8,11 @@ pool.on('open', () => {
     pool.query(sql)
   }
 })
+
+pool.on('debug', msg => {
+  console.log(msg)
+})
+
 pool.on('submitted', q => {
   console.log(`query submitted ${new Date()}`)
   q.on('done', () => console.log(`query done ${new Date()}`))
