@@ -6,7 +6,7 @@ pool.on('open', () => {
 })
 
 pool.on('debug', msg => {
-  console.log(`\t\t\t\t\t\t<pool.debug> ${msg}`)
+  console.log(`\t\t\t\t\t\t${new Date().toLocaleTimeString()} <pool.debug> ${msg}`)
 })
 
 pool.on('error', e => {
