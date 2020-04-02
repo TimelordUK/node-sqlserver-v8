@@ -27,7 +27,22 @@ function submit (sql) {
 
 for (let i = 0; i < 7; ++i) {
   const q = submit(testSql)
-  if (i >= 5) q.cancelQuery()
+  switch (i) {
+    case 5:
+      console.log('cancel a query')
+      q.cancelQuery()
+      break
+    case 6:
+      q.pauseQuery()
+      setTimeout(() => {
+        console.log('resume a paused query')
+        q.resumeQuery()
+      }, 50000)
+      break
+    default:
+      submit(testSql)
+      break
+  }
 }
 
 setInterval(() => {
