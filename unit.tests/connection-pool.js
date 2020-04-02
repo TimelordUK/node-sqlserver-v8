@@ -38,7 +38,7 @@ suite('connection-pool', function () {
     })
   })
 
-  test('submit 4 queries to pool of 4 connections', testDone => {
+  test('submit 4 queries to pool of 4 connections - expect concurrent queries', testDone => {
     const pool = new sql.Pool({
       connectionString: 'Driver={ODBC Driver 13 for SQL Server};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;'
     })
@@ -52,11 +52,15 @@ suite('connection-pool', function () {
     const checkout = []
     pool.on('open', () => {
       pool.on('status', s => {
-        if (s.op === 'checkout') {
-          checkout.push(s)
-        } else if (s.op === 'checkin') {
-          checkin.push(s)
+        switch (s.op) {
+          case 'checkout':
+            checkout.push(s)
+            break
+          case 'checkin':
+            checkin.push(s)
+            break
         }
+
         if (checkin.length === iterations) {
           assert.strictEqual(iterations, checkout.length)
           assert.strictEqual(iterations, checkin.length)
