@@ -22,10 +22,12 @@ function submit (sql) {
     console.log(`query submitted ${new Date().toLocaleTimeString()}, sql = ${d.query_str}`)
     q.on('done', () => console.log(`query done ${new Date().toLocaleTimeString()}`))
   })
+  return q
 }
 
 for (let i = 0; i < 7; ++i) {
-  submit(testSql)
+  const q = submit(testSql)
+  if (i >= 5) q.cancelQuery()
 }
 
 setInterval(() => {
