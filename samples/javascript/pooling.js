@@ -17,6 +17,7 @@ const testSql = 'waitfor delay \'00:00:10\';'
 
 function submit (sql) {
   const q = pool.query(sql)
+  console.log(`send ${new Date().toLocaleTimeString()}, sql = ${sql}`)
   q.on('submitted', d => {
     console.log(`query submitted ${new Date().toLocaleTimeString()}, sql = ${d.query_str}`)
     q.on('done', () => console.log(`query done ${new Date().toLocaleTimeString()}`))
