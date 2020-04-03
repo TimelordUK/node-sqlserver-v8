@@ -41,6 +41,67 @@ suite('sproc', function () {
     })
   })
 
+  test('get proc and call multiple times synchronously with changing params i.e. prove each call is independent', testDone => {
+    const spName = 'test_sp_get_int_int'
+
+    const def = `alter PROCEDURE <name>(
+@num1 INT,
+@num2 INT,
+@num3 INT OUTPUT
+
+)AS
+BEGIN
+   SET @num3 = @num1 + @num2
+   RETURN 99;
+END
+`
+
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          let i
+          const received = []
+          const iterations = 10
+
+          const check = () => {
+            for (i = 0; i < iterations; ++i) {
+              const expected = [99, i * 2]
+              assert.deepStrictEqual(received[i], expected, 'results didn\'t match')
+            }
+            asyncDone()
+          }
+
+          function next (i) {
+            proc.call([i, i], (err, results, output) => {
+              assert.ifError(err)
+              received[received.length] = output
+              if (received.length === iterations) {
+                check()
+              } else {
+                next(i + 1)
+              }
+            })
+          }
+
+          next(0)
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test('check proc called as object paramater', testDone => {
     const spName = 'test_sp_select_select'
 
@@ -216,67 +277,6 @@ END
             // console.log(`info ${i}`)
             info = i.message
           })
-        })
-      }
-    ]
-
-    async.series(fns, () => {
-      testDone()
-    })
-  })
-
-  test('get proc and call multiple times synchronously with changing params i.e. prove each call is independent', testDone => {
-    const spName = 'test_sp_get_int_int'
-
-    const def = `alter PROCEDURE <name>(
-@num1 INT,
-@num2 INT,
-@num3 INT OUTPUT
-
-)AS
-BEGIN
-   SET @num3 = @num1 + @num2
-   RETURN 99;
-END
-`
-
-    const fns = [
-      asyncDone => {
-        procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const pm = theConnection.procedureMgr()
-        pm.get(spName, proc => {
-          const count = pm.getCount()
-          assert.strictEqual(count, 1)
-          let i
-          const received = []
-          const iterations = 10
-
-          const check = () => {
-            for (i = 0; i < iterations; ++i) {
-              const expected = [99, i * 2]
-              assert.deepStrictEqual(received[i], expected, 'results didn\'t match')
-            }
-            asyncDone()
-          }
-
-          function next (i) {
-            proc.call([i, i], (err, results, output) => {
-              assert.ifError(err)
-              received[received.length] = output
-              if (received.length === iterations) {
-                check()
-              } else {
-                next(i + 1)
-              }
-            })
-          }
-
-          next(0)
         })
       }
     ]
