@@ -39,6 +39,72 @@ suite('connection-pool', function () {
     })
   })
 
+  test('submit 7 queries to pool of 4 connections - pause 1 and resume whilst waiting on queue', testDone => {
+    const iterations = 7
+    const size = 4
+    const pool = new sql.Pool({
+      connectionString: connectionString,
+      ceiling: size
+    })
+    pool.on('error', e => {
+      assert.ifError(e)
+    })
+    pool.open()
+
+    const checkin = []
+    const checkout = []
+    pool.on('open', () => {
+      pool.on('status', s => {
+        switch (s.op) {
+          case 'checkout':
+            checkout.push(s)
+            break
+          case 'checkin':
+            checkin.push(s)
+            break
+        }
+      })
+    })
+
+    pool.on('close', () => {
+      testDone()
+    })
+
+    let done = 0
+    let free = 0
+
+    function submit (sql) {
+      const q = pool.query(sql)
+      q.on('done', () => ++done)
+      q.on('free', () => {
+        ++free
+        if (free === iterations) {
+          assert.strictEqual(iterations, checkout.length)
+          assert.strictEqual(iterations, checkin.length)
+          assert.strictEqual(iterations, done)
+          const elapsed = checkin[checkin.length - 1].time - checkout[0].time
+          assert(elapsed >= 2000 && elapsed <= 2000 + 1000)
+          pool.close()
+        }
+      })
+      return q
+    }
+
+    for (let i = 0; i < iterations; ++i) {
+      const q = submit('waitfor delay \'00:00:01\';')
+      switch (i) {
+        case 5:
+          q.pauseQuery()
+          setTimeout(() => {
+            q.resumeQuery()
+          }, 500)
+          break
+        default:
+          break
+      }
+    }
+  })
+
   test('submit 7 queries to pool of 4 connections - cancel 2 waiting on pool, expect 4 + 1 concurrent', testDone => {
     const iterations = 7
     const size = 4
@@ -82,6 +148,7 @@ suite('connection-pool', function () {
         if (free === iterations) {
           assert.strictEqual(iterations - cancelled, checkout.length)
           assert.strictEqual(iterations - cancelled, checkin.length)
+          assert.strictEqual(iterations, done)
           const elapsed = checkin[checkin.length - 1].time - checkout[0].time
           assert(elapsed >= 2000 && elapsed <= 2000 + 1000)
           pool.close()
