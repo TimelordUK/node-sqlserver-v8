@@ -81,6 +81,8 @@ suite('connection-pool', function () {
 
     // with 3 second inactivity will checkout each connection 3 times for 3 heartbeats
     pool.on('close', () => {
+      assert.strictEqual(size, parked[size - 1].parked)
+      assert.strictEqual(0, parked[size - 1].idle)
       assert.strictEqual(true, opened)
       assert.strictEqual(size * 3, checkin.length)
       assert.strictEqual(size * 3, checkout.length)
