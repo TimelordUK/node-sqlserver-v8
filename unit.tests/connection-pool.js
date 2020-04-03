@@ -39,6 +39,55 @@ suite('connection-pool', function () {
     })
   })
 
+  test('open pool size 4 - leave inactive so connections closed and parked', testDone => {
+    const size = 4
+    const pool = new sql.Pool({
+      connectionString: connectionString,
+      ceiling: size,
+      heartbeatSecs: 1,
+      inactivityTimeoutSecs: 3
+    })
+
+    pool.on('error', e => {
+      assert.ifError(e)
+    })
+
+    pool.open()
+    let opened = false
+    const parked = []
+    const checkin = []
+    const checkout = []
+    pool.on('open', (options) => {
+      assert(options)
+      opened = true
+      pool.on('status', s => {
+        switch (s.op) {
+          case 'parked':
+            parked.push(s)
+            if (parked.length === size) {
+              pool.close()
+            }
+            break
+          case 'checkout':
+            checkout.push(s)
+            break
+          // the initial pool creates done prior to the open event
+          case 'checkin':
+            checkin.push(s)
+            break
+        }
+      })
+    })
+
+    // with 3 second inactivity will checkout each connection 3 times for 3 heartbeats
+    pool.on('close', () => {
+      assert.strictEqual(true, opened)
+      assert.strictEqual(size * 3, checkin.length)
+      assert.strictEqual(size * 3, checkout.length)
+      testDone()
+    })
+  })
+
   function pauseCancelTester (iterations, size, cancelled, strategy, expectedTimeToComplete, testDone) {
     const pool = new sql.Pool({
       connectionString: connectionString,
@@ -95,10 +144,10 @@ suite('connection-pool', function () {
   }
 
   /*
-     1
+     1  =====> submitted and run in parallel, elapsed = 1000ms
      2  =====> submitted and run in parallel, elapsed = 1000ms
-     3
-     4
+     3  =====> submitted and run in parallel, elapsed = 1000ms
+     4  =====> submitted and run in parallel, elapsed = 1000ms
      5 ======> paused and resumed at ~+2000ms
      6,
      7 ======> run in parallel with 5 paused, elapsed = 2000ms
