@@ -39,6 +39,70 @@ suite('connection-pool', function () {
     })
   })
 
+  test('submit 7 queries to pool of 4 connections - cancel 2 waiting on pool, expect 4 + 1 concurrent', testDone => {
+    const iterations = 7
+    const size = 4
+    const pool = new sql.Pool({
+      connectionString: connectionString,
+      ceiling: size
+    })
+    pool.on('error', e => {
+      assert.ifError(e)
+    })
+    pool.open()
+
+    const checkin = []
+    const checkout = []
+    pool.on('open', () => {
+      pool.on('status', s => {
+        switch (s.op) {
+          case 'checkout':
+            checkout.push(s)
+            break
+          case 'checkin':
+            checkin.push(s)
+            break
+        }
+      })
+    })
+
+    pool.on('close', () => {
+      testDone()
+    })
+
+    let done = 0
+    let free = 0
+
+    function submit (sql) {
+      const q = pool.query(sql)
+      q.on('done', () => ++done)
+      q.on('free', () => {
+        ++free
+        const cancelled = 2
+        if (free === iterations) {
+          assert.strictEqual(iterations - cancelled, checkout.length)
+          assert.strictEqual(iterations - cancelled, checkin.length)
+          const elapsed = checkin[checkin.length - 1].time - checkout[0].time
+          assert(elapsed >= 2000 && elapsed <= 2000 + 1000)
+          pool.close()
+        }
+      })
+      return q
+    }
+
+    for (let i = 0; i < iterations; ++i) {
+      const q = submit('waitfor delay \'00:00:01\';')
+      switch (i) {
+        case 5:
+        case 6:
+          q.cancelQuery()
+          break
+        default:
+          break
+      }
+    }
+  })
+
   function tester (iterations, size, renderSql, expectedTimeToComplete, testDone) {
     const pool = new sql.Pool({
       connectionString: connectionString,
@@ -93,10 +157,10 @@ suite('connection-pool', function () {
   }
 
   test('submit 4 queries to pool of 2 connections - expect 2 x queue 2 x concurrent queries', testDone => {
-    tester(4, 2, i => 'waitfor delay \'00:00:01\';', 2000, testDone)
+    tester(4, 2, () => 'waitfor delay \'00:00:01\';', 2000, testDone)
   })
 
-  test('submit 4 queries to pool of 4 connections - expect concurrent queries', testDone => {
+  test('submit 4 queries to pool of 4 connections - expect 4 x concurrent queries', testDone => {
     tester(4, 4, i => `waitfor delay '00:00:0${i + 1}';`, 4000, testDone)
   })
 
