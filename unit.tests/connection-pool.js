@@ -39,6 +39,75 @@ suite('connection-pool', function () {
     })
   })
 
+  test('open pool size 4 - submit queries on parked connections', testDone => {
+    const size = 4
+    const iterations = 4
+    const pool = new sql.Pool({
+      connectionString: connectionString,
+      ceiling: size,
+      heartbeatSecs: 1,
+      inactivityTimeoutSecs: 3
+    })
+
+    pool.on('error', e => {
+      assert.ifError(e)
+    })
+
+    pool.open()
+    let opened = false
+    const parked = []
+    const checkin = []
+    const checkout = []
+    let done = 0
+    let free = 0
+    function submit (sql) {
+      const q = pool.query(sql)
+      q.on('submitted', () => {
+        q.on('done', () => ++done)
+        q.on('free', () => {
+          ++free
+          if (free === iterations) {
+            pool.close()
+          }
+        })
+      })
+      return q
+    }
+
+    pool.on('open', (options) => {
+      assert(options)
+      opened = true
+      pool.on('status', s => {
+        switch (s.op) {
+          case 'parked':
+            parked.push(s)
+            if (parked.length === size) {
+              for (let i = 0; i < iterations; ++i) {
+                submit('waitfor delay \'00:00:01\';')
+              }
+            }
+            break
+          case 'checkout':
+            checkout.push(s)
+            break
+          case 'checkin':
+            checkin.push(s)
+            break
+        }
+      })
+    })
+
+    // with 3 second inactivity will checkout each connection 3 times for 3 heartbeats
+    pool.on('close', () => {
+      assert.strictEqual(size, parked[size - 1].parked)
+      assert.strictEqual(0, parked[size - 1].idle)
+      assert.strictEqual(true, opened)
+      assert.strictEqual(size * 5, checkin.length) // 3 x 4 heartbeats + 1 x 4 'grow' + 1 x 4 queries
+      assert.strictEqual(size * 4, checkout.length)
+      testDone()
+    })
+  })
+
   test('open pool size 4 - leave inactive so connections closed and parked', testDone => {
     const size = 4
     const pool = new sql.Pool({
@@ -71,7 +140,6 @@ suite('connection-pool', function () {
           case 'checkout':
             checkout.push(s)
             break
-          // the initial pool creates done prior to the open event
           case 'checkin':
             checkin.push(s)
             break
