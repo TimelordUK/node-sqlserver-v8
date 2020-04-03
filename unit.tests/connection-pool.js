@@ -14,7 +14,6 @@ suite('connection-pool', function () {
   let support
   let helper
   let procedureHelper
-  const connectionString = 'Driver={ODBC Driver 13 for SQL Server};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;'
 
   setup(done => {
     supp.GlobalConn.init(sql, co => {
@@ -47,7 +46,7 @@ suite('connection-pool', function () {
     const size = 4
     const iterations = 4
     const pool = new sql.Pool({
-      connectionString: connectionString,
+      connectionString: connStr,
       ceiling: size,
       heartbeatSecs: 1,
       inactivityTimeoutSecs: 3
@@ -114,7 +113,7 @@ suite('connection-pool', function () {
   test('open pool size 4 - leave inactive so connections closed and parked', testDone => {
     const size = 4
     const pool = new sql.Pool({
-      connectionString: connectionString,
+      connectionString: connStr,
       ceiling: size,
       heartbeatSecs: 1,
       inactivityTimeoutSecs: 3
@@ -163,7 +162,7 @@ suite('connection-pool', function () {
 
   function pauseCancelTester (iterations, size, cancelled, strategy, expectedTimeToComplete, testDone) {
     const pool = new sql.Pool({
-      connectionString: connectionString,
+      connectionString: connStr,
       ceiling: size
     })
     pool.on('error', e => {
@@ -273,7 +272,7 @@ suite('connection-pool', function () {
 
   function tester (iterations, size, renderSql, expectedTimeToComplete, testDone) {
     const pool = new sql.Pool({
-      connectionString: connectionString,
+      connectionString: connStr,
       ceiling: size
     })
     pool.on('error', e => {
@@ -335,7 +334,7 @@ suite('connection-pool', function () {
   test('open and close a pool with 2 connections without error', testDone => {
     const size = 2
     const pool = new sql.Pool({
-      connectionString: connectionString,
+      connectionString: connStr,
       ceiling: size
     })
 
