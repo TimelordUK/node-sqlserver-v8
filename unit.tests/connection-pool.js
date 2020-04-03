@@ -39,6 +39,67 @@ suite('connection-pool', function () {
     })
   })
 
+  function tester (iterations, size, renderSql, expectedTimeToComplete, testDone) {
+    const pool = new sql.Pool({
+      connectionString: connectionString,
+      ceiling: size
+    })
+    pool.on('error', e => {
+      assert.ifError(e)
+    })
+    pool.open()
+
+    const checkin = []
+    const checkout = []
+    pool.on('open', () => {
+      pool.on('status', s => {
+        switch (s.op) {
+          case 'checkout':
+            checkout.push(s)
+            break
+          case 'checkin':
+            checkin.push(s)
+            break
+        }
+
+        if (checkin.length === iterations) {
+          assert.strictEqual(iterations, checkout.length)
+          assert.strictEqual(iterations, checkin.length)
+          assert.strictEqual(iterations, done)
+          const elapsed = checkin[checkin.length - 1].time - checkout[0].time
+          assert(elapsed >= expectedTimeToComplete && elapsed <= expectedTimeToComplete + 1000)
+          pool.close()
+        }
+      })
+    })
+
+    pool.on('close', () => {
+      testDone()
+    })
+
+    let done = 0
+
+    function submit (sql) {
+      const q = pool.query(sql)
+      q.on('submitted', () => {
+        q.on('done', () => ++done)
+      })
+      return q
+    }
+
+    for (let i = 0; i < iterations; ++i) {
+      submit(renderSql(i))
+    }
+  }
+
+  test('submit 4 queries to pool of 2 connections - expect 2 x queue 2 x concurrent queries', testDone => {
+    tester(4, 2, i => 'waitfor delay \'00:00:01\';', 2000, testDone)
+  })
+
+  test('submit 4 queries to pool of 4 connections - expect concurrent queries', testDone => {
+    tester(4, 4, i => `waitfor delay '00:00:0${i + 1}';`, 4000, testDone)
+  })
+
   test('open and close a pool with 2 connections without error', testDone => {
     const size = 2
     const pool = new sql.Pool({
@@ -74,58 +135,5 @@ suite('connection-pool', function () {
       assert.strictEqual(0, checkout.length)
       testDone()
     })
-  })
-
-  test('submit 4 queries to pool of 4 connections - expect concurrent queries', testDone => {
-    const pool = new sql.Pool({
-      connectionString: connectionString
-    })
-    const iterations = 4
-    pool.on('error', e => {
-      assert.ifError(e)
-    })
-    pool.open()
-
-    const checkin = []
-    const checkout = []
-    pool.on('open', () => {
-      pool.on('status', s => {
-        switch (s.op) {
-          case 'checkout':
-            checkout.push(s)
-            break
-          case 'checkin':
-            checkin.push(s)
-            break
-        }
-
-        if (checkin.length === iterations) {
-          assert.strictEqual(iterations, checkout.length)
-          assert.strictEqual(iterations, checkin.length)
-          assert.strictEqual(iterations, done)
-          const elapsed = checkin[checkin.length - 1].time - checkout[0].time
-          assert(elapsed >= 4000 && elapsed <= 5000)
-          pool.close()
-        }
-      })
-    })
-
-    pool.on('close', () => {
-      testDone()
-    })
-
-    let done = 0
-
-    function submit (sql) {
-      const q = pool.query(sql)
-      q.on('submitted', () => {
-        q.on('done', () => ++done)
-      })
-      return q
-    }
-
-    for (let i = 0; i < iterations; ++i) {
-      submit(`waitfor delay '00:00:0${i + 1}';`)
-    }
   })
 })
