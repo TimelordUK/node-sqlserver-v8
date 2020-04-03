@@ -94,19 +94,30 @@ suite('connection-pool', function () {
     }
   }
 
-  test('submit 7 queries to pool of 4 connections - pause 1 and resume whilst waiting on queue', testDone => {
+  /*
+     1
+     2  =====> submitted and run in parallel, elapsed = 1000ms
+     3
+     4
+     5 ======> paused and resumed at ~+2000ms
+     6,
+     7 ======> run in parallel with 5 paused, elapsed = 2000ms
+     .....
+     5 ======> submits at ~2000 and completes at ~3000ms
+   */
+  test('submit 7 queries to pool of 4 connections - pause 1 and resume when only item left', testDone => {
     pauseCancelTester(7, 4, 0, (i, q) => {
       switch (i) {
         case 5:
           q.pauseQuery()
           setTimeout(() => {
             q.resumeQuery()
-          }, 500)
+          }, 2100)
           break
         default:
           break
       }
-    }, 2000, testDone)
+    }, 3000, testDone)
   })
 
   test('submit 7 queries to pool of 4 connections - cancel 2 waiting on pool, expect 4 + 1 concurrent', testDone => {
@@ -115,6 +126,22 @@ suite('connection-pool', function () {
         case 5:
         case 6:
           q.cancelQuery()
+          break
+        default:
+          break
+      }
+    }, 2000, testDone)
+  })
+
+  // pause and resume before pool even gets to servicing
+  test('submit 7 queries to pool of 4 connections - pause 1 and resume whilst waiting on queue', testDone => {
+    pauseCancelTester(7, 4, 0, (i, q) => {
+      switch (i) {
+        case 5:
+          q.pauseQuery()
+          setTimeout(() => {
+            q.resumeQuery()
+          }, 500)
           break
         default:
           break
