@@ -48,8 +48,9 @@ export interface SqlClient {
     DateTimeOffset(v:Date) : any
     PollingQuery(s:string) : QueryDescription
     TimeoutQuery(s:string, to:number) : QueryDescription
-    TzOffsetQuery(s:string, offsetMinutes?:number) : QueryDescription,
+    TzOffsetQuery(s:string, offsetMinutes?:number) : QueryDescription
     TvpFromTable(table:Table) : ProcedureParam
+    Pool(options: PoolOptions) : Pool
 }
 
 export interface Table {
@@ -57,6 +58,28 @@ export interface Table {
     rows: any[]
     columns: TableColumn[]
     addRowsFromObjects(vec:any) : void
+}
+
+export interface PoolOptions {
+    floor: number
+    ceiling: number
+    heartbeatSecs: number
+    heartbeatSql: string
+    inactivityTimeoutSecs: number
+    connectionString: string
+}
+
+export interface Pool {
+    open(): void
+    close(cb: StatusCb): void
+    query(sql: string, cb?: QueryCb): Query
+    query(sql: string, params?: any[], cb?: QueryCb): Query
+    query(description: QueryDescription, cb?: QueryCb): Query
+    query(description: QueryDescription, params?: any[], cb?: QueryCb): Query
+    queryRaw(description: QueryDescription, cb: QueryRawCb): Query
+    queryRaw(description: QueryDescription, params?: any[], cb?: QueryRawCb): Query
+    queryRaw(sql: string, params?: any[], cb?: QueryRawCb): Query
+    queryRaw(sql: string, cb: QueryRawCb): Query
 }
 
 export interface TableColumnType {
@@ -298,6 +321,7 @@ export enum QueryEvent {
     rowCount = 'rowCount',
     row = 'row',
     done = 'done',
+    free = 'free',
     error = 'error',
     warning = 'warning',
     closed = 'closed',
