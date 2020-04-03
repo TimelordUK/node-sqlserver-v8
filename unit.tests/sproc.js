@@ -250,7 +250,7 @@ END
             rows.push(r)
           })
 
-          qp.on('done', () => {
+          qp.on('free', () => {
             // console.log('done ....')
             assert(rows.length === 1)
             assert.strictEqual(true, submitted)
@@ -452,7 +452,7 @@ END
             rows.push(r)
           })
 
-          qp.on('done', () => {
+          qp.on('free', () => {
             assert(rows.length === 1)
             const expected = [
               {
