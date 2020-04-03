@@ -21,6 +21,9 @@ install:
 - ps: Install-Product node $env:nodejs_version $env:platform
 - npm install
 
+build_script:
+- cmd: node --version
+
 test_script:
 - cmd: |
     SET MSSQL_VERSION=2014
