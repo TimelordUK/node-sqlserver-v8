@@ -4,12 +4,16 @@ const pool = new sql.Pool({
   connectionString: 'Driver={ODBC Driver 13 for SQL Server};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;'
 })
 
-pool.on('open', () => {
-  console.log('ready')
+pool.on('open', (options) => {
+  console.log(`ready options = ${JSON.stringify(options, null, 4)}`)
 })
 
 pool.on('debug', msg => {
   console.log(`\t\t\t\t\t\t${new Date().toLocaleTimeString()} <pool.debug> ${msg}`)
+})
+
+pool.on('status', s => {
+  console.log(`status = ${JSON.stringify(s, null, 4)}`)
 })
 
 pool.on('error', e => {
