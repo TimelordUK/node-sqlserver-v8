@@ -39,6 +39,10 @@ suite('connection-pool', function () {
     })
   })
 
+  test('submit 1000 short queries to pool of 4 - expect concurrent queries and fast completion', testDone => {
+    tester(1000, 4, () => 'select @@SPID as spid', 50, testDone)
+  })
+
   test('open pool size 4 - submit queries on parked connections', testDone => {
     const size = 4
     const iterations = 4
@@ -97,7 +101,6 @@ suite('connection-pool', function () {
       })
     })
 
-    // with 3 second inactivity will checkout each connection 3 times for 3 heartbeats
     pool.on('close', () => {
       assert.strictEqual(size, parked[size - 1].parked)
       assert.strictEqual(0, parked[size - 1].idle)
