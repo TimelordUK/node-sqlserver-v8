@@ -299,7 +299,7 @@ suite('connection-pool', function () {
           assert.strictEqual(iterations, checkin.length)
           assert.strictEqual(iterations, done)
           const elapsed = checkin[checkin.length - 1].time - checkout[0].time
-          assert(elapsed >= expectedTimeToComplete && elapsed <= expectedTimeToComplete + 1000)
+          assert(elapsed >= expectedTimeToComplete - 250 && elapsed <= expectedTimeToComplete + 1000)
           pool.close()
         }
       })
