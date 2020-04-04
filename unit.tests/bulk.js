@@ -38,6 +38,12 @@ suite('bulk', function () {
     })
   })
 
+  test(`bulk insert/select int column of huge unsigned batchSize ${test1BatchSize}`, testDone => {
+    hugeUnsignedTest(test1BatchSize, true, false, () => {
+      testDone()
+    })
+  })
+
   test('bind to db with space', testDone => {
     let conn = null
     let bulkMgr = null
@@ -704,6 +710,21 @@ suite('bulk', function () {
     const params = {
       columnType: 'int',
       buildFunction: i => i * 2,
+      updateFunction: runUpdateFunction ? i => i * 3 : null,
+      check: selectAfterInsert,
+      deleteAfterTest: false,
+      batchSize: batchSize
+    }
+
+    simpleColumnBulkTest(params, () => {
+      testDone()
+    })
+  }
+
+  function hugeUnsignedTest (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
+    const params = {
+      columnType: 'Numeric(18,0)',
+      buildFunction: i => i <= 2 ? 2829365649 + i * 2 : i * 2,
       updateFunction: runUpdateFunction ? i => i * 3 : null,
       check: selectAfterInsert,
       deleteAfterTest: false,
