@@ -39,7 +39,7 @@ suite('connection-pool', function () {
   })
 
   test('submit 10 queries with errors (no callback) to pool of 4', testDone => {
-    const iterations = 2
+    const iterations = 10
     tester(iterations, 4, () => 'select a;', 50, true, err => {
       assert.strictEqual(iterations, err.length)
       const expected = err.filter(e => {
@@ -48,6 +48,63 @@ suite('connection-pool', function () {
       assert.strictEqual(iterations, expected.length)
       testDone()
     })
+  })
+
+  test('submit error queries with callback for results', testDone => {
+    const size = 4
+    const iterations = 8
+    const pool = new sql.Pool({
+      connectionString: connStr,
+      ceiling: size
+    })
+    pool.on('error', e => {
+      assert.ifError(e)
+      errors.push(e)
+    })
+    pool.open()
+
+    const checkin = []
+    const checkout = []
+    const errors = []
+    pool.on('open', () => {
+      pool.on('status', s => {
+        switch (s.op) {
+          case 'checkout':
+            checkout.push(s)
+            break
+          case 'checkin':
+            checkin.push(s)
+            break
+        }
+      })
+    })
+
+    let done = 0
+    let free = 0
+    function submit (sql) {
+      const q = pool.query(sql, (e, res) => {
+        errors.push(e)
+      })
+      q.on('submitted', () => {
+        q.on('done', () => ++done)
+        q.on('free', () => {
+          ++free
+          if (free === iterations) {
+            assert(errors.length === iterations)
+            assert(checkin.length === iterations)
+            assert(checkout.length === iterations)
+            pool.close(() => {
+              testDone()
+            })
+          }
+        })
+      })
+      return q
+    }
+    const testSql = 'select a;'
+    for (let i = 0; i < iterations; ++i) {
+      submit(testSql)
+    }
   })
 
   test('submit queries with callback for results', testDone => {
