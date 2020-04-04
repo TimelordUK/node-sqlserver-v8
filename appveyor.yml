@@ -26,7 +26,7 @@ build_script:
 
 test_script:
 - cmd: |
-    SET MSSQL_VERSION=2012SP1
+    SET MSSQL_VERSION=2012
     powershell tool\appveyor.ps1 SQL2012SP1
     node --version
     node unit.tests\cmd-test.js -a 2012SP1 -t benchmark --repeats=5 --delay=4500 2>&1
