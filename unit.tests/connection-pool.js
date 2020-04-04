@@ -38,6 +38,63 @@ suite('connection-pool', function () {
     })
   })
 
+  test('submit queries with callback for results', testDone => {
+    const size = 4
+    const iterations = 8
+    const pool = new sql.Pool({
+      connectionString: connStr,
+      ceiling: size
+    })
+    pool.on('error', e => {
+      assert.ifError(e)
+    })
+    pool.open()
+
+    const checkin = []
+    const checkout = []
+    pool.on('open', () => {
+      pool.on('status', s => {
+        switch (s.op) {
+          case 'checkout':
+            checkout.push(s)
+            break
+          case 'checkin':
+            checkin.push(s)
+            break
+        }
+      })
+    })
+
+    let done = 0
+    let free = 0
+    const results = []
+    function submit (sql) {
+      const q = pool.query(sql, (e, res) => {
+        assert.ifError(e)
+        results.push(res)
+      })
+      q.on('submitted', () => {
+        q.on('done', () => ++done)
+        q.on('free', () => {
+          ++free
+          if (free === iterations) {
+            assert(results.length === iterations)
+            assert(checkin.length === iterations)
+            assert(checkout.length === iterations)
+            pool.close(() => {
+              testDone()
+            })
+          }
+        })
+      })
+      return q
+    }
+    const testSql = 'select top 100 * from master..syscomments'
+    for (let i = 0; i < iterations; ++i) {
+      submit(testSql)
+    }
+  })
+
   test('submit 1000 short queries to pool of 4 - expect concurrent queries and fast completion', testDone => {
     tester(1000, 4, () => 'select @@SPID as spid', 50, testDone)
   })
