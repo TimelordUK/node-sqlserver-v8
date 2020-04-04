@@ -29,8 +29,8 @@ test_script:
     SET MSSQL_VERSION=SQL2012SP1
     powershell tool\appveyor.ps1 SQL2012SP1
     node --version
-    node unit.tests\cmd-test.js -a 2012 -t benchmark --repeats=5 --delay=4500 2>&1
-    node unit.tests\cmd-test.js -a 2012 -t benchmark --table=syscolumns --delay=5000 --repeats=5 2>&1
+    node unit.tests\cmd-test.js -a 2012SP1 -t benchmark --repeats=5 --delay=4500 2>&1
+    node unit.tests\cmd-test.js -a 2012SP1 -t benchmark --table=syscolumns --delay=5000 --repeats=5 2>&1
     node runtest -a 2012SP1 -t sproc.js -t connection-pool -t pause -t concurrent -t multiple-errors -t geography -t tvp -t warnings.js -t compoundqueries.js -t querycancel.js -t txn.js -t datatypes.js -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t prepared.js -t userbind.js -t dates.js 2>&1
     net stop MSSQL$SQL2012SP1
 
