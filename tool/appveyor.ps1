@@ -1,6 +1,8 @@
 [reflection.assembly]::LoadWithPartialName("Microsoft.SqlServer.Smo") | Out-Null;
 [reflection.assembly]::LoadWithPartialName("Microsoft.SqlServer.SqlWmiManagement") | Out-Null;
 
+powershell Get-Service MSSQL*
+
 $instancename = $args[0];
 
 $wmi = New-Object('Microsoft.SqlServer.Management.Smo.Wmi.ManagedComputer');
