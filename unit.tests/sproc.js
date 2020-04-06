@@ -729,4 +729,60 @@ END
       testDone()
     })
   })
+
+  test('call proc in non-dbo schema with parameters using callproc syntax', testDone => {
+    const spName = 'TestSchema.test_sp_get_int_int'
+
+    let schemaName = 'TestSchema'
+    const createSchemaSql = `IF NOT EXISTS (
+    SELECT schema_name
+    FROM  information_schema.schemata
+    WHERE schema_name = '${schemaName}')
+    BEGIN
+    EXEC sp_executesql N'CREATE SCHEMA ${schemaName}'
+    END`
+
+    const def = `alter PROCEDURE <name>(
+@num1 INT,
+@num2 INT,
+@num3 INT OUTPUT
+
+)AS
+BEGIN
+   SET @num3 = @num1 + @num2
+   RETURN 99;
+END
+`
+
+    const fns = [
+
+      asyncDone => {
+        theConnection.query(createSchemaSql, err => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.callproc(spName, [20, 8], function(err, results, output) {
+            assert.ifError(err)
+            let expected = [99, 28];
+            assert.ok(expected[0] == output[0], "results didn't match");
+            assert.ok(expected[1] == output[1], "results didn't match");
+            asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
 })

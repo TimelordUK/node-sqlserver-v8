@@ -15,4 +15,4 @@ select
 	    on ty.name=type_name(sp.user_type_id)
 		and ty.schema_id = schema_id('<schema_name>')
 	where
-	    object_id = object_id('<escaped_procedure_name>')
+	    object_id = object_id('<schema_name>.<escaped_procedure_name>')
