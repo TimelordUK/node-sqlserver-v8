@@ -34,12 +34,7 @@
   "bugs": {
     "url": "https://github.com/TimelordUK/node-sqlserver-v8/issues"
   },
-  "licenses": [
-    {
-      "type": "Apache 2.0",
-      "url": "https://github.com/TimelordUK/node-sqlserver-v8/blob/master/LICENSE"
-    }
-  ],
+  "license": "Apache-2.0",
   "main": "./lib/sql.js",
   "typings": "./lib/index.d.ts",
   "repository": {
