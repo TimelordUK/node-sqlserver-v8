@@ -1816,6 +1816,10 @@ namespace mssql
 		{
 			bind_double_array(pp);
 		}
+		else if (counts.int64Count > 0 && counts.int32Count > 0)
+		{
+			bind_double_array(pp);
+		}
 		else if (counts.int64Count > 0)
 		{
 			bind_integer_array(pp);

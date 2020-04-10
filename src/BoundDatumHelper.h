@@ -140,21 +140,6 @@ namespace mssql
 			else if (p->IsBoolean()) {
 				++boolCount;
 			}
-			else if (p->IsInt32()) {
-				++int32Count;
-			}
-			else if (p->IsUint32()) {
-				++uint32Count;
-			}
-			else if (p->IsBigInt())
-			{
-				MaybeLocal<BigInt> maybe = p->ToBigInt(context);
-				Local<BigInt> local;
-				if (maybe.ToLocal(&local))
-				{
-					++int64Count;
-				}
-			}
 			else if (p->IsNumber()) {
 				MaybeLocal<Number> maybe = p->ToNumber(context);
 				Local<Number> local;
@@ -175,6 +160,21 @@ namespace mssql
 					}
 					else ++numberCount;
 				}
+			}
+			else if (p->IsBigInt())
+			{
+				MaybeLocal<BigInt> maybe = p->ToBigInt(context);
+				Local<BigInt> local;
+				if (maybe.ToLocal(&local))
+				{
+					++int64Count;
+				}
+			}
+			else if (p->IsInt32()) {
+				++int32Count;
+			}
+			else if (p->IsUint32()) {
+				++uint32Count;
 			}
 			else if (p->IsDate()) {
 				++dateCount;

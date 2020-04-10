@@ -38,11 +38,59 @@ suite('bulk', function () {
     })
   })
 
-  test(`bulk insert/select int column of huge unsigned batchSize ${test1BatchSize}`, testDone => {
-    hugeUnsignedTest(test1BatchSize, true, false, () => {
+  test(`bulk insert/select int column of huge unsigned batchSize ${test2BatchSize}`, testDone => {
+    hugeUnsignedTest(test2BatchSize, true, false, () => {
       testDone()
     })
   })
+
+  test(`bulk insert/select int column of huge unsigned and some 0 values batchSize ${test2BatchSize}`, testDone => {
+    hugeUnsignedPlusZeroMixedTest(test2BatchSize, true, false, () => {
+      testDone()
+    })
+  })
+
+  test(`bulk insert/select datetime column batchSize ${test1BatchSize}`, testDone => {
+    dateTest(test1BatchSize, true, function () {
+      testDone()
+    })
+  })
+
+  test(`bulk insert/update/select int column of signed batchSize ${test2BatchSize}`, testDone => {
+    signedTest(test2BatchSize, true, true, () => {
+      testDone()
+    })
+  })
+
+  function hugeUnsignedTest (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
+    const params = {
+      columnType: 'Numeric(18,0)',
+      buildFunction: i => i <= 2 ? 2829365649 + i * 2 : i * 2,
+      updateFunction: runUpdateFunction ? i => i * 3 : null,
+      check: selectAfterInsert,
+      deleteAfterTest: false,
+      batchSize: batchSize
+    }
+
+    simpleColumnBulkTest(params, () => {
+      testDone()
+    })
+  }
+
+  function hugeUnsignedPlusZeroMixedTest (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
+    const params = {
+      columnType: 'Numeric(18,0)',
+      buildFunction: i => i % 2 === 0 ? 2829365649 : 0,
+      updateFunction: runUpdateFunction ? i => i * 3 : null,
+      check: selectAfterInsert,
+      deleteAfterTest: false,
+      batchSize: batchSize
+    }
+
+    simpleColumnBulkTest(params, () => {
+      testDone()
+    })
+  }
 
   test('bind to db with space', testDone => {
     let conn = null
@@ -401,12 +449,6 @@ suite('bulk', function () {
     })
   })
 
-  test(`bulk insert/update/select int column of signed batchSize ${test2BatchSize}`, testDone => {
-    signedTest(test2BatchSize, true, true, () => {
-      testDone()
-    })
-  })
-
   test(`bulk insert/select varbinary column batchSize ${test1BatchSize}`, testDone => {
     varbinaryTest(test1BatchSize, true, () => {
       testDone()
@@ -656,6 +698,7 @@ suite('bulk', function () {
         dt.setTime(dt.getTime() + 86400000)
         const nt = new Date()
         nt.setTime(dt.getTime())
+        nt.nanosecondsDelta = 0
         return nt
       },
       updateFunction: null,
@@ -667,12 +710,6 @@ suite('bulk', function () {
     simpleColumnBulkTest(params, testDone)
   }
 
-  test(`bulk insert/select datetime column batchSize ${test1BatchSize}`, testDone => {
-    dateTest(test1BatchSize, true, function () {
-      testDone()
-    })
-  })
-
   test(`bulk insert/select datetime column batchSize ${test2BatchSize}`, testDone => {
     dateTest(test2BatchSize, true, function () {
       testDone()
@@ -682,8 +719,8 @@ suite('bulk', function () {
   function signedTest (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
     const params = {
       columnType: 'int',
-      buildFunction: i => i % 2 === 0 ? -i : i,
-      updateFunction: runUpdateFunction ? i => i % 2 === 0 ? -i * 3 : i * 3 : null,
+      buildFunction: i => i % 2 === 0 && i > 0 ? -i : i,
+      updateFunction: runUpdateFunction ? i => i * 3 : null,
       check: selectAfterInsert,
       deleteAfterTest: false,
       batchSize: batchSize
@@ -710,21 +747,6 @@ suite('bulk', function () {
     const params = {
       columnType: 'int',
       buildFunction: i => i * 2,
-      updateFunction: runUpdateFunction ? i => i * 3 : null,
-      check: selectAfterInsert,
-      deleteAfterTest: false,
-      batchSize: batchSize
-    }
-
-    simpleColumnBulkTest(params, () => {
-      testDone()
-    })
-  }
-
-  function hugeUnsignedTest (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
-    const params = {
-      columnType: 'Numeric(18,0)',
-      buildFunction: i => i <= 2 ? 2829365649 + i * 2 : i * 2,
       updateFunction: runUpdateFunction ? i => i * 3 : null,
       check: selectAfterInsert,
       deleteAfterTest: false,
@@ -985,7 +1007,6 @@ suite('bulk', function () {
 
       asyncDone => {
         if (!updateFunction) {
-          skip = true
           asyncDone()
         } else {
           bulkMgr.updateRows(toUpdate, (err, res) => {
@@ -1002,19 +1023,19 @@ suite('bulk', function () {
           return
         }
         if (!check) {
-          skip = true
           asyncDone()
           return
         }
         const fetch = []
-        for (let i = 0; i < toUpdate.length; ++i) {
+        for (let i = 0; i < toInsert.length; ++i) {
           fetch.push({
             pkid: i
           })
         }
+        const expected = updateFunction ? toUpdate : toInsert
         bulkMgr.selectRows(fetch, (err, results) => {
           assert.ifError(err)
-          assert.deepEqual(results, toUpdate, 'results didn\'t match')
+          assert.deepStrictEqual(results, expected, 'results didn\'t match')
           asyncDone()
         })
       },
