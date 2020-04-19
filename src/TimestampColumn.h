@@ -107,7 +107,7 @@ namespace mssql
 		void milliseconds_from_timestamp(TIMESTAMP_STRUCT const & ts, int tz_offset = 0);
 
 		// derived from ECMA 262 15.9
-		void milliseconds_from_timestamp_offset(SQL_SS_TIMESTAMPOFFSET_STRUCT const& timeStruct);
+		void milliseconds_from_timestamp_offset(SQL_SS_TIMESTAMPOFFSET_STRUCT const& time_struct);
 
 		// return the year from the epoch time.  The remainder is returned in the day parameter
 		static int64_t year_from_day(int64_t& day);

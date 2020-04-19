@@ -1339,13 +1339,13 @@ namespace mssql
 			return false;
 		}
 		const auto maybe_size = MutateJS::get_property_as_value(local_object, "max_length")->Int32Value(context);
-		int size;
+		auto size = 0;
 		if (!maybe_size.To(&size))
 		{
 			return false;
 		}
 
-		int is_output_i;
+		auto is_output_i = 0;
 		if (!is_output->Int32Value(context).To(&is_output_i))
 		{
 			return false;

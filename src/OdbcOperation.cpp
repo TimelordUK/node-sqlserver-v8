@@ -153,7 +153,7 @@ namespace mssql
 
 	void OdbcOperation::complete_foreground()
 	{
-		auto isolate = Isolate::GetCurrent();
+		auto* isolate = Isolate::GetCurrent();
 		HandleScope scope(isolate);
 		const nodeTypeFactory fact;
 		if (_callback.IsEmpty()) return;

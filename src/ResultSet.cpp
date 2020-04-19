@@ -100,7 +100,7 @@ namespace mssql
 	}
 
 	Local<Object> ResultSet::get_entry(const nodeTypeFactory & fact, const ColumnDefinition & definition)  {
-		const auto type_name = map_type(definition.dataType);
+		const auto* const type_name = map_type(definition.dataType);
 		const auto entry = fact.new_object();
 		MutateJS::set_property_value(entry, MutateJS::from_two_byte(L"size"), fact.new_integer(static_cast<int32_t>(definition.columnSize)));
 		MutateJS::set_property_value(entry, MutateJS::from_two_byte(L"name"), MutateJS::from_two_byte(definition.name.c_str()));

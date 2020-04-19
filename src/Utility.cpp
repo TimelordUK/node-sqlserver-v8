@@ -155,7 +155,6 @@ namespace mssql
 
 	void nodeTypeFactory::scoped_callback(const Persistent<Function> & callback, const int argc, Local<Value> args[]) const
 	{
-		nodeTypeFactory fact;
 		auto cons = newCallbackFunction(callback);
 		auto context = isolate->GetCurrentContext();
 		const auto global = context->Global();

@@ -122,7 +122,7 @@ namespace mssql
 			return;
 		}
 
-		auto c = new Connection();
+		auto* c = new Connection();
 		c->Wrap(info.This());
 		info.GetReturnValue().Set(info.This());
 	}

@@ -80,9 +80,9 @@ namespace mssql
 
 	void OdbcHandle::read_errors(shared_ptr<vector<shared_ptr<OdbcError>>> & errors) const
 	{
-		SQLSMALLINT msg_len;
-		SQLRETURN      rc2;
-		SQLINTEGER    native_error;
+		SQLSMALLINT msg_len = 0;
+		SQLRETURN      rc2 = 0;
+		SQLINTEGER    native_error = 0;
 		SQLWCHAR        msg[2 * 1024];
 		SQLWCHAR sql_state[6];
 		set<string> received;
