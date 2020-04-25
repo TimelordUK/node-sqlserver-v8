@@ -1,10 +1,10 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/7swf644d37pqdmuj/branch/master?svg=true)](https://ci.appveyor.com/project/TimelordUK/node-sqlserver-v8/branch/master) [![npm version](https://badge.fury.io/js/msnodesqlv8.svg)](https://badge.fury.io/js/msnodesqlv8) 
+# msnodesqlv8
+
+[![Build status](https://ci.appveyor.com/api/projects/status/7swf644d37pqdmuj/branch/master?svg=true)](https://ci.appveyor.com/project/TimelordUK/node-sqlserver-v8/branch/master) [![npm version](https://badge.fury.io/js/msnodesqlv8.svg)](https://badge.fury.io/js/msnodesqlv8)
 [![GitHub stars](https://img.shields.io/github/stars/TimelordUK/node-sqlserver-v8.svg)](https://github.com/TimelordUK/node-sqlserver-v8/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/TimelordUK/node-sqlserver-v8.svg)](https://github.com/TimelordUK/node-sqlserver-v8/issues)
-[![npm](https://img.shields.io/npm/dm/msnodesqlv8.svg)]() 
-[![npm](https://img.shields.io/npm/dy/msnodesqlv8.svg)]()
-
-# msnodesqlv8
+[![npm](https://img.shields.io/npm/dm/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
+[![npm](https://img.shields.io/npm/dy/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
 
 1. pause/resume long running query
 1. built in connection pool
@@ -94,7 +94,7 @@ If you are using Webpack for your application, you need to:
     }
 ```
 
-### Pool ###
+### Pool
 
 you can now submit queries through a native library connection pool.  This pool creates a set of connections and queues work submitting items such that all connections are busy providing work exists.  A keep alive is sent periodically to check connection integrity and idle connections beyond a threshold are closed and re-created when queries submitted at a later point in time. Queries can be cancelled and paused / resumed regardless of where they are in the work lifecycle
 
