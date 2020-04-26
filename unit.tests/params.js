@@ -380,7 +380,7 @@ suite('params', function () {
           const expectedError = new Error('[Microsoft][SQL Server Native Client 11.0][SQL Server]String or binary data would be truncated.')
           expectedError.sqlstate = '22001'
           expectedError.code = 8152
-          assert.deepStrictEqual(e, expectedError)
+          assert(e.message.indexOf('String or binary data would be truncated') >= 0)
           done()
         })
       },
