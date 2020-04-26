@@ -79,10 +79,10 @@
   "scripts": {
     "install": "prebuild-install || node-gyp rebuild",
     "prebuild-all": "npm run prebuild-node && npm run prebuild-node-ia32 && npm run prebuild-electron && npm run prebuild-electron-ia32",
-    "prebuild-node": "prebuild -t 10.16.0 -t 11.15.0 -t 12.16.1 -t 13.12.0 --strip",
-    "prebuild-node-ia32": "prebuild -t 10.16.0 -t 11.15.0 -t 12.16.1 -t 13.12.0 -a ia32 --strip",
-    "prebuild-electron": "prebuild -t 6.1.9 -t 7.2.1 -t 8.2.0 -r electron --strip",
-    "prebuild-electron-ia32": "prebuild -t 6.1.9 -t 7.2.1 -t 8.2.0 -r electron -a ia32 --strip",
+    "prebuild-node": "prebuild -t 10.16.0 -t 11.15.0 -t 12.16.2 -t 13.13.0 -t 14.0.0 --strip",
+    "prebuild-node-ia32": "prebuild -t 10.16.0 -t 11.15.0 -t 12.16.2 -t 13.13.0 -t 14.0.0 -a ia32 --strip",
+    "prebuild-electron": "prebuild -t 6.1.9 -t 7.2.1 -t 8.2.3 -r electron --strip",
+    "prebuild-electron-ia32": "prebuild -t 6.1.9 -t 7.2.1 -t 8.2.3 -r electron -a ia32 --strip",
     "test": "call tool/testonce.bat"
   },
   "directories": {}
