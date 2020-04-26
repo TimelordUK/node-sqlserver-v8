@@ -318,7 +318,7 @@ namespace mssql
 			const auto maybe = p->ToString(context);
 			Local<String> str_param;
 			if (maybe.ToLocal(&str_param)) {
-				const auto first_p = _storage->uint16vec_ptr->data();
+				auto* const first_p = _storage->uint16vec_ptr->data();
 				str_param->Write(fact.isolate, first_p, 0, precision);
 				buffer_len = precision * size;
 				if (precision > 4000)
@@ -475,7 +475,7 @@ namespace mssql
 		if (!o->IsNull())
 		{
 			const auto itr = _storage->charvec_ptr->begin();
-			const auto ptr = node::Buffer::Data(o);
+			auto* const ptr = node::Buffer::Data(o);
 			_indvec[0] = obj_len;
 			memcpy(&*itr, ptr, obj_len);
 		}
@@ -487,7 +487,7 @@ namespace mssql
 		const auto array_len = arr->Length();
 		const auto max_obj_len = get_max_object_len(p);
 		reserve_var_binary_array(max_obj_len, array_len);
-		auto itr = _storage->charvec_ptr->data();
+		auto* itr = _storage->charvec_ptr->data();
 		const nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
 		for (uint32_t i = 0; i < array_len; ++i)
@@ -501,7 +501,7 @@ namespace mssql
 					auto maybe_object = elem->ToObject(context);
 					Local<Object> local_object;
 					if (maybe_object.ToLocal(&local_object)) {
-						const auto ptr = node::Buffer::Data(local_object);
+						auto* const ptr = node::Buffer::Data(local_object);
 						const auto obj_len = node::Buffer::Length(local_object);
 						_indvec[i] = obj_len;
 						memcpy(&*itr, ptr, obj_len);
@@ -576,7 +576,7 @@ namespace mssql
 				auto& ns = vec[0];
 				encode_numeric_struct(d, static_cast<int>(param_size), digits, ns);
 				param_size = ns.precision;
-				digits = ns.scale;
+				digits = static_cast<unsigned char>(ns.scale);
 				_indvec[0] = sizeof(SQL_NUMERIC_STRUCT);
 			}
 		}
@@ -599,7 +599,7 @@ namespace mssql
 				const auto d = local->Value();
 				encode_numeric_struct(d, static_cast<int>(param_size), digits, ns);
 				param_size = ns.precision;
-				digits = ns.scale;
+				digits = static_cast<unsigned char>(ns.scale);
 				_indvec[i] = sizeof(SQL_NUMERIC_STRUCT);
 			}
 		}

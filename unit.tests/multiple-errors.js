@@ -162,7 +162,7 @@ suite('multiple errors', function () {
   })
 
   test('non trusted invalid user', done => {
-    let adjusted = connStr.replace('Trusted_Connection=Yes', 'Trusted_Connection=No;Uid=test;Database=test;Pwd=...')
+    let adjusted = connStr.replace('Trusted_Connection=yes', 'Trusted_Connection=No;Uid=test;Database=test;Pwd=...')
     adjusted = adjusted.replace('Uid=sa', 'Uid=JohnSnow')
     sql.open(adjusted,
       err => {

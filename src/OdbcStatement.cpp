@@ -245,7 +245,7 @@ namespace mssql
 		if (!name.empty()) {
 			SQLINTEGER string_length = 0;
 			SQLHANDLE ipd = nullptr;
-			const auto name_ptr = const_cast<wchar_t*>(name.c_str());
+			auto* const name_ptr = const_cast<wchar_t*>(name.c_str());
 			r = SQLGetStmtAttr(statement, SQL_ATTR_IMP_PARAM_DESC, &ipd, SQL_IS_POINTER, &string_length);
 			if (!check_odbc_error(r)) return false;
 			SQLSetDescField(ipd, current_param, SQL_DESC_NAME, reinterpret_cast<SQLPOINTER>(name_ptr), name.size() * sizeof(wchar_t));
@@ -265,7 +265,7 @@ namespace mssql
 		if (!check_odbc_error(r)) return;
 		const auto schema = datum->get_storage()->schema;		
 		if (!schema.empty()) {
-			const auto schema_ptr = const_cast<wchar_t*>(schema.c_str());
+			auto* const schema_ptr = const_cast<wchar_t*>(schema.c_str());
 			r = SQLSetDescField(ipd, current_param, SQL_CA_SS_SCHEMA_NAME, reinterpret_cast<SQLPOINTER>(schema_ptr), schema.size() * sizeof(wchar_t));
 			if (!check_odbc_error(r)) return;
 			r = SQLGetDescField(ipd, current_param, SQL_CA_SS_SCHEMA_NAME, parameter_type_name, sizeof(parameter_type_name), &string_length);
@@ -1085,7 +1085,7 @@ namespace mssql
 		auto bytes_to_read = atomic_read;
 		storage->ReserveChars(bytes_to_read + 1);
 		auto & char_data = storage->charvec_ptr;
-		auto write_ptr = char_data->data();
+		auto* write_ptr = char_data->data();
 		SQLLEN total_bytes_to_read = 0;
 		auto r = SQLGetData(statement, column + 1, SQL_C_BINARY, write_ptr, bytes_to_read, &total_bytes_to_read);
 		if (!check_odbc_error(r)) return false;

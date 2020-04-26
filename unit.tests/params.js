@@ -36,7 +36,7 @@ suite('params', function () {
 
   let theConnection
   this.timeout(20000)
-  let connStr
+  let connStr = null
   let async
   let helper
   const sql = global.native_sql

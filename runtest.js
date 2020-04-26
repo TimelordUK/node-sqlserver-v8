@@ -17,7 +17,11 @@ function runTest () {
   if (Object.prototype.hasOwnProperty.call(argv, 'a')) {
     const appVeyorVersion = argv.a
     connStr = `Driver={SQL Server Native Client 11.0}; Server=(local)\\SQL${appVeyorVersion}; Database={master}; Uid=sa; Pwd=Password12!`
-    console.log('set connStr as ' + connStr)
+    console.log(`set connStr as ${connStr}`)
+  }
+
+  if (Object.prototype.hasOwnProperty.call(argv, 'l')) {
+    connStr = 'Driver={SQL Server Native Client 11.0}; Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;'
   }
 
   if (!Array.isArray(toRun)) {
@@ -39,7 +43,7 @@ function runTest () {
     mocha.suite.on('pre-require', g => {
       g.native_sql = sql
       if (connStr) {
-        console.log('override conn_str')
+        console.log(`use conn_str ${connStr}`)
         g.conn_str = connStr
       }
     })
