@@ -60,11 +60,11 @@
   },
   "devDependencies": {
     "@types/electron": "^1.4.31",
-    "@types/node": "^13.13.4",
+    "@types/node": "^13.13.5",
     "@types/sequelize": "^4.28.8",
     "asynquence": "^0.10.2",
     "asynquence-contrib": "^0.28.2",
-    "electron": "^8.2.3",
+    "electron": "^8.2.5",
     "minimist": "^1.2.5",
     "mocha": "^7.1.2",
     "node-gyp": "^4.0.0",

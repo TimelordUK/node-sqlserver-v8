@@ -428,7 +428,7 @@ namespace mssql
 		const auto precision = min(1024, s->Length() + 1);
 		s->WriteUtf8(fact.isolate, tmp, precision);
 		const string narrow(tmp);
-		const auto wide = converter.from_bytes(narrow);
+		auto wide = converter.from_bytes(narrow);
 		return wide;
 	}
 
@@ -595,8 +595,8 @@ namespace mssql
 			const auto elem = MutateJS::get_array_elelemt_at_index(arr, i);
 			if (!elem->IsNull())
 			{
-				const Local<Number> local;
-				const auto d = local->Value();
+				const auto num = Local<Number>::Cast<Value>(elem);
+				const auto d = num->Value();
 				encode_numeric_struct(d, static_cast<int>(param_size), digits, ns);
 				param_size = ns.precision;
 				digits = static_cast<unsigned char>(ns.scale);
@@ -1287,17 +1287,13 @@ namespace mssql
 		Local<Value> pval;
 		const nodeTypeFactory fact;
 
-		if (sql_type_s_maps_to_int32(p))
+		if (sql_type_s_maps_to_int32(p) || sql_type_s_maps_to_boolean(p))
 		{
 			pval = fact.new_int32(0);
 		}
 		else if (sql_type_s_maps_to_u_int32(p))
 		{
 			pval = fact.new_uint32(0);
-		}
-		else if (sql_type_s_maps_to_boolean(p))
-		{
-			pval = fact.new_int32(0);
 		}
 		else if (sql_type_s_maps_to_numeric(p))
 		{
@@ -1812,11 +1808,7 @@ namespace mssql
 			err = static_cast<char*>("Invalid number parameter");
 			return false;
 		}
-		else if (counts.numberCount > 0)
-		{
-			bind_double_array(pp);
-		}
-		else if (counts.int64Count > 0 && counts.int32Count > 0)
+		else if (counts.numberCount > 0 || counts.int64Count > 0 && counts.int32Count > 0)
 		{
 			bind_double_array(pp);
 		}

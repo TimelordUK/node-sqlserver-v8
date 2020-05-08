@@ -87,7 +87,7 @@ namespace mssql
 	void Connection::close(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto cb = info[0].As<Object>();
-		const auto connection = Unwrap<Connection>(info.This());
+		auto* const connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->close(cb);
 		info.GetReturnValue().Set(ret);
 	}
@@ -95,7 +95,7 @@ namespace mssql
 	void Connection::begin_transaction(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto cb = info[0].As<Object>();
-		const auto connection = Unwrap<Connection>(info.This());
+		auto* const connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->begin_transaction(cb);
 		info.GetReturnValue().Set(ret);
 	}
@@ -103,7 +103,7 @@ namespace mssql
 	void Connection::commit(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto cb = info[0].As<Object>();
-		const auto connection = Unwrap<Connection>(info.This());
+		auto* const connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->commit(cb);
 		info.GetReturnValue().Set(ret);
 	}
@@ -111,7 +111,7 @@ namespace mssql
 	void Connection::rollback(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto cb = info[0].As<Object>();
-		const auto connection = Unwrap<Connection>(info.This());
+		auto* const connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->rollback(cb);
 		info.GetReturnValue().Set(ret);
 	}
@@ -134,7 +134,7 @@ namespace mssql
 		const auto params = info[2].As<Array>();
 		const auto callback = info[3].As<Object>();
 
-		const auto connection = Unwrap<Connection>(info.This());
+		auto* const connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->query(query_id, query_object, params, callback);
 		info.GetReturnValue().Set(ret);
 	}
@@ -145,7 +145,7 @@ namespace mssql
 		const auto query_object = info[1].As<Object>();
 		const auto callback = info[2].As<Object>();
 
-		const auto connection = Unwrap<Connection>(info.This());
+		auto* const connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->prepare(query_id, query_object, callback);
 		info.GetReturnValue().Set(ret);
 	}
@@ -156,7 +156,7 @@ namespace mssql
 		const auto params = info[1].As<Array>();
 		const auto callback = info[2].As<Object>();
 
-		const auto connection = Unwrap<Connection>(info.This());
+		auto* const connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->query_prepared(query_id, params, callback);
 		info.GetReturnValue().Set(ret);
 	}
@@ -169,7 +169,7 @@ namespace mssql
 		const auto params = info[2].As<Array>();
 		const auto callback = info[3].As<Object>();
 
-		const auto connection = Unwrap<Connection>(info.This());
+		auto* const connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->call_procedure(query_id, query_object, params, callback);
 		info.GetReturnValue().Set(ret);
 	}
@@ -178,7 +178,7 @@ namespace mssql
 	{
 		const auto query_id = info[0].As<Number>();
 		const auto callback = info[1].As<Object>();
-		const auto connection = Unwrap<Connection>(info.This());
+		auto* const connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->unbind_parameters(query_id, callback);
 		info.GetReturnValue().Set(ret);
 	}
@@ -187,7 +187,7 @@ namespace mssql
 	{
 		const auto query_id = info[0].As<Number>();
 		const auto callback = info[1].As<Object>();
-		const auto connection = Unwrap<Connection>(info.This());
+		auto* const connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->free_statement(query_id, callback);
 		info.GetReturnValue().Set(ret);
 	}
@@ -197,7 +197,7 @@ namespace mssql
 		const auto query_id = info[0].As<Number>();
 		const auto number_rows = info[1].As<Number>();
 		const auto cb = info[2].As<Object>();
-		const auto connection = Unwrap<Connection>(info.This());
+		auto* const connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->read_column(query_id, number_rows, cb);
 		info.GetReturnValue().Set(ret);
 	}
@@ -206,7 +206,7 @@ namespace mssql
 	{
 		const auto query_id = info[0].As<Number>();
 		const auto callback = info[1].As<Object>();
-		const auto connection = Unwrap<Connection>(info.This());
+		auto* const connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->read_next_result(query_id, callback);
 		info.GetReturnValue().Set(ret);
 	}
@@ -216,7 +216,7 @@ namespace mssql
 		const auto connection_object = info[0].As<Object>();
 		const auto callback = info[1].As<Object>();
 
-		const auto connection = Unwrap<Connection>(info.This());
+		auto* const connection = Unwrap<Connection>(info.This());
 		const auto ret = connection->connectionBridge->open(connection_object, callback, info.This());
 		info.GetReturnValue().Set(ret);
 	}
@@ -225,7 +225,7 @@ namespace mssql
 	{
 		const auto query_id = info[0].As<Number>();
 		const auto callback = info[1].As<Object>();
-		const auto connection = Unwrap<Connection>(info.This());
+		auto* const connection = Unwrap<Connection>(info.This());
 
 		const auto ret = connection->connectionBridge->cancel(query_id, callback);
 		info.GetReturnValue().Set(ret);
@@ -236,7 +236,7 @@ namespace mssql
 		const auto query_id = info[0].As<Number>();
 		const auto v1 = info[1].As<Number>();
 		const auto callback = info[2].As<Object>();
-		const auto connection = Unwrap<Connection>(info.This());
+		auto* const connection = Unwrap<Connection>(info.This());
 		const nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
 		const auto maybe = v1->Int32Value(context);

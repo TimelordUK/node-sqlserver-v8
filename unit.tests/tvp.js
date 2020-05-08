@@ -64,12 +64,13 @@ END`
 \tdescription varchar(max),
 \tusername nvarchar(30), 
 \tage int, 
-\tsalary real
+\tsalary real,
+\tcode numeric(18,0)
 )`
 
     const dropTypeSql = `IF TYPE_ID(N'${tableTypeName}') IS not NULL drop type ${tableTypeName}`
 
-    const createTypeSql = `CREATE TYPE ${tableTypeName} AS TABLE (description varchar(max), username nvarchar(30), age int, salary real)`
+    const createTypeSql = `CREATE TYPE ${tableTypeName} AS TABLE (description varchar(max), username nvarchar(30), age int, salary real, code numeric(18,0))`
 
     const insertProcedureSql = `create PROCEDURE ${insertProcedureTypeName}
 @tvp ${tableTypeName} READONLY
@@ -81,13 +82,15 @@ BEGIN
    [description],
    [username],
    [age],
-   [salary]
+   [salary],
+   [code]
  )
  SELECT 
  [description],
  [username],
  [age],
- [salary]
+ [salary],
+ [code]
 n FROM @tvp tvp
 END`
 
@@ -146,7 +149,7 @@ END`
         theConnection.getUserTypeTable(tableTypeName, (err, t) => {
           assert.ifError(err)
           table = t
-          assert(table.columns.length === 4)
+          assert(table.columns.length === 5)
           asyncDone()
         })
       }
@@ -168,13 +171,15 @@ END`
         description: longString,
         username: 'santa',
         age: 1000,
-        salary: 0
+        salary: 0,
+        code: 123456789012345
       },
       {
         description: 'an entry',
         username: 'md',
         age: 28,
-        salary: 100000
+        salary: 100000,
+        code: 98765432109876
       }
     ]
   }
@@ -186,13 +191,15 @@ END`
         description: longString,
         username: 'santa',
         age: 1000,
-        salary: 0
+        salary: 0,
+        code: 123456789012345
       },
       {
         description: 'can compound Ã¢â‚¬',
         username: 'md',
         age: 28,
-        salary: 100000
+        salary: 100000,
+        code: 98765432109876
       }
     ]
   }

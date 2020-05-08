@@ -169,7 +169,7 @@ namespace mssql
 		 return val;
 	 }
 
-	 Local<Value> MutateJS::get_array_elelemt_at_index(const Local<Array> &arr, const int index)
+	 Local<Value> MutateJS::get_array_elelemt_at_index(const Local<Array> &arr, const unsigned int index)
 	 {
 		 const nodeTypeFactory fact;
 		 const auto context = fact.isolate->GetCurrentContext();
@@ -179,7 +179,7 @@ namespace mssql
 		 return elem;
 	 }
 	
-	 void MutateJS::set_array_elelemt_at_index(const Local<Array>& arr, const int index, const Local<Value>& value)
+	 void MutateJS::set_array_elelemt_at_index(const Local<Array>& arr, const unsigned int index, const Local<Value>& value)
 	 {
 		 const nodeTypeFactory fact;
 		 const auto context = fact.isolate->GetCurrentContext();
