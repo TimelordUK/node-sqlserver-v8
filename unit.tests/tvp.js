@@ -65,12 +65,13 @@ END`
 \tusername nvarchar(30), 
 \tage int, 
 \tsalary real,
-\tcode numeric(18,0)
+\tcode numeric(18,0),
+\tstart_date datetime2
 )`
 
     const dropTypeSql = `IF TYPE_ID(N'${tableTypeName}') IS not NULL drop type ${tableTypeName}`
 
-    const createTypeSql = `CREATE TYPE ${tableTypeName} AS TABLE (description varchar(max), username nvarchar(30), age int, salary real, code numeric(18,0))`
+    const createTypeSql = `CREATE TYPE ${tableTypeName} AS TABLE (description varchar(max), username nvarchar(30), age int, salary real, code numeric(18,0), start_date datetime2)`
 
     const insertProcedureSql = `create PROCEDURE ${insertProcedureTypeName}
 @tvp ${tableTypeName} READONLY
@@ -83,14 +84,16 @@ BEGIN
    [username],
    [age],
    [salary],
-   [code]
+   [code],
+   [start_date]
  )
  SELECT 
  [description],
  [username],
  [age],
  [salary],
- [code]
+ [code],
+ [start_date]
 n FROM @tvp tvp
 END`
 
@@ -149,7 +152,7 @@ END`
         theConnection.getUserTypeTable(tableTypeName, (err, t) => {
           assert.ifError(err)
           table = t
-          assert(table.columns.length === 5)
+          assert(table.columns.length === 6)
           asyncDone()
         })
       }
@@ -166,42 +169,54 @@ END`
 
   function getVec (descriptionLength) {
     const longString = repeat('a', descriptionLength)
-    return [
+    const v = [
       {
         description: longString,
         username: 'santa',
         age: 1000,
         salary: 0,
-        code: 123456789012345
+        code: 123456789012345,
+        start_date: new Date(1695, 11, 25)
       },
       {
         description: 'an entry',
         username: 'md',
         age: 28,
         salary: 100000,
-        code: 98765432109876
+        code: 98765432109876,
+        start_date: new Date(2010, 1, 10)
       }
     ]
+    v.forEach(e => {
+      e.start_date.nanosecondsDelta = 0
+    })
+    return v
   }
 
   function getExtendedVec (descriptionLength) {
     const longString = repeat('a', descriptionLength)
-    return [
+    const v = [
       {
         description: longString,
         username: 'santa',
         age: 1000,
         salary: 0,
-        code: 123456789012345
+        code: 123456789012345,
+        start_date: new Date(1695, 11, 25)
       },
       {
         description: 'can compound Ã¢â‚¬',
         username: 'md',
         age: 28,
         salary: 100000,
-        code: 98765432109876
+        code: 98765432109876,
+        start_date: new Date(2010, 1, 10)
       }
     ]
+    v.forEach(e => {
+      e.start_date.nanosecondsDelta = 0
+    })
+    return v
   }
 
   test('use tvp simple test type insert test long string 8 * 1024', testDone => {
