@@ -65,13 +65,13 @@ END`
 \tusername nvarchar(30), 
 \tage int, 
 \tsalary real,
-\tcode numeric(18,0),
+\tcode numeric(18,3),
 \tstart_date datetime2
 )`
 
     const dropTypeSql = `IF TYPE_ID(N'${tableTypeName}') IS not NULL drop type ${tableTypeName}`
 
-    const createTypeSql = `CREATE TYPE ${tableTypeName} AS TABLE (description varchar(max), username nvarchar(30), age int, salary real, code numeric(18,0), start_date datetime2)`
+    const createTypeSql = `CREATE TYPE ${tableTypeName} AS TABLE (description varchar(max), username nvarchar(30), age int, salary real, code numeric(18,3), start_date datetime2)`
 
     const insertProcedureSql = `create PROCEDURE ${insertProcedureTypeName}
 @tvp ${tableTypeName} READONLY
@@ -175,7 +175,7 @@ END`
         username: 'santa',
         age: 1000,
         salary: 0,
-        code: 123456789012345,
+        code: 123456789012.345,
         start_date: new Date(1695, 11, 25)
       },
       {
@@ -201,7 +201,7 @@ END`
         username: 'santa',
         age: 1000,
         salary: 0,
-        code: 123456789012345,
+        code: 123456789012.345,
         start_date: new Date(1695, 11, 25)
       },
       {

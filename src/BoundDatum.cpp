@@ -597,9 +597,10 @@ namespace mssql
 			{
 				const auto num = Local<Number>::Cast<Value>(elem);
 				const auto d = num->Value();
-				encode_numeric_struct(d, static_cast<int>(param_size), digits, ns);
-				param_size = ns.precision;
-				digits = static_cast<unsigned char>(ns.scale);
+				encode_numeric_struct(d, static_cast<int>(param_size), 0, ns);
+				param_size = max(static_cast<unsigned int>(param_size), static_cast<unsigned int>(ns.precision));
+				//digits = max(static_cast<unsigned char>(digits),static_cast<unsigned char>(ns.scale));
+				digits = 0;
 				_indvec[i] = sizeof(SQL_NUMERIC_STRUCT);
 			}
 		}
@@ -1531,7 +1532,7 @@ namespace mssql
 	{
 		if (pp->IsArray())
 		{
-			bind_numeric_array(pp);
+			bind_double_array(pp);
 		}
 		else
 		{
