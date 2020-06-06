@@ -41,24 +41,42 @@ suite('sproc', function () {
     })
   })
 
-  test('proc with multiple select  - should callback with each', testDone => {
-    const spName = 'test_sp_select_select'
+  test('test sproc with insert, update and delete', testDone => {
+    const spName = 'test_sp_multi_statement'
 
     const def = `alter PROCEDURE <name>(
-@num1 INT,
-@num2 INT,
-@num3 INT OUTPUT
+@p1 INT,
+@p2 nvarchar(15),
+@p3 nvarchar(256)
 
 )AS
 BEGIN
-BEGIN
-    select top 5 'syscolumns' as table_name, name, id, xtype, length from syscolumns
-    select top 5 'sysobjects' as table_name, name, id, xtype, category from sysobjects
-END
+    insert into TestMultiStatement (BusinessEntityID, NationalIDNumber, LoginID) values (@p1, @p2, @p3)
+    
+    update TestMultiStatement set BusinessEntityID = 100 where BusinessEntityID = @p1
+    
+    delete from TestMultiStatement where BusinessEntityID = 100 
 END
 `
-
     const fns = [
+      asyncDone => {
+        theConnection.queryRaw('DROP TABLE TestMultiStatement', () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.queryRaw(`CREATE TABLE TestMultiStatement (
+          [BusinessEntityID] [int] NOT NULL,
+          [NationalIDNumber] [nvarchar](15) NOT NULL,
+          [LoginID] [nvarchar](256) NOT NULL,
+          )`,
+        e => {
+          assert.ifError(e)
+          asyncDone()
+        })
+      },
+
       asyncDone => {
         procedureHelper.createProcedure(spName, def, () => {
           asyncDone()
@@ -70,30 +88,10 @@ END
         pm.get(spName, proc => {
           const count = pm.getCount()
           assert.strictEqual(count, 1)
-          const aggregate = []
-          const reducer = (arr) => {
-            return arr.reduce((t, latest) => {
-              t.push(latest.table_name)
-              return t
-            }, [])
-          }
-          proc.call([], (err, results, output) => {
+          proc.call([1, 'NI123456', 'Programmer01'], (err, results, output, more) => {
             assert.ifError(err)
-            aggregate.push(results)
-            if (output) {
-              assert.strictEqual(2, aggregate.length, 'results didn\'t match')
-              assert.strictEqual(true, Array.isArray(aggregate[0]))
-              assert.strictEqual(true, Array.isArray(aggregate[1]))
-              const tableNames0 = reducer(aggregate[0])
-              tableNames0.forEach(s => {
-                assert.strictEqual('syscolumns', s)
-              })
-              const tableNames1 = reducer(aggregate[1])
-              tableNames1.forEach(s => {
-                assert.strictEqual('sysobjects', s)
-              })
-              asyncDone()
-            }
+            if (!output) return
+            asyncDone()
           })
         })
       }
@@ -156,6 +154,69 @@ END
           }
 
           next(0)
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('proc with multiple select  - should callback with each', testDone => {
+    const spName = 'test_sp_select_select'
+
+    const def = `alter PROCEDURE <name>(
+@num1 INT,
+@num2 INT,
+@num3 INT OUTPUT
+
+)AS
+BEGIN
+BEGIN
+    select top 5 'syscolumns' as table_name, name, id, xtype, length from syscolumns
+    select top 5 'sysobjects' as table_name, name, id, xtype, category from sysobjects
+END
+END
+`
+
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const aggregate = []
+          const reducer = (arr) => {
+            return arr.reduce((t, latest) => {
+              t.push(latest.table_name)
+              return t
+            }, [])
+          }
+          proc.call([], (err, results, output) => {
+            assert.ifError(err)
+            aggregate.push(results)
+            if (output) {
+              assert.strictEqual(2, aggregate.length, 'results didn\'t match')
+              assert.strictEqual(true, Array.isArray(aggregate[0]))
+              assert.strictEqual(true, Array.isArray(aggregate[1]))
+              const tableNames0 = reducer(aggregate[0])
+              tableNames0.forEach(s => {
+                assert.strictEqual('syscolumns', s)
+              })
+              const tableNames1 = reducer(aggregate[1])
+              tableNames1.forEach(s => {
+                assert.strictEqual('sysobjects', s)
+              })
+              asyncDone()
+            }
+          })
         })
       }
     ]
@@ -733,7 +794,7 @@ END
   test('call proc in non-dbo schema with parameters using callproc syntax', testDone => {
     const spName = 'TestSchema.test_sp_get_int_int'
 
-    let schemaName = 'TestSchema'
+    const schemaName = 'TestSchema'
     const createSchemaSql = `IF NOT EXISTS (
     SELECT schema_name
     FROM  information_schema.schemata
@@ -771,12 +832,12 @@ END
 
       asyncDone => {
         const pm = theConnection.procedureMgr()
-        pm.callproc(spName, [20, 8], function(err, results, output) {
-            assert.ifError(err)
-            let expected = [99, 28];
-            assert.ok(expected[0] == output[0], "results didn't match");
-            assert.ok(expected[1] == output[1], "results didn't match");
-            asyncDone()
+        pm.callproc(spName, [20, 8], function (err, results, output) {
+          assert.ifError(err)
+          const expected = [99, 28]
+          assert.ok(expected[0] === output[0], "results didn't match")
+          assert.ok(expected[1] === output[1], "results didn't match")
+          asyncDone()
         })
       }
     ]
