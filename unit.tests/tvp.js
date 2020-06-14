@@ -97,6 +97,65 @@ BEGIN
 n FROM @tvp tvp
 END`
 
+    const callProcFromProcName = 'callProcedureFromProcedure'
+    const dropCallProcedureSql = `IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('${callProcFromProcName}'))
+    begin drop PROCEDURE ${callProcFromProcName} end`
+
+    const callProcedureFromProcedureSql = `create PROCEDURE ${callProcFromProcName}
+(
+      @description varchar(max),
+      @username nvarchar(30),
+      @age int,
+      @salary real,
+      @code numeric(18,3),
+      @start_date datetime2
+)
+AS
+BEGIN
+ set nocount on
+
+ declare @TmpTvpTable TestTvpType;
+ INSERT @TmpTvpTable
+ (
+   [description],
+   [username],
+   [age],
+   [salary],
+   [code],
+   [start_date]
+ )
+ values
+(
+   @description,
+   @username,
+   @age,
+   @salary,
+   @code,
+   @start_date
+ )
+ 
+execute InsertTestTvp @TmpTvpTable;
+
+SELECT 'Insert Complete';
+
+WAITFOR DELAY '000:00:02';
+
+execute InsertTestTvp @TmpTvpTable;
+
+SELECT 'Insert 2 Complete';
+
+ SELECT 
+ [description],
+ [username],
+ [age],
+ [salary],
+ [code],
+ [start_date]
+FROM TestTvp;
+
+END
+`
+
     const fns = [
 
       asyncDone => {
@@ -108,6 +167,13 @@ END`
 
       asyncDone => {
         theConnection.query(dropProcedureSql, err => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.query(dropCallProcedureSql, err => {
           assert.ifError(err)
           asyncDone()
         })
@@ -143,6 +209,13 @@ END`
 
       asyncDone => {
         theConnection.query(insertProcedureSql, err => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.query(callProcedureFromProcedureSql, err => {
           assert.ifError(err)
           asyncDone()
         })
@@ -218,6 +291,78 @@ END`
     })
     return v
   }
+
+  test('call tvp proc from proc', testDone => {
+    const tableName = 'TestTvp'
+    const all = []
+    const expected = [
+      [
+        {
+          Column0: 'Insert Complete'
+        }
+      ],
+      [
+        {
+          Column0: 'Insert 2 Complete'
+        }
+      ],
+      [
+        {
+          description: 'a user',
+          username: 'newuser1',
+          age: 55,
+          salary: 99000,
+          code: 98765432109876,
+          start_date: new Date(2010, 1, 10)
+        },
+        {
+          description: 'a user',
+          username: 'newuser1',
+          age: 55,
+          salary: 99000,
+          code: 98765432109876,
+          start_date: new Date(2010, 1, 10)
+        }
+      ]
+    ]
+    let procedure
+    expected[2][0].start_date.nanosecondsDelta = 0
+    expected[2][1].start_date.nanosecondsDelta = 0
+
+    const fns = [
+
+      asyncDone => {
+        setupSimpleType(tableName, t => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get('callProcedureFromProcedure', p => {
+          assert(p)
+          procedure = p
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        console.log('about to call')
+        procedure.call(['a user', 'newuser1', 55, 99000, 98765432109876, new Date(2010, 1, 10)], (err, res, output, more) => {
+          assert.ifError(err)
+          all.push(res)
+          if (!output) return
+          assert.strictEqual(2, res.length)
+          assert.deepStrictEqual(expected, all)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
 
   test('use tvp simple test type insert test long string 8 * 1024', testDone => {
     const tableName = 'TestTvp'
