@@ -58,6 +58,30 @@ suite('compoundqueries', function () {
     })
   })
 
+  test('check row count emission is as expected for compound queries 1 insert', testDone => {
+    const expected = [1]
+    const received = []
+
+    const cmd = [
+      'create table rowsAffectedTest (id int, val int)',
+      'insert into rowsAffectedTest values (1, 5)',
+      'drop table rowsAffectedTest'
+    ]
+
+    const batch = cmd.join(';')
+    const q = theConnection.query(batch, err => {
+      assert.ifError(err)
+    })
+
+    q.on('rowcount', count => {
+      received.push(count)
+      if (received.length === expected.length) {
+        assert.deepStrictEqual(expected, received)
+        testDone()
+      }
+    })
+  })
+
   testname = 'test 001 - batched query: SELECT....; INSERT ....; SELECT....;'
   test(testname, done => {
     const testcolumnsize = 100
@@ -138,30 +162,6 @@ suite('compoundqueries', function () {
       done()
     }) // end of async.series()
   }) // end of test()
-
-  test('check row count emission is as expected for compound queries 1 insert', testDone => {
-    const expected = [1]
-    const received = []
-
-    const cmd = [
-      'create table rowsAffectedTest (id int, val int)',
-      'insert into rowsAffectedTest values (1, 5)',
-      'drop table rowsAffectedTest'
-    ]
-
-    const batch = cmd.join(';')
-    const q = theConnection.query(batch, err => {
-      assert.ifError(err)
-    })
-
-    q.on('rowcount', count => {
-      received.push(count)
-      if (received.length === expected.length) {
-        assert.deepStrictEqual(expected, received)
-        testDone()
-      }
-    })
-  })
 
   test('check row count emission is as expected for compound queries 3 inserts, update all', testDone => {
     const expected = [1, 1, 1, 3]
