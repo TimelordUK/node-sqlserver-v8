@@ -360,6 +360,43 @@ END
     return v
   }
 
+  test('use tvp simple test type insert test long string 8 * 1024', testDone => {
+    const tableName = 'TestTvp'
+    let table
+    const vec = getVec(8 * 1024)
+    const fns = [
+
+      asyncDone => {
+        setupSimpleType(tableName, t => {
+          table = t
+          table.addRowsFromObjects(vec)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const tp = sql.TvpFromTable(table)
+        table.rows = []
+        theConnection.query('exec insertTestTvp @tvp = ?;', [tp], err => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.query(`select * from ${tableName}`, (err, res) => {
+          assert.ifError(err)
+          assert.deepStrictEqual(vec, res)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test('call tvp proc with local table', testDone => {
     const tableName = 'TestTvp'
     const all = []
@@ -493,43 +530,6 @@ END
     })
   })
 
-  test('use tvp simple test type insert test long string 8 * 1024', testDone => {
-    const tableName = 'TestTvp'
-    let table
-    const vec = getVec(8 * 1024)
-    const fns = [
-
-      asyncDone => {
-        setupSimpleType(tableName, t => {
-          table = t
-          table.addRowsFromObjects(vec)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const tp = sql.TvpFromTable(table)
-        table.rows = []
-        theConnection.query('exec insertTestTvp @tvp = ?;', [tp], err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        theConnection.query(`select * from ${tableName}`, (err, res) => {
-          assert.ifError(err)
-          assert.deepStrictEqual(vec, res)
-          asyncDone()
-        })
-      }
-    ]
-
-    async.series(fns, () => {
-      testDone()
-    })
-  })
-
   test('use tvp simple test type insert test extended ascii', testDone => {
     const tableName = 'TestTvp'
     let table
@@ -568,7 +568,7 @@ END
   })
 
   test('use tvp to select from table type complex object Employee type', testDone => {
-    const tableName = 'Employee'
+    const tableName = 'employee'
     let bulkMgr
 
     const fns = [
@@ -628,7 +628,7 @@ END
   })
 
   test('employee use tm to get a table value type representing table and create that user table type', testDone => {
-    const tableName = 'Employee'
+    const tableName = 'employee'
     let bulkMgr
 
     const fns = [

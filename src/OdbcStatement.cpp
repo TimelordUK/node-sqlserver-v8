@@ -267,15 +267,12 @@ namespace mssql
 		SQLHANDLE ipd = nullptr;
 		const auto& statement = *_statement;
 		SQLINTEGER string_length = 0;
-		SQLTCHAR parameter_type_name[256];
 		auto r = SQLGetStmtAttr(statement, SQL_ATTR_IMP_PARAM_DESC, &ipd, SQL_IS_POINTER, &string_length);
 		if (!check_odbc_error(r)) return;
-		const auto schema = datum->get_storage()->schema;		
+		const auto schema = datum->get_storage()->schema;
 		if (!schema.empty()) {
-			auto* const schema_ptr = const_cast<wchar_t*>(schema.c_str());
-			r = SQLSetDescField(ipd, current_param, SQL_CA_SS_SCHEMA_NAME, reinterpret_cast<SQLPOINTER>(schema_ptr), schema.size() * sizeof(wchar_t));
-			if (!check_odbc_error(r)) return;
-			r = SQLGetDescField(ipd, current_param, SQL_CA_SS_SCHEMA_NAME, parameter_type_name, sizeof(parameter_type_name), &string_length);
+			auto schema_vec = wstr2wcvec(schema);
+			r = SQLSetDescField(ipd, current_param, SQL_CA_SS_SCHEMA_NAME, reinterpret_cast<SQLPOINTER>(schema_vec.data()), schema_vec.size() * 2);
 			if (!check_odbc_error(r)) return;
 		}
 		tvp_t tvp;

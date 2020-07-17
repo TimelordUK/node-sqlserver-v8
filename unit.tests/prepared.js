@@ -75,7 +75,7 @@ function empNoParamsSQL () {
 }
 
 suite('prepared', function () {
-  const tableName = 'Employee'
+  const tableName = 'employee'
   let connStr
   let theConnection
   let support

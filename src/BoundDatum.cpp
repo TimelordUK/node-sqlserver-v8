@@ -458,8 +458,9 @@ namespace mssql
 		auto* itr_p = _storage->charvec_ptr->data();
 		type_id_str->WriteUtf8(fact.isolate, itr_p, precision);
 		const string narrow = _storage->charvec_ptr->data();
-		const auto wide = converter.from_bytes(narrow);
-		memcpy(static_cast<void*>(_storage->uint16vec_ptr->data()), wide.c_str(), precision * sizeof(uint16_t));
+		auto type_name = converter.from_bytes(narrow);
+		auto type_name_vec = wstr2wcvec(type_name);
+		memcpy(static_cast<void*>(_storage->uint16vec_ptr->data()), type_name_vec.data(), precision * sizeof(uint16_t));
 		buffer = _storage->uint16vec_ptr->data();
 		buffer_len = precision * sizeof(uint16_t);
 		param_size = rows; // max no of rows.

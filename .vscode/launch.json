@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "/home/stephen/.nvm/versions/node/v14.5.0/bin/node",
-            "args": ["runtest", "-u", "-t", "bulk"],
+            "args": ["runtest", "-u", "-t", "tvp"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
