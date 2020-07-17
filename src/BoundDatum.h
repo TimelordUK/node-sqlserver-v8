@@ -38,11 +38,11 @@ namespace mssql
 			buffer_len(0),
 			param_type(SQL_PARAM_INPUT),
 			offset(0),
+			is_tvp(false),
+			tvp_no_cols(0),
 			definedPrecision(false),
 			definedScale(false),
-			err(nullptr),
-			is_tvp(false),
-			tvp_no_cols(0)
+			err(nullptr)	
 		{
 			_indvec = vector<SQLLEN>(1);
 			_storage = make_shared<DatumStorage>();

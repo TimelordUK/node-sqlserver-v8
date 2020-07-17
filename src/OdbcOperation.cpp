@@ -83,7 +83,7 @@ namespace mssql
 		if (_connection) {
 			failures = _connection->errors();
 		}
-		if (!failures || failures->empty() && _statement) {
+		if (!failures || (failures->empty() && _statement)) {
 			failures = _statement->errors();
 		}
 		if (!failures || failures->empty())
@@ -163,7 +163,7 @@ namespace mssql
 		const auto context = isolate->GetCurrentContext();
 		const auto global = context->Global();
 		// std::cout << " complete_foreground " << timer.get_counter() << endl;
-		args[argc] = fact.new_number(timer.get_counter());
+		//args[argc] = fact.new_number(timer.get_counter());
 		cons->Call(context, global, argc, args);
 	}
 }

@@ -18,11 +18,14 @@
 //---------------------------------------------------------------------------------------------------------------------------------
 
 #include "stdafx.h"
+#include <locale>
+#include <codecvt>
 #include <OdbcConnection.h>
 #include <OdbcStatementCache.h>
 #include <OdbcOperation.h>
 #include <OperationManager.h>
 #include <NodeColumns.h>
+#include <iostream>
 
 namespace mssql
 {
@@ -30,19 +33,16 @@ namespace mssql
 
 	bool OdbcConnection::InitializeEnvironment()
 	{
-		// fprintf(stderr, ">> InitializeEnvironment\n\n");
-
-		auto ret = SQLSetEnvAttr(nullptr, SQL_ATTR_CONNECTION_POOLING, reinterpret_cast<SQLPOINTER>(SQL_CP_ONE_PER_HENV), 0);
-		if (!SQL_SUCCEEDED(ret)) { return false; }
-
 		if (!environment.alloc()) { return false; }
-
+		auto ret = SQLSetEnvAttr(environment, SQL_ATTR_CONNECTION_POOLING, reinterpret_cast<SQLPOINTER>(SQL_CP_ONE_PER_HENV), 0);
+		if (!SQL_SUCCEEDED(ret)) { return false; }
 		ret = SQLSetEnvAttr(environment, SQL_ATTR_ODBC_VERSION, reinterpret_cast<SQLPOINTER>(SQL_OV_ODBC3), 0);
 		if (!SQL_SUCCEEDED(ret)) { return false; }
-		ret = SQLSetEnvAttr(environment, SQL_ATTR_CP_MATCH, reinterpret_cast<SQLPOINTER>(SQL_CP_RELAXED_MATCH), 0);
-		if (!SQL_SUCCEEDED(ret)) { return false; }
-
-		// fprintf(stderr, "<< InitializeEnvironment\n\n");
+		//ret = SQLSetEnvAttr(environment, SQL_ATTR_CP_MATCH, reinterpret_cast<SQLPOINTER>(SQL_CP_RELAXED_MATCH), 0);
+		if (!SQL_SUCCEEDED(ret)) { 
+			fprintf(stderr, " InitializeEnvironment fail %d\n", ret);
+			return false; 
+		}
 
 		return true;
 	}
@@ -99,7 +99,7 @@ namespace mssql
 	{
 		if (timeout > 0)
 		{
-			auto* const to = reinterpret_cast<SQLPOINTER>(static_cast<UINT_PTR>(timeout));
+			auto* const to = reinterpret_cast<SQLPOINTER>(timeout);
 			auto ret = SQLSetConnectAttr(*connection, SQL_ATTR_CONNECTION_TIMEOUT, to, 0);
 			if (!CheckOdbcError(ret)) return false;
 
@@ -127,9 +127,13 @@ namespace mssql
 
 		auto ret = open_timeout(timeout);
 		if (!CheckOdbcError(ret)) return false;
-		auto * conn_str = const_cast<wchar_t *>(connection_string.c_str());
 		const auto len = static_cast<SQLSMALLINT>(connection_string.length());
-		ret = SQLDriverConnect(*connection, nullptr, conn_str, len, nullptr, 0, nullptr, SQL_DRIVER_NOPROMPT);
+		auto vec = wstr2wcvec(connection_string);
+		//auto * conn_str = const_cast<wchar_t *>(connection_string.c_str());	
+		auto tst = swcvec2str(vec, len);
+		// cerr << " tst " << tst << endl;
+		ret = SQLDriverConnect(*connection, nullptr, vec.data(), 
+		len, nullptr, 0, nullptr, SQL_DRIVER_NOPROMPT);
 		if (!CheckOdbcError(ret)) return false;
 
 		connectionState = Open;

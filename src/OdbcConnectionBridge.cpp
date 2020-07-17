@@ -37,6 +37,7 @@
 #include <OdbcStatementCache.h>
 #include <PollingModeOperation.h>
 #include <MutateJS.h>
+#include <iostream>
 
 namespace mssql
 {
@@ -240,7 +241,9 @@ namespace mssql
 		if (maybe_to.ToLocal(&local)) {
 			timeout = local->Value();
 		}
-		auto op = make_shared<OpenOperation>(connection, FromV8String(connection_string), timeout, callback, backpointer);
+		
+		auto cc= FromV8String(connection_string);
+		auto op = make_shared<OpenOperation>(connection, cc, timeout, callback, backpointer);
 		op->mgr = connection->ops;
 		connection->ops->add(op);
 

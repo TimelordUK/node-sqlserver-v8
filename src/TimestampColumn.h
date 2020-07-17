@@ -4,7 +4,7 @@
 #include <Column.h>
 #include <Utility.h>
 #include <sql.h>
-#include <sqlncli.h>
+#include <stdafx.h>
 #include <BoundDatumHelper.h>
 
 namespace mssql

@@ -1,7 +1,8 @@
 const sql = require('msnodesqlv8')
 
 const pool = new sql.Pool({
-  connectionString: 'Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;'
+  connectionString: 'Driver={SQL Server Native Client 17.0}; Server=192.168.56.1; UID=linux; PWD=linux'
+  // connectionString: 'Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;'
 })
 
 pool.on('open', (options) => {

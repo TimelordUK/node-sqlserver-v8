@@ -1,7 +1,9 @@
 const sql = require('msnodesqlv8')
 const util = require('util')
 
-const connectionString = 'Driver={SQL Server Native Client 11.0}; Server=(localdb)\\node; Database={master}; Trusted_Connection=Yes;'
+// const connectionString = 'Driver={SQL Server Native Client 17.0}; Server=192.168.56.1; database=node; Trusted_Connection=no; User Id=linux;Password=linux;'
+
+const connectionString = 'Driver={SQL Server Native Client 17.0}; database=node; Server=192.168.56.1; UID=linux; PWD=linux'
 
 function dispatch (con, query) {
   return new Promise((resolve, reject) => {
@@ -16,6 +18,7 @@ function dispatch (con, query) {
       metadata = meta
       currentRow = [metadata.length]
       lastColumn = metadata.length - 1
+      console.log(`meta = ${JSON.stringify(meta, null, 4)}`)
     })
 
     q.on('submitted', (m) => {
@@ -24,6 +27,7 @@ function dispatch (con, query) {
     })
 
     q.on('column', (index, data) => {
+      console.log(`column [${index}] = ${JSON.stringify(data, null, 4)}`)
       currentRow[index] = data
       if (index === lastColumn) {
         currentRow = [metadata.length]
@@ -54,7 +58,9 @@ async function run () {
   const promised = util.promisify(sql.open)
   const conn = await promised(connectionString)
   const d = new Date()
-  const rows = await dispatch(conn, 'SELECT * FROM syscomments')
+  // const rows = await dispatch(conn, 'select @@SERVERNAME as server_name')
+  // EXEC sys.sp_helpindex @objname = N'[users]'
+  const rows = await dispatch(conn, `EXEC sys.sp_helpindex @objname = N'[users]'`)
   const elapsed = new Date() - d
   console.log(`${rows.length} rows returned elapsed ${elapsed}`)
   return rows

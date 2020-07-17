@@ -34,12 +34,14 @@ namespace mssql
     {
 	   return String::NewFromTwoByte(Isolate::GetCurrent(), reinterpret_cast<const uint16_t*>(text));
     }*/
-
+	vector<SQLWCHAR> wstr2wcvec(const wstring & s);
+	string swcvec2str(vector<SQLWCHAR> &v, int l);
+    string w2sqlc(const wstring & s);
+	wstring s2ws(const string & s);
     wstring FromV8String(Local<String> input);
 	void encode_numeric_struct(double v, int precision, int upscale_limit, SQL_NUMERIC_STRUCT & numeric);
 
-    string w2a(const wchar_t* input);
-
+/*
 	struct clock_capture
 	{
 		double pc_freq = 0.0;
@@ -67,7 +69,7 @@ namespace mssql
 			QueryPerformanceCounter(&li);
 			return double(li.QuadPart - counter_start) / pc_freq;
 		}
-	};
+	};*/
 
     struct nodeTypeFactory
     {

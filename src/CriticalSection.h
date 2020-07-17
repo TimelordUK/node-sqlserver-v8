@@ -16,45 +16,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
+#include <thread>
+#include <mutex>
 
 namespace mssql {
 
 #pragma once
 
-   class CriticalSection {
-
-   public:
-
-       CriticalSection()
-       {
-           InitializeCriticalSection( &handle_ );
-       }
-
-       ~CriticalSection()
-       {
-           DeleteCriticalSection( &handle_ );
-       }
-
-       void lock( void )
-       {
-           EnterCriticalSection( &handle_ );
-       }
-
-       void unlock( void )
-       {
-           LeaveCriticalSection( &handle_ );
-       }
-
-   private:
-
-       CRITICAL_SECTION handle_;
-   };
-
    class ScopedCriticalSectionLock {
 
    public:
 
-       ScopedCriticalSectionLock( CriticalSection& cs ) :
+       ScopedCriticalSectionLock( std::mutex & cs ) :
            criticalSection_( cs )
        {
            criticalSection_.lock();
@@ -66,8 +39,7 @@ namespace mssql {
        }
 
    private:
-
-       CriticalSection& criticalSection_;
+      std::mutex & criticalSection_;
    };
 
 }  // mssql

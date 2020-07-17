@@ -27,6 +27,7 @@ namespace mssql {
     using namespace std;
  
 	class OdbcStatement;
+	class OperationManager;
 
     class Operation
     {

@@ -74,9 +74,11 @@
     "tedious": "^8.3.0"
   },
   "os": [
-    "win32"
+    "win32",
+    "linux"
   ],
   "scripts": {
+    "prebuild-gyp": "node-gyp rebuild",
     "install": "prebuild-install || node-gyp rebuild",
     "prebuild-all": "npm run prebuild-node && npm run prebuild-node-ia32 && npm run prebuild-electron && npm run prebuild-electron-ia32",
     "prebuild-node": "prebuild -t 10.16.0 -t 11.15.0 -t 12.16.2 -t 13.13.0 -t 14.5.0 --strip",

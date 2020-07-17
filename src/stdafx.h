@@ -24,9 +24,19 @@
 #include <node.h>
 #include <node_buffer.h>
 
+#ifdef LINUX_BUILD
+#include <sqltypes.h>
+#include <sqlspi.h>
+#include <sqlext.h>
+#include <sql.h>
+#include "sqlncli-linux.h"
+#endif
+
 #include <sqlucode.h>
 
+#ifdef WINDOWS_BUILD
 #include <windows.h>	// for critical section until xplatform
+#endif
 
 #include <vector>
 #include <queue>
@@ -41,7 +51,12 @@
 #include "OdbcHandle.h"
 
 // #define interface struct 	// for the COM interfaces in sqlncli.h and to avoid including extra files
+
+#ifdef WINDOWS_BUILD
 #include "sqlncli.h"	 	// SQL Server specific constants
+#endif
+
+
 
 // default values filled in for a JS date object when retrieving a SQL Server time field
 // There is no default JS date when only a time is furnished, so we are using the SQL Server

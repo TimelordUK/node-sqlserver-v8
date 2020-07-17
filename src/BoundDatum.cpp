@@ -2,6 +2,8 @@
 #include <BoundDatum.h>
 #include <MutateJS.h>
 #include <codecvt>
+#include <locale>
+#include <string.h>
 
 namespace mssql
 {
@@ -424,7 +426,7 @@ namespace mssql
 	{
 		const nodeTypeFactory fact;
 		wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
-		char tmp[1 * 1024];
+		char tmp[1 * 1024];	
 		const auto precision = min(1024, s->Length() + 1);
 		s->WriteUtf8(fact.isolate, tmp, precision);
 		const string narrow(tmp);
@@ -1254,9 +1256,14 @@ namespace mssql
 			Local<Number> local;
 			if (maybe.ToLocal(&local)) {
 				const auto d = local->Value();
+				#ifdef WINDOWS_BUILD
 				if (_isnan(d) || !_finite(d))
+				#endif
+				#ifdef LINUX_BUILD
+				if (isnan(d) || !finite(d))
+				#endif
 				{
-					err = static_cast<char*>("Invalid number parameter");
+					err = const_cast<char*>("Invalid number parameter");
 					return false;
 				}
 				bind_number(p);
@@ -1276,7 +1283,7 @@ namespace mssql
 		}
 		else
 		{
-			err = static_cast<char*>("Invalid parameter type");
+			err = const_cast<char*>("Invalid parameter type");
 			return false;
 		}
 
@@ -1627,7 +1634,7 @@ namespace mssql
 			}
 			else
 			{
-				err = static_cast<char*>("Invalid parameter type");
+				err = const_cast<char*>("Invalid parameter type");
 			}
 		}
 	}
@@ -1806,10 +1813,10 @@ namespace mssql
 		}
 		else if (counts.getoutBoundsCount() > 0)
 		{
-			err = static_cast<char*>("Invalid number parameter");
+			err = const_cast<char*>("Invalid number parameter");
 			return false;
 		}
-		else if (counts.numberCount > 0 || counts.int64Count > 0 && counts.int32Count > 0)
+		else if (counts.numberCount > 0 || (counts.int64Count > 0 && counts.int32Count > 0))
 		{
 			bind_double_array(pp);
 		}
@@ -1831,7 +1838,7 @@ namespace mssql
 		}
 		else
 		{
-			err = static_cast<char*>("Invalid parameter type");
+			err = const_cast<char*>("Invalid parameter type");
 			return false;
 		}
 
@@ -1846,6 +1853,7 @@ namespace mssql
 
 	Local<Value> BoundDatum::unbind_string() const
 	{
+		const nodeTypeFactory fact;
 		const auto s = MutateJS::from_two_byte(_storage->uint16vec_ptr->data());
 		return s;
 	}

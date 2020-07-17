@@ -22,6 +22,7 @@
 #include <locale>
 #include <codecvt>
 #include <set>
+#include <iostream>
 
 namespace mssql
 {
@@ -78,28 +79,40 @@ namespace mssql
 		return handle;
 	} 
 
+	string print_vec(vector<SQLWCHAR> &v, int l) {
+		vector<char> c_str;
+		c_str.reserve(l);
+		const char* ptr = reinterpret_cast<const char*>(v.data());
+			for (int i = 0, j = 0; i < l * 2; i+=2, j++) {
+				// cerr << "ptr." << i << " = " << ptr[i] << " " << (int)ptr[i] << endl;
+				c_str[j] = ptr[i];
+			}
+			string s(c_str.data());
+			return s;
+	}
+
 	void OdbcHandle::read_errors(shared_ptr<vector<shared_ptr<OdbcError>>> & errors) const
 	{
 		SQLSMALLINT msg_len = 0;
 		SQLRETURN      rc2 = 0;
 		SQLINTEGER    native_error = 0;
-		SQLWCHAR        msg[2 * 1024];
-		SQLWCHAR sql_state[6];
+		vector<SQLWCHAR> msg;
+		msg.reserve(2 * 1024);
+		msg.resize(2 * 1024);
+		vector<SQLWCHAR> sql_state;
+		sql_state.reserve(6);
+		sql_state.resize(6);
 		set<string> received;
 		// Get the status records.  
 		SQLSMALLINT i = 1;
 		errors->clear();
-		while ((rc2 = SQLGetDiagRec(HandleType, handle, i, sql_state, &native_error, msg, sizeof(msg) / sizeof(SQLWCHAR), &msg_len)) != SQL_NO_DATA) {
-			const wstring sqlstate(sql_state);
-			const wstring message(msg);
+		while ((rc2 = SQLGetDiagRec(HandleType, handle, i,  sql_state.data(), &native_error, msg.data(), msg.capacity(), &msg_len)) != SQL_NO_DATA) {
 			if (rc2 < 0) {
 				break;
 			}
-			//setup converter
-			using convert_type = codecvt_utf8<wchar_t>;
-			wstring_convert<convert_type, wchar_t> converter;
-			auto c_state = converter.to_bytes(sqlstate);
-			auto c_msg = converter.to_bytes(message);
+		
+			auto c_msg = print_vec(msg, msg_len);
+			auto c_state = print_vec(sql_state, sql_state.size());
 			const auto m = string(c_msg);
 			if (received.find(m) == received.end()) {
 				const auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), native_error);

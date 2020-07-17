@@ -25,9 +25,9 @@ namespace mssql
 {
     using namespace v8;
 
-    static const wchar_t* map_type(const SQLSMALLINT datatype)
+    static const char* map_type(const SQLSMALLINT datatype)
     {
-	   const wchar_t* type_name;
+	   const char* type_name;
 
 	   switch (datatype)
 	   {
@@ -39,10 +39,10 @@ namespace mssql
 	   case SQL_WLONGVARCHAR:
 	   case SQL_GUID:
 	   case SQL_SS_XML:
-		  type_name = L"text";
+		  type_name = "text";
 		  break;
 	   case SQL_BIT:
-		  type_name = L"boolean";
+		  type_name = "boolean";
 		  break;
 	   case SQL_SMALLINT:
 	   case SQL_TINYINT:
@@ -53,23 +53,23 @@ namespace mssql
 	   case SQL_FLOAT:
 	   case SQL_DOUBLE:
 	   case SQL_BIGINT:
-		  type_name = L"number";
+		  type_name = "number";
 		  break;
 	   case SQL_TYPE_TIME:
 	   case SQL_SS_TIME2:
 	   case SQL_TYPE_TIMESTAMP:
 	   case SQL_TYPE_DATE:
 	   case SQL_SS_TIMESTAMPOFFSET:
-		  type_name = L"date";
+		  type_name = "date";
 		  break;
 	   case SQL_BINARY:
 	   case SQL_VARBINARY:
 	   case SQL_LONGVARBINARY:
 	   case SQL_SS_UDT:
-		  type_name = L"binary";
+		  type_name = "binary";
 		  break;
 	   default:
-		  type_name = L"text";
+		  type_name = "text";
 		  break;
 	   }
 	   return type_name;
@@ -102,13 +102,13 @@ namespace mssql
 	Local<Object> ResultSet::get_entry(const nodeTypeFactory & fact, const ColumnDefinition & definition)  {
 		const auto* const type_name = map_type(definition.dataType);
 		const auto entry = fact.new_object();
-		MutateJS::set_property_value(entry, MutateJS::from_two_byte(L"size"), fact.new_integer(static_cast<int32_t>(definition.columnSize)));
-		MutateJS::set_property_value(entry, MutateJS::from_two_byte(L"name"), MutateJS::from_two_byte(definition.name.c_str()));
-		MutateJS::set_property_value(entry, MutateJS::from_two_byte(L"nullable"), fact.new_boolean(definition.nullable != 0));
-		MutateJS::set_property_value(entry, MutateJS::from_two_byte(L"type"), MutateJS::from_two_byte(type_name));
-		MutateJS::set_property_value(entry, MutateJS::from_two_byte(L"sqlType"), MutateJS::from_two_byte(definition.dataTypeName.c_str()));
+		MutateJS::set_property_value(entry, fact.new_string("size"), fact.new_integer(static_cast<int32_t>(definition.columnSize)));
+		MutateJS::set_property_value(entry, fact.new_string("name"),  fact.new_string(definition.name.c_str()));
+		MutateJS::set_property_value(entry, fact.new_string("nullable"), fact.new_boolean(definition.nullable != 0));
+		MutateJS::set_property_value(entry, fact.new_string("type"), fact.new_string(type_name));
+		MutateJS::set_property_value(entry, fact.new_string("sqlType"), fact.new_string(definition.dataTypeName.c_str()));
 		if (definition.dataType == SQL_SS_UDT) {
-			MutateJS::set_property_value(entry, MutateJS::from_two_byte(L"udtType"), MutateJS::from_two_byte(definition.udtTypeName.c_str()));
+			MutateJS::set_property_value(entry, fact.new_string("udtType"), fact.new_string(definition.udtTypeName.c_str()));
 		}
 		return entry;
 	}

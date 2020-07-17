@@ -24,6 +24,11 @@ function runTest () {
     connStr = 'Driver={SQL Server Native Client 11.0}; Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;'
   }
 
+  if (Object.prototype.hasOwnProperty.call(argv, 'u')) {
+    connStr = ' Driver={SQL Server Native Client 17.0}; database=node; Server=192.168.56.1; UID=linux; PWD=linux'
+  }
+
+  //
   if (!Array.isArray(toRun)) {
     toRun = [toRun]
   }

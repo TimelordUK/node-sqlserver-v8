@@ -55,7 +55,7 @@ namespace mssql
 		SQLRETURN open_timeout(int timeout);
 		
 		shared_ptr<OdbcConnectionHandle> connection;
-		CriticalSection closeCriticalSection;
+		std::mutex closeCriticalSection;
 
 		// any error that occurs when a Try* function returns false is stored here
 		// and may be retrieved via the Error function below.

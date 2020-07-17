@@ -6,6 +6,12 @@
 
 #include <limits>
 #include <vector>
+#include <string.h>
+
+#ifdef LINUX_BUILD
+#include <cmath>
+#include <cfloat>
+#endif
 
 namespace mssql
 {
@@ -27,9 +33,21 @@ namespace mssql
 		typedef vector<SQL_DATE_STRUCT > date_struct_vec_t;
 		typedef vector<SQL_NUMERIC_STRUCT> numeric_struct_vec_t;
 
+/*
+		shared_ptr<int32_vec_t> int32vec_ptr;
+		shared_ptr<uint32_vec_t> uint32vec_ptr;
+		shared_ptr<int64_vec_t> int64vec_ptr;
+		shared_ptr<double_vec_t> doublevec_ptr;
+		shared_ptr<timestamp_offset_vec_t> timestampoffsetvec_ptr;
+		shared_ptr<time2_struct_vec_t> time2vec_ptr;
+		shared_ptr<timestamp_struct_vec_t> timestampvec_ptr;
+		shared_ptr<date_struct_vec_t> datevec_ptr;
+		shared_ptr<numeric_struct_vec_t> numeric_ptr;
+		shared_ptr<char_vec_t> charvec_ptr;
+		shared_ptr<uint16_t_vec_t> uint16vec_ptr;
+		*/
+
 		DatumStorage() :
-			charvec_ptr(nullptr),
-			uint16vec_ptr(nullptr),
 			int32vec_ptr(nullptr),
 			uint32vec_ptr(nullptr),
 			int64vec_ptr(nullptr),
@@ -38,7 +56,9 @@ namespace mssql
 			time2vec_ptr(nullptr),
 			timestampvec_ptr(nullptr),
 			datevec_ptr(nullptr),
-			numeric_ptr(nullptr)
+			numeric_ptr(nullptr),
+			charvec_ptr(nullptr),
+			uint16vec_ptr(nullptr)	
 		{
 		}
 
@@ -146,8 +166,19 @@ namespace mssql
 				if (maybe.ToLocal(&local))
 				{
 					auto d = local->Value();
+					#ifdef WINDOWS_BUILD
 					if (_isnan(d)) ++nanCount;
+					#endif
+					#ifdef LINUX_BUILD
+					if (isnan(d)) ++nanCount;
+					#endif
+					#ifdef WINDOWS_BUILD
 					else if (!_finite(d)) ++infiniteCount;
+					#endif
+					#ifdef LINUX_BUILD
+					else if (!finite(d)) ++infiniteCount;
+					#endif
+
 					if (d == floor(d) &&
 						d >= std::numeric_limits<int32_t>::min() &&
 						d <= std::numeric_limits<int32_t>::max()) {

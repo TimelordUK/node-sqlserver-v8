@@ -1,0 +1,25 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558 
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "g++ build make file",
+            // "command": "cd build && make debug",
+            "command": "node-gyp -d build",
+            "args": [],
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": ["relative", 
+                    "/home/stephen/dev/js/sql/node_modules/msnodesqlv8/src/", 
+                    "/home/stephen/dev/js/sql/node_modules/msnodesqlv8/build/"]
+            },
+            "detail": "make",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}

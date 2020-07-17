@@ -51,9 +51,8 @@ namespace mssql
         static OdbcError NODE_SQL_NO_DATA;
 
     private:
-
-        string message;
         string sqlstate;
+        string message; 
         SQLINTEGER code;
     };
 

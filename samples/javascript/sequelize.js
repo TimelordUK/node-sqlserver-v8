@@ -6,10 +6,10 @@ const sequelize = new Sequelize({
   dialectOptions: {
     user: '',
     password: '',
-    database: 'scratch',
+    database: 'node',
     options: {
       driver: '',
-      connectionString: 'Driver={SQL Server Native Client 11.0};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;',
+      connectionString: 'Driver={SQL Server Native Client 17.0}; database=node; Server=192.168.56.1; UID=linux; PWD=linux',
       trustedConnection: true,
       instanceName: ''
     }

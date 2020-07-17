@@ -27,7 +27,7 @@ namespace mssql
     using namespace std;
     using namespace v8;
 
-    class Connection :node::ObjectWrap
+    class Connection : public node::ObjectWrap
     {
     public:
 		static void initialize(Local<Object> exports);
