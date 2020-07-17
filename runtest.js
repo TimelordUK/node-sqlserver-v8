@@ -25,7 +25,7 @@ function runTest () {
   }
 
   if (Object.prototype.hasOwnProperty.call(argv, 'u')) {
-    connStr = ' Driver={SQL Server Native Client 17.0}; database=node; Server=192.168.56.1; UID=linux; PWD=linux'
+    connStr = ' Driver={ODBC Driver 17 for SQL Server}; database=node; Server=192.168.56.1; UID=linux; PWD=linux'
   }
 
   //

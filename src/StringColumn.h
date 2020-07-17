@@ -69,4 +69,51 @@ namespace mssql
 		shared_ptr<DatumStorage::uint16_t_vec_t> storage;
 		size_t offset = 0;
     };
+
+    class StringUtf8Column : public Column
+    {
+    public:
+	   virtual ~StringUtf8Column()
+	   {
+	   }
+
+	   StringUtf8Column(int id, shared_ptr<DatumStorage> s, size_t size) 
+	   : 
+		Column(id), 
+		size(size), 
+		storage(s->charvec_ptr)
+	   {
+	   }
+
+	   StringUtf8Column(int id, shared_ptr<DatumStorage::char_vec_t> s, size_t size) 
+	   : 
+		Column(id), 
+		size(size), 
+		storage(s)
+	   {
+	   }
+
+	   StringUtf8Column(int id, shared_ptr<DatumStorage::char_vec_t> s, size_t offset, size_t size) 
+	   : 
+		Column(id), 
+		size(size), 
+		storage(s),
+		offset(offset)
+	   {
+	   }
+		
+	   Local<Value> ToValue() override
+	   {
+			nodeTypeFactory fact;
+		  	auto sptr = storage->data();
+		  	const char* ptr = reinterpret_cast<const char*>(sptr + offset);
+		  	auto s = fact.new_string(ptr);
+		  	return s;
+	   }
+
+    private:
+		size_t size;
+		shared_ptr<DatumStorage::char_vec_t> storage;
+		size_t offset = 0;
+    };
 }

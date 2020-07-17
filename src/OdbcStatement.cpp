@@ -1175,9 +1175,9 @@ namespace mssql
 		lob_capture() :
 			total_bytes_to_read(atomic_read_bytes)
 		{
-			storage.ReserveUint16(atomic_read_bytes / item_size + 1);
-			uint16_data = storage.uint16vec_ptr;
-			write_ptr = uint16_data->data();		
+			storage.ReserveChars(atomic_read_bytes / item_size + 1);
+			char_data = storage.charvec_ptr;
+			write_ptr = char_data->data();		
 			maxvarchar = false;
 		}
 
@@ -1185,15 +1185,15 @@ namespace mssql
 		{
 			if (maxvarchar)
 			{
-				auto last = uint16_data->size() - 1;
+				auto last = char_data->size() - 1;
 				if (maxvarchar)
 				{
-					while ((*uint16_data)[last] == 0)
+					while ((*char_data)[last] == 0)
 					{
 						--last;
 					}
-					if (last < uint16_data->size() - 1) {
-						uint16_data->resize(last + 1);
+					if (last < char_data->size() - 1) {
+						char_data->resize(last + 1);
 					}
 				}
 			}
@@ -1204,13 +1204,13 @@ namespace mssql
 			++reads;
 			if (total_bytes_to_read < 0)
 			{
-				const int previous = uint16_data->size();
+				const int previous = char_data->size();
 				total_bytes_to_read = bytes_to_read * (reads + 1);
 				const auto n_items = total_bytes_to_read / item_size;
-				uint16_data->reserve(n_items + 1);
-				uint16_data->resize(n_items);
-				write_ptr = uint16_data->data() + previous;
-				memset(write_ptr, 0, uint16_data->data() + uint16_data->size() - write_ptr);
+				char_data->reserve(n_items + 1);
+				char_data->resize(n_items);
+				write_ptr = char_data->data() + previous;
+				memset(write_ptr, 0, char_data->data() + char_data->size() - write_ptr);
 			}
 			else
 			{
@@ -1226,25 +1226,25 @@ namespace mssql
 				total_bytes_to_read = bytes_to_read * factor;
 			}
 			n_items = total_bytes_to_read / item_size;
-			uint16_data->reserve(n_items + 1);
-			uint16_data->resize(n_items);
+			char_data->reserve(n_items + 1);
+			char_data->resize(n_items);
 
 			if (total_bytes_to_read > bytes_to_read) {
 				total_bytes_to_read -= bytes_to_read;
 			}
-			write_ptr = uint16_data->data();
+			write_ptr = char_data->data();
 			write_ptr += bytes_to_read / item_size;
 		}
 
 		SQLLEN reads = 1;
 		size_t n_items = 0;
 		bool maxvarchar;
-		const size_t item_size = sizeof(uint16_t);
+		const size_t item_size = sizeof(char);
 		const SQLLEN atomic_read_bytes = 24 * 1024;
 		SQLLEN bytes_to_read = atomic_read_bytes;
 		DatumStorage storage;
-		shared_ptr<vector<uint16_t>> uint16_data{};
-		unsigned short* write_ptr{};
+		shared_ptr<vector<char>> char_data{};
+		char* write_ptr{};
 		SQLLEN total_bytes_to_read;
 	} ;
 	
@@ -1273,7 +1273,7 @@ namespace mssql
 		while (more)
 		{
 			capture.bytes_to_read = min(static_cast<SQLLEN>(capture.atomic_read_bytes), capture.total_bytes_to_read);
-			r = SQLGetData(statement, column + 1, SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
+			r = SQLGetData(statement, column + 1, SQL_C_CHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
 			capture.on_next_read();
 			if (!check_odbc_error(r)) {
 				// cerr << "lob error " << endl;
@@ -1288,7 +1288,7 @@ namespace mssql
 		}
 		capture.trim();
 		// cerr << "lob add StringColumn column " << endl;
-		_resultset->add_column(row_id, make_shared<StringColumn>(column, capture.uint16_data, capture.uint16_data->size()));
+		_resultset->add_column(row_id, make_shared<StringUtf8Column>(column, capture.char_data, capture.char_data->size()));
 		return true;
 	}
 
@@ -1336,13 +1336,13 @@ namespace mssql
 		// cerr << "bounded_string ... " << endl;
 
 		const auto storage = make_shared<DatumStorage>();
-		const auto size = sizeof(uint16_t);
+		const auto size = sizeof(char);
 		SQLLEN value_len = 0;
 
 		display_size++;
-		storage->ReserveUint16(display_size); // increment for null terminator
+		storage->ReserveChars(display_size); // increment for null terminator
 
-		const auto r = SQLGetData(*_statement, column + 1, SQL_C_WCHAR, storage->uint16vec_ptr->data(), display_size * size,
+		const auto r = SQLGetData(*_statement, column + 1, SQL_C_CHAR, storage->charvec_ptr->data(), display_size * size,
 		                          &value_len);
 		if (!check_odbc_error(r)) return false;
 		//CHECK_ODBC_NO_DATA(r, statement);
@@ -1353,13 +1353,12 @@ namespace mssql
 			return true;
 		}
 
-		assert(value_len % 2 == 0); // should always be even
 		value_len /= size;
 
 		assert(value_len >= 0 && value_len <= display_size - 1);
-		storage->uint16vec_ptr->resize(value_len);
+		storage->charvec_ptr->resize(value_len);
 		// cerr << "bounded_string  make_shared value_len " << value_len << endl;
-		const auto value = make_shared<StringColumn>(column, storage, value_len);
+		const auto value = make_shared<StringUtf8Column>(column, storage, value_len);
 		_resultset->add_column(row_id, value);
 
 		return true;

@@ -21,6 +21,9 @@ suite('sproc', function () {
       connStr = global.conn_str || co.conn_str
       support = co.support
       driver = co.driver
+      var myRegexp = /Driver=\{(.*)\}.*$/g;
+      var match = myRegexp.exec(connStr);
+      driver = match[1]
       procedureHelper = new support.ProcedureHelper(connStr)
       procedureHelper.setVerbose(false)
       async = co.async
@@ -315,7 +318,7 @@ END
             // console.log('done ....')
             assert(rows.length === 1)
             assert.strictEqual(true, submitted)
-            assert.strictEqual('[Microsoft][SQL Server Native Client 11.0][SQL Server]a print in proc message', info)
+            assert(info.includes('a print in proc message'))
             const expected = [
               {
                 0: 10
