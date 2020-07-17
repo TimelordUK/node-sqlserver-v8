@@ -469,12 +469,16 @@ namespace mssql
 
 	void BoundDatum::bind_var_binary(Local<Value>& p)
 	{
-		const auto o = p.As<Object>();
+		Local<Object> o;
 		_indvec[0] = SQL_NULL_DATA;
-		const auto obj_len = !o->IsNull() ? node::Buffer::Length(o) : 0;
+		if (!p->IsNullOrUndefined()) {
+		 	o = p.As<Object>();
+		}
+		bool valid = !p->IsNullOrUndefined() && !o->IsNull();
+		const auto obj_len = valid ? node::Buffer::Length(o) : 0;
 		reserve_var_binary_array(obj_len, 1);
 
-		if (!o->IsNull())
+		if (valid)
 		{
 			const auto itr = _storage->charvec_ptr->begin();
 			auto* const ptr = node::Buffer::Data(o);

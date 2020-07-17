@@ -1153,18 +1153,20 @@ namespace mssql
 	bool OdbcStatement::check_more_read(SQLRETURN r, bool & status)
 	{
 		const auto& statement = *_statement;
-		SQLWCHAR sql_state[6];
+		vector<SQLWCHAR> sql_state(6);
 		SQLINTEGER native_error = 0;
 		SQLSMALLINT text_length = 0;
 		auto res = false;
 		if (r == SQL_SUCCESS_WITH_INFO)
 		{
-			r = SQLGetDiagRec(SQL_HANDLE_STMT, statement, 1, sql_state, &native_error, nullptr, 0, &text_length);
+			r = SQLGetDiagRec(SQL_HANDLE_STMT, statement, 1, sql_state.data(), &native_error, nullptr, 0, &text_length);
 			if (!check_odbc_error(r)) {
 				status = false;
 				return false;
 			}
-			res = wcsncmp(reinterpret_cast<wchar_t*>(sql_state), L"01004", 5) == 0;
+			auto status = swcvec2str(sql_state, sql_state.size());
+			// cerr << "check_more_read " << status << endl;
+			res = status == "01004";
 		}
 		status = true;
 		return res;
@@ -1254,7 +1256,7 @@ namespace mssql
 		// cerr << "lob ..... " << endl;
 		const auto& statement = *_statement;
 		lob_capture capture;
-		auto r = SQLGetData(statement, column + 1, SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
+		auto r = SQLGetData(statement, column + 1, SQL_C_CHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
 		if (capture.total_bytes_to_read == SQL_NULL_DATA)
 		{
 			// cerr << "lob NullColumn " << endl;

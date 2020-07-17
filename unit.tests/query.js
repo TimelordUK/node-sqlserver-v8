@@ -41,6 +41,9 @@ suite('query', function () {
       async = co.async
       helper = co.helper
       driver = co.driver
+      var myRegexp = /Driver=\{(.*)\}.*$/g;
+      var match = myRegexp.exec(connStr);
+      driver = match[1]
       // database = co.database
       helper.setVerbose(false)
       sql.open(connStr, (err, conn) => {
@@ -54,6 +57,51 @@ suite('query', function () {
   teardown(done => {
     theConnection.close(() => {
       done()
+    })
+  })
+
+  test('test retrieving a string with null embedded', testDone => {
+    const embeddedNull = String.fromCharCode(65, 66, 67, 68, 0, 69, 70)
+
+    const fns = [
+      asyncDone => {
+        theConnection.queryRaw('DROP TABLE null_in_string_test', () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.queryRaw('CREATE TABLE null_in_string_test (id int IDENTITY, null_in_string varchar(100) NOT NULL)',
+          e => {
+            assert.ifError(e)
+            asyncDone()
+          })
+      },
+      asyncDone => {
+        theConnection.queryRaw('CREATE CLUSTERED INDEX ix_null_in_string_test ON null_in_string_Test (id)', err => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+      asyncDone => {
+        theConnection.queryRaw('INSERT INTO null_in_string_test (null_in_string) VALUES (?)', [embeddedNull],
+          e => {
+            assert.ifError(e)
+            asyncDone()
+          })
+      },
+
+      asyncDone => {
+        theConnection.queryRaw('SELECT null_in_string FROM null_in_string_test', (e, r) => {
+          assert.ifError(e)
+          assert(r.rows[0][0] === embeddedNull)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
     })
   })
 
@@ -645,51 +693,6 @@ suite('query', function () {
         assert.deepStrictEqual(results, expected, 'Results didn\'t match')
         done()
       })
-  })
-
-  test('test retrieving a string with null embedded', testDone => {
-    const embeddedNull = String.fromCharCode(65, 66, 67, 68, 0, 69, 70)
-
-    const fns = [
-      asyncDone => {
-        theConnection.queryRaw('DROP TABLE null_in_string_test', () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        theConnection.queryRaw('CREATE TABLE null_in_string_test (id int IDENTITY, null_in_string varchar(100) NOT NULL)',
-          e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-      },
-      asyncDone => {
-        theConnection.queryRaw('CREATE CLUSTERED INDEX ix_null_in_string_test ON null_in_string_Test (id)', err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        theConnection.queryRaw('INSERT INTO null_in_string_test (null_in_string) VALUES (?)', [embeddedNull],
-          e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-      },
-
-      asyncDone => {
-        theConnection.queryRaw('SELECT null_in_string FROM null_in_string_test', (e, r) => {
-          assert.ifError(e)
-          assert(r.rows[0][0] === embeddedNull)
-          asyncDone()
-        })
-      }
-    ]
-
-    async.series(fns, () => {
-      testDone()
-    })
   })
 
   test('test retrieving a non-LOB string of max size', testDone => {

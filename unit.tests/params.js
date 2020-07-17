@@ -138,6 +138,17 @@ suite('params', function () {
       })
   }
 
+  test('bind a null to binary using sqlTypes.asVarBinary(null)', testDone => {
+    theConnection.query('declare @bin binary(4) = ?; select @bin as bin', [sql.VarBinary(null)], (err, res) => {
+      assert.ifError(err)
+      const expected = [{
+        bin: null
+      }]
+      assert.deepStrictEqual(expected, res)
+      testDone()
+    })
+  })
+
   test('select a long string using streaming - ensure no fragmentation', testDone => {
     function repeat (a, num) {
       return new Array(num + 1).join(a)
@@ -1051,17 +1062,6 @@ suite('params', function () {
       () => {
         testDone()
       })
-  })
-
-  test('bind a null to binary using sqlTypes.asVarBinary(null)', testDone => {
-    theConnection.query('declare @bin binary(4) = ?; select @bin as bin', [sql.VarBinary(null)], (err, res) => {
-      assert.ifError(err)
-      const expected = [{
-        bin: null
-      }]
-      assert.deepStrictEqual(expected, res)
-      testDone()
-    })
   })
 
   test('bind a Buffer([0,1,2,3])] to binary', testDone => {
