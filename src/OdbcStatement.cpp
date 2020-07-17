@@ -100,7 +100,7 @@ namespace mssql
 				return true;
 			}
 			if (!check_odbc_error(ret)) {
-				fprintf(stderr, "fetch_read check_odbc_error\n");
+				//fprintf(stderr, "fetch_read check_odbc_error\n");
 				return false;
 			}
 			_resultset->_end_of_rows = false;

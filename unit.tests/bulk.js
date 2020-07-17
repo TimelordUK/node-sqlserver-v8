@@ -53,72 +53,8 @@ suite('bulk', function () {
     return v
   }
 
-  test('test tm with large insert vector - should block for few secs', testDone => {
-    const tableName = 'LargeInsert'
-    const fns = [
-      asyncDone => {
-        theConnection.queryRaw(`DROP TABLE ${tableName}`, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        theConnection.queryRaw(`CREATE TABLE ${tableName} (
-          [BusinessEntityID] [int] NOT NULL,
-          [NationalIDNumber] [nvarchar](15) NOT NULL,
-          [LoginID] [nvarchar](256) NOT NULL,
-          [Salary] int NOT NULL
-          )`,
-        e => {
-          assert.ifError(e)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const tm = theConnection.tableMgr()
-        tm.bind(tableName, t => {
-          const meta = t.getMeta()
-
-          const select = meta.getSelectSignature()
-          assert(select.indexOf('select') >= 0)
-
-          const insert = meta.getInsertSignature()
-          assert(insert.indexOf('insert') >= 0)
-
-          const del = meta.getDeleteSignature()
-          assert(del.indexOf('delete') >= 0)
-
-          const update = meta.getUpdateSignature()
-          assert(update.indexOf('update') >= 0)
-
-          const assignable = meta.getAssignableColumns()
-          assert(Array.isArray(assignable))
-          assert(assignable.length > 0)
-
-          const updateColumns = meta.getUpdateColumns()
-          assert(Array.isArray(updateColumns))
-          assert(updateColumns.length > 0)
-
-          const byName = meta.getColumnsByName()
-          assert(byName !== null)
-
-          const testVec = getInsertVector(50000)
-          t.insertRows(testVec, (e, res) => {
-            assert.ifError(e)
-            asyncDone()
-          })
-        })
-      }
-    ]
-
-    async.series(fns, () => {
-      testDone()
-    })
-  })
-
   test('employee table complex json object test api', testDone => {
-    const tableName = 'Employee'
+    const tableName = 'employee'
 
     const fns = [
 
@@ -174,6 +110,70 @@ suite('bulk', function () {
           assert(byName !== null)
 
           asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('test tm with large insert vector - should block for few secs', testDone => {
+    const tableName = 'LargeInsert'
+    const fns = [
+      asyncDone => {
+        theConnection.queryRaw(`DROP TABLE ${tableName}`, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.queryRaw(`CREATE TABLE ${tableName} (
+          [BusinessEntityID] [int] NOT NULL,
+          [NationalIDNumber] [nvarchar](15) NOT NULL,
+          [LoginID] [nvarchar](256) NOT NULL,
+          [Salary] int NOT NULL
+          )`,
+        e => {
+          assert.ifError(e)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const tm = theConnection.tableMgr()
+        tm.bind(tableName, t => {
+          const meta = t.getMeta()
+
+          const select = meta.getSelectSignature()
+          assert(select.indexOf('select') >= 0)
+
+          const insert = meta.getInsertSignature()
+          assert(insert.indexOf('insert') >= 0)
+
+          const del = meta.getDeleteSignature()
+          assert(del.indexOf('delete') >= 0)
+
+          const update = meta.getUpdateSignature()
+          assert(update.indexOf('update') >= 0)
+
+          const assignable = meta.getAssignableColumns()
+          assert(Array.isArray(assignable))
+          assert(assignable.length > 0)
+
+          const updateColumns = meta.getUpdateColumns()
+          assert(Array.isArray(updateColumns))
+          assert(updateColumns.length > 0)
+
+          const byName = meta.getColumnsByName()
+          assert(byName !== null)
+
+          const testVec = getInsertVector(50000)
+          t.insertRows(testVec, (e, res) => {
+            assert.ifError(e)
+            asyncDone()
+          })
         })
       }
     ]
@@ -466,7 +466,7 @@ suite('bulk', function () {
       return arr
     }
 
-    const tableName = 'BulkTest'
+    const tableName = 'bulkTest'
     let bulkMgr
     const vec = buildTest(totalObjectsForInsert)
 
@@ -503,7 +503,7 @@ suite('bulk', function () {
   })
 
   test('employee tmp table complex json object array bulk operations', testDone => {
-    const tableName = '#Employee'
+    const tableName = '#employee'
 
     const fns = [
 
@@ -553,7 +553,7 @@ suite('bulk', function () {
   })
 
   test('employee complex json object array bulk operations', testDone => {
-    const tableName = 'Employee'
+    const tableName = 'employee'
 
     const fns = [
 
@@ -615,7 +615,7 @@ suite('bulk', function () {
   }
 
   test('employee insert/select with non primary key', testDone => {
-    const tableName = 'Employee'
+    const tableName = 'employee'
     let parsedJSON
     const whereCols = [
       {
@@ -660,7 +660,7 @@ suite('bulk', function () {
   })
 
   test('employee insert - update a single column', testDone => {
-    const tableName = 'Employee'
+    const tableName = 'employee'
     let parsedJSON
     const updateCols = []
 
@@ -982,7 +982,7 @@ suite('bulk', function () {
       return arr
     }
 
-    const tableName = 'BulkTest'
+    const tableName = 'bulkTest'
 
     helper.dropCreateTable({
       tableName: tableName
