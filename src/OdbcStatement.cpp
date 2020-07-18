@@ -31,6 +31,10 @@
 #include <MutateJS.h>
 #include <iostream>
 
+#ifdef LINUX_BUILD
+#include <unistd.h>
+#endif
+
 namespace mssql
 {
 	// internal constants
@@ -512,17 +516,18 @@ namespace mssql
 		return true;
 	}
 
-	SQLRETURN OdbcStatement::poll_check(SQLRETURN ret, const bool direct)
+	SQLRETURN OdbcStatement::poll_check(SQLRETURN ret, vector<SQLWCHAR> & vec, const bool direct)
 	{
 		const auto& statement = *_statement;
 
 		if (ret == SQL_STILL_EXECUTING)
 		{
-			while (true)
+			bool running = true;
+			while (running)
 			{
 				if (direct)
 				{
-					ret = SQLExecDirect(statement, reinterpret_cast<SQLWCHAR*>(const_cast<wchar_t*>(L"")), SQL_NTS);
+					ret = SQLExecDirect(statement, vec.data(), vec.size());
 				}
 				else
 				{
@@ -538,7 +543,7 @@ namespace mssql
 				Sleep(1); // wait 1 MS
 #endif
 #ifdef LINUX_BUILD
-				// sleep(1); // wait 1 MS
+				usleep(1000); // wait 1 MS
 #endif			
 				{
 					lock_guard<mutex> lock(g_i_mutex);
@@ -547,7 +552,11 @@ namespace mssql
 
 				if (submit_cancel)
 				{
-					cancel_handle();
+					// cancel_handle();
+					_statementState = _statementState = OdbcStatementState::STATEMENT_CANCELLED;
+					running = false;
+					ret = SQL_NO_DATA;
+					break;
 				}
 			}
 		}
@@ -570,13 +579,17 @@ namespace mssql
 		}
 		if (polling_mode)
 		{
-			SQLSetStmtAttr(statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
+			auto s = SQLSetStmtAttr(statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
+			if (!check_odbc_error(s)) {
+				return false;
+			}
 		}
 	
 		auto ret = SQLExecute(statement);
 		if (polling_mode)
 		{
-			ret = poll_check(ret, false);
+			vector<SQLWCHAR> vec;
+			ret = poll_check(ret, vec, false);
 		}
 
 		if (ret == SQL_NO_DATA)
@@ -592,18 +605,20 @@ namespace mssql
 		return check_odbc_error(ret);
 	}
 
-	void OdbcStatement::cancel_handle()
+	bool OdbcStatement::cancel_handle()
 	{
 		const auto hnd = *_statement;
 		const auto ret2 = SQLCancelHandle(hnd.HandleType, hnd.get());
 		if (!check_odbc_error(ret2))
 		{
 			fprintf(stderr, "cancel req failed state %d %ld \n", _statementState, _statementId);
+			return false;
 		}
 		{
 			lock_guard<mutex> lock(g_i_mutex);
 			_cancelRequested = false;
 		}
+		return true;
 	}
 
 	bool OdbcStatement::try_execute_direct(const shared_ptr<QueryOperationParams> &q, const shared_ptr<BoundDatumSet> &param_set)
@@ -640,10 +655,20 @@ namespace mssql
 		auto s = swcvec2str(vec, vec.size());
 		// cerr << " try_execute_direct s = " << s << endl;
 		ret = SQLExecDirect(*_statement, vec.data(), vec.size());
-
 		if (polling_mode)
 		{
-			ret = poll_check(ret, true);
+			ret = poll_check(ret, vec, true);
+		}
+
+		if (_statementState == OdbcStatementState::STATEMENT_CANCELLED) {
+			_resultset = make_unique<ResultSet>(0);
+			_resultset->_end_of_rows = true;
+			_endOfResults = true; // reset 
+			string c_msg = "[Microsoft] Operation canceled";
+			string c_state = "U00000";
+			const auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), 0);
+			_errors->push_back(last);
+			return true;
 		}
 
 		// cerr << "ret = " << ret << endl;

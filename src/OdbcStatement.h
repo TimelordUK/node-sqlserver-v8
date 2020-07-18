@@ -77,14 +77,14 @@ namespace mssql
 		bool try_prepare(const shared_ptr<QueryOperationParams> &q);
 		bool bind_fetch(const shared_ptr<BoundDatumSet> & param_set);
 		bool try_execute_direct(const shared_ptr<QueryOperationParams> &q, const shared_ptr<BoundDatumSet> &paramSet);
-		void cancel_handle();
+		bool cancel_handle();
 		bool try_read_columns(size_t number_rows);
 		bool try_read_next_result();
 
 	private:
 		bool fetch_read(const size_t number_rows);
 		bool prepared_read();
-		SQLRETURN poll_check(SQLRETURN ret, bool direct);
+		SQLRETURN poll_check(SQLRETURN ret, vector<SQLWCHAR> & vec, bool direct);
 		bool get_data_binary(size_t row_id, size_t column);
 		bool get_data_decimal(size_t row_id, size_t column);
 		bool get_data_bit(size_t row_id, size_t column);

@@ -234,7 +234,7 @@ namespace mssql
 	void Connection::polling_mode(const FunctionCallbackInfo<Value>& info)
 	{
 		const auto query_id = info[0].As<Number>();
-		const auto v1 = info[1].As<Number>();
+		const auto v1 = info[1].As<Boolean>();
 		const auto callback = info[2].As<Object>();
 		auto* const connection = Unwrap<Connection>(info.This());
 		const nodeTypeFactory fact;
