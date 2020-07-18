@@ -79,18 +79,6 @@ namespace mssql
 		return handle;
 	} 
 
-	string print_vec(vector<SQLWCHAR> &v, int l) {
-		vector<char> c_str;
-		c_str.reserve(l);
-		const char* ptr = reinterpret_cast<const char*>(v.data());
-			for (int i = 0, j = 0; i < l * 2; i+=2, j++) {
-				// cerr << "ptr." << i << " = " << ptr[i] << " " << (int)ptr[i] << endl;
-				c_str[j] = ptr[i];
-			}
-			string s(c_str.data());
-			return s;
-	}
-
 	void OdbcHandle::read_errors(shared_ptr<vector<shared_ptr<OdbcError>>> & errors) const
 	{
 		SQLSMALLINT msg_len = 0;
@@ -111,8 +99,8 @@ namespace mssql
 				break;
 			}
 		
-			auto c_msg = print_vec(msg, msg_len);
-			auto c_state = print_vec(sql_state, sql_state.size());
+			auto c_msg = swcvec2str(msg, msg_len);
+			auto c_state = swcvec2str(sql_state, sql_state.size());
 			const auto m = string(c_msg);
 			if (received.find(m) == received.end()) {
 				const auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), native_error);

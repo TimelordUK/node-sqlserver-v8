@@ -28,6 +28,7 @@ suite('multiple errors', function () {
   let connStr
   let theConnection
   let helper
+  let driver
 
   this.timeout(20000)
   const sql = global.native_sql
@@ -36,6 +37,10 @@ suite('multiple errors', function () {
     supp.GlobalConn.init(sql, co => {
       connStr = global.conn_str || co.conn_str
       helper = co.helper
+      driver = co.driver
+      var myRegexp = /Driver=\{(.*)\}.*$/g;
+      var match = myRegexp.exec(connStr);
+      driver = match[1]
       helper.setVerbose(false)
       sql.open(connStr, (err, conn) => {
         theConnection = conn
@@ -51,6 +56,18 @@ suite('multiple errors', function () {
     })
   })
 
+  test('non trusted invalid user', done => {
+    let adjusted = connStr.replace('Trusted_Connection=yes', 'Trusted_Connection=No;Uid=test;Database=test;Pwd=...')
+    adjusted = connStr.replace('UID=linux', 'Uid=linux2')
+    adjusted = adjusted.replace('Uid=sa', 'Uid=JohnSnow')
+    sql.open(adjusted,
+      err => {
+        assert(err)
+        assert(err.message.indexOf('Login failed for user') > 0)
+        done()
+      })
+  })
+
   test('select then use print statement capture print', done => {
     const q = theConnection.query('select 1 as one; print \'hello world!\'')
     const errors = []
@@ -64,7 +81,7 @@ suite('multiple errors', function () {
       {
         sqlstate: '01000',
         code: 0,
-        message: '[Microsoft][SQL Server Native Client 11.0][SQL Server]hello world!'
+        message: `[Microsoft][${driver}][SQL Server]hello world!`
       }
     ]
     q.on('error', e => {
@@ -119,7 +136,7 @@ suite('multiple errors', function () {
       {
         sqlstate: '01000',
         code: 0,
-        message: '[Microsoft][SQL Server Native Client 11.0][SQL Server]hello world!'
+        message: `[Microsoft][${driver}][SQL Server]hello world!`
       }
     ]
     q.on('error', e => {
@@ -161,17 +178,6 @@ suite('multiple errors', function () {
     })
   })
 
-  test('non trusted invalid user', done => {
-    let adjusted = connStr.replace('Trusted_Connection=yes', 'Trusted_Connection=No;Uid=test;Database=test;Pwd=...')
-    adjusted = adjusted.replace('Uid=sa', 'Uid=JohnSnow')
-    sql.open(adjusted,
-      err => {
-        assert(err)
-        assert(err.message.indexOf('Login failed for user') > 0)
-        done()
-      })
-  })
-
   test('callback multiple errors', done => {
     const errors = []
     theConnection.query('select a;select b;', (err, res, more) => {
@@ -180,8 +186,8 @@ suite('multiple errors', function () {
       }
       if (!more) {
         assert.deepStrictEqual(errors, [
-          '[Microsoft][SQL Server Native Client 11.0][SQL Server]Invalid column name \'a\'.',
-          '[Microsoft][SQL Server Native Client 11.0][SQL Server]Invalid column name \'b\'.'
+          `[Microsoft][${driver}][SQL Server]Invalid column name \'a\'.`,
+          `[Microsoft][${driver}][SQL Server]Invalid column name \'b\'.`
         ])
         done()
       }
@@ -198,8 +204,8 @@ suite('multiple errors', function () {
       if (!more) {
         assert.deepStrictEqual(callbacks, 2)
         assert.deepStrictEqual(errors, [
-          '[Microsoft][SQL Server Native Client 11.0][SQL Server]Invalid column name \'a\'.',
-          '[Microsoft][SQL Server Native Client 11.0][SQL Server]Invalid column name \'b\'.'
+          `[Microsoft][${driver}][SQL Server]Invalid column name \'a\'.`,
+          `[Microsoft][${driver}][SQL Server]Invalid column name \'b\'.`
         ])
         done()
       }

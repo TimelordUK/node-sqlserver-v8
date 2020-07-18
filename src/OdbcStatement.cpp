@@ -476,10 +476,10 @@ namespace mssql
 		const auto& statement = *_statement;
 		_query = q;
 		const auto query = q->query_string();
-		auto* sql_str = const_cast<SQLWCHAR *>(reinterpret_cast<const SQLWCHAR *>(query.c_str()));
+		auto sql = wstr2wcvec(query);
 		SQLSMALLINT num_cols = 0;
 		
-		auto ret = SQLPrepare(statement, sql_str, static_cast<SQLINTEGER>(query.length()));
+		auto ret = SQLPrepare(statement, sql.data(), static_cast<SQLINTEGER>(sql.size()));
 		if (!check_odbc_error(ret)) return false;
 
 		ret = SQLNumResultCols(statement, &num_cols);
