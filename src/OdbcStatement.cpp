@@ -127,7 +127,7 @@ namespace mssql
 		// fprintf(stderr, "prepared_read");
 		const auto& statement = *_statement;
 #ifdef LINUX_BUILD
-		SQLINTEGER row_count = 0;
+		SQLROWSETSIZE row_count = 0;
 #endif
 #ifdef WINDOWS_BUILD
 		SQLROWSETSIZE row_count = 0;
