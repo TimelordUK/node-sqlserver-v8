@@ -40,6 +40,39 @@ suite('querycancel', function () {
     })
   })
 
+  test('cancel a prepared call that waits', testDone => {
+    const s = 'waitfor delay ?;'
+    let prepared
+
+    const fns = [
+      asyncDone => {
+        theConnection.prepare(sql.PollingQuery(s), (err, pq) => {
+          assert(!err)
+          prepared = pq
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const q = prepared.preparedQuery(['00:00:20'], err => {
+          assert(err)
+          assert(err.message.indexOf('Operation canceled') > 0)
+          asyncDone()
+        })
+
+        q.on('submitted', () => {
+          q.cancelQuery(err => {
+            assert(!err)
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test('pause a large query and cancel check done', testDone => {
     let rows = 0
     const q = theConnection.query('select top 3000 * from syscolumns')
@@ -220,39 +253,6 @@ suite('querycancel', function () {
           assert(err.message.indexOf('Operation canceled') > 0)
           asyncDone()
         })
-        q.on('submitted', () => {
-          q.cancelQuery(err => {
-            assert(!err)
-          })
-        })
-      }
-    ]
-
-    async.series(fns, () => {
-      testDone()
-    })
-  })
-
-  test('cancel a prepared call that waits', testDone => {
-    const s = 'waitfor delay ?;'
-    let prepared
-
-    const fns = [
-      asyncDone => {
-        theConnection.prepare(sql.PollingQuery(s), (err, pq) => {
-          assert(!err)
-          prepared = pq
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const q = prepared.preparedQuery(['00:00:20'], err => {
-          assert(err)
-          assert(err.message.indexOf('Operation canceled') > 0)
-          asyncDone()
-        })
-
         q.on('submitted', () => {
           q.cancelQuery(err => {
             assert(!err)

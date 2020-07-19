@@ -108,6 +108,7 @@ namespace mssql
 		void apply_precision(const shared_ptr<BoundDatum> & datum, int current_param) const;
 		bool read_col_attributes(ResultSet::ColumnDefinition& current, int column);
 		bool read_next(int column);
+		bool raise_cancel();
 		bool check_more_read(SQLRETURN r, bool & status);
 		bool lob(size_t, size_t column);
 		static OdbcEnvironmentHandle environment;

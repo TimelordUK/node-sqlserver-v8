@@ -563,6 +563,18 @@ namespace mssql
 		return ret;
 	}
 
+	bool OdbcStatement::raise_cancel() {
+		_resultset = make_unique<ResultSet>(0);
+		_resultset->_end_of_rows = true;
+		_endOfResults = true; // reset 
+			// cancel_handle();
+		string c_msg = "[Microsoft] Operation canceled";
+		string c_state = "U00000";
+		const auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), 0);
+		_errors->push_back(last);
+		return true;
+	}
+
 	bool OdbcStatement::bind_fetch(const shared_ptr<BoundDatumSet> & param_set)
 	{
 		const auto& statement = *_statement;
@@ -590,6 +602,10 @@ namespace mssql
 		{
 			vector<SQLWCHAR> vec;
 			ret = poll_check(ret, vec, false);
+		}
+
+		if (_statementState == OdbcStatementState::STATEMENT_CANCELLED) {	
+			return raise_cancel();
 		}
 
 		if (ret == SQL_NO_DATA)
@@ -661,14 +677,7 @@ namespace mssql
 		}
 
 		if (_statementState == OdbcStatementState::STATEMENT_CANCELLED) {
-			_resultset = make_unique<ResultSet>(0);
-			_resultset->_end_of_rows = true;
-			_endOfResults = true; // reset 
-			string c_msg = "[Microsoft] Operation canceled";
-			string c_state = "U00000";
-			const auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), 0);
-			_errors->push_back(last);
-			return true;
+			return raise_cancel();
 		}
 
 		// cerr << "ret = " << ret << endl;
