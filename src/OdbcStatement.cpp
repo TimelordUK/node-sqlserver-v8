@@ -532,6 +532,47 @@ namespace mssql
 		return true;
 	}
 
+#ifdef WINDOWS_BUILD
+	SQLRETURN OdbcStatement::poll_check(SQLRETURN ret, vector<SQLWCHAR> & vec, const bool direct)
+	{
+		const auto& statement = *_statement;
+
+		if (ret == SQL_STILL_EXECUTING)
+		{
+			while (true)
+			{
+				if (direct)
+				{
+					ret = SQLExecDirect(statement, reinterpret_cast<SQLWCHAR*>(L""), SQL_NTS);
+				}
+				else
+				{
+					ret = SQLExecute(statement);
+				}
+
+				auto submit_cancel = false;
+				if (ret != SQL_STILL_EXECUTING)
+				{
+					break;
+				}
+
+				Sleep(1); // wait 1 MS			
+				{
+					lock_guard<mutex> lock(g_i_mutex);
+					submit_cancel = _cancelRequested;
+				}
+
+				if (submit_cancel)
+				{
+					cancel_handle();
+				}
+			}
+		}
+		return ret;
+	}
+#endif
+
+#ifdef LINUX_BUILD
 	SQLRETURN OdbcStatement::poll_check(SQLRETURN ret, vector<SQLWCHAR> & vec, const bool direct)
 	{
 		const auto& statement = *_statement;
@@ -555,12 +596,8 @@ namespace mssql
 				{
 					break;
 				}
-#ifdef WINDOWS_BUILD
-				Sleep(1); // wait 1 MS
-#endif
-#ifdef LINUX_BUILD
-				usleep(1000); // wait 1 MS
-#endif			
+
+				usleep(1000); // wait 1 MS	
 				{
 					lock_guard<mutex> lock(g_i_mutex);
 					submit_cancel = _cancelRequested;
@@ -568,7 +605,6 @@ namespace mssql
 
 				if (submit_cancel)
 				{
-					// cancel_handle();
 					_statementState = _statementState = OdbcStatementState::STATEMENT_CANCELLED;
 					running = false;
 					ret = SQL_NO_DATA;
@@ -578,12 +614,12 @@ namespace mssql
 		}
 		return ret;
 	}
+	#endif
 
 	bool OdbcStatement::raise_cancel() {
 		_resultset = make_unique<ResultSet>(0);
 		_resultset->_end_of_rows = true;
-		_endOfResults = true; // reset 
-			// cancel_handle();
+		_endOfResults = true; // reset
 		string c_msg = "[Microsoft] Operation canceled";
 		string c_state = "U00000";
 		const auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), 0);
