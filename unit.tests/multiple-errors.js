@@ -38,7 +38,7 @@ suite('multiple errors', function () {
       connStr = global.conn_str || co.conn_str
       helper = co.helper
       driver = co.driver
-      var myRegexp = /Driver=\{(.*)\}.*$/g
+      var myRegexp = /Driver=\{(.*?)\}.*$/g
       var match = myRegexp.exec(connStr)
       driver = match[1]
       helper.setVerbose(false)
@@ -58,7 +58,7 @@ suite('multiple errors', function () {
 
   test('non trusted invalid user', done => {
     let adjusted = connStr.replace('Trusted_Connection=yes', 'Trusted_Connection=No;Uid=test;Database=test;Pwd=...')
-    adjusted = connStr.replace('UID=linux', 'Uid=linux2')
+    adjusted = adjusted.replace('UID=linux', 'Uid=linux2')
     adjusted = adjusted.replace('Uid=sa', 'Uid=JohnSnow')
     sql.open(adjusted,
       err => {

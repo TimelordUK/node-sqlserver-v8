@@ -360,6 +360,43 @@ END
     return v
   }
 
+  test('use tvp simple test type insert test extended ascii', testDone => {
+    const tableName = 'TestTvp'
+    let table
+    const vec = getExtendedVec(8 * 1024)
+    const fns = [
+
+      asyncDone => {
+        setupSimpleType(tableName, t => {
+          table = t
+          table.addRowsFromObjects(vec)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const tp = sql.TvpFromTable(table)
+        table.rows = []
+        theConnection.query('exec insertTestTvp @tvp = ?;', [tp], err => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.query(`select * from ${tableName}`, (err, res) => {
+          assert.ifError(err)
+          assert.deepStrictEqual(res, vec)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test('use tvp simple test type insert test long string 8 * 1024', testDone => {
     const tableName = 'TestTvp'
     let table
@@ -386,7 +423,7 @@ END
       asyncDone => {
         theConnection.query(`select * from ${tableName}`, (err, res) => {
           assert.ifError(err)
-          assert.deepStrictEqual(vec, res)
+          assert.deepStrictEqual(res, vec)
           asyncDone()
         })
       }
@@ -520,43 +557,6 @@ END
           if (!output) return
           assert.strictEqual(2, res.length)
           assert.deepStrictEqual(expected, all)
-          asyncDone()
-        })
-      }
-    ]
-
-    async.series(fns, () => {
-      testDone()
-    })
-  })
-
-  test('use tvp simple test type insert test extended ascii', testDone => {
-    const tableName = 'TestTvp'
-    let table
-    const vec = getExtendedVec(8 * 1024)
-    const fns = [
-
-      asyncDone => {
-        setupSimpleType(tableName, t => {
-          table = t
-          table.addRowsFromObjects(vec)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const tp = sql.TvpFromTable(table)
-        table.rows = []
-        theConnection.query('exec insertTestTvp @tvp = ?;', [tp], err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        theConnection.query(`select * from ${tableName}`, (err, res) => {
-          assert.ifError(err)
-          assert.deepStrictEqual(vec, res)
           asyncDone()
         })
       }

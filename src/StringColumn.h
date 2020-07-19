@@ -44,7 +44,18 @@ namespace mssql
 	   offset(offset)
 	   {
 	   }
-		
+	
+	#ifdef WINDOWS_BUILD
+		Local<Value> ToValue() override
+	   {
+		  auto ptr = storage->data();
+		  auto len = size;
+		  auto s = MutateJS::from_two_byte(static_cast<const uint16_t*>(ptr + offset), len);
+		  return s;
+	   }
+	#endif
+
+	#ifdef LINUX_BUILD
 	   Local<Value> ToValue() override
 	   {
 		  auto sptr = storage->data();
@@ -61,6 +72,7 @@ namespace mssql
 		  auto s = fact.new_string(c_str.data());
 		  return s;
 	   }
+	#endif   
 
     private:
 		size_t size;
