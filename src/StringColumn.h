@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <iostream>
@@ -55,12 +54,11 @@ namespace mssql
 		  c_str.reserve(len);
 		  c_str.resize(len);
 		  const char* ptr = reinterpret_cast<const char*>(sptr + offset);
-		  for (int i = 0, j = 0; i < len * 2; i += 2, j++) {
+		  for (unsigned long i = 0, j = 0; i < len * 2; i += 2, j++) {
 				c_str[j] = ptr[i];
 		  }	
 		  c_str.resize(len - 1);
 		  auto s = fact.new_string(c_str.data());
-		  // auto s = MutateJS::from_two_byte(static_cast<const uint16_t*>(ptr + offset), len);
 		  return s;
 	   }
 
@@ -107,7 +105,7 @@ namespace mssql
 			nodeTypeFactory fact;
 		  	auto sptr = storage->data();
 		  	const char* ptr = reinterpret_cast<const char*>(sptr + offset);
-		  	auto s = fact.new_string(ptr);
+		  	auto s = fact.new_string(ptr, size);
 		  	return s;
 	   }
 
