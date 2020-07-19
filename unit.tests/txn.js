@@ -38,6 +38,10 @@ suite('txn', function () {
     supp.GlobalConn.init(sql, co => {
       connStr = global.conn_str || co.conn_str
       driver = co.driver
+      driver = co.driver
+      var myRegexp = /Driver=\{(.*)\}.*$/g
+      var match = myRegexp.exec(connStr)
+      driver = match[1]
       async = co.async
       helper = co.helper
       helper.setVerbose(false)

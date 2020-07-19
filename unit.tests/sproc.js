@@ -21,8 +21,8 @@ suite('sproc', function () {
       connStr = global.conn_str || co.conn_str
       support = co.support
       driver = co.driver
-      var myRegexp = /Driver=\{(.*)\}.*$/g;
-      var match = myRegexp.exec(connStr);
+      var myRegexp = /Driver=\{(.*)\}.*$/g
+      var match = myRegexp.exec(connStr)
       driver = match[1]
       procedureHelper = new support.ProcedureHelper(connStr)
       procedureHelper.setVerbose(false)

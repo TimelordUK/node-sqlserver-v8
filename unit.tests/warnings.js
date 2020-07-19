@@ -11,6 +11,7 @@ suite('warnings', function () {
   let support
   let async
   let helper
+  let driver
   let procedureHelper
   const sql = global.native_sql
 
@@ -24,6 +25,10 @@ suite('warnings', function () {
       procedureHelper.setVerbose(false)
       async = co.async
       helper = co.helper
+      driver = co.driver
+      var myRegexp = /Driver=\{(.*)\}.*$/g
+      var match = myRegexp.exec(connStr)
+      driver = match[1]
       helper.setVerbose(false)
       sql.open(connStr, (err, conn) => {
         theConnection = conn
@@ -220,7 +225,7 @@ suite('warnings', function () {
     const fns = [
       asyncDone => {
         const warnings = []
-        const err = new Error('[Microsoft][SQL Server Native Client 11.0][SQL Server]print error')
+        const err = new Error(`[Microsoft][${driver}][SQL Server]print error`)
         err.code = 0
         err.sqlstate = '01000'
         const expectedErrors = [err]

@@ -38,8 +38,8 @@ suite('multiple errors', function () {
       connStr = global.conn_str || co.conn_str
       helper = co.helper
       driver = co.driver
-      var myRegexp = /Driver=\{(.*)\}.*$/g;
-      var match = myRegexp.exec(connStr);
+      var myRegexp = /Driver=\{(.*)\}.*$/g
+      var match = myRegexp.exec(connStr)
       driver = match[1]
       helper.setVerbose(false)
       sql.open(connStr, (err, conn) => {
@@ -186,8 +186,8 @@ suite('multiple errors', function () {
       }
       if (!more) {
         assert.deepStrictEqual(errors, [
-          `[Microsoft][${driver}][SQL Server]Invalid column name \'a\'.`,
-          `[Microsoft][${driver}][SQL Server]Invalid column name \'b\'.`
+          `[Microsoft][${driver}][SQL Server]Invalid column name 'a'.`,
+          `[Microsoft][${driver}][SQL Server]Invalid column name 'b'.`
         ])
         done()
       }
@@ -204,8 +204,8 @@ suite('multiple errors', function () {
       if (!more) {
         assert.deepStrictEqual(callbacks, 2)
         assert.deepStrictEqual(errors, [
-          `[Microsoft][${driver}][SQL Server]Invalid column name \'a\'.`,
-          `[Microsoft][${driver}][SQL Server]Invalid column name \'b\'.`
+          `[Microsoft][${driver}][SQL Server]Invalid column name 'a'.`,
+          `[Microsoft][${driver}][SQL Server]Invalid column name 'b'.`
         ])
         done()
       }
