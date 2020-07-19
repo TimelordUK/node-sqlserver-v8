@@ -90,6 +90,8 @@
 #define SQL_SS_TIME2                        (-154)
 #define SQL_SS_TIMESTAMPOFFSET              (-155)
 
+typedef SQLULEN			SQLROWSETSIZE;
+
 // New Date Time Structures
 // New Structure for TIME2
 typedef struct tagSS_TIME2_STRUCT
