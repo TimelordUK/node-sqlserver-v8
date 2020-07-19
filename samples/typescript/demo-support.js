@@ -296,7 +296,12 @@ function DemoSupport (native) {
             createSql = createSql.replace(/<col_name>/g, columnName)
             const arr = createSql.split('GO')
             for (let i = 0; i < arr.length; ++i) {
-              arr[i] = arr[i].replace(/^\s+|\s+$/g, '')
+              const s = arr[i].replace(/^\s+|\s+$/g, '')
+              if (s === '') continue
+              arr[i] = s
+            }
+            while (arr[arr.length - 1] === '') {
+              arr.pop()
             }
             inChunks(arr, () => {
               asyncDone()

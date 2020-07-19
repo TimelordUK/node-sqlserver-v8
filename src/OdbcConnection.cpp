@@ -31,6 +31,28 @@ namespace mssql
 {
 	OdbcEnvironmentHandle OdbcConnection::environment;
 
+#ifdef WINDOWS_BUILD
+	bool OdbcConnection::InitializeEnvironment()
+	{
+		// fprintf(stderr, ">> InitializeEnvironment\n\n");
+
+		auto ret = SQLSetEnvAttr(nullptr, SQL_ATTR_CONNECTION_POOLING, reinterpret_cast<SQLPOINTER>(SQL_CP_ONE_PER_HENV), 0);
+		if (!SQL_SUCCEEDED(ret)) { return false; }
+
+		if (!environment.alloc()) { return false; }
+
+		ret = SQLSetEnvAttr(environment, SQL_ATTR_ODBC_VERSION, reinterpret_cast<SQLPOINTER>(SQL_OV_ODBC3), 0);
+		if (!SQL_SUCCEEDED(ret)) { return false; }
+		ret = SQLSetEnvAttr(environment, SQL_ATTR_CP_MATCH, reinterpret_cast<SQLPOINTER>(SQL_CP_RELAXED_MATCH), 0);
+		if
+		(!SQL_SUCCEEDED(ret)) { return false; }
+
+		// fprintf(stderr, "<< InitializeEnvironment\n\n");
+
+		return true;
+	}
+#endif
+#ifdef LINUX_BUILD
 	bool OdbcConnection::InitializeEnvironment()
 	{
 		if (!environment.alloc()) { return false; }
@@ -46,6 +68,7 @@ namespace mssql
 
 		return true;
 	}
+#endif
 
 	OdbcConnection::OdbcConnection() :
 		statements(nullptr),

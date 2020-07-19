@@ -19,8 +19,7 @@
 
 #include <algorithm>
 #include <cmath>
- #include <string.h>
-
+#include <cstring>
 #include <v8.h>
 #include <OdbcStatement.h>
 #include <BoundDatum.h>
@@ -127,7 +126,12 @@ namespace mssql
 	{
 		// fprintf(stderr, "prepared_read");
 		const auto& statement = *_statement;
+#ifdef LINUX_BUILD
 		SQLINTEGER row_count = 0;
+#endif
+#ifdef WINDOWS_BUILD
+		SQLROWSETSIZE row_count = 0;
+#endif
 		SQLSetStmtAttr(statement, SQL_ATTR_ROWS_FETCHED_PTR, &row_count, 0);
 		const auto ret = SQLFetchScroll(statement, SQL_FETCH_NEXT, 0);
 		if (ret == SQL_NO_DATA)
@@ -274,11 +278,23 @@ namespace mssql
 		auto r = SQLGetStmtAttr(statement, SQL_ATTR_IMP_PARAM_DESC, &ipd, SQL_IS_POINTER, &string_length);
 		if (!check_odbc_error(r)) return;
 		const auto schema = datum->get_storage()->schema;
+#ifdef LINUX_BUILD
 		if (!schema.empty()) {
 			auto schema_vec = wstr2wcvec(schema);
 			r = SQLSetDescField(ipd, current_param, SQL_CA_SS_SCHEMA_NAME, reinterpret_cast<SQLPOINTER>(schema_vec.data()), schema_vec.size() * 2);
 			if (!check_odbc_error(r)) return;
 		}
+#endif
+#ifdef WINDOWS_BUILD
+		if (!schema.empty()) {
+			SQLTCHAR parameter_type_name[256];
+			auto* const schema_ptr = const_cast<wchar_t*>(schema.c_str());
+			r = SQLSetDescField(ipd, current_param, SQL_CA_SS_SCHEMA_NAME, reinterpret_cast<SQLPOINTER>(schema_ptr), schema.size() * sizeof(wchar_t));
+			if (!check_odbc_error(r)) return;
+			r = SQLGetDescField(ipd, current_param, SQL_CA_SS_SCHEMA_NAME, parameter_type_name, sizeof(parameter_type_name), &string_length);
+			if (!check_odbc_error(r)) return;
+		}
+#endif
 		tvp_t tvp;
 		const auto cols = make_shared<BoundDatumSet::param_bindings>();
 		for (auto c = 1; c <= datum->tvp_no_cols; ++c)

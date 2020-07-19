@@ -26,7 +26,7 @@ suite('warnings', function () {
       async = co.async
       helper = co.helper
       driver = co.driver
-      var myRegexp = /Driver=\{(.*)\}.*$/g
+      var myRegexp = /Driver=\{(.*?)\}.*$/g
       var match = myRegexp.exec(connStr)
       driver = match[1]
       helper.setVerbose(false)
@@ -123,6 +123,21 @@ suite('warnings', function () {
     testSP(connStr, 'TEST FIVE - Stord Proc - JOIN HINT WARNING')
     */
 
+  test('TEST THREE - Prepared Query - JOIN HINT WARNING', testDone => {
+    const fns = [
+      asyncDone => {
+        testPrepared(joinFailTestQry, (warnings, errors) => {
+          assert(errors.length === 0)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test('TEST ONE - Query - JOIN HINT WARNING', testDone => {
     const expected = [
       [
@@ -176,36 +191,6 @@ suite('warnings', function () {
     })
   })
 
-  test('TEST THREE - Prepared Query - JOIN HINT WARNING', testDone => {
-    const fns = [
-      asyncDone => {
-        testPrepared(joinFailTestQry, (warnings, errors) => {
-          assert(errors.length === 0)
-          asyncDone()
-        })
-      }
-    ]
-
-    async.series(fns, () => {
-      testDone()
-    })
-  })
-
-  test('TEST FOUR - Prepared Query - NULL ELIMNATED WARNING', testDone => {
-    const fns = [
-      asyncDone => {
-        testPrepared(nullEliminatedTestQry, (warnings, errors) => {
-          assert(errors.length === 0)
-          asyncDone()
-        })
-      }
-    ]
-
-    async.series(fns, () => {
-      testDone()
-    })
-  })
-
   test('TEST FIVE - Stord Proc - JOIN HINT WARNING', testDone => {
     const fns = [
       asyncDone => {
@@ -228,6 +213,7 @@ suite('warnings', function () {
         const err = new Error(`[Microsoft][${driver}][SQL Server]print error`)
         err.code = 0
         err.sqlstate = '01000'
+        err.stack = null
         const expectedErrors = [err]
         const expectedResults = [
           {
@@ -241,14 +227,31 @@ suite('warnings', function () {
             assert(warnings.length === 1)
             assert.deepStrictEqual(warnings, expectedErrors)
             assert.deepStrictEqual(res, expectedResults)
-            asyncDone()
           }
         })
         q.on('error', err => {
+          err.stack = null
           assert.ifError(err)
         })
         q.on('info', err => {
           warnings.push(err)
+        })
+        q.on('done', () => {
+          asyncDone()
+        })
+      }]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('TEST FOUR - Prepared Query - NULL ELIMNATED WARNING', testDone => {
+    const fns = [
+      asyncDone => {
+        testPrepared(nullEliminatedTestQry, (warnings, errors) => {
+          assert(errors.length === 0)
+          asyncDone()
         })
       }
     ]

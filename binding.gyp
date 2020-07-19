@@ -2,10 +2,6 @@
   'targets': [
     {
       'target_name': 'sqlserverv8',
-      
-      'link_settings': {
-        'libraries': ['-L/usr/lib', '-lmsodbcsql-17'],
-      },
 
       'variables': {
         'target%': '<!(node -e "console.log(process.versions.node)")', # Set the target variable only if it is not passed in by prebuild 
@@ -53,7 +49,7 @@
         'src',
       ],
 
-     'defines': [ 'NODE_GYP_V4', 'UNICODE', 'SQL_WCHART_CONVERT'],
+     'defines': [ 'NODE_GYP_V4' ],
 
       'conditions': [
          ['target < "13.0"', {
@@ -72,8 +68,13 @@
           }
         ],
         ['OS=="linux"', {
+            'link_settings': {
+             'libraries': ['-L/usr/lib', '-lmsodbcsql-17'],
+            },
             'defines': [
               'LINUX_BUILD',
+              'UNICODE',
+              'SQL_WCHART_CONVERT'
             ],
             'include_dirs': [
               '/usr/include/',

@@ -48,18 +48,24 @@ namespace mssql
 
 		bool created() { return  _statementState == OdbcStatementState::STATEMENT_CREATED; }
 		bool cancel();
-		
+
 		OdbcStatement(long statement_id, shared_ptr<OdbcConnectionHandle> c);
 		virtual ~OdbcStatement();
 		SQLLEN get_row_count() const { return _resultset != nullptr ? _resultset->row_count() : -1; }
 		shared_ptr<ResultSet> get_result_set() const
-		{ return _resultset; } 
+		{
+			return _resultset;
+		}
 
 		long get_statement_id() const
-		{ return _statementId; }
+		{
+			return _statementId;
+		}
 
-		bool is_prepared() const 
-		{ return _prepared; }
+		bool is_prepared() const
+		{
+			return _prepared;
+		}
 
 		Local<Array> unbind_params() const;
 		Local<Value> get_meta_value() const;
@@ -73,10 +79,10 @@ namespace mssql
 		{
 			return _errors;
 		}
-	
-		bool try_prepare(const shared_ptr<QueryOperationParams> &q);
-		bool bind_fetch(const shared_ptr<BoundDatumSet> & param_set);
-		bool try_execute_direct(const shared_ptr<QueryOperationParams> &q, const shared_ptr<BoundDatumSet> &paramSet);
+
+		bool try_prepare(const shared_ptr<QueryOperationParams>& q);
+		bool bind_fetch(const shared_ptr<BoundDatumSet>& param_set);
+		bool try_execute_direct(const shared_ptr<QueryOperationParams>& q, const shared_ptr<BoundDatumSet>& paramSet);
 		bool cancel_handle();
 		bool try_read_columns(size_t number_rows);
 		bool try_read_next_result();
@@ -84,7 +90,7 @@ namespace mssql
 	private:
 		bool fetch_read(const size_t number_rows);
 		bool prepared_read();
-		SQLRETURN poll_check(SQLRETURN ret, vector<SQLWCHAR> & vec, bool direct);
+		SQLRETURN poll_check(SQLRETURN ret, vector<SQLWCHAR>& vec, bool direct);
 		bool get_data_binary(size_t row_id, size_t column);
 		bool get_data_decimal(size_t row_id, size_t column);
 		bool get_data_bit(size_t row_id, size_t column);
@@ -105,26 +111,26 @@ namespace mssql
 		bool reserved_time(const size_t row_count, const size_t column) const;
 		bool reserved_timestamp(const size_t row_count, const size_t column) const;
 		bool reserved_timestamp_offset(const size_t row_count, const size_t column) const;
-		void apply_precision(const shared_ptr<BoundDatum> & datum, int current_param) const;
+		void apply_precision(const shared_ptr<BoundDatum>& datum, int current_param) const;
 		bool read_col_attributes(ResultSet::ColumnDefinition& current, int column);
 		bool read_next(int column);
 		bool raise_cancel();
-		bool check_more_read(SQLRETURN r, bool & status);
+		bool check_more_read(SQLRETURN r, bool& status);
 		bool lob(size_t, size_t column);
 		static OdbcEnvironmentHandle environment;
 		bool dispatch(SQLSMALLINT t, size_t row, size_t column);
 		bool dispatch_prepared(const SQLSMALLINT t, const size_t column_size, const size_t rows_count, const size_t column) const;
 		typedef vector<shared_ptr<BoundDatum>> param_bindings;
 		typedef pair<int, shared_ptr<param_bindings>> tvp_t;
-		bool bind_tvp(vector<tvp_t> &tvps);
-		bool bind_datum(int current_param, const shared_ptr<BoundDatum> &datum);
-		bool bind_params(const shared_ptr<BoundDatumSet> & params);
-		void queue_tvp(int current_param, param_bindings::iterator &itr, shared_ptr<BoundDatum> &datum, vector <tvp_t> & tvps);
+		bool bind_tvp(vector<tvp_t>& tvps);
+		bool bind_datum(int current_param, const shared_ptr<BoundDatum>& datum);
+		bool bind_params(const shared_ptr<BoundDatumSet>& params);
+		void queue_tvp(int current_param, param_bindings::iterator& itr, shared_ptr<BoundDatum>& datum, vector <tvp_t>& tvps);
 		bool try_read_string(bool binary, size_t row_id, size_t column);
 
 		bool return_odbc_error();
 		bool check_odbc_error(SQLRETURN ret);
-		
+
 		shared_ptr<QueryOperationParams> _query;
 		shared_ptr<OdbcConnectionHandle> _connection;
 		shared_ptr<OdbcStatementHandle> _statement;
@@ -143,11 +149,11 @@ namespace mssql
 		OdbcStatementState _statementState = OdbcStatementState::STATEMENT_CREATED;
 
 		// set binary true if a binary Buffer should be returned instead of a JS string
-	
+
 		shared_ptr<ResultSet> _resultset;
 		shared_ptr<BoundDatumSet> _boundParamsSet;
-		shared_ptr<BoundDatumSet> _preparedStorage;	
-		
+		shared_ptr<BoundDatumSet> _preparedStorage;
+
 		mutex g_i_mutex;
 
 		const static size_t prepared_rows_to_bind = 50;
