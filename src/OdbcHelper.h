@@ -21,8 +21,9 @@
 
 namespace mssql
 {
+#ifdef WINDOWS_BUILD
 #pragma intrinsic( memset )
-
+#endif
 
 	// boilerplate macro for checking if SQL_NO_DATA was returned for field data
 #define CHECK_ODBC_NO_DATA( r, handle ) {                                                                 \
