@@ -39,7 +39,7 @@ suite('txn', function () {
       connStr = global.conn_str || co.conn_str
       driver = co.driver
       driver = co.driver
-      var myRegexp = /Driver=\{(.*)\}.*$/g
+      var myRegexp = /Driver=\{(.*?)\}.*$/g
       var match = myRegexp.exec(connStr)
       driver = match[1]
       async = co.async
