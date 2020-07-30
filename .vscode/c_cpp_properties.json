@@ -4,6 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
+                "${workspaceFolder}/node_modules/nan",
                 "/usr/include/**",
                 "/opt/microsoft/msodbcsql17/include/**"
             ],
