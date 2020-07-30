@@ -238,15 +238,14 @@ namespace mssql
 
 	void Connection::polling_mode(const Nan::FunctionCallbackInfo<v8::Value>& info)
 	{
+		auto context1 = info.GetIsolate();
 		const auto query_id = info[0].As<Number>();
-		const auto v1 = info[1].As<Boolean>();
+		auto v2 = info[1]->IsUndefined() ? false : info[1]->BooleanValue(context1);
 		const auto callback = info[2].As<Object>();
 		auto* const connection = Unwrap<Connection>(info.This());
 		const nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
-		const auto maybe = v1->Int32Value(context);
-		const auto i32 = maybe.FromMaybe(0);
-		const auto b1 = fact.new_boolean(i32 > 0);
+		const auto b1 = fact.new_boolean(v2);
 
 		const auto ret = connection->connectionBridge->polling_mode(query_id, b1, callback);
 		info.GetReturnValue().Set(ret);

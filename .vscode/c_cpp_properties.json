@@ -3,8 +3,8 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
                 "${workspaceFolder}/node_modules/nan",
+                "${workspaceFolder}/**", 
                 "/usr/include/**",
                 "/opt/microsoft/msodbcsql17/include/**"
             ],

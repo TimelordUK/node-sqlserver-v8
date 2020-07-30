@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include <MutateJS.h>
+#include <nan.h>
 
 namespace mssql
 {
@@ -42,18 +43,8 @@ namespace mssql
 
 	int32_t MutateJS::getint32(const Local<Number> l)
 	{
-		nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
-		if (!l->IsNull())
-		{
-			const auto maybe = l->ToInt32(context);
-			Local<Int32> local;
-			if (maybe.ToLocal(&local))
-			{
-				return local->Value();
-			}
-		}
-		return 0;
+		auto v = l->IsUndefined() || l->IsNull() ? 0 : Nan::To<int32_t>(l).ToChecked();
+		return v;
 	}
 
 	int64_t MutateJS::getint64(const Local<Object> query_object, const char* v)
