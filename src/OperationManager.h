@@ -49,7 +49,7 @@ namespace mssql {
 		map_operations_t operations;
 		ssize_t _id;
 		static void on_background(uv_work_t* work);
-		static void on_foreground(uv_work_t* work);
+		static void on_foreground(uv_work_t* work, int x);
 		mutex g_i_mutex;
 	};
 }

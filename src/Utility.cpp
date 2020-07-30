@@ -349,7 +349,8 @@ namespace mssql
 			if (maybe.ToLocal(&local)) {
 				const Local<String> ds;
 				const auto ls = ns.FromMaybe(ds);
-				local->Set(context, ls, n);
+				auto ret = local->Set(context, ls, n);
+				auto status = ret.ToChecked();
 			}
 		}
 		return d;
