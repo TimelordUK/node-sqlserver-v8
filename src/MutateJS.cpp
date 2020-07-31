@@ -119,14 +119,16 @@ namespace mssql
 		return elem;
 	}
 
-	void MutateJS::set_array_elelemt_at_index(const Local<Array>& arr, const unsigned int index, const Local<Value>& value)
+	bool MutateJS::set_array_elelemt_at_index(const Local<Array>& arr, const unsigned int index, const Local<Value>& value)
 	{
 		arr->Set(index, value);
+		return true;
 	}
 
-	void MutateJS::set_property_value(const Local<Object>& o, const Local<Value>& p, const Local<Value>& v)
+	bool MutateJS::set_property_value(const Local<Object>& o, const Local<Value>& p, const Local<Value>& v)
 	{
 		o->Set(p, v);
+		return true;
 	}
 
 	Local<Value> MutateJS::from_two_byte(const wchar_t* text)
