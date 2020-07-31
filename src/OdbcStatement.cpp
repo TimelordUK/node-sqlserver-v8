@@ -398,7 +398,6 @@ namespace mssql
 		vector<SQLWCHAR> type_name(l);
 		SQLSMALLINT type_name_len = 0;
 		const auto index = column + 1;
-		const auto width = sizeof(wchar_t);
 		auto ret = SQLColAttribute(*_statement, index, SQL_DESC_TYPE_NAME, type_name.data(), type_name.size(), &type_name_len, nullptr);
 		if (!check_odbc_error(ret)) return false;
 
@@ -514,7 +513,7 @@ namespace mssql
 		}
 
 		SQLSetStmtAttr(statement, SQL_ATTR_ROW_ARRAY_SIZE, reinterpret_cast<SQLPOINTER>(prepared_rows_to_bind), 0);
-		auto reserved=  _preparedStorage->reserve(_resultset, prepared_rows_to_bind);
+		_preparedStorage->reserve(_resultset, prepared_rows_to_bind);
 
 		auto i = 0;
 		for (auto& datum : *_preparedStorage)
@@ -605,7 +604,7 @@ namespace mssql
 
 				if (submit_cancel)
 				{
-					_statementState = _statementState = OdbcStatementState::STATEMENT_CANCELLED;
+					_statementState = OdbcStatementState::STATEMENT_CANCELLED;
 					running = false;
 					ret = SQL_NO_DATA;
 					break;
@@ -679,7 +678,7 @@ namespace mssql
 		const auto ret2 = SQLCancelHandle(hnd.HandleType, hnd.get());
 		if (!check_odbc_error(ret2))
 		{
-			fprintf(stderr, "cancel req failed state %d %ld \n", _statementState, _statementId);
+			// fprintf(stderr, "cancel req failed state %d %ld \n", _statementState, _statementId);
 			return false;
 		}
 		{
@@ -710,7 +709,6 @@ namespace mssql
 		auto ret = query_timeout(timeout);
 		if (!check_odbc_error(ret)) return false;
 		const auto query = q->query_string();
-		auto* sql_str = const_cast<wchar_t *>(query.c_str());
 		_statementState = OdbcStatementState::STATEMENT_SUBMITTED;
 		if (polling_mode)
 		{
@@ -920,7 +918,7 @@ namespace mssql
 			break;
 
 		default:
-			res = res = try_read_string(false, row_id, column);
+			res = try_read_string(false, row_id, column);
 			break;
 		}
 
@@ -937,7 +935,7 @@ namespace mssql
 		auto ret = SQLGetData(statement, column + 1, SQL_C_BINARY, &b, 0, &iv);
 		if (!check_odbc_error(ret)) return false;
 		//Figure out the type
-		ret = SQLColAttribute(statement, column + 1, SQL_CA_SS_VARIANT_TYPE, nullptr, NULL, nullptr, &variant_type);
+		ret = SQLColAttribute(statement, column + 1, SQL_CA_SS_VARIANT_TYPE, nullptr, 0, nullptr, &variant_type);
 		if (!check_odbc_error(ret)) return false;
 		// set the definiton to actual data underlying data type.
 		auto& definition = _resultset->get_meta_data(column);

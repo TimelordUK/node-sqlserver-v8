@@ -24,7 +24,7 @@ namespace mssql
 		return result == 0;
 	}
 
-	void OperationManager::on_foreground(uv_work_t* work)
+	void OperationManager::on_foreground(uv_work_t* work, int x)
 	{
 		auto* operation = static_cast<Operation*>(work->data);
 		//fprintf(stderr, "OnForeground %llu\n ", operation->OperationID);
@@ -38,7 +38,7 @@ namespace mssql
 		operations.erase(id);
 	}
 
-	void OperationManager::on_background(uv_work_t* work)
+	void OperationManager::on_background(uv_work_t*work)
 	{
 		auto* operation = static_cast<Operation*>(work->data);
 		operation->invoke_background();

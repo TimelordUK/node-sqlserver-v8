@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "node_object_wrap.h"
+#include <nan.h>
 #include "OdbcConnectionBridge.h"
 
 namespace mssql
@@ -27,34 +27,34 @@ namespace mssql
     using namespace std;
     using namespace v8;
 
-    class Connection : public node::ObjectWrap
+    class Connection : public Nan::ObjectWrap
     {
     public:
-		static void initialize(Local<Object> exports);
+		static void Init(v8::Local<v8::Object> exports);
 		Connection();
 		virtual ~Connection();
 
 	private:
 		
-		static void New(const FunctionCallbackInfo<Value>& info);
-		static void close(const FunctionCallbackInfo<Value>& info);
-		static void begin_transaction(const FunctionCallbackInfo<Value>& info);
-		static void commit(const FunctionCallbackInfo<Value>& info);
-		static void rollback(const FunctionCallbackInfo<Value>& info);
-		static void open(const FunctionCallbackInfo<Value>& info);
-		static void query(const FunctionCallbackInfo<Value>& info);
-		static void prepare(const FunctionCallbackInfo<Value>& info);
-		static void bind_query(const FunctionCallbackInfo<Value>& info);
-		static void call_procedure(const FunctionCallbackInfo<Value>& info);
-		static void unbind(const FunctionCallbackInfo<Value>& info);
-		static void free_statement(const FunctionCallbackInfo<Value>& info);
-		static void read_row(const FunctionCallbackInfo<Value>& info);
-		static void cancel_statement(const FunctionCallbackInfo<Value>& info);
-		static void read_column(const FunctionCallbackInfo<Value>& info);
-		static void read_next_result(const FunctionCallbackInfo<Value>& info);
-		static void polling_mode(const FunctionCallbackInfo<Value>& info);
+		static void New(const Nan::FunctionCallbackInfo<v8::Value>& info);
+		static void close(const Nan::FunctionCallbackInfo<v8::Value>& info);
+		static void begin_transaction(const Nan::FunctionCallbackInfo<v8::Value>& info);
+		static void commit(const Nan::FunctionCallbackInfo<v8::Value>& info);
+		static void rollback(const Nan::FunctionCallbackInfo<v8::Value>& info);
+		static void open(const Nan::FunctionCallbackInfo<v8::Value>& info);
+		static void query(const Nan::FunctionCallbackInfo<v8::Value>& info);
+		static void prepare(const Nan::FunctionCallbackInfo<v8::Value>& info);
+		static void bind_query(const Nan::FunctionCallbackInfo<v8::Value>& info);
+		static void call_procedure(const Nan::FunctionCallbackInfo<v8::Value>& info);
+		static void unbind(const Nan::FunctionCallbackInfo<v8::Value>& info);
+		static void free_statement(const Nan::FunctionCallbackInfo<v8::Value>& info);
+		static void read_row(const Nan::FunctionCallbackInfo<v8::Value>& info);
+		static void cancel_statement(const Nan::FunctionCallbackInfo<v8::Value>& info);
+		static void read_column(const Nan::FunctionCallbackInfo<v8::Value>& info);
+		static void read_next_result(const Nan::FunctionCallbackInfo<v8::Value>& info);
+		static void polling_mode(const Nan::FunctionCallbackInfo<v8::Value>& info);
 		
-		static Persistent<Function> constructor;
+		static Nan::Persistent<v8::Function> constructor;
 		static void api(Local<FunctionTemplate>& tpl);
 		unique_ptr<OdbcConnectionBridge> connectionBridge;
 		Persistent<Object> This;

@@ -9,7 +9,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "C:/Program Files/nodejs/node.exe",
-            "args": ["runtest", "-u", "-t", "tvp"],
+            "args": ["runtest", "-u", "-t", "querycancel"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
