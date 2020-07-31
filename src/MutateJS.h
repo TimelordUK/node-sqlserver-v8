@@ -13,9 +13,9 @@ namespace mssql
 		static bool as_boolean(const Local<Value>& as_val);
 		static Local<Value> get_property_as_value(const Local<Object>& o, const char* v);
 		static Local<Value> get_property_as_value(const Local<Object>& o, const Local<Value>& v);
-		static void set_property_value(const Local<Object>& o, const Local<Value>& p, const Local<Value>& v);
+		static bool set_property_value(const Local<Object>& o, const Local<Value>& p, const Local<Value>& v);
 		static Local<Value> get_array_elelemt_at_index(const Local<Array> & arr, const unsigned int index);
-		static void set_array_elelemt_at_index(const Local<Array>& arr, const unsigned int index, const Local<Value> & value);
+		static bool set_array_elelemt_at_index(const Local<Array>& arr, const unsigned int index, const Local<Value> & value);
 		static int32_t getint32(Local<Object> query_object, const char* v);
 		static int64_t getint64(Local<Object> query_object, const char* v);
 		static int64_t getint64(Local<Number> l);

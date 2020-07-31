@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include <MutateJS.h>
+#include <nan.h>
 
 namespace mssql
 {
@@ -42,18 +43,8 @@ namespace mssql
 
 	int32_t MutateJS::getint32(const Local<Number> l)
 	{
-		nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
-		if (!l->IsNull())
-		{
-			const auto maybe = l->ToInt32(context);
-			Local<Int32> local;
-			if (maybe.ToLocal(&local))
-			{
-				return local->Value();
-			}
-		}
-		return 0;
+		auto v = l->IsUndefined() || l->IsNull() ? 0 : Nan::To<int32_t>(l).ToChecked();
+		return v;
 	}
 
 	int64_t MutateJS::getint64(const Local<Object> query_object, const char* v)
@@ -128,14 +119,16 @@ namespace mssql
 		return elem;
 	}
 
-	void MutateJS::set_array_elelemt_at_index(const Local<Array>& arr, const unsigned int index, const Local<Value>& value)
+	bool MutateJS::set_array_elelemt_at_index(const Local<Array>& arr, const unsigned int index, const Local<Value>& value)
 	{
 		arr->Set(index, value);
+		return true;
 	}
 
-	void MutateJS::set_property_value(const Local<Object>& o, const Local<Value>& p, const Local<Value>& v)
+	bool MutateJS::set_property_value(const Local<Object>& o, const Local<Value>& p, const Local<Value>& v)
 	{
 		o->Set(p, v);
+		return true;
 	}
 
 	Local<Value> MutateJS::from_two_byte(const wchar_t* text)
@@ -179,18 +172,22 @@ namespace mssql
 		 return elem;
 	 }
 	
-	 void MutateJS::set_array_elelemt_at_index(const Local<Array>& arr, const unsigned int index, const Local<Value>& value)
+	 bool MutateJS::set_array_elelemt_at_index(const Local<Array>& arr, const unsigned int index, const Local<Value>& value)
 	 {
 		 const nodeTypeFactory fact;
 		 const auto context = fact.isolate->GetCurrentContext();
-		 arr->Set(context, index, value);
+		 auto ret = arr->Set(context, index, value);
+		 const auto status = ret.ToChecked();
+		 return status;
 	 }
 
-	 void MutateJS::set_property_value(const Local<Object>& o, const Local<Value>& p, const Local<Value>& v)
+	 bool MutateJS::set_property_value(const Local<Object>& o, const Local<Value>& p, const Local<Value>& v)
 	 {
 		 const nodeTypeFactory fact;
 		 const auto context = fact.isolate->GetCurrentContext();
-		 o->Set(context, p, v);
+		 auto ret = o->Set(context, p, v);
+		 const auto status = ret.ToChecked();
+		 return status;
 	 }
 	
 	 Local<Value> MutateJS::from_two_byte(const uint16_t* text, const size_t size)

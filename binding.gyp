@@ -8,6 +8,7 @@
       },
 
       'sources': [
+        'src/addon.cpp',
         'src/QueryOperationParams.cpp',
         'src/MutateJS.cpp',
         'src/BoundDatum.cpp',
@@ -46,6 +47,7 @@
 		  ],
 
       'include_dirs': [
+        "<!(node -e \"require('nan')\")",
         'src',
       ],
 
