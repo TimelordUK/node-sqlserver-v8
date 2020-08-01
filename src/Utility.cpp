@@ -23,6 +23,7 @@
 #include <locale>
 #include <codecvt>
 #include <iostream>
+#include <nan.h>
 
 namespace mssql
 {
@@ -170,7 +171,7 @@ namespace mssql
 
 	Local<Number> nodeTypeFactory::new_number(const double d) const
 	{
-		return Number::New(isolate, d);
+		return Nan::New(d);
 	}
 
 	void nodeTypeFactory::scoped_callback(const Persistent<Function> & callback, const int argc, Local<Value> args[]) const
@@ -183,37 +184,37 @@ namespace mssql
 
 	Local<Integer> nodeTypeFactory::new_integer(const int32_t i) const
 	{
-		return Integer::New(isolate, i);
+		return Nan::New(i);
 	}
 
 	Local<Integer> nodeTypeFactory::new_long(const int64_t i) const
 	{
-		return Integer::New(isolate, static_cast<int32_t>(i));
+		return Nan::New(static_cast<int32_t>(i));
 	}
 
 	Local<Boolean> nodeTypeFactory::new_boolean(const bool b) const
 	{
-		return Boolean::New(isolate, b);
+		return Nan::New(b);
 	}
 
 	Local<Boolean> nodeTypeFactory::new_boolean(const uint16_t n) const
 	{
-		return Boolean::New(isolate, n != 0);
+		return Nan::New(n != 0);
 	}
 
 	Local<Integer> nodeTypeFactory::new_int32(const int32_t i) const
 	{
-		return Int32::New(isolate, i);
+		return Nan::New<Int32>(i);
 	}
 
 	Local<Number> nodeTypeFactory::new_int64(const int64_t i) const
 	{
-		return Number::New(isolate, static_cast<double>(i));
+		return Nan::New<Number>(static_cast<double>(i));
 	}
 
 	Local<Object> nodeTypeFactory::new_object() const
 	{
-		return Object::New(isolate);
+		return Nan::New<Object>();
 	}
 
 	Local<Value> nodeTypeFactory::new_number() const
@@ -223,27 +224,22 @@ namespace mssql
 
 	Local<Integer> nodeTypeFactory::new_uint32(const uint32_t n) const
 	{
-		return Integer::New(isolate, n);
+		return Nan::New<Integer>(n);
+	}
+
+	Local<String> nodeTypeFactory::new_string(const char *cstr) const
+	{
+		return Nan::New(cstr).ToLocalChecked();
 	}
 
 #ifdef PRE_V13
-	Local<String> nodeTypeFactory::new_string(const char *cstr) const
-	{
-		return String::NewFromUtf8(isolate, cstr);
-	}
+
 
 	Local<String> nodeTypeFactory::new_string(const char *cstr, const int size) const
 	{
 		return String::NewFromUtf8(isolate, cstr, String::NewStringType::kNormalString, size);
 	}
 #else
-	Local<String> nodeTypeFactory::new_string(const char* cstr) const
-	{
-		const auto maybe = String::NewFromUtf8(isolate, cstr);
-		const Local<String> d;
-		const auto v = maybe.FromMaybe(d);
-		return v;
-	}
 
 	Local<String> nodeTypeFactory::new_string(const char* cstr, const int size) const
 	{
@@ -256,7 +252,7 @@ namespace mssql
 
 	Local<Array> nodeTypeFactory::new_array() const
 	{
-		return Array::New(isolate);
+		return Nan::New<Array>();
 	}
 
 	Local<Array> nodeTypeFactory::new_array(const int count) const
@@ -266,7 +262,7 @@ namespace mssql
 
 	Local<Value> nodeTypeFactory::new_local_value(const Local<Value> & v) const
 	{
-		return Local<Value>::New(isolate, v);
+		return Nan::New<Value>(v);
 	}
 
 	Local<Function> nodeTypeFactory::newCallbackFunction(const Persistent<Function> & callback) const

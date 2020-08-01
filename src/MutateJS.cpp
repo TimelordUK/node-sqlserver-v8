@@ -42,8 +42,6 @@ namespace mssql
 
 	int32_t MutateJS::getint32(const Local<Object> query_object, const char* v)
 	{
-		nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
 		const auto l = get(query_object, v);
 		if (!isUnDefined(l))
 		{
@@ -69,8 +67,6 @@ namespace mssql
 
 	int64_t MutateJS::getint64(const Local<Object> query_object, const char* v)
 	{
-		nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
 		const auto l = get(query_object, v);
 		if (!isUnDefined(l))
 		{
@@ -81,8 +77,6 @@ namespace mssql
 
 	int64_t MutateJS::getint64(const Local<Number> l)
 	{
-		nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
 		if (!isUnDefined(l))
 		{
 			return Nan::To<int64_t>(l).ToChecked();

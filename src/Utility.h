@@ -29,11 +29,6 @@ namespace mssql
     using namespace std;
     using namespace v8;
 
-	/*
-    inline Local<String> New(const wchar_t* text)
-    {
-	   return String::NewFromTwoByte(Isolate::GetCurrent(), reinterpret_cast<const uint16_t*>(text));
-    }*/
 	vector<SQLWCHAR> wstr2wcvec(const wstring & s);
 	string swcvec2str(vector<SQLWCHAR> &v, int l);
     string w2sqlc(const wstring & s);
