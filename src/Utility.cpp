@@ -303,13 +303,7 @@ namespace mssql
 
 	Local<Value> nodeTypeFactory::new_date() const
 	{
-		const auto dd = Date::New(isolate->GetCurrentContext(), 0.0);
-		Local<Value> d;
-		if (dd.ToLocal(&d))
-		{
-			return d;
-		}
-		return d;
+		return Nan::New<Date>(0.0).ToLocalChecked();
 	}
 
 #ifdef PRE_V13
