@@ -4,6 +4,7 @@
 #include <codecvt>
 #include <locale>
 #include <cstring>
+#include <nan.h>
 
 namespace mssql
 {
@@ -137,13 +138,8 @@ namespace mssql
 
 	void BoundDatum::bind_w_var_char(const Local<Value>& p)
 	{
-		const nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
-		const auto maybe = p->ToString(context);
-		Local<String> str_param;
-		if (maybe.ToLocal(&str_param)) {
-			bind_w_var_char(p, str_param->Length());
-		}
+		auto str_param = Nan::To<String>(p).FromMaybe(Nan::EmptyString());	
+		bind_w_var_char(p, str_param->Length());
 	}
 
 	void BoundDatum::bind_char(const Local<Value>& p)
@@ -153,15 +149,10 @@ namespace mssql
 
 	void BoundDatum::bind_var_char(const Local<Value>& p)
 	{
-		const nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
-		const auto maybe = p->ToString(context);
-		Local<String> local;
-		if (maybe.ToLocal(&local)) {
-			SQLULEN precision = local->Length();
-			if (param_size > 0) precision = min(param_size, precision);
-			bind_var_char(p, static_cast<int>(precision));
-		}
+		auto local = Nan::To<String>(p).FromMaybe(Nan::EmptyString());
+		SQLULEN precision = local->Length();
+		if (param_size > 0) precision = min(param_size, precision);
+		bind_var_char(p, static_cast<int>(precision));
 	}
 
 	void BoundDatum::reserve_var_char(const size_t precision, const size_t array_len)
@@ -185,13 +176,9 @@ namespace mssql
 		if (!p->IsNull())
 		{
 			const nodeTypeFactory fact;
-			const auto context = fact.isolate->GetCurrentContext();
-			const auto maybe = p->ToString(context);
-			Local<String> str_param;
-			if (maybe.ToLocal(&str_param)) {
-				str_param->WriteUtf8(fact.isolate, _storage->charvec_ptr->data(), precision);
-				_indvec[0] = precision;
-			}
+			auto str_param = Nan::To<String>(p).FromMaybe(Nan::EmptyString());	
+			str_param->WriteUtf8(fact.isolate, _storage->charvec_ptr->data(), precision);
+			_indvec[0] = precision;	
 		}
 	}
 	
@@ -200,23 +187,15 @@ namespace mssql
 		auto str_len = 0;
 		auto arr = Local<Array>::Cast(p);
 		const auto len = arr->Length();
-		const nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
 		for (uint32_t i = 0; i < len; ++i)
-		{
-			auto maybe_value = arr->Get(context, i);
-			
-			Local<Value> local_value;
-			if (maybe_value.ToLocal(&local_value))
-			{
-				Local<String> str;
-				auto maybe_string = local_value->ToString(context);
-				if (maybe_string.ToLocal(&str)) {
-					if (str->Length() > str_len) {
-						str_len = str->Length();
-					}
-				}
-			}
+		{	
+			auto elem = Nan::Get(arr, i);
+			if (elem.IsEmpty()) continue;
+			auto maybe_value = Nan::To<String>(elem.ToLocalChecked());
+			auto str = maybe_value.FromMaybe(Nan::EmptyString()); 	
+			if (str->Length() > str_len) {
+				str_len = str->Length();
+			}		
 		}
 		return str_len;
 	}
@@ -233,22 +212,13 @@ namespace mssql
 		for (uint32_t i = 0; i < array_len; ++i)
 		{
 			_indvec[i] = SQL_NULL_DATA;
-			const auto elem = MutateJS::get_array_elelemt_at_index(arr, i);
-			if (!elem->IsNull())
-			{
-				auto maybe_value = arr->Get(context, i);
-				Local<Value> local_value;
-				if (maybe_value.ToLocal(&local_value))
-				{
-					Local<String> str;
-					auto maybe_string = local_value->ToString(context);
-					if (maybe_string.ToLocal(&str)) {
-						const auto width = str->Length();
-						_indvec[i] = width;
-						str->WriteUtf8(fact.isolate, &*itr, max_str_len);
-					}
-				}
-			}
+			auto elem = Nan::Get(arr, i);
+			if (elem.IsEmpty()) continue;
+			auto maybe_value = Nan::To<String>(elem.ToLocalChecked());
+			auto str = maybe_value.FromMaybe(Nan::EmptyString()); 	
+			const auto width = str->Length();
+			_indvec[i] = width;
+			str->WriteUtf8(fact.isolate, &*itr, max_str_len);
 			itr += max_str_len;
 		}
 	}
@@ -280,29 +250,17 @@ namespace mssql
 		const auto array_len = arr->Length();
 		const auto size = sizeof(uint16_t);
 		reserve_w_var_char_array(max_str_len, array_len);
-		const nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
 		auto itr = _storage->uint16vec_ptr->begin();
 		for (uint32_t i = 0; i < array_len; ++i)
 		{
 			_indvec[i] = SQL_NULL_DATA;
-			const auto elem = MutateJS::get_array_elelemt_at_index(arr, i);
-			if (!elem->IsNull())
-			{
-				auto maybe_value = arr->Get(context, i);
-				
-				Local<Value> local_value;
-				if (maybe_value.ToLocal(&local_value))
-				{
-					Local<String> str;
-					auto maybe_string = local_value->ToString(context);
-					if (maybe_string.ToLocal(&str)) {
-						const auto width = str->Length() * size;
-						_indvec[i] = width;
-						str->Write(fact.isolate, &*itr, 0, max_str_len);
-					}
-				}
-			}
+			auto elem = Nan::Get(arr, i);
+			if (elem.IsEmpty()) continue;
+			auto maybe_value = Nan::To<String>(elem.ToLocalChecked());
+			auto str = maybe_value.FromMaybe(Nan::EmptyString()); 	
+			const auto width = str->Length() * size;
+			_indvec[i] = width;
+			str->Write(Nan::GetCurrentContext()->GetIsolate(), &*itr, 0, max_str_len);
 			itr += max_str_len;
 		}
 	}
@@ -573,19 +531,14 @@ namespace mssql
 		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
-			nodeTypeFactory fact;
-			const auto context = fact.isolate->GetCurrentContext();
-			const auto maybe = p->ToNumber(context);
-			Local<Number> local;
-			if (maybe.ToLocal(&local)) {
-				const auto d = local->Value();
-				auto& vec = *_storage->numeric_ptr;
-				auto& ns = vec[0];
-				encode_numeric_struct(d, static_cast<int>(param_size), digits, ns);
-				param_size = ns.precision;
-				digits = static_cast<unsigned char>(ns.scale);
-				_indvec[0] = sizeof(SQL_NUMERIC_STRUCT);
-			}
+			const auto local = Nan::To<Number>(p).ToLocalChecked();
+			const auto d = local->Value();
+			auto& vec = *_storage->numeric_ptr;
+			auto& ns = vec[0];
+			encode_numeric_struct(d, static_cast<int>(param_size), digits, ns);
+			param_size = ns.precision;
+			digits = static_cast<unsigned char>(ns.scale);
+			_indvec[0] = sizeof(SQL_NUMERIC_STRUCT);
 		}
 	}
 
@@ -602,7 +555,7 @@ namespace mssql
 			const auto elem = MutateJS::get_array_elelemt_at_index(arr, i);
 			if (!elem->IsNull())
 			{
-				const auto num = Local<Number>::Cast<Value>(elem);
+				const auto num = Nan::To<Number>(elem).ToLocalChecked();
 				const auto d = num->Value();
 				encode_numeric_struct(d, static_cast<int>(param_size), 0, ns);
 				param_size = max(static_cast<unsigned int>(param_size), static_cast<unsigned int>(ns.precision));
@@ -647,13 +600,10 @@ namespace mssql
 		vec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
-			const auto maybe = p->ToInt32(context);
-			Local<Int32> local;
-			if (maybe.ToLocal(&local)) {
-				const auto d = local->Value();
-				vec[0] = d;
-				_indvec[0] = 0;
-			}
+			auto local = Nan::To<Int32>(p).ToLocalChecked();	
+			const auto d = local->Value();
+			vec[0] = d;
+			_indvec[0] = 0;
 		}
 	}
 
