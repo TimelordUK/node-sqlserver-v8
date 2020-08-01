@@ -7,21 +7,37 @@ namespace mssql
 	bool MutateJS::getbool(const Local<Object> query_object, const char* v)
 	{
 		const auto l = get(query_object, v);
-		if (!l->IsNull())
-		{
-			return as_boolean(l);
-		}
-		return false;
+		return as_boolean(l);
 	}
+
+	 Local<Value> MutateJS::get_array_elelemt_at_index(const Local<Array> &arr, const unsigned int index)
+	 {
+		const auto t = Nan::Get(arr, index).ToLocalChecked();
+		return t;
+	 }
+
+	 bool MutateJS::set_array_elelemt_at_index(const Local<Array>& arr, const unsigned int index, const Local<Value>& value)
+	 {
+		 return Nan::Set(arr, index, value).ToChecked();
+	 }
+
+	 bool MutateJS::set_property_value(const Local<Object>& o, const Local<Value>& p, const Local<Value>& v)
+	 {
+		 return Nan::Set(o, p, v).ToChecked();
+	 }
 
 	Local<Value> MutateJS::get_property_as_value(const Local<Object>& o, const Local<Value>& v)
 	{
 		const nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
-		const auto maybe = o->Get(context, v);
-		const Local<Value> d;
-		const auto val = maybe.FromMaybe(d);
-		return val;
+		if ( o->IsUndefined() || o->IsNull()) {
+			return fact.null();
+		}
+		const auto p = Nan::Get(o,v).ToLocalChecked();
+		return p;
+	}
+
+	static bool isUnDefined(const Local<Value> l) {
+		return l->IsUndefined() || l->IsNull();
 	}
 
 	int32_t MutateJS::getint32(const Local<Object> query_object, const char* v)
@@ -29,21 +45,25 @@ namespace mssql
 		nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
 		const auto l = get(query_object, v);
-		if (!l->IsNull())
+		if (!isUnDefined(l))
 		{
-			const auto maybe = l->ToInt32(context);
-			Local<Int32> local;
-			if (maybe.ToLocal(&local))
-			{
-				return local->Value();
-			}
+			return Nan::To<int32_t>(l).ToChecked();
 		}
 		return 0;
 	}
 
+	 bool MutateJS::as_boolean(const Local<Value>& as_val) 
+	 {
+		 if (!isUnDefined(as_val))
+		 {
+			 return Nan::To<bool>(as_val).ToChecked();
+		 }
+		 return false;
+	 }
+
 	int32_t MutateJS::getint32(const Local<Number> l)
 	{
-		const auto v = l->IsUndefined() || l->IsNull() ? 0 : Nan::To<int32_t>(l).ToChecked();
+		const auto v = isUnDefined(l) ? 0 : Nan::To<int32_t>(l).ToChecked();
 		return v;
 	}
 
@@ -52,14 +72,9 @@ namespace mssql
 		nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
 		const auto l = get(query_object, v);
-		if (!l->IsNull())
+		if (!isUnDefined(l))
 		{
-			const auto maybe = l->ToBigInt(context);
-			Local<BigInt> local;
-			if (maybe.ToLocal(&local))
-			{
-				return local->Int64Value();
-			}
+			return Nan::To<int64_t>(l).ToChecked();
 		}
 		return 0;
 	}
@@ -68,69 +83,30 @@ namespace mssql
 	{
 		nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
-		if (!l->IsNull())
+		if (!isUnDefined(l))
 		{
-			const auto maybe = l->ToBigInt(context);
-			Local<BigInt> local;
-			if (maybe.ToLocal(&local))
-			{
-				return local->Int64Value();
-			}
+			return Nan::To<int64_t>(l).ToChecked();
 		}
 		return 0;
 	}
 
-	Local<Value> MutateJS::get(Local<Object> o, const char* v)
+	Local<Value> MutateJS::get_property_as_value(const Local<Object>& o, const char* v)
 	{
-		nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
-		const auto vp = fact.new_string(v);
-		const auto maybe = o->Get(context, vp);
-		Local<Value> local;
-		if (maybe.ToLocal(&local)) {
-			return local;
+		return get(o, v);
+	}
+
+	Local<Value> MutateJS::get(const Local<Object> o, const char* v)
+	{
+		const nodeTypeFactory fact;
+		if (isUnDefined(o)) {
+			return fact.null();
 		}
-		return fact.null();
+		const auto p = Nan::Get(o, Nan::New<String>(v).ToLocalChecked()).ToLocalChecked();
+		return p;
 	}
 	
 #ifdef PRE_V13
-	bool MutateJS::as_boolean(const Local<Value>& as_val) {
-		const nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
-		bool as_bool;
-		if (!as_val->BooleanValue(context).To(&as_bool))
-		{
-			return false;
-		}
-		return  as_bool;
-	}
-	
-	Local<Value> MutateJS::get_property_as_value(const Local<Object>& o, const char* v)
-	{
-		const nodeTypeFactory fact;
-		const auto vp = fact.new_string(v);
-		const auto val = o->Get(vp);
-		return val;
-	}
-	
-	Local<Value> MutateJS::get_array_elelemt_at_index(const Local<Array>& arr, const unsigned int index)
-	{
-		const auto elem = arr->Get(index);
-		return elem;
-	}
-
-	bool MutateJS::set_array_elelemt_at_index(const Local<Array>& arr, const unsigned int index, const Local<Value>& value)
-	{
-		arr->Set(index, value);
-		return true;
-	}
-
-	bool MutateJS::set_property_value(const Local<Object>& o, const Local<Value>& p, const Local<Value>& v)
-	{
-		o->Set(p, v);
-		return true;
-	}
-
+		
 	Local<Value> MutateJS::from_two_byte(const wchar_t* text)
 	{
 		const nodeTypeFactory fact;
@@ -150,46 +126,7 @@ namespace mssql
 	}
 
 #else
- 
-	 Local<Value> MutateJS::get_property_as_value(const Local<Object>& o, const char* v)
-	 {
-		 const nodeTypeFactory fact;
-		 const auto context = fact.isolate->GetCurrentContext();
-		 const auto vp = fact.new_string(v);
-		 const auto maybe = o->Get(context, vp);
-		 const Local<Value> d;
-		 const auto val = maybe.FromMaybe(d);
-		 return val;
-	 }
-
-	 Local<Value> MutateJS::get_array_elelemt_at_index(const Local<Array> &arr, const unsigned int index)
-	 {
-		 const nodeTypeFactory fact;
-		 const auto context = fact.isolate->GetCurrentContext();
-		 const auto maybe = arr->Get(context, index);
-		 const Local<Value> d;
-		 const auto elem = maybe.FromMaybe(d);
-		 return elem;
-	 }
-	
-	 bool MutateJS::set_array_elelemt_at_index(const Local<Array>& arr, const unsigned int index, const Local<Value>& value)
-	 {
-		 const nodeTypeFactory fact;
-		 const auto context = fact.isolate->GetCurrentContext();
-		 auto ret = arr->Set(context, index, value);
-		 const auto status = ret.ToChecked();
-		 return status;
-	 }
-
-	 bool MutateJS::set_property_value(const Local<Object>& o, const Local<Value>& p, const Local<Value>& v)
-	 {
-		 const nodeTypeFactory fact;
-		 const auto context = fact.isolate->GetCurrentContext();
-		 auto ret = o->Set(context, p, v);
-		 const auto status = ret.ToChecked();
-		 return status;
-	 }
-	
+ 		
 	 Local<Value> MutateJS::from_two_byte(const uint16_t* text, const size_t size)
 	 {
 		 nodeTypeFactory fact;
@@ -215,16 +152,6 @@ namespace mssql
 		 const auto maybe = String::NewFromTwoByte(context->GetIsolate(), text, NewStringType::kNormal);
 		 const Local<Value> d;
 		 return maybe.FromMaybe(d);
-	 }
-
-	 bool MutateJS::as_boolean(const Local<Value>& as_val) {
-		 if (!as_val->IsNull())
-		 {
-			 const nodeTypeFactory fact;
-			 const auto context = fact.isolate->GetCurrentContext();
-			 return as_val->BooleanValue(context->GetIsolate());
-		 }
-		 return false;
 	 }
 	
 #endif
