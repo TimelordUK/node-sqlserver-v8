@@ -70,7 +70,7 @@ namespace mssql
 
 	wstring FromV8String(const Local<String> input) {
 		const nodeTypeFactory fact;
-		String::Utf8Value cons(fact.isolate, input);
+		Nan::Utf8String cons(input);
 		auto* x = *cons;
 		const string cc = x;
 		auto wides = s2ws(cc);
@@ -282,11 +282,7 @@ namespace mssql
 
 	Local<Value> nodeTypeFactory::new_buffer(const int size) const
 	{
-		return node::Buffer::New(isolate, size)
-#ifdef NODE_GYP_V4 
-			.ToLocalChecked()
-#endif
-			;
+		return Nan::NewBuffer(size).ToLocalChecked();
 	}
 
 	Local<Object> nodeTypeFactory::error(const stringstream &full_error) const
