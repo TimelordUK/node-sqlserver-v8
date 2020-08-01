@@ -3,7 +3,7 @@
 #include <MutateJS.h>
 #include <codecvt>
 #include <locale>
-#include <string.h>
+#include <cstring>
 
 namespace mssql
 {
@@ -458,7 +458,7 @@ namespace mssql
 		auto* itr_p = _storage->charvec_ptr->data();
 		type_id_str->WriteUtf8(fact.isolate, itr_p, precision);
 		const string narrow = _storage->charvec_ptr->data();
-		auto type_name = converter.from_bytes(narrow);
+		const auto type_name = converter.from_bytes(narrow);
 		auto type_name_vec = wstr2wcvec(type_name);
 		memcpy(static_cast<void*>(_storage->uint16vec_ptr->data()), type_name_vec.data(), precision * sizeof(uint16_t));
 		buffer = _storage->uint16vec_ptr->data();
@@ -475,7 +475,7 @@ namespace mssql
 		if (!p->IsNullOrUndefined()) {
 		 	o = p.As<Object>();
 		}
-		bool valid = !p->IsNullOrUndefined() && !o->IsNull();
+		const auto valid = !p->IsNullOrUndefined() && !o->IsNull();
 		const auto obj_len = valid ? node::Buffer::Length(o) : 0;
 		reserve_var_binary_array(obj_len, 1);
 

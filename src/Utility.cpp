@@ -19,7 +19,7 @@
 
 #include "stdafx.h"
 #include <BoundDatumHelper.h>
-#include <string.h>
+#include <cstring>
 #include <locale>
 #include <codecvt>
 #include <iostream>
@@ -32,7 +32,7 @@ namespace mssql
 		vector<char> c_str;
 		c_str.reserve(l + 1);
 		c_str.resize(l + 1);
-		const char* ptr = reinterpret_cast<const char*>(v.data());
+		const auto* ptr = reinterpret_cast<const char*>(v.data());
 		for (int i = 0, j = 0; i < l * 2; i+=2, j++) {
 			c_str[j] = ptr[i];
 		}
@@ -46,7 +46,7 @@ namespace mssql
 		vector<SQLWCHAR> ret; 
 		ret.resize(s.size());
 		ret.reserve(s.size());
-		char* wptr = const_cast<char*>(reinterpret_cast<const char*>(ret.data()));
+		auto* wptr = const_cast<char*>(reinterpret_cast<const char*>(ret.data()));
 		for (string::const_iterator ptr = cs.begin(); ptr != cs.end(); ++ptr, wptr +=2) {
 			*wptr = *ptr;
 		}
@@ -62,16 +62,16 @@ namespace mssql
 	wstring s2ws(const string & s) {
 		using convert_type = codecvt_utf8<wchar_t>;
 		wstring_convert<convert_type, wchar_t> converter;
-		auto c_cs = converter.from_bytes(s);
+		const auto c_cs = converter.from_bytes(s);
 		const auto m = wstring(c_cs);
 		return m;	
 	}
 
 	wstring FromV8String(const Local<String> input) {
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		String::Utf8Value cons(fact.isolate, input);
-		auto x = *cons;
-		string cc = x;
+		auto* x = *cons;
+		const string cc = x;
 		auto wides = s2ws(cc);
 		return wides;
 	}

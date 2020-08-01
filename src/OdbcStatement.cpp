@@ -443,7 +443,7 @@ namespace mssql
 		ret = SQLDescribeCol(statement, index, buffer.data(), name_length + 1, &name_length, &current.dataType,
 		                     &current.columnSize, &current.decimalDigits, &current.nullable);
 		if (!check_odbc_error(ret)) return false;
-		auto s = swcvec2str(buffer, name_length);
+		const auto s = swcvec2str(buffer, name_length);
 		current.name = s;
 		// wcerr << "read_next " << column << " name = " << current.name << endl; 
 		ret = read_col_attributes(current, column);
@@ -461,7 +461,7 @@ namespace mssql
 
 		auto column = 0;
 		_resultset = make_unique<ResultSet>(columns);
-		auto cols = static_cast<int>(_resultset->get_column_count());
+		const auto cols = static_cast<int>(_resultset->get_column_count());
 		// cerr << "start_reading_results. cols = " << cols << " " << endl;
 		while (column < cols)
 		{
@@ -619,8 +619,8 @@ namespace mssql
 		_resultset = make_unique<ResultSet>(0);
 		_resultset->_end_of_rows = true;
 		_endOfResults = true; // reset
-		string c_msg = "[Microsoft] Operation canceled";
-		string c_state = "U00000";
+		const string c_msg = "[Microsoft] Operation canceled";
+		const string c_state = "U00000";
 		const auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), 0);
 		_errors->push_back(last);
 		return true;
@@ -642,7 +642,7 @@ namespace mssql
 		}
 		if (polling_mode)
 		{
-			auto s = SQLSetStmtAttr(statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
+			const auto s = SQLSetStmtAttr(statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
 			if (!check_odbc_error(s)) {
 				return false;
 			}

@@ -52,8 +52,8 @@ namespace mssql
 		 Nan::SetPrototypeMethod(tpl, "pollingMode", polling_mode);
 	}
 
-	void Connection::Init(v8::Local<v8::Object> exports) {
-  		v8::Local<v8::Context> context = exports->CreationContext();
+	void Connection::Init(Local<Object> exports) {
+		const auto context = exports->CreationContext();
   		Nan::HandleScope scope;
 		const auto initialized = OdbcConnection::InitializeEnvironment();
 		const nodeTypeFactory fact;
@@ -65,7 +65,7 @@ namespace mssql
 		}
 
 		// Prepare constructor template
-		v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
+		auto tpl = Nan::New<FunctionTemplate>(New);
 		tpl->SetClassName(Nan::New("Connection").ToLocalChecked());
 		tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
@@ -116,17 +116,17 @@ namespace mssql
 	}
 
 	void Connection::New(const Nan::FunctionCallbackInfo<v8::Value>& info) {
-		v8::Local<v8::Context> context = info.GetIsolate()->GetCurrentContext();
+		const auto context = info.GetIsolate()->GetCurrentContext();
   		if (info.IsConstructCall()) {
     		// Invoked as constructor: `new MyObject(...)`
-    		Connection* obj = new Connection();
+            auto* obj = new Connection();
     		obj->Wrap(info.This());
     		info.GetReturnValue().Set(info.This());
   		} else {
     		// Invoked as plain function `MyObject(...)`, turn into construct call.
-    		const int argc = 1;
-    		v8::Local<v8::Value> argv[argc] = {info[0]};
-    		v8::Local<v8::Function> cons = Nan::New<v8::Function>(constructor);
+    		const auto argc = 1;
+    		Local<Value> argv[argc] = {info[0]};
+            const auto cons = Nan::New<Function>(constructor);
     		info.GetReturnValue().Set(
         	cons->NewInstance(context, argc, argv).ToLocalChecked());
   		}

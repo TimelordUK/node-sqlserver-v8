@@ -43,7 +43,7 @@ namespace mssql
 
 	int32_t MutateJS::getint32(const Local<Number> l)
 	{
-		auto v = l->IsUndefined() || l->IsNull() ? 0 : Nan::To<int32_t>(l).ToChecked();
+		const auto v = l->IsUndefined() || l->IsNull() ? 0 : Nan::To<int32_t>(l).ToChecked();
 		return v;
 	}
 

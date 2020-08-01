@@ -19,13 +19,11 @@
 
 #include "stdafx.h"
 #include <locale>
-#include <codecvt>
 #include <OdbcConnection.h>
 #include <OdbcStatementCache.h>
 #include <OdbcOperation.h>
 #include <OperationManager.h>
 #include <NodeColumns.h>
-#include <iostream>
 
 namespace mssql
 {
