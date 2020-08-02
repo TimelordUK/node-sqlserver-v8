@@ -1,4 +1,4 @@
-#include <v8.h>
+#include "stdafx.h"
 #include <OdbcConnection.h>
 #include <CloseOperation.h>
 #include <OperationManager.h>

@@ -19,11 +19,15 @@
 
 #pragma once
 
+#ifdef LINUX_BUILD
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+
 #include <v8.h>
 #include <uv.h>
 #include <node.h>
 #include <node_buffer.h>
-
+#include <nan.h>
 #ifdef LINUX_BUILD
 #include <sqltypes.h>
 #include <sqlspi.h>

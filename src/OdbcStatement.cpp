@@ -17,10 +17,10 @@
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
 
+#include "stdafx.h"
 #include <algorithm>
 #include <cmath>
 #include <cstring>
-#include <v8.h>
 #include <OdbcStatement.h>
 #include <BoundDatum.h>
 #include <BoundDatumSet.h>

@@ -77,7 +77,7 @@
               'LINUX_BUILD',
               'UNICODE',
               'SQL_WCHART_CONVERT'
-            ],
+            ], 
             'include_dirs': [
               '/usr/include/',
               '/opt/microsoft/msodbcsql17/include/',

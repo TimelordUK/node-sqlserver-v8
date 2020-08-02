@@ -17,7 +17,7 @@
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
 
-#include <v8.h>
+#include "stdafx.h"
 #include <Connection.h>
 #include <OdbcConnection.h>
 #include <MutateJS.h>

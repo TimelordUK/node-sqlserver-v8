@@ -1,10 +1,9 @@
-#include <TimestampColumn.h>
 #include <BoundDatum.h>
+#include <TimestampColumn.h>
 #include <MutateJS.h>
 #include <codecvt>
 #include <locale>
 #include <cstring>
-#include <nan.h>
 
 namespace mssql
 {

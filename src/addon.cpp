@@ -1,4 +1,4 @@
-#include <nan.h>
+#include "stdafx.h"
 #include "Connection.h"
 
 void InitAll(v8::Local<v8::Object> exports) {

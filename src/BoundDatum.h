@@ -1,6 +1,7 @@
 #pragma once
 // undo these tokens to use numeric_limits below
 
+#include "stdafx.h"
 #include <BoundDatumHelper.h>
 
 namespace mssql
