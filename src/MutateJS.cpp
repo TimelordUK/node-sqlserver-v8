@@ -101,13 +101,13 @@ namespace mssql
 	
 	 Local<Value> MutateJS::from_two_byte(const uint16_t* text, const size_t size)
 	 {
-		 auto s = Nan::New<String>(text, size).ToLocalChecked();
+		 const auto s = Nan::New<String>(text, size).ToLocalChecked();
 		 return s;
 	 }
 
 	 Local<Value> MutateJS::from_two_byte(const uint16_t* text)
 	 {
- 		auto s = Nan::New<String>(text).ToLocalChecked();
+		 const auto s = Nan::New<String>(text).ToLocalChecked();
 		return s;
 	 }
 }

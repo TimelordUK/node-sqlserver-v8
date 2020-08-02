@@ -22,7 +22,6 @@
 #include <cstring>
 #include <locale>
 #include <codecvt>
-#include <iostream>
 #include <nan.h>
 
 namespace mssql
@@ -69,7 +68,7 @@ namespace mssql
 	}
 
 	wstring FromV8String(const Local<String> input) {
-		const nodeTypeFactory fact;
+		
 		Nan::Utf8String cons(input);
 		auto* x = *cons;
 		const string cc = x;
@@ -176,7 +175,7 @@ namespace mssql
 
 	void nodeTypeFactory::scoped_callback(const Persistent<Function> & callback, const int argc, Local<Value> args[]) const
 	{
-		auto cons = newCallbackFunction(callback);
+		const auto cons = newCallbackFunction(callback);
 		auto context = isolate->GetCurrentContext();
 		const auto global = context->Global();
 		Nan::Call(cons, global, argc, args);
