@@ -848,8 +848,6 @@ namespace mssql
 
 	void BoundDatum::bind_integer_array(const Local<Value>& p)
 	{
-		const nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
 		const auto arr = Local<Array>::Cast(p);
 		const auto len = arr->Length();
 		reserve_integer(len);
@@ -861,7 +859,7 @@ namespace mssql
 			if (!elem->IsNull())
 			{
 				_indvec[i] = 0;
-				auto v = Nan::To<int64_t>(elem).ToChecked();
+				const auto v = Nan::To<int64_t>(elem).ToChecked();
 				vec[i] = v;
 			}
 		}
@@ -881,14 +879,12 @@ namespace mssql
 
 	void BoundDatum::bind_double(const Local<Value>& p)
 	{
-		const nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
 		reserve_double(1);
 		auto& vec = *_storage->doublevec_ptr;
 		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
-			auto v = Nan::To<double>(p).ToChecked();
+			const auto v = Nan::To<double>(p).ToChecked();
 			vec[0] = v;
 			_indvec[0] = 0;	
 		}
@@ -913,8 +909,6 @@ namespace mssql
 		const auto arr = Local<Array>::Cast(p);
 		const auto len = arr->Length();
 		reserve_double(len);
-		const nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
 		auto& vec = *_storage->doublevec_ptr;
 		for (uint32_t i = 0; i < len; ++i)
 		{
@@ -922,7 +916,7 @@ namespace mssql
 			auto maybe = Nan::Get(arr, i);
 			if (maybe.IsEmpty()) continue;
 			const auto checked = maybe.ToLocalChecked();
-			auto v = Nan::To<double>(checked).ToChecked();
+			const auto v = Nan::To<double>(checked).ToChecked();
 			vec[i] = v;
 			_indvec[i] = 0;
 		}
