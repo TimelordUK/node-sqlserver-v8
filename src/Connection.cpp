@@ -57,25 +57,23 @@ namespace mssql
   		Nan::HandleScope scope;
 		const auto initialized = OdbcConnection::InitializeEnvironment();
 		const nodeTypeFactory fact;
-		const auto connection = fact.new_string("Connection");
+		auto name = Nan::New("Connection").ToLocalChecked();
 		if (!initialized) {
-			MutateJS::set_property_value(exports, connection, fact.undefined());
+			MutateJS::set_property_value(exports, name, Nan::Null());
 			fact.throwError("Unable to initialize msnodesql");
 			return;
 		}
 
 		// Prepare constructor template
 		auto tpl = Nan::New<FunctionTemplate>(New);
-		tpl->SetClassName(Nan::New("Connection").ToLocalChecked());
+		tpl->SetClassName(name);
 		tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
 		api(tpl);
 
   		constructor.Reset(tpl->GetFunction(context).ToLocalChecked());
-  		exports->Set(context,
-               Nan::New("Connection").ToLocalChecked(),
-               tpl->GetFunction(context).ToLocalChecked());
-	}
+		Nan::Set(exports, name, tpl->GetFunction(context).ToLocalChecked());
+ 	}
 
 	Connection::~Connection()
 	{
