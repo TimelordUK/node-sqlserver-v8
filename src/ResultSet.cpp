@@ -81,7 +81,7 @@ namespace mssql
 		{
 			return nullptr;
 		}
-		auto &row = _rows[row_id];
+		const auto& row = _rows[row_id];
 		return row[column_id];
 	}
 
