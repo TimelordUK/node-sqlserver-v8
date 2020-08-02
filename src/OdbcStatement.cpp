@@ -481,7 +481,7 @@ namespace mssql
 		const auto& statement = *_statement;
 		if (timeout > 0)
 		{
-			auto* const to = reinterpret_cast<SQLPOINTER>(timeout);
+			auto* const to = reinterpret_cast<SQLPOINTER>(static_cast<long long>(timeout));
 			const auto ret = SQLSetStmtAttr(statement, SQL_QUERY_TIMEOUT, to, SQL_IS_UINTEGER);
 			if (!check_odbc_error(ret)) return false;
 			SQLSetStmtAttr(statement, SQL_ATTR_QUERY_TIMEOUT, to, SQL_IS_UINTEGER);

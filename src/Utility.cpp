@@ -232,23 +232,10 @@ namespace mssql
 		return Nan::New(cstr).ToLocalChecked();
 	}
 
-#ifdef PRE_V13
-
-
 	Local<String> nodeTypeFactory::new_string(const char *cstr, const int size) const
 	{
-		return String::NewFromUtf8(isolate, cstr, String::NewStringType::kNormalString, size);
+		return Nan::New<String>(cstr, size).ToLocalChecked();
 	}
-#else
-
-	Local<String> nodeTypeFactory::new_string(const char* cstr, const int size) const
-	{
-		const auto maybe = String::NewFromUtf8(isolate, cstr, NewStringType::kNormal, size);
-		const Local<String> d;
-		const auto v = maybe.FromMaybe(d);
-		return v;
-	}
-#endif
 
 	Local<Array> nodeTypeFactory::new_array() const
 	{

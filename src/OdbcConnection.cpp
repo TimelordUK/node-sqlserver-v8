@@ -120,7 +120,7 @@ namespace mssql
 	{
 		if (timeout > 0)
 		{
-			auto* const to = reinterpret_cast<SQLPOINTER>(timeout);
+			auto* const to = reinterpret_cast<SQLPOINTER>(static_cast<long long>(timeout));
 			auto ret = SQLSetConnectAttr(*connection, SQL_ATTR_CONNECTION_TIMEOUT, to, 0);
 			if (!CheckOdbcError(ret)) return false;
 

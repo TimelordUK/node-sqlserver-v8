@@ -22,7 +22,6 @@ namespace mssql
 		static int32_t getint32(Local<Number> l);
 		static Local<Value> get(Local<Object> o, const char* v);
 		static bool getbool(Local<Object> query_object, const char* v);
-		static Local<Value> from_two_byte(const wchar_t* text);
 		static Local<Value> from_two_byte(const uint16_t* text);
 		static Local<Value> from_two_byte(const uint16_t* text, size_t size);
 	};

@@ -99,55 +99,15 @@ namespace mssql
 		return p;
 	}
 	
-#ifdef PRE_V13
-		
-	Local<Value> MutateJS::from_two_byte(const wchar_t* text)
-	{
-		const nodeTypeFactory fact;
-		return String::NewFromTwoByte(fact.isolate, reinterpret_cast<const uint16_t*>(text));
-	}
-
-	Local<Value> MutateJS::from_two_byte(const uint16_t* text)
-	{
-		const nodeTypeFactory fact;
-		return String::NewFromTwoByte(fact.isolate, text);
-	}
-
-	Local<Value> MutateJS::from_two_byte(const uint16_t* text, const size_t size)
-	{
-		const nodeTypeFactory fact;
-		return String::NewFromTwoByte(fact.isolate, text, String::NewStringType::kNormalString, static_cast<int>(size));
-	}
-
-#else
- 		
 	 Local<Value> MutateJS::from_two_byte(const uint16_t* text, const size_t size)
 	 {
-		 nodeTypeFactory fact;
-		 auto context = fact.isolate->GetCurrentContext();
-		 const auto maybe = String::NewFromTwoByte(context->GetIsolate(), text, NewStringType::kNormal, static_cast<int>(size));
-		 const Local<Value> d;
-		 return maybe.FromMaybe(d);
-	 }
-
-	 Local<Value> MutateJS::from_two_byte(const wchar_t* text)
-	 {
-		 nodeTypeFactory fact;
-		 auto context = fact.isolate->GetCurrentContext();
-		 const auto maybe = String::NewFromTwoByte(context->GetIsolate(), reinterpret_cast<const uint16_t*>(text), NewStringType::kNormal);
-		 const Local<Value> d;
-		 return maybe.FromMaybe(d);
+		 auto s = Nan::New<String>(text, size).ToLocalChecked();
+		 return s;
 	 }
 
 	 Local<Value> MutateJS::from_two_byte(const uint16_t* text)
 	 {
-		 nodeTypeFactory fact;
-		 auto context = fact.isolate->GetCurrentContext();
-		 const auto maybe = String::NewFromTwoByte(context->GetIsolate(), text, NewStringType::kNormal);
-		 const Local<Value> d;
-		 return maybe.FromMaybe(d);
+ 		auto s = Nan::New<String>(text).ToLocalChecked();
+		return s;
 	 }
-	
-#endif
-
 }
