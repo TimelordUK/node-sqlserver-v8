@@ -861,11 +861,8 @@ namespace mssql
 			if (!elem->IsNull())
 			{
 				_indvec[i] = 0;
-				const auto maybe = elem->ToBigInt(context);
-				Local<BigInt> local;
-				if (maybe.ToLocal(&local)) {
-					vec[i] = local->Int64Value();
-				}
+				auto v = Nan::To<int64_t>(elem).ToChecked();
+				vec[i] = v;
 			}
 		}
 	}
@@ -891,12 +888,9 @@ namespace mssql
 		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
-			const auto maybe = p->ToNumber(context);
-			Local<Number> local;
-			if (maybe.ToLocal(&local)) {
-				vec[0] = local->Value();
-				_indvec[0] = 0;
-			}
+			auto v = Nan::To<double>(p).ToChecked();
+			vec[0] = v;
+			_indvec[0] = 0;	
 		}
 	}
 
@@ -925,19 +919,12 @@ namespace mssql
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			_indvec[i] = SQL_NULL_DATA;
-			const auto maybe_elem = arr->Get(context, i);
-			Local<Value> elem;
-			if (maybe_elem.ToLocal(&elem)) {
-				if (!elem->IsNull())
-				{
-					auto maybe_number = elem->ToNumber(context);
-					Local<Number> local_number;
-					if (maybe_number.ToLocal(&local_number)) {
-						vec[i] = local_number->Value();
-						_indvec[i] = 0;
-					}
-				}
-			}
+			auto maybe = Nan::Get(arr, i);
+			if (maybe.IsEmpty()) continue;
+			const auto checked = maybe.ToLocalChecked();
+			auto v = Nan::To<double>(checked).ToChecked();
+			vec[i] = v;
+			_indvec[i] = 0;
 		}
 	}
 
@@ -1131,12 +1118,7 @@ namespace mssql
 			Local<Number> local;
 			if (maybe.ToLocal(&local)) {
 				const auto d = local->Value();
-				#ifdef WINDOWS_BUILD
-				if (_isnan(d) || !_finite(d))
-				#endif
-				#ifdef LINUX_BUILD
-				if (isnan(d) || !finite(d))
-				#endif
+				if (isnan(d) || !isfinite(d))
 				{
 					err = const_cast<char*>("Invalid number parameter");
 					return false;
