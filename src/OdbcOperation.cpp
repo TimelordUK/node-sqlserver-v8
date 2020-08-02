@@ -164,6 +164,6 @@ namespace mssql
 		const auto global = context->Global();
 		// std::cout << " complete_foreground " << timer.get_counter() << endl;
 		//args[argc] = fact.new_number(timer.get_counter());
-		cons->Call(context, global, argc, args);
+		Nan::Call(cons, global, argc, args);
 	}
 }

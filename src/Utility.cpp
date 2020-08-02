@@ -179,7 +179,7 @@ namespace mssql
 		auto cons = newCallbackFunction(callback);
 		auto context = isolate->GetCurrentContext();
 		const auto global = context->Global();
-		cons->Call(context, global, argc, args);
+		Nan::Call(cons, global, argc, args);
 	}
 
 	Local<Integer> nodeTypeFactory::new_integer(const int32_t i) const
@@ -289,46 +289,16 @@ namespace mssql
 		return Nan::New<Date>(0.0).ToLocalChecked();
 	}
 
-#ifdef PRE_V13
 	Local<Value> nodeTypeFactory::new_date(const double milliseconds, const int32_t nanoseconds_delta) const
 	{
-		const auto ns = String::NewFromUtf8(isolate, "nanosecondsDelta");
-		const auto n = Number::New(isolate, nanoseconds_delta / (NANOSECONDS_PER_MS * 1000.0));
+		const auto ns = Nan::New<String>("nanosecondsDelta").ToLocalChecked();
+		const auto n = Nan::New<Number>(nanoseconds_delta / (NANOSECONDS_PER_MS * 1000.0));
 		// include the properties for items in a DATETIMEOFFSET that are not included in a JS Date object
-		const auto context = isolate->GetCurrentContext();
-		const auto dd = Date::New(context, milliseconds);
-		Local<Value> d;
-		if (dd.ToLocal(&d)) {
-			const auto maybe = d->ToObject(context);
-			Local<Object> local;
-			if (maybe.ToLocal(&local)) {
-				local->Set(ns, n);
-			}
-		}
+		const auto d = Nan::New<Date>(milliseconds).ToLocalChecked();
+		Nan::Set(d, ns, n);
 		return d;
 	}
-#else
-	Local<Value> nodeTypeFactory::new_date(const double milliseconds, const int32_t nanoseconds_delta) const
-	{
-		const auto ns = String::NewFromUtf8(isolate, "nanosecondsDelta");
-		const auto n = Number::New(isolate, nanoseconds_delta / (NANOSECONDS_PER_MS * 1000.0));
-		// include the properties for items in a DATETIMEOFFSET that are not included in a JS Date object
-		const auto context = isolate->GetCurrentContext();
-		const auto dd = Date::New(context, milliseconds);
-		Local<Value> d;
-		if (dd.ToLocal(&d)) {
-			const auto maybe = d->ToObject(context);
-			Local<Object> local;
-			if (maybe.ToLocal(&local)) {
-				const Local<String> ds;
-				const auto ls = ns.FromMaybe(ds);
-				auto ret = local->Set(context, ls, n);
-				auto status = ret.ToChecked();
-			}
-		}
-		return d;
-	}
-#endif
+
 	Local<Value> nodeTypeFactory::global() const
 	{
 		return isolate->GetCurrentContext()->Global();
