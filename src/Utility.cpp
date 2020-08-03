@@ -191,11 +191,6 @@ namespace mssql
 		return Nan::New(static_cast<int32_t>(i));
 	}
 
-	Local<Boolean> nodeTypeFactory::new_boolean(const bool b) const
-	{
-		return Nan::New(b);
-	}
-
 	Local<Boolean> nodeTypeFactory::new_boolean(const uint16_t n) const
 	{
 		return Nan::New(n != 0);

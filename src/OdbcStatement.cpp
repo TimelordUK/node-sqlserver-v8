@@ -126,12 +126,7 @@ namespace mssql
 	{
 		// fprintf(stderr, "prepared_read");
 		const auto& statement = *_statement;
-#ifdef LINUX_BUILD
 		SQLROWSETSIZE row_count = 0;
-#endif
-#ifdef WINDOWS_BUILD
-		SQLROWSETSIZE row_count = 0;
-#endif
 		SQLSetStmtAttr(statement, SQL_ATTR_ROWS_FETCHED_PTR, &row_count, 0);
 		const auto ret = SQLFetchScroll(statement, SQL_FETCH_NEXT, 0);
 		if (ret == SQL_NO_DATA)

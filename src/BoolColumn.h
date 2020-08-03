@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <v8.h>
+#include "stdafx.h"
 #include <Column.h>
 
 namespace mssql
@@ -21,9 +21,7 @@ namespace mssql
 
 		Local<Value> ToValue() override
 		{
-			nodeTypeFactory fact;
-			auto b = fact.new_boolean(value);
-			return b;
+			return Nan::New<Boolean>(value);
 		}
 	private:
 		bool value;

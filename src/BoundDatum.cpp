@@ -79,24 +79,12 @@ namespace mssql
 
 	static Local<String> get_as_string(const Local<Value> o, const char* v)
 	{
-		const nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
-		const auto vp = fact.new_string(v);
-		const auto maybe = o->ToObject(context);
-		Local<Object> local;
-		if (maybe.ToLocal(&local))
-		{
-			const auto maybe_value = local->Get(context, vp);
-			Local<Value> local_value;
-			if (maybe_value.ToLocal(&local_value))
-			{
-				const auto maybe_string = local_value->ToString(context);
-				const auto default_string = String::Empty(fact.isolate);
-				return maybe_string.FromMaybe(default_string);
-			}
+		auto key = Nan::New<String>(v).ToLocalChecked();
+		auto ss = Nan::Get(Nan::To<Object>(o).ToLocalChecked(), key).ToLocalChecked();
+		if (!ss.IsEmpty()) {
+			return Nan::To<String>(ss).ToLocalChecked();
 		}
-
-		return String::Empty(fact.isolate);
+		return Nan::EmptyString();
 	}
 
 	void BoundDatum::bind_null(const Local<Value>& p)

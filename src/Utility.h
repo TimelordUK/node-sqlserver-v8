@@ -77,7 +77,6 @@ namespace mssql
 	   void scoped_callback(const Persistent<Function> & callback, int argc, Local<Value> args[]) const;
 	   Local<Integer> new_integer(int32_t i) const;
 	   Local<Integer> new_long(int64_t i) const;
-	   Local<Boolean> new_boolean(bool b) const;
 	   Local<Boolean> new_boolean(uint16_t n) const;
 	   Local<Integer> new_int32(int32_t i) const;
 	   Local<Number> new_int64(int64_t i) const;

@@ -44,13 +44,8 @@ namespace mssql {
 		const auto ptr = storage->data() + offset;
 		const auto str = new char[len];
 		memcpy(str, ptr, len);
+		const auto buff = Nan::NewBuffer(str, len, delete_buffer, nullptr).ToLocalChecked();
 		// fprintf(stderr, "[%d], ToValue len = %zu, offset = %zu, ptr = %p, destructed = %d\n", Id(), len, offset, str, destructed);
-		const auto buff = node::Buffer::New(Isolate::GetCurrent(), str, len, delete_buffer, nullptr)
-		// const auto buff = node::Buffer::New(Isolate::GetCurrent(), str, len)
-#ifdef NODE_GYP_V4 
-			.ToLocalChecked()
-#endif
-			;
 		return buff;
 	}
 }   // namespace mssql
