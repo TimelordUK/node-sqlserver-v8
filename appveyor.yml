@@ -42,8 +42,8 @@ for:
       matrix:
         only:
           - image: Ubuntu
-          - platform: x64
-          - nodejs_version: "14"
+            platform: x64
+            nodejs_version: "14"
         
       services:
         - mssql
