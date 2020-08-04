@@ -23,23 +23,23 @@ for:
   -
       matrix:
         only:
-      - image: Visual Studio 2015
+          - image: Visual Studio 2015
     
-    clone_folder: c:\projects\node_modules\msnodesqlv8
+      clone_folder: c:\projects\node_modules\msnodesqlv8
 
-    before_test:
-      - cmd: sc config sqlbrowser start= auto
-      - cmd: net start sqlbrowser
+      before_test:
+        - cmd: sc config sqlbrowser start= auto
+        - cmd: net start sqlbrowser
 
-    install:
-      - ps: Install-Product node $env:nodejs_version $env:platform
-      - npm install
+      install:
+        - ps: Install-Product node $env:nodejs_version $env:platform
+        - npm install
 
-    build_script:
-      - cmd: node --version
+      build_script:
+        - cmd: node --version
 
-    test_script:
-      - cmd: |
+      test_script:
+        - cmd: |
           SET MSSQL_VERSION=2017
           powershell tool\appveyor.ps1 SQL2017
           node --version
@@ -73,16 +73,16 @@ for:
           net stop MSSQL$SQL2016
 
     matrix:
-    only:
-      - image: Ubuntu
-    except:
-      - platform: x86
+      only:
+        - image: Ubuntu
+      except:
+        - platform: x86
 
-    services:
-      - mssql
+      services:
+        - mssql
 
-    clone_folder: /home/appveyor/projects/node_modules/msnodesqlv8 
+      clone_folder: /home/appveyor/projects/node_modules/msnodesqlv8 
       
-    install:
-      - ps: Install-Product node $env:nodejs_version $env:platform
-      - npm install
+      install:
+        - ps: Install-Product node $env:nodejs_version $env:platform
+        - npm install
