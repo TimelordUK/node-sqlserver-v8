@@ -21,7 +21,9 @@ namespace mssql
 
 	   Local<Value> ToValue() override
 	   {
-			return Nan::New<Number>(static_cast<double>(value));
+		  nodeTypeFactory fact;
+		  auto v = fact.new_long(value);
+		  return v;
 	   }
 
     private:
