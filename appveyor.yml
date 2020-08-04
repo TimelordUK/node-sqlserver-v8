@@ -44,7 +44,9 @@ for:
         only:
           - image: Ubuntu
             nodejs_version: 14
-     
+        except:
+          - platform: x86
+               
       services:
         - mssql
 
