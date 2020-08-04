@@ -1,6 +1,6 @@
 #pragma once
 
-#include <v8.h>
+#include <stdafx.h>
 #include "Column.h"
 #include "BoundDatumHelper.h"
 
@@ -21,9 +21,7 @@ namespace mssql
 
 	   Local<Value> ToValue() override
 	   {
-		  nodeTypeFactory fact;
-		  auto v = fact.new_long(value);
-		  return v;
+			return Nan::New<Number>(static_cast<double>(value));
 	   }
 
     private:

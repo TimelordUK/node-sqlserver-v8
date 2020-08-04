@@ -35,24 +35,24 @@ namespace mssql
 
 	int get_tvp_col_count(Local<Value>& v)
 	{
-		const auto tvp_columns = get(v.As<Object>(), "table_value_param");
-		const auto cols = tvp_columns.As<Array>();
-		const auto count = cols->Length();
+		auto tvp_columns = Nan::Get(Nan::To<Object>(v).ToLocalChecked(), Nan::New("table_value_param").ToLocalChecked()).ToLocalChecked();
+		auto cols = tvp_columns.As<Array>();
+		auto count = cols->Length();
 		return count;
 	}
 
 	bool BoundDatumSet::tvp(Local<Value>& v) const
 	{
-		const auto tvp_columns = get(v.As<Object>(), "table_value_param");
+		auto tvp_columns = Nan::Get(Nan::To<Object>(v).ToLocalChecked(), Nan::New("table_value_param").ToLocalChecked()).ToLocalChecked();
 		if (tvp_columns->IsNull()) return false;
 		if (!tvp_columns->IsArray()) return false;
 
-		const auto cols = tvp_columns.As<Array>();
-		const auto count = cols->Length();
+		auto cols = tvp_columns.As<Array>();
+		auto count = cols->Length();
 
 		for (uint32_t i = 0; i < count; ++i) {
 			const auto binding = make_shared<BoundDatum>();
-			auto p = MutateJS::get_array_elelemt_at_index(cols, i);
+			auto p = Nan::Get(Nan::To<Object>(tvp_columns).ToLocalChecked(), i).ToLocalChecked();
 			const auto res = binding->bind(p);
 			if (!res) break;
 			_bindings->push_back(binding);

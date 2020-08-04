@@ -163,8 +163,10 @@ namespace mssql
 		if (!p->IsNull())
 		{
 			const nodeTypeFactory fact;
-			const auto str_param = Nan::To<String>(p).FromMaybe(Nan::EmptyString());	
-			str_param->WriteUtf8(fact.isolate, _storage->charvec_ptr->data(), precision);
+			const auto str_param = Nan::To<String>(p).FromMaybe(Nan::EmptyString());
+			Nan::Utf8String x(str_param);
+			auto *x_p = *x;
+			memcpy(_storage->charvec_ptr->data(), x_p, precision);	
 			_indvec[0] = precision;	
 		}
 	}
@@ -204,7 +206,9 @@ namespace mssql
 			const auto str = maybe_value.FromMaybe(Nan::EmptyString()); 	
 			const auto width = str->Length();
 			_indvec[i] = width;
-			str->WriteUtf8(fact.isolate, &*itr, max_str_len);
+			Nan::Utf8String x(str);
+			auto *x_p = *x;
+			memcpy(&*itr, x_p, max_str_len);
 			itr += max_str_len;
 		}
 	}
@@ -353,10 +357,10 @@ namespace mssql
 	{
 		const nodeTypeFactory fact;
 		wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
-		char tmp[1 * 1024];	
 		const auto precision = min(1024, s->Length() + 1);
-		s->WriteUtf8(fact.isolate, tmp, precision);
-		const string narrow(tmp);
+		Nan::Utf8String x(s);
+		auto *x_p = *x;
+		const string narrow = x_p;
 		auto wide = converter.from_bytes(narrow);
 		return wide;
 	}
@@ -383,7 +387,10 @@ namespace mssql
 		_storage->ReserveChars(static_cast<size_t>(precision) + 1);
 		_storage->ReserveUint16(static_cast<size_t>(precision) + 1);
 		auto* itr_p = _storage->charvec_ptr->data();
-		type_id_str->WriteUtf8(fact.isolate, itr_p, precision);
+		Nan::Utf8String x(type_id_str);
+		auto *x_p = *x;
+		memcpy(itr_p, x_p, precision);
+		//type_id_str->WriteUtf8(fact.isolate, itr_p, precision);
 		const string narrow = _storage->charvec_ptr->data();
 		const auto type_name = converter.from_bytes(narrow);
 		auto type_name_vec = wstr2wcvec(type_name);

@@ -190,7 +190,7 @@ namespace mssql
 					}
 					else ++numberCount;
 				}
-			}
+			}/*
 			else if (p->IsBigInt())
 			{
 				MaybeLocal<BigInt> maybe = p->ToBigInt(context);
@@ -199,7 +199,7 @@ namespace mssql
 				{
 					++int64Count;
 				}
-			}
+			}*/
 			else if (p->IsInt32()) {
 				++int32Count;
 			}
