@@ -41,11 +41,11 @@ for:
       test_script:
         - cmd: tool\appveyor-win.cmd
 
-    matrix:
-      only:
-        - image: Ubuntu
-      except:
-        - platform: x86
+      matrix:
+        only:
+          - image: Ubuntu
+        except:
+          - platform: x86
 
       services:
         - mssql
