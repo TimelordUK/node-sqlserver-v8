@@ -1,59 +1,82 @@
 version: 1.0.{build}
-image: Visual Studio 2015
-clone_folder: c:\projects\node_modules\msnodesqlv8
+image: 
+  - Ubuntu
+  - Visual Studio 2015
+
 environment:
+  for:
+    -
   matrix:
+    only:
+      - image: Visual Studio 2015
+    
+    clone_folder: c:\projects\node_modules\msnodesqlv8
+
     - nodejs_version: "14"
     - nodejs_version: "13"
     - nodejs_version: "12"
     - nodejs_version: "11"
     - nodejs_version: "10"
 
-platform:
-  - x86
-  - x64
+    platform:
+    - x86
+    - x64
 
-before_test:
-  - sc config sqlbrowser start= auto
-  - net start sqlbrowser
+    before_test:
+      - cmd: sc config sqlbrowser start= auto
+      - cmd: net start sqlbrowser
 
-install:
-  - ps: Install-Product node $env:nodejs_version $env:platform
-  - npm install
+    install:
+      - ps: Install-Product node $env:nodejs_version $env:platform
+      - npm install
 
-build_script:
-  - cmd: node --version
+    build_script:
+      - cmd: node --version
 
-test_script:
-  - cmd: |
-      SET MSSQL_VERSION=2017
-      powershell tool\appveyor.ps1 SQL2017
-      node --version
-      node unit.tests\cmd-test.js -a 2017 -t benchmark --repeats=5 --delay=4500 2>&1
-      node unit.tests\cmd-test.js -a 2017 -t benchmark --table=syscolumns --delay=5000 --repeats=5 2>&1
-      node runtest -a 2017 -t sproc.js -t connection-pool -t pause -t concurrent -t multiple-errors -t geography -t tvp -t warnings.js -t compoundqueries.js -t querycancel.js -t txn.js -t datatypes.js -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t prepared.js -t userbind.js -t dates.js 2>&1
-      net stop MSSQL$SQL2017
+    test_script:
+      - cmd: |
+          SET MSSQL_VERSION=2017
+          powershell tool\appveyor.ps1 SQL2017
+          node --version
+          node unit.tests\cmd-test.js -a 2017 -t benchmark --repeats=5 --delay=4500 2>&1
+          node unit.tests\cmd-test.js -a 2017 -t benchmark --table=syscolumns --delay=5000 --repeats=5 2>&1
+          node runtest -a 2017 -t sproc.js -t connection-pool -t pause -t concurrent -t multiple-errors -t geography -t tvp -t warnings.js -t compoundqueries.js -t querycancel.js -t txn.js -t datatypes.js -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t prepared.js -t userbind.js -t dates.js 2>&1
+          net stop MSSQL$SQL2017
 
-      SET MSSQL_VERSION=2012
-      powershell tool\appveyor.ps1 SQL2012SP1
-      node --version
-      node unit.tests\cmd-test.js -a 2012SP1 -t benchmark --repeats=5 --delay=4500 2>&1
-      node unit.tests\cmd-test.js -a 2012SP1 -t benchmark --table=syscolumns --delay=5000 --repeats=5 2>&1
-      node runtest -a 2012SP1 -t sproc.js -t connection-pool -t pause -t concurrent -t multiple-errors -t geography -t tvp -t warnings.js -t compoundqueries.js -t querycancel.js -t txn.js -t datatypes.js -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t prepared.js -t userbind.js -t dates.js 2>&1
-      net stop MSSQL$SQL2012SP1
+          SET MSSQL_VERSION=2012
+          powershell tool\appveyor.ps1 SQL2012SP1
+          node --version
+          node unit.tests\cmd-test.js -a 2012SP1 -t benchmark --repeats=5 --delay=4500 2>&1
+          node unit.tests\cmd-test.js -a 2012SP1 -t benchmark --table=syscolumns --delay=5000 --repeats=5 2>&1
+          node runtest -a 2012SP1 -t sproc.js -t connection-pool -t pause -t concurrent -t multiple-errors -t geography -t tvp -t warnings.js -t compoundqueries.js -t querycancel.js -t txn.js -t datatypes.js -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t prepared.js -t userbind.js -t dates.js 2>&1
+          net stop MSSQL$SQL2012SP1
 
-      SET MSSQL_VERSION=2014
-      powershell tool\appveyor.ps1 SQL2014
-      node --version
-      node unit.tests\cmd-test.js -a 2014 -t benchmark --repeats=5 --delay=4500 2>&1
-      node unit.tests\cmd-test.js -a 2014 -t benchmark --table=syscolumns --delay=5000 --repeats=5 2>&1
-      node runtest -a 2014 -t sproc.js -t connection-pool -t pause -t concurrent -t multiple-errors -t geography -t tvp -t warnings.js -t compoundqueries.js -t querycancel.js -t txn.js -t datatypes.js -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t prepared.js -t userbind.js -t dates.js 2>&1
-      net stop MSSQL$SQL2014
+          SET MSSQL_VERSION=2014
+          powershell tool\appveyor.ps1 SQL2014
+          node --version
+          node unit.tests\cmd-test.js -a 2014 -t benchmark --repeats=5 --delay=4500 2>&1
+          node unit.tests\cmd-test.js -a 2014 -t benchmark --table=syscolumns --delay=5000 --repeats=5 2>&1
+          node runtest -a 2014 -t sproc.js -t connection-pool -t pause -t concurrent -t multiple-errors -t geography -t tvp -t warnings.js -t compoundqueries.js -t querycancel.js -t txn.js -t datatypes.js -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t prepared.js -t userbind.js -t dates.js 2>&1
+          net stop MSSQL$SQL2014
 
-      SET MSSQL_VERSION=2016
-      powershell tool\appveyor.ps1 SQL2016
-      node --version
-      node unit.tests\cmd-test.js -a 2016 -t benchmark --repeats=5 --delay=4500 2>&1
-      node unit.tests\cmd-test.js -a 2016 -t benchmark --table=syscolumns --delay=5000 --repeats=5 2>&1
-      node runtest -a 2016 -t sproc.js -t connection-pool -t pause -t concurrent -t multiple-errors -t geography -t tvp -t warnings.js -t compoundqueries.js -t querycancel.js -t txn.js -t datatypes.js -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t prepared.js -t userbind.js -t dates.js 2>&1
-      net stop MSSQL$SQL2016
+          SET MSSQL_VERSION=2016
+          powershell tool\appveyor.ps1 SQL2016
+          node --version
+          node unit.tests\cmd-test.js -a 2016 -t benchmark --repeats=5 --delay=4500 2>&1
+          node unit.tests\cmd-test.js -a 2016 -t benchmark --table=syscolumns --delay=5000 --repeats=5 2>&1
+          node runtest -a 2016 -t sproc.js -t connection-pool -t pause -t concurrent -t multiple-errors -t geography -t tvp -t warnings.js -t compoundqueries.js -t querycancel.js -t txn.js -t datatypes.js -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t prepared.js -t userbind.js -t dates.js 2>&1
+          net stop MSSQL$SQL2016
+
+  matrix:
+    only:
+      - image: Ubuntu
+      - nodejs_version: "14"
+
+      services:
+        - mssql
+
+      clone_folder: ~/projects/node_modules/msnodesqlv8 
+      
+      install:
+        - ps: Install-Product node $env:nodejs_version $env:platform
+        - npm install
