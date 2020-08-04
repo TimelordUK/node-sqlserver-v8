@@ -15,11 +15,14 @@ environment:
         - nodejs_version: "12"
         - nodejs_version: "11"
         - nodejs_version: "10"
-    
-  for:
-    -
-    matrix:
-    only:
+test_script:
+  - ps: Write-Host "msnodesqlv8 test script"    
+matrix:
+  - fast_finish: true
+for:
+  -
+      matrix:
+        only:
       - image: Visual Studio 2015
     
     clone_folder: c:\projects\node_modules\msnodesqlv8
