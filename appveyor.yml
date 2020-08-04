@@ -5,14 +5,8 @@ image:
   - Visual Studio 2015
 
 environment:
-    matrix:
-      - platform: x86
-      - platform: x64
-      - nodejs_version: 14
-      - nodejs_version: 13
-      - nodejs_version: 12
-      - nodejs_version: 11
-      - nodejs_version: 10
+    - platform: x86
+    - platform: x64
 
 test_script:
   - ps: Write-Host "msnodesqlv8 test script"    
@@ -21,6 +15,11 @@ for:
       matrix:
         only:
           - image: Visual Studio 2015
+            nodejs_version: 14
+            nodejs_version: 13
+            nodejs_version: 12
+            nodejs_version: 11
+            nodejs_version: 10
     
       clone_folder: c:\projects\node_modules\msnodesqlv8
 
@@ -38,11 +37,12 @@ for:
       test_script:
         - cmd: tool\appveyor-win.cmd
   -        
-      matrix:  
+      matrix:
+        except:
+          - platform: x86
         only:
           - image: Ubuntu
             nodejs_version: 14
-            platform: x64
             
       services:
         - mssql
