@@ -43,6 +43,7 @@ for:
       matrix:
         only:
           - image: Ubuntu
+          - platform: x64
 
       services:
         - mssql
