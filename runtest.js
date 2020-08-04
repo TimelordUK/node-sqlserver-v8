@@ -28,7 +28,7 @@ function runTest () {
     connStr = 'Driver={ODBC Driver 17 for SQL Server}; database=node; Server=192.168.56.1; UID=linux; PWD=linux'
   }
 
-  if (Object.prototype.hasOwnProperty.call(argv, 'au')) {
+  if (Object.prototype.hasOwnProperty.call(argv, 'x')) {
     connStr = 'Driver={ODBC Driver 17 for SQL Server}; Server=localhost; Uid=SA; Pwd=Password12!'
   }
 
