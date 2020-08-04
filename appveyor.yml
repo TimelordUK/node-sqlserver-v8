@@ -1,4 +1,5 @@
 version: 1.0.{build}
+
 image: 
   - Ubuntu
   - Visual Studio 2015
@@ -16,7 +17,7 @@ environment:
         - nodejs_version: "10"
     
   for:
-  -
+    -
     matrix:
     only:
       - image: Visual Studio 2015
