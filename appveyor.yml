@@ -8,12 +8,12 @@ platform:
   - x86
   - x64
 
-nodejs_version: 
-  - 14
-  - 13
-  - 12
-  - 11
-  - 10
+environment:
+    nodejs_version: 14
+    nodejs_version: 13
+    nodejs_version: 12
+    nodejs_version: 11
+    nodejs_version: 10
 
 test_script:
   - ps: Write-Host "msnodesqlv8 test script"    
