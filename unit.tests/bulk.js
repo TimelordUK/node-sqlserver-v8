@@ -169,7 +169,7 @@ suite('bulk', function () {
           const byName = meta.getColumnsByName()
           assert(byName !== null)
 
-          const testVec = getInsertVector(50000)
+          const testVec = getInsertVector(10000)
           t.insertRows(testVec, (e, res) => {
             assert.ifError(e)
             asyncDone()

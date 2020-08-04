@@ -60,6 +60,7 @@ suite('multiple errors', function () {
     let adjusted = connStr.replace('Trusted_Connection=yes', 'Trusted_Connection=No;Uid=test;Database=test;Pwd=...')
     adjusted = adjusted.replace('UID=linux', 'Uid=linux2')
     adjusted = adjusted.replace('Uid=sa', 'Uid=JohnSnow')
+    adjusted = adjusted.replace('Uid=SA', 'Uid=JohnSnow')
     sql.open(adjusted,
       err => {
         assert(err)
