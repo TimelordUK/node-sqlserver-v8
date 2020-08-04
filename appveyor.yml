@@ -40,7 +40,7 @@ for:
 
       test_script:
         - cmd: tool\appveyor-win.cmd
-
+  -        
       matrix:
         only:
           - image: Ubuntu
