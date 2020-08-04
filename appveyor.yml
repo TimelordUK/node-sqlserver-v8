@@ -4,10 +4,11 @@ image:
   - Ubuntu
   - Visual Studio 2015
 
-environment:
-    - platform: x86
-    - platform: x64
+platform: 
+  - x86
+  - x64
 
+environment:
     matrix:
       - nodejs_version: 14
       - nodejs_version: 13
@@ -44,7 +45,7 @@ for:
           - platform: x86
         only:
           - image: Ubuntu
-                      
+
       services:
         - mssql
 
