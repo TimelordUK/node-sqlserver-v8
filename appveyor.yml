@@ -8,13 +8,13 @@ platform:
   - x86
   - x64
 
-environment:
-      matrix:
-        - nodejs_version: 14
-        - nodejs_version: 13
-        - nodejs_version: 12
-        - nodejs_version: 11
-        - nodejs_version: 10
+nodejs_version: 
+  - 14
+  - 13
+  - 12
+  - 11
+  - 10
+
 test_script:
   - ps: Write-Host "msnodesqlv8 test script"    
 for:
@@ -43,9 +43,6 @@ for:
         only:
           - image: Ubuntu
             nodejs_version: 14
-      platform:
-         only:
-           - platform: x64
      
       services:
         - mssql
