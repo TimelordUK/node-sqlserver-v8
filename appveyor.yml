@@ -45,8 +45,8 @@ for:
             nodejs_version: 14
             platform: x64
 
-         exclude:
-           - platform: x86
+        exclude:
+          - platform: x86
              
       services:
         - mssql
