@@ -41,12 +41,12 @@ for:
         - cmd: tool\appveyor-win.cmd
   -        
       matrix:
+        except:
+          - platform: x86
         only:
           - image: Ubuntu
             nodejs_version: 14
-        except:
-          - platform: x86
-               
+            
       services:
         - mssql
 
