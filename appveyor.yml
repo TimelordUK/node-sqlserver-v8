@@ -42,14 +42,14 @@ for:
       matrix:
         only:
           - image: Ubuntu
-        except:
-          - platform: x86
-
+          - platform: x64
+          - nodejs_version: "14"
+        
       services:
         - mssql
 
       clone_folder: /home/appveyor/projects/node_modules/msnodesqlv8 
       
       install:
-        - ps: Install-Product node $env:nodejs_version $env:platform
+        - nvm install $nodejs_version.6.0
         - npm install
