@@ -3,14 +3,9 @@ image:
   - Ubuntu
   - Visual Studio 2015
 
-environment:
   for:
     -
   matrix:
-    only:
-      - image: Visual Studio 2015
-    
-    clone_folder: c:\projects\node_modules\msnodesqlv8
 
     - nodejs_version: "14"
     - nodejs_version: "13"
@@ -21,6 +16,11 @@ environment:
     platform:
     - x86
     - x64
+
+    only:
+      - image: Visual Studio 2015
+    
+    clone_folder: c:\projects\node_modules\msnodesqlv8
 
     before_test:
       - cmd: sc config sqlbrowser start= auto
@@ -67,16 +67,14 @@ environment:
           node runtest -a 2016 -t sproc.js -t connection-pool -t pause -t concurrent -t multiple-errors -t geography -t tvp -t warnings.js -t compoundqueries.js -t querycancel.js -t txn.js -t datatypes.js -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t prepared.js -t userbind.js -t dates.js 2>&1
           net stop MSSQL$SQL2016
 
-  matrix:
     only:
       - image: Ubuntu
-      - nodejs_version: "14"
 
-      services:
-        - mssql
+    services:
+      - mssql
 
-      clone_folder: ~/projects/node_modules/msnodesqlv8 
+    clone_folder: /home/appveyor/projects/node_modules/msnodesqlv8 
       
-      install:
-        - ps: Install-Product node $env:nodejs_version $env:platform
-        - npm install
+    install:
+      - ps: Install-Product node $env:nodejs_version $env:platform
+      - npm install
