@@ -20,7 +20,12 @@
 #pragma once
 
 #ifdef LINUX_BUILD
-#pragma GCC diagnostic ignored "-Wcast-function-type"
+#define GCC_VERSION (__GNUC__ * 10000 \
+                     + __GNUC_MINOR__ * 100 \
+                     + __GNUC_PATCHLEVEL__)
+    #if GCC_VERSION > 90200
+    #pragma GCC diagnostic ignored "-Wcast-function-type"
+    #endif
 #endif
 
 #include <v8.h>
