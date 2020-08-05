@@ -357,7 +357,6 @@ namespace mssql
 	{
 		const nodeTypeFactory fact;
 		wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
-		const auto precision = min(1024, s->Length() + 1);
 		Nan::Utf8String x(s);
 		auto *x_p = *x;
 		const string narrow = x_p;
