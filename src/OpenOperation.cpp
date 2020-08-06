@@ -25,8 +25,7 @@ namespace mssql
 
 	Local<Value> OpenOperation::CreateCompletionArg()
 	{
-		const nodeTypeFactory fact;
-		const auto o = fact.new_object(backpointer);
+		const auto o = Nan::New(backpointer);
 		return o;
 	}
 }

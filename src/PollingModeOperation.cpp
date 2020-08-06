@@ -15,7 +15,6 @@ namespace mssql
 
 	Local<Value> PollingModeOperation::CreateCompletionArg()
 	{
-		const nodeTypeFactory fact;
-		return fact.null();
+		return Nan::Null();
 	}
 }

@@ -244,7 +244,7 @@ namespace mssql
 		const auto context = fact.isolate->GetCurrentContext();
 		const auto maybe = v1->Int32Value(context);
 		const auto i32 = maybe.FromMaybe(0);
-		const auto b1 = fact.new_boolean(i32 > 0);
+		const auto b1 = Nan::New(i32 > 0);
 
 		const auto ret = connection->connectionBridge->polling_mode(query_id, b1, callback);
 		info.GetReturnValue().Set(ret);

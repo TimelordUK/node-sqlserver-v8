@@ -112,9 +112,9 @@ namespace mssql
 		{
 			const auto failure = (*failures)[i];
 			auto err = fact.error(failure->Message());
-			MutateJS::set_property_value(err, fact.new_string("sqlstate"), fact.new_string(failure->SqlState()));
-			MutateJS::set_property_value(err, fact.new_string("code"), fact.new_integer(failure->Code()));
-			MutateJS::set_array_elelemt_at_index(errors, i, err);
+			Nan::Set(err, Nan::New("sqlstate").ToLocalChecked(), Nan::New(failure->SqlState()).ToLocalChecked());
+			Nan::Set(err, Nan::New("code").ToLocalChecked(), Nan::New(failure->Code()));
+			Nan::Set(errors, i, err);
 		}
 		
 		auto more = false;
@@ -133,7 +133,7 @@ namespace mssql
 		{
 			args[1] = fact.new_array();
 		}
-		args[2] = fact.new_boolean(more);
+		args[2] = Nan::New(more);
 		const auto argc = 3;
 		return argc;
 	}
@@ -142,7 +142,7 @@ namespace mssql
 	{
 		const nodeTypeFactory fact;
 
-		args[0] = fact.new_local_value(fact.new_boolean(false));
+		args[0] = Nan::New(false);
 		const auto arg = CreateCompletionArg();
 		args[1] = fact.new_local_value(arg);
 		const auto c = _output_param->IsNull() ? 0 : _output_param.As<Array>()->Length();

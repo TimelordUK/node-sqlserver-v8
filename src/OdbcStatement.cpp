@@ -153,22 +153,23 @@ namespace mssql
 	Local<Value> OdbcStatement::get_column_values() const
 	{
 		const nodeTypeFactory fact;
-		const auto result = fact.new_object();
+		const auto result = Nan::New<Object>();
 		if (_resultset->EndOfRows())
 		{
-			MutateJS::set_property_value(result, fact.new_string("end_rows"), fact.new_boolean(true));
+			Nan::Set(result, Nan::New("end_rows").ToLocalChecked(), Nan::New(true));
 		}
 		// cerr << " get_column_values " << endl;
 		const auto number_rows = _resultset->get_result_count();
 		const auto column_count = static_cast<int>(_resultset->get_column_count());
 		const auto results_array = fact.new_array(number_rows);
-		MutateJS::set_property_value(result, fact.new_string("data"), results_array);
+		const auto data = Nan::New("data").ToLocalChecked();
+		Nan::Set(result, data, results_array);
 		for (size_t row_id = 0; row_id < number_rows; ++row_id) {
 			auto row_array = fact.new_array(column_count);
-			MutateJS::set_array_elelemt_at_index(results_array, row_id, row_array);
+			Nan::Set(results_array, row_id, row_array);
 			for (auto c = 0; c < column_count; ++c)
 			{
-				MutateJS::set_array_elelemt_at_index(row_array, c, _resultset->get_column(row_id, c)->ToValue());
+				Nan::Set(row_array, c, _resultset->get_column(row_id, c)->ToValue());
 			}
 		}
 
@@ -361,13 +362,13 @@ namespace mssql
 	Local<Value> OdbcStatement::handle_end_of_results() const
 	{
 		const nodeTypeFactory fact;
-		return fact.new_boolean(_endOfResults);
+		return Nan::New(_endOfResults);
 	}
 
 	Local<Value> OdbcStatement::end_of_rows() const
 	{
 		const nodeTypeFactory fact;
-		return fact.new_boolean(_resultset->EndOfRows());
+		return Nan::New(_resultset->EndOfRows());
 	}
 
 	bool OdbcStatement::return_odbc_error()

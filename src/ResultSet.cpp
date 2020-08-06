@@ -101,14 +101,14 @@ namespace mssql
 
 	Local<Object> ResultSet::get_entry(const nodeTypeFactory & fact, const ColumnDefinition & definition)  {
 		const auto* const type_name = map_type(definition.dataType);
-		const auto entry = fact.new_object();
-		MutateJS::set_property_value(entry, fact.new_string("size"), fact.new_integer(static_cast<int32_t>(definition.columnSize)));
-		MutateJS::set_property_value(entry, fact.new_string("name"),  fact.new_string(definition.name.c_str()));
-		MutateJS::set_property_value(entry, fact.new_string("nullable"), fact.new_boolean(definition.nullable != 0));
-		MutateJS::set_property_value(entry, fact.new_string("type"), fact.new_string(type_name));
-		MutateJS::set_property_value(entry, fact.new_string("sqlType"), fact.new_string(definition.dataTypeName.c_str()));
+		const auto entry = Nan::New<Object>();
+		Nan::Set(entry, Nan::New("size").ToLocalChecked(), fact.new_integer(static_cast<int32_t>(definition.columnSize)));
+		Nan::Set(entry, Nan::New("name").ToLocalChecked(),  Nan::New(definition.name.c_str()).ToLocalChecked());
+		Nan::Set(entry, Nan::New("nullable").ToLocalChecked(), Nan::New(definition.nullable != 0));
+		Nan::Set(entry, Nan::New("type").ToLocalChecked(), Nan::New(type_name).ToLocalChecked());
+		Nan::Set(entry, Nan::New("sqlType").ToLocalChecked(), Nan::New(definition.dataTypeName.c_str()).ToLocalChecked());
 		if (definition.dataType == SQL_SS_UDT) {
-			MutateJS::set_property_value(entry, fact.new_string("udtType"), fact.new_string(definition.udtTypeName.c_str()));
+			Nan::Set(entry, Nan::New("udtType").ToLocalChecked(), Nan::New(definition.udtTypeName.c_str()).ToLocalChecked());
 		}
 		return entry;
 	}

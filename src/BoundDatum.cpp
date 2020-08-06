@@ -16,8 +16,8 @@ namespace mssql
 	{
 		const nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
-		const auto vp = fact.new_string(v);
-		const auto false_val = fact.new_boolean(false);
+		const auto vp = Nan::New(v).ToLocalChecked();
+		const auto false_val = Nan::New(false);
 		if (o->IsNull())
 		{
 			return false_val;
@@ -45,8 +45,7 @@ namespace mssql
 			return false_val;
 		}
 		
-		const auto as_bool = MutateJS::as_boolean(as_val);
-		return fact.new_boolean(as_bool);
+		return Nan::To<Boolean>(as_val).ToLocalChecked();
 	}
 
 	bool sql_type_s_maps_to_tvp(const Local<Value> p)
@@ -1713,7 +1712,7 @@ namespace mssql
 	{
 		const nodeTypeFactory fact;
 		const auto& vec = *_storage->uint16vec_ptr;
-		const auto s = fact.new_boolean(vec[0]);
+		const auto s = Nan::New<Boolean>(vec[0] != 0);
 		return s;
 	}
 
