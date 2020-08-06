@@ -151,7 +151,7 @@ namespace mssql
 		const auto len = static_cast<SQLSMALLINT>(connection_string.length());
 		auto vec = wstr2wcvec(connection_string);
 		//auto * conn_str = const_cast<wchar_t *>(connection_string.c_str());	
-		auto tst = swcvec2str(vec, len);
+		//auto tst = swcvec2str(vec, len);
 		// cerr << " tst " << tst << endl;
 		ret = SQLDriverConnect(*connection, nullptr, vec.data(), 
 		len, nullptr, 0, nullptr, SQL_DRIVER_NOPROMPT);

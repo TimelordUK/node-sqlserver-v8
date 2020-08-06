@@ -8,7 +8,7 @@
                 "/usr/include/**",
                 "/opt/microsoft/msodbcsql17/include/**"
             ],
-            "defines": ["LINUX_BUILD", "UNICODE", "SQL_WCHART_CONVERT"],
+            "defines": ["LINUX_BUILD", "UNICODE"],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c11",
             "cppStandard": "gnu++14",

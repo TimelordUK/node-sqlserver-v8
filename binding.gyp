@@ -75,8 +75,7 @@
             },
             'defines': [
               'LINUX_BUILD',
-              'UNICODE',
-              'SQL_WCHART_CONVERT'
+              'UNICODE'
             ], 
             'include_dirs': [
               '/usr/include/',
