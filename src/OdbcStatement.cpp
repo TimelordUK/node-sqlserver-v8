@@ -165,7 +165,7 @@ namespace mssql
 		const auto data = Nan::New("data").ToLocalChecked();
 		Nan::Set(result, data, results_array);
 		for (size_t row_id = 0; row_id < number_rows; ++row_id) {
-			auto row_array = fact.new_array(column_count);
+			const auto row_array = fact.new_array(column_count);
 			Nan::Set(results_array, row_id, row_array);
 			for (auto c = 0; c < column_count; ++c)
 			{

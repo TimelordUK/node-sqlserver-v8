@@ -78,8 +78,8 @@ namespace mssql
 
 	static Local<String> get_as_string(const Local<Value> o, const char* v)
 	{
-		auto key = Nan::New<String>(v).ToLocalChecked();
-		auto ss = Nan::Get(Nan::To<Object>(o).ToLocalChecked(), key).ToLocalChecked();
+		const auto key = Nan::New<String>(v).ToLocalChecked();
+		const auto ss = Nan::Get(Nan::To<Object>(o).ToLocalChecked(), key).ToLocalChecked();
 		if (!ss.IsEmpty()) {
 			return Nan::To<String>(ss).ToLocalChecked();
 		}
@@ -160,8 +160,7 @@ namespace mssql
 	{
 		reserve_var_char(precision, 1);
 		if (!p->IsNull())
-		{
-			const nodeTypeFactory fact;
+		{	
 			const auto str_param = Nan::To<String>(p).FromMaybe(Nan::EmptyString());
 			Nan::Utf8String x(str_param);
 			auto *x_p = *x;
@@ -194,7 +193,6 @@ namespace mssql
 		const auto arr = Local<Array>::Cast(p);
 		const auto array_len = arr->Length();
 		reserve_var_char(max_str_len, array_len);
-		const nodeTypeFactory fact;
 		auto itr = _storage->charvec_ptr->begin();
 		for (uint32_t i = 0; i < array_len; ++i)
 		{
@@ -353,8 +351,7 @@ namespace mssql
 	}
 
 	wstring wide_from_js_string(const Local<String> s)
-	{
-		const nodeTypeFactory fact;
+	{		
 		wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
 		Nan::Utf8String x(s);
 		auto *x_p = *x;
@@ -375,7 +372,7 @@ namespace mssql
 		const auto rows = get_row_count(p);
 		const auto type_id_str = get_as_string(p, "type_id");
 		const auto schema_str = get_as_string(p, "schema");
-		const nodeTypeFactory fact;
+		
 		if (!schema_str->IsNull())
 		{
 			_storage->schema = wide_from_js_string(schema_str);
@@ -1710,7 +1707,6 @@ namespace mssql
 
 	Local<Value> BoundDatum::unbind_boolean() const
 	{
-		const nodeTypeFactory fact;
 		const auto& vec = *_storage->uint16vec_ptr;
 		const auto s = Nan::New<Boolean>(vec[0] != 0);
 		return s;
