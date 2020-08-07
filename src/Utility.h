@@ -30,6 +30,7 @@ namespace mssql
     using namespace v8;
 
 	vector<SQLWCHAR> wstr2wcvec(const wstring & s);
+	vector<SQLWCHAR> str2wcvec(const string & cs);
 	string swcvec2str(vector<SQLWCHAR> &v, int l);
     string w2sqlc(const wstring & s);
 	wstring s2ws(const string & s);

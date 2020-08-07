@@ -44,12 +44,15 @@ namespace mssql
 
 	vector<SQLWCHAR> wstr2wcvec(const wstring & s) {
 		auto cs = w2sqlc(s);
-		vector<SQLWCHAR> ret; 
-		ret.resize(s.size());
-		ret.reserve(s.size());
-		auto c = sizeof(SQLWCHAR);
-		auto* wptr = const_cast<char*>(reinterpret_cast<const char*>(ret.data()));
-		for (string::const_iterator ptr = cs.begin(); ptr != cs.end(); ++ptr, wptr +=c) {
+		return str2wcvec(cs);
+	}
+
+	vector<SQLWCHAR> str2wcvec(const string & cs) {
+		vector<SQLWCHAR> ret;
+		ret.resize(cs.size());
+		ret.reserve(cs.size());
+		vector<SQLWCHAR>::iterator wptr = ret.begin();
+		for (string::const_iterator ptr = cs.begin(); ptr != cs.end(); ++ptr, ++wptr) {
 			*wptr = *ptr;
 		}
 		return ret;

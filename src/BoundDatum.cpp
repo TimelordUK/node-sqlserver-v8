@@ -389,9 +389,10 @@ namespace mssql
 		const string narrow = _storage->charvec_ptr->data();
 		const auto type_name = converter.from_bytes(narrow);
 		auto type_name_vec = wstr2wcvec(type_name);
-		memcpy(static_cast<void*>(_storage->uint16vec_ptr->data()), type_name_vec.data(), precision * sizeof(uint16_t));
+		auto size = sizeof(type_name_vec[0]);
+		memcpy(static_cast<void*>(_storage->uint16vec_ptr->data()), type_name_vec.data(), precision * size);
 		buffer = _storage->uint16vec_ptr->data();
-		buffer_len = precision * sizeof(uint16_t);
+		buffer_len = precision * size;
 		param_size = rows; // max no of rows.
 		_indvec[0] = rows; // no of rows.
 		digits = 0;
