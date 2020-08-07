@@ -32,9 +32,9 @@ namespace mssql
 		vector<char> c_str;
 		c_str.reserve(l + 1);
 		c_str.resize(l + 1);
-		auto c = static_cast<int>(sizeof(SQLWCHAR));
+		const auto c = static_cast<int>(sizeof(SQLWCHAR));
 		const auto* ptr = reinterpret_cast<const char*>(v.data());
-		for (int i = 0, j = 0; i < l * c; i+=c, j++) {
+		for (auto i = 0, j = 0; i < l * c; i+=c, j++) {
 			c_str[j] = ptr[i];
 		}
 		if (l > 0) c_str.resize(l - 1);

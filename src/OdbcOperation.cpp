@@ -22,7 +22,6 @@
 #include <OdbcConnection.h>
 #include <OdbcStatement.h>
 #include <OdbcStatementCache.h>
-#include <MutateJS.h>
 
 namespace mssql
 {
@@ -111,7 +110,7 @@ namespace mssql
 		for (unsigned int i = 0; i < error_count; ++i)
 		{
 			const auto failure = (*failures)[i];
-			auto err = fact.error(failure->Message());
+			const auto err = fact.error(failure->Message());
 			Nan::Set(err, Nan::New("sqlstate").ToLocalChecked(), Nan::New(failure->SqlState()).ToLocalChecked());
 			Nan::Set(err, Nan::New("code").ToLocalChecked(), Nan::New(failure->Code()));
 			Nan::Set(errors, i, err);
@@ -159,7 +158,7 @@ namespace mssql
 		if (_callback.IsEmpty()) return;
 		Local<Value> args[4];
 		const auto argc = failed ? error(args) : success(args);
-		auto cons = fact.newCallbackFunction(_callback);		
+		const auto cons = fact.newCallbackFunction(_callback);		
 		const auto context = isolate->GetCurrentContext();
 		const auto global = context->Global();
 		// std::cout << " complete_foreground " << timer.get_counter() << endl;

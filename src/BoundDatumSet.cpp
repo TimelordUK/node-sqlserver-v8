@@ -35,20 +35,20 @@ namespace mssql
 
 	int get_tvp_col_count(Local<Value>& v)
 	{
-		auto tvp_columns = Nan::Get(Nan::To<Object>(v).ToLocalChecked(), Nan::New("table_value_param").ToLocalChecked()).ToLocalChecked();
-		auto cols = tvp_columns.As<Array>();
-		auto count = cols->Length();
+		const auto tvp_columns = Nan::Get(Nan::To<Object>(v).ToLocalChecked(), Nan::New("table_value_param").ToLocalChecked()).ToLocalChecked();
+		const auto cols = tvp_columns.As<Array>();
+		const auto count = cols->Length();
 		return count;
 	}
 
 	bool BoundDatumSet::tvp(Local<Value>& v) const
 	{
-		auto tvp_columns = Nan::Get(Nan::To<Object>(v).ToLocalChecked(), Nan::New("table_value_param").ToLocalChecked()).ToLocalChecked();
+		const auto tvp_columns = Nan::Get(Nan::To<Object>(v).ToLocalChecked(), Nan::New("table_value_param").ToLocalChecked()).ToLocalChecked();
 		if (tvp_columns->IsNull()) return false;
 		if (!tvp_columns->IsArray()) return false;
 
-		auto cols = tvp_columns.As<Array>();
-		auto count = cols->Length();
+		const auto cols = tvp_columns.As<Array>();
+		const auto count = cols->Length();
 
 		for (uint32_t i = 0; i < count; ++i) {
 			const auto binding = make_shared<BoundDatum>();

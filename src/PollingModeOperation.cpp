@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include <OdbcStatement.h>
-#include <OperationManager.h>
 #include <PollingModeOperation.h>
 
 namespace mssql
