@@ -5,7 +5,6 @@
 #include <QueryOperation.h>
 #include <QueryOperationParams.h>
 #include <BoundDatumSet.h>
-#include <MutateJS.h>
 
 namespace mssql
 {
@@ -31,9 +30,9 @@ namespace mssql
 		full_error << "IMNOD: [msnodesql] Parameter " << param + 1 << ": " << error;
 
 		const auto err = fact.error(full_error);
-		const auto imn = fact.new_string("IMNOD");
-		MutateJS::set_property_value(err, fact.new_string("sqlstate"), imn);
-		MutateJS::set_property_value(err, fact.new_string("code"), fact.new_integer(-1));
+		const auto imn = Nan::New("IMNOD").ToLocalChecked();
+		Nan::Set(err, Nan::New("sqlstate").ToLocalChecked(), imn);
+		Nan::Set(err, Nan::New("code").ToLocalChecked(), fact.new_integer(-1));
 
 		Local<Value> args[1];
 		args[0] = err;

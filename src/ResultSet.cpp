@@ -99,10 +99,10 @@ namespace mssql
 		row[column->Id()] = column;
 	}
 
-	Local<Object> ResultSet::get_entry(const nodeTypeFactory & fact, const ColumnDefinition & definition)  {
+	Local<Object> ResultSet::get_entry(const ColumnDefinition & definition)  {
 		const auto* const type_name = map_type(definition.dataType);
 		const auto entry = Nan::New<Object>();
-		Nan::Set(entry, Nan::New("size").ToLocalChecked(), fact.new_integer(static_cast<int32_t>(definition.columnSize)));
+		Nan::Set(entry, Nan::New("size").ToLocalChecked(), Nan::New(static_cast<int32_t>(definition.columnSize)));
 		Nan::Set(entry, Nan::New("name").ToLocalChecked(),  Nan::New(definition.name.c_str()).ToLocalChecked());
 		Nan::Set(entry, Nan::New("nullable").ToLocalChecked(), Nan::New(definition.nullable != 0));
 		Nan::Set(entry, Nan::New("type").ToLocalChecked(), Nan::New(type_name).ToLocalChecked());
@@ -118,8 +118,8 @@ namespace mssql
 	   const nodeTypeFactory fact;
 	   auto metadata = fact.new_array();
 
-	   for_each(this->_metadata.begin(), this->_metadata.end(), [fact, metadata](const ColumnDefinition & definition) {
-		   MutateJS::set_array_elelemt_at_index(metadata, metadata->Length(), get_entry(fact, definition));
+	   for_each(this->_metadata.begin(), this->_metadata.end(), [metadata](const ColumnDefinition & definition) {
+		   Nan::Set(metadata, metadata->Length(), get_entry(definition));
 	   });
 
 	   return metadata;

@@ -81,7 +81,7 @@ namespace mssql
         }
 
     private:
-		static Local<Object> get_entry(const nodeTypeFactory & fact, const ColumnDefinition & definition);
+		static Local<Object> get_entry(const ColumnDefinition & definition);
         vector<ColumnDefinition> _metadata;
 		
         SQLLEN _row_count;

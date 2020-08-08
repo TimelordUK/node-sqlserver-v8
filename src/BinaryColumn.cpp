@@ -41,8 +41,8 @@ namespace mssql {
 	
 	Local<Value> BinaryColumn::ToValue()
 	{
-		const auto ptr = storage->data() + offset;
-		const auto str = new char[len];
+		auto* const ptr = storage->data() + offset;
+		auto* const str = new char[len];
 		memcpy(str, ptr, len);
 		const auto buff = Nan::NewBuffer(str, len, delete_buffer, nullptr).ToLocalChecked();
 		// fprintf(stderr, "[%d], ToValue len = %zu, offset = %zu, ptr = %p, destructed = %d\n", Id(), len, offset, str, destructed);
