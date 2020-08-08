@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include <BoundDatum.h>
 #include <BoundDatumSet.h>
-#include <MutateJS.h>
 #include <ResultSet.h>
 
 namespace mssql
@@ -26,10 +25,9 @@ namespace mssql
 	}
 
 	Local<Value> get(const Local<Object> o, const char* v)
-	{
-		const nodeTypeFactory fact;
-		const auto vp = fact.new_string(v);
-		const auto val = MutateJS::get_property_as_value(o, vp);
+	{	
+		const auto vp = Nan::New(v).ToLocalChecked();
+		const auto val = Nan::Get(o, vp).ToLocalChecked();
 		return val;
 	}
 
@@ -68,7 +66,7 @@ namespace mssql
 		if (count > 0) {
 			for (uint32_t i = 0; i < count; ++i) {
 				const auto binding = make_shared<BoundDatum>();
-				auto v = MutateJS::get_array_elelemt_at_index(node_params, i);
+				auto v = Nan::Get(node_params, i).ToLocalChecked();
 				res = binding->bind(v);
 
 				switch (binding->param_type)
@@ -116,7 +114,7 @@ namespace mssql
 				case SQL_PARAM_INPUT_OUTPUT:
 				{
 					const auto v = param->unbind();
-					MutateJS::set_array_elelemt_at_index(arr, i++, v);
+					Nan::Set(arr, i++, v);
 				}
 				break;
 
