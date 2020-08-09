@@ -1241,16 +1241,16 @@ namespace mssql
 				status = false;
 				return false;
 			}
-			auto status = swcvec2str(sql_state, sql_state.size());
+			const auto state = swcvec2str(sql_state, sql_state.size());
 			// cerr << "check_more_read " << status << endl;
-			res = status == "01004";
+			res = state == "01004";
 		}
 		status = true;
 		return res;
 	}
 
 
-#ifdef LINUX_BUILD
+#ifdef LINUX_BUILD_
 	struct lob_capture
 	{
 		lob_capture() :
@@ -1328,8 +1328,138 @@ namespace mssql
 		char* write_ptr{};
 		SQLLEN total_bytes_to_read;
 	} ;
+#endif
+
+
+	struct lob_capture
+	{
+		lob_capture() :
+			total_bytes_to_read(atomic_read_bytes)
+		{
+#ifdef WINDOWS_BUILD			
+			storage.ReserveUint16(atomic_read_bytes / item_size + 1);
+			src_data = storage.uint16vec_ptr;
+#endif
+#ifdef LINUX_BUILD
+			storage.ReserveChars(atomic_read_bytes / item_size + 1);
+			src_data = storage.charvec_ptr;
+#endif
+			write_ptr = src_data->data();
+			maxvarchar = false;
+		}
+
+		void trim() const
+		{
+			if (maxvarchar)
+			{
+				auto last = src_data->size() - 1;
+				if (maxvarchar)
+				{
+					while ((*src_data)[last] == 0)
+					{
+						--last;
+					}
+					if (last < src_data->size() - 1) {
+						src_data->resize(last + 1);
+					}
+				}
+			}
+		}
+
+		 void on_next_read()
+		{
+			++reads;
+			if (total_bytes_to_read < 0)
+			{
+				const int previous = src_data->size();
+				total_bytes_to_read = bytes_to_read * (reads + 1);
+				const auto n_items = total_bytes_to_read / item_size;
+				src_data->reserve(n_items + 1);
+				src_data->resize(n_items);
+				write_ptr = src_data->data() + previous;
+				memset(write_ptr, 0, src_data->data() + src_data->size() - write_ptr);
+			}
+			else
+			{
+				write_ptr += bytes_to_read / item_size;
+			}
+		}
+
+		void on_first_read(const int factor = 2)
+		{
+			maxvarchar = total_bytes_to_read < 0;
+			if (maxvarchar)
+			{
+				total_bytes_to_read = bytes_to_read * factor;
+			}
+			n_items = total_bytes_to_read / item_size;
+			src_data->reserve(n_items + 1);
+			src_data->resize(n_items);
+
+			if (total_bytes_to_read > bytes_to_read) {
+				total_bytes_to_read -= bytes_to_read;
+			}
+			write_ptr = src_data->data();
+			write_ptr += bytes_to_read / item_size;
+		}
+
+		SQLLEN reads = 1;
+		size_t n_items = 0;
+		bool maxvarchar;
+#ifdef LINUX_BUILD		
+		const size_t item_size = sizeof(char);
+		shared_ptr<vector<char>> src_data{};
+		char* write_ptr{};
+#endif
+#ifdef WINDOWS_BUILD
+		const size_t item_size = sizeof(uint16_t);
+		shared_ptr<vector<uint16_t>> src_data{};
+		unsigned short* write_ptr{};
+#endif
+		const SQLLEN atomic_read_bytes = 24 * 1024;
+		SQLLEN bytes_to_read = atomic_read_bytes;
+		DatumStorage storage;		
+		SQLLEN total_bytes_to_read;
+	} ;
 	
-	
+#ifdef WINDOWS_BUILD	
+	bool OdbcStatement::lob(const size_t row_id, size_t column)
+	{
+		const auto& statement = *_statement;
+		lob_capture capture;
+		auto r = SQLGetData(statement, column + 1, SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
+		if (capture.total_bytes_to_read == SQL_NULL_DATA)
+		{
+			_resultset->add_column(row_id, make_shared<NullColumn>(column));
+			return true;
+		}
+		if (!check_odbc_error(r)) return false;
+		auto status = false;
+		auto more = check_more_read(r, status);
+		if (!status)
+		{
+			return false;
+		}
+		capture.on_first_read();
+		while (more)
+		{
+			capture.bytes_to_read = min(static_cast<SQLLEN>(capture.atomic_read_bytes), capture.total_bytes_to_read);
+			r = SQLGetData(statement, column + 1, SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
+			capture.on_next_read();
+			if (!check_odbc_error(r)) return false;
+			more = check_more_read(r, status);
+			if (!status)
+			{
+				return false;
+			}
+		}
+		capture.trim();
+		_resultset->add_column(row_id, make_shared<StringColumn>(column, capture.src_data, capture.src_data->size()));
+		return true;
+	}
+	#endif
+
+#ifdef LINUX_BUILD	
 	bool OdbcStatement::lob(const size_t row_id, size_t column)
 	{
 		// cerr << "lob ..... " << endl;
@@ -1369,127 +1499,11 @@ namespace mssql
 		}
 		capture.trim();
 		// cerr << "lob add StringColumn column " << endl;
-		_resultset->add_column(row_id, make_shared<StringUtf8Column>(column, capture.char_data, capture.char_data->size()));
+		_resultset->add_column(row_id, make_shared<StringUtf8Column>(column, capture.src_data, capture.src_data->size()));
 		return true;
 	}
 #endif
-
-#ifdef WINDOWS_BUILD
-	struct lob_capture
-	{
-		lob_capture() :
-			total_bytes_to_read(atomic_read_bytes)
-		{
-			storage.ReserveUint16(atomic_read_bytes / item_size + 1);
-			uint16_data = storage.uint16vec_ptr;
-			write_ptr = uint16_data->data();		
-			maxvarchar = false;
-		}
-
-		void trim() const
-		{
-			if (maxvarchar)
-			{
-				auto last = uint16_data->size() - 1;
-				if (maxvarchar)
-				{
-					while ((*uint16_data)[last] == 0)
-					{
-						--last;
-					}
-					if (last < uint16_data->size() - 1) {
-						uint16_data->resize(last + 1);
-					}
-				}
-			}
-		}
-
-		 void on_next_read()
-		{
-			++reads;
-			if (total_bytes_to_read < 0)
-			{
-				const int previous = uint16_data->size();
-				total_bytes_to_read = bytes_to_read * (reads + 1);
-				const auto n_items = total_bytes_to_read / item_size;
-				uint16_data->reserve(n_items + 1);
-				uint16_data->resize(n_items);
-				write_ptr = uint16_data->data() + previous;
-				memset(write_ptr, 0, uint16_data->data() + uint16_data->size() - write_ptr);
-			}
-			else
-			{
-				write_ptr += bytes_to_read / item_size;
-			}
-		}
-
-		void on_first_read(const int factor = 2)
-		{
-			maxvarchar = total_bytes_to_read < 0;
-			if (maxvarchar)
-			{
-				total_bytes_to_read = bytes_to_read * factor;
-			}
-			n_items = total_bytes_to_read / item_size;
-			uint16_data->reserve(n_items + 1);
-			uint16_data->resize(n_items);
-
-			if (total_bytes_to_read > bytes_to_read) {
-				total_bytes_to_read -= bytes_to_read;
-			}
-			write_ptr = uint16_data->data();
-			write_ptr += bytes_to_read / item_size;
-		}
-
-		SQLLEN reads = 1;
-		size_t n_items = 0;
-		bool maxvarchar;
-		const size_t item_size = sizeof(uint16_t);
-		const SQLLEN atomic_read_bytes = 24 * 1024;
-		SQLLEN bytes_to_read = atomic_read_bytes;
-		DatumStorage storage;
-		shared_ptr<vector<uint16_t>> uint16_data{};
-		unsigned short* write_ptr{};
-		SQLLEN total_bytes_to_read;
-	} ;
 	
-	
-	bool OdbcStatement::lob(const size_t row_id, size_t column)
-	{
-		const auto& statement = *_statement;
-		lob_capture capture;
-		auto r = SQLGetData(statement, column + 1, SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
-		if (capture.total_bytes_to_read == SQL_NULL_DATA)
-		{
-			_resultset->add_column(row_id, make_shared<NullColumn>(column));
-			return true;
-		}
-		if (!check_odbc_error(r)) return false;
-		auto status = false;
-		auto more = check_more_read(r, status);
-		if (!status)
-		{
-			return false;
-		}
-		capture.on_first_read();
-		while (more)
-		{
-			capture.bytes_to_read = min(static_cast<SQLLEN>(capture.atomic_read_bytes), capture.total_bytes_to_read);
-			r = SQLGetData(statement, column + 1, SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
-			capture.on_next_read();
-			if (!check_odbc_error(r)) return false;
-			more = check_more_read(r, status);
-			if (!status)
-			{
-				return false;
-			}
-		}
-		capture.trim();
-		_resultset->add_column(row_id, make_shared<StringColumn>(column, capture.uint16_data, capture.uint16_data->size()));
-		return true;
-	}
-	#endif
-
 	bool OdbcStatement::reserved_string(const size_t row_count, const size_t column_size, const size_t column) const
 	{
 		const auto& bound_datum = _preparedStorage->atIndex(column);
