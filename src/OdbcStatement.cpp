@@ -1426,7 +1426,12 @@ namespace mssql
 		}
 		capture.trim();
 		// cerr << "lob add StringColumn column " << endl;
+		#ifdef LINUX_BUILD
 		_resultset->add_column(row_id, make_shared<StringUtf8Column>(column, capture.src_data, capture.src_data->size()));
+		#endif
+		#ifdef WINDOWS_BUILD
+		_resultset->add_column(row_id, make_shared<StringColumn>(column, capture.src_data, capture.src_data->size()));
+		#endif
 		return true;
 	}
 
