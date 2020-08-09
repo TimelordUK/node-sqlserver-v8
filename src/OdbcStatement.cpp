@@ -1340,43 +1340,6 @@ namespace mssql
 		SQLLEN total_bytes_to_read;
 	} ;
 	
-#ifdef WINDOWS_BUILD_
-	bool OdbcStatement::lob(const size_t row_id, size_t column)
-	{
-		const auto& statement = *_statement;
-		lob_capture capture;
-		auto r = SQLGetData(statement, column + 1, SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
-		if (capture.total_bytes_to_read == SQL_NULL_DATA)
-		{
-			_resultset->add_column(row_id, make_shared<NullColumn>(column));
-			return true;
-		}
-		if (!check_odbc_error(r)) return false;
-		auto status = false;
-		auto more = check_more_read(r, status);
-		if (!status)
-		{
-			return false;
-		}
-		capture.on_first_read();
-		while (more)
-		{
-			capture.bytes_to_read = min(static_cast<SQLLEN>(capture.atomic_read_bytes), capture.total_bytes_to_read);
-			r = SQLGetData(statement, column + 1, SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
-			capture.on_next_read();
-			if (!check_odbc_error(r)) return false;
-			more = check_more_read(r, status);
-			if (!status)
-			{
-				return false;
-			}
-		}
-		capture.trim();
-		_resultset->add_column(row_id, make_shared<StringColumn>(column, capture.src_data, capture.src_data->size()));
-		return true;
-	}
-	#endif
-
 	bool OdbcStatement::lob(const size_t row_id, size_t column)
 	{
 		// cerr << "lob ..... " << endl;
@@ -1434,52 +1397,6 @@ namespace mssql
 		#endif
 		return true;
 	}
-
-
-#ifdef LINUX_BUILD_	
-	bool OdbcStatement::lob(const size_t row_id, size_t column)
-	{
-		// cerr << "lob ..... " << endl;
-		const auto& statement = *_statement;
-		lob_capture capture;
-		auto r = SQLGetData(statement, column + 1, SQL_C_CHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
-		if (capture.total_bytes_to_read == SQL_NULL_DATA)
-		{
-			// cerr << "lob NullColumn " << endl;
-			_resultset->add_column(row_id, make_shared<NullColumn>(column));
-			return true;
-		}
-		if (!check_odbc_error(r)) return false;
-		auto status = false;
-		auto more = check_more_read(r, status);
-		if (!status)
-		{
-			// cerr << "lob check_more_read " << endl;
-			return false;
-		}
-		capture.on_first_read();
-		while (more)
-		{
-			capture.bytes_to_read = min(static_cast<SQLLEN>(capture.atomic_read_bytes), capture.total_bytes_to_read);
-			r = SQLGetData(statement, column + 1, SQL_C_CHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
-			capture.on_next_read();
-			if (!check_odbc_error(r)) {
-				// cerr << "lob error " << endl;
-				return false;
-			}
-			more = check_more_read(r, status);
-			if (!status)
-			{
-				// cerr << "lob status " << endl;
-				return false;
-			}
-		}
-		capture.trim();
-		// cerr << "lob add StringColumn column " << endl;
-		_resultset->add_column(row_id, make_shared<StringUtf8Column>(column, capture.src_data, capture.src_data->size()));
-		return true;
-	}
-#endif
 	
 	bool OdbcStatement::reserved_string(const size_t row_count, const size_t column_size, const size_t column) const
 	{
@@ -1520,54 +1437,30 @@ namespace mssql
 		return true;
 	}
 
-#ifdef WINDOWS_BUILD
-	bool OdbcStatement::bounded_string(SQLLEN display_size, const size_t row_id, size_t column)
-	{
-		const auto storage = make_shared<DatumStorage>();
-		const auto size = sizeof(uint16_t);
-		SQLLEN value_len = 0;
-
-		display_size++;
-		storage->ReserveUint16(display_size); // increment for null terminator
-
-		const auto r = SQLGetData(*_statement, column + 1, SQL_C_WCHAR, storage->uint16vec_ptr->data(), display_size * size,
-		                          &value_len);
-		if (!check_odbc_error(r)) return false;
-		//CHECK_ODBC_NO_DATA(r, statement);
-
-		if (value_len == SQL_NULL_DATA)
-		{
-			_resultset->add_column(row_id, make_shared<NullColumn>(column));
-			return true;
-		}
-
-		assert(value_len % 2 == 0); // should always be even
-		value_len /= size;
-
-		assert(value_len >= 0 && value_len <= display_size - 1);
-		storage->uint16vec_ptr->resize(value_len);
-		const auto value = make_shared<StringColumn>(column, storage, value_len);
-		_resultset->add_column(row_id, value);
-
-		return true;
-	}
-
-#endif
-
-#ifdef LINUX_BUILD
 	bool OdbcStatement::bounded_string(SQLLEN display_size, const size_t row_id, size_t column)
 	{
 		// cerr << "bounded_string ... " << endl;
 
 		const auto storage = make_shared<DatumStorage>();
+#ifdef LINUX_BUILD
 		const auto size = sizeof(char);
+#endif
+#ifdef WINDOWS_BUILD
+		const auto size = sizeof(uint16_t);
+#endif
 		SQLLEN value_len = 0;
 
 		display_size++;
+#ifdef LINUX_BUILD
 		storage->ReserveChars(display_size); // increment for null terminator
-
 		const auto r = SQLGetData(*_statement, column + 1, SQL_C_CHAR, storage->charvec_ptr->data(), display_size * size,
 		                          &value_len);
+#endif
+#ifdef WINDOWS_BUILD
+		storage->ReserveUint16(display_size); // increment for null terminator
+		const auto r = SQLGetData(*_statement, column + 1, SQL_C_WCHAR, storage->uint16vec_ptr->data(), display_size * size,
+                       &value_len);
+#endif
 		if (!check_odbc_error(r)) return false;
 		//CHECK_ODBC_NO_DATA(r, statement);
 
@@ -1580,14 +1473,19 @@ namespace mssql
 		value_len /= size;
 
 		assert(value_len >= 0 && value_len <= display_size - 1);
+#ifdef LINUX_BUILD
 		storage->charvec_ptr->resize(value_len);
 		// cerr << "bounded_string  make_shared value_len " << value_len << endl;
 		const auto value = make_shared<StringUtf8Column>(column, storage, value_len);
+#endif
+#ifdef WINDOWS_BUILD
+		storage->uint16vec_ptr->resize(value_len);
+		const auto value = make_shared<StringColumn>(column, storage, value_len);
+#endif
 		_resultset->add_column(row_id, value);
 
 		return true;
 	}
-#endif	
 
 	bool OdbcStatement::try_read_string(bool binary, const size_t row_id, const size_t column)
 	{
