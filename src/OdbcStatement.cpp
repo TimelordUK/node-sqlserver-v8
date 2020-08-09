@@ -1249,88 +1249,6 @@ namespace mssql
 		return res;
 	}
 
-
-#ifdef LINUX_BUILD_
-	struct lob_capture
-	{
-		lob_capture() :
-			total_bytes_to_read(atomic_read_bytes)
-		{
-			storage.ReserveChars(atomic_read_bytes / item_size + 1);
-			char_data = storage.charvec_ptr;
-			write_ptr = char_data->data();		
-			maxvarchar = false;
-		}
-
-		void trim() const
-		{
-			if (maxvarchar)
-			{
-				auto last = char_data->size() - 1;
-				if (maxvarchar)
-				{
-					while ((*char_data)[last] == 0)
-					{
-						--last;
-					}
-					if (last < char_data->size() - 1) {
-						char_data->resize(last + 1);
-					}
-				}
-			}
-		}
-
-		 void on_next_read()
-		{
-			++reads;
-			if (total_bytes_to_read < 0)
-			{
-				const int previous = char_data->size();
-				total_bytes_to_read = bytes_to_read * (reads + 1);
-				const auto n_items = total_bytes_to_read / item_size;
-				char_data->reserve(n_items + 1);
-				char_data->resize(n_items);
-				write_ptr = char_data->data() + previous;
-				memset(write_ptr, 0, char_data->data() + char_data->size() - write_ptr);
-			}
-			else
-			{
-				write_ptr += bytes_to_read / item_size;
-			}
-		}
-
-		void on_first_read(const int factor = 2)
-		{
-			maxvarchar = total_bytes_to_read < 0;
-			if (maxvarchar)
-			{
-				total_bytes_to_read = bytes_to_read * factor;
-			}
-			n_items = total_bytes_to_read / item_size;
-			char_data->reserve(n_items + 1);
-			char_data->resize(n_items);
-
-			if (total_bytes_to_read > bytes_to_read) {
-				total_bytes_to_read -= bytes_to_read;
-			}
-			write_ptr = char_data->data();
-			write_ptr += bytes_to_read / item_size;
-		}
-
-		SQLLEN reads = 1;
-		size_t n_items = 0;
-		bool maxvarchar;
-		const size_t item_size = sizeof(char);
-		const SQLLEN atomic_read_bytes = 24 * 1024;
-		SQLLEN bytes_to_read = atomic_read_bytes;
-		DatumStorage storage;
-		shared_ptr<vector<char>> char_data{};
-		char* write_ptr{};
-		SQLLEN total_bytes_to_read;
-	} ;
-#endif
-
-
 	struct lob_capture
 	{
 		lob_capture() :
@@ -1422,7 +1340,7 @@ namespace mssql
 		SQLLEN total_bytes_to_read;
 	} ;
 	
-#ifdef WINDOWS_BUILD	
+#ifdef WINDOWS_BUILD_
 	bool OdbcStatement::lob(const size_t row_id, size_t column)
 	{
 		const auto& statement = *_statement;
@@ -1459,7 +1377,61 @@ namespace mssql
 	}
 	#endif
 
-#ifdef LINUX_BUILD	
+	bool OdbcStatement::lob(const size_t row_id, size_t column)
+	{
+		// cerr << "lob ..... " << endl;
+		const auto& statement = *_statement;
+		lob_capture capture;
+		#ifdef LINUX_BUILD
+		auto r = SQLGetData(statement, column + 1, SQL_C_CHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
+		#endif
+		#ifdef WINDOWS_BUILD
+		auto r = SQLGetData(statement, column + 1, SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
+		#endif
+		if (capture.total_bytes_to_read == SQL_NULL_DATA)
+		{
+			// cerr << "lob NullColumn " << endl;
+			_resultset->add_column(row_id, make_shared<NullColumn>(column));
+			return true;
+		}
+		if (!check_odbc_error(r)) return false;
+		auto status = false;
+		auto more = check_more_read(r, status);
+		if (!status)
+		{
+			// cerr << "lob check_more_read " << endl;
+			return false;
+		}
+		capture.on_first_read();
+		while (more)
+		{
+			capture.bytes_to_read = min(static_cast<SQLLEN>(capture.atomic_read_bytes), capture.total_bytes_to_read);
+#ifdef LINUX_BUILD
+			r = SQLGetData(statement, column + 1, SQL_C_CHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
+#endif
+#ifdef WINDOWS_BUILD
+			r = SQLGetData(statement, column + 1, SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
+#endif
+			capture.on_next_read();
+			if (!check_odbc_error(r)) {
+				// cerr << "lob error " << endl;
+				return false;
+			}
+			more = check_more_read(r, status);
+			if (!status)
+			{
+				// cerr << "lob status " << endl;
+				return false;
+			}
+		}
+		capture.trim();
+		// cerr << "lob add StringColumn column " << endl;
+		_resultset->add_column(row_id, make_shared<StringUtf8Column>(column, capture.src_data, capture.src_data->size()));
+		return true;
+	}
+
+
+#ifdef LINUX_BUILD_	
 	bool OdbcStatement::lob(const size_t row_id, size_t column)
 	{
 		// cerr << "lob ..... " << endl;
