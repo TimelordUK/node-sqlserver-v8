@@ -43,7 +43,7 @@ namespace mssql
 	}
 
 	vector<SQLWCHAR> wstr2wcvec(const wstring & s) {
-		auto cs = w2sqlc(s);
+		const auto cs = w2sqlc(s);
 		return str2wcvec(cs);
 	}
 
@@ -51,8 +51,8 @@ namespace mssql
 		vector<SQLWCHAR> ret;
 		ret.resize(cs.size());
 		ret.reserve(cs.size());
-		vector<SQLWCHAR>::iterator wptr = ret.begin();
-		for (string::const_iterator ptr = cs.begin(); ptr != cs.end(); ++ptr, ++wptr) {
+		auto wptr = ret.begin();
+		for (auto ptr = cs.begin(); ptr != cs.end(); ++ptr, ++wptr) {
 			*wptr = *ptr;
 		}
 		return ret;
@@ -68,8 +68,7 @@ namespace mssql
 		using convert_type = codecvt_utf8<wchar_t>;
 		wstring_convert<convert_type, wchar_t> converter;
 		const auto c_cs = converter.from_bytes(s);
-		const auto m = wstring(c_cs);
-		return m;	
+		return wstring(c_cs);
 	}
 
 	wstring FromV8String(const Local<String> input) {

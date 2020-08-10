@@ -463,7 +463,7 @@ namespace mssql
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			_indvec[i] = SQL_NULL_DATA;
-			const auto elem = MutateJS::get_array_elelemt_at_index(arr, i);
+			const auto elem = Nan::Get(arr, i).ToLocalChecked();
 			if (!elem->IsNull())
 			{
 				const auto v = MutateJS::as_boolean(elem);
@@ -516,7 +516,7 @@ namespace mssql
 		{
 			auto& ns = vec[i];
 			_indvec[i] = SQL_NULL_DATA;
-			const auto elem = MutateJS::get_array_elelemt_at_index(arr, i);
+			const auto elem = Nan::Get(arr, i).ToLocalChecked();
 			if (!elem->IsNull())
 			{
 				const auto num = Nan::To<Number>(elem).ToLocalChecked();
@@ -796,7 +796,7 @@ namespace mssql
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			_indvec[i] = SQL_NULL_DATA;
-			const auto elem = MutateJS::get_array_elelemt_at_index(arr, i);
+			const auto elem = Nan::Get(arr, i).ToLocalChecked();
 			if (!elem->IsNull())
 			{
 				_indvec[i] = sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT);
@@ -845,7 +845,7 @@ namespace mssql
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			_indvec[i] = SQL_NULL_DATA;
-			const auto elem = MutateJS::get_array_elelemt_at_index(arr, i);
+			const auto elem = Nan::Get(arr, i).ToLocalChecked();
 			if (!elem->IsNull())
 			{
 				_indvec[i] = 0;
@@ -963,7 +963,7 @@ namespace mssql
 
 	bool BoundDatum::bind(const Local<Object> o, const char* if_str, const uint16_t type)
 	{
-		auto val = MutateJS::get_property_as_value(o, if_str);
+		auto val = Nan::Get(o, Nan::New(if_str).ToLocalChecked()).ToLocalChecked();
 		if (!val->IsUndefined())
 		{
 			param_type = type;
@@ -1183,7 +1183,7 @@ namespace mssql
 		{
 			return false;
 		}
-		const auto maybe_size = MutateJS::get_property_as_value(local_object, "max_length")->Int32Value(context);
+		const auto maybe_size = Nan::Get(local_object, Nan::New("max_length").ToLocalChecked()).ToLocalChecked()->Int32Value(context);
 		auto size = 0;
 		if (!maybe_size.To(&size))
 		{
@@ -1208,7 +1208,7 @@ namespace mssql
 			{
 				return false;
 			}
-			pval = MutateJS::get_property_as_value(as_object, "val");
+			pval = Nan::Get(as_object, Nan::New("val").ToLocalChecked()).ToLocalChecked();
 		}
 
 		return bind_datum_type(pval);
@@ -1218,21 +1218,21 @@ namespace mssql
 	{
 		const nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
-		const auto precision = MutateJS::get_property_as_value(pv, "precision");
+		const auto precision = Nan::Get(pv, Nan::New("precision").ToLocalChecked()).ToLocalChecked();
 		if (!precision->IsUndefined())
 		{
 			const auto maybe_param_size = precision->Int32Value(context);
 			param_size = maybe_param_size.FromMaybe(0);
 		}
 
-		const auto scale = MutateJS::get_property_as_value(pv, "scale");
+		const auto scale = Nan::Get(pv, Nan::New("scale").ToLocalChecked()).ToLocalChecked();
 		if (!scale->IsUndefined())
 		{
 			const auto maybe_digits = scale->Int32Value(context);
 			digits = maybe_digits.FromMaybe(0);
 		}
 
-		const auto off = MutateJS::get_property_as_value(pv, "offset");
+		const auto off = Nan::Get(pv, Nan::New("offset").ToLocalChecked()).ToLocalChecked();
 		if (!off->IsUndefined())
 		{
 			const auto maybe_offset = off->Int32Value(context);
@@ -1497,7 +1497,7 @@ namespace mssql
 			return false;
 		}
 
-		const auto pp = MutateJS::get_property_as_value(as_local, "value");
+		const auto pp = Nan::Get(as_local, Nan::New("value").ToLocalChecked()).ToLocalChecked();
 
 		assign_precision(as_local);
 
@@ -1602,13 +1602,13 @@ namespace mssql
 			return false;
 		}
 
-		auto v = MutateJS::get_property_as_value(po, "is_output");
+		auto v = Nan::Get(po, Nan::New("is_output").ToLocalChecked()).ToLocalChecked();
 		if (!v->IsUndefined())
 		{
 			return proc_bind(p, v);
 		}
 
-		v = MutateJS::get_property_as_value(po, "sql_type");
+		v = Nan::Get(po, Nan::New("sql_type").ToLocalChecked()).ToLocalChecked();
 		if (!v->IsUndefined())
 		{
 			return user_bind(p, v);
@@ -1618,7 +1618,7 @@ namespace mssql
 		if (!n->IsUndefined())
 		{
 			name = wide_from_js_string(n);
-			auto pp = MutateJS::get_property_as_value(po, "value");
+			auto pp = Nan::Get(po, Nan::New("value").ToLocalChecked()).ToLocalChecked();
 			return bind_datum_type(pp);
 		}
 		
@@ -1632,7 +1632,7 @@ namespace mssql
 
 		for (uint32_t i = 0; i < arr->Length(); ++i)
 		{
-			const auto p = MutateJS::get_array_elelemt_at_index(arr, i);
+			const auto p = Nan::Get(arr, i).ToLocalChecked();
 			counts.Decode(p);
 		}
 
@@ -1694,15 +1694,14 @@ namespace mssql
 
 	Local<Value> BoundDatum::unbind_string() const
 	{
-		const auto s = MutateJS::from_two_byte(_storage->uint16vec_ptr->data());
+		const auto s = Nan::New<String>(_storage->uint16vec_ptr->data()).ToLocalChecked();
 		return s;
 	}
 
 	Local<Value> BoundDatum::unbind_double() const
 	{
-		const nodeTypeFactory fact;
 		const auto& vec = *_storage->doublevec_ptr;
-		const auto s = fact.new_number(vec[0]);
+		const auto s = Nan::New(vec[0]);
 		return s;
 	}
 
@@ -1714,18 +1713,16 @@ namespace mssql
 	}
 
 	Local<Value> BoundDatum::unbind_int32() const
-	{
-		const nodeTypeFactory fact;
+	{		
 		const auto& vec = *_storage->int32vec_ptr;
-		const auto s = fact.new_int32(vec[0]);
+		const auto s = Nan::New<Int32>(vec[0]);
 		return s;
 	}
 
 	Local<Value> BoundDatum::unbind_uint32() const
-	{
-		const nodeTypeFactory fact;
+	{	
 		const auto& vec = *_storage->uint32vec_ptr;
-		const auto s = fact.new_uint32(vec[0]);
+		const auto s = Nan::New<Integer>(vec[0]);
 		return s;
 	}
 

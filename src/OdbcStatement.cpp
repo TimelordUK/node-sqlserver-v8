@@ -27,7 +27,6 @@
 #include <NodeColumns.h>
 #include <OdbcHelper.h>
 #include <QueryOperationParams.h>
-#include <MutateJS.h>
 #include <iostream>
 
 #ifdef LINUX_BUILD
@@ -78,7 +77,7 @@ namespace mssql
 	bool OdbcStatement::try_read_columns(const size_t number_rows)
 	{
 		// fprintf(stderr, "try_read_columns %d\n", number_rows);
-		auto res = false;
+		bool res;
 		_resultset->start_results();
 		if (!_prepared) {
 			res = fetch_read(number_rows);
@@ -348,14 +347,12 @@ namespace mssql
 	}
 
 	Local<Value> OdbcStatement::handle_end_of_results() const
-	{
-		const nodeTypeFactory fact;
+	{		
 		return Nan::New(_endOfResults);
 	}
 
 	Local<Value> OdbcStatement::end_of_rows() const
-	{
-		const nodeTypeFactory fact;
+	{		
 		return Nan::New(_resultset->EndOfRows());
 	}
 
@@ -533,7 +530,7 @@ namespace mssql
 					ret = SQLExecute(statement);
 				}
 
-				auto submit_cancel = false;
+				bool submit_cancel;
 				if (ret != SQL_STILL_EXECUTING)
 				{
 					break;
@@ -613,7 +610,7 @@ namespace mssql
 	bool OdbcStatement::bind_fetch(const shared_ptr<BoundDatumSet> & param_set)
 	{
 		const auto& statement = *_statement;
-		auto polling_mode = false;
+		bool polling_mode;
 		{
 			lock_guard<mutex> lock(g_i_mutex);
 			polling_mode = _pollingEnabled;
@@ -684,7 +681,7 @@ namespace mssql
 			// error already set in BindParams
 			return false;
 		}
-		auto polling_mode = false;
+		bool polling_mode;
 		{
 			lock_guard<mutex> lock(g_i_mutex);
 			polling_mode = _pollingEnabled;
@@ -835,7 +832,7 @@ namespace mssql
 	bool OdbcStatement::dispatch(const SQLSMALLINT t, const size_t row_id, const size_t column)
 	{
 		// cerr << " dispatch row = " << row_id << endl;
-		auto res = false;
+		bool res;
 		switch (t)
 		{
 		case SQL_SS_VARIANT:
