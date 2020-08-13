@@ -20,11 +20,9 @@ namespace mssql
 		{			
 		}
 
-	   Local<Value> ToValue() override
+	   inline Local<Value> ToValue() override
 	   {
-		  nodeTypeFactory fact;
-		  auto o = fact.new_number(value);
-		  return o;
+		  return Nan::New(value);
 	   }
 
     private:

@@ -19,11 +19,9 @@ namespace mssql
 	   {
 	   }
 
-	   Local<Value> ToValue() override
+	   inline Local<Value> ToValue() override
 	   {
-		  nodeTypeFactory fact;
-		  auto v = fact.new_long(value);
-		  return v;
+		 	return Nan::New(static_cast<int32_t>(value));
 	   }
 
     private:

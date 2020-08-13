@@ -1238,15 +1238,9 @@ namespace mssql
 	{
 		lob_capture() :
 			total_bytes_to_read(atomic_read_bytes)
-		{
-#ifdef WINDOWS_BUILD			
+		{		
 			storage.ReserveUint16(atomic_read_bytes / item_size + 1);
 			src_data = storage.uint16vec_ptr;
-#endif
-#ifdef LINUX_BUILD
-			storage.ReserveChars(atomic_read_bytes / item_size + 1);
-			src_data = storage.charvec_ptr;
-#endif
 			write_ptr = src_data->data();
 			maxvarchar = false;
 		}
@@ -1309,16 +1303,9 @@ namespace mssql
 		SQLLEN reads = 1;
 		size_t n_items = 0;
 		bool maxvarchar;
-#ifdef LINUX_BUILD		
-		const size_t item_size = sizeof(char);
-		shared_ptr<vector<char>> src_data{};
-		char* write_ptr{};
-#endif
-#ifdef WINDOWS_BUILD
 		const size_t item_size = sizeof(uint16_t);
 		shared_ptr<vector<uint16_t>> src_data{};
 		unsigned short* write_ptr{};
-#endif
 		const SQLLEN atomic_read_bytes = 24 * 1024;
 		SQLLEN bytes_to_read = atomic_read_bytes;
 		DatumStorage storage;		
@@ -1330,12 +1317,7 @@ namespace mssql
 		// cerr << "lob ..... " << endl;
 		const auto& statement = *_statement;
 		lob_capture capture;
-		#ifdef LINUX_BUILD
-		auto r = SQLGetData(statement, column + 1, SQL_C_CHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
-		#endif
-		#ifdef WINDOWS_BUILD
 		auto r = SQLGetData(statement, column + 1, SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
-		#endif
 		if (capture.total_bytes_to_read == SQL_NULL_DATA)
 		{
 			// cerr << "lob NullColumn " << endl;
@@ -1354,12 +1336,7 @@ namespace mssql
 		while (more)
 		{
 			capture.bytes_to_read = min(static_cast<SQLLEN>(capture.atomic_read_bytes), capture.total_bytes_to_read);
-#ifdef LINUX_BUILD
-			r = SQLGetData(statement, column + 1, SQL_C_CHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
-#endif
-#ifdef WINDOWS_BUILD
 			r = SQLGetData(statement, column + 1, SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
-#endif
 			capture.on_next_read();
 			if (!check_odbc_error(r)) {
 				// cerr << "lob error " << endl;
@@ -1374,12 +1351,7 @@ namespace mssql
 		}
 		capture.trim();
 		// cerr << "lob add StringColumn column " << endl;
-		#ifdef LINUX_BUILD
-		_resultset->add_column(row_id, make_shared<StringUtf8Column>(column, capture.src_data, capture.src_data->size()));
-		#endif
-		#ifdef WINDOWS_BUILD
 		_resultset->add_column(row_id, make_shared<StringColumn>(column, capture.src_data, capture.src_data->size()));
-		#endif
 		return true;
 	}
 	
@@ -1427,25 +1399,13 @@ namespace mssql
 		// cerr << "bounded_string ... " << endl;
 
 		const auto storage = make_shared<DatumStorage>();
-#ifdef LINUX_BUILD
-		const auto size = sizeof(char);
-#endif
-#ifdef WINDOWS_BUILD
 		const auto size = sizeof(uint16_t);
-#endif
 		SQLLEN value_len = 0;
 
 		display_size++;
-#ifdef LINUX_BUILD
-		storage->ReserveChars(display_size); // increment for null terminator
-		const auto r = SQLGetData(*_statement, column + 1, SQL_C_CHAR, storage->charvec_ptr->data(), display_size * size,
-		                          &value_len);
-#endif
-#ifdef WINDOWS_BUILD
 		storage->ReserveUint16(display_size); // increment for null terminator
 		const auto r = SQLGetData(*_statement, column + 1, SQL_C_WCHAR, storage->uint16vec_ptr->data(), display_size * size,
                        &value_len);
-#endif
 		if (!check_odbc_error(r)) return false;
 		//CHECK_ODBC_NO_DATA(r, statement);
 
@@ -1458,15 +1418,8 @@ namespace mssql
 		value_len /= size;
 
 		assert(value_len >= 0 && value_len <= display_size - 1);
-#ifdef LINUX_BUILD
-		storage->charvec_ptr->resize(value_len);
-		// cerr << "bounded_string  make_shared value_len " << value_len << endl;
-		const auto value = make_shared<StringUtf8Column>(column, storage, value_len);
-#endif
-#ifdef WINDOWS_BUILD
 		storage->uint16vec_ptr->resize(value_len);
 		const auto value = make_shared<StringColumn>(column, storage, value_len);
-#endif
 		_resultset->add_column(row_id, value);
 
 		return true;
