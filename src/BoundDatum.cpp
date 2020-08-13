@@ -247,7 +247,7 @@ namespace mssql
 			const auto str = maybe_value.FromMaybe(Nan::EmptyString()); 	
 			const auto width = str->Length() * size;
 			_indvec[i] = width;
-			str->Write(Nan::GetCurrentContext()->GetIsolate(), &*itr, 0, max_str_len);
+			Nan::DecodeWrite(reinterpret_cast<char*>(&*itr), str->Length()*2, str, Nan::UCS2);
 			itr += max_str_len;
 		}
 	}
@@ -263,7 +263,7 @@ namespace mssql
 		{
 			const auto str_param = Nan::To<String>(p).FromMaybe(Nan::EmptyString());
 			auto* const first_p = _storage->uint16vec_ptr->data();
-			str_param->Write(fact.isolate, first_p, 0, precision);
+			Nan::DecodeWrite(reinterpret_cast<char*>(first_p), str_param->Length()*2, str_param, Nan::UCS2);
 			buffer_len = precision * size;
 			if (precision > 4000)
 			{
