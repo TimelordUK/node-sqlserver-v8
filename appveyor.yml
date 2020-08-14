@@ -1,15 +1,14 @@
 version: 1.0.{build}
 
 image: 
-  - Visual Studio 2015
   - Ubuntu
+  - Visual Studio 2015
 
 platform: 
   - x64
 
 environment:
     matrix:
-      - nodejs_version: 8
       - nodejs_version: 14
       - nodejs_version: 13
       - nodejs_version: 12
