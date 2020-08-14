@@ -82,7 +82,7 @@
     "prebuild-gyp": "node-gyp rebuild",
     "install": "prebuild-install || node-gyp rebuild",
     "prebuild-all": "npm run prebuild-node && npm run prebuild-node-ia32 && npm run prebuild-electron && npm run prebuild-electron-ia32",
-    "prebuild-node": "prebuild -t 10.16.0 -t 11.15.0 -t 12.18.3 -t 13.13.0 -t 14.7.0 --strip",
+    "prebuild-node": "prebuild -t 8.17.0 -t 10.16.0 -t 11.15.0 -t 12.18.3 -t 13.13.0 -t 14.7.0 --strip",
     "prebuild-node-ia32": "prebuild -t 10.16.0 -t 11.15.0 -t 12.18.3 -t 13.13.0 -t 14.7.0 -a ia32 --strip",
     "prebuild-electron": "prebuild -t 6.1.9 -t 7.2.1 -t 8.2.3 -t 9.0.5 -r electron --strip",
     "prebuild-electron-ia32": "prebuild -t 6.1.9 -t 7.2.1 -t 8.2.3 -t 9.0.5 -r electron -a ia32 --strip",

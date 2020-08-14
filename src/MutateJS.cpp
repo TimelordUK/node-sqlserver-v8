@@ -10,17 +10,6 @@ namespace mssql
 		return as_boolean(l);
 	}
 
-	 Local<Value> MutateJS::get_array_elelemt_at_index(const Local<Array> &arr, const unsigned int index)
-	 {
-		const auto t = Nan::Get(arr, index).ToLocalChecked();
-		return t;
-	 }
-
-	 bool MutateJS::set_array_elelemt_at_index(const Local<Array>& arr, const unsigned int index, const Local<Value>& value)
-	 {
-		 return Nan::Set(arr, index, value).ToChecked();
-	 }
-
 	 bool MutateJS::set_property_value(const Local<Object>& o, const Local<Value>& p, const Local<Value>& v)
 	 {
 		 return Nan::Set(o, p, v).ToChecked();
@@ -98,16 +87,4 @@ namespace mssql
 		const auto p = Nan::Get(o, Nan::New<String>(v).ToLocalChecked()).ToLocalChecked();
 		return p;
 	}
-	
-	 Local<Value> MutateJS::from_two_byte(const uint16_t* text, const size_t size)
-	 {
-		 const auto s = Nan::New<String>(text, size).ToLocalChecked();
-		 return s;
-	 }
-
-	 Local<Value> MutateJS::from_two_byte(const uint16_t* text)
-	 {
-		 const auto s = Nan::New<String>(text).ToLocalChecked();
-		return s;
-	 }
 }

@@ -3,6 +3,7 @@
 
 const assert = require('assert')
 const supp = require('../samples/typescript/demo-support')
+const { Console } = require('console')
 
 suite('sproc', function () {
   let connStr
@@ -41,6 +42,62 @@ suite('sproc', function () {
     theConnection.close(err => {
       assert.ifError(err)
       done()
+    })
+  })
+
+  test('get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
+    const spName = 'test_sp_get_int_int'
+
+    const def = `alter PROCEDURE <name>(
+@num1 INT,
+@num2 INT,
+@num3 INT OUTPUT
+
+)AS
+BEGIN
+   SET @num3 = @num1 + @num2
+   RETURN 99;
+END
+`
+
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, procedure => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const received = []
+          const iterations = 500
+
+          const check = () => {
+            for (let i = 0; i < iterations; ++i) {
+              const expected = [99, i * 2]
+              assert.deepStrictEqual(received[i], expected, 'results didn\'t match')
+            }
+            asyncDone()
+          }
+
+          for (let i = 0; i < iterations; ++i) {
+            procedure.call([i, i], (err, results, output) => {
+              assert.ifError(err)
+              received[received.length] = output
+              if (received.length === iterations) {
+                check()
+              }
+            })
+          }
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
     })
   })
 
@@ -341,62 +398,6 @@ END
             // console.log(`info ${i}`)
             info = i.message
           })
-        })
-      }
-    ]
-
-    async.series(fns, () => {
-      testDone()
-    })
-  })
-
-  test('get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
-    const spName = 'test_sp_get_int_int'
-
-    const def = `alter PROCEDURE <name>(
-@num1 INT,
-@num2 INT,
-@num3 INT OUTPUT
-
-)AS
-BEGIN
-   SET @num3 = @num1 + @num2
-   RETURN 99;
-END
-`
-
-    const fns = [
-      asyncDone => {
-        procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const pm = theConnection.procedureMgr()
-        pm.get(spName, procedure => {
-          const count = pm.getCount()
-          assert.strictEqual(count, 1)
-          const received = []
-          const iterations = 1000
-
-          const check = () => {
-            for (let i = 0; i < iterations; ++i) {
-              const expected = [99, i * 2]
-              assert.deepStrictEqual(received[i], expected, 'results didn\'t match')
-            }
-            asyncDone()
-          }
-
-          for (let i = 0; i < iterations; ++i) {
-            procedure.call([i, i], (err, results, output) => {
-              assert.ifError(err)
-              received[received.length] = output
-              if (received.length === iterations) {
-                check()
-              }
-            })
-          }
         })
       }
     ]
