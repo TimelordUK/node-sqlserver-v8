@@ -22,11 +22,12 @@
 #include <OdbcConnection.h>
 #include <OdbcStatement.h>
 #include <OdbcStatementCache.h>
+#include <iostream>
 
 namespace mssql
 {
 	OdbcOperation::OdbcOperation(const size_t query_id, Local<Object> cb)
-		:
+		: Nan::AsyncWorker(new Nan::Callback(cb.As<Function>())),
 		_connection(nullptr),
 		_statement(nullptr),
 		_callback(Isolate::GetCurrent(), cb.As<Function>()),
@@ -40,7 +41,7 @@ namespace mssql
 	}
 
 	OdbcOperation::OdbcOperation(const shared_ptr<OdbcConnection> &connection, const size_t query_id, Local<Object> cb)
-		: 
+		: Nan::AsyncWorker(new Nan::Callback(cb.As<Function>())),
 		_connection(connection),
 		_statement(nullptr),
 		_callback(Isolate::GetCurrent(), cb.As<Function>()),
@@ -54,7 +55,7 @@ namespace mssql
 	}
 
 	OdbcOperation::OdbcOperation(const shared_ptr<OdbcConnection> & connection, Local<Object> cb)
-		:
+		: Nan::AsyncWorker(new Nan::Callback(cb.As<Function>())),
 		_connection(connection),
 		_statement(nullptr),
 		_callback(Isolate::GetCurrent(), cb.As<Function>()),
@@ -67,14 +68,42 @@ namespace mssql
 		_output_param = fact.null();
 	}
 
+	void OdbcOperation::Execute () {	
+		// std::cout << " invoke_background .... " << timer.get_counter() << endl;
+		failed = !TryInvokeOdbc();
+		// std::cout << " .... invoke_background " << timer.get_counter() << endl;
+		if (failed) {
+			getFailure();
+		}
+	}
+
+	void OdbcOperation::HandleOKCallback () {
+		auto* isolate = Isolate::GetCurrent();
+		HandleScope scope(isolate);
+		const nodeTypeFactory fact;
+		if (_callback.IsEmpty()) return;
+		Local<Value> args[4];
+		const auto argc = failed ? error(args) : success(args);
+		const auto cons = fact.newCallbackFunction(_callback);		
+		const auto context = isolate->GetCurrentContext();
+		const auto global = context->Global();
+		// std::cout << " complete_foreground " << timer.get_counter() << endl;
+		//args[argc] = fact.new_number(timer.get_counter());
+		Nan::Call(cons, global, argc, args);
+	}
+
 	OdbcOperation::~OdbcOperation()
 	{
 		_callback.Reset();
+		int count = _statement.use_count();
+		// cerr << "~OdbcOperation statementId " << _statementId << " count " << count << endl;
 	}
 
 	void OdbcOperation::fetch_statement()
 	{
 		_statement = _connection->statements->checkout(_statementId);
+		int count = _statement.use_count();
+		// cerr << "fetch_statement statementId " << _statementId << " count " << count << endl;
 	}
 
 	void OdbcOperation::getFailure()
@@ -89,16 +118,6 @@ namespace mssql
 		{
 			failures = make_shared<vector<shared_ptr<OdbcError>>>();
 			failures->push_back(make_shared<OdbcError>("unknown", "internal error", -1));
-		}
-	}
-
-	void OdbcOperation::invoke_background()
-	{
-		// std::cout << " invoke_background .... " << timer.get_counter() << endl;
-		failed = !TryInvokeOdbc();
-		// std::cout << " .... invoke_background " << timer.get_counter() << endl;
-		if (failed) {
-			getFailure();
 		}
 	}
 
@@ -139,30 +158,12 @@ namespace mssql
 
 	int OdbcOperation::success(Local<Value> args[])
 	{
-		const nodeTypeFactory fact;
-
 		args[0] = Nan::New(false);
 		const auto arg = CreateCompletionArg();
-		args[1] = fact.new_local_value(arg);
+		args[1] = arg;
 		const auto c = _output_param->IsNull() ? 0 : _output_param.As<Array>()->Length();
 		if (c > 0) args[2] = _output_param;
 		const auto argc = c == 0 ? 2 : 3;
 		return argc;
-	}
-
-	void OdbcOperation::complete_foreground()
-	{
-		auto* isolate = Isolate::GetCurrent();
-		HandleScope scope(isolate);
-		const nodeTypeFactory fact;
-		if (_callback.IsEmpty()) return;
-		Local<Value> args[4];
-		const auto argc = failed ? error(args) : success(args);
-		const auto cons = fact.newCallbackFunction(_callback);		
-		const auto context = isolate->GetCurrentContext();
-		const auto global = context->Global();
-		// std::cout << " complete_foreground " << timer.get_counter() << endl;
-		//args[argc] = fact.new_number(timer.get_counter());
-		Nan::Call(cons, global, argc, args);
 	}
 }

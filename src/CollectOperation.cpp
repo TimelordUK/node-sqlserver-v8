@@ -19,9 +19,4 @@ namespace mssql
 		const nodeTypeFactory fact;
 		return fact.null();
 	}
-
-	// override to not call a callback
-	void CollectOperation::complete_foreground()
-	{
-	}
 }

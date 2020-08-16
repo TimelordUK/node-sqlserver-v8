@@ -40,6 +40,24 @@ suite('querycancel', function () {
     })
   })
 
+  test('nested cancel - expect Operation canceled on both', testDone => {
+    const q1 = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:50\';'), err => {
+      assert(err.message.indexOf('Operation canceled') > 0)
+      const q2 = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:40\';'), err => {
+        assert(err.message.indexOf('Operation canceled') > 0)
+        testDone()
+      })
+
+      theConnection.cancelQuery(q2, err => {
+        assert(!err)
+      })
+    })
+
+    theConnection.cancelQuery(q1, err => {
+      assert(!err)
+    })
+  })
+
   test('cancel single query and submit new query to prove connection still valid', testDone => {
     const q = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:20\';'), err => {
       assert(err)
@@ -159,24 +177,6 @@ suite('querycancel', function () {
     })
 
     q.cancelQuery(err => {
-      assert(!err)
-    })
-  })
-
-  test('nested cancel - expect Operation canceled on both', testDone => {
-    const q1 = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:50\';'), err => {
-      assert(err.message.indexOf('Operation canceled') > 0)
-      const q2 = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:40\';'), err => {
-        assert(err.message.indexOf('Operation canceled') > 0)
-        testDone()
-      })
-
-      theConnection.cancelQuery(q2, err => {
-        assert(!err)
-      })
-    })
-
-    theConnection.cancelQuery(q1, err => {
       assert(!err)
     })
   })

@@ -39,13 +39,12 @@ namespace mssql
 		~OdbcConnection();
 		static bool InitializeEnvironment();
 		bool try_begin_tran();
-		void send(const shared_ptr<OdbcOperation> & op) const;
+		void send(OdbcOperation* op) const;
 		bool try_end_tran(SQLSMALLINT completion_type);
 		bool try_open(const wstring& connection_string, int timeout);
 		shared_ptr<vector<shared_ptr<OdbcError>>> errors(void) const { return _errors; }
 		bool TryClose();
 		shared_ptr<OdbcStatementCache> statements;
-		shared_ptr<OperationManager> ops;
 
 	private:
 		bool ReturnOdbcError();
@@ -54,7 +53,7 @@ namespace mssql
 		static OdbcEnvironmentHandle environment;
 		SQLRETURN open_timeout(int timeout);
 		
-		shared_ptr<OdbcConnectionHandle> connection;
+		shared_ptr<OdbcConnectionHandle> _connection;
 		std::mutex closeCriticalSection;
 
 		// any error that occurs when a Try* function returns false is stored here

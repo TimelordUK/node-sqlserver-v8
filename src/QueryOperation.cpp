@@ -5,6 +5,7 @@
 #include <QueryOperation.h>
 #include <QueryOperationParams.h>
 #include <BoundDatumSet.h>
+#include <iostream>
 
 namespace mssql
 {
@@ -18,6 +19,11 @@ namespace mssql
 	{
 		_statementId = static_cast<long>(_query->id());
 		_params = make_shared<BoundDatumSet>();
+	}
+
+	QueryOperation::~QueryOperation() {
+		// auto size = _connection->statements->size();
+		// std::cerr << "size = " << size << " statementId = " << _statementId << endl; 
 	}
 
 	bool QueryOperation::parameter_error_to_user_callback(const uint32_t param, const char* error) const
@@ -58,7 +64,8 @@ namespace mssql
 	{
 		_statement = _connection->statements->checkout(_statementId);	
 		_statement->set_polling(_query->polling());
-		return _statement->try_execute_direct(_query, _params);
+		auto res = _statement->try_execute_direct(_query, _params);
+		return res;
 	}
 
 	Local<Value> QueryOperation::CreateCompletionArg()

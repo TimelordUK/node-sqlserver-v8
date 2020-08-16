@@ -35,7 +35,6 @@ namespace mssql
 		bool TryInvokeOdbc() override;
 		Local<Value> CreateCompletionArg() override;
 		// override to not call a callback
-		void complete_foreground() override;
 	};
 }
 

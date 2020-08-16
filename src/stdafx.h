@@ -34,17 +34,17 @@
 #include <node_buffer.h>
 #include <nan.h>
 #ifdef LINUX_BUILD
-#include <sqltypes.h>
-#include <sqlspi.h>
-#include <sqlext.h>
-#include <sql.h>
-#include "sqlncli-linux.h"
+    #include <sqltypes.h>
+    #include <sqlspi.h>
+    #include <sqlext.h>
+    #include <sql.h>
+    #include "sqlncli-linux.h"
 #endif
 
 #include <sqlucode.h>
 
 #ifdef WINDOWS_BUILD
-#include <windows.h>	// for critical section until xplatform
+    #include <windows.h>	// for critical section until xplatform
 #endif
 
 #include <vector>
@@ -62,7 +62,7 @@
 // #define interface struct 	// for the COM interfaces in sqlncli.h and to avoid including extra files
 
 #ifdef WINDOWS_BUILD
-#include "sqlncli.h"	 	// SQL Server specific constants
+    #include "sqlncli.h"	 	// SQL Server specific constants
 #endif
 
 

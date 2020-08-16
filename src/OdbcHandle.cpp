@@ -21,9 +21,14 @@
 #include "stdafx.h"
 #include <locale>
 #include <set>
+#include <iostream>
 
 namespace mssql
 {
+	OdbcStatementHandle::~OdbcStatementHandle() {
+		// cerr << "OdbcStatementHandle::~OdbcStatementHandle " << _statementId << endl; 
+	}
+
 	OdbcHandle::OdbcHandle(const SQLSMALLINT ht) 
 		: 
 		HandleType(ht), 
@@ -66,6 +71,7 @@ namespace mssql
 	{
 		if (handle != nullptr)
 		{	
+			// cerr << "free hande " << HandleType << " handle " << handle << endl;
 			//fprintf(stderr, "destruct OdbcHandle %i %p\n", HandleType, handle);
 			SQLFreeHandle(HandleType, handle);
 			handle = nullptr;

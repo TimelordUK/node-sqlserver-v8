@@ -150,6 +150,7 @@ suite('prepared', function () {
   ]
 
   setup(testDone => {
+    // console.log('setup ....')
     prepared = {
       update: null,
       select: null,
@@ -174,25 +175,41 @@ suite('prepared', function () {
   })
 
   teardown(done => {
+    // console.log('teardown ....')
     const fns = [
       asyncDone => {
+        // console.log('select free ')
         prepared.select.free(() => {
+          // console.log('done ')
           asyncDone()
         })
       },
       asyncDone => {
+        // console.log('scan free ')
+        prepared.scan.free(() => {
+          // console.log('done ')
+          asyncDone()
+        })
+      },
+      asyncDone => {
+        // console.log('delete free ')
         prepared.delete.free(() => {
+          // console.log('done ')
           asyncDone()
         })
       },
       asyncDone => {
+        // console.log('update free ')
         prepared.update.free(() => {
+          // console.log('done ')
           asyncDone()
         })
       },
       asyncDone => {
         theConnection.close((err) => {
+          // console.log('close free ')
           assert.ifError(err)
+          // console.log('done ')
           asyncDone()
         })
       }
@@ -246,9 +263,9 @@ suite('prepared', function () {
         assert(res != null)
         assert(res.length === 0)
         assert.ifError(err)
-      })
-      preparedQuery.free(() => {
-        testDone()
+        preparedQuery.free(() => {
+          testDone()
+        })
       })
     })
   })
@@ -261,9 +278,9 @@ suite('prepared', function () {
         assert(res != null)
         assert(res.length > 0)
         assert.ifError(err)
-      })
-      preparedQuery.free(() => {
-        testDone()
+        preparedQuery.free(() => {
+          testDone()
+        })
       })
     })
   })

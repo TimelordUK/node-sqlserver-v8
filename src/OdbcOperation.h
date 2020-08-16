@@ -20,6 +20,7 @@
 #pragma once
 
 #include <Operation.h>
+#include <nan.h>
 
 namespace mssql
 {
@@ -29,7 +30,7 @@ namespace mssql
 	class OdbcConnection;
 	class OdbcStatement;
 
-	class OdbcOperation : public Operation
+	class OdbcOperation : public Nan::AsyncWorker
 	{
 	public:
 
@@ -40,15 +41,13 @@ namespace mssql
 		virtual ~OdbcOperation();
 		virtual bool TryInvokeOdbc() = 0;
 		virtual Local<Value> CreateCompletionArg() = 0;
-
 		void getFailure();
-		void invoke_background() override;
-		void complete_foreground() override;
 
 	protected:
 
 		friend OdbcConnection;
-
+		void Execute ();
+		void HandleOKCallback ();
 		shared_ptr<OdbcConnection> _connection;
 		shared_ptr<OdbcStatement> _statement;
 		Persistent<Function> _callback;

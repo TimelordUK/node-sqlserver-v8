@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include <OdbcConnection.h>
 #include <CloseOperation.h>
+#include <iostream>
 
 namespace mssql
 {
@@ -14,6 +15,7 @@ namespace mssql
 		//fprintf(stderr, "invoke TryClose statementId = %d operationId = %llu\n",
 		//	statementId,
 		//	OperationID );
+		// cerr << "CloseOperation statementId = " << _statementId << endl;
 		return _connection->TryClose();
 	}
 

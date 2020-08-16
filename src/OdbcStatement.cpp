@@ -52,6 +52,10 @@ namespace mssql
 
 	OdbcStatement::~OdbcStatement()
 	{
+		// cerr << "~OdbcStatement() " << _statementId << " " << endl;
+		if (_statementState == OdbcStatementState::STATEMENT_CLOSED) {
+			int x = 0;
+		}
 		_statementState = OdbcStatementState::STATEMENT_CLOSED;
 	}
 
@@ -66,11 +70,14 @@ namespace mssql
 		_resultset(nullptr),
 		_boundParamsSet(nullptr)
 	{
+		// cerr << "OdbcStatement() " << _statementId << " " << endl;
 		// fprintf(stderr, "OdbcStatement::OdbcStatement OdbcStatement ID = %ld\n ", statement_id);
-		_statement = make_shared<OdbcStatementHandle>();
+		_statement = make_shared<OdbcStatementHandle>(_statementId);
 		_errors = make_shared<vector<shared_ptr<OdbcError>>>();
 		if (!_statement->alloc(*_connection))
 		{
+			// cerr << " failed to alloc " << statement_id << endl;
+			_statement = nullptr;
 		}
 	}
 	
@@ -695,12 +702,7 @@ namespace mssql
 		{
 			SQLSetStmtAttr(*_statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
 		}
-		// fprintf(stderr, "SQLExecDirect\n");
-		// wcerr << " try_execute_direct query = " << query << endl;
 		auto vec = wstr2wcvec(query);
-		// cerr << " try_execute_direct vec.size = " << vec.size() << endl;
-		auto s = swcvec2str(vec, vec.size());
-		// cerr << " try_execute_direct s = " << s << endl;
 		ret = SQLExecDirect(*_statement, vec.data(), vec.size());
 		if (polling_mode)
 		{

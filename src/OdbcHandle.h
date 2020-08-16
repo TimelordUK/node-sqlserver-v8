@@ -31,7 +31,7 @@ namespace mssql
     public:
 		SQLSMALLINT HandleType;
 		OdbcHandle(SQLSMALLINT ht);
-		~OdbcHandle();
+		virtual ~OdbcHandle();
 		bool alloc();
 		bool alloc(const OdbcHandle &parent);
 		void free();
@@ -69,8 +69,10 @@ namespace mssql
 	class OdbcStatementHandle : public OdbcHandle
 	{
 	public:
-		OdbcStatementHandle() : OdbcHandle(SQL_HANDLE_STMT)
+		OdbcStatementHandle(long id) : OdbcHandle(SQL_HANDLE_STMT), _statementId(id)
 		{
 		}
+		~OdbcStatementHandle();
+		long _statementId;
 	};	
 }

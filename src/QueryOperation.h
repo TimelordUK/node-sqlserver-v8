@@ -43,7 +43,7 @@ namespace mssql
 		bool parameter_error_to_user_callback(uint32_t param, const char* error) const;
 		bool TryInvokeOdbc() override;
 		Local<Value> CreateCompletionArg() override;
-
+		virtual ~QueryOperation();
 	protected:
 		shared_ptr<QueryOperationParams> _query;
 		shared_ptr<BoundDatumSet> _params;

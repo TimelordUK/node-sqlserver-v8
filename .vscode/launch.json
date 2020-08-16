@@ -9,14 +9,26 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "C:/Program Files/nodejs/node.exe",
-            "args": ["runtest", "-u", "-t", "tvp"],
+            "args": [
+                "runtest", "-u", 
+                "-t", "querycancel"
+               // "-t", "prepared",
+               // "-t", "compoundqueries",
+               // "-t", "query",
+               // "-t", "multiple-errors", 
+               // "-t", "geography",
+               // "-t", "tvp",
+               // "-t", "warnings",
+               // "-t", "txn",
+               // "-t", "datatypes",
+               // "-t", "params" 
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false
         },
-
-        
+       
         {
             "name": "(gdb) Launch",
             "type": "cppdbg",

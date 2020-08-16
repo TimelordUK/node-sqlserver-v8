@@ -86,6 +86,11 @@ namespace mssql
 		bool cancel_handle();
 		bool try_read_columns(size_t number_rows);
 		bool try_read_next_result();
+		void free_handle() {
+			if (_statement != nullptr) {
+				_statement->free();
+			}
+		}
 
 	private:
 		bool fetch_read(const size_t number_rows);
@@ -132,9 +137,9 @@ namespace mssql
 		bool check_odbc_error(SQLRETURN ret);
 
 		shared_ptr<QueryOperationParams> _query;
-		shared_ptr<OdbcConnectionHandle> _connection;
 		shared_ptr<OdbcStatementHandle> _statement;
-
+		shared_ptr<OdbcConnectionHandle> _connection;
+	
 		// any error that occurs when a Try* function returns false is stored here
 		// and may be retrieved via the Error function below.
 

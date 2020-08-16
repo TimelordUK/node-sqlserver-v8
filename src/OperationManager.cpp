@@ -26,10 +26,10 @@ namespace mssql
 
 	void OperationManager::on_foreground(uv_work_t* work, int x)
 	{
-		auto* operation = static_cast<Operation*>(work->data);
+		//auto* operation = static_cast<Operation*>(work->data);
 		//fprintf(stderr, "OnForeground %llu\n ", operation->OperationID);
-		operation->complete_foreground();
-		operation->mgr->check_in_operation(operation->OperationID);
+		//operation->complete_foreground();
+		//operation->mgr->check_in_operation(operation->OperationID);
 	}
 
 	void OperationManager::check_in_operation(const size_t id)
@@ -40,7 +40,7 @@ namespace mssql
 
 	void OperationManager::on_background(uv_work_t*work)
 	{
-		auto* operation = static_cast<Operation*>(work->data);
-		operation->invoke_background();
+		//auto* operation = static_cast<Operation*>(work->data);
+		//operation->invoke_background();
 	}
 }

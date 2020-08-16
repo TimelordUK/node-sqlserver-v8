@@ -56,7 +56,7 @@ namespace mssql
 
 	Local<Value> OdbcConnectionBridge::close(Local<Object> callback)
 	{
-		const auto op = make_shared<CloseOperation>(connection, callback);
+		const auto op = new CloseOperation(connection, callback);
 		connection->send(op);
 		//fprintf(stderr, "CloseOperation operationId=%llu\n", op->OperationID);
 		const nodeTypeFactory fact;
@@ -65,13 +65,13 @@ namespace mssql
 
 	void OdbcConnectionBridge::collect()
 	{
-		const auto op = make_shared<CollectOperation>(connection);
+		const auto op = new CollectOperation(connection);
 		connection->send(op);
 	}
 
 	Local<Value> OdbcConnectionBridge::begin_transaction(Local<Object> callback)
 	{
-		const auto op = make_shared<BeginTranOperation>(connection, callback);
+		const auto op = new BeginTranOperation(connection, callback);
 		connection->send(op);
 		const nodeTypeFactory fact;
 		return fact.null();
@@ -79,7 +79,7 @@ namespace mssql
 
 	Local<Value> OdbcConnectionBridge::commit(Local<Object> callback)
 	{
-		const auto op = make_shared<EndTranOperation>(connection, SQL_COMMIT, callback);
+		const auto op = new EndTranOperation(connection, SQL_COMMIT, callback);
 		connection->send(op);
 		const nodeTypeFactory fact;
 		return fact.null();
@@ -87,7 +87,7 @@ namespace mssql
 
 	Local<Value> OdbcConnectionBridge::rollback(Local<Object> callback)
 	{
-		const auto op = make_shared<EndTranOperation>(connection, SQL_ROLLBACK, callback);
+		const auto op = new EndTranOperation(connection, SQL_ROLLBACK, callback);
 		connection->send(op);
 		const nodeTypeFactory fact;
 		return fact.null();
@@ -96,9 +96,11 @@ namespace mssql
 	Local<Value> OdbcConnectionBridge::query(Local<Number> query_id, Local<Object> query_object, Local<Array> params, Local<Object> callback) const
 	{
 		auto q = make_shared<QueryOperationParams>(query_id, query_object);
-		const auto operation = make_shared<QueryOperation>(connection, q, callback);
+		auto operation = new QueryOperation(connection, q, callback);
 		if (operation->bind_parameters(params)) {
 			connection->send(operation);
+		} else {
+			delete operation;
 		}
 		const nodeTypeFactory fact;
 		return fact.null();
@@ -140,9 +142,11 @@ namespace mssql
 	Local<Value> OdbcConnectionBridge::query_prepared(const Local<Number> query_id, Local<Array> params, Local<Object> callback) const
 	{
 		auto id = getint32(query_id);
-		const auto operation = make_shared<QueryPreparedOperation>(connection, id, 0, callback);
+		auto *operation = new QueryPreparedOperation(connection, id, 0, callback);
 		if (operation->bind_parameters(params)) {
 			connection->send(operation);
+		} else {
+			delete operation;
 		}
 		const nodeTypeFactory fact;
 		return fact.null();
@@ -151,7 +155,7 @@ namespace mssql
 	Local<Value> OdbcConnectionBridge::prepare(Local<Number> query_id, Local<Object> query_object, Local<Object> callback) const
 	{
 		auto q = make_shared<QueryOperationParams>(query_id, query_object);
-		const auto operation = make_shared<PrepareOperation>(connection, q, callback);
+		const auto operation = new PrepareOperation(connection, q, callback);
 		connection->send(operation);
 		const nodeTypeFactory fact;
 		return fact.null();
@@ -161,18 +165,20 @@ namespace mssql
 	{
 		auto q = make_shared<QueryOperationParams>(query_id, query_object);
 
-		const auto operation = make_shared<ProcedureOperation>(connection, q, callback);
+		auto *operation = new ProcedureOperation(connection, q, callback);
 		if (operation->bind_parameters(params)) {
 			connection->send(operation);
+		} else {
+			delete operation;
 		}
 		const nodeTypeFactory fact;
-		return fact.new_int64(operation->OperationID);
+	    return fact.null();
 	}
 
 	Local<Value> OdbcConnectionBridge::unbind_parameters(const Local<Number> query_id, Local<Object> callback)
 	{
 		auto id = getint32(query_id);
-		const auto op = make_shared<UnbindOperation>(connection, id, callback);
+		const auto op = new UnbindOperation(connection, id, callback);
 		connection->send(op);
 		const nodeTypeFactory fact;
 		return fact.null();
@@ -182,7 +188,7 @@ namespace mssql
 	{
 		auto id = getint32(query_id);
 		//fprintf(stderr, "cancel %lld", id);
-		const auto op = make_shared<CancelOperation>(connection, id, callback);
+		const auto op = new CancelOperation(connection, id, callback);
 		connection->send(op);
 		const nodeTypeFactory fact;
 		return fact.null();
@@ -192,7 +198,7 @@ namespace mssql
 	{
 		auto id = getint32(query_id);
 		auto polling = MutateJS::as_boolean(mode);
-		const auto op = make_shared<PollingModeOperation>(connection, id, polling, callback);
+		const auto op = new PollingModeOperation(connection, id, polling, callback);
 		connection->send(op);
 		const nodeTypeFactory fact;
 		return fact.null();
@@ -202,18 +208,15 @@ namespace mssql
 	{
 		auto id = static_cast<long>(getint32(query_id));
 		const nodeTypeFactory fact;
-		auto op = make_shared<FreeStatementOperation>(connection, id, callback);
-		connection->statements->checkin(id);
-		op->mgr = connection->ops;
-		connection->ops->add(op);
-
+		auto op = new FreeStatementOperation(connection, id, callback);
+		connection->send(op);
 		return fact.null();
 	}
 
 	Local<Value> OdbcConnectionBridge::read_next_result(const Local<Number> query_id, Local<Object> callback) const
 	{
 		auto id = getint32(query_id);
-		const auto op = make_shared<ReadNextResultOperation>(connection, id, callback);
+		const auto op = new ReadNextResultOperation(connection, id, callback);
 		connection->send(op);
 		const nodeTypeFactory fact;
 		return fact.null();
@@ -222,7 +225,7 @@ namespace mssql
 	Local<Value> OdbcConnectionBridge::read_column(const Local<Number> query_id, const Local<Number> number_rows, Local<Object> callback) const
 	{
 		auto id = getint32(query_id);
-		const auto op = make_shared<ReadColumnOperation>(connection, id, getint32(number_rows), callback);
+		const auto op = new ReadColumnOperation(connection, id, getint32(number_rows), callback);
 		connection->send(op);
 		const nodeTypeFactory fact;
 		return fact.null();
@@ -243,10 +246,8 @@ namespace mssql
 		}
 		
 		auto cc= FromV8String(connection_string);
-		auto op = make_shared<OpenOperation>(connection, cc, timeout, callback, backpointer);
-		op->mgr = connection->ops;
-		connection->ops->add(op);
-
+		auto op = new OpenOperation(connection, cc, timeout, callback, backpointer);
+		connection->send(op);
 		return fact.null();
 	}
 }

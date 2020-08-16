@@ -19,6 +19,7 @@
 
 #include <OdbcStatementCache.h>
 #include <OdbcStatement.h>
+#include <iostream>
 
 namespace mssql
 {
@@ -36,6 +37,7 @@ namespace mssql
 
 	void OdbcStatementCache::clear()
 	{
+		// cerr << "OdbcStatementCache - size = " << statements.size() << endl;
 		vector<long> ids;
 		// fprintf(stderr, "destruct OdbcStatementCache\n");
 
@@ -44,7 +46,7 @@ namespace mssql
 		});
 
 		for_each(ids.begin(), ids.end(), [&](const long id) {
-			// fprintf(stderr, "destruct OdbcStatementCache - erase statement %llu\n", id);
+			// cerr << "destruct OdbcStatementCache - erase statement" << id << endl;
 			statements.erase(id);
 		});
 	}
@@ -79,6 +81,12 @@ namespace mssql
 
 	void OdbcStatementCache::checkin(const long statement_id)
 	{
-		statements.erase(statement_id);
+		if (statement_id < 0) return;
+		auto statement = find(statement_id);
+		if (statement != nullptr) {
+		// cerr << "checkin  " << statement_id << endl;
+			statement->free_handle();
+			statements.erase(statement_id);
+		}
 	}
 }
