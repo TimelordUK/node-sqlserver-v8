@@ -19,15 +19,16 @@
 
 #include <OdbcStatementCache.h>
 #include <OdbcStatement.h>
+#include <ConnectionHandles.h>
 #include <iostream>
 
 namespace mssql
 {
 	using namespace std;
 
-	OdbcStatementCache::OdbcStatementCache(const shared_ptr<OdbcConnectionHandle>  &connection) 
+	OdbcStatementCache::OdbcStatementCache(const shared_ptr<ConnectionHandles>  connectionHandles) 
 		: 
-		connection(connection)
+		_connectionHandles(connectionHandles)
 	{
 	}
 
@@ -76,7 +77,7 @@ namespace mssql
 		}
 		auto statement = find(statement_id);
 		if (statement) return statement;
-		return store(make_shared<OdbcStatement>(statement_id, connection));
+		return store(make_shared<OdbcStatement>(statement_id, _connectionHandles));
 	}
 
 	void OdbcStatementCache::checkin(const long statement_id)
@@ -85,7 +86,7 @@ namespace mssql
 		auto statement = find(statement_id);
 		if (statement != nullptr) {
 		// cerr << "checkin  " << statement_id << endl;
-			statement->free_handle();
+			_connectionHandles->checkin(statement_id);
 			statements.erase(statement_id);
 		}
 	}

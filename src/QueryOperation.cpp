@@ -62,7 +62,7 @@ namespace mssql
 
 	bool QueryOperation::TryInvokeOdbc()
 	{
-		_statement = _connection->statements->checkout(_statementId);	
+		_statement = _connection->getStatamentCache()->checkout(_statementId);	
 		_statement->set_polling(_query->polling());
 		auto res = _statement->try_execute_direct(_query, _params);
 		return res;

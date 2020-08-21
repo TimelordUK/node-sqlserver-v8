@@ -9,7 +9,7 @@ namespace mssql
 	bool FreeStatementOperation::TryInvokeOdbc()
 	{
 		// cerr << "FreeStatementOperation() " << _statementId << " " << endl;
-		_connection->statements->checkin(_statementId);
+		//_connection->getStatamentCache()->checkin(_statementId);
 		//fprintf(stderr, " checkin statementId %d size %llu\n", statementId, connection->statements->size());
 		return true;
 	}

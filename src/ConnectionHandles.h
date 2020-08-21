@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------------------------------------------------------------
-// File: OdbcHandle.h
+// File: ConnectionHandles.h
 // Contents: Object to manage ODBC handles
 // 
 // Copyright Microsoft Corporation and contributors
@@ -21,58 +21,30 @@
 
 #include "stdafx.h"
 #include <vector>
+#include <map>
 
 namespace mssql
 {
     using namespace std;
+    class OdbcConnectionHandle;
+    class OdbcStatementHandle;
+    class OdbcEnvironmentHandle;
 
-    class OdbcHandle
+    class ConnectionHandles
     {
     public:
-		SQLSMALLINT HandleType;
-		OdbcHandle(SQLSMALLINT ht);
-		virtual ~OdbcHandle();
-		bool alloc();
-		bool alloc(const OdbcHandle &parent);
-		void free();
-		SQLHANDLE get() const;
-		operator SQLHANDLE() const { return handle; }
-		operator bool() const { return handle != nullptr; }
-		void read_errors(shared_ptr<vector<shared_ptr<OdbcError>>> & errors) const;
-      
+		 ConnectionHandles(const OdbcEnvironmentHandle &env);
+         ~ConnectionHandles();
+         shared_ptr<OdbcStatementHandle> checkout(long statementId);
+         void checkin(long statementId);
+         inline shared_ptr<OdbcConnectionHandle> connectionHandle() { return _connectionHandle; }
+         void clear();
+
     private:
-
-        void operator=(const OdbcHandle& orig) 
-        {
-            assert(false);
-        }
-
-        SQLHANDLE handle;
+      
+        shared_ptr<OdbcStatementHandle> store(shared_ptr<OdbcStatementHandle> handle);
+        shared_ptr<OdbcStatementHandle> find(const long statement_id); 
+        map<long, shared_ptr<OdbcStatementHandle>> _statementHandles;
+        shared_ptr<OdbcConnectionHandle> _connectionHandle;
     };
-
-	class OdbcEnvironmentHandle : public OdbcHandle
-	{
-	public:
-		OdbcEnvironmentHandle() : OdbcHandle(SQL_HANDLE_ENV)
-		{	
-		}
-	};
-
-	class OdbcConnectionHandle : public OdbcHandle
-	{
-	public:
-		OdbcConnectionHandle() : OdbcHandle(SQL_HANDLE_DBC)
-		{
-		}
-	};
-
-	class OdbcStatementHandle : public OdbcHandle
-	{
-	public:
-		OdbcStatementHandle(long id) : OdbcHandle(SQL_HANDLE_STMT), statementId(id)
-		{
-		}
-		~OdbcStatementHandle();
-		long statementId;
-	};	
 }

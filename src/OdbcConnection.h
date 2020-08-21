@@ -31,6 +31,7 @@ namespace mssql
 	class ResultSet;
 	class OdbcOperation;
 	class OperationManager;
+	class ConnectionHandles;
 
 	class OdbcConnection
 	{
@@ -44,16 +45,16 @@ namespace mssql
 		bool try_open(const wstring& connection_string, int timeout);
 		shared_ptr<vector<shared_ptr<OdbcError>>> errors(void) const { return _errors; }
 		bool TryClose();
-		shared_ptr<OdbcStatementCache> statements;
-
+		shared_ptr<OdbcStatementCache> getStatamentCache() { return _statements; }
+		
 	private:
+		shared_ptr<OdbcStatementCache> _statements;
 		bool ReturnOdbcError();
 		bool CheckOdbcError(SQLRETURN ret);
 		
 		static OdbcEnvironmentHandle environment;
-		SQLRETURN open_timeout(int timeout);
-		
-		shared_ptr<OdbcConnectionHandle> _connection;
+		SQLRETURN open_timeout(int timeout);		
+		shared_ptr<ConnectionHandles> _connectionHandles;
 		std::mutex closeCriticalSection;
 
 		// any error that occurs when a Try* function returns false is stored here

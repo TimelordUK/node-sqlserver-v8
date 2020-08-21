@@ -28,11 +28,12 @@ namespace mssql
 	using namespace std;
 
 	class OdbcStatement;
+	class ConnectionHandles;
 
 	class OdbcStatementCache
 	{
 	public:		
-		OdbcStatementCache(const shared_ptr<OdbcConnectionHandle> &connection);
+		OdbcStatementCache(const shared_ptr<ConnectionHandles> connectionHandles);
 		~OdbcStatementCache();
 		shared_ptr<OdbcStatement> checkout(long statement_id);
 		void checkin(long statement_id);
@@ -46,6 +47,6 @@ namespace mssql
 		typedef map<long, shared_ptr<OdbcStatement>> map_statements_t;
 
 		map_statements_t statements;
-		shared_ptr<OdbcConnectionHandle> connection;
+		shared_ptr<ConnectionHandles> _connectionHandles;
 	};
 }

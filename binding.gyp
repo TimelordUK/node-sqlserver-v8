@@ -8,6 +8,7 @@
       },
 
       'sources': [
+        'src/ConnectionHandles.cpp',
         'src/addon.cpp',
         'src/QueryOperationParams.cpp',
         'src/MutateJS.cpp',

@@ -209,7 +209,8 @@ namespace mssql
 		auto id = static_cast<long>(getint32(query_id));
 		const nodeTypeFactory fact;
 		auto op = new FreeStatementOperation(connection, id, callback);
-		connection->send(op);
+		connection->getStatamentCache()->checkin(id);
+		Nan::AsyncQueueWorker(op);
 		return fact.null();
 	}
 

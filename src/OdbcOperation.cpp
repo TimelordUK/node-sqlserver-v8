@@ -101,7 +101,7 @@ namespace mssql
 
 	void OdbcOperation::fetch_statement()
 	{
-		_statement = _connection->statements->checkout(_statementId);
+		_statement = _connection->getStatamentCache()->checkout(_statementId);
 		int count = _statement.use_count();
 		// cerr << "fetch_statement statementId " << _statementId << " count " << count << endl;
 	}

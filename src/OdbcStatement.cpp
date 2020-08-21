@@ -27,6 +27,7 @@
 #include <NodeColumns.h>
 #include <OdbcHelper.h>
 #include <QueryOperationParams.h>
+#include <ConnectionHandles.h>
 #include <iostream>
 
 #ifdef LINUX_BUILD
@@ -59,9 +60,9 @@ namespace mssql
 		_statementState = OdbcStatementState::STATEMENT_CLOSED;
 	}
 
-	OdbcStatement::OdbcStatement(const long statement_id, const shared_ptr<OdbcConnectionHandle> c)
+	OdbcStatement::OdbcStatement(const long statement_id, shared_ptr<ConnectionHandles> c)
 		:
-		_connection(c),
+		_connectionHandles(c),
 		_endOfResults(true),
 		_statementId(static_cast<long>(statement_id)),
 		_prepared(false),
@@ -72,13 +73,8 @@ namespace mssql
 	{
 		// cerr << "OdbcStatement() " << _statementId << " " << endl;
 		// fprintf(stderr, "OdbcStatement::OdbcStatement OdbcStatement ID = %ld\n ", statement_id);
-		_statement = make_shared<OdbcStatementHandle>(_statementId);
+		_statement = _connectionHandles->checkout(_statementId);
 		_errors = make_shared<vector<shared_ptr<OdbcError>>>();
-		if (!_statement->alloc(*_connection))
-		{
-			// cerr << " failed to alloc " << statement_id << endl;
-			_statement = nullptr;
-		}
 	}
 	
 	bool OdbcStatement::try_read_columns(const size_t number_rows)
@@ -662,7 +658,7 @@ namespace mssql
 
 	bool OdbcStatement::cancel_handle()
 	{
-		const auto hnd = *_statement;
+		auto &hnd = *_statement;
 		const auto ret2 = SQLCancelHandle(hnd.HandleType, hnd.get());
 		if (!check_odbc_error(ret2))
 		{

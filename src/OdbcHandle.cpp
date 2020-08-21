@@ -39,7 +39,6 @@ namespace mssql
 
 	OdbcHandle::~OdbcHandle()
 	{
-		free();
 	}
 
 	bool OdbcHandle::alloc()
@@ -70,10 +69,10 @@ namespace mssql
 	void OdbcHandle::free()
 	{
 		if (handle != nullptr)
-		{	
+		{		
 			// cerr << "free hande " << HandleType << " handle " << handle << endl;
 			//fprintf(stderr, "destruct OdbcHandle %i %p\n", HandleType, handle);
-			SQLFreeHandle(HandleType, handle);
+			SQLFreeHandle(HandleType, handle);	
 			handle = nullptr;
 		}
 	}

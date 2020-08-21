@@ -11,7 +11,8 @@
             "program": "C:/Program Files/nodejs/node.exe",
             "args": [
                 "runtest", "-u", 
-                "-t", "querycancel"
+                "-t", "querycancel",
+                "-t", "pause"
                // "-t", "prepared",
                // "-t", "compoundqueries",
                // "-t", "query",
@@ -33,8 +34,14 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/stephen/.nvm/versions/node/v14.7.0/bin/node",
-            "args": ["runtest", "-u", "-t", "query"],
+            "program": "/home/stephen/.nvm/versions/node/v14.8.0/bin/node",
+            "args": [
+                "runtest", "-u", 
+                "-t", "pause",
+                "-t", "datatypes",
+                "-t", "query",
+                "-t", "tvp"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

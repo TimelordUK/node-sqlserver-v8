@@ -28,6 +28,7 @@ namespace mssql
 	class BoundDatumSet;
 	class DatumStorage;
 	class QueryOperationParams;
+	class ConnectionHandles;
 
 	using namespace std;
 
@@ -49,7 +50,7 @@ namespace mssql
 		bool created() { return  _statementState == OdbcStatementState::STATEMENT_CREATED; }
 		bool cancel();
 
-		OdbcStatement(long statement_id, shared_ptr<OdbcConnectionHandle> c);
+		OdbcStatement(long statement_id, shared_ptr<ConnectionHandles> c);
 		virtual ~OdbcStatement();
 		SQLLEN get_row_count() const { return _resultset != nullptr ? _resultset->row_count() : -1; }
 		shared_ptr<ResultSet> get_result_set() const
@@ -86,11 +87,6 @@ namespace mssql
 		bool cancel_handle();
 		bool try_read_columns(size_t number_rows);
 		bool try_read_next_result();
-		void free_handle() {
-			if (_statement != nullptr) {
-				_statement->free();
-			}
-		}
 
 	private:
 		bool fetch_read(const size_t number_rows);
@@ -138,7 +134,7 @@ namespace mssql
 
 		shared_ptr<QueryOperationParams> _query;
 		shared_ptr<OdbcStatementHandle> _statement;
-		shared_ptr<OdbcConnectionHandle> _connection;
+		shared_ptr<ConnectionHandles> _connectionHandles;
 	
 		// any error that occurs when a Try* function returns false is stored here
 		// and may be retrieved via the Error function below.

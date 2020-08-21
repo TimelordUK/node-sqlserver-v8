@@ -16,7 +16,7 @@ namespace mssql
 
 	bool ProcedureOperation::TryInvokeOdbc()
 	{
-		_statement = _connection->statements->checkout(_statementId);
+		_statement = _connection->getStatamentCache()->checkout(_statementId);
 		_statement->set_polling(_query->polling());
 		return _statement->try_execute_direct(_query, _params);
 	}
