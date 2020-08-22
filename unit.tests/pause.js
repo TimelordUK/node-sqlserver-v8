@@ -38,6 +38,25 @@ suite('pause', function () {
     })
   })
 
+  test('pause a large query and cancel without resume', testDone => {
+    let rows = 0
+    const q = theConnection.query('select top 3000 * from syscolumns')
+    q.on('error', (e) => {
+      assert.ifError(e)
+    })
+    q.on('row', () => {
+      ++rows
+      if (rows % 100 === 0) {
+        q.pauseQuery()
+        setTimeout(() => {
+          q.cancelQuery(() => {
+            testDone()
+          })
+        }, 50)
+      }
+    })
+  })
+
   test('pause a large query to only get 10 rows then submit new query whilst other paused (first killed)', testDone => {
     const q = theConnection.query('select top 3000 * from syscolumns')
     const pauseAt = 10
@@ -187,25 +206,6 @@ suite('pause', function () {
           testDone()
         })
       }, 1000)
-    })
-  })
-
-  test('pause a large query and cancel without resume', testDone => {
-    let rows = 0
-    const q = theConnection.query('select top 3000 * from syscolumns')
-    q.on('error', (e) => {
-      assert.ifError(e)
-    })
-    q.on('row', () => {
-      ++rows
-      if (rows % 100 === 0) {
-        q.pauseQuery()
-        setTimeout(() => {
-          q.cancelQuery(() => {
-            testDone()
-          })
-        }, 50)
-      }
     })
   })
 
