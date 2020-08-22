@@ -185,25 +185,39 @@ suite('prepared', function () {
         })
       },
       asyncDone => {
+        if (prepared.scan) {
         // console.log('scan free ')
-        prepared.scan.free(() => {
+          prepared.scan.free(() => {
           // console.log('done ')
+            asyncDone()
+          })
+        } else {
           asyncDone()
-        })
+        }
       },
       asyncDone => {
         // console.log('delete free ')
-        prepared.delete.free(() => {
-          // console.log('done ')
+        if (prepared.delete) {
+          // console.log('scan free ')
+          prepared.delete.free(() => {
+            // console.log('done ')
+            asyncDone()
+          })
+        } else {
           asyncDone()
-        })
+        }
       },
       asyncDone => {
         // console.log('update free ')
-        prepared.update.free(() => {
-          // console.log('done ')
+        if (prepared.update) {
+          // console.log('scan free ')
+          prepared.update.free(() => {
+            // console.log('done ')
+            asyncDone()
+          })
+        } else {
           asyncDone()
-        })
+        }
       },
       asyncDone => {
         theConnection.close((err) => {
@@ -227,20 +241,6 @@ suite('prepared', function () {
     })
   }
 
-  test('use prepared statement with params updating 0 rows - expect no error', testDone => {
-    const update = prepared.update
-    const meta = update.getMeta()
-    const id1 = -1
-
-    assert(meta.length === 0)
-    update.preparedQuery(['login1', id1], (err, res) => {
-      assert.ifError(err)
-      assert(res != null)
-      assert(res.length === 0)
-      testDone()
-    })
-  })
-
   test('use prepared statement with params returning 0 rows. - expect no error', testDone => {
     const select = prepared.select
     const meta = select.getMeta()
@@ -251,6 +251,20 @@ suite('prepared', function () {
       assert(res != null)
       assert(res.length === 0)
       assert.ifError(err)
+      testDone()
+    })
+  })
+
+  test('use prepared statement with params updating 0 rows - expect no error', testDone => {
+    const update = prepared.update
+    const meta = update.getMeta()
+    const id1 = -1
+
+    assert(meta.length === 0)
+    update.preparedQuery(['login1', id1], (err, res) => {
+      assert.ifError(err)
+      assert(res != null)
+      assert(res.length === 0)
       testDone()
     })
   })
