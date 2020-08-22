@@ -285,7 +285,7 @@ suite('prepared', function () {
   })
 
   test('use prepared to reserve and read multiple rows.', testDone => {
-    const sql = 'select * from master..syscomments'
+    const sql = 'select top 500 * from master..syscomments'
     theConnection.prepare(sql, (err, preparedQuery) => {
       assert(err === null || err === false)
       preparedQuery.preparedQuery([], (err, res) => {
