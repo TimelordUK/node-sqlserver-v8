@@ -28,13 +28,13 @@ namespace mssql
 {
 	using namespace v8;
 
-	string swcvec2str(vector<SQLWCHAR> &v, int l) {
+	string swcvec2str(vector<SQLWCHAR> &v, const size_t l) {
 		vector<char> c_str;
 		c_str.reserve(l + 1);
 		c_str.resize(l + 1);
 		const auto c = static_cast<int>(sizeof(SQLWCHAR));
 		const auto* ptr = reinterpret_cast<const char*>(v.data());
-		for (auto i = 0, j = 0; i < l * c; i+=c, j++) {
+		for (size_t i = 0, j = 0; i < l * c; i+=c, j++) {
 			c_str[j] = ptr[i];
 		}
 		if (l > 0) c_str.resize(l - 1);
@@ -100,7 +100,7 @@ namespace mssql
 		auto len = 0;
 		while (*src && src[1])
 		{
-			*(target++) = char2_int(*src) * 16 + char2_int(src[1]);
+			*target++ = static_cast<char>(char2_int(*src) * 16 + char2_int(src[1]));
 			src += 2;
 			++len;
 		}
@@ -162,8 +162,8 @@ namespace mssql
 		}
 
 		numeric.sign = v >= 0.0 ? 1 : 0;
-		numeric.precision = precision > 0 ? precision : static_cast<SQLCHAR>(log10(encode) + 1);
-		numeric.scale = min(upscale_limit, scale);
+		numeric.precision = precision > 0 ? static_cast<SQLCHAR>(precision) : static_cast<SQLCHAR>(log10(encode) + 1);
+		numeric.scale = static_cast<SQLSCHAR>(min(upscale_limit, scale));
 	}
 
 

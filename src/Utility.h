@@ -31,41 +31,11 @@ namespace mssql
 
 	vector<SQLWCHAR> wstr2wcvec(const wstring & s);
 	vector<SQLWCHAR> str2wcvec(const string & cs);
-	string swcvec2str(vector<SQLWCHAR> &v, int l);
+	string swcvec2str(vector<SQLWCHAR> &v, size_t l);
     string w2sqlc(const wstring & s);
 	wstring s2ws(const string & s);
     wstring FromV8String(Local<String> input);
 	void encode_numeric_struct(double v, int precision, int upscale_limit, SQL_NUMERIC_STRUCT & numeric);
-
-/*
-	struct clock_capture
-	{
-		double pc_freq = 0.0;
-		__int64 counter_start = 0;
-		bool status = true;
-		const double conversion = 1000.0;
-
-		clock_capture()
-		{
-			start_counter();
-		}
-
-		void start_counter()
-		{
-			LARGE_INTEGER li;
-			status = QueryPerformanceFrequency(&li);
-			pc_freq = double(li.QuadPart) / conversion;
-			QueryPerformanceCounter(&li);
-			counter_start = li.QuadPart;
-		}
-
-		double get_counter() const
-		{
-			LARGE_INTEGER li;
-			QueryPerformanceCounter(&li);
-			return double(li.QuadPart - counter_start) / pc_freq;
-		}
-	};*/
 
     struct nodeTypeFactory
     {

@@ -1,5 +1,4 @@
 #include "ConnectionHandles.h"
-#include <iostream>
 
 namespace mssql {
     ConnectionHandles::ConnectionHandles(const OdbcEnvironmentHandle& env) {

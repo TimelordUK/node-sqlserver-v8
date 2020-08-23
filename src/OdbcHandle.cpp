@@ -21,7 +21,6 @@
 #include "stdafx.h"
 #include <locale>
 #include <set>
-#include <iostream>
 
 namespace mssql
 {

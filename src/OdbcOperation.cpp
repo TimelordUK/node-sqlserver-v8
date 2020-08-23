@@ -26,7 +26,7 @@
 
 namespace mssql
 {
-	OdbcOperation::OdbcOperation(const size_t query_id, Local<Object> cb)
+	OdbcOperation::OdbcOperation(const size_t query_id, const Local<Object> cb)
 		: Nan::AsyncWorker(new Nan::Callback(cb.As<Function>())),
 		_connection(nullptr),
 		_statement(nullptr),

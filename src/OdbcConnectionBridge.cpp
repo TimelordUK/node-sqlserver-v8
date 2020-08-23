@@ -54,49 +54,49 @@ namespace mssql
 		// fprintf(stderr, "destruct OdbcConnectionBridge\n");
 	}
 
-	Local<Value> OdbcConnectionBridge::close(Local<Object> callback)
+	Local<Value> OdbcConnectionBridge::close(const Local<Object> callback) const
 	{
-		const auto op = new CloseOperation(connection, callback);
+		auto* const op = new CloseOperation(connection, callback);
 		connection->send(op);
 		//fprintf(stderr, "CloseOperation operationId=%llu\n", op->OperationID);
 		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
-	void OdbcConnectionBridge::collect()
+	void OdbcConnectionBridge::collect() const 
 	{
-		const auto op = new CollectOperation(connection);
+		auto* const op = new CollectOperation(connection);
 		connection->send(op);
 	}
 
-	Local<Value> OdbcConnectionBridge::begin_transaction(Local<Object> callback)
+	Local<Value> OdbcConnectionBridge::begin_transaction(const Local<Object> callback) const 
 	{
-		const auto op = new BeginTranOperation(connection, callback);
-		connection->send(op);
-		const nodeTypeFactory fact;
-		return fact.null();
-	}
-
-	Local<Value> OdbcConnectionBridge::commit(Local<Object> callback)
-	{
-		const auto op = new EndTranOperation(connection, SQL_COMMIT, callback);
+		auto* const op = new BeginTranOperation(connection, callback);
 		connection->send(op);
 		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
-	Local<Value> OdbcConnectionBridge::rollback(Local<Object> callback)
+	Local<Value> OdbcConnectionBridge::commit(const Local<Object> callback) const
 	{
-		const auto op = new EndTranOperation(connection, SQL_ROLLBACK, callback);
+		auto* const op = new EndTranOperation(connection, SQL_COMMIT, callback);
 		connection->send(op);
 		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
-	Local<Value> OdbcConnectionBridge::query(Local<Number> query_id, Local<Object> query_object, Local<Array> params, Local<Object> callback) const
+	Local<Value> OdbcConnectionBridge::rollback(const Local<Object> callback) const
 	{
-		auto q = make_shared<QueryOperationParams>(query_id, query_object);
-		auto operation = new QueryOperation(connection, q, callback);
+		auto* const op = new EndTranOperation(connection, SQL_ROLLBACK, callback);
+		connection->send(op);
+		const nodeTypeFactory fact;
+		return fact.null();
+	}
+
+	Local<Value> OdbcConnectionBridge::query(Local<Number> query_id, Local<Object> query_object, Local<Array> params, const Local<Object> callback) const
+	{
+		const auto q = make_shared<QueryOperationParams>(query_id, query_object);
+		auto* operation = new QueryOperation(connection, q, callback);
 		if (operation->bind_parameters(params)) {
 			connection->send(operation);
 		} else {
@@ -106,7 +106,7 @@ namespace mssql
 		return fact.null();
 	}
 
-	int32_t getint32(Local<Number> l)
+	int32_t getint32(const Local<Number> l)
 	{
 		nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
@@ -139,9 +139,9 @@ namespace mssql
 		return s;
 	}
 
-	Local<Value> OdbcConnectionBridge::query_prepared(const Local<Number> query_id, Local<Array> params, Local<Object> callback) const
+	Local<Value> OdbcConnectionBridge::query_prepared(const Local<Number> query_id, Local<Array> params, const Local<Object> callback) const
 	{
-		auto id = getint32(query_id);
+		const auto id = getint32(query_id);
 		auto *operation = new QueryPreparedOperation(connection, id, 0, callback);
 		if (operation->bind_parameters(params)) {
 			connection->send(operation);
@@ -152,18 +152,18 @@ namespace mssql
 		return fact.null();
 	}
 
-	Local<Value> OdbcConnectionBridge::prepare(Local<Number> query_id, Local<Object> query_object, Local<Object> callback) const
+	Local<Value> OdbcConnectionBridge::prepare(Local<Number> query_id, Local<Object> query_object, const Local<Object> callback) const
 	{
-		auto q = make_shared<QueryOperationParams>(query_id, query_object);
-		const auto operation = new PrepareOperation(connection, q, callback);
+		const auto q = make_shared<QueryOperationParams>(query_id, query_object);
+		auto* const operation = new PrepareOperation(connection, q, callback);
 		connection->send(operation);
 		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
-	Local<Value> OdbcConnectionBridge::call_procedure(Local<Number> query_id, Local<Object> query_object, Local<Array> params, Local<Object> callback) const
+	Local<Value> OdbcConnectionBridge::call_procedure(Local<Number> query_id, Local<Object> query_object, Local<Array> params, const Local<Object> callback) const
 	{
-		auto q = make_shared<QueryOperationParams>(query_id, query_object);
+		const auto q = make_shared<QueryOperationParams>(query_id, query_object);
 
 		auto *operation = new ProcedureOperation(connection, q, callback);
 		if (operation->bind_parameters(params)) {
@@ -175,49 +175,49 @@ namespace mssql
 	    return fact.null();
 	}
 
-	Local<Value> OdbcConnectionBridge::unbind_parameters(const Local<Number> query_id, Local<Object> callback)
+	Local<Value> OdbcConnectionBridge::unbind_parameters(const Local<Number> query_id, const Local<Object> callback) const 
 	{
-		auto id = getint32(query_id);
-		const auto op = new UnbindOperation(connection, id, callback);
+		const auto id = getint32(query_id);
+		auto* const op = new UnbindOperation(connection, id, callback);
 		connection->send(op);
 		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
-	Local<Value> OdbcConnectionBridge::cancel(const Local<Number> query_id, Local<Object> callback)
+	Local<Value> OdbcConnectionBridge::cancel(const Local<Number> query_id, const Local<Object> callback) const
 	{
-		auto id = getint32(query_id);
+		const auto id = getint32(query_id);
 		//fprintf(stderr, "cancel %lld", id);
-		const auto op = new CancelOperation(connection, id, callback);
+		auto* const op = new CancelOperation(connection, id, callback);
 		connection->send(op);
 		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
-	Local<Value> OdbcConnectionBridge::polling_mode(const Local<Number> query_id, const Local<Boolean> mode, Local<Object> callback)
+	Local<Value> OdbcConnectionBridge::polling_mode(const Local<Number> query_id, const Local<Boolean> mode, const Local<Object> callback) const
 	{
-		auto id = getint32(query_id);
-		auto polling = MutateJS::as_boolean(mode);
-		const auto op = new PollingModeOperation(connection, id, polling, callback);
+		const auto id = getint32(query_id);
+		const auto polling = MutateJS::as_boolean(mode);
+		auto* const op = new PollingModeOperation(connection, id, polling, callback);
 		connection->send(op);
 		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
-	Local<Value> OdbcConnectionBridge::free_statement(const Local<Number> query_id, Local<Object> callback)
+	Local<Value> OdbcConnectionBridge::free_statement(const Local<Number> query_id, const Local<Object> callback) const
 	{
-		auto id = static_cast<long>(getint32(query_id));
+		const auto id = static_cast<long>(getint32(query_id));
 		const nodeTypeFactory fact;
-		auto op = new FreeStatementOperation(connection, id, callback);
+		auto* op = new FreeStatementOperation(connection, id, callback);
 		connection->getStatamentCache()->checkin(id);
 		Nan::AsyncQueueWorker(op);
 		return fact.null();
 	}
 
-	Local<Value> OdbcConnectionBridge::read_next_result(const Local<Number> query_id, Local<Object> callback) const
+	Local<Value> OdbcConnectionBridge::read_next_result(const Local<Number> query_id, const Local<Object> callback) const
 	{
-		auto id = getint32(query_id);
-		const auto op = new ReadNextResultOperation(connection, id, callback);
+		const auto id = getint32(query_id);
+		auto* const op = new ReadNextResultOperation(connection, id, callback);
 		connection->send(op);
 		const nodeTypeFactory fact;
 		return fact.null();
@@ -225,14 +225,14 @@ namespace mssql
 
 	Local<Value> OdbcConnectionBridge::read_column(const Local<Number> query_id, const Local<Number> number_rows, Local<Object> callback) const
 	{
-		auto id = getint32(query_id);
-		const auto op = new ReadColumnOperation(connection, id, getint32(number_rows), callback);
+		const auto id = getint32(query_id);
+		auto* const op = new ReadColumnOperation(connection, id, getint32(number_rows), callback);
 		connection->send(op);
 		const nodeTypeFactory fact;
 		return fact.null();
 	}
 
-	Local<Value> OdbcConnectionBridge::open(const Local<Object> connection_object, Local<Object> callback, Local<Object> backpointer)
+	Local<Value> OdbcConnectionBridge::open(const Local<Object> connection_object, const Local<Object> callback, const Local<Object> backpointer) const
 	{
 		nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
@@ -245,9 +245,9 @@ namespace mssql
 		if (maybe_to.ToLocal(&local)) {
 			timeout = local->Value();
 		}
-		
-		auto cc= FromV8String(connection_string);
-		auto op = new OpenOperation(connection, cc, timeout, callback, backpointer);
+
+		const auto cc= FromV8String(connection_string);
+		auto* const op = new OpenOperation(connection, cc, timeout, callback, backpointer);
 		connection->send(op);
 		return fact.null();
 	}

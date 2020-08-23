@@ -20,7 +20,6 @@
 #include <OdbcStatementCache.h>
 #include <OdbcStatement.h>
 #include <ConnectionHandles.h>
-#include <iostream>
 
 namespace mssql
 {
@@ -83,7 +82,7 @@ namespace mssql
 	void OdbcStatementCache::checkin(const long statement_id)
 	{
 		if (statement_id < 0) return;
-		auto statement = find(statement_id);
+		const auto statement = find(statement_id);
 		if (statement != nullptr) {
 		// cerr << "checkin  " << statement_id << endl;
 			_connectionHandles->checkin(statement_id);

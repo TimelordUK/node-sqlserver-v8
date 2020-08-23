@@ -1,8 +1,5 @@
 #include "stdafx.h"
-#include <OdbcConnection.h>
-#include <OdbcStatementCache.h>
 #include <FreeStatementOperation.h>
-#include <iostream>
 
 namespace mssql
 {

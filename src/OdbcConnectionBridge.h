@@ -34,23 +34,23 @@ namespace mssql
 
 		OdbcConnectionBridge();
 		~OdbcConnectionBridge();
-		Local<Value> close(Local<Object> callback);
-		void collect(void);
-		Local<Value> begin_transaction(Local<Object> callback);
-		Local<Value> commit(Local<Object> callback);
-		Local<Value> rollback(Local<Object> callback);
+		Local<Value> close(Local<Object> callback) const;
+		void collect(void) const ;
+		Local<Value> begin_transaction(Local<Object> callback) const;
+		Local<Value> commit(Local<Object> callback) const;
+		Local<Value> rollback(Local<Object> callback) const;
 		Local<Value> query(Local<Number> query_id, Local<Object> query_object, Local<Array> params, Local<Object> callback) const;
 		Local<Value> query_prepared(Local<Number> query_id, Local<Array> params, Local<Object> callback) const;
 		Local<Value> prepare(Local<Number> query_id, Local<Object> query_object, Local<Object> callback) const;
 		Local<Value> call_procedure(Local<Number> query_id, Local<Object> query_object, Local<Array> params, Local<Object> callback) const;
-		Local<Value> unbind_parameters(Local<Number> query_id, Local<Object> callback);
-		Local<Value> cancel(Local<Number> query_id, Local<Object> callback);
-		Local<Value> polling_mode(Local<Number> query_id, Local<Boolean> mode, Local<Object> callback);
+		Local<Value> unbind_parameters(Local<Number> query_id, Local<Object> callback) const;
+		Local<Value> cancel(Local<Number> query_id, Local<Object> callback) const ;
+		Local<Value> polling_mode(Local<Number> query_id, Local<Boolean> mode, Local<Object> callback) const;
 		Local<Value> read_row(Local<Number> query_id, Local<Object> callback) const;
 		Local<Value> read_next_result(Local<Number> query_id, Local<Object> callback) const;
 		Local<Value> read_column(Local<Number> query_id, Local<Number> number_rows, Local<Object> callback) const;
-		Local<Value> open(Local<Object> connection_object, Local<Object> callback, Local<Object> backpointer);
-		Local<Value> free_statement(Local<Number> query_id, Local<Object> callback);
+		Local<Value> open(Local<Object> connection_object, Local<Object> callback, Local<Object> backpointer) const;
+		Local<Value> free_statement(Local<Number> query_id, Local<Object> callback) const;
 
 	private:
 		shared_ptr<OdbcConnection> connection;

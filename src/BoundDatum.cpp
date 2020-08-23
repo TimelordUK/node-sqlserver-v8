@@ -256,8 +256,7 @@ namespace mssql
 	{
 		const size_t max_str_len = max(1, precision);
 		const auto size = sizeof(uint16_t);
-		reserve_w_var_char_array(max_str_len, 1);
-		const nodeTypeFactory fact;
+		reserve_w_var_char_array(max_str_len, 1);	
 		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
 		{
@@ -468,7 +467,7 @@ namespace mssql
 			{
 				const auto v = MutateJS::as_boolean(elem);
 				const auto b = !v ? 0 : 1;
-				vec[i] = b;
+				vec[i] = static_cast<char>(b);
 				_indvec[i] = 0;
 			}
 		}
@@ -1229,7 +1228,7 @@ namespace mssql
 		if (!scale->IsUndefined())
 		{
 			const auto maybe_digits = scale->Int32Value(context);
-			digits = maybe_digits.FromMaybe(0);
+			digits = static_cast<SQLSMALLINT>(maybe_digits.FromMaybe(0));
 		}
 
 		const auto off = Nan::Get(pv, Nan::New("offset").ToLocalChecked()).ToLocalChecked();
@@ -1487,7 +1486,7 @@ namespace mssql
 		const auto maybe_sql_type = v->Int32Value(fact.isolate->GetCurrentContext());
 		const auto local_sql_type = maybe_sql_type.FromMaybe(0);
 		if (local_sql_type == 0) return false;
-		sql_type = local_sql_type;
+		sql_type = static_cast<SQLSMALLINT>(local_sql_type);
 		param_type = SQL_PARAM_INPUT;
 
 		const auto maybe_local = p->ToObject(context);
