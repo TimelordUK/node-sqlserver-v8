@@ -78,6 +78,9 @@
               'LINUX_BUILD',
               'UNICODE'
             ], 
+            'cflags_cc': [
+              '-std=c++1y'
+            ],
             'include_dirs': [
               '/usr/include/',
               '/opt/microsoft/msodbcsql17/include/',
