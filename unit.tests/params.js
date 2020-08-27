@@ -138,6 +138,43 @@ suite('params', function () {
       })
   }
 
+  test('query containing Swedish "åäö"', testDone => {
+    const STR_LEN = 10
+    const str = 'åäö'.repeat(STR_LEN)
+    theConnection.query('declare @str nvarchar (MAX);set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @str AS data', [str], (err, res) => {
+      assert.ifError(err)
+      const expected = [{
+        data: str
+      }]
+      assert.deepStrictEqual(expected, res)
+      testDone()
+    })
+  })
+
+  test('insert/query containing Swedish "åäö"', testDone => {
+    const STR_LEN = 5
+    const str = 'åäö'.repeat(STR_LEN)
+    const name = 'test_swedish_insert'
+    testBoilerPlate(name, { text_col: 'nvarchar(50)' },
+      done => {
+        theConnection.query(`INSERT INTO ${name} (text_col) VALUES (?)`, [str], e => {
+          assert.ifError(e, 'Error inserting large string')
+          done()
+        })
+      },
+
+      done => {
+        theConnection.query(`SELECT text_col FROM ${name}`, (e, r) => {
+          assert.ifError(e)
+          assert(r[0].text_col === str, 'bad insert')
+          done()
+        })
+      },
+      () => {
+        testDone()
+      })
+  })
+
   test('bind a null to binary using sqlTypes.asVarBinary(null)', testDone => {
     theConnection.query('declare @bin binary(4) = ?; select @bin as bin', [sql.VarBinary(null)], (err, res) => {
       assert.ifError(err)
