@@ -26,8 +26,8 @@
             "program": "C:/Program Files/nodejs/node.exe",
             "args": [
                 "runtest", "-u", 
-                "-t", "querycancel",
-                "-t", "pause"
+               //  "-t", "querycancel",
+               // "-t", "pause"
                // "-t", "prepared",
                // "-t", "compoundqueries",
                // "-t", "query",
@@ -37,7 +37,7 @@
                // "-t", "warnings",
                // "-t", "txn",
                // "-t", "datatypes",
-               // "-t", "params" 
+               "-t", "params" 
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
