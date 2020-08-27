@@ -3,7 +3,7 @@ const util = require('util')
 
 // const connectionString = 'Driver={SQL Server Native Client 17.0}; Server=192.168.56.1; database=node; Trusted_Connection=no; User Id=linux;Password=linux;'
 
-const connectionString = 'Driver={SQL Server Native Client 17.0}; database=node; Server=192.168.56.1; UID=linux; PWD=linux'
+const connectionString = 'Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;'
 
 function dispatch (con, query) {
   return new Promise((resolve, reject) => {
@@ -55,15 +55,16 @@ function dispatch (con, query) {
 }
 
 async function run () {
+  console.log(`run with ${connectionString}`)
   const promised = util.promisify(sql.open)
   const conn = await promised(connectionString)
-  const d = new Date()
-  // const rows = await dispatch(conn, 'select @@SERVERNAME as server_name')
-  // EXEC sys.sp_helpindex @objname = N'[users]'
-  const rows = await dispatch(conn, `EXEC sys.sp_helpindex @objname = N'[users]'`)
-  const elapsed = new Date() - d
-  console.log(`${rows.length} rows returned elapsed ${elapsed}`)
-  return rows
+  for (let i = 0; i < 5; ++i) {
+    const d = new Date()
+    const rows = await dispatch(conn, 'select top 5 * from master..syscolumns')
+    const elapsed = new Date() - d
+    console.log(`${rows.length} rows returned elapsed ${elapsed}`)
+  }
+  return []
 }
 
 run(connectionString).then(() => {
