@@ -500,7 +500,7 @@ namespace mssql
 		auto i = 0;
 		for (auto& datum : *_preparedStorage)
 		{
-			ret = SQLBindCol(statement, i + 1, datum->c_type, datum->buffer, datum->buffer_len, datum->get_ind_vec().data());
+			ret = SQLBindCol(statement, static_cast<SQLUSMALLINT>(i + 1), datum->c_type, datum->buffer, datum->buffer_len, datum->get_ind_vec().data());
 			if (!check_odbc_error(ret)) return false;
 			++i;
 		}
@@ -633,7 +633,7 @@ namespace mssql
 		auto ret = SQLExecute(statement);
 		if (polling_mode)
 		{
-			shared_ptr<vector<uint16_t>> vec = make_shared<vector<uint16_t>>();
+			const auto vec = make_shared<vector<uint16_t>>();
 			ret = poll_check(ret, vec, false);
 		}
 
