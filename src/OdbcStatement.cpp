@@ -480,7 +480,7 @@ namespace mssql
 		const auto query = q->query_string();		
 		SQLSMALLINT num_cols = 0;
 		
-		auto ret = SQLPrepare(statement, static_cast<SQLWCHAR*>(query->data()), query->size());
+		auto ret = SQLPrepare(statement, reinterpret_cast<SQLWCHAR*>(query->data()), query->size());
 		if (!check_odbc_error(ret)) return false;
 
 		ret = SQLNumResultCols(statement, &num_cols);
@@ -514,7 +514,7 @@ namespace mssql
 	}
 
 #ifdef WINDOWS_BUILD
-	SQLRETURN OdbcStatement::poll_check(SQLRETURN ret, vector<SQLWCHAR> & vec, const bool direct)
+	SQLRETURN OdbcStatement::poll_check(SQLRETURN ret, shared_ptr<vector<uint16_t>> query, const bool direct)
 	{
 		const auto& statement = *_statement;
 
@@ -696,7 +696,7 @@ namespace mssql
 		{
 			SQLSetStmtAttr(*_statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
 		}
-		ret = SQLExecDirect(*_statement, static_cast<SQLWCHAR*>(query->data()), query->size());
+		ret = SQLExecDirect(*_statement, reinterpret_cast<SQLWCHAR*>(query->data()), query->size());
 		if (polling_mode)
 		{
 			ret = poll_check(ret, query, true);
