@@ -477,11 +477,10 @@ namespace mssql
 	{
 		const auto& statement = *_statement;
 		_query = q;
-		const auto query = q->query_string();
-		auto sql = wstr2wcvec(query);
+		const auto query = q->query_string();		
 		SQLSMALLINT num_cols = 0;
 		
-		auto ret = SQLPrepare(statement, sql.data(), static_cast<SQLINTEGER>(sql.size()));
+		auto ret = SQLPrepare(statement, static_cast<SQLWCHAR*>(query->data()), query->size());
 		if (!check_odbc_error(ret)) return false;
 
 		ret = SQLNumResultCols(statement, &num_cols);
@@ -555,7 +554,7 @@ namespace mssql
 #endif
 
 #ifdef LINUX_BUILD
-	SQLRETURN OdbcStatement::poll_check(SQLRETURN ret, vector<SQLWCHAR> & vec, const bool direct)
+	SQLRETURN OdbcStatement::poll_check(SQLRETURN ret, shared_ptr<vector<uint16_t>> query, const bool direct)
 	{
 		const auto& statement = *_statement;
 
@@ -566,7 +565,7 @@ namespace mssql
 			{
 				if (direct)
 				{
-					ret = SQLExecDirect(statement, vec.data(), vec.size());
+					ret = SQLExecDirect(statement, static_cast<SQLWCHAR*>(query->data()), query->size());
 				}
 				else
 				{
@@ -634,7 +633,7 @@ namespace mssql
 		auto ret = SQLExecute(statement);
 		if (polling_mode)
 		{
-			vector<SQLWCHAR> vec;
+			shared_ptr<vector<uint16_t>> vec = make_shared<vector<uint16_t>>();
 			ret = poll_check(ret, vec, false);
 		}
 
@@ -697,11 +696,10 @@ namespace mssql
 		{
 			SQLSetStmtAttr(*_statement, SQL_ATTR_ASYNC_ENABLE, reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON), 0);
 		}
-		auto vec = wstr2wcvec(query);
-		ret = SQLExecDirect(*_statement, vec.data(), vec.size());
+		ret = SQLExecDirect(*_statement, static_cast<SQLWCHAR*>(query->data()), query->size());
 		if (polling_mode)
 		{
-			ret = poll_check(ret, vec, true);
+			ret = poll_check(ret, query, true);
 		}
 
 		if (_statementState == OdbcStatementState::STATEMENT_CANCELLED) {

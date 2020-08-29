@@ -138,7 +138,33 @@ suite('params', function () {
       })
   }
 
-  test('query containing Swedish "åäö"', testDone => {
+  test('query containing Swedish "åäö" as sql query literal no params', testDone => {
+    const STR_LEN = 10
+    const str = 'åäö'.repeat(STR_LEN)
+    theConnection.query(`select '${str}' as data`, (err, res) => {
+      assert.ifError(err)
+      const expected = [{
+        data: str
+      }]
+      assert.deepStrictEqual(expected, res)
+      testDone()
+    })
+  })
+
+  test('query containing ascii chars as sql query literal no params', testDone => {
+    const STR_LEN = 10
+    const str = 'a'.repeat(STR_LEN)
+    theConnection.query(`select '${str}' as data`, (err, res) => {
+      assert.ifError(err)
+      const expected = [{
+        data: str
+      }]
+      assert.deepStrictEqual(expected, res)
+      testDone()
+    })
+  })
+
+  test('query containing Swedish "åäö" as param', testDone => {
     const STR_LEN = 10
     const str = 'åäö'.repeat(STR_LEN)
     theConnection.query('declare @str nvarchar (MAX);set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @str AS data', [str], (err, res) => {
@@ -151,7 +177,7 @@ suite('params', function () {
     })
   })
 
-  test('insert/query containing Swedish "åäö"', testDone => {
+  test('insert/query containing Swedish "åäö" as param', testDone => {
     const STR_LEN = 5
     const str = 'åäö'.repeat(STR_LEN)
     const name = 'test_swedish_insert'

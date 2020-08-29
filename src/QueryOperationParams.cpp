@@ -1,5 +1,6 @@
 #include <QueryOperationParams.h>
 #include <MutateJS.h>
+#include "stdafx.h"
 
 namespace mssql
 {
@@ -8,17 +9,17 @@ namespace mssql
 
 	QueryOperationParams::QueryOperationParams(const Local<Number> query_id, const Local<Object> query_object)
 	{
-		const auto qs = MutateJS::get(query_object, "query_str");
-		nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
-		const auto maybe = qs->ToString(context);
-		Local<String> local;
-		if (maybe.ToLocal(&local)) {
-			_query_string = FromV8String(local);
-		}
+		const auto qs = Nan::Get(query_object, Nan::New("query_str").ToLocalChecked()).ToLocalChecked();
+		auto maybe_value = Nan::To<String>(qs);
+		const auto str = maybe_value.FromMaybe(Nan::EmptyString());
+		auto str_len = str->Length();
+		_query_string = make_shared<vector<uint16_t>>();
+		_query_string->reserve(str_len);
+		_query_string->resize(str_len);
 		_timeout = MutateJS::getint32(query_object, "query_timeout");
 		_polling = MutateJS::getbool(query_object, "query_polling");
 		_query_tz_adjustment = MutateJS::getint32(query_object, "query_tz_adjustment");
-		_id = MutateJS::getint32(query_id); // getint64(query_id); //  query_id->NumberValue();
+		Nan::DecodeWrite(reinterpret_cast<char*>(_query_string->data()), str->Length()*2, str, Nan::UCS2);
+		_id = MutateJS::getint32(query_id);
 	}
 }

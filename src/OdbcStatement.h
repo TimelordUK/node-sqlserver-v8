@@ -91,7 +91,7 @@ namespace mssql
 	private:
 		bool fetch_read(const size_t number_rows);
 		bool prepared_read();
-		SQLRETURN poll_check(SQLRETURN ret, vector<SQLWCHAR>& vec, bool direct);
+		SQLRETURN poll_check(SQLRETURN ret, shared_ptr<vector<uint16_t>> vec, const bool direct);
 		bool get_data_binary(size_t row_id, size_t column);
 		bool get_data_decimal(size_t row_id, size_t column);
 		bool get_data_bit(size_t row_id, size_t column);

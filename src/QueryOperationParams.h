@@ -11,7 +11,7 @@ namespace mssql
 	{
 	public:
 
-		wstring query_string() { return _query_string; }
+		shared_ptr<vector<uint16_t>> query_string() { return _query_string; }
 		int64_t id() { return _id; }
 		int32_t timeout() { return _timeout; }
 		int32_t query_tz_adjustment() { return _query_tz_adjustment; }
@@ -19,7 +19,7 @@ namespace mssql
 		
 		QueryOperationParams(Local<Number> query_id, Local<Object> query_object);
 	private:
-		wstring _query_string;
+		shared_ptr<vector<uint16_t>> _query_string;
 		int32_t _timeout;
 		int32_t _query_tz_adjustment;
 		int64_t _id;
