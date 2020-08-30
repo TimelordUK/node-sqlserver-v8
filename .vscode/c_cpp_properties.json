@@ -4,15 +4,36 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/node_modules/nan",
-                "${workspaceFolder}/**", 
+                "${workspaceFolder}/**",
                 "/usr/include/**",
                 "/opt/microsoft/msodbcsql17/include/**"
             ],
-            "defines": ["LINUX_BUILD", "UNICODE"],
+            "defines": [
+                "LINUX_BUILD",
+                "UNICODE"
+            ],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c11",
             "cppStandard": "gnu++14",
             "intelliSenseMode": "clang-x64"
+        },
+        {
+            "name": "Win32",
+            "includePath": [
+                "${USERPROFILE}/.node-gyp/12.2.0/include/node/**",
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "WINDOWS_BUILD",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "10.0.17763.0",
+            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Professional/VC/Tools/MSVC/14.27.29110/bin/Hostx64/x64/cl.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "msvc-x64"
         }
     ],
     "version": 4
