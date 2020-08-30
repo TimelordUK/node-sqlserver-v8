@@ -20,6 +20,7 @@
         {
             "name": "Win32",
             "includePath": [
+                "${USERPROFILE}/.node-gyp/14.0.0/include/node/**",
                 "${USERPROFILE}/.node-gyp/12.2.0/include/node/**",
                 "${workspaceFolder}/**"
             ],
