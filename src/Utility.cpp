@@ -257,7 +257,7 @@ namespace mssql
 
 	Local<Object> nodeTypeFactory::new_object(const Persistent <Object> & bp) const
 	{
-		return Local<Object>::New(isolate, bp);
+		return Nan::New(bp);
 	}
 
 	Local<Value> nodeTypeFactory::new_buffer(const int size) const
