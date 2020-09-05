@@ -44,22 +44,14 @@ namespace mssql
 	   Isolate *isolate;
 
 	   nodeTypeFactory();
-	   Local<Number> new_number(double d) const;
-	   Local<Integer> new_integer(int32_t i) const;
 	   Local<Integer> new_long(int64_t i) const;
 	   Local<Integer> new_int32(int32_t i) const;
 	   Local<Number> new_int64(int64_t i) const;
-	   Local<Object> new_object() const;
 	   Local<Value> new_number() const;
-	   Local<Integer> new_uint32(uint32_t n) const;
 	   Local<String> new_string(const char *cstr) const;
 	   Local<String> new_string(const char *cstr, int size) const;
 	   Local<Array> new_array() const;
 	   Local<Array> new_array(int count) const;
-	   Local<Value> new_local_value(const Local<Value> & v) const;
-	   Local<FunctionTemplate> new_template(const FunctionCallback & callback) const;
-	   Local<Object> new_object(const Persistent <Object> & bp) const;
-
 	   Local<Value> new_buffer(int size) const;
 	   Local<Object> error(const stringstream &full_error) const;
 	   Local<Object> error(const char* full_error) const;

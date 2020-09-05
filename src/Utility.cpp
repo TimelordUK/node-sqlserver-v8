@@ -172,16 +172,6 @@ namespace mssql
 		isolate = Isolate::GetCurrent();
 	}
 
-	Local<Number> nodeTypeFactory::new_number(const double d) const
-	{
-		return Nan::New(d);
-	}
-
-	Local<Integer> nodeTypeFactory::new_integer(const int32_t i) const
-	{
-		return Nan::New(i);
-	}
-
 	Local<Integer> nodeTypeFactory::new_long(const int64_t i) const
 	{
 		return Nan::New(static_cast<int32_t>(i));
@@ -197,19 +187,9 @@ namespace mssql
 		return Nan::New<Number>(static_cast<double>(i));
 	}
 
-	Local<Object> nodeTypeFactory::new_object() const
-	{
-		return Nan::New<Object>();
-	}
-
 	Local<Value> nodeTypeFactory::new_number() const
 	{
 		return Object::New(isolate);
-	}
-
-	Local<Integer> nodeTypeFactory::new_uint32(const uint32_t n) const
-	{
-		return Nan::New<Integer>(n);
 	}
 
 	Local<String> nodeTypeFactory::new_string(const char *cstr) const
@@ -230,21 +210,6 @@ namespace mssql
 	Local<Array> nodeTypeFactory::new_array(const int count) const
 	{
 		return Array::New(isolate, count);
-	}
-
-	Local<Value> nodeTypeFactory::new_local_value(const Local<Value> & v) const
-	{
-		return Nan::New<Value>(v);
-	}
-
-	Local<FunctionTemplate> nodeTypeFactory::new_template(const FunctionCallback & callback) const
-	{
-		return FunctionTemplate::New(isolate, callback);
-	}
-
-	Local<Object> nodeTypeFactory::new_object(const Persistent <Object> & bp) const
-	{
-		return Nan::New(bp);
 	}
 
 	Local<Value> nodeTypeFactory::new_buffer(const int size) const
@@ -286,7 +251,7 @@ namespace mssql
 
 	Local<Primitive> nodeTypeFactory::null() const
 	{
-		return Null(isolate);
+		return Nan::Null();
 	}
 
 	Local<Primitive> nodeTypeFactory::undefined() const

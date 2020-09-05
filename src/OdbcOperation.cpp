@@ -119,7 +119,7 @@ namespace mssql
 		args[0] = errors;
 		if (more) {
 			const auto arg = CreateCompletionArg();
-			args[1] = fact.new_local_value(arg);
+			args[1] = Nan::New<Value>(arg);
 		}
 		else
 		{

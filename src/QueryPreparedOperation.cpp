@@ -31,7 +31,7 @@ namespace mssql
 		const auto err = fact.error(full_error);
 		const auto imn = fact.new_string("IMNOD");
 		MutateJS::set_property_value(err, fact.new_string("sqlstate"), imn);
-		MutateJS::set_property_value(err, fact.new_string("code"), fact.new_integer(-1));
+		MutateJS::set_property_value(err, fact.new_string("code"), Nan::New(-1));
 
 		Local<Value> args[1];
 		args[0] = err;

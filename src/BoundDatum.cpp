@@ -1141,11 +1141,11 @@ namespace mssql
 		}
 		else if (sql_type_s_maps_to_u_int32(p))
 		{
-			pval = fact.new_uint32(0);
+			pval = Nan::New<Integer>(0);
 		}
 		else if (sql_type_s_maps_to_numeric(p))
 		{
-			pval = fact.new_number(0.0);
+			pval = Nan::New(0.0);
 		}
 		else if (sql_type_s_maps_to_date(p))
 		{

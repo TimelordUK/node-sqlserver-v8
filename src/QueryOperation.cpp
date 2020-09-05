@@ -38,7 +38,7 @@ namespace mssql
 		const auto err = fact.error(full_error);
 		const auto imn = Nan::New("IMNOD").ToLocalChecked();
 		Nan::Set(err, Nan::New("sqlstate").ToLocalChecked(), imn);
-		Nan::Set(err, Nan::New("code").ToLocalChecked(), fact.new_integer(-1));
+		Nan::Set(err, Nan::New("code").ToLocalChecked(), Nan::New(-1));
 
 		Local<Value> args[1];
 		args[0] = err;
