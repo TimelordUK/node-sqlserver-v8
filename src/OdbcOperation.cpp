@@ -26,70 +26,44 @@
 
 namespace mssql
 {
-	OdbcOperation::OdbcOperation(const size_t query_id, const Local<Object> cb)
-		: Nan::AsyncWorker(new Nan::Callback(cb.As<Function>())),
-		_connection(nullptr),
-		_statement(nullptr),
-		_callback(Isolate::GetCurrent(), cb.As<Function>()),
-		_cb(cb),
-		failed(false),
-		failures(nullptr)
-	{
-		_statementId = static_cast<long>(query_id);
-		const nodeTypeFactory fact;
-		_output_param = fact.null();
-	}
-
 	OdbcOperation::OdbcOperation(const shared_ptr<OdbcConnection> &connection, const size_t query_id, Local<Object> cb)
 		: Nan::AsyncWorker(new Nan::Callback(cb.As<Function>())),
 		_connection(connection),
 		_statement(nullptr),
 		_callback(Isolate::GetCurrent(), cb.As<Function>()),
 		_cb(cb),
-		failed(false),
-		failures(nullptr)
+		_failed(false),
+		_failures(nullptr)
 	{
 		_statementId = static_cast<long>(query_id);
 		const nodeTypeFactory fact;
 		_output_param = fact.null();
 	}
 
+	OdbcOperation::OdbcOperation(const size_t query_id, const Local<Object> cb)
+	: OdbcOperation(nullptr, -1, cb) {	
+	}
+
 	OdbcOperation::OdbcOperation(const shared_ptr<OdbcConnection> & connection, Local<Object> cb)
-		: Nan::AsyncWorker(new Nan::Callback(cb.As<Function>())),
-		_connection(connection),
-		_statement(nullptr),
-		_callback(Isolate::GetCurrent(), cb.As<Function>()),
-		_cb(cb),
-		failed(false),
-		failures(nullptr)
-	{
-		_statementId = -1;
-		const nodeTypeFactory fact;
-		_output_param = fact.null();
+	: OdbcOperation(connection, -1, cb) {	
 	}
 
 	void OdbcOperation::Execute () {	
 		// std::cout << " invoke_background .... " << timer.get_counter() << endl;
-		failed = !TryInvokeOdbc();
+		_failed = !TryInvokeOdbc();
 		// std::cout << " .... invoke_background " << timer.get_counter() << endl;
-		if (failed) {
+		if (_failed) {
 			getFailure();
 		}
 	}
 
 	void OdbcOperation::HandleOKCallback () {
-		auto* isolate = Isolate::GetCurrent();
-		HandleScope scope(isolate);
-		const nodeTypeFactory fact;
 		if (_callback.IsEmpty()) return;
 		Local<Value> args[4];
-		const auto argc = failed ? error(args) : success(args);
-		const auto cons = fact.newCallbackFunction(_callback);		
-		const auto context = isolate->GetCurrentContext();
-		const auto global = context->Global();
+		const auto argc = _failed ? error(args) : success(args);
 		// std::cout << " complete_foreground " << timer.get_counter() << endl;
 		//args[argc] = fact.new_number(timer.get_counter());
-		Nan::Call(cons, global, argc, args);
+		Nan::Call(Nan::New(_callback), Nan::GetCurrentContext()->Global(), argc, args);
 	}
 
 	OdbcOperation::~OdbcOperation()
@@ -109,26 +83,26 @@ namespace mssql
 	void OdbcOperation::getFailure()
 	{
 		if (_connection) {
-			failures = _connection->errors();
+			_failures = _connection->errors();
 		}
-		if (!failures || (failures->empty() && _statement)) {
-			failures = _statement->errors();
+		if (!_failures || (_failures->empty() && _statement)) {
+			_failures = _statement->errors();
 		}
-		if (!failures || failures->empty())
+		if (!_failures || _failures->empty())
 		{
-			failures = make_shared<vector<shared_ptr<OdbcError>>>();
-			failures->push_back(make_shared<OdbcError>("unknown", "internal error", -1));
+			_failures = make_shared<vector<shared_ptr<OdbcError>>>();
+			_failures->push_back(make_shared<OdbcError>("unknown", "internal error", -1));
 		}
 	}
 
 	int OdbcOperation::error(Local<Value> args[])
 	{
 		const nodeTypeFactory fact;
-		const auto error_count = failures ? failures->size() : 0;
+		const auto error_count = _failures ? _failures->size() : 0;
 		const auto errors = fact.new_array(error_count);
 		for (unsigned int i = 0; i < error_count; ++i)
 		{
-			const auto failure = (*failures)[i];
+			const auto failure = (*_failures)[i];
 			const auto err = fact.error(failure->Message());
 			Nan::Set(err, Nan::New("sqlstate").ToLocalChecked(), Nan::New(failure->SqlState()).ToLocalChecked());
 			Nan::Set(err, Nan::New("code").ToLocalChecked(), Nan::New(failure->Code()));

@@ -37,8 +37,7 @@ namespace mssql
 		args[0] = err;
 		const auto argc = 1;
 
-		fact.scoped_callback(_callback, argc, args);
-
+		Nan::Call(Nan::New(_callback), Nan::GetCurrentContext()->Global(), argc, args);
 		return false;
 	}
 

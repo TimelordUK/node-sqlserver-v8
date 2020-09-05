@@ -177,14 +177,6 @@ namespace mssql
 		return Nan::New(d);
 	}
 
-	void nodeTypeFactory::scoped_callback(const Persistent<Function> & callback, const int argc, Local<Value> args[]) const
-	{
-		const auto cons = newCallbackFunction(callback);
-		auto context = isolate->GetCurrentContext();
-		const auto global = context->Global();
-		Nan::Call(cons, global, argc, args);
-	}
-
 	Local<Integer> nodeTypeFactory::new_integer(const int32_t i) const
 	{
 		return Nan::New(i);
@@ -243,11 +235,6 @@ namespace mssql
 	Local<Value> nodeTypeFactory::new_local_value(const Local<Value> & v) const
 	{
 		return Nan::New<Value>(v);
-	}
-
-	Local<Function> nodeTypeFactory::newCallbackFunction(const Persistent<Function> & callback) const
-	{
-		return Local<Function>::New(isolate, callback);
 	}
 
 	Local<FunctionTemplate> nodeTypeFactory::new_template(const FunctionCallback & callback) const

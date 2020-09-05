@@ -45,7 +45,6 @@ namespace mssql
 
 	   nodeTypeFactory();
 	   Local<Number> new_number(double d) const;
-	   void scoped_callback(const Persistent<Function> & callback, int argc, Local<Value> args[]) const;
 	   Local<Integer> new_integer(int32_t i) const;
 	   Local<Integer> new_long(int64_t i) const;
 	   Local<Integer> new_int32(int32_t i) const;
@@ -58,7 +57,6 @@ namespace mssql
 	   Local<Array> new_array() const;
 	   Local<Array> new_array(int count) const;
 	   Local<Value> new_local_value(const Local<Value> & v) const;
-	   Local<Function> newCallbackFunction(const Persistent<Function> & callback) const;
 	   Local<FunctionTemplate> new_template(const FunctionCallback & callback) const;
 	   Local<Object> new_object(const Persistent <Object> & bp) const;
 
