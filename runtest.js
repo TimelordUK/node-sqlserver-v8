@@ -49,11 +49,14 @@ function runTest () {
       }
     )
 
+    var shown = false
     mocha.suite.on('pre-require', g => {
       g.native_sql = sql
       if (connStr) {
-        console.log(`use conn_str ${connStr}`)
         g.conn_str = connStr
+        if (shown) return
+        console.log(`use conn_str ${connStr}`)
+        shown = true
       }
     })
 
