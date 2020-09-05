@@ -1,5 +1,7 @@
 const Sequelize = require('sequelize')
 
+const driver = 'ODBC Driver 17 for SQL Server'
+// const driver = 'SQL Server Native Client 17.0'
 const sequelize = new Sequelize({
   dialect: 'mssql',
   dialectModulePath: 'msnodesqlv8/lib/sequelize',
@@ -9,7 +11,7 @@ const sequelize = new Sequelize({
     database: 'node',
     options: {
       driver: '',
-      connectionString: 'Driver={SQL Server Native Client 17.0}; database=node; Server=192.168.56.1; UID=linux; PWD=linux',
+      connectionString: `Driver={${driver}}; database=node; Server=192.168.56.1; UID=linux; PWD=linux`,
       trustedConnection: true,
       instanceName: ''
     }
