@@ -30,21 +30,13 @@ namespace mssql {
 	BinaryColumn::BinaryColumn(const int id, const shared_ptr<DatumStorage> s, const size_t offset, const size_t l) : Column(id)                                                                                             , storage(s->charvec_ptr), len(l), offset(offset)
 	{
 	}
-	
-	static void delete_buffer(char* ptr, void* hint)
-	{
-		//auto* bc = static_cast<BinaryColumn*>(hint);
-		// fprintf(stderr, "delete ptr %p\n", hint);
-		// fprintf(stderr, "delete_buffer %p\n", ptr);
-		// delete[] ptr;
-	}
-	
+
 	Local<Value> BinaryColumn::ToValue()
 	{
 		auto* const ptr = storage->data() + offset;
-		auto* const str = new char[len];
-		memcpy(str, ptr, len);
-		const auto buff = Nan::NewBuffer(str, len, delete_buffer, nullptr).ToLocalChecked();
+		const auto buff = Nan::CopyBuffer(ptr, len).ToLocalChecked();
+		storage->reserve(0);
+		storage = nullptr;
 		// fprintf(stderr, "[%d], ToValue len = %zu, offset = %zu, ptr = %p, destructed = %d\n", Id(), len, offset, str, destructed);
 		return buff;
 	}
