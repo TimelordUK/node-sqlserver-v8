@@ -18,6 +18,7 @@ async function test (request, response) {
     const connection = await sqlOpen(connectionString)
     console.log('..... sqlOpen')
     const connectionQuery = util.promisify(connection.queryRaw)
+    const close = util.promisify(connection.close)
     try {
       const d = new Date()
       console.log('connectionQuery 1 ....')
@@ -26,7 +27,6 @@ async function test (request, response) {
       const elapsed = new Date() - d
       console.log(`rows.length ${data.rows.length} elapsed ${elapsed}`)
       response.end(JSON.stringify(data, null, 4))
-      const close = util.promisify(sql.close)
       console.log('close ...')
       await close()
       console.log('... close')
