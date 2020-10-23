@@ -24,14 +24,14 @@
 
 ## Node JS support for SQL server
 
-Based on node-sqlserver, this version will compile in Visual Studio 2015/2017 and is built against the v8 node module API.
+Based on node-sqlserver, this version will compile in Visual Studio 2017/2019 and is built against the v8 node module API using the NAN abstraction.
 Releases include pre-compiled binaries for both x64 and x86 targets for Node and Electron.
 
 This library only works with Node versions greater than 10.0.
 
 ## Linux (x64 only)
 
-if running on Linux, the odbc driver needs to be installed as outlined here [ODBC 17](https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/.installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-ver15). Please use version >= 17.5 which has been tested with this library.  We are running test suite for Linux on AppVeyor which you can see via the badge at top of this page. Linux distros tested so far are Ubuntu 18.04, Ubuntu 20.04, Debian 10.5 and Fedora 32.  The driver also works under windows linux subsystem 2 (WLS).
+if running on Linux, the odbc driver needs to be installed as outlined here [ODBC 17](https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-ver15). Please use version >= 17.5 which has been tested with this library.  We are running test suite for Linux on AppVeyor which you can see via the badge at top of this page. Linux distros tested so far are Ubuntu 18.04, Alpine 3.12, Ubuntu 20.04, Debian 10.5 and Fedora 32.  The driver also works under windows linux subsystem 2 (WLS).
 
 ## Installing
 
