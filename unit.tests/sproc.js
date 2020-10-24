@@ -45,6 +45,29 @@ suite('sproc', function () {
     })
   })
 
+  test('test non existant sproc', testDone => {
+    const spName = 'test_sp_i_do_not_exist'
+
+    const fns = [
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          proc.call([1, 'NI123456', 'Programmer01'], (err, results, output) => {
+            assert(err)
+            asyncDone()
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test('get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
     const spName = 'test_sp_get_int_int'
 

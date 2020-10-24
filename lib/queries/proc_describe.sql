@@ -1,4 +1,12 @@
+with proc_exist_cte(object_id, proc_name, type_desc) as
+(
+	SELECT object_id, name as proc_name, type_desc  
+		FROM sys.objects WHERE type = 'P' AND object_id = object_id('<schema_name>.<escaped_procedure_name>')
+), 
+proc_params_cte(object_id,is_output,name,type_id,max_length,[order],collation,is_user_defined) as
+( 
 select
+	object_id,
     is_output,
     sp.name,
     type_id   = type_name(sp.user_type_id),
@@ -16,3 +24,9 @@ select
 		and ty.schema_id = schema_id('<schema_name>')
 	where
 	    object_id = object_id('<schema_name>.<escaped_procedure_name>')
+) select 
+	r.proc_name, r.type_desc, 
+    p.* 
+        from proc_exist_cte r
+	cross join 
+        proc_params_cte p
