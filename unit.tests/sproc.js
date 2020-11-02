@@ -47,14 +47,14 @@ suite('sproc', function () {
   test('optional parameters set output to 0', testDone => {
     const spName = 'test_sp_get_optional_p'
 
-    const def = `alter PROCEDURE <name>(
+    const def = `alter PROCEDURE <name> (
       @plus INT out,
       @a INT,
       @b INT,
       @c INT = 0
     )
     AS begin
-      SET XACT_ABORT ON;
+      -- SET XACT_ABORT ON;
       SET NOCOUNT ON;
       set @plus = @a + @b + @c;
     end;
@@ -105,7 +105,7 @@ suite('sproc', function () {
       @plus INT out
     )
     AS begin
-      SET XACT_ABORT ON;
+      -- SET XACT_ABORT ON;
       SET NOCOUNT ON;
       set @plus = @a + @plus;
     end;
@@ -156,7 +156,7 @@ suite('sproc', function () {
       @plus_out INT out
     )
     AS begin
-      SET XACT_ABORT ON;
+      -- SET XACT_ABORT ON;
       SET NOCOUNT ON;
       set @plus_out = @a + @plus_in;
     end;
