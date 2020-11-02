@@ -1164,10 +1164,13 @@ namespace mssql
 		return pval;
 	}
 
+	inline Local<Value> get(const char * key,Local<Object> local_object ) {
+		return Nan::Get(local_object, Nan::New(key).ToLocalChecked()).ToLocalChecked();
+	}
+
 	bool BoundDatum::proc_bind(Local<Value>& p, Local<Value>& v)
 	{
-		const nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
+		const auto context = Nan::GetCurrentContext();
 		const auto maybe_is_output = v->ToInteger(context);
 		Local<Integer> is_output;
 		if (!maybe_is_output.ToLocal(&is_output))
@@ -1182,13 +1185,21 @@ namespace mssql
 		{
 			return false;
 		}
-		const auto maybe_size = Nan::Get(local_object, Nan::New("max_length").ToLocalChecked()).ToLocalChecked()->Int32Value(context);
+		const auto maybe_size = get("max_length", local_object)->Int32Value(context);
 		auto size = 0;
 		if (!maybe_size.To(&size))
 		{
 			return false;
 		}
 
+		Local<Object> as_object;
+		if (p->ToObject(context).ToLocal(&as_object))
+		{
+			pval = get("val", as_object);
+		} else {
+			pval = Nan::Null();
+		}
+		
 		auto is_output_i = 0;
 		if (!is_output->Int32Value(context).To(&is_output_i))
 		{
@@ -1196,18 +1207,16 @@ namespace mssql
 		}
 		if (is_output_i != 0)
 		{
-			param_type = SQL_PARAM_OUTPUT;
-			pval = reserve_output_param(p, size);
+			if (pval->IsNull()) {
+				param_type = SQL_PARAM_OUTPUT;
+				pval = reserve_output_param(p, size);
+			} else {
+				param_type = SQL_PARAM_INPUT_OUTPUT;
+			}	
 		}
 		else
 		{
 			param_type = SQL_PARAM_INPUT;
-			Local<Object> as_object;
-			if (!p->ToObject(context).ToLocal(&as_object))
-			{
-				return false;
-			}
-			pval = Nan::Get(as_object, Nan::New("val").ToLocalChecked()).ToLocalChecked();
 		}
 
 		return bind_datum_type(pval);
@@ -1217,21 +1226,21 @@ namespace mssql
 	{
 		const nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
-		const auto precision = Nan::Get(pv, Nan::New("precision").ToLocalChecked()).ToLocalChecked();
+		const auto precision = get("precision", pv);
 		if (!precision->IsUndefined())
 		{
 			const auto maybe_param_size = precision->Int32Value(context);
 			param_size = maybe_param_size.FromMaybe(0);
 		}
 
-		const auto scale = Nan::Get(pv, Nan::New("scale").ToLocalChecked()).ToLocalChecked();
+		const auto scale = get("scale", pv);
 		if (!scale->IsUndefined())
 		{
 			const auto maybe_digits = scale->Int32Value(context);
 			digits = static_cast<SQLSMALLINT>(maybe_digits.FromMaybe(0));
 		}
 
-		const auto off = Nan::Get(pv, Nan::New("offset").ToLocalChecked()).ToLocalChecked();
+		const auto off = get("offset", pv);
 		if (!off->IsUndefined())
 		{
 			const auto maybe_offset = off->Int32Value(context);
@@ -1496,7 +1505,7 @@ namespace mssql
 			return false;
 		}
 
-		const auto pp = Nan::Get(as_local, Nan::New("value").ToLocalChecked()).ToLocalChecked();
+		const auto pp = get("value", as_local);
 
 		assign_precision(as_local);
 
@@ -1601,13 +1610,13 @@ namespace mssql
 			return false;
 		}
 
-		auto v = Nan::Get(po, Nan::New("is_output").ToLocalChecked()).ToLocalChecked();
+		auto v = get("is_output", po);
 		if (!v->IsUndefined())
 		{
 			return proc_bind(p, v);
 		}
 
-		v = Nan::Get(po, Nan::New("sql_type").ToLocalChecked()).ToLocalChecked();
+		v = get("sql_type", po);
 		if (!v->IsUndefined())
 		{
 			return user_bind(p, v);
@@ -1617,7 +1626,7 @@ namespace mssql
 		if (!n->IsUndefined())
 		{
 			name = wide_from_js_string(n);
-			auto pp = Nan::Get(po, Nan::New("value").ToLocalChecked()).ToLocalChecked();
+			auto pp = get("value", po);
 			return bind_datum_type(pp);
 		}
 		

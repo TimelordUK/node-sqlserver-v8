@@ -3,7 +3,6 @@
 
 const assert = require('assert')
 const supp = require('../samples/typescript/demo-support')
-const { Console } = require('console')
 
 suite('sproc', function () {
   let connStr
@@ -42,6 +41,164 @@ suite('sproc', function () {
     theConnection.close(err => {
       assert.ifError(err)
       done()
+    })
+  })
+
+  /*
+  test('optional parameters set output to 0', testDone => {
+    const spName = 'test_sp_get_optional_p'
+
+    const def = `create or alter procedure <name>(
+      @plus INT out,
+      @a INT,
+      @b INT,
+      @c INT = 0
+    )
+    AS begin
+      SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @plus = @a + @b + @c;
+    end;
+`
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const o = {
+            a: 2,
+            b: 3,
+            c: 4
+          }
+          const p = proc.paramsArray(o)
+          proc.call(p, (err, results, output) => {
+            assert.ifError(err)
+            if (output) {
+              assert(Array.isArray(output))
+              const expected = [
+                0,
+                o.a + o.b + o.c
+              ]
+              assert.deepStrictEqual(expected, output)
+              asyncDone()
+            }
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+  */
+
+  test('use input output parameters i.e. use a param as both input and output ', testDone => {
+    const spName = 'test_sp_get_in_out_p'
+
+    const def = `create or alter procedure <name> (
+      @a INT,
+      @plus INT out
+    )
+    AS begin
+      SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @plus = @a + @plus;
+    end;
+`
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const o = {
+            a: 2,
+            plus: 3
+          }
+          proc.call(o, (err, results, output) => {
+            assert.ifError(err)
+            if (output) {
+              assert(Array.isArray(output))
+              const expected = [
+                0,
+                o.a + o.plus
+              ]
+              assert.deepStrictEqual(expected, output)
+              asyncDone()
+            }
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('two in out params use first as input only second output only', testDone => {
+    const spName = 'test_sp_get_in_out_p'
+
+    const def = `create or alter procedure <name> (
+      @a INT,
+      @plus_in INT out,
+      @plus_out INT out
+    )
+    AS begin
+      SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @plus_out = @a + @plus_in;
+    end;
+`
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const o = {
+            a: 2,
+            plus_in: 3
+          }
+          proc.call(o, (err, results, output) => {
+            assert.ifError(err)
+            if (output) {
+              assert(Array.isArray(output))
+              const expected = [
+                0,
+                o.plus_in,
+                o.a + o.plus_in
+              ]
+              assert.deepStrictEqual(expected, output)
+              asyncDone()
+            }
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
     })
   })
 
@@ -309,7 +466,7 @@ END
     })
   })
 
-  test('check proc called as object paramater', testDone => {
+  test('check proc called as object paramater where converting via utility method', testDone => {
     const spName = 'test_sp_select_select'
 
     const def = `alter PROCEDURE <name>(
@@ -361,6 +518,59 @@ END
       testDone()
     })
   })
+
+  test('check proc called as object paramater where vals sent as attributes', testDone => {
+    const spName = 'test_sp_select_select'
+
+    const def = `alter PROCEDURE <name>(
+@num1 INT,
+@num2 INT,
+@num3 INT OUTPUT
+
+)AS
+BEGIN
+   SET @num3 = @num1 + @num2
+   RETURN 99;
+END
+`
+
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const o = {
+            num1: 10,
+            num2: 100
+          }
+          proc.call(o, (err, results, output) => {
+            assert.ifError(err)
+            if (output) {
+              assert(Array.isArray(output))
+              const expected = [
+                99,
+                o.num1 + o.num2
+              ]
+              assert.deepStrictEqual(expected, output)
+              asyncDone()
+            }
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
 
   test('stream call proc no callback with print in proc', testDone => {
     const spName = 'test_len_of_sp'

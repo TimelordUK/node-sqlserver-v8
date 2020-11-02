@@ -1401,10 +1401,10 @@ namespace mssql
 		storage->ReserveUint16(display_size); // increment for null terminator
 		const auto r = SQLGetData(*_statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_WCHAR, storage->uint16vec_ptr->data(), display_size * size,
                        &value_len);
-		if (!check_odbc_error(r)) return false;
-		//CHECK_ODBC_NO_DATA(r, statement);
 
-		if (value_len == SQL_NULL_DATA)
+		if (r != SQL_NO_DATA && !check_odbc_error(r)) return false;
+
+		if (r == SQL_NO_DATA || value_len == SQL_NULL_DATA)
 		{
 			_resultset->add_column(row_id, make_shared<NullColumn>(column));
 			return true;

@@ -25,7 +25,7 @@
             "request": "launch",
             "program": "C:/Program Files/nodejs/node.exe",
             "args": [
-                "runtest", "-u", 
+                "runtest", "-l", 
                //  "-t", "querycancel",
                // "-t", "pause"
                // "-t", "prepared",
@@ -37,7 +37,7 @@
                // "-t", "warnings",
                // "-t", "txn",
                // "-t", "datatypes",
-               "-t", "params" 
+               "-t", "sproc" 
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
