@@ -44,11 +44,10 @@ suite('sproc', function () {
     })
   })
 
-  /*
   test('optional parameters set output to 0', testDone => {
     const spName = 'test_sp_get_optional_p'
 
-    const def = `create or alter procedure <name>(
+    const def = `alter PROCEDURE <name>(
       @plus INT out,
       @a INT,
       @b INT,
@@ -77,8 +76,7 @@ suite('sproc', function () {
             b: 3,
             c: 4
           }
-          const p = proc.paramsArray(o)
-          proc.call(p, (err, results, output) => {
+          proc.call(o, (err, results, output) => {
             assert.ifError(err)
             if (output) {
               assert(Array.isArray(output))
@@ -98,12 +96,11 @@ suite('sproc', function () {
       testDone()
     })
   })
-  */
 
   test('use input output parameters i.e. use a param as both input and output ', testDone => {
     const spName = 'test_sp_get_in_out_p'
 
-    const def = `create or alter procedure <name> (
+    const def = `alter PROCEDURE <name> (
       @a INT,
       @plus INT out
     )
@@ -153,7 +150,7 @@ suite('sproc', function () {
   test('two in out params use first as input only second output only', testDone => {
     const spName = 'test_sp_get_in_out_p'
 
-    const def = `create or alter procedure <name> (
+    const def = `alter PROCEDURE <name> (
       @a INT,
       @plus_in INT out,
       @plus_out INT out
@@ -228,7 +225,7 @@ suite('sproc', function () {
   test('get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
     const spName = 'test_sp_get_int_int'
 
-    const def = `alter PROCEDURE <name>(
+    const def = `alter PROCEDURE <name> (
 @num1 INT,
 @num2 INT,
 @num3 INT OUTPUT
@@ -570,7 +567,6 @@ END
       testDone()
     })
   })
-
 
   test('stream call proc no callback with print in proc', testDone => {
     const spName = 'test_len_of_sp'
