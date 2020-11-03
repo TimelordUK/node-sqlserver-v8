@@ -125,6 +125,52 @@ suite('sproc', function () {
           const o = {
           }
           proc.call(o, (err, results, output) => {
+            assert(!results)
+            assert(!output)
+            assert(err)
+            asyncDone()
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('add illegal parameter expect error', testDone => {
+    const spName = 'test_sp_get_in_out_p'
+
+    const def = `alter PROCEDURE <name> (
+      @a INT,
+      @plus INT out
+    )
+    AS begin
+      -- SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @plus = @a + @plus;
+    end;
+`
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const o = {
+            a: 2,
+            illegal: 4
+          }
+          proc.call(o, (err, results, output) => {
+            assert(!results)
+            assert(!output)
             assert(err)
             asyncDone()
           })
