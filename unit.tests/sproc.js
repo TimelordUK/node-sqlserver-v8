@@ -44,6 +44,35 @@ suite('sproc', function () {
     })
   })
 
+  test('two parameters same name mixed case - should error', testDone => {
+    const spName = 'test_sp_get_optional_p'
+    const a = 10
+    const b = 20
+    const def = `create or alter PROCEDURE ${spName} (
+      @plus INT out,
+      @a INT = ${a},
+      @A INT = ${b}
+      )
+    AS begin
+      -- SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @plus = @a + @A;
+    end;
+`
+    const fns = [
+      asyncDone => {
+        theConnection.query(def, (err, res) => {
+          assert(err)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test('two optional parameters set output to sum no input params', testDone => {
     const spName = 'test_sp_get_optional_p'
     const a = 10
