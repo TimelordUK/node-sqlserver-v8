@@ -157,6 +157,15 @@ function DemoSupport (native) {
     const assert = new Assert()
     let verbose = true
 
+    function createProcedureIfNotExist (procedureName, doneFunction) {
+      let createSql = `IF NOT EXISTS (SELECT *  FROM sys.objects WHERE type = 'P' AND name = '${procedureName}')`
+      createSql += ` EXEC ('CREATE PROCEDURE ${procedureName} AS BEGIN SET nocount ON; END')`
+      if (verbose) console.log(createSql)
+      sql.query(connStr, createSql, (e) => {
+        doneFunction(e)
+      })
+    }
+
     function createProcedure (procedureName, procedureSql, doneFunction) {
       procedureSql = procedureSql.replace(/<name>/g, procedureName)
 
@@ -189,6 +198,7 @@ function DemoSupport (native) {
       verbose = v
     }
 
+    this.createProcedureIfNotExist = createProcedureIfNotExist
     this.createProcedure = createProcedure
     this.setVerbose = setVerbose
   }

@@ -48,7 +48,7 @@ suite('sproc', function () {
     const spName = 'test_sp_get_optional_p'
     const a = 10
     const b = 20
-    const def = `create or alter PROCEDURE ${spName} (
+    const def = `alter PROCEDURE ${spName} (
       @plus INT out,
       @a INT = ${a},
       @A INT = ${b}
@@ -60,6 +60,11 @@ suite('sproc', function () {
     end;
 `
     const fns = [
+      asyncDone => {
+        procedureHelper.createProcedureIfNotExist(spName, () => {
+          asyncDone()
+        })
+      },
       asyncDone => {
         theConnection.query(def, (err, res) => {
           assert(err)
