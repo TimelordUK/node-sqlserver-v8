@@ -44,6 +44,55 @@ suite('sproc', function () {
     })
   })
 
+  test('two optional parameters set output to sum no input params', testDone => {
+    const spName = 'test_sp_get_optional_p'
+    const a = 10
+    const b = 20
+    const def = `alter PROCEDURE <name> (
+      @plus INT out,
+      @a INT = ${a},
+      @b INT = ${b}
+      )
+    AS begin
+      -- SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @plus = @a + @b;
+    end;
+`
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const o = {}
+          proc.call(o, (err, results, output) => {
+            assert.ifError(err)
+            if (output) {
+              assert(Array.isArray(output))
+              const expected = [
+                0,
+                a + b
+              ]
+              assert.deepStrictEqual(expected, output)
+              asyncDone()
+            }
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test('optional parameters set output to 0', testDone => {
     const spName = 'test_sp_get_optional_p'
 
