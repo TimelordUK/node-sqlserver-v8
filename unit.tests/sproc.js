@@ -72,21 +72,114 @@ suite('sproc', function () {
         pm.get(spName, proc => {
           const count = pm.getCount()
           assert.strictEqual(count, 1)
-          const o = {
-            // a: a,
-            b: override
-          }
+          const o = {}
           proc.call(o, (err, results, output) => {
             assert.ifError(err)
             if (output) {
               assert(Array.isArray(output))
               const expected = [
                 0,
-                a + override
+                a + b
               ]
               assert.deepStrictEqual(expected, output)
               asyncDone()
             }
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('one default input, three output parameters', testDone => {
+    const spName = 'test_sp_get_optional_p'
+    const a = 20
+    const def = `alter PROCEDURE <name> (
+      @t1 INT out,
+      @t2 INT out,
+      @t3 INT out,
+      @a INT = ${a}
+      )
+    AS begin
+      -- SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @t1 = @a;
+      set @t2 = @a * 2;
+      set @t3 = @a * 3;
+    end;
+`
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const o = {}
+          proc.call(o, (err, results, output) => {
+            assert.ifError(err)
+            if (output) {
+              assert(Array.isArray(output))
+              const expected = [
+                0,
+                a,
+                a * 2,
+                a * 3
+              ]
+              assert.deepStrictEqual(expected, output)
+              asyncDone()
+            }
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('two parameters 1 optional set output to sum - omit required expect error', testDone => {
+    const spName = 'test_sp_get_optional_p'
+    const a = 20
+    const override = 30
+    const def = `alter PROCEDURE <name> (
+      @plus INT out,
+      @a INT = ${a},
+      @b INT
+      )
+    AS begin
+      -- SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @plus = @a + @b;
+    end;
+`
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const o = {
+            a: override
+          }
+          proc.call(o, (err, results, output) => {
+            assert(err)
+            asyncDone()
           })
         })
       }
@@ -286,7 +379,7 @@ suite('sproc', function () {
     })
   })
 
-  test('optional parameters set output to 0', testDone => {
+  test('2 input, 1 optional parameter override set output to sum of 3', testDone => {
     const spName = 'test_sp_get_optional_p'
 
     const def = `alter PROCEDURE <name> (
@@ -325,6 +418,58 @@ suite('sproc', function () {
               const expected = [
                 0,
                 o.a + o.b + o.c
+              ]
+              assert.deepStrictEqual(expected, output)
+              asyncDone()
+            }
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('2 input, 1 optional default parameters set output to sum of 3', testDone => {
+    const spName = 'test_sp_get_optional_p'
+
+    const def = `alter PROCEDURE <name> (
+      @plus INT out,
+      @a INT,
+      @b INT,
+      @c INT = 0
+    )
+    AS begin
+      -- SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @plus = @a + @b + @c;
+    end;
+`
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const o = {
+            a: 2,
+            b: 3
+          }
+          proc.call(o, (err, results, output) => {
+            assert.ifError(err)
+            if (output) {
+              assert(Array.isArray(output))
+              const expected = [
+                0,
+                o.a + o.b
               ]
               assert.deepStrictEqual(expected, output)
               asyncDone()
