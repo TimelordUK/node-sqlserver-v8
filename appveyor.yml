@@ -1,8 +1,8 @@
 version: 1.0.{build}
 
 image: 
-  - Ubuntu
   - Visual Studio 2015
+  - Ubuntu
 
 platform: 
   - x64
@@ -50,6 +50,7 @@ for:
       clone_folder: /home/appveyor/projects/node_modules/msnodesqlv8 
       
       test_script:
+        - sh: "sleep 2"
         - sh: "node runtest -x -t connection-pool -t pause -t concurrent -t multiple-errors -t geography -t tvp -t warnings.js -t compoundqueries.js -t querycancel.js -t txn.js -t datatypes.js -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t sproc.js -t prepared.js -t userbind.js -t dates.js 2>&1"
 
       install:

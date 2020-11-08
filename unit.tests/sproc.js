@@ -44,17 +44,259 @@ suite('sproc', function () {
     })
   })
 
+  test('two optional parameters override second set output to sum', testDone => {
+    const spName = 'test_sp_get_optional_p'
+    const a = 10
+    const b = 20
+    const override = 30
+    const def = `alter PROCEDURE <name> (
+      @a INT = ${a},
+      @b INT = ${b},
+      @plus INT out
+      )
+    AS begin
+      -- SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @plus = @a + @b;
+    end;
+`
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const o = {
+            // a: a,
+            b: override
+          }
+          proc.call(o, (err, results, output) => {
+            assert.ifError(err)
+            if (output) {
+              assert(Array.isArray(output))
+              const expected = [
+                0,
+                a + override
+              ]
+              assert.deepStrictEqual(expected, output)
+              asyncDone()
+            }
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('two optional parameters override both set output to sum', testDone => {
+    const spName = 'test_sp_get_optional_p'
+    const a = 10
+    const b = 20
+    const anew = 30
+    const bnew = 40
+    const def = `alter PROCEDURE <name> (
+      @plus INT out,
+      @a INT = ${a},
+      @b INT = ${b}
+      )
+    AS begin
+      -- SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @plus = @a + @b;
+    end;
+`
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const o = {
+            a: anew,
+            b: bnew
+          }
+          proc.call(o, (err, results, output) => {
+            assert.ifError(err)
+            if (output) {
+              assert(Array.isArray(output))
+              const expected = [
+                0,
+                anew + bnew
+              ]
+              assert.deepStrictEqual(expected, output)
+              asyncDone()
+            }
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('two parameters same name mixed case - should error', testDone => {
+    const spName = 'test_sp_get_optional_p'
+    const a = 10
+    const b = 20
+    const def = `alter PROCEDURE ${spName} (
+      @plus INT out,
+      @a INT = ${a},
+      @A INT = ${b}
+      )
+    AS begin
+      -- SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @plus = @a + @A;
+    end;
+`
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedureIfNotExist(spName, () => {
+          asyncDone()
+        })
+      },
+      asyncDone => {
+        theConnection.query(def, (err, res) => {
+          assert(err)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('two optional parameters set output to sum no input params', testDone => {
+    const spName = 'test_sp_get_optional_p'
+    const a = 10
+    const b = 20
+    const def = `alter PROCEDURE <name> (
+      @plus INT out,
+      @a INT = ${a},
+      @b INT = ${b}
+      )
+    AS begin
+      -- SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @plus = @a + @b;
+    end;
+`
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const o = {}
+          proc.call(o, (err, results, output) => {
+            assert.ifError(err)
+            if (output) {
+              assert(Array.isArray(output))
+              const expected = [
+                0,
+                a + b
+              ]
+              assert.deepStrictEqual(expected, output)
+              asyncDone()
+            }
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('two optional parameters override first set output to sum', testDone => {
+    const spName = 'test_sp_get_optional_p'
+    const a = 10
+    const b = 20
+    const override = 30
+    const def = `alter PROCEDURE <name> (
+      @plus INT out,
+      @a INT = ${a},
+      @b INT = ${b}
+      )
+    AS begin
+      -- SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @plus = @a + @b;
+    end;
+`
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const o = {
+            a: override
+          }
+          proc.call(o, (err, results, output) => {
+            assert.ifError(err)
+            if (output) {
+              assert(Array.isArray(output))
+              const expected = [
+                0,
+                override + b
+              ]
+              assert.deepStrictEqual(expected, output)
+              asyncDone()
+            }
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test('optional parameters set output to 0', testDone => {
     const spName = 'test_sp_get_optional_p'
 
-    const def = `alter PROCEDURE <name>(
+    const def = `alter PROCEDURE <name> (
       @plus INT out,
       @a INT,
       @b INT,
       @c INT = 0
     )
     AS begin
-      SET XACT_ABORT ON;
+      -- SET XACT_ABORT ON;
       SET NOCOUNT ON;
       set @plus = @a + @b + @c;
     end;
@@ -97,6 +339,92 @@ suite('sproc', function () {
     })
   })
 
+  test('omit required parameter expect error', testDone => {
+    const spName = 'test_sp_get_in_out_p'
+
+    const def = `alter PROCEDURE <name> (
+      @a INT,
+      @plus INT out
+    )
+    AS begin
+      -- SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @plus = @a + @plus;
+    end;
+`
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const o = {
+          }
+          proc.call(o, (err, results, output) => {
+            assert(!results)
+            assert(!output)
+            assert(err)
+            asyncDone()
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('add illegal parameter expect error', testDone => {
+    const spName = 'test_sp_get_in_out_p'
+
+    const def = `alter PROCEDURE <name> (
+      @a INT,
+      @plus INT out
+    )
+    AS begin
+      -- SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @plus = @a + @plus;
+    end;
+`
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const o = {
+            a: 2,
+            illegal: 4
+          }
+          proc.call(o, (err, results, output) => {
+            assert(!results)
+            assert(!output)
+            assert(err)
+            asyncDone()
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test('use input output parameters i.e. use a param as both input and output ', testDone => {
     const spName = 'test_sp_get_in_out_p'
 
@@ -105,7 +433,7 @@ suite('sproc', function () {
       @plus INT out
     )
     AS begin
-      SET XACT_ABORT ON;
+      -- SET XACT_ABORT ON;
       SET NOCOUNT ON;
       set @plus = @a + @plus;
     end;
@@ -156,7 +484,7 @@ suite('sproc', function () {
       @plus_out INT out
     )
     AS begin
-      SET XACT_ABORT ON;
+      -- SET XACT_ABORT ON;
       SET NOCOUNT ON;
       set @plus_out = @a + @plus_in;
     end;
