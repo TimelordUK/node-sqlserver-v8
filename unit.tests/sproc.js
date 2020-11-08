@@ -44,6 +44,113 @@ suite('sproc', function () {
     })
   })
 
+  test('two optional parameters override second set output to sum', testDone => {
+    const spName = 'test_sp_get_optional_p'
+    const a = 10
+    const b = 20
+    const override = 30
+    const def = `alter PROCEDURE <name> (
+      @a INT = ${a},
+      @b INT = ${b},
+      @plus INT out
+      )
+    AS begin
+      -- SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @plus = @a + @b;
+    end;
+`
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const o = {
+            // a: a,
+            b: override
+          }
+          proc.call(o, (err, results, output) => {
+            assert.ifError(err)
+            if (output) {
+              assert(Array.isArray(output))
+              const expected = [
+                0,
+                a + override
+              ]
+              assert.deepStrictEqual(expected, output)
+              asyncDone()
+            }
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('two optional parameters override both set output to sum', testDone => {
+    const spName = 'test_sp_get_optional_p'
+    const a = 10
+    const b = 20
+    const anew = 30
+    const bnew = 40
+    const def = `alter PROCEDURE <name> (
+      @plus INT out,
+      @a INT = ${a},
+      @b INT = ${b}
+      )
+    AS begin
+      -- SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @plus = @a + @b;
+    end;
+`
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const o = {
+            a: anew,
+            b: bnew
+          }
+          proc.call(o, (err, results, output) => {
+            assert.ifError(err)
+            if (output) {
+              assert(Array.isArray(output))
+              const expected = [
+                0,
+                anew + bnew
+              ]
+              assert.deepStrictEqual(expected, output)
+              asyncDone()
+            }
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test('two parameters same name mixed case - should error', testDone => {
     const spName = 'test_sp_get_optional_p'
     const a = 10
@@ -113,6 +220,58 @@ suite('sproc', function () {
               const expected = [
                 0,
                 a + b
+              ]
+              assert.deepStrictEqual(expected, output)
+              asyncDone()
+            }
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('two optional parameters override first set output to sum', testDone => {
+    const spName = 'test_sp_get_optional_p'
+    const a = 10
+    const b = 20
+    const override = 30
+    const def = `alter PROCEDURE <name> (
+      @plus INT out,
+      @a INT = ${a},
+      @b INT = ${b}
+      )
+    AS begin
+      -- SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @plus = @a + @b;
+    end;
+`
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.get(spName, proc => {
+          const count = pm.getCount()
+          assert.strictEqual(count, 1)
+          const o = {
+            a: override
+          }
+          proc.call(o, (err, results, output) => {
+            assert.ifError(err)
+            if (output) {
+              assert(Array.isArray(output))
+              const expected = [
+                0,
+                override + b
               ]
               assert.deepStrictEqual(expected, output)
               asyncDone()
