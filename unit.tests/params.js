@@ -272,6 +272,30 @@ suite('params', function () {
     })
   })
 
+  test('insert string 1 x 1000 in varchar(max)', testDone => {
+    runTest('varchar(max)', 1 * 1000, () => {
+      testDone()
+    })
+  })
+
+  test('insert string 4 x 1000 in varchar(max)', testDone => {
+    runTest('varchar(max)', 4 * 1000, () => {
+      testDone()
+    })
+  })
+
+  test('insert string 3999 in varchar(max)', testDone => {
+    runTest('varchar(max)', 3999, () => {
+      testDone()
+    })
+  })
+
+  test('insert string 4001 in varchar(max)', testDone => {
+    runTest('varchar(max)', 4001, () => {
+      testDone()
+    })
+  })
+
   test('insert string 4 x 1024 in varchar(8000)', testDone => {
     runTest('varchar(8000)', 4 * 1024, () => {
       testDone()

@@ -37,7 +37,8 @@
                // "-t", "warnings",
                // "-t", "txn",
                // "-t", "datatypes",
-               "-t", "sproc" 
+               //"-t", "sproc"
+               "-t", "params" 
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

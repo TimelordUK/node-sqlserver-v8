@@ -7,6 +7,7 @@
 [![npm](https://img.shields.io/npm/dy/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
 
 1. *new* 64 bit x64 Linux now supported
+1. *new* use object based named params for proc calls - see WIKI
 1. pause/resume long running query
 1. built in connection pool
 1. sequelize support directly included

@@ -146,6 +146,9 @@ namespace mssql
 		js_type = JS_STRING;
 		c_type = SQL_C_CHAR;
 		sql_type = precision > 8000 ? SQL_WLONGVARCHAR : SQL_VARCHAR;
+		if (precision == 4000) {
+			sql_type = SQL_WCHAR;
+		}
 		digits = 0;
 		_indvec[0] = SQL_NULL_DATA;
 		_indvec.resize(array_len);
@@ -264,7 +267,7 @@ namespace mssql
 			auto* const first_p = _storage->uint16vec_ptr->data();
 			Nan::DecodeWrite(reinterpret_cast<char*>(first_p), str_param->Length()*2, str_param, Nan::UCS2);
 			buffer_len = precision * size;
-			if (precision > 4000)
+			if (precision >= 4000)
 			{
 				param_size = 0;
 			}
