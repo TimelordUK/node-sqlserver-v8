@@ -138,6 +138,47 @@ suite('params', function () {
       })
   }
 
+  test('bind via a declare and insert', testDone => {
+    const tableName = 'tmp_int'
+    const tableFieldsSql = `(
+     n1 int,
+     n2 int
+    )`
+
+    const sequence = [
+
+      asyncDone => {
+        const dropQuery = `DROP TABLE ${tableName}`
+        theConnection.query(dropQuery, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const createQuery = `CREATE TABLE ${tableName}${tableFieldsSql}`
+        theConnection.query(createQuery,
+          e => {
+            assert.ifError(e, 'Error creating table')
+            asyncDone()
+          })
+      },
+
+      asyncDone => {
+        theConnection.query('declare @_p0 int = ?, @_p1 int = ?; insert into [tmp_int] ([n1],[n2]) values (@_p0,@_p1)',
+          [10, 20],
+          e => {
+            assert.ifError(e, 'Error inserting')
+            asyncDone()
+          })
+      }
+    ]
+
+    async.series(sequence,
+      () => {
+        testDone()
+      })
+  })
+
   test('query containing Swedish "åäö" as sql query literal no params', testDone => {
     const STR_LEN = 10
     const str = 'åäö'.repeat(STR_LEN)
