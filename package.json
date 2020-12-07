@@ -77,7 +77,8 @@
   },
   "os": [
     "win32",
-    "linux"
+    "linux",
+    "darwin"
   ],
   "scripts": {
     "prebuild-gyp": "node-gyp rebuild",
