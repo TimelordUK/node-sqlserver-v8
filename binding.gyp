@@ -86,6 +86,22 @@
               '/opt/microsoft/msodbcsql17/include/',
             ],
         }],
+        ['OS=="mac"', {
+            'link_settings': {
+             'libraries': ['-L/usr/local/lib', '-lmsodbcsql.17'],
+            },
+            'defines': [
+              'LINUX_BUILD',
+              'UNICODE'
+            ], 
+            'cflags_cc': [
+              '-std=c++1y'
+            ],
+            'include_dirs': [
+              '/usr/local/include/',
+              '/usr/local/opt/msodbcsql17/include/',
+            ],
+        }],
       ]
     }
   ]
