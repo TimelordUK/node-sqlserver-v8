@@ -41,15 +41,8 @@ function asStream (con) {
     const q = con.query('select a;select b;')
     q.on('error', (err, more) => {
       if (err) {
+        console.log(`on.error [${errors}] message = ${err.message} more = ${more}`)
         ++errors
-        console.log(`on.error message = ${err.message} more = ${more}`)
-        if (!more) {
-          console.log('subscribe to multiple errors query')
-          const req = con.query('select a;select b;')
-          req.on('error', (msg, more) => {
-            console.log('event error ', msg, ' more = ', more)
-          })
-        }
       }
     })
 
@@ -62,6 +55,9 @@ function asStream (con) {
 
     q.on('free', () => {
       console.log('on.free')
+      if (errors === 0) {
+        reject(new Error('no errors raised'))
+      }
       resolve(null)
     })
   })
