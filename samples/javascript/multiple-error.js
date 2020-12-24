@@ -69,13 +69,6 @@ function asFunction (con) {
     const q = con.query('select a;select b;', function (err, res, more) {
       if (err) {
         console.log(err.message + 'more = ' + more)
-        if (!more) {
-          console.log('subscribe to multiple errors query')
-          const req = con.query('select a;select b;')
-          req.on('error', (msg, more) => {
-            console.log('event error ', msg, ' more = ', more)
-          })
-        }
       } else {
         console.log(res)
         reject(new Error('no errors raised'))
