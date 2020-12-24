@@ -61,18 +61,18 @@
   },
   "devDependencies": {
     "@types/electron": "^1.4.31",
-    "@types/node": "^14.14.2",
+    "@types/node": "^14.14.16",
     "@types/sequelize": "^4.28.9",
     "asynquence": "^0.10.2",
     "asynquence-contrib": "^0.28.2",
-    "electron": "^10.1.4",
-    "electron-rebuild": "^2.3.2",
+    "electron": "^11.1.1",
+    "electron-rebuild": "^2.3.4",
     "minimist": "^1.2.5",
-    "mocha": "^8.2.0",
+    "mocha": "^8.2.1",
     "node-gyp": "^7.1.2",
     "prebuild": "^10.0.1",
     "sequelize": "^6.3.5",
-    "standard": "^15.0.0",
+    "standard": "^16.0.3",
     "tedious": "^9.2.1"
   },
   "os": [

@@ -274,7 +274,7 @@ namespace mssql
 		SQLINTEGER string_length = 0;
 		auto r = SQLGetStmtAttr(statement, SQL_ATTR_IMP_PARAM_DESC, &ipd, SQL_IS_POINTER, &string_length);
 		if (!check_odbc_error(r)) return;
-		const auto schema = datum->get_storage()->schema;
+		const auto &schema = datum->get_storage()->schema;
 		if (!schema.empty()) {
 			auto schema_vec = wstr2wcvec(schema);
 			r = SQLSetDescField(ipd, current_param, SQL_CA_SS_SCHEMA_NAME, reinterpret_cast<SQLPOINTER>(schema_vec.data()), schema_vec.size() * 2);

@@ -4,7 +4,14 @@ const port = 2020
 const sql = require('msnodesqlv8')
 const util = require('util')
 
-const connectionString = 'driver={SQL Server Native Client 11.0};server=(localdb)\\node;trusted_connection=yes;`database=scratch;`'
+function getConnection () {
+  const path = require('path')
+  const config = require(path.join(__dirname, 'config.json'))
+  return config.connection.local
+}
+
+const connectionString = getConnection()
+
 const query = 'select top 50 object_name(c.object_id), (select dc.definition from sys.default_constraints as dc where dc.object_id = c.default_object_id) as DefaultValueExpression from sys.columns as c'
 
 async function test (request, response) {

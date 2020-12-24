@@ -1,8 +1,14 @@
 const sql = require('msnodesqlv8')
 
+function getConnection () {
+  const path = require('path')
+  const config = require(path.join(__dirname, 'config.json'))
+  return config.connection.local
+}
+
+const str = getConnection()
 const pool = new sql.Pool({
-  connectionString: 'Driver={SQL Server Native Client 17.0}; Server=192.168.56.1; UID=linux; PWD=linux'
-  // connectionString: 'Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;'
+  connectionString: str
 })
 
 pool.on('open', (options) => {

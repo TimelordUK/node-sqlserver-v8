@@ -1,7 +1,12 @@
 const sql = require('msnodesqlv8')
 
-// const connectionString = 'Driver={SQL Server Native Client 11.0}; Server=np:\\\\.\\pipe\\LOCALDB#CE90B02A\\tsql\\query; Database={master}; Trusted_Connection=No;Uid=test;Database=test;Pwd=...'
-const connectionString = 'Driver={SQL Server Native Client 11.0}; Server=(localdb)\\node; Database={master}; Trusted_Connection=Yes;'
+function getConnection () {
+  const path = require('path')
+  const config = require(path.join(__dirname, 'config.json'))
+  return config.connection.local
+}
+
+const connectionString = getConnection()
 
 sql.open(connectionString, function (err, con) {
   if (err) {

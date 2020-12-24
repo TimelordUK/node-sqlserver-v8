@@ -34,7 +34,8 @@ namespace mssql
 	{
 		// fprintf(stderr, ">> InitializeEnvironment\n\n");
 
-		auto ret = SQLSetEnvAttr(nullptr, SQL_ATTR_CONNECTION_POOLING, reinterpret_cast<SQLPOINTER>(SQL_CP_ONE_PER_HENV), 0);
+		auto ret = SQLSetEnvAttr(nullptr, SQL_ATTR_CONNECTION_POOLING,
+		                         reinterpret_cast<SQLPOINTER>(SQL_CP_ONE_PER_HENV), 0);
 		if (!SQL_SUCCEEDED(ret)) { return false; }
 
 		if (!environment.alloc()) { return false; }
@@ -70,7 +71,7 @@ namespace mssql
 
 	OdbcConnection::OdbcConnection() :
 		_statements(nullptr),
-		connectionState(Closed)		
+		connectionState(Closed)
 	{
 		_errors = make_shared<vector<shared_ptr<OdbcError>>>();
 		// ops = make_shared<OperationManager>();
@@ -83,8 +84,8 @@ namespace mssql
 
 	bool OdbcConnection::TryClose()
 	{
-		if (connectionState != Closed)  // fast fail before critical section
-		{			
+		if (connectionState != Closed) // fast fail before critical section
+		{
 			ScopedCriticalSectionLock crit_sec_lock(closeCriticalSection);
 			// std::cerr << " TryClose " << std::endl;
 			//fprintf(stderr, "TryClose - %llu\n", statements->size());
@@ -92,7 +93,8 @@ namespace mssql
 			_connectionHandles->clear();
 			if (connectionState != Closed)
 			{
-				auto &connection = *_connectionHandles->connectionHandle();	
+				const auto ch = _connectionHandles->connectionHandle();
+				auto& connection = *ch;
 				SQLDisconnect(connection);
 				connectionState = Closed;
 			}
@@ -104,7 +106,8 @@ namespace mssql
 	bool OdbcConnection::ReturnOdbcError()
 	{
 		_errors->clear();
-		auto &connection = *_connectionHandles->connectionHandle();
+		const auto ch = _connectionHandles->connectionHandle();
+		auto& connection = *ch;
 		connection.read_errors(_errors);
 		// fprintf(stderr, "RETURN_ODBC_ERROR - free connection handle\n\n");
 		TryClose();
@@ -124,7 +127,8 @@ namespace mssql
 	{
 		if (timeout > 0)
 		{
-			auto &connection = *_connectionHandles->connectionHandle();
+			const auto ch = _connectionHandles->connectionHandle();
+			auto& connection = *ch;
 			auto* const to = reinterpret_cast<SQLPOINTER>(static_cast<long long>(timeout));
 			auto ret = SQLSetConnectAttr(connection, SQL_ATTR_CONNECTION_TIMEOUT, to, 0);
 			if (!CheckOdbcError(ret)) return false;
@@ -141,22 +145,23 @@ namespace mssql
 		_errors->clear();
 		this->_connectionHandles = make_shared<ConnectionHandles>(environment);
 		const auto connection = _connectionHandles->connectionHandle();
-		if (connection == nullptr) {
+		if (connection == nullptr)
+		{
 			_errors->clear();
 			environment.read_errors(_errors);
 			//fprintf(stderr, "RETURN_ODBC_ERROR - free environment handle\n\n");
 			environment.free();
 			return false;
 		}
-	
+
 		_statements = make_shared<OdbcStatementCache>(_connectionHandles);
 
 		auto ret = open_timeout(timeout);
 		if (!CheckOdbcError(ret)) return false;
 		const auto len = static_cast<SQLSMALLINT>(connection_string.length());
 		auto vec = wstr2wcvec(connection_string);
-		ret = SQLDriverConnect(*connection, nullptr, vec.data(), 
-		len, nullptr, 0, nullptr, SQL_DRIVER_NOPROMPT);
+		ret = SQLDriverConnect(*connection, nullptr, vec.data(),
+		                       len, nullptr, 0, nullptr, SQL_DRIVER_NOPROMPT);
 		if (!CheckOdbcError(ret)) return false;
 
 		connectionState = Open;

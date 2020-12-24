@@ -1,9 +1,13 @@
 const sql = require('msnodesqlv8')
 const util = require('util')
 
-// const connectionString = 'Driver={SQL Server Native Client 17.0}; Server=192.168.56.1; database=node; Trusted_Connection=no; User Id=linux;Password=linux;'
+function getConnection () {
+  const path = require('path')
+  const config = require(path.join(__dirname, 'config.json'))
+  return config.connection.local
+}
 
-const connectionString = 'Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;'
+const connectionString = getConnection()
 
 function dispatch (con, query) {
   return new Promise((resolve, reject) => {
@@ -33,6 +37,10 @@ function dispatch (con, query) {
         currentRow = [metadata.length]
         rows.push(currentRow)
       }
+    })
+
+    q.on('row', (index) => {
+      console.log(`row [${index}]`)
     })
 
     q.on('error', err => {
