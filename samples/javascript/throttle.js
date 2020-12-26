@@ -4,7 +4,7 @@ const util = require('util')
 function getConnection () {
   const path = require('path')
   const config = require(path.join(__dirname, 'config.json'))
-  return config.connection.local
+  return config.connection.lap_win
 }
 
 main().then(() => {
@@ -62,7 +62,7 @@ function asStream (con) {
       if (more) {
         errors.push(err)
       } else {
-        var msg = errors.map(e => e.message).join(', ')
+        const msg = errors.map(e => e.message).join(', ')
         reject(new Error(msg))
       }
     })
@@ -79,7 +79,7 @@ function asStream (con) {
     })
 
     function next () {
-      var d = new Date()
+      const d = new Date()
       const ts = d.toLocaleTimeString()
       console.log(`${ts} - [${batchIndex}] (rowCount ${rowCount}): pause and dispatch ${batch.length} rows ...`)
       q.pauseQuery()

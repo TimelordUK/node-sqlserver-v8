@@ -35,32 +35,35 @@ async function main () {
   }
 }
 
-async function asFunction (theConnection) {
-  console.log('work with SQL server Geography using tvp')
-  const geographyHelper = new GeographyHelper(theConnection)
-  const promisedQuery = util.promisify(theConnection.query)
-  const coordinates = geographyHelper.getCoordinates()
-  const lines = geographyHelper.asLines(coordinates)
-  const points = geographyHelper.asPoints(coordinates)
-  const polygon = geographyHelper.asPoly(coordinates)
-  const allGeography = lines.concat(points).concat(polygon)
-  console.log(`inserting ${allGeography.length} geography`)
-
-  const pm = theConnection.procedureMgr()
-  const table = await geographyHelper.createGeographyTable()
-  const promisedGetProcedure = util.promisify(pm.getForPromise)
-  const procName = 'InsertGeographyTvp'
-  const procedure = await promisedGetProcedure(procName)
-
-  const promisedProcCall = util.promisify(procedure.call)
-
+function asTvpTable (table, allGeography) {
   allGeography.forEach(l => {
     // each row is represented as an array of columns
     table.rows[table.rows.length] = [l]
   })
   const tp = sql.TvpFromTable(table)
+  return tp
+}
+
+async function asFunction (theConnection) {
+  console.log('work with SQL server Geography using tvp')
+
+  const geographyHelper = new GeographyHelper(theConnection)
+  const pm = theConnection.procedureMgr()
+  const promisedGetProcedure = util.promisify(pm.getProc) // promise safe
+  const promisedQuery = util.promisify(theConnection.query)
+  const coordinates = geographyHelper.getCoordinates()
+  const allGeography = geographyHelper.all(coordinates)
+
+  console.log('create table')
+
+  const table = await geographyHelper.createGeographyTable()
+  const procName = 'InsertGeographyTvp'
+  const procedure = await promisedGetProcedure(procName)
+  const promisedProcCall = util.promisify(procedure.call)
+
+  const tp = asTvpTable(table, allGeography)
   table.rows = []
-  console.log(`call proc ${procName} with tvp`)
+  console.log(`call proc ${procName} with tvp to bulk insert ${allGeography.length} rows`)
   await promisedProcCall([tp])
   console.log(`select all data '${geographyHelper.selectSql}'`)
   const res = await promisedQuery(geographyHelper.selectSql)
@@ -70,39 +73,53 @@ async function asFunction (theConnection) {
 
 class GeographyHelper {
   constructor (theConnection) {
-    async function createGeographyTable () {
-      const tableName = 'spatial_test'
-      const insertProcedureTypeName = 'InsertGeographyTvp'
-      const tableTypeName = 'geographyTvpType'
-      const createTableSql = `CREATE TABLE ${tableName} ( id int IDENTITY (1,1), GeogCol1 geography, GeogCol2 AS GeogCol1.STAsText() )`
-      const dropProcedureSql = `IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('${insertProcedureTypeName}'))
- begin drop PROCEDURE ${insertProcedureTypeName} end `
-      const dropTypeSql = `IF TYPE_ID(N'${tableTypeName}') IS not NULL drop type ${tableTypeName}`
-      const createType = `create type ${tableTypeName} AS TABLE ([GeogCol1] nvarchar (2048))`
-      const createProcedureSql = `create PROCEDURE InsertGeographyTvp @tvp geographyTvpType READONLY
-       AS 
-       BEGIN 
-       set nocount on
-       INSERT INTO spatial_test 
-       ( 
-          GeogCol1
-        )
+    const tableName = 'spatial_test'
+    const insertProcedureTypeName = 'InsertGeographyTvp'
+    const tableTypeName = 'geographyTvpType'
+    const createTableSql = `CREATE TABLE ${tableName} ( id int IDENTITY (1,1), GeogCol1 geography, GeogCol2 AS GeogCol1.STAsText() )`
+    const dropProcedureSql = `IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('${insertProcedureTypeName}'))
+begin drop PROCEDURE ${insertProcedureTypeName} end `
+    const dropTypeSql = `IF TYPE_ID(N'${tableTypeName}') IS not NULL drop type ${tableTypeName}`
+    const createType = `create type ${tableTypeName} AS TABLE ([GeogCol1] nvarchar (2048))`
+    const createProcedureSql = `create PROCEDURE InsertGeographyTvp @tvp geographyTvpType READONLY
+     AS 
+     BEGIN 
+     set nocount on
+     INSERT INTO spatial_test 
+     ( 
+        GeogCol1
+      )
 SELECT  (case
 when GeogCol1 like 'POINT%'
- then geography::STPointFromText([GeogCol1], 4326)
+then geography::STPointFromText([GeogCol1], 4326)
 when GeogCol1 like 'LINE%'
- then geography::STLineFromText([GeogCol1], 4326)
+then geography::STLineFromText([GeogCol1], 4326)
 when GeogCol1 like 'POLY%'
 then geography::STPolyFromText([GeogCol1], 4326)
 end)
-  n FROM @tvp tvp
-  END
+n FROM @tvp tvp
+END
 `
-      const dropTableSql = `IF OBJECT_ID(N'dbo.${tableName}', N'U') IS NOT NULL
-      BEGIN
-        DROP TABLE ${tableName}
-      END`
+    const dropTableSql = `IF OBJECT_ID(N'dbo.${tableName}', N'U') IS NOT NULL
+    BEGIN
+      DROP TABLE ${tableName}
+    END`
 
+    const points = [
+      'POINT (-89.349 -55.349)',
+      'POINT (1.349 -9.349)'
+    ]
+
+    const lines = [
+      'LINESTRING (-0.19535064697265625 51.509249951770364, -0.19148826599121094 51.5100245354003)'
+    ]
+
+    const insertPolySql = 'INSERT INTO spatial_test (GeogCol1) VALUES (geography::STPolyFromText(?, 4326))'
+    const insertPointsSql = 'INSERT INTO spatial_test (GeogCol1) VALUES (geography::STPointFromText(?, 4326))'
+    const insertLinesSql = 'INSERT INTO spatial_test (GeogCol1) VALUES (geography::STLineFromText(?, 4326))'
+    const selectSql = 'select id, GeogCol2 from spatial_test'
+
+    async function createGeographyTable () {
       async function exec (sql) {
         console.log(`exec '${sql}' ....`)
         const promisedQuery = util.promisify(theConnection.query)
@@ -120,20 +137,6 @@ end)
       const table = await promisedUserType(tableTypeName)
       return table
     }
-
-    const points = [
-      'POINT (-89.349 -55.349)',
-      'POINT (1.349 -9.349)'
-    ]
-
-    const lines = [
-      'LINESTRING (-0.19535064697265625 51.509249951770364, -0.19148826599121094 51.5100245354003)'
-    ]
-
-    const insertPolySql = 'INSERT INTO spatial_test (GeogCol1) VALUES (geography::STPolyFromText(?, 4326))'
-    const insertPointsSql = 'INSERT INTO spatial_test (GeogCol1) VALUES (geography::STPointFromText(?, 4326))'
-    const insertLinesSql = 'INSERT INTO spatial_test (GeogCol1) VALUES (geography::STLineFromText(?, 4326))'
-    const selectSql = 'select id, GeogCol2 from spatial_test'
 
     const expectedPoints = [
       {
@@ -179,6 +182,14 @@ end)
       return `POLYGON ((${s.join(', ')}))`
     }
 
+    function all (coordinates) {
+      const lines = this.asLines(coordinates)
+      const points = this.asPoints(coordinates)
+      const polygon = this.asPoly(coordinates)
+      const allGeography = lines.concat(points).concat(polygon)
+      return allGeography
+    }
+
     function asLine (coords) {
     // 'LINESTRING (-0.19535064697265625 51.509249951770364, -0.19148826599121094 51.5100245354003)'
       return `LINESTRING (${asPair(coords[0])}, ${asPair(coords[1])})`
@@ -211,6 +222,7 @@ end)
       return expected
     }
 
+    this.all = all
     this.asExpected = asExpected
     this.asLines = asLines
     this.asPoly = asPoly
