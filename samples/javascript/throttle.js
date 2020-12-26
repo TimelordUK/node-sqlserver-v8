@@ -4,7 +4,7 @@ const util = require('util')
 function getConnection () {
   const path = require('path')
   const config = require(path.join(__dirname, 'config.json'))
-  return config.connection.lap_win
+  return config.connection.local
 }
 
 main().then(() => {
