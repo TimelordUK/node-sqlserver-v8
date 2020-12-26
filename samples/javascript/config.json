@@ -1,8 +1,6 @@
 {
     "connection": {
         "local": "Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;",
-        "linux": "Driver={SQL Server Native Client 17.0}; Server=192.168.56.1; UID=linux; PWD=linux",
-        "lap_win": "Driver={ODBC Driver 17 for SQL Server}; Server=DESKTOP-9RLN5E4; UID=linux; PWD=linux",
-        "lap_lin": "Driver={SQL Server Native Client 17.0}; Server=DESKTOP-9RLN5E4; UID=linux; PWD=linux"
+        "linux": "Driver={SQL Server Native Client 17.0}; Server=192.168.56.1; UID=linux; PWD=linux"
     }
 }
