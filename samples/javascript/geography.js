@@ -233,10 +233,10 @@ END
     this.insertPolySql = insertPolySql
     this.expectedLines = expectedLines
     this.insertPointsSql = insertPointsSql
-    this.nsertLinesSql = insertLinesSql
+    this.insertLinesSql = insertLinesSql
     this.selectSql = selectSql
     this.expectedPoints = expectedPoints
-    this.linea = lines
+    this.lines = lines
     this.points = points
   }
 }
