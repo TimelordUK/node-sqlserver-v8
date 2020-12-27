@@ -208,7 +208,8 @@ export interface DescribeProcedureCb { (description?: ProcedureSummary): void
 }
 export interface GetProcedureCb { (procedure?: ProcedureDefinition): void
 }
-
+export interface GetProcCb { (err:Error, procedure?: ProcedureDefinition): void
+}
 export interface BulkMgrSummary {
     insertSignature: string
     whereColumns: TableColumn[]
@@ -295,7 +296,8 @@ export interface ProcedureSummary {
 }
 
 export interface ProcedureManager {
-    get(name:string, cb?:GetProcedureCb):void
+    get(name:string, cb?:GetProcedureCb):void  // cannot promisify (proc)
+    getProc(name:string, cb?:GetProcCb):void // promise friendly (err, proc)
     callproc(name: string, params?: any[], cb?: CallProcedureCb): Query
     describe(name: string, cb?: DescribeProcedureCb): void
     setTimeout(timeout: number): void
