@@ -148,7 +148,7 @@ suite('date tests', function () {
             ++expectedMinute
             assert(c === 0)
             assert(!more)
-            var expectedDate = new Date(Date.UTC(1900, 0, 1, randomHour, expectedMinute, 0, 0))
+            const expectedDate = new Date(Date.UTC(1900, 0, 1, randomHour, expectedMinute, 0, 0))
             expectedDate.nanosecondsDelta = 0
             assert.deepStrictEqual(d, expectedDate)
           })

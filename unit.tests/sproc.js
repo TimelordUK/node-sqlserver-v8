@@ -21,8 +21,8 @@ suite('sproc', function () {
       connStr = global.conn_str || co.conn_str
       support = co.support
       driver = co.driver
-      var myRegexp = /Driver=\{(.*?)\}.*$/g
-      var match = myRegexp.exec(connStr)
+      const myRegexp = /Driver=\{(.*?)\}.*$/g
+      const match = myRegexp.exec(connStr)
       driver = match[1]
       procedureHelper = new support.ProcedureHelper(connStr)
       procedureHelper.setVerbose(false)
@@ -48,7 +48,6 @@ suite('sproc', function () {
     const spName = 'test_sp_get_optional_p'
     const a = 10
     const b = 20
-    const override = 30
     const def = `alter PROCEDURE <name> (
       @a INT = ${a},
       @b INT = ${b},

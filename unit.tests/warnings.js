@@ -26,8 +26,8 @@ suite('warnings', function () {
       async = co.async
       helper = co.helper
       driver = co.driver
-      var myRegexp = /Driver=\{(.*?)\}.*$/g
-      var match = myRegexp.exec(connStr)
+      const myRegexp = /Driver=\{(.*?)\}.*$/g
+      const match = myRegexp.exec(connStr)
       driver = match[1]
       helper.setVerbose(false)
       sql.open(connStr, (err, conn) => {

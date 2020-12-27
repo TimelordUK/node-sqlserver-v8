@@ -41,8 +41,8 @@ suite('query', function () {
       async = co.async
       helper = co.helper
       driver = co.driver
-      var myRegexp = /Driver=\{(.*?)\}.*$/g
-      var match = myRegexp.exec(connStr)
+      const myRegexp = /Driver=\{(.*?)\}.*$/g
+      const match = myRegexp.exec(connStr)
       driver = match[1]
       // database = co.database
       helper.setVerbose(false)
