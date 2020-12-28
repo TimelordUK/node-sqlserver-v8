@@ -184,6 +184,8 @@ export interface TableCb { (err: Error, table: Table): void
 }
 export interface BindCb { (cb: BulkTableMgr): void
 }
+export interface GetTableCb { (err: Error, table: BulkTableMgr): void
+}
 export interface OpenCb { (err: Error, connection: Connection): void
 }
 export interface QueryCb { (err?: Error, rows?: any[], more?: boolean): void
@@ -296,6 +298,9 @@ export interface ProcedureSummary {
 }
 
 export interface ProcedureManager {
+    /**
+     * @deprecated Please use `getProc`
+     */
     get(name:string, cb?:GetProcedureCb):void  // cannot promisify (proc)
     getProc(name:string, cb?:GetProcCb):void // promise friendly (err, proc)
     callproc(name: string, params?: any[], cb?: CallProcedureCb): Query
@@ -305,7 +310,11 @@ export interface ProcedureManager {
 }
 
 export interface TableManager {
-    bind(tableName: string, cb: BindCb): void
+    /**
+     * @deprecated Please use `getTable`
+     */
+    bind(tableName: string, cb: BindCb): void // cannot promisify (table)
+    getTable(tableName: string, cb: GetTableCb): void // promise friendly (err, table)
 }
 
 export interface PreparedStatement {

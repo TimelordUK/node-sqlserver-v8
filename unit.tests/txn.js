@@ -23,6 +23,7 @@
 
 const assert = require('assert')
 const supp = require('../samples/typescript/demo-support')
+const util = require('util')
 
 suite('txn', function () {
   let theConnection
@@ -92,33 +93,39 @@ suite('txn', function () {
     })
   })
 
+  class TxnHelper {
+    constructor (theConnection) {
+      const tableName = 'test_txn_sales'
+      const dropTableSql = `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL 
+    DROP TABLE ${tableName};`
+
+      const createTableSql = `CREATE TABLE ${tableName} (
+        activity_id INT PRIMARY KEY,
+        activity_name VARCHAR (255) NOT NULL
+    );`
+
+      const insertSql = `INSERT INTO ${tableName} (activity_id, activity_name) VALUES (?, ?)`
+      const selectSql = `select activity_id, activity_name from ${tableName}`
+
+      async function create () {
+        const promisedQuery = util.promisify(theConnection.query)
+        await promisedQuery(dropTableSql)
+        await promisedQuery(createTableSql)
+      }
+
+      this.create = create
+      this.insertSql = insertSql
+      this.selectSql = selectSql
+    }
+  }
+
   test('begin a transaction and use streaming with error on constraint to trigger rollback detection', done => {
-    const tableName = 'testsales'
-    const dropTableSql = `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL 
-  DROP TABLE ${tableName};`
-
-    const createTableSql = `CREATE TABLE ${tableName} (
-      activity_id INT PRIMARY KEY,
-      activity_name VARCHAR (255) NOT NULL
-  );`
-
-    const insertSql = `INSERT INTO ${tableName} (activity_id, activity_name) VALUES (?, ?)`
-    const selectSql = `select activity_id, activity_name from ${tableName}`
-
+    const helper = new TxnHelper(theConnection)
     const fns = [
 
-      asyncDone => {
-        theConnection.query(dropTableSql, (err) => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        theConnection.query(createTableSql, (err) => {
-          assert.ifError(err)
-          asyncDone()
-        })
+      async asyncDone => {
+        await helper.create()
+        asyncDone()
       },
 
       asyncDone => {
@@ -129,14 +136,14 @@ suite('txn', function () {
       },
 
       asyncDone => {
-        theConnection.query(insertSql, [1, 'jogging'], (err) => {
+        theConnection.query(helper.insertSql, [1, 'jogging'], (err) => {
           assert.ifError(err)
           asyncDone()
         })
       },
 
       asyncDone => {
-        const q = theConnection.query(insertSql, [1, 'sprinting'])
+        const q = theConnection.query(helper.insertSql, [1, 'sprinting'])
         const errors = []
         q.on('error', (err, more) => {
           errors.push(err)
@@ -160,9 +167,161 @@ suite('txn', function () {
       },
 
       asyncDone => {
-        theConnection.queryRaw(selectSql, (err, results) => {
+        theConnection.queryRaw(helper.selectSql, (err, results) => {
           assert.ifError(err)
           assert.deepStrictEqual(results.rows, [])
+          asyncDone()
+        })
+      }
+    ]
+    async.series(fns, () => {
+      done()
+    })
+  })
+
+  test('begin a transaction and rollback on violation and insert valid', done => {
+    const helper = new TxnHelper(theConnection)
+    const fns = [
+
+      async asyncDone => {
+        await helper.create()
+        asyncDone()
+      },
+
+      asyncDone => {
+        theConnection.beginTransaction(err => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.query(helper.insertSql, [1, 'jogging'], (err) => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const q = theConnection.query(helper.insertSql, [1, 'sprinting'])
+        const errors = []
+        q.on('error', (err, more) => {
+          errors.push(err)
+          if (more) return
+          const msgs = errors.map(e => e.message)
+          assert.deepStrictEqual(1, msgs.length)
+          assert(msgs[0].includes('Violation of PRIMARY KEY'))
+        })
+
+        q.on('info', i => {
+          const msg = i.message
+          assert(msg.includes('statement has been terminated'))
+        })
+
+        q.on('free', () => {
+          theConnection.rollback(err => {
+            assert.ifError(err)
+            asyncDone()
+          })
+        })
+      },
+
+      // at this stage rolled back and expect no rows
+
+      asyncDone => {
+        theConnection.queryRaw(helper.selectSql, (err, results) => {
+          assert.ifError(err)
+          assert.deepStrictEqual(results.rows, [])
+          asyncDone()
+        })
+      },
+
+      // add 2 more valid rows with no transaction
+
+      asyncDone => {
+        theConnection.query(helper.insertSql, [1, 'jogging'], (err) => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.query(helper.insertSql, [2, 'sprinting'], (err) => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      // now expect 2 rows to be present
+
+      asyncDone => {
+        theConnection.query(helper.selectSql, (err, results) => {
+          assert.ifError(err)
+          assert.deepStrictEqual(results, [{
+            activity_id: 1,
+            activity_name: 'jogging'
+          },
+          {
+            activity_id: 2,
+            activity_name: 'sprinting'
+          }])
+          asyncDone()
+        })
+      }
+    ]
+    async.series(fns, () => {
+      done()
+    })
+  })
+
+  test('begin a transaction and add two rows no constraint violation, commit and check', done => {
+    const helper = new TxnHelper(theConnection)
+    const fns = [
+
+      async asyncDone => {
+        await helper.create()
+        asyncDone()
+      },
+
+      asyncDone => {
+        theConnection.beginTransaction(err => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.query(helper.insertSql, [1, 'jogging'], (err) => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.query(helper.insertSql, [2, 'sprinting'], (err) => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.commit(err => {
+          assert.ifError(err)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.query(helper.selectSql, (err, results) => {
+          assert.ifError(err)
+          assert.deepStrictEqual(results, [{
+            activity_id: 1,
+            activity_name: 'jogging'
+          },
+          {
+            activity_id: 2,
+            activity_name: 'sprinting'
+          }])
           asyncDone()
         })
       }

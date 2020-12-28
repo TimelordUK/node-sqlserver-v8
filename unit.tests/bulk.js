@@ -3,6 +3,7 @@
 
 const supp = require('../samples/typescript/demo-support')
 const assert = require('assert')
+const util = require('util')
 
 suite('bulk', function () {
   let theConnection
@@ -52,6 +53,117 @@ suite('bulk', function () {
 
     return v
   }
+
+  class TableHelper {
+    constructor (theConnection) {
+      const tableName = 'test_bulk_table'
+      const dropTableSql = `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL 
+    DROP TABLE ${tableName};`
+
+      const createTableSql = `CREATE TABLE ${tableName} (
+        id INT PRIMARY KEY,
+        col_a int,
+        col_b int, 
+        col_c int,
+        col_d int,
+        col_e int,
+        col_f int,
+    );`
+
+      function getVec (count) {
+        const v = []
+        for (let i = 0; i < count; ++i) {
+          v.push({
+            id: i,
+            col_a: (i + 1) * 10 + i,
+            col_b: (i + 1) * 100 + i,
+            col_c: (i + 1) * 1000 + i,
+            col_d: (i + 1) * 10000 + i,
+            col_e: (i + 1) * 100000 + i,
+            col_f: (i + 1) * 1000000 + i
+          })
+        }
+        return v
+      }
+
+      async function create () {
+        const promisedQuery = util.promisify(theConnection.query)
+        const tm = theConnection.tableMgr()
+        const promisedGetTable = util.promisify(tm.getTable)
+        await promisedQuery(dropTableSql)
+        await promisedQuery(createTableSql)
+        const table = await promisedGetTable(tableName)
+        return table
+      }
+
+      this.create = create
+      this.getVec = getVec
+    }
+  }
+
+  test('use tableMgr get Table and update 2 columns', testDone => {
+    const helper = new TableHelper(theConnection)
+    const expected = helper.getVec(10)
+    let table
+    const fns = [
+
+      async asyncDone => {
+        table = await helper.create()
+        asyncDone()
+      },
+
+      asyncDone => {
+        table.insertRows(expected, (e) => {
+          assert.ifError(e)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        table.selectRows(expected, (e, res) => {
+          assert.ifError(e)
+          assert.deepStrictEqual(expected, res)
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const meta = table.getMeta()
+        const updateColumns = meta.getUpdateColumns()
+        assert(Array.isArray(updateColumns))
+        assert(updateColumns.length > 0)
+        const cols = updateColumns.slice(0, 2)
+        table.setUpdateCols(cols)
+        const updateSql = meta.getUpdateSignature()
+        assert(updateSql.includes('set [col_a] = ?, [col_b] = ?'))
+        const deleteSql = meta.getDeleteSignature()
+        assert(deleteSql.includes('where ( [id] = ? )'))
+        const selectSql = meta.getSelectSignature()
+        assert(selectSql.includes('select [id], [col_a], [col_b], [col_c], [col_d], [col_e], [col_f] from'))
+        const updated = expected.map(e => {
+          return {
+            id: e.id,
+            col_a: e.col_a * 2,
+            col_b: e.col_b * 2,
+            col_c: e.col_c,
+            col_d: e.col_d,
+            col_e: e.col_e,
+            col_f: e.col_f
+          }
+        })
+        table.updateRows(updated)
+        table.selectRows(updated, (e, res) => {
+          assert.ifError(e)
+          assert.deepStrictEqual(updated, res)
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
 
   test('employee table complex json object test api', testDone => {
     const tableName = 'employee'
@@ -931,10 +1043,12 @@ suite('bulk', function () {
         const idx = i % 10
         return arr[idx]
       },
-      updateFunction: runUpdateFunction ? i => {
-        const idx = 9 - (i % 10)
-        return arr[idx]
-      } : null,
+      updateFunction: runUpdateFunction
+        ? i => {
+            const idx = 9 - (i % 10)
+            return arr[idx]
+          }
+        : null,
       check: selectAfterInsert,
       deleteAfterTest: deleteAfterTest,
       batchSize: batchSize
