@@ -38,6 +38,69 @@ suite('pause', function () {
     })
   })
 
+  test('resume query having never paused', testDone => {
+    let expected = 0
+    const sql = 'select top 3000 * from syscolumns'
+    const q0 = theConnection.query(sql)
+    q0.on('row', () => {
+      ++expected
+    })
+    let rows = 0
+    const q = theConnection.query(sql)
+    q.on('error', (e) => {
+      assert.ifError(e)
+    })
+    q.on('row', () => {
+      ++rows
+      q.resumeQuery()
+    })
+    q.on('done', () => {
+      assert.strictEqual(expected, rows)
+      testDone()
+    })
+  })
+
+  test('pause a closed query', testDone => {
+    const expected = 1
+    let rows = 0
+    const sql = 'select \'hello\''
+    const q = theConnection.query(sql)
+    q.on('error', (e) => {
+      assert.ifError(e)
+    })
+    q.on('row', () => {
+      ++rows
+    })
+    q.on('done', () => {
+      assert.strictEqual(expected, rows)
+      q.pauseQuery() // make sure nothing goes wrong
+      testDone()
+    })
+  })
+
+  test('pause a paused query that is about to close', testDone => {
+    let expected = 0
+    const sql = 'select \'hello\''
+    const q0 = theConnection.query(sql)
+    q0.on('row', () => {
+      ++expected
+    })
+    let rows = 0
+    const q = theConnection.query(sql)
+    q.on('error', (e) => {
+      assert.ifError(e)
+    })
+    q.on('row', () => {
+      ++rows
+      q.pauseQuery()
+      q.pauseQuery()
+    })
+    q.on('done', () => {
+      assert.strictEqual(expected, rows)
+      testDone()
+    })
+  })
+
   test('pause a large query and cancel without resume', testDone => {
     let rows = 0
     const q = theConnection.query('select top 3000 * from syscolumns')
@@ -132,12 +195,13 @@ suite('pause', function () {
 
   test('pause a large query every 100 rows', testDone => {
     let expected = 0
-    const q0 = theConnection.query('select top 3000 * from syscolumns')
+    const sql = 'select top 3000 * from syscolumns'
+    const q0 = theConnection.query(sql)
     q0.on('row', () => {
       ++expected
     })
     let rows = 0
-    const q = theConnection.query('select top 3000 * from syscolumns')
+    const q = theConnection.query(sql)
     q.on('error', (e) => {
       assert.ifError(e)
     })
