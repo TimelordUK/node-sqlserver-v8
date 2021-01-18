@@ -246,7 +246,13 @@ namespace mssql
 			_indvec[i] = SQL_NULL_DATA;
 			auto elem = Nan::Get(arr, i);
 			if (elem.IsEmpty()) continue;
-			auto maybe_value = Nan::To<String>(elem.ToLocalChecked());
+			auto local_elem = elem.ToLocalChecked();
+			if (local_elem->IsNull() || local_elem->IsUndefined())
+			{
+				itr += max_str_len;
+				continue;
+			}
+			auto maybe_value = Nan::To<String>(local_elem);
 			const auto str = maybe_value.FromMaybe(Nan::EmptyString()); 	
 			const auto width = str->Length() * size;
 			_indvec[i] = width;
