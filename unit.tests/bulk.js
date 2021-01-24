@@ -101,6 +101,124 @@ suite('bulk', function () {
     }
   }
 
+  class TypeTableHelper {
+    constructor (theConnection, sqlType) {
+      const tableName = 'test_bulk_table'
+      const dropTableSql = `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL 
+    DROP TABLE ${tableName};`
+
+      const createTableSql = `CREATE TABLE ${tableName} (
+        id INT PRIMARY KEY,
+        col_a ${sqlType}
+    );`
+
+      function getVec (count, generator) {
+        const v = []
+        for (let i = 0; i < count; ++i) {
+          const val = generator(i)
+          v.push({
+            id: i,
+            col_a: val
+          })
+        }
+        return v
+      }
+
+      async function create () {
+        const promisedQuery = util.promisify(theConnection.query)
+        const tm = theConnection.tableMgr()
+        const promisedGetTable = util.promisify(tm.getTable)
+        await promisedQuery(dropTableSql)
+        await promisedQuery(createTableSql)
+        const table = await promisedGetTable(tableName)
+        return table
+      }
+
+      this.create = create
+      this.getVec = getVec
+    }
+  }
+
+  test('use tableMgr bulk insert int vector - with nulls', testDone => {
+    async function runner () {
+      const helper = new TypeTableHelper(theConnection, 'int')
+      const expected = helper.getVec(10, i => i % 2 === 0 ? null : i * 10)
+      const table = await helper.create()
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedSelect = util.promisify(table.selectRows)
+      try {
+        await promisedInsert(expected)
+        const res = await promisedSelect(expected)
+        assert.deepStrictEqual(expected, res)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
+  test('use tableMgr bulk insert int vector - no nulls', testDone => {
+    async function runner () {
+      const helper = new TypeTableHelper(theConnection, 'int')
+      const expected = helper.getVec(10, i => i * 10)
+      const table = await helper.create()
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedSelect = util.promisify(table.selectRows)
+      try {
+        await promisedInsert(expected)
+        const res = await promisedSelect(expected)
+        assert.deepStrictEqual(expected, res)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
+  test('use tableMgr bulk insert varchar vector - with nulls', testDone => {
+    async function runner () {
+      const helper = new TypeTableHelper(theConnection, 'varchar(100)')
+      const expected = helper.getVec(10, i => i % 2 === 0 ? null : `string ${i}`)
+      const table = await helper.create()
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedSelect = util.promisify(table.selectRows)
+      try {
+        await promisedInsert(expected)
+        const res = await promisedSelect(expected)
+        assert.deepStrictEqual(expected, res)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
+  test('use tableMgr bulk insert var char vector - no nulls', testDone => {
+    async function runner () {
+      const helper = new TypeTableHelper(theConnection, 'varchar(100)')
+      const expected = helper.getVec(10, i => `string ${i}`)
+      const table = await helper.create()
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedSelect = util.promisify(table.selectRows)
+      try {
+        await promisedInsert(expected)
+        const res = await promisedSelect(expected)
+        assert.deepStrictEqual(expected, res)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
   test('use tableMgr get Table and update 2 columns', testDone => {
     const helper = new TableHelper(theConnection)
     const expected = helper.getVec(10)
@@ -127,7 +245,7 @@ suite('bulk', function () {
         })
       },
 
-      asyncDone => {
+      async asyncDone => {
         const meta = table.getMeta()
         const updateColumns = meta.getUpdateColumns()
         assert(Array.isArray(updateColumns))
@@ -151,12 +269,16 @@ suite('bulk', function () {
             col_f: e.col_f
           }
         })
-        table.updateRows(updated)
-        table.selectRows(updated, (e, res) => {
-          assert.ifError(e)
+        const promisedUpdate = util.promisify(table.updateRows)
+        const promisedSelect = util.promisify(table.selectRows)
+        try {
+          await promisedUpdate(updated)
+          const res = await promisedSelect(updated)
           assert.deepStrictEqual(updated, res)
           asyncDone()
-        })
+        } catch (e) {
+          assert.ifError(e)
+        }
       }
     ]
 

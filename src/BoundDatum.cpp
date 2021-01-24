@@ -240,24 +240,20 @@ namespace mssql
 		const auto array_len = arr->Length();
 		const auto size = sizeof(uint16_t);
 		reserve_w_var_char_array(max_str_len, array_len);
-		auto itr = _storage->uint16vec_ptr->begin();
+		auto* const base = _storage->uint16vec_ptr->data();
 		for (uint32_t i = 0; i < array_len; ++i)
 		{
+			auto* const itr = base + (max_str_len * i);
 			_indvec[i] = SQL_NULL_DATA;
 			auto elem = Nan::Get(arr, i);
 			if (elem.IsEmpty()) continue;
 			auto local_elem = elem.ToLocalChecked();
-			if (local_elem->IsNull() || local_elem->IsUndefined())
-			{
-				itr += max_str_len;
-				continue;
-			}
+			if (local_elem->IsNullOrUndefined()) continue;
 			auto maybe_value = Nan::To<String>(local_elem);
 			const auto str = maybe_value.FromMaybe(Nan::EmptyString()); 	
 			const auto width = str->Length() * size;
 			_indvec[i] = width;
 			Nan::DecodeWrite(reinterpret_cast<char*>(&*itr), str->Length()*2, str, Nan::UCS2);
-			itr += max_str_len;
 		}
 	}
 
@@ -442,6 +438,7 @@ namespace mssql
 			auto maybe_value = Nan::To<Object>(elem.ToLocalChecked());
 			if (maybe_value.IsEmpty()) continue;
 			const auto local_instance = maybe_value.ToLocalChecked();
+			if (local_instance->IsNullOrUndefined()) continue;
 			auto* const ptr = node::Buffer::Data(local_instance);
 			const auto obj_len = node::Buffer::Length(local_instance);
 			_indvec[i] = obj_len;
@@ -569,7 +566,7 @@ namespace mssql
 		auto& vec = *_storage->int32vec_ptr;
 		vec[0] = SQL_NULL_DATA;
 		if (!p->IsNull())
-		{
+		{			
 			const auto local = Nan::To<Int32>(p).FromMaybe(Nan::New<Int32>(0));	
 			const auto d = local->Value();
 			vec[0] = d;
@@ -589,7 +586,9 @@ namespace mssql
 			_indvec[i] = SQL_NULL_DATA;
 			auto maybe_elem = Nan::Get(arr, i);
 			if (!maybe_elem.IsEmpty()) {
-				const auto local = Nan::To<Int32>(maybe_elem.ToLocalChecked()).FromMaybe(Nan::New<Int32>(0));
+				const auto local_elem = maybe_elem.ToLocalChecked();
+				if (local_elem->IsNullOrUndefined()) continue;
+				const auto local = Nan::To<Int32>(local_elem).FromMaybe(Nan::New<Int32>(0));
 				vec[i] = local->Value();
 				_indvec[i] = 0;
 			}
@@ -634,7 +633,9 @@ namespace mssql
 			_indvec[i] = SQL_NULL_DATA;
 			auto maybe_elem = Nan::Get(arr, i);
 			if (!maybe_elem.IsEmpty()) {
-				const auto local = Nan::To<Uint32>(maybe_elem.ToLocalChecked()).FromMaybe(Nan::New<Uint32>(0));
+				const auto local_elem = maybe_elem.ToLocalChecked();
+				if (local_elem->IsNullOrUndefined()) continue;
+				const auto local = Nan::To<Uint32>(local_elem).FromMaybe(Nan::New<Uint32>(0));
 				vec[i] = local->Value();
 				_indvec[i] = 0;
 			}
