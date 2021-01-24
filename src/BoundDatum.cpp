@@ -914,8 +914,9 @@ namespace mssql
 			_indvec[i] = SQL_NULL_DATA;
 			auto maybe = Nan::Get(arr, i);
 			if (maybe.IsEmpty()) continue;
-			const auto checked = maybe.ToLocalChecked();
-			const auto v = Nan::To<double>(checked).ToChecked();
+			const auto local_elem = maybe.ToLocalChecked();
+			if (local_elem->IsNullOrUndefined()) continue;
+			const auto v = Nan::To<double>(local_elem).ToChecked();
 			vec[i] = v;
 			_indvec[i] = 0;
 		}

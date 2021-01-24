@@ -139,6 +139,165 @@ suite('bulk', function () {
     }
   }
 
+  function toUTCDate (localDate) {
+    return new Date(
+      Date.UTC(
+        localDate.getUTCFullYear(),
+        localDate.getUTCMonth(),
+        localDate.getUTCDate(),
+        localDate.getUTCHours(),
+        0,
+        0,
+        0))
+  }
+
+  function toUtc (localDate) {
+    const utcDate = new Date(Date.UTC(localDate.getUTCFullYear(),
+      localDate.getUTCMonth(),
+      localDate.getUTCDate(),
+      localDate.getUTCHours(),
+      localDate.getUTCMinutes(),
+      localDate.getUTCSeconds(),
+      localDate.getUTCMilliseconds()))
+    return utcDate
+  }
+
+  function addDays (days) {
+    const localDate = new Date()
+    const utcDate = toUTCDate(localDate)
+    var result = new Date(utcDate)
+    result.setDate(result.getDate() + days)
+    return result
+  }
+
+  test('use tableMgr bulk insert datetime vector - no nulls', testDone => {
+    async function runner () {
+      const helper = new TypeTableHelper(theConnection, 'datetime')
+      const expected = helper.getVec(10, i => addDays(i))
+      const table = await helper.create()
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedSelect = util.promisify(table.selectRows)
+      try {
+        await promisedInsert(expected)
+        const res = await promisedSelect(expected)
+        res.forEach(a => {
+          delete a.col_a.nanosecondsDelta
+        })
+        assert.deepStrictEqual(res, expected)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
+  test('use tableMgr bulk insert datetime vector - with nulls', testDone => {
+    async function runner () {
+      const helper = new TypeTableHelper(theConnection, 'datetime')
+      const expected = helper.getVec(10, i => i % 2 === 0 ? null : addDays(i))
+      const table = await helper.create()
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedSelect = util.promisify(table.selectRows)
+      try {
+        await promisedInsert(expected)
+        const res = await promisedSelect(expected)
+        res.forEach(a => {
+          if (a.col_a) {
+            delete a.col_a.nanosecondsDelta
+          }
+        })
+        assert.deepStrictEqual(res, expected)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
+  test('use tableMgr bulk insert decimal vector - no nulls', testDone => {
+    async function runner () {
+      const helper = new TypeTableHelper(theConnection, 'decimal(20,18)')
+      const expected = helper.getVec(10, i => 1 / (i + 2.5))
+      const table = await helper.create()
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedSelect = util.promisify(table.selectRows)
+      try {
+        await promisedInsert(expected)
+        const res = await promisedSelect(expected)
+        assert.deepStrictEqual(expected, res)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
+  test('use tableMgr bulk insert decimal vector - with nulls', testDone => {
+    async function runner () {
+      const helper = new TypeTableHelper(theConnection, 'decimal(20,18)')
+      const expected = helper.getVec(10, i => i % 2 === 0 ? null : 1 / (i + 2.5))
+      const table = await helper.create()
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedSelect = util.promisify(table.selectRows)
+      try {
+        await promisedInsert(expected)
+        const res = await promisedSelect(expected)
+        assert.deepStrictEqual(expected, res)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
+  test('use tableMgr bulk insert bit vector - with nulls', testDone => {
+    async function runner () {
+      const helper = new TypeTableHelper(theConnection, 'bit')
+      const expected = helper.getVec(10, i => i % 2 === 0 ? null : i % 2 === 0)
+      const table = await helper.create()
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedSelect = util.promisify(table.selectRows)
+      try {
+        await promisedInsert(expected)
+        const res = await promisedSelect(expected)
+        assert.deepStrictEqual(expected, res)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
+  test('use tableMgr bulk insert bit vector - no nulls', testDone => {
+    async function runner () {
+      const helper = new TypeTableHelper(theConnection, 'bit')
+      const expected = helper.getVec(10, i => i % 2 === 0)
+      const table = await helper.create()
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedSelect = util.promisify(table.selectRows)
+      try {
+        await promisedInsert(expected)
+        const res = await promisedSelect(expected)
+        assert.deepStrictEqual(expected, res)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
   test('use tableMgr bulk insert int vector - with nulls', testDone => {
     async function runner () {
       const helper = new TypeTableHelper(theConnection, 'int')
