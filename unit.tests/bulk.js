@@ -170,6 +170,49 @@ suite('bulk', function () {
     return result
   }
 
+  test('use tableMgr bulk insert varbinary vector - with empty', testDone => {
+    async function runner () {
+      const b = Buffer.from('0102030405060708090a', 'hex')
+      const emptyBuffer = Buffer.alloc(0)
+      const helper = new TypeTableHelper(theConnection, 'varbinary(10)')
+      const expected = helper.getVec(10, i => i % 2 === 0 ? emptyBuffer : b)
+      const table = await helper.create()
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedSelect = util.promisify(table.selectRows)
+      try {
+        await promisedInsert(expected)
+        const res = await promisedSelect(expected)
+        assert.deepStrictEqual(res, expected)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
+  test('use tableMgr bulk insert varbinary vector - no nulls', testDone => {
+    async function runner () {
+      const b = Buffer.from('0102030405060708090a', 'hex')
+      const helper = new TypeTableHelper(theConnection, 'varbinary(20)')
+      const expected = helper.getVec(10, _ => b)
+      const table = await helper.create()
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedSelect = util.promisify(table.selectRows)
+      try {
+        await promisedInsert(expected)
+        const res = await promisedSelect(expected)
+        assert.deepStrictEqual(res, expected)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
   test('use tableMgr bulk insert datetime vector - no nulls', testDone => {
     async function runner () {
       const helper = new TypeTableHelper(theConnection, 'datetime')

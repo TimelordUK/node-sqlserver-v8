@@ -162,7 +162,7 @@ namespace mssql
 	void BoundDatum::bind_var_char(const Local<Value>& p, const int precision)
 	{
 		reserve_var_char(precision, 1);
-		if (!p->IsNull())
+		if (!p->IsNullOrUndefined())
 		{	
 			const auto str_param = Nan::To<String>(p).FromMaybe(Nan::EmptyString());
 			Nan::Utf8String x(str_param);
@@ -263,7 +263,7 @@ namespace mssql
 		const auto size = sizeof(uint16_t);
 		reserve_w_var_char_array(max_str_len, 1);	
 		_indvec[0] = SQL_NULL_DATA;
-		if (!p->IsNull())
+		if (!p->IsNullOrUndefined())
 		{
 			const auto str_param = Nan::To<String>(p).FromMaybe(Nan::EmptyString());
 			auto* const first_p = _storage->uint16vec_ptr->data();
@@ -377,7 +377,7 @@ namespace mssql
 		const auto type_id_str = get_as_string(p, "type_id");
 		const auto schema_str = get_as_string(p, "schema");
 		
-		if (!schema_str->IsNull())
+		if (!schema_str->IsNullOrUndefined())
 		{
 			_storage->schema = wide_from_js_string(schema_str);
 		}
@@ -451,7 +451,7 @@ namespace mssql
 		reserve_boolean(1);
 		auto& vec = *_storage->charvec_ptr;
 		_indvec[0] = SQL_NULL_DATA;
-		if (!p->IsNull())
+		if (!p->IsNullOrUndefined())
 		{
 			const auto v = MutateJS::as_boolean(p);
 			vec[0] = !v ? 0 : 1;
@@ -469,7 +469,7 @@ namespace mssql
 		{
 			_indvec[i] = SQL_NULL_DATA;
 			const auto elem = Nan::Get(arr, i).ToLocalChecked();
-			if (!elem->IsNull())
+			if (!elem->IsNullOrUndefined())
 			{
 				const auto v = MutateJS::as_boolean(elem);
 				const auto b = !v ? 0 : 1;
@@ -498,7 +498,7 @@ namespace mssql
 		reserve_numeric(1);
 		sql_type = SQL_NUMERIC;
 		_indvec[0] = SQL_NULL_DATA;
-		if (!p->IsNull())
+		if (!p->IsNullOrUndefined())
 		{
 			const auto local = Nan::To<Number>(p).ToLocalChecked();
 			const auto d = local->Value();
@@ -522,7 +522,7 @@ namespace mssql
 			auto& ns = vec[i];
 			_indvec[i] = SQL_NULL_DATA;
 			const auto elem = Nan::Get(arr, i).ToLocalChecked();
-			if (!elem->IsNull())
+			if (!elem->IsNullOrUndefined())
 			{
 				const auto num = Nan::To<Number>(elem).ToLocalChecked();
 				const auto d = num->Value();
@@ -565,7 +565,7 @@ namespace mssql
 		_indvec[0] = SQL_NULL_DATA;
 		auto& vec = *_storage->int32vec_ptr;
 		vec[0] = SQL_NULL_DATA;
-		if (!p->IsNull())
+		if (!p->IsNullOrUndefined())
 		{			
 			const auto local = Nan::To<Int32>(p).FromMaybe(Nan::New<Int32>(0));	
 			const auto d = local->Value();
@@ -614,7 +614,7 @@ namespace mssql
 		reserve_uint32(1);
 		auto& vec = *_storage->uint32vec_ptr;
 		_indvec[0] = SQL_NULL_DATA;
-		if (!p->IsNull())
+		if (!p->IsNullOrUndefined())
 		{
 			const auto local = Nan::To<Uint32>(p).FromMaybe(Nan::New<Uint32>(0));
 			vec[0] = local->Value();
@@ -661,7 +661,7 @@ namespace mssql
 		reserve_date(1);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC
 		_indvec[0] = SQL_NULL_DATA;
-		if (!p->IsNull())
+		if (!p->IsNullOrUndefined())
 		{
 			const auto date_object = Local<Date>::Cast<Value>(p);
 			assert(!date_object.IsEmpty());
@@ -697,7 +697,7 @@ namespace mssql
 		reserve_time(1);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC
 		_indvec[0] = SQL_NULL_DATA;
-		if (!p->IsNull())
+		if (!p->IsNullOrUndefined())
 		{
 			const auto date_object = Local<Date>::Cast<Value>(p);
 			assert(!date_object.IsEmpty());
@@ -732,7 +732,7 @@ namespace mssql
 		reserve_time_stamp(1);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC
 		_indvec[0] = SQL_NULL_DATA;
-		if (!p->IsNull())
+		if (!p->IsNullOrUndefined())
 		{
 			const auto date_object = Local<Date>::Cast<Value>(p);
 			assert(!date_object.IsEmpty());
@@ -766,7 +766,7 @@ namespace mssql
 		reserve_time_stamp_offset(1);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC
 		_indvec[0] = SQL_NULL_DATA;
-		if (!p->IsNull())
+		if (!p->IsNullOrUndefined())
 		{
 			const auto date_object = Local<Date>::Cast<Value>(p);
 			assert(!date_object.IsEmpty());
@@ -806,7 +806,7 @@ namespace mssql
 		{
 			_indvec[i] = SQL_NULL_DATA;
 			const auto elem = Nan::Get(arr, i).ToLocalChecked();
-			if (!elem->IsNull())
+			if (!elem->IsNullOrUndefined())
 			{
 				_indvec[i] = sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT);
 				const auto d = Local<Date>::Cast<Value>(elem);
@@ -823,7 +823,7 @@ namespace mssql
 		reserve_integer(1);
 		auto& vec = *_storage->int64vec_ptr;
 		_indvec[0] = SQL_NULL_DATA;
-		if (!p->IsNull())
+		if (!p->IsNullOrUndefined())
 		{
 			const auto local = Nan::To<Number>(p).ToLocalChecked();
 			vec[0] = static_cast<long long>(local->Value());
@@ -855,7 +855,7 @@ namespace mssql
 		{
 			_indvec[i] = SQL_NULL_DATA;
 			const auto elem = Nan::Get(arr, i).ToLocalChecked();
-			if (!elem->IsNull())
+			if (!elem->IsNullOrUndefined())
 			{
 				_indvec[i] = 0;
 				const auto v = Nan::To<int64_t>(elem).ToChecked();
@@ -881,7 +881,7 @@ namespace mssql
 		reserve_double(1);
 		auto& vec = *_storage->doublevec_ptr;
 		_indvec[0] = SQL_NULL_DATA;
-		if (!p->IsNull())
+		if (!p->IsNullOrUndefined())
 		{
 			const auto v = Nan::To<double>(p).ToChecked();
 			vec[0] = v;
