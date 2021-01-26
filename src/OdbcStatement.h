@@ -87,6 +87,10 @@ namespace mssql
 		bool cancel_handle();
 		bool try_read_columns(size_t number_rows);
 		bool try_read_next_result();
+		void done() {
+			_statementState = OdbcStatementState::STATEMENT_CLOSED;
+			_statement = nullptr;
+		}
 
 	private:
 		bool fetch_read(const size_t number_rows);

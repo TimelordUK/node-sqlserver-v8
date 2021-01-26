@@ -290,7 +290,9 @@ namespace mssql
 		{
 			auto elem = Nan::Get(arr, i);
 			if (elem.IsEmpty()) continue;
-			auto maybe_value = Nan::To<Object>(elem.ToLocalChecked());
+			const auto local = elem.ToLocalChecked();
+			if (local->IsNullOrUndefined()) continue;
+			auto maybe_value = Nan::To<Object>(local);
 			if (maybe_value.IsEmpty()) continue;
 			const auto local_instance = maybe_value.ToLocalChecked();
 			const auto width = node::Buffer::Length(local_instance);
@@ -409,7 +411,7 @@ namespace mssql
 		if (!p->IsNullOrUndefined()) {
 		 	o = p.As<Object>();
 		}
-		const auto valid = !p->IsNullOrUndefined() && !o->IsNull();
+		const auto valid = !p->IsNullOrUndefined() && !o->IsNullOrUndefined();
 		const auto obj_len = valid ? node::Buffer::Length(o) : 0;
 		reserve_var_binary_array(obj_len, 1);
 
@@ -435,7 +437,9 @@ namespace mssql
 			_indvec[i] = SQL_NULL_DATA;
 			auto elem = Nan::Get(arr, i);
 			if (elem.IsEmpty()) continue;
-			auto maybe_value = Nan::To<Object>(elem.ToLocalChecked());
+			auto toLocal = elem.ToLocalChecked();
+			if (toLocal->IsNullOrUndefined()) continue;
+			auto maybe_value = Nan::To<Object>(toLocal);
 			if (maybe_value.IsEmpty()) continue;
 			const auto local_instance = maybe_value.ToLocalChecked();
 			if (local_instance->IsNullOrUndefined()) continue;
@@ -1651,8 +1655,9 @@ namespace mssql
 
 		for (uint32_t i = 0; i < arr->Length(); ++i)
 		{
-			const auto p = Nan::Get(arr, i).ToLocalChecked();
-			counts.Decode(p);
+			auto p = Nan::Get(arr, i);
+			const auto l = p.ToLocalChecked();
+			counts.Decode(l);
 		}
 
 		if (counts.boolCount != 0)

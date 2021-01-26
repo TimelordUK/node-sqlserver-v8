@@ -20,6 +20,7 @@
 #include <OdbcStatementCache.h>
 #include <OdbcStatement.h>
 #include <ConnectionHandles.h>
+// #include <iostream>
 
 namespace mssql
 {
@@ -84,7 +85,8 @@ namespace mssql
 		if (statement_id < 0) return;
 		const auto statement = find(statement_id);
 		if (statement != nullptr) {
-		// cerr << "checkin  " << statement_id << endl;
+			statement->done();
+		    // cerr << "checkin  " << statement_id << endl;
 			_connectionHandles->checkin(statement_id);
 			statements.erase(statement_id);
 		}

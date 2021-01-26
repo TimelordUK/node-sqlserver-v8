@@ -150,7 +150,7 @@ namespace mssql
 		{
 			nodeTypeFactory fact;
 			auto context = fact.isolate->GetCurrentContext();
-			if (p->IsNull()) {
+			if (p->IsNullOrUndefined()) {
 				++nullCount;
 			}
 			else if (p->IsString()) {
