@@ -39,7 +39,8 @@
                // "-t", "datatypes",
                // "-t", "sproc"
                // "-t", "params"
-               "-t", "bulk" 
+               // "-t", "bulk"
+               "-t", "json" 
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

@@ -297,7 +297,7 @@ suite('tvp', function () {
   test('use tvp simple test type insert test extended ascii', testDone => {
     const tableName = 'TestTvp'
     let table
-    var helper = new TvpHelper(theConnection, tableName)
+    const helper = new TvpHelper(theConnection, tableName)
     const vec = helper.getExtendedVec(8 * 1024)
     const fns = [
 
@@ -333,7 +333,7 @@ suite('tvp', function () {
   test('use tvp simple test type insert test long string 8 * 1024', testDone => {
     const tableName = 'TestTvp'
     let table
-    var helper = new TvpHelper(theConnection, tableName)
+    const helper = new TvpHelper(theConnection, tableName)
     const vec = helper.getVec(8 * 1024)
     const fns = [
 
