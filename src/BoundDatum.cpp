@@ -223,7 +223,7 @@ namespace mssql
 		_storage->ReserveUint16(array_len * max_str_len);
 		buffer = _storage->uint16vec_ptr->data();
 		buffer_len = max_str_len * size;
-		if (max_str_len > 4000)
+		if (max_str_len >= 4000)
 		{
 			param_size = 0;
 		}

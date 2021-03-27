@@ -151,24 +151,80 @@ suite('bulk', function () {
         0))
   }
 
-  function toUtc (localDate) {
-    const utcDate = new Date(Date.UTC(localDate.getUTCFullYear(),
-      localDate.getUTCMonth(),
-      localDate.getUTCDate(),
-      localDate.getUTCHours(),
-      localDate.getUTCMinutes(),
-      localDate.getUTCSeconds(),
-      localDate.getUTCMilliseconds()))
-    return utcDate
-  }
-
   function addDays (days) {
     const localDate = new Date()
     const utcDate = toUTCDate(localDate)
-    var result = new Date(utcDate)
+    const result = new Date(utcDate)
     result.setDate(result.getDate() + days)
     return result
   }
+
+  function repeat (c, num) {
+    return new Array(num + 1).join(c)
+  }
+
+  test('use tableMgr bulk insert varchar vector - exactly 4001 chars', testDone => {
+    async function runner () {
+      const b = repeat('z', 4000)
+      const helper = new TypeTableHelper(theConnection, 'NVARCHAR(MAX)')
+      const expected = helper.getVec(10, i => b)
+      const table = await helper.create()
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedSelect = util.promisify(table.selectRows)
+      try {
+        await promisedInsert(expected)
+        const res = await promisedSelect(expected)
+        assert.deepStrictEqual(res, expected)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
+  test('use tableMgr bulk insert varchar vector - exactly 4000 chars', testDone => {
+    async function runner () {
+      const b = repeat('z', 4000)
+      const helper = new TypeTableHelper(theConnection, 'NVARCHAR(MAX)')
+      const expected = helper.getVec(10, i => b)
+      const table = await helper.create()
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedSelect = util.promisify(table.selectRows)
+      try {
+        await promisedInsert(expected)
+        const res = await promisedSelect(expected)
+        assert.deepStrictEqual(res, expected)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
+  test('use tableMgr bulk insert varchar vector - exactly 3999 chars', testDone => {
+    async function runner () {
+      const b = repeat('z', 4000)
+      const helper = new TypeTableHelper(theConnection, 'NVARCHAR(MAX)')
+      const expected = helper.getVec(10, i => b)
+      const table = await helper.create()
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedSelect = util.promisify(table.selectRows)
+      try {
+        await promisedInsert(expected)
+        const res = await promisedSelect(expected)
+        assert.deepStrictEqual(res, expected)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
 
   test('use tableMgr bulk insert varbinary vector - with null', testDone => {
     async function runner () {
