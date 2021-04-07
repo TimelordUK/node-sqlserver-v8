@@ -214,6 +214,9 @@ suite('warnings', function () {
         err.code = 0
         err.sqlstate = '01000'
         err.stack = null
+        err.severity = 0
+        err.procName = ''
+        err.lineNumber = 1
         const expectedErrors = [err]
         const expectedResults = [
           {
@@ -225,6 +228,8 @@ suite('warnings', function () {
           assert.ifError(err)
           if (!more) {
             assert(warnings.length === 1)
+            assert(warnings[0].serverName.length > 0)
+            delete warnings[0].serverName
             assert.deepStrictEqual(warnings, expectedErrors)
             assert.deepStrictEqual(res, expectedResults)
           }

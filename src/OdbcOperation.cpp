@@ -91,7 +91,7 @@ namespace mssql
 		if (!_failures || _failures->empty())
 		{
 			_failures = make_shared<vector<shared_ptr<OdbcError>>>();
-			_failures->push_back(make_shared<OdbcError>("unknown", "internal error", -1));
+			_failures->push_back(make_shared<OdbcError>("unknown", "internal error", -1, 0, "", "", 0));
 		}
 	}
 
@@ -106,6 +106,10 @@ namespace mssql
 			const auto err = fact.error(failure->Message());
 			Nan::Set(err, Nan::New("sqlstate").ToLocalChecked(), Nan::New(failure->SqlState()).ToLocalChecked());
 			Nan::Set(err, Nan::New("code").ToLocalChecked(), Nan::New(failure->Code()));
+			Nan::Set(err, Nan::New("severity").ToLocalChecked(), Nan::New(static_cast<int32_t>(failure->Severity())));
+			Nan::Set(err, Nan::New("serverName").ToLocalChecked(), Nan::New(failure->ServerName()).ToLocalChecked());
+			Nan::Set(err, Nan::New("procName").ToLocalChecked(), Nan::New(failure->ProcName()).ToLocalChecked());
+			Nan::Set(err, Nan::New("lineNumber").ToLocalChecked(), Nan::New(static_cast<uint32_t>(failure->LineNumber())));
 			Nan::Set(errors, i, err);
 		}
 		

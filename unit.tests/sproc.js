@@ -258,6 +258,14 @@ suite('sproc', function () {
       set @plus = @a + @A;
     end;
 `
+
+    const expectedError = new Error('[Microsoft][' + driver + '][SQL Server]The variable name \'@A\' has already been declared. Variable names must be unique within a query batch or stored procedure.')
+    expectedError.sqlstate = '42000'
+    expectedError.code = 134
+    expectedError.severity = 15
+    expectedError.procName = spName
+    expectedError.lineNumber = 5
+
     const fns = [
       asyncDone => {
         procedureHelper.createProcedureIfNotExist(spName, () => {
@@ -266,7 +274,10 @@ suite('sproc', function () {
       },
       asyncDone => {
         theConnection.query(def, (err, res) => {
-          assert(err)
+          assert(err instanceof Error)
+          assert(err.serverName.length > 0)
+          delete err.serverName
+          assert.deepStrictEqual(err, expectedError, 'Unexpected error returned')
           asyncDone()
         })
       }
@@ -1283,6 +1294,10 @@ waitfor delay @timeout;END
         const expected = new Error(`[Microsoft][${driver}]Query timeout expired`)
         expected.sqlstate = 'HYT00'
         expected.code = 0
+        expected.severity = 0
+        expected.serverName = ''
+        expected.procName = ''
+        expected.lineNumber = 0
         const pm = theConnection.procedureMgr()
         pm.setTimeout(2)
         pm.callproc(spName, ['0:0:5'], err => {
@@ -1311,6 +1326,10 @@ waitfor delay @timeout;END
         const expected = new Error(`[Microsoft][${driver}]Query timeout expired`)
         expected.sqlstate = 'HYT00'
         expected.code = 0
+        expected.severity = 0
+        expected.serverName = ''
+        expected.procName = ''
+        expected.lineNumber = 0
         const pm = theConnection.procedureMgr()
         pm.setTimeout(2)
         pm.callproc(spName, ['0:0:5'], err => {

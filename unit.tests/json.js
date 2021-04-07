@@ -1,7 +1,7 @@
 'use strict'
 /* global suite teardown teardown setup */
 
-const supp = require('msnodesqlv8/samples/typescript/demo-support')
+const supp = require('../samples/typescript/demo-support')
 const assert = require('assert')
 const util = require('util')
 const { test } = require('mocha')

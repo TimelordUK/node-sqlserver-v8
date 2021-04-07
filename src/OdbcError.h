@@ -27,8 +27,11 @@ namespace mssql
     {
     public:
 
-        OdbcError( const char* sqlstate, const char* message, SQLINTEGER code )
-           : sqlstate( sqlstate ), message(message), code(code)
+        OdbcError( const char* sqlstate, const char* message, SQLINTEGER code, 
+                    const int severity, const char* serverName, const char* procName, const unsigned int lineNumber 
+        )
+           : sqlstate( sqlstate ), message(message), code(code), 
+                severity(severity), serverName(serverName), procName(procName), lineNumber(lineNumber)
         {
         }
 
@@ -46,6 +49,26 @@ namespace mssql
         {
             return code;
         }
+        
+        const int Severity( void ) const
+        {
+            return severity;
+        }
+
+        const char* ServerName( void ) const
+        {
+            return serverName.c_str();
+        }
+
+        const char* ProcName( void ) const
+        {
+            return procName.c_str();
+        }
+
+        const unsigned int LineNumber( void ) const
+        {
+            return lineNumber;
+        }
 
         // list of msnodesql specific errors
         static OdbcError NODE_SQL_NO_DATA;
@@ -54,6 +77,10 @@ namespace mssql
         string sqlstate;
         string message; 
         SQLINTEGER code;
+        int severity;
+        string serverName;
+        string procName;
+        unsigned int lineNumber;
     };
 
 }
