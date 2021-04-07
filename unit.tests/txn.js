@@ -482,7 +482,13 @@ suite('txn', function () {
           const expected = new Error(`[Microsoft][${driver}][SQL Server]Unclosed quotation mark after the character string 'm with STUPID'.`)
           expected.sqlstate = '42000'
           expected.code = 105
+          expected.severity = 15
+          expected.procName = ''
+          expected.lineNumber = 1
 
+          assert(err instanceof Error)
+          assert(err.serverName.length > 0)
+          delete err.serverName
           assert.deepStrictEqual(err, expected, 'Transaction should have caused an error')
 
           theConnection.rollback(err => {

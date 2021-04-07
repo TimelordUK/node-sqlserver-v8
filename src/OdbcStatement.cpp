@@ -201,7 +201,7 @@ namespace mssql
 		SQLINTEGER native_error = -1;
 		const auto* c_state = "CANCEL";
 		const auto* c_msg = "Error: [msnodesql] cancel only supported for statements where polling is enabled.";
-		_errors->push_back(make_shared<OdbcError>(c_state, c_msg, native_error));
+		_errors->push_back(make_shared<OdbcError>(c_state, c_msg, native_error, 0, "", "", 0));
 		return false;
 	}
 
@@ -603,7 +603,7 @@ namespace mssql
 		_endOfResults = true; // reset
 		const string c_msg = "[Microsoft] Operation canceled";
 		const string c_state = "U00000";
-		const auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), 0);
+		const auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), 0, 0, "", "", 0);
 		_errors->push_back(last);
 		return true;
 	}

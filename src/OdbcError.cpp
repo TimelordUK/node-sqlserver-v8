@@ -24,5 +24,5 @@ namespace mssql {
 
 	// error returned when a string returns no data but it's not a NULL field
 	// ODBC returns SQL_NO_DATA so we translate this into an error and return it to node.js
-    OdbcError OdbcError::NODE_SQL_NO_DATA = OdbcError( "IMNOD", "No data returned", 1 );
+    OdbcError OdbcError::NODE_SQL_NO_DATA = OdbcError( "IMNOD", "No data returned", 1, 0, "", "", 0);
 }

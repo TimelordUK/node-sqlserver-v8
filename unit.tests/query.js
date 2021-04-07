@@ -455,11 +455,16 @@ suite('query', function () {
     const expectedError = new Error('[Microsoft][' + driver + '][SQL Server]Unclosed quotation mark after the character string \'m with NOBODY\'.')
     expectedError.sqlstate = '42000'
     expectedError.code = 105
+    expectedError.severity = 15
+    expectedError.procName = ''
+    expectedError.lineNumber = 1
     const fns = [
       asyncDone => {
         assert.doesNotThrow(() => {
           theConnection.queryRaw('I\'m with NOBODY', e => {
             assert(e instanceof Error)
+            assert(e.serverName.length > 0)
+            delete e.serverName
             assert.deepStrictEqual(e, expectedError, 'Unexpected error returned')
             asyncDone()
           })
@@ -471,6 +476,8 @@ suite('query', function () {
           const s = theConnection.queryRaw('I\'m with NOBODY')
           s.on('error', e => {
             assert(e instanceof Error)
+            assert(e.serverName.length > 0)
+            delete e.serverName
             assert.deepStrictEqual(e, expectedError, 'Unexpected error returned')
             asyncDone()
           })
@@ -594,40 +601,6 @@ suite('query', function () {
       assert.ifError(e)
       results.push(r)
       assert.deepStrictEqual(expected, results)
-      done()
-    })
-  })
-
-  test('query with errors', done => {
-    const expectedError = new Error('[Microsoft][' + driver + '][SQL Server]Unclosed quotation mark after the character string \'m with NOBODY\'.')
-    expectedError.sqlstate = '42000'
-    expectedError.code = 105
-
-    const fns = [
-
-      asyncDone => {
-        assert.doesNotThrow(() => {
-          theConnection.queryRaw('I\'m with NOBODY', e => {
-            assert(e instanceof Error)
-            assert.deepStrictEqual(e, expectedError, 'Unexpected error returned')
-            asyncDone()
-          })
-        })
-      },
-
-      asyncDone => {
-        assert.doesNotThrow(() => {
-          const s = theConnection.queryRaw('I\'m with NOBODY')
-          s.on('error', e => {
-            assert(e instanceof Error)
-            assert.deepStrictEqual(e, expectedError, 'Unexpected error returned')
-            asyncDone()
-          })
-        })
-      }
-    ]
-
-    async.series(fns, () => {
       done()
     })
   })

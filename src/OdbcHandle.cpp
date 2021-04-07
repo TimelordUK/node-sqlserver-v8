@@ -93,6 +93,16 @@ namespace mssql
 		sql_state.reserve(6);
 		sql_state.resize(6);
 		set<string> received;
+		int severity = 0;
+		SQLSMALLINT serverName_len = 0;
+		vector<SQLWCHAR> serverName;
+		serverName.reserve(SQL_MAX_SQLSERVERNAME);
+		serverName.resize(SQL_MAX_SQLSERVERNAME);
+		SQLSMALLINT procName_len = 0;
+		vector<SQLWCHAR> procName;
+		procName.reserve(128);
+		procName.resize(128);
+		unsigned int lineNumber = 0;
 		// Get the status records.  
 		SQLSMALLINT i = 1;
 		errors->clear();
@@ -104,8 +114,14 @@ namespace mssql
 			auto c_msg = swcvec2str(msg, msg_len);
 			auto c_state = swcvec2str(sql_state, sql_state.size());
 			const auto m = string(c_msg);
+			SQLGetDiagField(HandleType, handle, i, SQL_DIAG_SS_SEVERITY, &severity, SQL_IS_INTEGER, NULL);
+			SQLGetDiagField(HandleType, handle, i, SQL_DIAG_SS_SRVNAME, serverName.data(), serverName.capacity(), &serverName_len);
+			const string c_serverName = swcvec2str(serverName, serverName_len);
+			SQLGetDiagField(HandleType, handle, i, SQL_DIAG_SS_PROCNAME, procName.data(), procName.capacity(), &procName_len);
+			const string c_procName = swcvec2str(procName, procName_len);
+			SQLGetDiagField(HandleType, handle, i, SQL_DIAG_SS_LINE, &lineNumber, SQL_IS_UINTEGER, NULL);
 			if (received.find(m) == received.end()) {
-				const auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), native_error);
+				const auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), native_error, severity, c_serverName.c_str(), c_procName.c_str(), lineNumber);
 				errors->push_back(last);
 				received.insert(m);
 			}
