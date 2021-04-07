@@ -90,6 +90,16 @@
 #define SQL_SS_TIME2                        (-154)
 #define SQL_SS_TIMESTAMPOFFSET              (-155)
 
+#define SQL_DIAG_SS_BASE                    (-1150)
+#define SQL_DIAG_SS_MSGSTATE                (SQL_DIAG_SS_BASE)
+#define SQL_DIAG_SS_SEVERITY                (SQL_DIAG_SS_BASE-1)
+#define SQL_DIAG_SS_SRVNAME                 (SQL_DIAG_SS_BASE-2)
+#define SQL_DIAG_SS_PROCNAME                (SQL_DIAG_SS_BASE-3)
+#define SQL_DIAG_SS_LINE                    (SQL_DIAG_SS_BASE-4)
+
+// max SQL Server identifier length
+#define SQL_MAX_SQLSERVERNAME                       128
+
 typedef SQLULEN			SQLROWSETSIZE;
 
 // New Date Time Structures
