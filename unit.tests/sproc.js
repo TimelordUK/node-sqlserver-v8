@@ -872,7 +872,9 @@ END
 
   async function t18 (connectionProxy, iterations, testDone) {
     const promisedQueryRaw = util.promisify(connectionProxy.queryRaw)
-
+    const newBusinessId = 100
+    const NationalIDNumber = 'NI123456'
+    const loginId = 'Programmer01'
     const spName = 'test_sp_multi_statement'
 
     const def = `alter PROCEDURE <name>(
@@ -886,11 +888,11 @@ BEGIN
     
     select BusinessEntityID, NationalIDNumber, LoginID from TestMultiStatement
 
-    update TestMultiStatement set BusinessEntityID = 100 where BusinessEntityID = @p1
+    update TestMultiStatement set BusinessEntityID = ${newBusinessId} where BusinessEntityID = @p1
 
     select BusinessEntityID, NationalIDNumber, LoginID from TestMultiStatement
     
-    delete from TestMultiStatement where BusinessEntityID = 100 
+    delete from TestMultiStatement where BusinessEntityID = ${newBusinessId}
 END
 `
     try {
@@ -904,20 +906,20 @@ END
 
       const o = {
         p1: 1,
-        p2: 'NI123456',
-        p3: 'Programmer01'
+        p2: NationalIDNumber,
+        p3: loginId
       }
 
       const expected = [
         {
           BusinessEntityID: 1,
-          NationalIDNumber: 'NI123456',
-          LoginID: 'Programmer01'
+          NationalIDNumber: NationalIDNumber,
+          LoginID: loginId
         },
         {
-          BusinessEntityID: 100,
-          NationalIDNumber: 'NI123456',
-          LoginID: 'Programmer01'
+          BusinessEntityID: newBusinessId,
+          NationalIDNumber: NationalIDNumber,
+          LoginID: loginId
         }
       ]
 
