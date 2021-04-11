@@ -762,7 +762,9 @@ END
     t15(theConnection, 500, testDone)
   })
 
-  test('test sproc with insert, update and delete', testDone => {
+  async function t16 (connectionProxy, iterations, testDone) {
+    const promisedQueryRaw = util.promisify(connectionProxy.queryRaw)
+
     const spName = 'test_sp_multi_statement'
 
     const def = `alter PROCEDURE <name>(
@@ -779,48 +781,37 @@ BEGIN
     delete from TestMultiStatement where BusinessEntityID = 100 
 END
 `
-    const fns = [
-      asyncDone => {
-        theConnection.queryRaw('DROP TABLE TestMultiStatement', () => {
-          asyncDone()
-        })
-      },
+    try {
+      await promisedQueryRaw('DROP TABLE TestMultiStatement')
+      await promisedQueryRaw(`CREATE TABLE TestMultiStatement (
+        [BusinessEntityID] [int] NOT NULL,
+        [NationalIDNumber] [nvarchar](15) NOT NULL,
+        [LoginID] [nvarchar](256) NOT NULL,
+        )`)
+      await promisedCreate(spName, def)
 
-      asyncDone => {
-        theConnection.queryRaw(`CREATE TABLE TestMultiStatement (
-          [BusinessEntityID] [int] NOT NULL,
-          [NationalIDNumber] [nvarchar](15) NOT NULL,
-          [LoginID] [nvarchar](256) NOT NULL,
-          )`,
-        e => {
-          assert.ifError(e)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const pm = theConnection.procedureMgr()
-        pm.get(spName, proc => {
-          const count = pm.getCount()
-          assert.strictEqual(count, 1)
-          proc.call([1, 'NI123456', 'Programmer01'], (err, results, output, more) => {
-            assert.ifError(err)
-            if (!output) return
-            asyncDone()
-          })
-        })
+      const o = {
+        p1: 1,
+        p2: 'NI123456',
+        p3: 'Programmer01'
       }
-    ]
 
-    async.series(fns, () => {
+      for (let i = 0; i < iterations; ++i) {
+        const res = await promisedCallProc(connectionProxy, spName, o)
+        assert(res)
+      }
       testDone()
-    })
+    } catch (e) {
+      assert.ifError(e)
+    }
+  }
+
+  test('pool: get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
+    usePoolCallProc(t15, 5, testDone)
+  })
+
+  test('connection: get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
+    t16(theConnection, 1, testDone)
   })
 
   test('get proc and call multiple times synchronously with changing params i.e. prove each call is independent', testDone => {
