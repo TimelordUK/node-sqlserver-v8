@@ -102,7 +102,7 @@ suite('sproc', function () {
     }
   }
 
-  function usePoolCallProc (testfn, testDone) {
+  function usePoolCallProc (testfn, iterations, testDone) {
     const size = 2
     const pool = new sql.Pool({
       connectionString: connStr,
@@ -112,7 +112,7 @@ suite('sproc', function () {
       assert.ifError(e)
     })
     pool.open()
-    testfn(pool, 5, () => {
+    testfn(pool, iterations, () => {
       pool.close(() => {
         testDone()
       })
@@ -120,7 +120,7 @@ suite('sproc', function () {
   }
 
   test('pool: two optional parameters override second set output to sum', testDone => {
-    usePoolCallProc(t1, testDone)
+    usePoolCallProc(t1, 5, testDone)
   })
 
   test('connection: two optional parameters override second set output to sum', testDone => {
@@ -169,7 +169,7 @@ suite('sproc', function () {
   }
 
   test('pool: one default input, three output parameters', testDone => {
-    usePoolCallProc(t2, testDone)
+    usePoolCallProc(t2, 5, testDone)
   })
 
   test('connection: one default input, three output parameters', testDone => {
@@ -214,7 +214,7 @@ suite('sproc', function () {
   }
 
   test('pool: two parameters 1 optional set output to sum - omit required expect error', testDone => {
-    usePoolCallProc(t3, testDone)
+    usePoolCallProc(t3, 5, testDone)
   })
 
   test('connection: two parameters 1 optional set output to sum - omit required expect error', testDone => {
@@ -263,7 +263,7 @@ suite('sproc', function () {
   }
 
   test('pool: two optional parameters override both set output to sum', testDone => {
-    usePoolCallProc(t4, testDone)
+    usePoolCallProc(t4, 5, testDone)
   })
 
   test('connection: two optional parameters override both set output to sum', testDone => {
@@ -317,7 +317,7 @@ suite('sproc', function () {
   }
 
   test('pool: two parameters same name mixed case - should error', testDone => {
-    usePoolCallProc(t5, testDone)
+    usePoolCallProc(t5, 5, testDone)
   })
 
   test('connection: two parameters same name mixed case - should error', testDone => {
@@ -362,7 +362,7 @@ suite('sproc', function () {
   }
 
   test('pool: two optional parameters set output to sum no input params', testDone => {
-    usePoolCallProc(t6, testDone)
+    usePoolCallProc(t6, 5, testDone)
   })
 
   test('connection: two optional parameters set output to sum no input params', testDone => {
@@ -409,7 +409,7 @@ suite('sproc', function () {
   }
 
   test('pool: two optional parameters override first set output to sum', testDone => {
-    usePoolCallProc(t7, testDone)
+    usePoolCallProc(t7, 5, testDone)
   })
 
   test('connection: two optional parameters override first set output to sum', testDone => {
@@ -457,7 +457,7 @@ suite('sproc', function () {
   }
 
   test('pool: 2 input, 1 optional parameter override set output to sum of 3', testDone => {
-    usePoolCallProc(t8, testDone)
+    usePoolCallProc(t8, 5, testDone)
   })
 
   test('connection: 2 input, 1 optional parameter override set output to sum of 3', testDone => {
@@ -504,7 +504,7 @@ suite('sproc', function () {
   }
 
   test('pool: 2 input, 1 optional default parameters set output to sum of 3', testDone => {
-    usePoolCallProc(t9, testDone)
+    usePoolCallProc(t9, 5, testDone)
   })
 
   test('connection: 2 input, 1 optional default parameters set output to sum of 3', testDone => {
@@ -546,7 +546,7 @@ suite('sproc', function () {
   }
 
   test('pool: omit required parameter expect error', testDone => {
-    usePoolCallProc(t10, testDone)
+    usePoolCallProc(t10, 5, testDone)
   })
 
   test('connection: omit required parameter expect error', testDone => {
@@ -590,7 +590,7 @@ suite('sproc', function () {
   }
 
   test('pool: add illegal parameter expect error', testDone => {
-    usePoolCallProc(t11, testDone)
+    usePoolCallProc(t11, 5, testDone)
   })
 
   test('connection: add illegal parameter expect error', testDone => {
@@ -635,7 +635,7 @@ suite('sproc', function () {
   }
 
   test('pool: use input output parameters i.e. use a param as both input and output', testDone => {
-    usePoolCallProc(t12, testDone)
+    usePoolCallProc(t12, 5, testDone)
   })
 
   test('connection: use input output parameters i.e. use a param as both input and output', testDone => {
@@ -682,7 +682,7 @@ suite('sproc', function () {
   }
 
   test('pool: two in out params use first as input only second output only', testDone => {
-    usePoolCallProc(t13, testDone)
+    usePoolCallProc(t13, 5, testDone)
   })
 
   test('connection: two in out params use first as input only second output only', testDone => {
@@ -707,14 +707,14 @@ suite('sproc', function () {
   }
 
   test('pool: test non existant sproc', testDone => {
-    usePoolCallProc(t14, testDone)
+    usePoolCallProc(t14, 5, testDone)
   })
 
   test('connection: test non existant sproc', testDone => {
     t14(theConnection, 1, testDone)
   })
 
-  test('get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
+  async function t15 (connectionProxy, iterations, testDone) {
     const spName = 'test_sp_get_int_int'
 
     const def = `alter PROCEDURE <name> (
@@ -728,46 +728,38 @@ BEGIN
    RETURN 99;
 END
 `
+    try {
+      await promisedCreate(spName, def)
 
-    const fns = [
-      asyncDone => {
-        procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const pm = theConnection.procedureMgr()
-        pm.get(spName, procedure => {
-          const count = pm.getCount()
-          assert.strictEqual(count, 1)
-          const received = []
-          const iterations = 500
-
-          const check = () => {
-            for (let i = 0; i < iterations; ++i) {
-              const expected = [99, i * 2]
-              assert.deepStrictEqual(received[i], expected, 'results didn\'t match')
-            }
-            asyncDone()
-          }
-
-          for (let i = 0; i < iterations; ++i) {
-            procedure.call([i, i], (err, results, output) => {
-              assert.ifError(err)
-              received[received.length] = output
-              if (received.length === iterations) {
-                check()
-              }
-            })
-          }
-        })
+      function check (received) {
+        for (let i = 0; i < iterations; ++i) {
+          const expected = [99, i * 2]
+          assert.deepStrictEqual(received[i], expected, 'results didn\'t match')
+        }
       }
-    ]
+      const promises = []
+      for (let i = 0; i < iterations; ++i) {
+        const o = {
+          num1: i,
+          num2: i
+        }
+        promises.push(promisedCallProc(connectionProxy, spName, o))
+      }
+      Promise.all(promises).then(received => {
+        check(received.map(v => v.output))
+        testDone()
+      })
+    } catch (e) {
+      assert.ifError(e)
+    }
+  }
 
-    async.series(fns, () => {
-      testDone()
-    })
+  test('pool: get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
+    usePoolCallProc(t15, 500, testDone)
+  })
+
+  test('connection: get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
+    t15(theConnection, 500, testDone)
   })
 
   test('test sproc with insert, update and delete', testDone => {
