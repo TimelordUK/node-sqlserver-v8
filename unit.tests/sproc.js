@@ -15,6 +15,7 @@ suite('sproc', function () {
   let procedureHelper
   const sql = global.native_sql
   let promisedCreate
+  let promisedCreateIfNotExist
 
   this.timeout(60000)
 
@@ -28,6 +29,7 @@ suite('sproc', function () {
       driver = match[1]
       procedureHelper = new support.ProcedureHelper(connStr)
       promisedCreate = util.promisify(procedureHelper.createProcedure)
+      promisedCreateIfNotExist = util.promisify(procedureHelper.createProcedureIfNotExist)
 
       procedureHelper.setVerbose(false)
       async = co.async
@@ -218,7 +220,7 @@ suite('sproc', function () {
     t3(theConnection, 1, testDone)
   })
 
-  test('two optional parameters override both set output to sum', testDone => {
+  async function t4 (connectionProxy, iterations, testDone) {
     const spName = 'test_sp_get_optional_p'
     const a = 10
     const b = 20
@@ -235,44 +237,39 @@ suite('sproc', function () {
       set @plus = @a + @b;
     end;
 `
-    const fns = [
-      asyncDone => {
-        procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const pm = theConnection.procedureMgr()
-        pm.get(spName, proc => {
-          const count = pm.getCount()
-          assert.strictEqual(count, 1)
-          const o = {
-            a: anew,
-            b: bnew
-          }
-          proc.call(o, (err, results, output) => {
-            assert.ifError(err)
-            if (output) {
-              assert(Array.isArray(output))
-              const expected = [
-                0,
-                anew + bnew
-              ]
-              assert.deepStrictEqual(expected, output)
-              asyncDone()
-            }
-          })
-        })
+    try {
+      await promisedCreate(spName, def)
+      const expected = [
+        0,
+        anew + bnew
+      ]
+      const o = {
+        a: anew,
+        b: bnew
       }
-    ]
-
-    async.series(fns, () => {
+      for (let i = 0; i < iterations; ++i) {
+        const res = await promisedCallProc(connectionProxy, spName, o)
+        const output = res.output
+        if (output) {
+          assert(Array.isArray(output))
+          assert.deepStrictEqual(expected, output)
+        }
+      }
       testDone()
-    })
+    } catch (e) {
+      assert.ifError(e)
+    }
+  }
+
+  test('pool: two optional parameters override both set output to sum', testDone => {
+    usePoolCallProc(t4, testDone)
   })
 
-  test('two parameters same name mixed case - should error', testDone => {
+  test('connection: two optional parameters override both set output to sum', testDone => {
+    t4(theConnection, 1, testDone)
+  })
+
+  async function t5 (connectionProxy, iterations, testDone) {
     const spName = 'test_sp_get_optional_p'
     const a = 10
     const b = 20
@@ -287,7 +284,6 @@ suite('sproc', function () {
       set @plus = @a + @A;
     end;
 `
-
     const expectedError = new Error('[Microsoft][' + driver + '][SQL Server]The variable name \'@A\' has already been declared. Variable names must be unique within a query batch or stored procedure.')
     expectedError.sqlstate = '42000'
     expectedError.code = 134
@@ -295,29 +291,39 @@ suite('sproc', function () {
     expectedError.procName = spName
     expectedError.lineNumber = 5
 
-    const fns = [
-      asyncDone => {
-        procedureHelper.createProcedureIfNotExist(spName, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        theConnection.query(def, (err, res) => {
-          assert(err instanceof Error)
-          assert(err.serverName.length > 0)
-          delete err.serverName
-          assert.deepStrictEqual(err, expectedError, 'Unexpected error returned')
-          asyncDone()
-        })
+    try {
+      await promisedCreateIfNotExist(spName)
+    } catch (e) {
+      assert.ifError(e)
+    }
+    const errors = []
+    const promisedQuery = util.promisify(connectionProxy.query)
+    for (let i = 0; i < iterations; ++i) {
+      try {
+        const res = await promisedQuery(def)
+        assert(res)
+      } catch (e) {
+        assert(e.serverName.length > 0)
+        delete e.serverName
+        errors.push(e)
       }
-    ]
-
-    async.series(fns, () => {
-      testDone()
+    }
+    assert.deepStrictEqual(iterations, errors.length)
+    errors.forEach(err => {
+      assert.deepStrictEqual(err, expectedError, 'Unexpected error returned')
     })
+    testDone()
+  }
+
+  test('pool: two parameters same name mixed case - should error', testDone => {
+    usePoolCallProc(t5, testDone)
   })
 
-  test('two optional parameters set output to sum no input params', testDone => {
+  test('connection: two parameters same name mixed case - should error', testDone => {
+    t5(theConnection, 1, testDone)
+  })
+
+  async function t6 (connectionProxy, iterations, testDone) {
     const spName = 'test_sp_get_optional_p'
     const a = 10
     const b = 20
@@ -332,38 +338,34 @@ suite('sproc', function () {
       set @plus = @a + @b;
     end;
 `
-    const fns = [
-      asyncDone => {
-        procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const pm = theConnection.procedureMgr()
-        pm.get(spName, proc => {
-          const count = pm.getCount()
-          assert.strictEqual(count, 1)
-          const o = {}
-          proc.call(o, (err, results, output) => {
-            assert.ifError(err)
-            if (output) {
-              assert(Array.isArray(output))
-              const expected = [
-                0,
-                a + b
-              ]
-              assert.deepStrictEqual(expected, output)
-              asyncDone()
-            }
-          })
-        })
+    try {
+      await promisedCreate(spName, def)
+      const expected = [
+        0,
+        a + b
+      ]
+      const o = {
       }
-    ]
-
-    async.series(fns, () => {
+      for (let i = 0; i < iterations; ++i) {
+        const res = await promisedCallProc(connectionProxy, spName, o)
+        const output = res.output
+        if (output) {
+          assert(Array.isArray(output))
+          assert.deepStrictEqual(expected, output)
+        }
+      }
       testDone()
-    })
+    } catch (e) {
+      assert.ifError(e)
+    }
+  }
+
+  test('pool: two optional parameters set output to sum no input params', testDone => {
+    usePoolCallProc(t6, testDone)
+  })
+
+  test('connection: two optional parameters set output to sum no input params', testDone => {
+    t6(theConnection, 1, testDone)
   })
 
   test('two optional parameters override first set output to sum', testDone => {

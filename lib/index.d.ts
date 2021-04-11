@@ -80,6 +80,7 @@ export interface Pool {
     queryRaw(description: QueryDescription, params?: any[], cb?: QueryRawCb): Query
     queryRaw(sql: string, params?: any[], cb?: QueryRawCb): Query
     queryRaw(sql: string, cb: QueryRawCb): Query
+    callproc(name: string, params?: any[], cb?: CallProcedureCb): Query
 }
 
 export interface TableColumnType {
@@ -135,6 +136,7 @@ export interface Connection {
     prepare(sql: string, cb: PrepareCb): void
     prepare(description: QueryDescription, cb: PrepareCb): void
     setFilterNonCriticalErrors(flag:boolean):void
+    callproc(name: string, params?: any[], cb?: CallProcedureCb): Query
 }
 
 export interface Query {
