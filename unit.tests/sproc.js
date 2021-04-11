@@ -53,14 +53,24 @@ suite('sproc', function () {
   // this will be either Pool or connection
   function promisedCallProc (connectionProxy, spName, o) {
     return new Promise((resolve, reject) => {
-      connectionProxy.callproc(spName, o, (err, results, output) => {
+      const allResults = []
+      connectionProxy.callproc(spName, o, (err, results, output, more) => {
         if (err) {
           reject(err)
         } else {
-          resolve({
-            results: results,
-            output: output
-          })
+          allResults.push(results)
+          if (!more) {
+            const selects = allResults.reduce((agg, latest) => {
+              if (latest.length > 0) {
+                agg.push(latest[0])
+              }
+              return agg
+            }, [])
+            resolve({
+              results: selects,
+              output: output
+            })
+          }
         }
       })
     })
@@ -858,6 +868,78 @@ END
 
   test('connection: get proc and call multiple times synchronously with changing params i.e. prove each call is independent', testDone => {
     t17(theConnection, 1, testDone)
+  })
+
+  async function t18 (connectionProxy, iterations, testDone) {
+    const promisedQueryRaw = util.promisify(connectionProxy.queryRaw)
+
+    const spName = 'test_sp_multi_statement'
+
+    const def = `alter PROCEDURE <name>(
+@p1 INT,
+@p2 nvarchar(15),
+@p3 nvarchar(256)
+
+)AS
+BEGIN
+    insert into TestMultiStatement (BusinessEntityID, NationalIDNumber, LoginID) values (@p1, @p2, @p3)
+    
+    select BusinessEntityID, NationalIDNumber, LoginID from TestMultiStatement
+
+    update TestMultiStatement set BusinessEntityID = 100 where BusinessEntityID = @p1
+
+    select BusinessEntityID, NationalIDNumber, LoginID from TestMultiStatement
+    
+    delete from TestMultiStatement where BusinessEntityID = 100 
+END
+`
+    try {
+      await promisedQueryRaw('DROP TABLE TestMultiStatement')
+      await promisedQueryRaw(`CREATE TABLE TestMultiStatement (
+        [BusinessEntityID] [int] NOT NULL,
+        [NationalIDNumber] [nvarchar](15) NOT NULL,
+        [LoginID] [nvarchar](256) NOT NULL,
+        )`)
+      await promisedCreate(spName, def)
+
+      const o = {
+        p1: 1,
+        p2: 'NI123456',
+        p3: 'Programmer01'
+      }
+
+      const expected = [
+        {
+          BusinessEntityID: 1,
+          NationalIDNumber: 'NI123456',
+          LoginID: 'Programmer01'
+        },
+        {
+          BusinessEntityID: 100,
+          NationalIDNumber: 'NI123456',
+          LoginID: 'Programmer01'
+        }
+      ]
+
+      for (let i = 0; i < iterations; ++i) {
+        const res = await promisedCallProc(connectionProxy, spName, o)
+        assert(res)
+        assert.deepStrictEqual(2, res.results.length)
+        assert.deepStrictEqual(res.results, expected)
+      }
+
+      testDone()
+    } catch (e) {
+      assert.ifError(e)
+    }
+  }
+
+  test('pool: async call proc with changing params - include multiple select in sproc', testDone => {
+    usePoolCallProc(t18, 5, testDone)
+  })
+
+  test('connection: async call proc with changing params - include multiple select in sproc', testDone => {
+    t18(theConnection, 1, testDone)
   })
 
   test('proc with multiple select  - should callback with each', testDone => {
