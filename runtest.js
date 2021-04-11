@@ -4,35 +4,52 @@ const path = require('path')
 
 runTest()
 
-function runTest () {
-  const argv = require('minimist')(process.argv.slice(2))
-  console.log(argv)
-  let connStr = null
+function getConnection (jsonFile, key) {
+  const config = require(path.join(__dirname, jsonFile))
+  return config.connection[key]
+}
 
-  let toRun
-  if (Object.prototype.hasOwnProperty.call(argv, 't')) {
-    toRun = argv.t
+function argvGet(argv, key) {
+  if (Object.prototype.hasOwnProperty.call(argv, key)) {
+    return argv[key] || true
+  }
+  return null
+}
+
+function resolve(argv) {
+  let connStr = ''
+  const jsonFile = argvGet(argv, 'json') || 'runtest.json'
+  const key = argvGet(argv, 'k')
+  if (key) {
+    connStr = getConnection(jsonFile, key)
   }
 
-  if (Object.prototype.hasOwnProperty.call(argv, 'a')) {
+  else if (Object.prototype.hasOwnProperty.call(argv, 'a')) {
     const appVeyorVersion = argv.a
     connStr = `Driver={SQL Server Native Client 11.0}; Server=(local)\\SQL${appVeyorVersion}; Database={master}; Uid=sa; Pwd=Password12!`
     console.log(`set connStr as ${connStr}`)
   }
 
-  if (Object.prototype.hasOwnProperty.call(argv, 'l')) {
+  else if (Object.prototype.hasOwnProperty.call(argv, 'l')) {
     connStr = 'Driver={SQL Server Native Client 11.0}; Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;'
   }
 
-  if (Object.prototype.hasOwnProperty.call(argv, 'u')) {
+  else if (Object.prototype.hasOwnProperty.call(argv, 'u')) {
     connStr = 'Driver={ODBC Driver 17 for SQL Server}; database=node; Server=192.168.56.1; UID=linux; PWD=linux'
   }
 
-  if (Object.prototype.hasOwnProperty.call(argv, 'x')) {
+  else if (Object.prototype.hasOwnProperty.call(argv, 'x')) {
     connStr = 'Driver={ODBC Driver 17 for SQL Server}; Server=localhost; Uid=SA; Pwd=Password12!'
   }
+  return connStr
+}
 
-  //
+function runTest () {
+  const argv = require('minimist')(process.argv.slice(2))
+  console.log(argv)
+  const connStr = resolve(argv)
+  let toRun = argvGet(argv, 't')
+
   if (!Array.isArray(toRun)) {
     toRun = [toRun]
   }
