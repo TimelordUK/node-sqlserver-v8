@@ -14,6 +14,7 @@ suite('sproc', function () {
   let helper
   let procedureHelper
   const sql = global.native_sql
+  let promisedCreate
 
   this.timeout(60000)
 
@@ -26,6 +27,8 @@ suite('sproc', function () {
       const match = myRegexp.exec(connStr)
       driver = match[1]
       procedureHelper = new support.ProcedureHelper(connStr)
+      promisedCreate = util.promisify(procedureHelper.createProcedure)
+
       procedureHelper.setVerbose(false)
       async = co.async
       helper = co.helper
@@ -75,7 +78,6 @@ suite('sproc', function () {
       set @plus = @a + @b;
     end;
 `
-    const promisedCreate = util.promisify(procedureHelper.createProcedure)
     try {
       await promisedCreate(spName, def)
       const expected = [
@@ -97,7 +99,7 @@ suite('sproc', function () {
     }
   }
 
-  test('pool: two optional parameters override second set output to sum', testDone => {
+  function usePoolCallProc (testfn, testDone) {
     const size = 2
     const pool = new sql.Pool({
       connectionString: connStr,
@@ -107,18 +109,22 @@ suite('sproc', function () {
       assert.ifError(e)
     })
     pool.open()
-    t1(pool, 5, () => {
+    testfn(pool, 5, () => {
       pool.close(() => {
         testDone()
       })
     })
+  }
+
+  test('pool: two optional parameters override second set output to sum', testDone => {
+    usePoolCallProc(t1, testDone)
   })
 
   test('connection: two optional parameters override second set output to sum', testDone => {
     t1(theConnection, 1, testDone)
   })
 
-  test('one default input, three output parameters', testDone => {
+  async function t2 (connectionProxy, iterations, testDone) {
     const spName = 'test_sp_get_optional_p'
     const a = 20
     const def = `alter PROCEDURE <name> (
@@ -135,43 +141,39 @@ suite('sproc', function () {
       set @t3 = @a * 3;
     end;
 `
-    const fns = [
-      asyncDone => {
-        procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
+    try {
+      await promisedCreate(spName, def)
+      const expected = [
+        0,
+        a,
+        a * 2,
+        a * 3
+      ]
 
-      asyncDone => {
-        const pm = theConnection.procedureMgr()
-        pm.get(spName, proc => {
-          const count = pm.getCount()
-          assert.strictEqual(count, 1)
-          const o = {}
-          proc.call(o, (err, results, output) => {
-            assert.ifError(err)
-            if (output) {
-              assert(Array.isArray(output))
-              const expected = [
-                0,
-                a,
-                a * 2,
-                a * 3
-              ]
-              assert.deepStrictEqual(expected, output)
-              asyncDone()
-            }
-          })
-        })
+      const o = {}
+      for (let i = 0; i < iterations; ++i) {
+        const res = await promisedCallProc(connectionProxy, spName, o)
+        const output = res.output
+        if (output) {
+          assert(Array.isArray(output))
+          assert.deepStrictEqual(expected, output)
+        }
       }
-    ]
-
-    async.series(fns, () => {
       testDone()
-    })
+    } catch (e) {
+      assert.ifError(e)
+    }
+  }
+
+  test('pool: one default input, three output parameters', testDone => {
+    usePoolCallProc(t2, testDone)
   })
 
-  test('two parameters 1 optional set output to sum - omit required expect error', testDone => {
+  test('connection: one default input, three output parameters', testDone => {
+    t2(theConnection, 1, testDone)
+  })
+
+  async function t3 (connectionProxy, iterations, testDone) {
     const spName = 'test_sp_get_optional_p'
     const a = 20
     const override = 30
@@ -186,32 +188,34 @@ suite('sproc', function () {
       set @plus = @a + @b;
     end;
 `
-    const fns = [
-      asyncDone => {
-        procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
+    try {
+      await promisedCreate(spName, def)
+    } catch (e) {
+      assert.ifError(e)
+    }
+    const o = {
+      a: override
+    }
+    const errors = []
 
-      asyncDone => {
-        const pm = theConnection.procedureMgr()
-        pm.get(spName, proc => {
-          const count = pm.getCount()
-          assert.strictEqual(count, 1)
-          const o = {
-            a: override
-          }
-          proc.call(o, (err, results, output) => {
-            assert(err)
-            asyncDone()
-          })
-        })
+    for (let i = 0; i < iterations; ++i) {
+      try {
+        const res = await promisedCallProc(connectionProxy, spName, o)
+        assert(res)
+      } catch (e) {
+        errors.push(e)
       }
-    ]
+    }
+    assert.deepStrictEqual(iterations, errors.length)
+    testDone()
+  }
 
-    async.series(fns, () => {
-      testDone()
-    })
+  test('pool: two parameters 1 optional set output to sum - omit required expect error', testDone => {
+    usePoolCallProc(t3, testDone)
+  })
+
+  test('connection: two parameters 1 optional set output to sum - omit required expect error', testDone => {
+    t3(theConnection, 1, testDone)
   })
 
   test('two optional parameters override both set output to sum', testDone => {
