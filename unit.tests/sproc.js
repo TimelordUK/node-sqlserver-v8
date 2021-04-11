@@ -807,17 +807,17 @@ END
   }
 
   test('pool: get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
-    usePoolCallProc(t15, 5, testDone)
+    usePoolCallProc(t16, 5, testDone)
   })
 
   test('connection: get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
     t16(theConnection, 1, testDone)
   })
 
-  test('get proc and call multiple times synchronously with changing params i.e. prove each call is independent', testDone => {
+  async function t17 (connectionProxy, iterations, testDone) {
     const spName = 'test_sp_get_int_int'
 
-    const def = `alter PROCEDURE <name>(
+    const def = `alter PROCEDURE <name> (
 @num1 INT,
 @num2 INT,
 @num3 INT OUTPUT
@@ -828,51 +828,36 @@ BEGIN
    RETURN 99;
 END
 `
+    try {
+      await promisedCreate(spName, def)
 
-    const fns = [
-      asyncDone => {
-        procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const pm = theConnection.procedureMgr()
-        pm.get(spName, proc => {
-          const count = pm.getCount()
-          assert.strictEqual(count, 1)
-          let i
-          const received = []
-          const iterations = 10
-
-          const check = () => {
-            for (i = 0; i < iterations; ++i) {
-              const expected = [99, i * 2]
-              assert.deepStrictEqual(received[i], expected, 'results didn\'t match')
-            }
-            asyncDone()
-          }
-
-          function next (i) {
-            proc.call([i, i], (err, results, output) => {
-              assert.ifError(err)
-              received[received.length] = output
-              if (received.length === iterations) {
-                check()
-              } else {
-                next(i + 1)
-              }
-            })
-          }
-
-          next(0)
-        })
+      function check (received) {
+        for (let i = 0; i < iterations; ++i) {
+          const expected = [99, i * 2]
+          assert.deepStrictEqual(received[i], expected, 'results didn\'t match')
+        }
       }
-    ]
-
-    async.series(fns, () => {
+      const received = []
+      for (let i = 0; i < iterations; ++i) {
+        const o = {
+          num1: i,
+          num2: i
+        }
+        received.push(await promisedCallProc(connectionProxy, spName, o))
+      }
+      check(received.map(v => v.output))
       testDone()
-    })
+    } catch (e) {
+      assert.ifError(e)
+    }
+  }
+
+  test('pool: get proc and call multiple times synchronously with changing params i.e. prove each call is independent', testDone => {
+    usePoolCallProc(t17, 5, testDone)
+  })
+
+  test('connection: get proc and call multiple times synchronously with changing params i.e. prove each call is independent', testDone => {
+    t17(theConnection, 1, testDone)
   })
 
   test('proc with multiple select  - should callback with each', testDone => {
