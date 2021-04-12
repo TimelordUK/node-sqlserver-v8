@@ -1093,7 +1093,7 @@ END
     })
   })
 
-  test('check proc called as object paramater where vals sent as attributes', testDone => {
+  async function t20 (connectionProxy, iterations, testDone) {
     const spName = 'test_sp_select_select'
 
     const def = `alter PROCEDURE <name>(
@@ -1108,44 +1108,39 @@ BEGIN
 END
 `
 
-    const fns = [
-      asyncDone => {
-        procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const pm = theConnection.procedureMgr()
-        pm.get(spName, proc => {
-          const count = pm.getCount()
-          assert.strictEqual(count, 1)
-          const o = {
-            num1: 10,
-            num2: 100
-          }
-          proc.call(o, (err, results, output) => {
-            assert.ifError(err)
-            if (output) {
-              assert(Array.isArray(output))
-              const expected = [
-                99,
-                o.num1 + o.num2
-              ]
-              assert.deepStrictEqual(expected, output)
-              asyncDone()
-            }
-          })
-        })
+    try {
+      await promisedCreate(spName, def)
+      const o = {
+        num1: 10,
+        num2: 100
       }
-    ]
-
-    async.series(fns, () => {
+      const expected = [
+        99,
+        o.num1 + o.num2
+      ]
+      for (let i = 0; i < iterations; ++i) {
+        const res = await promisedCallProc(connectionProxy, spName, o)
+        const output = res.output
+        if (output) {
+          assert(Array.isArray(output))
+          assert.deepStrictEqual(expected, output)
+        }
+      }
       testDone()
-    })
+    } catch (e) {
+      assert.ifError(e)
+    }
+  }
+
+  test('pool: check proc called as object paramater where vals sent as attributes', testDone => {
+    usePoolCallProc(t20, 5, testDone)
   })
 
-  test('stream call proc no callback with print in proc', testDone => {
+  test('connection: check proc called as object paramater where vals sent as attributes', testDone => {
+    t20(theConnection, 1, testDone)
+  })
+
+  async function t21 (connectionProxy, iterations, testDone) {
     const spName = 'test_len_of_sp'
 
     const def = `alter PROCEDURE <name> @param VARCHAR(50) 
@@ -1155,62 +1150,82 @@ END
      select LEN(@param) as len; 
  END 
 `
-
-    const fns = [
-      asyncDone => {
-        procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const pm = theConnection.procedureMgr()
-        const rows = []
-        let info = null
-        let submitted = false
-        pm.get(spName, proc => {
-          const qp = proc.call(['javascript'])
-          qp.on('column', (c, data) => {
-            const l = c.toString()
-            const r = {}
-            r[l] = data
-            rows.push(r)
-          })
-
-          qp.on('free', () => {
-            // console.log('done ....')
-            assert(rows.length === 1)
-            assert.strictEqual(true, submitted)
-            assert(info.includes('a print in proc message'))
-            const expected = [
-              {
-                0: 10
-              }
-            ]
-            assert.deepStrictEqual(expected, rows)
-            asyncDone()
-          })
-
-          qp.on('error', (e) => {
-            assert.ifError(e)
-          })
-
-          qp.on('submitted', (q) => {
-            // console.log('submitted')
-            submitted = true
-          })
-
-          qp.on('info', (i) => {
-            // console.log(`info ${i}`)
-            info = i.message
-          })
-        })
+    try {
+      await promisedCreate(spName, def)
+      const o = {
+        param: 'javascript'
       }
-    ]
-
-    async.series(fns, () => {
+      const expected = [
+        [
+          10
+        ]
+      ]
+      for (let i = 0; i < iterations; ++i) {
+        const res = await streamingPromise(connectionProxy, spName, o)
+        const rows = res.rows
+        assert(rows.length === 1)
+        assert(res.info.length === 1)
+        assert(res.info[0].includes('a print in proc message'))
+        assert.deepStrictEqual(expected, rows)
+      }
       testDone()
+    } catch (e) {
+      assert.ifError(e)
+    }
+  }
+
+  function streamingPromise (connectionProxy, proc, params) {
+    return new Promise((resolve, reject) => {
+      let submitted = false
+      let meta = null
+      const rows = []
+      const info = []
+      let row
+      const qp = connectionProxy.callproc(proc, params)
+      qp.on('column', (c, data) => {
+        row[c] = data
+        if (c === meta.length - 1) {
+          rows.push(row)
+          row = [meta.length]
+        }
+      })
+
+      qp.on('meta', (m) => {
+        meta = m
+        row = [meta.length]
+      })
+
+      qp.on('free', () => {
+        // console.log('done ....')
+        assert.strictEqual(true, submitted)
+        resolve({
+          rows: rows,
+          info: info
+        })
+      })
+
+      qp.on('error', (e) => {
+        reject(e)
+      })
+
+      qp.on('submitted', (q) => {
+        // console.log('submitted')
+        submitted = true
+      })
+
+      qp.on('info', (i) => {
+        // console.log(`info ${i}`)
+        info.push(i.message)
+      })
     })
+  }
+
+  test('pool: stream call proc no callback with print in proc', testDone => {
+    usePoolCallProc(t21, 5, testDone)
+  })
+
+  test('connection: stream call proc no callback with print in proc', testDone => {
+    t21(theConnection, 1, testDone)
   })
 
   test('call proc that has 2 output string params + return code', testDone => {
