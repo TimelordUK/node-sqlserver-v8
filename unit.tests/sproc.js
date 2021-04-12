@@ -944,6 +944,39 @@ END
     t18(theConnection, 1, testDone)
   })
 
+  async function t19 (connectionProxy, iterations, testDone) {
+    const spName = 'test_sp_select_select'
+
+    const def = `alter PROCEDURE <name>
+AS
+BEGIN
+    select top 5 'syscolumns' as table_name, name, id, xtype, length from syscolumns
+    select top 5 'sysobjects' as table_name, name, id, xtype, category from sysobjects
+END
+`
+    try {
+      await promisedCreate(spName, def)
+
+      for (let i = 0; i < iterations; ++i) {
+        const res = await promisedCallProc(connectionProxy, spName, [])
+        assert(res)
+        assert.deepStrictEqual(2, res.results.length)
+      }
+
+      testDone()
+    } catch (e) {
+      assert.ifError(e)
+    }
+  }
+
+  test('pool: proc with multiple select  - should callback with each', testDone => {
+    usePoolCallProc(t19, 5, testDone)
+  })
+
+  test('connection: proc with multiple select  - should callback with each', testDone => {
+    t19(theConnection, 1, testDone)
+  })
+
   test('proc with multiple select  - should callback with each', testDone => {
     const spName = 'test_sp_select_select'
 

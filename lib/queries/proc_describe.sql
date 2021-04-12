@@ -30,5 +30,5 @@ select
 	r.proc_name, r.type_desc, 
     p.* 
         from proc_exist_cte r
-	cross join 
-        proc_params_cte p
+	outer apply 
+    proc_params_cte p
