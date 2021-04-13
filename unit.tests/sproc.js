@@ -1529,7 +1529,7 @@ waitfor delay @timeout;END
     t26(theConnection, 1, testDone)
   })
 
-  test('call proc that has 2 input params + 1 output', testDone => {
+  async function t27 (connectionProxy, iterations, testDone) {
     const spName = 'test_sp_get_int_int'
 
     const def = `alter PROCEDURE <name>(
@@ -1543,28 +1543,71 @@ BEGIN
    RETURN 99;
 END
 `
+    try {
+      await promisedCreate(spName, def)
+      const p = [10, 5]
+      const expected = [99, 15]
 
-    const fns = [
-      asyncDone => {
-        procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const pm = theConnection.procedureMgr()
-        pm.callproc(spName, [10, 5], (err, results, output) => {
-          assert.ifError(err)
-          const expected = [99, 15]
-          assert.deepStrictEqual(output, expected, 'results didn\'t match')
-          asyncDone()
-        })
+      for (let i = 0; i < iterations; ++i) {
+        const res = await promisedCallProc(connectionProxy, spName, p)
+        assert.deepStrictEqual(res.output, expected)
       }
-    ]
-
-    async.series(fns, () => {
       testDone()
-    })
+    } catch (e) {
+      assert.ifError(e)
+    }
+  }
+
+  test('pool: call proc that has 2 input params + 1 output', testDone => {
+    usePoolCallProc(t27, 5, testDone)
+  })
+
+  test('connection: call proc that has 2 input params + 1 output', testDone => {
+    t27(theConnection, 1, testDone)
+  })
+
+  async function t28 (connectionProxy, iterations, testDone) {
+    const spName = 'test_sp_get_int_int'
+
+    const def = `alter PROCEDURE <name>(
+@num1 INT,
+@num2 INT,
+@num3 INT OUTPUT
+
+)AS
+BEGIN
+   SET @num3 = @num1 + @num2
+   RETURN 99;
+END
+`
+    try {
+      await promisedCreate(spName, def)
+      const p = [10, 5]
+      const expected = [{
+        num3: 15,
+        ___return___: 99
+      }]
+      const promisedGet = util.promisify(theConnection.procedureMgr().getProc)
+      const proc = await promisedGet(spName)
+      const meta = proc.getMeta()
+      const s = meta.select
+      const promisedQuery = util.promisify(connectionProxy.query)
+      for (let i = 0; i < iterations; ++i) {
+        const res = await promisedQuery(s, p)
+        assert.deepStrictEqual(res, expected)
+      }
+      testDone()
+    } catch (e) {
+      assert.ifError(e)
+    }
+  }
+
+  test('pool: test asselect on proc', testDone => {
+    usePoolCallProc(t28, 5, testDone)
+  })
+
+  test('connection: test asselect on proc', testDone => {
+    t28(theConnection, 1, testDone)
   })
 
   test('test asselect on proc', testDone => {
