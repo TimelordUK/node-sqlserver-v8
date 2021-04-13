@@ -1228,7 +1228,7 @@ END
     t21(theConnection, 1, testDone)
   })
 
-  test('call proc that has 2 output string params + return code', testDone => {
+  async function t23 (connectionProxy, iterations, testDone) {
     const spName = 'test_sp_get_str_str'
 
     const def = `alter PROCEDURE <name>(
@@ -1243,31 +1243,33 @@ BEGIN
    RETURN 99;
 END
 `
-
-    const fns = [
-      asyncDone => {
-        procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const pm = theConnection.procedureMgr()
-        pm.callproc(spName, [1], (err, results, output) => {
-          assert.ifError(err)
-          const expected = [99, 'name', 'company']
-          assert.deepStrictEqual(output, expected, 'results didn\'t match')
-          asyncDone()
-        })
+    try {
+      await promisedCreate(spName, def)
+      const p = [1]
+      const expected = [99, 'name', 'company']
+      for (let i = 0; i < iterations; ++i) {
+        const res = await promisedCallProc(connectionProxy, spName, p)
+        const output = res.output
+        if (output) {
+          assert(Array.isArray(output))
+          assert.deepStrictEqual(expected, output)
+        }
       }
-    ]
-
-    async.series(fns, () => {
       testDone()
-    })
+    } catch (e) {
+      assert.ifError(e)
+    }
+  }
+
+  test('pool: call proc that has 2 output string params + return code', testDone => {
+    usePoolCallProc(t23, 5, testDone)
   })
 
-  test('get proc and call  - should not error', testDone => {
+  test('connection: call proc that has 2 output string params + return code', testDone => {
+    t23(theConnection, 1, testDone)
+  })
+
+  async function t22 (connectionProxy, iterations, testDone) {
     const spName = 'test_sp_get_int_int'
 
     const def = `alter PROCEDURE <name>(
@@ -1282,34 +1284,33 @@ BEGIN
 END
 `
 
-    const fns = [
-      asyncDone => {
-        procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const pm = theConnection.procedureMgr()
-        pm.get(spName, proc => {
-          const count = pm.getCount()
-          assert.strictEqual(count, 1)
-          proc.call([10, 5], (err, results, output) => {
-            const expected = [99, 15]
-            assert.ifError(err)
-            assert.deepStrictEqual(output, expected, 'results didn\'t match')
-            asyncDone()
-          })
-        })
+    try {
+      await promisedCreate(spName, def)
+      const p = [10, 5]
+      const expected = [99, 15]
+      for (let i = 0; i < iterations; ++i) {
+        const res = await promisedCallProc(connectionProxy, spName, p)
+        const output = res.output
+        if (output) {
+          assert(Array.isArray(output))
+          assert.deepStrictEqual(expected, output)
+        }
       }
-    ]
-
-    async.series(fns, () => {
       testDone()
-    })
+    } catch (e) {
+      assert.ifError(e)
+    }
+  }
+
+  test('pool: get proc and call  - should not error', testDone => {
+    usePoolCallProc(t22, 5, testDone)
   })
 
-  test('stream call proc no callback', testDone => {
+  test('connection: get proc and call  - should not error', testDone => {
+    t22(theConnection, 1, testDone)
+  })
+
+  async function t24 (connectionProxy, iterations, testDone) {
     const spName = 'test_len_of_sp'
 
     const def = `alter PROCEDURE <name> @param VARCHAR(50) 
@@ -1318,43 +1319,35 @@ END
      select LEN(@param) as len; 
  END 
 `
-
-    const fns = [
-      asyncDone => {
-        procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const pm = theConnection.procedureMgr()
-        const rows = []
-        pm.get(spName, proc => {
-          const qp = proc.call(['javascript'])
-          qp.on('column', (c, data) => {
-            const l = c.toString()
-            const r = {}
-            r[l] = data
-            rows.push(r)
-          })
-
-          qp.on('free', () => {
-            assert(rows.length === 1)
-            const expected = [
-              {
-                0: 10
-              }
-            ]
-            assert.deepStrictEqual(expected, rows)
-            asyncDone()
-          })
-        })
+    try {
+      await promisedCreate(spName, def)
+      const o = {
+        param: 'javascript'
       }
-    ]
-
-    async.series(fns, () => {
+      const expected = [
+        [
+          10
+        ]
+      ]
+      for (let i = 0; i < iterations; ++i) {
+        const res = await streamingPromise(connectionProxy, spName, o)
+        const rows = res.rows
+        assert(rows.length === 1)
+        assert(res.info.length === 0)
+        assert.deepStrictEqual(expected, rows)
+      }
       testDone()
-    })
+    } catch (e) {
+      assert.ifError(e)
+    }
+  }
+
+  test('pool: stream call proc no callback', testDone => {
+    usePoolCallProc(t24, 5, testDone)
+  })
+
+  test('connection: stream call proc no callback', testDone => {
+    t24(theConnection, 1, testDone)
   })
 
   const waitProcDef = `alter PROCEDURE <name>(
@@ -1465,7 +1458,7 @@ waitfor delay @timeout;END
     })
   })
 
-  test('call proc that returns length of input string and decribes itself in results', testDone => {
+  async function t25 (connectionProxy, iterations, testDone) {
     const spName = 'test_sp'
 
     const def = `alter PROCEDURE <name> @param VARCHAR(50) 
@@ -1474,38 +1467,37 @@ waitfor delay @timeout;END
      SELECT name, type, type_desc  FROM sys.objects WHERE type = 'P' AND name = '<name>'     RETURN LEN(@param); 
  END 
 `
+    try {
+      await promisedCreate(spName, def)
+      const p = ['US of A!']
+      const expectedOutput = [8]
+      const expected = [
+        {
+          name: spName,
+          type: 'P ',
+          type_desc: 'SQL_STORED_PROCEDURE'
+        }]
 
-    const fns = [
-      asyncDone => {
-        procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const pm = theConnection.procedureMgr()
-        pm.callproc(spName, ['US of A!'], (err, results, output) => {
-          assert.ifError(err)
-          let expected = [8]
-          assert.deepStrictEqual(output, expected, 'results didn\'t match')
-          expected = [
-            {
-              name: spName,
-              type: 'P ',
-              type_desc: 'SQL_STORED_PROCEDURE'
-            }]
-          assert.deepStrictEqual(results, expected, 'results didn\'t match')
-          asyncDone()
-        })
+      for (let i = 0; i < iterations; ++i) {
+        const res = await promisedCallProc(connectionProxy, spName, p)
+        assert.deepStrictEqual(res.output, expectedOutput)
+        assert.deepStrictEqual(res.results, expected)
       }
-    ]
-
-    async.series(fns, () => {
       testDone()
-    })
+    } catch (e) {
+      assert.ifError(e)
+    }
+  }
+
+  test('pool: call proc that returns length of input string and decribes itself in results', testDone => {
+    usePoolCallProc(t25, 5, testDone)
   })
 
-  test('call proc that returns length of input string', testDone => {
+  test('connection: call proc that returns length of input string and decribes itself in results', testDone => {
+    t25(theConnection, 1, testDone)
+  })
+
+  async function t26 (connectionProxy, iterations, testDone) {
     const spName = 'test_sp'
 
     const def = `alter PROCEDURE <name> @param VARCHAR(50) 
@@ -1514,30 +1506,27 @@ waitfor delay @timeout;END
      RETURN LEN(@param); 
  END 
 `
+    try {
+      await promisedCreate(spName, def)
+      const p = ['US of A!']
+      const expectedOutput = [8]
 
-    const fns = [
-      asyncDone => {
-        procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const pm = theConnection.procedureMgr()
-        pm.get(spName, proc => {
-          proc.call(['US of A!'], (err, results, output) => {
-            assert.ifError(err)
-            const expected = [8]
-            assert.deepStrictEqual(output, expected, 'results didn\'t match')
-            asyncDone()
-          })
-        })
+      for (let i = 0; i < iterations; ++i) {
+        const res = await promisedCallProc(connectionProxy, spName, p)
+        assert.deepStrictEqual(res.output, expectedOutput)
       }
-    ]
-
-    async.series(fns, () => {
       testDone()
-    })
+    } catch (e) {
+      assert.ifError(e)
+    }
+  }
+
+  test('pool: call proc that returns length of input string', testDone => {
+    usePoolCallProc(t26, 5, testDone)
+  })
+
+  test('connection: call proc that returns length of input string', testDone => {
+    t26(theConnection, 1, testDone)
   })
 
   test('call proc that has 2 input params + 1 output', testDone => {
