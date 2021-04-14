@@ -763,11 +763,11 @@ END
   }
 
   test('pool: get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
-    usePoolCallProc(t15, 300, testDone)
+    usePoolCallProc(t15, 150, testDone)
   })
 
   test('connection: get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
-    t15(theConnection, 300, testDone)
+    t15(theConnection, 100, testDone)
   })
 
   async function t16 (connectionProxy, iterations, testDone) {
@@ -814,11 +814,11 @@ END
     }
   }
 
-  test('pool: get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
+  test('pool: insert/update/delete synchronously ', testDone => {
     usePoolCallProc(t16, 5, testDone)
   })
 
-  test('connection: get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
+  test('connection: insert/update/delete synchronously ', testDone => {
     t16(theConnection, 1, testDone)
   })
 
