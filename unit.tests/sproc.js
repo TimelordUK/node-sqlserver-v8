@@ -790,12 +790,18 @@ BEGIN
 END
 `
     try {
-      await promisedQueryRaw('DROP TABLE TestMultiStatement')
-      await promisedQueryRaw(`CREATE TABLE TestMultiStatement (
+      const tname = 'TestMultiStatement'
+      const dropTableSql = `IF OBJECT_ID(N'dbo.${tname}', N'U') IS NOT NULL
+      BEGIN
+        DROP TABLE ${tname}
+      END`
+      const createTable = `CREATE TABLE ${tname} (
         [BusinessEntityID] [int] NOT NULL,
         [NationalIDNumber] [nvarchar](15) NOT NULL,
-        [LoginID] [nvarchar](256) NOT NULL,
-        )`)
+        [LoginID] [nvarchar](256) NOT NULL
+        )`
+      await promisedQueryRaw(dropTableSql)
+      await promisedQueryRaw(createTable)
       await promisedCreate(spName, def)
 
       const o = {
@@ -894,12 +900,18 @@ BEGIN
 END
 `
     try {
-      await promisedQueryRaw('DROP TABLE TestMultiStatement')
-      await promisedQueryRaw(`CREATE TABLE TestMultiStatement (
+      const tname = 'TestMultiStatement'
+      const dropTableSql = `IF OBJECT_ID(N'dbo.${tname}', N'U') IS NOT NULL
+      BEGIN
+        DROP TABLE ${tname}
+      END`
+      const createTable = `CREATE TABLE ${tname} (
         [BusinessEntityID] [int] NOT NULL,
         [NationalIDNumber] [nvarchar](15) NOT NULL,
-        [LoginID] [nvarchar](256) NOT NULL,
-        )`)
+        [LoginID] [nvarchar](256) NOT NULL
+        )`
+      await promisedQueryRaw(dropTableSql)
+      await promisedQueryRaw(createTable)
       await promisedCreate(spName, def)
 
       const o = {
