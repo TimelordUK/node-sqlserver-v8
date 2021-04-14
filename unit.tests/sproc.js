@@ -22,7 +22,13 @@ suite('sproc', function () {
   setup(testDone => {
     supp.GlobalConn.init(sql, co => {
       connStr = global.conn_str || co.conn_str
-      driver = co.driver
+      const regexp = /Driver={(.*)};.*/
+      const res = connStr.match(regexp)
+      if (res) {
+        driver = res[1]
+      } else {
+        driver = co.driver
+      }
       support = co.support
       procedureHelper = new support.ProcedureHelper(connStr)
       promisedCreate = util.promisify(procedureHelper.createProcedure)
