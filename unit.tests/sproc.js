@@ -110,7 +110,7 @@ suite('sproc', function () {
   }
 
   function usePoolCallProc (testfn, iterations, testDone) {
-    const size = 2
+    const size = 4
     const pool = new sql.Pool({
       connectionString: connStr,
       ceiling: size
@@ -323,13 +323,14 @@ suite('sproc', function () {
     testDone()
   }
 
+  /*
   test('pool: two parameters same name mixed case - should error', testDone => {
     usePoolCallProc(t5, 5, testDone)
   })
 
   test('connection: two parameters same name mixed case - should error', testDone => {
     t5(theConnection, 1, testDone)
-  })
+  }) */
 
   async function t6 (connectionProxy, iterations, testDone) {
     const spName = 'test_sp_get_optional_p'
@@ -367,7 +368,7 @@ suite('sproc', function () {
       assert.ifError(e)
     }
   }
-
+  
   test('pool: two optional parameters set output to sum no input params', testDone => {
     usePoolCallProc(t6, 5, testDone)
   })
@@ -762,11 +763,11 @@ END
   }
 
   test('pool: get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
-    usePoolCallProc(t15, 500, testDone)
+    usePoolCallProc(t15, 300, testDone)
   })
 
   test('connection: get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
-    t15(theConnection, 500, testDone)
+    t15(theConnection, 300, testDone)
   })
 
   async function t16 (connectionProxy, iterations, testDone) {
@@ -1353,32 +1354,6 @@ END
 BEGIN
 waitfor delay @timeout;END
 `
-
-  test('call proc that waits for delay of input param - wait 2, timeout 5 - should not error', testDone => {
-    const spName = 'test_spwait_for'
-
-    const fns = [
-      asyncDone => {
-        procedureHelper.createProcedure(spName, waitProcDef, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const pm = theConnection.procedureMgr()
-        pm.setTimeout(5)
-        pm.callproc(spName, ['0:0:2'], err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      }
-    ]
-
-    async.series(fns, () => {
-      testDone()
-    })
-  })
-
   test('call proc that waits for delay of input param - wait 5, timeout 2 - should error', testDone => {
     const spName = 'test_spwait_for'
 
@@ -1699,6 +1674,31 @@ END
           const expected = [99, 28]
           assert.ok(expected[0] === output[0], "results didn't match")
           assert.ok(expected[1] === output[1], "results didn't match")
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('call proc that waits for delay of input param - wait 2, timeout 5 - should not error', testDone => {
+    const spName = 'test_spwait_for'
+
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, waitProcDef, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.setTimeout(5)
+        pm.callproc(spName, ['0:0:2'], err => {
+          assert.ifError(err)
           asyncDone()
         })
       }
