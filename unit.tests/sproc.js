@@ -8,8 +8,8 @@ const util = require('util')
 suite('sproc', function () {
   let connStr
   let theConnection
-  let support
   let driver
+  let support
   let async
   let helper
   let procedureHelper
@@ -22,8 +22,9 @@ suite('sproc', function () {
   setup(testDone => {
     supp.GlobalConn.init(sql, co => {
       connStr = global.conn_str || co.conn_str
+      driver = co.driver
       support = co.support
-      driver = co.driverProcedureHelper(connStr)
+      procedureHelper = new support.ProcedureHelper(connStr)
       promisedCreate = util.promisify(procedureHelper.createProcedure)
       promisedCreateIfNotExist = util.promisify(procedureHelper.createProcedureIfNotExist)
 
