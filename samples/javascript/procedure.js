@@ -49,7 +49,9 @@ async function asPool (invocations) {
     pool.on('error', e => {
       throw e
     })
-    pool.open()
+    const promisedOpen = util.promisify(pool.open)
+    const options = await promisedOpen()
+    console.log(JSON.stringify(options, null, 4))
     const res = await test(pool, invocations)
     console.log(`asPool [${size}] ${invocations} invocations, elapsed = ${res.elapsed}, res length=${res.results.length}`)
     const promisedClose = util.promisify(pool.close)
