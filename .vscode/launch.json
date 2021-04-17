@@ -25,7 +25,8 @@
             "request": "launch",
             "program": "C:/Program Files/nodejs/node.exe",
             "args": [
-                "runtest", "-l", 
+                "procedure"
+               // "runtest", "-l", 
                //  "-t", "querycancel",
                // "-t", "pause"
                // "-t", "prepared",
@@ -39,11 +40,11 @@
                // "-t", "datatypes",
                // "-t", "sproc"
                // "-t", "params"
-               "-t", "bulk"
+               //"-t", "bulk"
                //"-t", "json" 
             ],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/samples/javascript",
             "environment": [],
             "externalConsole": false
         },

@@ -19,9 +19,39 @@ main(1000).then(() => {
   console.log('done')
 })
 
+const longspName = 'long_sp'
+const longDef = `create PROCEDURE ${longspName} (
+  @timeout datetime
+  )AS
+  BEGIN
+    select top 100 * from sysobjects;
+    waitfor delay @timeout;
+    select top 100 * from syscolumns;
+  END
+  `
+
 async function main (invocations) {
+  await asTimeout(10000)
+  await asTimeout(200)
   await asConnection(invocations)
   await asPool(invocations)
+}
+
+async function asTimeout (procTimeout) {
+  const connectionString = getConnection()
+  const promisedOpen = util.promisify(sql.open)
+  const con = await promisedOpen(connectionString)
+  const helper = new ProcedureHelper(con, longspName, longDef)
+  await helper.create()
+  try {
+    const p = {
+      timeout: '0:0:02'
+    }
+    const res = await helper.promisedCallProc(p, procTimeout)
+    console.log(`asTimeout [${procTimeout}] done - sets returned ${res.results.length} [${res.results.map(r => r.length).join(', ')}]`)
+  } catch (e) {
+    console.log(e.message)
+  }
 }
 
 async function asConnection (invocations) {
@@ -103,30 +133,41 @@ class ProcedureHelper {
       await promisedQuery(def)
     }
 
-    function promisedCallProc (o) {
+    function promisedCallProc (o, timeoutMs) {
       return new Promise((resolve, reject) => {
         const allResults = []
-        connectionProxy.callproc(spName, o, (err, results, output, more) => {
+        let handle = null
+        const q = connectionProxy.callproc(spName, o, (err, results, output, more) => {
           if (err) {
             reject(err)
           } else {
             allResults.push(results)
             if (!more) {
-              const selects = allResults.reduce((agg, latest) => {
-                if (latest.length > 0) {
-                  agg.push(latest[0])
-                }
-                return agg
-              }, [])
+              if (handle) {
+                clearTimeout(handle)
+              }
               resolve({
-                results: selects,
+                results: allResults,
                 output: output
               })
             }
           }
         })
+        if (timeoutMs) {
+          handle = setTimeout(() => {
+            try {
+              q.pauseQuery()
+              q.cancelQuery((e) => {
+                reject(e || new Error(`query cancelled timeout ${timeoutMs}`))
+              })
+            } catch (e) {
+              reject(e)
+            }
+          }, timeoutMs)
+        }
       })
     }
+
     this.promisedCallProc = promisedCallProc
     this.create = create
   }
