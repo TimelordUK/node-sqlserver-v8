@@ -32,7 +32,6 @@ const longDef = `create PROCEDURE ${longspName} (
 
 async function main (invocations) {
   await asConnectionTimeout(10000, 2)
-  await asConnectionTimeout(200, 2)
   await asConnection(invocations)
   await asPool(invocations)
 }
@@ -95,7 +94,7 @@ async function asPool (invocations) {
     })
     const promisedOpen = util.promisify(pool.open)
     const options = await promisedOpen()
-    console.log(JSON.stringify(options, null, 4))
+    console.log(`pool opened : ${JSON.stringify(options, null, 4)}`)
     const res = await test(pool, invocations)
     console.log(`asPool [${size}] ${invocations} invocations, elapsed = ${res.elapsed}, res length=${res.results.length}`)
     const promisedClose = util.promisify(pool.close)
