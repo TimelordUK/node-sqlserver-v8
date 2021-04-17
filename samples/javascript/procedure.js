@@ -31,13 +31,13 @@ const longDef = `create PROCEDURE ${longspName} (
   `
 
 async function main (invocations) {
-  await asTimeout(10000, 2)
-  await asTimeout(200, 2)
+  await asConnectionTimeout(10000, 2)
+  await asConnectionTimeout(200, 2)
   await asConnection(invocations)
   await asPool(invocations)
 }
 
-async function asTimeout (procTimeout, invocations) {
+async function asConnectionTimeout (procTimeout, invocations) {
   const connectionString = getConnection()
   const promisedOpen = util.promisify(sql.open)
   const con = await promisedOpen(connectionString)
@@ -53,7 +53,7 @@ async function testTimeout (connectionProxy, invocations, procTimeout) {
   }
   for (let i = 0; i < invocations; ++i) {
     try {
-      const res = await helper.promisedCallProc(p, procTimeout)
+      const res = await helper.callProcPromise(p, procTimeout)
       console.log(`testTimeout [${i} - ${procTimeout}] done - sets returned ${res.results.length} [${res.results.map(r => r.length).join(', ')}]`)
     } catch (e) {
       console.log(`rejection: ${e.message} - test connection still good.`)
@@ -115,7 +115,7 @@ async function test (connectionProxy, invocations) {
       param: 'hello world'
     }
     for (let i = 0; i < invocations; ++i) {
-      promises.push(helper.promisedCallProc(p))
+      promises.push(helper.callProcPromise(p))
     }
     const res = await Promise.all(promises)
     const elapsed = new Date() - d
@@ -147,7 +147,7 @@ class ProcedureHelper {
       await promisedQuery(def)
     }
 
-    function promisedCallProc (o, timeoutMs) {
+    function callProcPromise (o, timeoutMs) {
       return new Promise((resolve, reject) => {
         const allResults = []
         let handle = null
@@ -182,7 +182,7 @@ class ProcedureHelper {
       })
     }
 
-    this.promisedCallProc = promisedCallProc
+    this.callProcPromise = callProcPromise
     this.create = create
   }
 }
