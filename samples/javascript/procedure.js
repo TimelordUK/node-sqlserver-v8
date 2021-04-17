@@ -24,33 +24,47 @@ const longDef = `create PROCEDURE ${longspName} (
   @timeout datetime
   )AS
   BEGIN
-    select top 100 * from sysobjects;
+   -- select top 100 * from sysobjects;
     waitfor delay @timeout;
-    select top 100 * from syscolumns;
+   -- select top 100 * from syscolumns;
   END
   `
 
 async function main (invocations) {
-  await asTimeout(10000)
-  await asTimeout(200)
+  await asTimeout(10000, 2)
+  await asTimeout(200, 2)
   await asConnection(invocations)
   await asPool(invocations)
 }
 
-async function asTimeout (procTimeout) {
+async function asTimeout (procTimeout, invocations) {
   const connectionString = getConnection()
   const promisedOpen = util.promisify(sql.open)
   const con = await promisedOpen(connectionString)
-  const helper = new ProcedureHelper(con, longspName, longDef)
+  await testTimeout(con, invocations, procTimeout)
+}
+
+async function testTimeout (connectionProxy, invocations, procTimeout) {
+  const helper = new ProcedureHelper(connectionProxy, longspName, longDef)
   await helper.create()
-  try {
-    const p = {
-      timeout: '0:0:02'
+
+  const p = {
+    timeout: '0:0:02'
+  }
+  for (let i = 0; i < invocations; ++i) {
+    try {
+      const res = await helper.promisedCallProc(p, procTimeout)
+      console.log(`testTimeout [${i} - ${procTimeout}] done - sets returned ${res.results.length} [${res.results.map(r => r.length).join(', ')}]`)
+    } catch (e) {
+      console.log(`rejection: ${e.message} - test connection still good.`)
+      // test can still use the connection
+      const promisedQuery = util.promisify(connectionProxy.query)
+      promisedQuery('SELECT @@version as version').then(res => {
+        console.log(`good ${JSON.stringify(res, null, 4)}`)
+      }).catch(e2 => {
+        console.log(`bad ${e2.message}`)
+      })
     }
-    const res = await helper.promisedCallProc(p, procTimeout)
-    console.log(`asTimeout [${procTimeout}] done - sets returned ${res.results.length} [${res.results.map(r => r.length).join(', ')}]`)
-  } catch (e) {
-    console.log(e.message)
   }
 }
 

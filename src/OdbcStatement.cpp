@@ -340,6 +340,11 @@ namespace mssql
 
 	Local<Value> OdbcStatement::get_meta_value() const
 	{
+		if (_cancelRequested || _resultset == nullptr) {
+			const nodeTypeFactory fact;
+	   		auto metadata = fact.new_array();
+		    return metadata;
+		}
 		return _resultset->meta_to_value();
 	}
 
@@ -437,6 +442,10 @@ namespace mssql
 
 	bool OdbcStatement::start_reading_results()
 	{
+		if (_cancelRequested) {
+			_resultset = make_unique<ResultSet>(0);
+			return true;
+		}
 		SQLSMALLINT columns = 0;
 		const auto& statement = *_statement;
 		auto ret = SQLNumResultCols(statement, &columns);
