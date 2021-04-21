@@ -33,6 +33,7 @@ const longDef = `create PROCEDURE ${longspName} (
 async function main (invocations) {
   await asConnectionTimeout(10000, 2)
   await asConnectionTimeout(200, 1)
+  await asConnectionTimeout(200, 1)
   await asConnection(invocations)
   await asPool(invocations)
 }
@@ -151,9 +152,9 @@ class ProcedureHelper {
       return new Promise((resolve, reject) => {
         let handle = null
         const ret = {
-            results: [],
-            output: null,
-            info: null
+          results: [],
+          output: null,
+          info: null
         }
         const q = connectionProxy.callproc(spName, o, (err, results, output, more) => {
           if (err) {
@@ -170,7 +171,7 @@ class ProcedureHelper {
           }
         })
         q.on('info', m => {
-          if(!ret.info) {
+          if (!ret.info) {
             ret.info = []
           }
           ret.info.push(m)
