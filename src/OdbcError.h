@@ -50,7 +50,7 @@ namespace mssql
             return code;
         }
         
-        const int Severity( void ) const
+        int Severity( void ) const
         {
             return severity;
         }
@@ -65,7 +65,7 @@ namespace mssql
             return procName.c_str();
         }
 
-        const unsigned int LineNumber( void ) const
+        unsigned int LineNumber( void ) const
         {
             return lineNumber;
         }
