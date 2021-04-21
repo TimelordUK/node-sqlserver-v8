@@ -36,6 +36,7 @@ namespace mssql
 			: OdbcOperation(connection, callback)
 		{
 			_statementId = queryId;
+			_can_lock = false;
 		}
 
 		bool TryInvokeOdbc() override;

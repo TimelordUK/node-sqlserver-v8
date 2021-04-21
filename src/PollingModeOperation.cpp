@@ -6,9 +6,7 @@ namespace mssql
 {
 	bool PollingModeOperation::TryInvokeOdbc()
 	{
-		if (_statement == nullptr) {
-			return false;
-		}
+		if (!_statement) return false;
 		return _statement->set_polling(_polling);
 	}
 

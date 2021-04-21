@@ -36,6 +36,7 @@ namespace mssql
 			: OdbcOperation(connection, callback)
 		{
 			_polling = mode;
+			_can_lock = false;
 			_statementId = queryId;
 		}
 

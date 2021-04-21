@@ -24,14 +24,15 @@ const longDef = `create PROCEDURE ${longspName} (
   @timeout datetime
   )AS
   BEGIN
-   -- select top 100 * from sysobjects;
+    select top 100 * from sysobjects;
     waitfor delay @timeout;
-   -- select top 100 * from syscolumns;
+    select top 100 * from syscolumns;
   END
   `
 
 async function main (invocations) {
   await asConnectionTimeout(10000, 2)
+  await asConnectionTimeout(200, 1)
   await asConnection(invocations)
   await asPool(invocations)
 }
@@ -148,23 +149,31 @@ class ProcedureHelper {
 
     function callProcPromise (o, timeoutMs) {
       return new Promise((resolve, reject) => {
-        const allResults = []
         let handle = null
+        const ret = {
+            results: [],
+            output: null,
+            info: null
+        }
         const q = connectionProxy.callproc(spName, o, (err, results, output, more) => {
           if (err) {
             reject(err)
           } else {
-            allResults.push(results)
+            ret.results.push(results)
             if (!more) {
               if (handle) {
                 clearTimeout(handle)
               }
-              resolve({
-                results: allResults,
-                output: output
-              })
+              ret.output = output
+              resolve(ret)
             }
           }
+        })
+        q.on('info', m => {
+          if(!ret.info) {
+            ret.info = []
+          }
+          ret.info.push(m)
         })
         if (timeoutMs) {
           handle = setTimeout(() => {

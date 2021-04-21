@@ -78,6 +78,7 @@ namespace mssql
 	
 	bool OdbcStatement::try_read_columns(const size_t number_rows)
 	{
+		if(!_statement) return false;
 		// fprintf(stderr, "try_read_columns %d\n", number_rows);
 		bool res;
 		_resultset->start_results();
@@ -93,6 +94,7 @@ namespace mssql
 	bool OdbcStatement::fetch_read(const size_t number_rows)
 	{
 		// fprintf(stderr, "fetch_read %d\n", number_rows);
+		if (!_statement) return false;
 		const auto& statement = *_statement;
 		auto res = false;
 		for (size_t row_id = 0; row_id < number_rows; ++row_id) {
@@ -125,6 +127,7 @@ namespace mssql
 
 	bool OdbcStatement::prepared_read()
 	{
+		if(!_statement) return false;
 		// fprintf(stderr, "prepared_read");
 		const auto& statement = *_statement;
 		SQLROWSETSIZE row_count = 0;
@@ -214,6 +217,7 @@ namespace mssql
 
 	bool OdbcStatement::bind_tvp(vector<tvp_t>& tvps)
 	{
+		if(!_statement) return false;
 		const auto& statement = *_statement;
 		for (auto& tvp : tvps)
 		{
@@ -242,6 +246,7 @@ namespace mssql
 
 	bool OdbcStatement::bind_datum(const int current_param, const shared_ptr<BoundDatum> &datum)
 	{
+		if(!_statement) return false;
 		const auto& statement = *_statement;
 		auto r = SQLBindParameter(statement, static_cast<SQLUSMALLINT>(current_param), datum->param_type, datum->c_type, datum->sql_type,
 		                                datum->param_size, datum->digits, datum->buffer, datum->buffer_len,
@@ -269,6 +274,7 @@ namespace mssql
 
 	void OdbcStatement::queue_tvp(int current_param, param_bindings::iterator& itr,  shared_ptr<BoundDatum> &datum, vector<tvp_t>& tvps) 
 	{
+		if(!_statement) return;
 		SQLHANDLE ipd = nullptr;
 		const auto& statement = *_statement;
 		SQLINTEGER string_length = 0;
@@ -294,6 +300,7 @@ namespace mssql
 	// bind all the parameters in the array
 	bool OdbcStatement::bind_params(const shared_ptr<BoundDatumSet> &params)
 	{
+		if(!_statement) return false;
 		auto& ps = *params;
 		// fprintf(stderr, "bind_params\n");
 		const auto size = get_size(ps);
@@ -419,6 +426,7 @@ namespace mssql
 
 	bool OdbcStatement::read_next(const int column)
 	{
+		if(!_statement) return false;
 		const auto& statement = *_statement;
 		SQLSMALLINT name_length = 0;
 		const auto index = column + 1;
@@ -442,6 +450,7 @@ namespace mssql
 
 	bool OdbcStatement::start_reading_results()
 	{
+		if(!_statement) return false;
 		if (_cancelRequested) {
 			_resultset = make_unique<ResultSet>(0);
 			return true;
@@ -484,6 +493,7 @@ namespace mssql
 
 	bool OdbcStatement::try_prepare(const shared_ptr<QueryOperationParams> &q)
 	{
+		if(!_statement) return false;
 		const auto& statement = *_statement;
 		_query = q;
 		const auto query = q->query_string();		
@@ -619,6 +629,7 @@ namespace mssql
 
 	bool OdbcStatement::bind_fetch(const shared_ptr<BoundDatumSet> & param_set)
 	{
+		if(!_statement) return false;
 		const auto& statement = *_statement;
 		bool polling_mode;
 		{
@@ -665,6 +676,7 @@ namespace mssql
 
 	bool OdbcStatement::cancel_handle()
 	{
+		if(!_statement) return false;
 		auto &hnd = *_statement;
 		const auto ret2 = SQLCancelHandle(hnd.HandleType, hnd.get());
 		if (!check_odbc_error(ret2))
@@ -681,6 +693,7 @@ namespace mssql
 
 	bool OdbcStatement::try_execute_direct(const shared_ptr<QueryOperationParams> &q, const shared_ptr<BoundDatumSet> &param_set)
 	{
+		if(!_statement) return false;
 		// fprintf(stderr, "try_execute_direct\n");
 		_errors->clear();
 		_query = q;
@@ -835,6 +848,7 @@ namespace mssql
 
 	bool OdbcStatement::dispatch(const SQLSMALLINT t, const size_t row_id, const size_t column)
 	{
+		if (!_statement) return false;
 		// cerr << " dispatch row = " << row_id << endl;
 		bool res;
 		switch (t)

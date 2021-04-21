@@ -25,13 +25,13 @@
             "request": "launch",
             "program": "C:/Program Files/nodejs/node.exe",
             "args": [
-               // "procedure"
-               "runtest", "-l", 
+               "procedure"
+               // "runtest", "-l", 
                //  "-t", "querycancel",
                // "-t", "pause"
                // "-t", "prepared",
                // "-t", "compoundqueries",
-               "-t", "query",
+               // "-t", "query",
                // "-t", "multiple-errors", 
                // "-t", "geography",
                // "-t", "tvp",
@@ -44,7 +44,7 @@
                //"-t", "json" 
             ],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/samples/javascript",
             "environment": [],
             "externalConsole": false
         },

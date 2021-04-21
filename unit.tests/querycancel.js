@@ -58,46 +58,6 @@ suite('querycancel', function () {
     })
   })
 
-  test('cancel a call to proc that waits for delay of input param.', testDone => {
-    const spName = 'test_spwait_for'
-
-    const def = 'alter PROCEDURE <name>' +
-      '(\n' +
-      '@timeout datetime' +
-      '\n)' +
-      'AS\n' +
-      'BEGIN\n' +
-      'waitfor delay @timeout;' +
-      'END\n'
-
-    const fns = [
-      asyncDone => {
-        procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const pm = theConnection.procedureMgr()
-        pm.setPolling(true)
-        const q = pm.callproc(spName, ['0:0:20'], err => {
-          assert(err)
-          assert(err.message.indexOf('Operation canceled') > 0)
-          asyncDone()
-        })
-        q.on('submitted', () => {
-          q.cancelQuery(err => {
-            assert(!err)
-          })
-        })
-      }
-    ]
-
-    async.series(fns, () => {
-      testDone()
-    })
-  })
-
   test('cancel single waitfor using notifier - expect Operation canceled', testDone => {
     const q = theConnection.query(sql.PollingQuery('waitfor delay \'00:00:20\';'), err => {
       assert(err)
@@ -282,6 +242,46 @@ suite('querycancel', function () {
           asyncDone()
         })
 
+        q.on('submitted', () => {
+          q.cancelQuery(err => {
+            assert(!err)
+          })
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
+  test('cancel a call to proc that waits for delay of input param.', testDone => {
+    const spName = 'test_spwait_for'
+
+    const def = 'alter PROCEDURE <name>' +
+      '(\n' +
+      '@timeout datetime' +
+      '\n)' +
+      'AS\n' +
+      'BEGIN\n' +
+      'waitfor delay @timeout;' +
+      'END\n'
+
+    const fns = [
+      asyncDone => {
+        procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = theConnection.procedureMgr()
+        pm.setPolling(true)
+        const q = pm.callproc(spName, ['0:0:20'], err => {
+          assert(err)
+          assert(err.message.indexOf('Operation canceled') > 0)
+          asyncDone()
+        })
         q.on('submitted', () => {
           q.cancelQuery(err => {
             assert(!err)

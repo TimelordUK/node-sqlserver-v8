@@ -33,7 +33,8 @@ namespace mssql
 		_callback(Isolate::GetCurrent(), cb.As<Function>()),
 		_cb(cb),
 		_failed(false),
-		_failures(nullptr)
+		_failures(nullptr),
+		_can_lock(true)
 	{
 		_statementId = static_cast<long>(query_id);
 		const nodeTypeFactory fact;
@@ -48,10 +49,14 @@ namespace mssql
 	: OdbcOperation(connection, -1, cb) {	
 	}
 
-	void OdbcOperation::Execute () {	
-		OdbcStatementGuard guard(_statement);
+	void OdbcOperation::Execute () {
+		if (_statement && _can_lock) {
+		 	const std::lock_guard<std::mutex> lock(_statement->_statement_mutex);
 		// std::cout << " invoke_background .... " << timer.get_counter() << endl;
-		_failed = !TryInvokeOdbc();
+			_failed = !TryInvokeOdbc();
+		} else {
+			_failed = !TryInvokeOdbc();
+		}
 		// std::cout << " .... invoke_background " << timer.get_counter() << endl;
 		if (_failed) {
 			getFailure();
@@ -60,7 +65,6 @@ namespace mssql
 
 	void OdbcOperation::HandleOKCallback () {
 		if (_callback.IsEmpty()) return;
-		OdbcStatementGuard guard(_statement);
 		Local<Value> args[4];
 		const auto argc = _failed ? error(args) : success(args);
 		// std::cout << " complete_foreground " << timer.get_counter() << endl;

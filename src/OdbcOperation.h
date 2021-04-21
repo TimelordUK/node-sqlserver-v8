@@ -53,6 +53,7 @@ namespace mssql
 		Persistent<Function> _callback;
 		Local<Value> _output_param;
 		Local<Object> _cb;
+		bool _can_lock;
 		bool fetch_statement();
 		long _statementId;
 

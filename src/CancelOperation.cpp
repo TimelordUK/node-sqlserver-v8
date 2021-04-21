@@ -6,9 +6,7 @@ namespace mssql
 {
 	bool CancelOperation::TryInvokeOdbc()
 	{
-		if (_statement == nullptr) {
-			return false;
-		}
+		if (!_statement) return false;
 		return _statement->cancel();
 	}
 
