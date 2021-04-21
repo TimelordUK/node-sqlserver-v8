@@ -53,7 +53,7 @@ namespace mssql
 		Persistent<Function> _callback;
 		Local<Value> _output_param;
 		Local<Object> _cb;
-		void fetch_statement();
+		bool fetch_statement();
 		long _statementId;
 
 	private:

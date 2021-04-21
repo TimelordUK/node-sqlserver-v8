@@ -18,7 +18,7 @@ namespace mssql
 	bool PrepareOperation::TryInvokeOdbc()
 	{
 		_statement = _connection->getStatamentCache()->checkout(_statementId);
-		if (_statement == nullptr) return false;
+		if (!_statement) return false;
 		_statement->set_polling(_query->polling());
 		return _statement->try_prepare(_query);
 	}

@@ -6,7 +6,7 @@ namespace mssql
 {
 	bool ReadNextResultOperation::TryInvokeOdbc()
 	{
-		if (_statement == nullptr) return false;
+		if (!_statement) return false;
 		preRowCount = _statement->get_row_count();
 		const auto res = _statement->try_read_next_result();
 		postRowCount = _statement->get_row_count();

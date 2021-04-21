@@ -35,7 +35,7 @@ namespace mssql
 	class OdbcStatement
 	{
 	public:
-
+		mutex _statement_mutex;
 		enum class OdbcStatementState
 		{
 			STATEMENT_CREATED = 1,
@@ -160,7 +160,17 @@ namespace mssql
 		shared_ptr<BoundDatumSet> _preparedStorage;
 
 		mutex g_i_mutex;
+		
 
 		const static size_t prepared_rows_to_bind = 50;
+	};
+
+	struct OdbcStatementGuard {
+		OdbcStatementGuard(shared_ptr<OdbcStatement> statement) : 
+		_statement(statement) {
+			if (!_statement) return;
+			lock_guard<mutex> lock(_statement->_statement_mutex);
+		}
+		shared_ptr<OdbcStatement> _statement;
 	};
 }

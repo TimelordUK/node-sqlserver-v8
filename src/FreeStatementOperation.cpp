@@ -1,5 +1,8 @@
 #include "stdafx.h"
 #include <FreeStatementOperation.h>
+#include <OdbcConnection.h>
+#include <OdbcStatement.h>
+#include <OdbcStatementCache.h>
 
 namespace mssql
 {
@@ -7,6 +10,7 @@ namespace mssql
 	{
 		// cerr << "FreeStatementOperation() " << _statementId << " " << endl;
 		//_connection->getStatamentCache()->checkin(_statementId);
+		_connection->getStatamentCache()->checkin(_statementId);
 		//fprintf(stderr, " checkin statementId %d size %llu\n", statementId, connection->statements->size());
 		return true;
 	}

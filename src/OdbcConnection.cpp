@@ -172,6 +172,7 @@ namespace mssql
 	{
 		// turn off autocommit
 		const auto connection = _connectionHandles->connectionHandle();
+		if (!connection) return false;
 		auto* const acoff = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_OFF);
 		const auto ret = SQLSetConnectAttr(*connection, SQL_ATTR_AUTOCOMMIT, acoff, SQL_IS_UINTEGER);
 		return CheckOdbcError(ret);
@@ -187,6 +188,7 @@ namespace mssql
 	bool OdbcConnection::try_end_tran(const SQLSMALLINT completion_type)
 	{
 		const auto connection = _connectionHandles->connectionHandle();
+		if (!connection) return false;
 		auto ret = SQLEndTran(SQL_HANDLE_DBC, *connection, completion_type);
 		if (!CheckOdbcError(ret)) return false;
 		auto* const acon = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_ON);

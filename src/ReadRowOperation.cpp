@@ -6,7 +6,7 @@ namespace mssql
 {
 	bool ReadRowOperation::TryInvokeOdbc()
 	{
-		if (_statement == nullptr) return false;
+		if (!_statement) return false;
 		// fprintf(stderr, "invoke statement->TryReadRow() statementId = %d\n", statementId);
 		const auto res = _statement->try_read_row();
 		return res;

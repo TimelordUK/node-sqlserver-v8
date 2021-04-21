@@ -6,7 +6,7 @@ namespace mssql
 {
 	bool ReadColumnOperation::TryInvokeOdbc()
 	{
-		if (_statement == nullptr) return false;
+		if (!_statement) return false;
 		return _statement->try_read_columns(this->_number_rows);
 	}
 

@@ -49,6 +49,7 @@ namespace mssql
 	}
 
 	void OdbcOperation::Execute () {	
+		OdbcStatementGuard guard(_statement);
 		// std::cout << " invoke_background .... " << timer.get_counter() << endl;
 		_failed = !TryInvokeOdbc();
 		// std::cout << " .... invoke_background " << timer.get_counter() << endl;
@@ -59,6 +60,7 @@ namespace mssql
 
 	void OdbcOperation::HandleOKCallback () {
 		if (_callback.IsEmpty()) return;
+		OdbcStatementGuard guard(_statement);
 		Local<Value> args[4];
 		const auto argc = _failed ? error(args) : success(args);
 		// std::cout << " complete_foreground " << timer.get_counter() << endl;
@@ -73,11 +75,13 @@ namespace mssql
 		// cerr << "~OdbcOperation statementId " << _statementId << " count " << count << endl;
 	}
 
-	void OdbcOperation::fetch_statement()
+	bool OdbcOperation::fetch_statement()
 	{
 		_statement = _connection->getStatamentCache()->checkout(_statementId);
 		// int count = _statement.use_count();
 		// cerr << "fetch_statement statementId " << _statementId << " count " << count << endl;
+		bool res = _statement ? true : false;
+		return res;
 	}
 
 	void OdbcOperation::getFailure()
