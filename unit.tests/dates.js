@@ -22,6 +22,7 @@
 
 const assert = require('assert')
 const supp = require('../samples/typescript/demo-support')
+const util = require('util')
 
 suite('date tests', function () {
   let theConnection
@@ -52,6 +53,37 @@ suite('date tests', function () {
       done()
     })
   })
+
+  class DateTableTest {
+    constructor (c, def) {
+      const tableName = def.tableName
+      const columns = def.columns.map(e => `${e.name} ${e.type}`).join(', ')
+      const columnNames = def.columns.map(e => `${e.name}`).join(', ')
+      const dropTableSql = `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL DROP TABLE ${tableName};`
+      const createTableSql = `CREATE TABLE ${tableName} (id int identity, ${columns})`
+      const clusteredSql = `CREATE CLUSTERED INDEX IX_${tableName} ON ${tableName}(id)`
+      const insertSql = `INSERT INTO ${tableName} (${columnNames}) VALUES `
+      const selectSql = `SELECT ${columnNames} FROM ${tableName}`
+      const trucateSql = `TRUNCATE TABLE ${tableName}`
+
+      this.definition = def
+      this.theConnection = c
+      this.dropTableSql = dropTableSql
+      this.createTableSql = createTableSql
+      this.clusteredSql = clusteredSql
+      this.selectSql = selectSql
+      this.insertSql = insertSql
+      this.truncateSql = trucateSql
+      this.tableName = def.tableName
+    }
+
+    async create () {
+      const promisedRaw = util.promisify(this.theConnection.queryRaw)
+      await promisedRaw(this.dropTableSql)
+      await promisedRaw(this.createTableSql)
+      await promisedRaw(this.clusteredSql)
+    }
+  }
 
   test('time to millisecond components', testDone => {
     const randomHour = Math.floor(Math.random() * 24)
@@ -296,56 +328,57 @@ suite('date tests', function () {
 
   // this test simply verifies dates round trip.  It doesn't try to verify illegal dates vs. legal dates.
   // SQL Server is assumed to be only returning valid times and dates.
+
   test('date retrieval verification', testDone => {
     const testDates = ['1-1-1970', '12-31-1969', '2-29-1904', '2-29-2000']
-    const fns = [
-      asyncDone => {
-        theConnection.queryRaw('DROP TABLE date_test', () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        theConnection.queryRaw('CREATE TABLE date_test (id int identity, test_date date)', e => {
-          assert.ifError(e)
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        theConnection.queryRaw('CREATE CLUSTERED INDEX IX_date_test ON date_test(id)', e => {
-          assert.ifError(e)
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        let insertQuery = 'INSERT INTO date_test (test_date) VALUES '
-        for (const testDate of testDates) {
-          insertQuery += '(\'' + testDate + '\'),'
+    const tableDef = {
+      tableName: 'date_test',
+      columns: [
+        {
+          name: 'test_date',
+          type: 'date'
         }
-        insertQuery = insertQuery.substr(0, insertQuery.length - 1)
-        insertQuery += ';'
-        theConnection.queryRaw(insertQuery, e => {
-          assert.ifError(e)
+      ]
+    }
+    const promisedRaw = util.promisify(theConnection.queryRaw)
+    const tt = new DateTableTest(theConnection, tableDef)
+    let insertQuery = tt.insertSql
+    for (const testDate of testDates) {
+      insertQuery += '(\'' + testDate + '\'),'
+    }
+    insertQuery = insertQuery.substr(0, insertQuery.length - 1)
+    insertQuery += ';'
+
+    const expectedDates = []
+    for (const testDate of testDates) {
+      const d = new Date(testDate)
+      // eslint-disable-next-line camelcase
+      const now_utc = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(),
+        d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds())
+      const expectedDate = new Date(now_utc)
+      expectedDates.push([expectedDate])
+    }
+    const expectedResults = {
+      meta: [{ name: 'test_date', size: 10, nullable: true, type: 'date', sqlType: 'date' }],
+      rows: expectedDates
+    }
+
+    const fns = [
+      async asyncDone => {
+        try {
+          await tt.create()
+          await promisedRaw(insertQuery)
           asyncDone()
-        })
+        } catch (e) {
+          assert(e)
+          testDone()
+        }
       },
       // test valid dates
-      asyncDone => {
+      async asyncDone => {
         theConnection.setUseUTC(false)
-        theConnection.queryRaw('SELECT test_date FROM date_test', (e, r) => {
-          assert.ifError(e)
-          const expectedDates = []
-          for (const testDate of testDates) {
-            const d = new Date(testDate)
-            // eslint-disable-next-line camelcase
-            const now_utc = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(),
-              d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds())
-            const expectedDate = new Date(now_utc)
-            expectedDates.push([expectedDate])
-          }
-          const expectedResults = {
-            meta: [{ name: 'test_date', size: 10, nullable: true, type: 'date', sqlType: 'date' }],
-            rows: expectedDates
-          }
+        try {
+          const r = promisedRaw(tt.selectSql)
           assert.deepStrictEqual(expectedResults.meta, r.meta)
           for (const row in r.rows) {
             for (const d in row) {
@@ -353,7 +386,10 @@ suite('date tests', function () {
             }
           }
           asyncDone()
-        })
+        } catch (e) {
+          assert(e)
+          testDone()
+        }
       }
     ]
 
