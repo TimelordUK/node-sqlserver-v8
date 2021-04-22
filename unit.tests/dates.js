@@ -431,43 +431,44 @@ suite('date tests', function () {
       { date1: '1-1-1969', date2: '1-1-1968', milliseconds: -(31536000000 + 86400000) },
       { date1: '2-3-4567', date2: '2-3-4567', milliseconds: 0 }]
 
-    const fns = [
-      asyncDone => {
-        theConnection.queryRaw('DROP TABLE date_diff_test', () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        theConnection.queryRaw('CREATE TABLE date_diff_test (id int identity, date1 datetime2, date2 datetime2)', e => {
-          assert.ifError(e)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        theConnection.queryRaw('CREATE CLUSTERED INDEX IX_date_diff_test ON date_diff_test(id)', e => {
-          assert.ifError(e)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        let insertQuery = 'INSERT INTO date_diff_test (date1, date2) VALUES '
-        for (const i in testDates) {
-          insertQuery += ['(\'', testDates[i].date1, '\',\'', testDates[i].date2, '\'),'].join('')
+    const tableDef = {
+      tableName: 'date_diff_test',
+      columns: [
+        {
+          name: 'date1',
+          type: 'datetime2'
+        },
+        {
+          name: 'date2',
+          type: 'datetime2'
         }
-        insertQuery = insertQuery.substr(0, insertQuery.length - 1)
-        insertQuery = insertQuery + ';'
-        theConnection.queryRaw(insertQuery, e => {
-          assert.ifError(e)
+      ]
+    }
+
+    const tt = new DateTableTest(theConnection, tableDef)
+    let insertQuery = tt.insertSql
+    for (const i in testDates) {
+      insertQuery += ['(\'', testDates[i].date1, '\',\'', testDates[i].date2, '\'),'].join('')
+    }
+    insertQuery = insertQuery.substr(0, insertQuery.length - 1)
+    insertQuery = insertQuery + ';'
+
+    const promisedRaw = util.promisify(theConnection.queryRaw)
+    const fns = [
+      async asyncDone => {
+        try {
+          await tt.create()
+          await promisedRaw(insertQuery)
           asyncDone()
-        })
+        } catch (e) {
+          assert(e)
+          testDone()
+        }
       },
 
       // test valid dates
       asyncDone => {
-        theConnection.queryRaw('SELECT date1, date2 FROM date_diff_test ORDER BY id', (e, r) => {
+        theConnection.queryRaw(tt.selectSql, (e, r) => {
           assert.ifError(e)
           for (const d in r.rows) {
             const timeDiff = r.rows[d][1].getTime() - r.rows[d][0].getTime()
@@ -494,63 +495,61 @@ suite('date tests', function () {
     const insertedDate = new Date(Date.UTC(tzYear, tzMonth, tzDay, tzHour, tzSecond))
     const msPerHour = 1000 * 60 * 60
 
-    const fns =
-      [
-        asyncDone => {
-          theConnection.queryRaw('DROP TABLE datetimeoffset_test', () => {
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          theConnection.query('CREATE TABLE datetimeoffset_test (id int identity, test_datetimeoffset datetimeoffset)', e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          theConnection.queryRaw('CREATE CLUSTERED INDEX IX_datetimeoffset_test ON datetimeoffset_test(id)', e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          let query = ['INSERT INTO datetimeoffset_test (test_datetimeoffset) VALUES ']
-
-          // there are some timezones not on hour boundaries, but we aren't testing those in these unit tests
-          for (let tz = -12; tz <= 12; ++tz) {
-            query.push(['(\'', (tzYear < 1000) ? '0' + tzYear : tzYear, '-', tzMonth + 1, '-', tzDay,
-              ' ', tzHour, ':', tzMinute, ':', tzSecond, (tz < 0) ? '' : '+', tz, ':00\'),'].join(''))
-          }
-          query = query.join('')
-          query = query.substr(0, query.length - 1)
-          query += ';'
-
-          theConnection.queryRaw(query, e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          const stmt = theConnection.queryRaw('SELECT test_datetimeoffset FROM datetimeoffset_test ORDER BY id')
-          let tz = -13
-
-          stmt.on('error', e => {
-            assert.ifError(e)
-          })
-          stmt.on('column', function (c, d, m) {
-            assert(c === 0, 'c != 0')
-            assert(!m, 'm != false')
-            assert(d.nanosecondsDelta === 0, 'nanosecondsDelta != 0')
-            ++tz
-            const expectedDate = new Date(insertedDate.valueOf() - (msPerHour * tz))
-            assert(d.valueOf() === expectedDate.valueOf(), 'Dates don\'t match')
-          })
-          stmt.on('done', () => {
-            assert(tz === 12, 'Incorrect final timezone')
-            asyncDone()
-          })
+    const tableDef = {
+      tableName: 'datetimeoffset_test',
+      columns: [
+        {
+          name: 'test_datetimeoffset',
+          type: 'datetimeoffset'
         }
       ]
+    }
+
+    const tt = new DateTableTest(theConnection, tableDef)
+    let insertQuery = [tt.insertSql]
+
+    // there are some timezones not on hour boundaries, but we aren't testing those in these unit tests
+    for (let tz = -12; tz <= 12; ++tz) {
+      insertQuery.push(['(\'', (tzYear < 1000) ? '0' + tzYear : tzYear, '-', tzMonth + 1, '-', tzDay,
+        ' ', tzHour, ':', tzMinute, ':', tzSecond, (tz < 0) ? '' : '+', tz, ':00\'),'].join(''))
+    }
+    insertQuery = insertQuery.join('')
+    insertQuery = insertQuery.substr(0, insertQuery.length - 1)
+    insertQuery += ';'
+
+    const promisedRaw = util.promisify(theConnection.queryRaw)
+    const fns = [
+      async asyncDone => {
+        try {
+          await tt.create()
+          await promisedRaw(insertQuery)
+          asyncDone()
+        } catch (e) {
+          assert(e)
+          testDone()
+        }
+      },
+      asyncDone => {
+        const stmt = theConnection.queryRaw(tt.selectSql)
+        let tz = -13
+
+        stmt.on('error', e => {
+          assert.ifError(e)
+        })
+        stmt.on('column', function (c, d, m) {
+          assert(c === 0, 'c != 0')
+          assert(!m, 'm != false')
+          assert(d.nanosecondsDelta === 0, 'nanosecondsDelta != 0')
+          ++tz
+          const expectedDate = new Date(insertedDate.valueOf() - (msPerHour * tz))
+          assert(d.valueOf() === expectedDate.valueOf(), 'Dates don\'t match')
+        })
+        stmt.on('done', () => {
+          assert(tz === 12, 'Incorrect final timezone')
+          asyncDone()
+        })
+      }
+    ]
 
     async.series(fns, () => {
       testDone()
