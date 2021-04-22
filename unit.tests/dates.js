@@ -63,7 +63,7 @@ suite('date tests', function () {
       const createTableSql = `CREATE TABLE ${tableName} (id int identity, ${columns})`
       const clusteredSql = `CREATE CLUSTERED INDEX IX_${tableName} ON ${tableName}(id)`
       const insertSql = `INSERT INTO ${tableName} (${columnNames}) VALUES `
-      const selectSql = `SELECT ${columnNames} FROM ${tableName}`
+      const selectSql = `SELECT ${columnNames} FROM ${tableName} ORDER BY id`
       const trucateSql = `TRUNCATE TABLE ${tableName}`
 
       this.definition = def
@@ -85,52 +85,100 @@ suite('date tests', function () {
     }
   }
 
+  class InsertSqlHelper {
+    constructor (tt) {
+      const randomHour = Math.floor(Math.random() * 24)
+      const randomMinute = Math.floor(Math.random() * 60)
+      const randomSecond = Math.floor(Math.random() * 60)
+      let randomMs = []
+      const nanoseconds = [1e-9 * 100, 0.9999999, 0.5]
+      const nanosecondsDeltaExpected = [1e-7, 0.0009999, 0]
+      let insertHoursQuery = [tt.insertSql]
+      for (let h = 0; h <= 23; ++h) {
+        insertHoursQuery.push(['(\'', h, ':00:00.00\'),'].join(''))
+      }
+      insertHoursQuery = insertHoursQuery.join('')
+      insertHoursQuery = insertHoursQuery.substr(0, insertHoursQuery.length - 1)
+      insertHoursQuery += ';'
+
+      let insertMinutesSql = [tt.insertSql]
+      for (let m = 0; m <= 59; ++m) {
+        insertMinutesSql.push(['(\'', randomHour, ':', m, ':00.00\'),'].join(''))
+      }
+      insertMinutesSql = insertMinutesSql.join('')
+      insertMinutesSql = insertMinutesSql.substr(0, insertMinutesSql.length - 1)
+      insertMinutesSql += ';'
+
+      let insertSecondsSql = [tt.insertSql]
+      for (let s = 0; s <= 59; ++s) {
+        insertSecondsSql.push(['(\'', randomHour, ':', randomMinute, ':', s, '.00\'),'].join(''))
+      }
+      insertSecondsSql = insertSecondsSql.join('')
+      insertSecondsSql = insertSecondsSql.substr(0, insertSecondsSql.length - 1)
+      insertSecondsSql += ';'
+
+      let insertMilliSecondsSql = [tt.insertSql]
+      randomMs = []
+
+      for (let ms = 0; ms <= 50; ++ms) {
+        randomMs.push(Math.floor(Math.random() * 1000))
+        insertMilliSecondsSql.push(['(\'', randomHour, ':', randomMinute, ':', randomSecond, (randomMs[ms] / 1000).toFixed(3).substr(1), '\'),'].join(''))
+      }
+      insertMilliSecondsSql = insertMilliSecondsSql.join('')
+      insertMilliSecondsSql = insertMilliSecondsSql.substr(0, insertMilliSecondsSql.length - 1)
+      insertMilliSecondsSql += ';'
+
+      let insertNanoSecondsSql = [tt.insertSql]
+      for (const i in nanoseconds) {
+        insertNanoSecondsSql.push(['(\'', randomHour, ':', randomMinute, ':', randomSecond, (nanoseconds[i]).toFixed(7).substr(1), '\'),'].join(''))
+      }
+      insertNanoSecondsSql = insertNanoSecondsSql.join('')
+      insertNanoSecondsSql = insertNanoSecondsSql.substr(0, insertNanoSecondsSql.length - 1)
+      insertNanoSecondsSql += ';'
+
+      this.randomHour = randomHour
+      this.randomMinute = randomMinute
+      this.randomSecond = randomSecond
+      this.nanoseconds = nanoseconds
+      this.randomMs = randomMs
+      this.insertHoursQuery = insertHoursQuery
+      this.insertMinutesSql = insertMinutesSql
+      this.insertSecondsSql = insertSecondsSql
+      this.insertMilliSecondsSql = insertMilliSecondsSql
+      this.insertNanoSecondsSql = insertNanoSecondsSql
+      this.nanosecondsDeltaExpected = nanosecondsDeltaExpected
+    }
+  }
+
   test('time to millisecond components', testDone => {
-    const randomHour = Math.floor(Math.random() * 24)
-    const randomMinute = Math.floor(Math.random() * 60)
-    const randomSecond = Math.floor(Math.random() * 60)
-    let randomMs = []
-    const nanoseconds = [1e-9 * 100, 0.9999999, 0.5]
-    const nanosecondsDeltaExpected = [1e-7, 0.0009999, 0]
+    const tableDef = {
+      tableName: 'time_test',
+      columns: [
+        {
+          name: 'test_time',
+          type: 'time'
+        }
+      ]
+    }
+    const promisedRaw = util.promisify(theConnection.queryRaw)
+    const tt = new DateTableTest(theConnection, tableDef)
+    const ih = new InsertSqlHelper(tt)
 
     const fns =
       [
-        asyncDone => {
-          theConnection.queryRaw('DROP TABLE time_test', () => {
+        async asyncDone => {
+          try {
+            await tt.create()
+            await promisedRaw(ih.insertHoursQuery)
             asyncDone()
-          })
-        },
-        asyncDone => {
-          theConnection.queryRaw('CREATE TABLE time_test (id int identity, test_time time, test_datetime2 datetime2, test_datetimeoffset datetimeoffset)', e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          theConnection.queryRaw('CREATE CLUSTERED INDEX IX_time_test ON time_test(id)', e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-        },
-        // insert all the hours and make sure they come back from time column
-        asyncDone => {
-          let query = ['INSERT INTO time_test (test_time) VALUES ']
-
-          for (let h = 0; h <= 23; ++h) {
-            query.push(['(\'', h, ':00:00.00\'),'].join(''))
+          } catch (e) {
+            assert(e)
+            testDone()
           }
-          query = query.join('')
-          query = query.substr(0, query.length - 1)
-          query += ';'
-
-          theConnection.queryRaw(query, e => {
-            assert.ifError(e)
-            asyncDone()
-          })
         },
         asyncDone => {
           let expectedHour = -1
-          const stmt = theConnection.queryRaw('SELECT test_time FROM time_test ORDER BY id')
+          const stmt = theConnection.queryRaw(tt.selectSql)
           stmt.on('error', e => {
             assert.ifError(e)
           })
@@ -148,22 +196,14 @@ suite('date tests', function () {
           })
         },
         asyncDone => {
-          theConnection.queryRaw('TRUNCATE TABLE time_test', e => {
+          theConnection.queryRaw(tt.truncateSql, e => {
             assert.ifError(e)
             asyncDone()
           })
         },
-        // insert all the hours and make sure they come back from time column
         asyncDone => {
-          let query = ['INSERT INTO time_test (test_time) VALUES ']
-          for (let m = 0; m <= 59; ++m) {
-            query.push(['(\'', randomHour, ':', m, ':00.00\'),'].join(''))
-          }
-          query = query.join('')
-          query = query.substr(0, query.length - 1)
-          query += ';'
-
-          theConnection.queryRaw(query, e => {
+        // insert all the mins and make sure they come back from time column
+          theConnection.queryRaw(ih.insertMinutesSql, e => {
             assert.ifError(e)
             asyncDone()
           })
@@ -171,7 +211,7 @@ suite('date tests', function () {
         asyncDone => {
           let expectedMinute = -1
 
-          const stmt = theConnection.queryRaw('SELECT test_time FROM time_test ORDER BY id')
+          const stmt = theConnection.queryRaw(tt.selectSql)
 
           stmt.on('error', e => {
             assert.ifError(e)
@@ -180,7 +220,7 @@ suite('date tests', function () {
             ++expectedMinute
             assert(c === 0)
             assert(!more)
-            const expectedDate = new Date(Date.UTC(1900, 0, 1, randomHour, expectedMinute, 0, 0))
+            const expectedDate = new Date(Date.UTC(1900, 0, 1, ih.randomHour, expectedMinute, 0, 0))
             expectedDate.nanosecondsDelta = 0
             assert.deepStrictEqual(d, expectedDate)
           })
@@ -190,30 +230,21 @@ suite('date tests', function () {
           })
         },
         asyncDone => {
-          theConnection.queryRaw('TRUNCATE TABLE time_test', e => {
+          theConnection.queryRaw(tt.truncateSql, e => {
             assert.ifError(e)
             asyncDone()
           })
         },
-        // insert all the hours and make sure they come back from time column
+        // insert all the seconds and make sure they come back from time column
         asyncDone => {
-          let query = ['INSERT INTO time_test (test_time) VALUES ']
-
-          for (let s = 0; s <= 59; ++s) {
-            query.push(['(\'', randomHour, ':', randomMinute, ':', s, '.00\'),'].join(''))
-          }
-          query = query.join('')
-          query = query.substr(0, query.length - 1)
-          query += ';'
-
-          theConnection.queryRaw(query, e => {
+          theConnection.queryRaw(ih.insertSecondsSql, e => {
             assert.ifError(e)
             asyncDone()
           })
         },
         asyncDone => {
           let expectedSecond = -1
-          const stmt = theConnection.queryRaw('SELECT test_time FROM time_test ORDER BY id')
+          const stmt = theConnection.queryRaw(tt.selectSql)
 
           stmt.on('error', e => {
             assert.ifError(e)
@@ -222,7 +253,7 @@ suite('date tests', function () {
             ++expectedSecond
             assert(c === 0)
             assert(!more)
-            const expectedDate = new Date(Date.UTC(1900, 0, 1, randomHour, randomMinute, expectedSecond, 0))
+            const expectedDate = new Date(Date.UTC(1900, 0, 1, ih.randomHour, ih.randomMinute, expectedSecond, 0))
             expectedDate.nanosecondsDelta = 0
             assert.deepStrictEqual(d, expectedDate)
           })
@@ -232,25 +263,14 @@ suite('date tests', function () {
           })
         },
         asyncDone => {
-          theConnection.queryRaw('TRUNCATE TABLE time_test', e => {
+          theConnection.queryRaw(tt.truncateSql, e => {
             assert.ifError(e)
             asyncDone()
           })
         },
         // insert a sampling of milliseconds and make sure they come back correctly
         asyncDone => {
-          let query = ['INSERT INTO time_test (test_time) VALUES ']
-          randomMs = []
-
-          for (let ms = 0; ms <= 50; ++ms) {
-            randomMs.push(Math.floor(Math.random() * 1000))
-            query.push(['(\'', randomHour, ':', randomMinute, ':', randomSecond, (randomMs[ms] / 1000).toFixed(3).substr(1), '\'),'].join(''))
-          }
-          query = query.join('')
-          query = query.substr(0, query.length - 1)
-          query += ';'
-
-          theConnection.queryRaw(query, e => {
+          theConnection.queryRaw(ih.insertMilliSecondsSql, e => {
             assert.ifError(e)
             asyncDone()
           })
@@ -258,7 +278,7 @@ suite('date tests', function () {
         asyncDone => {
           let msCount = -1
 
-          const stmt = theConnection.queryRaw('SELECT test_time FROM time_test ORDER BY id')
+          const stmt = theConnection.queryRaw(tt.selectSql)
 
           stmt.on('error', e => {
             assert.ifError(e)
@@ -267,7 +287,7 @@ suite('date tests', function () {
             ++msCount
             assert(c === 0)
             assert(!more)
-            const expectedDate = new Date(Date.UTC(1900, 0, 1, randomHour, randomMinute, randomSecond, randomMs[msCount]))
+            const expectedDate = new Date(Date.UTC(1900, 0, 1, ih.randomHour, ih.randomMinute, ih.randomSecond, ih.randomMs[msCount]))
             expectedDate.nanosecondsDelta = 0
             assert.deepStrictEqual(d, expectedDate, 'Milliseconds didn\'t match')
           })
@@ -277,31 +297,21 @@ suite('date tests', function () {
           })
         },
         asyncDone => {
-          theConnection.queryRaw('TRUNCATE TABLE time_test', e => {
+          theConnection.queryRaw(tt.truncateSql, e => {
             assert.ifError(e)
             asyncDone()
           })
         },
-        // insert a sampling of milliseconds and make sure they come back correctly
+        // insert a sampling of ns and make sure they come back correctly
         asyncDone => {
-          let query = ['INSERT INTO time_test (test_time) VALUES ']
-
-          for (const i in nanoseconds) {
-            query.push(['(\'', randomHour, ':', randomMinute, ':', randomSecond, (nanoseconds[i]).toFixed(7).substr(1), '\'),'].join(''))
-          }
-          query = query.join('')
-          query = query.substr(0, query.length - 1)
-          query += ';'
-
-          theConnection.queryRaw(query, e => {
+          theConnection.queryRaw(ih.insertNanoSecondsSql, e => {
             assert.ifError(e)
             asyncDone()
           })
         },
         asyncDone => {
           let nsCount = -1
-
-          const stmt = theConnection.queryRaw('SELECT test_time FROM time_test ORDER BY id')
+          const stmt = theConnection.queryRaw(tt.selectSql)
 
           stmt.on('error', e => {
             assert.ifError(e)
@@ -310,8 +320,8 @@ suite('date tests', function () {
             ++nsCount
             assert(c === 0)
             assert(!more)
-            const expectedDate = new Date(Date.UTC(1900, 0, 1, randomHour, randomMinute, randomSecond, nanoseconds[nsCount] * 1000))
-            expectedDate.nanosecondsDelta = nanosecondsDeltaExpected[nsCount]
+            const expectedDate = new Date(Date.UTC(1900, 0, 1, ih.randomHour, ih.randomMinute, ih.randomSecond, ih.nanoseconds[nsCount] * 1000))
+            expectedDate.nanosecondsDelta = ih.nanosecondsDeltaExpected[nsCount]
             assert.deepStrictEqual(d, expectedDate, 'Nanoseconds didn\'t match')
           })
           stmt.on('done', () => {
@@ -342,12 +352,12 @@ suite('date tests', function () {
     }
     const promisedRaw = util.promisify(theConnection.queryRaw)
     const tt = new DateTableTest(theConnection, tableDef)
-    let insertQuery = tt.insertSql
+    let insertDatesQuery = tt.insertSql
     for (const testDate of testDates) {
-      insertQuery += '(\'' + testDate + '\'),'
+      insertDatesQuery += '(\'' + testDate + '\'),'
     }
-    insertQuery = insertQuery.substr(0, insertQuery.length - 1)
-    insertQuery += ';'
+    insertDatesQuery = insertDatesQuery.substr(0, insertDatesQuery.length - 1)
+    insertDatesQuery += ';'
 
     const expectedDates = []
     for (const testDate of testDates) {
@@ -367,7 +377,7 @@ suite('date tests', function () {
       async asyncDone => {
         try {
           await tt.create()
-          await promisedRaw(insertQuery)
+          await promisedRaw(insertDatesQuery)
           asyncDone()
         } catch (e) {
           assert(e)
