@@ -283,6 +283,7 @@ suite('date tests', function () {
           stmt.on('error', e => {
             assert.ifError(e)
           })
+
           stmt.on('column', (c, d, more) => {
             ++msCount
             assert(c === 0)
@@ -291,6 +292,7 @@ suite('date tests', function () {
             expectedDate.nanosecondsDelta = 0
             assert.deepStrictEqual(d, expectedDate, 'Milliseconds didn\'t match')
           })
+
           stmt.on('done', () => {
             assert(msCount === 50)
             asyncDone()
@@ -352,12 +354,10 @@ suite('date tests', function () {
     }
     const promisedRaw = util.promisify(theConnection.queryRaw)
     const tt = new DateTableTest(theConnection, tableDef)
-    let insertDatesQuery = tt.insertSql
-    for (const testDate of testDates) {
-      insertDatesQuery += '(\'' + testDate + '\'),'
-    }
-    insertDatesQuery = insertDatesQuery.substr(0, insertDatesQuery.length - 1)
-    insertDatesQuery += ';'
+
+    // 'INSERT INTO date_test (test_date) VALUES ('1-1-1970'),('12-31-1969'),('2-29-1904'),('2-29-2000');
+
+    const insertDatesQuery = `${tt.insertSql} ${testDates.map(d => `('${d}')`)}`
 
     const expectedDates = []
     for (const testDate of testDates) {
@@ -388,7 +388,7 @@ suite('date tests', function () {
       async asyncDone => {
         theConnection.setUseUTC(false)
         try {
-          const r = promisedRaw(tt.selectSql)
+          const r = await promisedRaw(tt.selectSql)
           assert.deepStrictEqual(expectedResults.meta, r.meta)
           for (const row in r.rows) {
             for (const d in row) {
@@ -446,19 +446,14 @@ suite('date tests', function () {
     }
 
     const tt = new DateTableTest(theConnection, tableDef)
-    let insertQuery = tt.insertSql
-    for (const i in testDates) {
-      insertQuery += ['(\'', testDates[i].date1, '\',\'', testDates[i].date2, '\'),'].join('')
-    }
-    insertQuery = insertQuery.substr(0, insertQuery.length - 1)
-    insertQuery = insertQuery + ';'
+    const insertDatesQuery = `${tt.insertSql} ${testDates.map(d => `('${d.date1}', '${d.date2}')`)}`
 
     const promisedRaw = util.promisify(theConnection.queryRaw)
     const fns = [
       async asyncDone => {
         try {
           await tt.create()
-          await promisedRaw(insertQuery)
+          await promisedRaw(insertDatesQuery)
           asyncDone()
         } catch (e) {
           assert(e)
@@ -467,15 +462,18 @@ suite('date tests', function () {
       },
 
       // test valid dates
-      asyncDone => {
-        theConnection.queryRaw(tt.selectSql, (e, r) => {
-          assert.ifError(e)
+      async asyncDone => {
+        try {
+          const r = await promisedRaw(tt.selectSql)
           for (const d in r.rows) {
             const timeDiff = r.rows[d][1].getTime() - r.rows[d][0].getTime()
             assert(timeDiff === testDates[d].milliseconds)
           }
           asyncDone()
-        })
+        } catch (e) {
+          assert(e)
+          testDone()
+        }
       }
     ]
 
@@ -506,23 +504,30 @@ suite('date tests', function () {
     }
 
     const tt = new DateTableTest(theConnection, tableDef)
-    let insertQuery = [tt.insertSql]
 
     // there are some timezones not on hour boundaries, but we aren't testing those in these unit tests
-    for (let tz = -12; tz <= 12; ++tz) {
-      insertQuery.push(['(\'', (tzYear < 1000) ? '0' + tzYear : tzYear, '-', tzMonth + 1, '-', tzDay,
-        ' ', tzHour, ':', tzMinute, ':', tzSecond, (tz < 0) ? '' : '+', tz, ':00\'),'].join(''))
+    // INSERT INTO datetimeoffset_test (test_datetimeoffset) VALUES ('1970-1-1 0:0:0-12:00'),('1970-1-1 0:0:0-11:00'),
+
+    const offsets = []
+    for (let offset = -12; offset <= 12; ++offset) {
+      offsets.push(offset)
     }
-    insertQuery = insertQuery.join('')
-    insertQuery = insertQuery.substr(0, insertQuery.length - 1)
-    insertQuery += ';'
+
+    function get (tz) {
+      const paddedYear = tzYear < 1000 ? '0' + tzYear : tzYear
+      const sign = (tz < 0) ? '' : '+'
+      const x = `${paddedYear}-${tzMonth + 1}-${tzDay} ${tzHour}:${tzMinute}:${tzSecond}${sign}${tz}:00`
+      return x
+    }
+
+    const insertDatesQuery = `${tt.insertSql} ${offsets.map(t => `('${get(t)}')`)}`
 
     const promisedRaw = util.promisify(theConnection.queryRaw)
     const fns = [
       async asyncDone => {
         try {
           await tt.create()
-          await promisedRaw(insertQuery)
+          await promisedRaw(insertDatesQuery)
           asyncDone()
         } catch (e) {
           assert(e)
