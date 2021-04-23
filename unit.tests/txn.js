@@ -60,31 +60,91 @@ suite('txn', function () {
     })
   })
 
+  class TxnTableTest {
+    constructor (c, def) {
+      function where (list, primitive) {
+        return list.reduce((agg, latest) => {
+          if (primitive(latest)) {
+            agg.push(latest)
+          }
+          return agg
+        }, [])
+      }
+      const tableName = def.tableName
+      const columns = def.columns.map(e => `${e.name} ${e.type}`).join(', ')
+      const insertColumnNames = where(def.columns, c => {
+        const res = !c.type.includes('identity')
+        return res
+      }).map(e => `${e.name}`).join(', ')
+      const columnNames = def.columns.map(e => `${e.name}`).join(', ')
+      const dropTableSql = `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL DROP TABLE ${tableName};`
+      const createTableSql = `CREATE TABLE ${tableName} (${columns})`
+      const clusteredSql = `CREATE CLUSTERED INDEX IX_${tableName} ON ${tableName}(id)`
+      const insertSql = `INSERT INTO ${tableName} (${insertColumnNames}) VALUES `
+      const selectSql = `SELECT ${columnNames} FROM ${tableName}`
+      const trucateSql = `TRUNCATE TABLE ${tableName}`
+      const paramsSql = `(${def.columns.map(_ => '?').join(', ')})`
+
+      this.definition = def
+      this.theConnection = c
+      this.dropTableSql = dropTableSql
+      this.createTableSql = createTableSql
+      this.clusteredSql = clusteredSql
+      this.selectSql = selectSql
+      this.insertSql = insertSql
+      this.truncateSql = trucateSql
+      this.tableName = def.tableName
+      this.paramsSql = paramsSql
+      this.insertParamsSql = `${insertSql} ${paramsSql}`
+    }
+
+    async create () {
+      const promisedRaw = util.promisify(this.theConnection.queryRaw)
+      await promisedRaw(this.dropTableSql)
+      await promisedRaw(this.createTableSql)
+    }
+  }
+
+  const txnTableDef = {
+    tableName: 'test_txn',
+    columns: [
+      {
+        name: 'id',
+        type: 'int identity'
+      },
+      {
+        name: 'name',
+        type: 'VARCHAR (100)'
+      }
+    ]
+  }
+
+  const activityTableDef = {
+    tableName: 'test_txn_sales',
+    columns: [
+      {
+        name: 'activity_id',
+        type: 'INT PRIMARY KEY'
+      },
+      {
+        name: 'activity_name',
+        type: 'VARCHAR (255) NOT NULL'
+      }
+    ]
+  }
+
   test('setup for tests', testDone => {
     // single setup necessary for the test
-
+    const tester = new TxnTableTest(theConnection, txnTableDef)
     const fns = [
-
-      asyncDone => {
+      async asyncDone => {
         try {
-          sql.query(connStr, 'drop table test_txn', () => {
-            asyncDone()
-          })
+          await tester.create()
+          asyncDone()
         } catch (e) {
+          assert(e)
           asyncDone() // skip any errors because the table might not exist
         }
-      },
-      asyncDone => {
-        sql.query(connStr, 'create table test_txn (id int identity, name varchar(100))', err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        theConnection.queryRaw('create clustered index index_txn on test_txn (id)', err => {
-          assert.ifError(err)
-          asyncDone()
-        })
       }
     ]
 
@@ -93,34 +153,8 @@ suite('txn', function () {
     })
   })
 
-  class TxnHelper {
-    constructor (theConnection) {
-      const tableName = 'test_txn_sales'
-      const dropTableSql = `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL 
-    DROP TABLE ${tableName};`
-
-      const createTableSql = `CREATE TABLE ${tableName} (
-        activity_id INT PRIMARY KEY,
-        activity_name VARCHAR (255) NOT NULL
-    );`
-
-      const insertSql = `INSERT INTO ${tableName} (activity_id, activity_name) VALUES (?, ?)`
-      const selectSql = `select activity_id, activity_name from ${tableName}`
-
-      async function create () {
-        const promisedQuery = util.promisify(theConnection.query)
-        await promisedQuery(dropTableSql)
-        await promisedQuery(createTableSql)
-      }
-
-      this.create = create
-      this.insertSql = insertSql
-      this.selectSql = selectSql
-    }
-  }
-
   test('begin a transaction and use streaming with error on constraint to trigger rollback detection', done => {
-    const helper = new TxnHelper(theConnection)
+    const helper = new TxnTableTest(theConnection, activityTableDef)
     const fns = [
 
       async asyncDone => {
@@ -136,14 +170,14 @@ suite('txn', function () {
       },
 
       asyncDone => {
-        theConnection.query(helper.insertSql, [1, 'jogging'], (err) => {
+        theConnection.query(helper.insertParamsSql, [1, 'jogging'], (err) => {
           assert.ifError(err)
           asyncDone()
         })
       },
 
       asyncDone => {
-        const q = theConnection.query(helper.insertSql, [1, 'sprinting'])
+        const q = theConnection.query(helper.insertParamsSql, [1, 'sprinting'])
         const errors = []
         q.on('error', (err, more) => {
           errors.push(err)
@@ -180,7 +214,7 @@ suite('txn', function () {
   })
 
   test('begin a transaction and rollback on violation and insert valid', done => {
-    const helper = new TxnHelper(theConnection)
+    const helper = new TxnTableTest(theConnection, activityTableDef)
     const fns = [
 
       async asyncDone => {
@@ -196,14 +230,14 @@ suite('txn', function () {
       },
 
       asyncDone => {
-        theConnection.query(helper.insertSql, [1, 'jogging'], (err) => {
+        theConnection.query(helper.insertParamsSql, [1, 'jogging'], (err) => {
           assert.ifError(err)
           asyncDone()
         })
       },
 
       asyncDone => {
-        const q = theConnection.query(helper.insertSql, [1, 'sprinting'])
+        const q = theConnection.query(helper.insertParamsSql, [1, 'sprinting'])
         const errors = []
         q.on('error', (err, more) => {
           errors.push(err)
@@ -239,14 +273,14 @@ suite('txn', function () {
       // add 2 more valid rows with no transaction
 
       asyncDone => {
-        theConnection.query(helper.insertSql, [1, 'jogging'], (err) => {
+        theConnection.query(helper.insertParamsSql, [1, 'jogging'], (err) => {
           assert.ifError(err)
           asyncDone()
         })
       },
 
       asyncDone => {
-        theConnection.query(helper.insertSql, [2, 'sprinting'], (err) => {
+        theConnection.query(helper.insertParamsSql, [2, 'sprinting'], (err) => {
           assert.ifError(err)
           asyncDone()
         })
@@ -275,7 +309,7 @@ suite('txn', function () {
   })
 
   test('begin a transaction and add two rows no constraint violation, commit and check', done => {
-    const helper = new TxnHelper(theConnection)
+    const helper = new TxnTableTest(theConnection, activityTableDef)
     const fns = [
 
       async asyncDone => {
@@ -291,14 +325,14 @@ suite('txn', function () {
       },
 
       asyncDone => {
-        theConnection.query(helper.insertSql, [1, 'jogging'], (err) => {
+        theConnection.query(helper.insertParamsSql, [1, 'jogging'], (err) => {
           assert.ifError(err)
           asyncDone()
         })
       },
 
       asyncDone => {
-        theConnection.query(helper.insertSql, [2, 'sprinting'], (err) => {
+        theConnection.query(helper.insertParamsSql, [2, 'sprinting'], (err) => {
           assert.ifError(err)
           asyncDone()
         })
@@ -354,6 +388,7 @@ suite('txn', function () {
   })
 
   test('begin a transaction and commit', testDone => {
+    const tester = new TxnTableTest(theConnection, txnTableDef)
     const fns = [
 
       asyncDone => {
@@ -363,14 +398,14 @@ suite('txn', function () {
         })
       },
       asyncDone => {
-        theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Anne\')', (err, results) => {
+        theConnection.queryRaw(`${tester.insertSql} ('Anne')`, (err, results) => {
           assert.ifError(err)
           assert.deepStrictEqual(results, { meta: null, rowcount: 1 }, 'Insert results don\'t match')
           asyncDone()
         })
       },
       asyncDone => {
-        theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Bob\')', (err, results) => {
+        theConnection.queryRaw(`${tester.insertSql} ('Bob')`, (err, results) => {
           assert.ifError(err)
           assert.deepStrictEqual(results, { meta: null, rowcount: 1 }, 'Insert results don\'t match')
           asyncDone()
@@ -383,7 +418,7 @@ suite('txn', function () {
         })
       },
       asyncDone => {
-        theConnection.queryRaw('select * from test_txn', (err, results) => {
+        theConnection.queryRaw(tester.selectSql, (err, results) => {
           assert.ifError(err)
 
           // verify results
@@ -410,6 +445,7 @@ suite('txn', function () {
   })
 
   test('begin a transaction and rollback', testDone => {
+    const tester = new TxnTableTest(theConnection, txnTableDef)
     const fns = [
 
       asyncDone => {
@@ -419,14 +455,14 @@ suite('txn', function () {
         })
       },
       asyncDone => {
-        theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Carl\')', (err, results) => {
+        theConnection.queryRaw(`${tester.insertSql} ('Carl')`, (err, results) => {
           assert.ifError(err)
           assert.deepStrictEqual(results, { meta: null, rowcount: 1 }, 'Insert results don\'t match')
           asyncDone()
         })
       },
       asyncDone => {
-        theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Dana\')', (err, results) => {
+        theConnection.queryRaw(`${tester.insertSql} ('Dana')`, (err, results) => {
           assert.ifError(err)
           assert.deepStrictEqual(results, { meta: null, rowcount: 1 }, 'Insert results don\'t match')
           asyncDone()
@@ -439,7 +475,7 @@ suite('txn', function () {
         })
       },
       asyncDone => {
-        theConnection.queryRaw('select * from test_txn', (err, results) => {
+        theConnection.queryRaw(tester.selectSql, (err, results) => {
           assert.ifError(err)
 
           // verify results
@@ -467,6 +503,7 @@ suite('txn', function () {
   })
 
   test('begin a transaction and then query with an error', testDone => {
+    const tester = new TxnTableTest(theConnection, txnTableDef)
     const fns = [
       asyncDone => {
         theConnection.beginTransaction(err => {
@@ -499,7 +536,7 @@ suite('txn', function () {
       },
 
       asyncDone => {
-        theConnection.queryRaw('select * from test_txn', (err, results) => {
+        theConnection.queryRaw(tester.selectSql, (err, results) => {
           assert.ifError(err)
 
           // verify results
@@ -527,15 +564,16 @@ suite('txn', function () {
   })
 
   test('begin a transaction and commit (with no async support)', testDone => {
+    const tester = new TxnTableTest(theConnection, txnTableDef)
     theConnection.beginTransaction(err => {
       assert.ifError(err)
     })
 
-    theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Anne\')', err => {
+    theConnection.queryRaw(`${tester.insertSql} ('Anne')`, (err) => {
       assert.ifError(err)
     })
 
-    theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Bob\')', err => {
+    theConnection.queryRaw(`${tester.insertSql} ('Bob')`, (err) => {
       assert.ifError(err)
     })
 
@@ -543,7 +581,7 @@ suite('txn', function () {
       assert.ifError(err)
     })
 
-    theConnection.queryRaw('select * from test_txn', (err, results) => {
+    theConnection.queryRaw(tester.selectSql, (err, results) => {
       assert.ifError(err)
 
       // verify results

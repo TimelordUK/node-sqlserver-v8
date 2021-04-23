@@ -374,7 +374,7 @@ suite('sproc', function () {
       assert.ifError(e)
     }
   }
-  
+
   test('pool: two optional parameters set output to sum no input params', testDone => {
     usePoolCallProc(t6, 5, testDone)
   })
