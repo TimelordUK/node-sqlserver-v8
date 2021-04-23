@@ -50,7 +50,7 @@ export interface SqlClient {
     TimeoutQuery(s:string, to:number) : QueryDescription
     TzOffsetQuery(s:string, offsetMinutes?:number) : QueryDescription
     TvpFromTable(table:Table) : ProcedureParam
-    Pool(options: PoolOptions) : Pool
+    Pool: { (options:PoolOptions) : Pool } & { new (options:PoolOptions) : Pool }
 }
 
 export interface Table {
@@ -61,16 +61,16 @@ export interface Table {
 }
 
 export interface PoolOptions {
-    floor: number
-    ceiling: number
-    heartbeatSecs: number
-    heartbeatSql: string
-    inactivityTimeoutSecs: number
+    floor?: number
+    ceiling?: number
+    heartbeatSecs?: number
+    heartbeatSql?: string
+    inactivityTimeoutSecs?: number
     connectionString: string
 }
 
 export interface Pool {
-    open(): void
+    open(cb?: PoolOpenCb): void
     close(cb: StatusCb): void
     query(sql: string, cb?: QueryCb): Query
     query(sql: string, params?: any[], cb?: QueryCb): Query
@@ -81,6 +81,16 @@ export interface Pool {
     queryRaw(sql: string, params?: any[], cb?: QueryRawCb): Query
     queryRaw(sql: string, cb: QueryRawCb): Query
     callproc(name: string, params?: any[], cb?: CallProcedureCb): Query
+    // pool.on('debug', msg => { console.log(msg) })
+    on(debug: string, cb?: MessageCb): void 
+    // pool.on('open', options = {} )
+    on(open: string, cb?: PoolOptionsEventCb): void
+    // pool.on('error', err = {} )
+    on(error: string, err?: StatusCb): void
+    // pool.on('submitted', q => {} )
+    on(submitted: string, query?: QueryDescriptionCb): void
+     // pool.on('status', q => {} )
+    on(status: string, statusRecord?: PoolStatusRecordCb): void
 }
 
 export interface TableColumnType {
@@ -172,13 +182,37 @@ export interface Meta {
 export interface Error
 {
     message:string
-    sqlstate: string
-    code: number
+    sqlstate?: string
+    code?: number
 }
 
 export interface RawData {
     meta: Meta[]
     rows: Array<any[]>
+}
+
+export interface PoolStatusRecord {
+    time: Date,
+    parked: number,
+    idle: number,
+    busy: number,
+    pause: number,
+    parking: number,
+    workQueue: number,
+    activity: string,
+    op: string
+    lastSql?: string
+  }
+
+export interface PoolStatusRecordCb { (status: PoolStatusRecord): void
+}
+export interface QueryDescriptionCb { (description: QueryDescription): void
+}
+export interface MessageCb { (msg: string): void
+}
+export interface PoolOptionsEventCb { (options: PoolOptions): void
+}
+export interface PoolOpenCb { (err: Error, options: PoolOptions): void
 }
 export interface SimpleCb { (): void
 }

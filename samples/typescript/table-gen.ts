@@ -132,7 +132,7 @@ class TableGenerator {
                 if (err) {
                     reject(err);
                 }else {
-                    resolve();
+                    resolve(null);
                 }
             })
         })
@@ -149,6 +149,7 @@ class TableGenerator {
                 let schema :TableColumn[] = summary.columns;
                 vec = inst.rows(schema, rows);
                 yield inst.insert(t, vec);
+                resolve(null)
                 console.log('finished.');
             }).or((e: any) => {
                 console.log(e.message);
@@ -162,9 +163,9 @@ class TableGenerator {
         return new Promise<any>((resolve, reject) => {
             let inst = this;
             ASQ().runner(function*() {
-                let wrapper:SqlWrapper = yield inst.init();
+                const wrapper:SqlWrapper = yield inst.init();
                 console.log('open question');
-                let connection = yield wrapper.open();
+                let connection:SqlConnection = yield wrapper.open(0);
                 console.log(`drop table ${inst.dropSql}`);
                 yield connection.getCommand().sql(inst.dropSql).execute();
                 console.log('create table');
@@ -172,7 +173,7 @@ class TableGenerator {
                 yield connection.getCommand().sql(inst.defSql).execute();
                 console.log('close connection');
                 yield connection.close();
-                resolve();
+                resolve(null);
             }).or((e: CommandResponse) => {
                 reject(e);
             });

@@ -356,10 +356,10 @@ export module MsNodeSqlWrapperModule {
                 let res = new SqlCommandResponse();
                 let to = this._wrapperTimeoutMs;
                 if (to > 0) {
-                    setTimeout(to, () => {
+                    setTimeout(() => {
                         res.error = new SqlModuleWrapperError(`wrapper timeout ${to} expired.`);
                         reject(res);
-                    });
+                    }, to);
                 }
 
                 this.dispatchCommandType(resolve, reject, res);
@@ -528,7 +528,7 @@ export module MsNodeSqlWrapperModule {
             return new Promise((resolve, reject) => {
                 this.legacy_conn.close((err: Error) => {
                     if (err) reject(err);
-                    else resolve();
+                    else resolve(null);
                 })
             });
         }
