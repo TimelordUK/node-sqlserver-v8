@@ -66,6 +66,7 @@ export interface PoolOptions {
     heartbeatSecs?: number
     heartbeatSql?: string
     inactivityTimeoutSecs?: number
+    useUTC?:boolean
     connectionString: string
 }
 
@@ -373,4 +374,5 @@ export enum QueryEvent {
     warning = 'warning',
     closed = 'closed',
     submitted = 'submitted',
+    output = 'output'
 }

@@ -33,13 +33,14 @@ const helloSpName = 'hello_sp'
 const helloSpDef = `create PROCEDURE ${helloSpName} AS
     BEGIN
       print 'hello';
-      select top 100 * from sysobjects;
+      select top 3 id, name, type from sysobjects;
       print 'world';
-      select top 100 * from syscolumns;
+      select top 3 id, name, xusertype, length from syscolumns;
+      return 321;
     END
     `
 async function main (invocations) {
-  await asConnectionMessages(10000, 1)
+  await asConnectionMessages(10000, 2)
   await asConnectionTimeout(10000, 2)
   await asConnectionTimeout(200, 1)
   await asConnectionTimeout(200, 1)
@@ -55,8 +56,8 @@ async function asConnectionMessages (procTimeout, invocations) {
   await helper.create()
   for (let i = 0; i < invocations; ++i) {
     try {
-      const res = await helper.callProcPromise([], procTimeout)
-      console.log(`${helloSpName}: testTimeout [${i} - ${procTimeout}] done - sets returned ${res.results.length} [${res.results.map(r => r.length).join(', ')}] [${res.info.join(', ')}]`)
+      const res = await helper.callProcAggregator([], { timeoutMs: procTimeout, raw: i % 2 === 0 })
+      console.log(`${helloSpName}: testTimeout [${i} - ${procTimeout}] done - sets returned ${JSON.stringify(res, null, 4)}]`)
     } catch (e) {
       console.log(e.message)
     }
@@ -79,7 +80,7 @@ async function testTimeout (connectionProxy, invocations, procTimeout) {
   }
   for (let i = 0; i < invocations; ++i) {
     try {
-      const res = await helper.callProcPromise(p, procTimeout)
+      const res = await helper.callProcAggregator(p, { timeoutMs: procTimeout })
       console.log(`${longspName}: testTimeout [${i} - ${procTimeout}] done - sets returned ${res.results.length} [${res.results.map(r => r.length).join(', ')}]`)
     } catch (e) {
       console.log(`rejection: ${e.message} - test connection still good.`)
@@ -141,7 +142,7 @@ async function test (connectionProxy, invocations) {
       param: 'hello world'
     }
     for (let i = 0; i < invocations; ++i) {
-      promises.push(helper.callProcPromise(p))
+      promises.push(helper.callProcAggregator(p))
     }
     const res = await Promise.all(promises)
     const elapsed = new Date() - d
@@ -179,73 +180,7 @@ class ProcedureHelper {
     await promisedQuery(this.defition)
   }
 
-  callProcPromise (o, timeoutMs) {
-    return new Promise((resolve, reject) => {
-      let handle = null
-      let row = {}
-      const ret = {
-        meta: [],
-        results: [],
-        output: null,
-        info: null
-      }
-      const q = this.connectionProxy.callproc(this.procName, o)
-      if (timeoutMs) {
-        handle = setTimeout(() => {
-          try {
-            q.pauseQuery()
-            q.cancelQuery((e) => {
-              reject(e || new Error(`query cancelled timeout ${timeoutMs}`))
-            })
-          } catch (e) {
-            reject(e)
-          }
-        }, timeoutMs)
-      }
-
-      q.on('output', o => {
-        ret.output = o
-      })
-
-      q.on('error', e => {
-        reject(e)
-      })
-
-      q.on('info', m => {
-        if (!ret.info) {
-          ret.info = []
-        }
-        ret.info.push(m.message.substr(m.message.lastIndexOf(']') + 1))
-      })
-
-      q.on('meta', meta => {
-        ret.meta.push(meta)
-        ret.results.push([])
-      })
-
-      q.on('row', e => {
-        row = {}
-      })
-
-      q.on('done', () => {
-        if (handle) {
-          clearTimeout(handle)
-        }
-      })
-
-      q.on('free', () => {
-        resolve(ret)
-      })
-
-      q.on('column', (c, v) => {
-        const resultId = ret.meta.length - 1
-        const meta = ret.meta[resultId]
-        const results = ret.results[resultId]
-        row[meta[c].name] = v
-        if (c === meta.length - 1) {
-          results.push(row)
-        }
-      })
-    })
+  callProcAggregator (o, options) {
+    return this.connectionProxy.callProcAggregator(this.procName, o, options)
   }
 }
