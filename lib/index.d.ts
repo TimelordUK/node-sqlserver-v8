@@ -163,6 +163,7 @@ export interface Connection {
     prepare(description: QueryDescription, cb: PrepareCb): void
     setFilterNonCriticalErrors(flag:boolean):void
     callproc(name: string, params?: any[], cb?: CallProcedureCb): Query
+    callprocAggregator(name: string, params?: any[], optons?: CallProcedureAggregatorOptions): Promise<CallProcedureAggregatorResults>
 }
 
 export interface Query {
