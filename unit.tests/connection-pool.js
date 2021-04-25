@@ -40,7 +40,7 @@ suite('connection-pool', function () {
 
   test('submit 10 queries with errors (no callback) to pool of 4', testDone => {
     const iterations = 10
-    tester(iterations, 4, () => 'select a;', 50, true, err => {
+    tester(iterations, 4, () => 'select a;', 2000, true, err => {
       assert.strictEqual(iterations, err.length)
       const expected = err.filter(e => {
         return e.message.includes('Invalid column name \'a\'')
@@ -165,7 +165,7 @@ suite('connection-pool', function () {
   })
 
   test('submit 1000 short queries to pool of 4 - expect concurrent queries and fast completion', testDone => {
-    tester(1000, 4, () => 'select @@SPID as spid', 50, 0, testDone)
+    tester(1000, 4, () => 'select @@SPID as spid', 5000, 0, testDone)
   })
 
   test('open pool size 4 - submit queries on parked connections', testDone => {
