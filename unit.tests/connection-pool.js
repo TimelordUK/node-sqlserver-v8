@@ -328,7 +328,7 @@ suite('connection-pool', function () {
           assert.strictEqual(iterations - cancelled, checkin.length)
           assert.strictEqual(iterations, done)
           const elapsed = checkin[checkin.length - 1].time - checkout[0].time
-          assert(elapsed >= expectedTimeToComplete && elapsed <= expectedTimeToComplete + 1000)
+          assert(elapsed <= expectedTimeToComplete + 1000)
           pool.close()
         }
       })
@@ -452,7 +452,7 @@ suite('connection-pool', function () {
           assert.strictEqual(iterations, free)
           assert.strictEqual(iterations, checkin.length)
           const elapsed = checkin[checkin.length - 1].time - checkout[0].time
-          assert(elapsed >= expectedTimeToComplete - 250 && elapsed <= expectedTimeToComplete + 1000)
+          assert(elapsed <= expectedTimeToComplete + 1000)
           pool.close()
         }
       })
@@ -469,7 +469,7 @@ suite('connection-pool', function () {
   })
 
   test('submit 4 queries to pool of 4 connections - expect 4 x concurrent queries', testDone => {
-    tester(4, 4, i => `waitfor delay '00:00:0${i + 1}';`, 4000, 0, testDone)
+    tester(4, 4, i => `waitfor delay '00:00:0${i + 1}';`, 8000, 0, testDone)
   })
 
   test('open and close a pool with 2 connections without error', testDone => {
