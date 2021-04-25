@@ -70,6 +70,20 @@ export interface PoolOptions {
     connectionString: string
 }
 
+export interface CallProcedureAggregatorResults {
+    elapsed: number // elapsed ms for call to complete
+    meta: Meta[][] // array of meta for each query
+    results: any[][] // each result set either as array of arrays or array of objects
+    output: null // output params if any
+    info: string[] // prints from procedure collected
+    returns: null // return code from procedure
+  }
+
+export interface CallProcedureAggregatorOptions {
+    timeoutMs?: number // default 0 i.e. no timeout
+    raw?: boolean // results as arrays or objects with column names
+}
+
 export interface Pool {
     open(cb?: PoolOpenCb): void
     close(cb: StatusCb): void
@@ -82,6 +96,7 @@ export interface Pool {
     queryRaw(sql: string, params?: any[], cb?: QueryRawCb): Query
     queryRaw(sql: string, cb: QueryRawCb): Query
     callproc(name: string, params?: any[], cb?: CallProcedureCb): Query
+    callprocAggregator(name: string, params?: any[], optons?: CallProcedureAggregatorOptions): Promise<CallProcedureAggregatorResults>
     // pool.on('debug', msg => { console.log(msg) })
     on(debug: string, cb?: MessageCb): void 
     // pool.on('open', options = {} )
