@@ -32,10 +32,9 @@ namespace mssql
 		_statement(nullptr),
 		_callback(Isolate::GetCurrent(), cb.As<Function>()),
 		_cb(cb),
-		_failed(false),
 		_can_lock(true),
-		_failures(nullptr)
-	
+		_failed(false),
+		_failures(nullptr)	
 	{
 		_statementId = static_cast<long>(query_id);
 		const nodeTypeFactory fact;
