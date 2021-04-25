@@ -66,7 +66,7 @@ setInterval(() => {
   submit(testSql)
 }, 60000)
 
-pool.open((e, options) => {
+pool.open((e: Error, options:PoolOptions) => {
     if (e) {
         console.log(`Error ${e.message}`)
     } else {
