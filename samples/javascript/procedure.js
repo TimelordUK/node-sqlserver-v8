@@ -32,10 +32,11 @@ const longDef = `create PROCEDURE ${longspName} (
 const helloSpName = 'hello_sp'
 const helloSpDef = `create PROCEDURE ${helloSpName} AS
     BEGIN
-      print 'hello';
+      print 'hello, ';
       select top 2 id, name, type from sysobjects;
-      print 'world';
+      print 'world. ';
       select top 2 id, name, xusertype from syscolumns;
+      print 'bye!';
       return 321;
     END
     `
@@ -49,10 +50,15 @@ async function main (invocations) {
   await asPool(invocations)
 }
 
-async function asConnectionMessages (procTimeout, invocations) {
+async function getTheConnection () {
   const connectionString = getConnection()
   const promisedOpen = util.promisify(sql.open)
   const con = await promisedOpen(connectionString)
+  return con
+}
+
+async function asConnectionMessages (procTimeout, invocations) {
+  const con = await getTheConnection()
   const res = await messages(con, invocations, procTimeout)
   for (let i = 0; i < res.length; ++i) {
     console.log(`asConnectionMessages [${i}]: ${helloSpName}: done - ${JSON.stringify(res[i], null, 4)}]`)
@@ -91,12 +97,12 @@ async function killPool (pool) {
 
 async function messages (connectionProxy, invocations, procTimeout) {
   const helper = new ProcedureHelper(connectionProxy, helloSpName, helloSpDef)
-  await helper.create()
-  const promises = []
-  for (let i = 0; i < invocations; ++i) {
-    promises.push(helper.callprocAggregator([], { timeoutMs: procTimeout, raw: i % 2 === 0 }))
-  }
   try {
+    await helper.create()
+    const promises = []
+    for (let i = 0; i < invocations; ++i) {
+      promises.push(helper.callprocAggregator([], { timeoutMs: procTimeout, raw: i % 2 === 0 }))
+    }
     const res = await Promise.all(promises)
     return res
   } catch (e) {
@@ -105,9 +111,7 @@ async function messages (connectionProxy, invocations, procTimeout) {
 }
 
 async function asConnectionTimeout (procTimeout, invocations) {
-  const connectionString = getConnection()
-  const promisedOpen = util.promisify(sql.open)
-  const con = await promisedOpen(connectionString)
+  const con = await getTheConnection()
   await testTimeout(con, invocations, procTimeout)
 }
 
@@ -137,9 +141,7 @@ async function testTimeout (connectionProxy, invocations, procTimeout) {
 
 async function asConnection (invocations) {
   try {
-    const connectionString = getConnection()
-    const promisedOpen = util.promisify(sql.open)
-    const con = await promisedOpen(connectionString)
+    const con = await getTheConnection()
     const res = await test(con, invocations)
     console.log(`${spName}: asConnection ${invocations} invocations, elapsed = ${res.elapsed}, res length=${res.results.length}`)
     const promisedClose = util.promisify(con.close)
