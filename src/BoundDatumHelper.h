@@ -175,7 +175,7 @@ namespace mssql
 					else if (!_finite(d)) ++infiniteCount;
 					#endif
 					#ifdef LINUX_BUILD
-					else if (!finite(d)) ++infiniteCount;
+					else if (!isfinite(d)) ++infiniteCount;
 					#endif
 
 					if (d == floor(d) &&
