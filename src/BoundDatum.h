@@ -70,7 +70,7 @@ namespace mssql
 		SQLPOINTER buffer;
 		SQLLEN buffer_len;
 		uint16_t param_type;
-		uint32_t offset;
+		int32_t offset;
 		bool is_tvp;
 		int tvp_no_cols;
 		wstring name;
@@ -128,12 +128,14 @@ namespace mssql
 		void bind_double_array(const Local<Value> & p);
 
 		void bind_time(const Local<Value> & p);
+		void bind_date_array(const Local<Value> & p);
 		void reserve_time(SQLLEN len);
 
 		void bind_date(const Local<Value> & p);
 		void reserve_date(SQLLEN len);
 
 		void bind_time_stamp(const Local<Value> & p);
+		void bind_time_stamp_array(const Local<Value> & p);
 		void reserve_time_stamp(SQLLEN len);
 
 		void bind_time_stamp_offset(const Local<Value> & p);

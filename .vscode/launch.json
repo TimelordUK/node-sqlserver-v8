@@ -25,8 +25,8 @@
             "request": "launch",
             "program": "C:/Program Files/nodejs/node.exe",
             "args": [
-               "procedure"
-               // "runtest", "-l", 
+               // "procedure"
+               "runtest", "-l", 
                //  "-t", "querycancel",
                // "-t", "pause"
                // "-t", "prepared",
@@ -34,17 +34,18 @@
                // "-t", "query",
                // "-t", "multiple-errors", 
                // "-t", "geography",
-               // "-t", "tvp",
+               "-t", "tvp",
                // "-t", "warnings",
                // "-t", "txn",
                // "-t", "datatypes",
                // "-t", "sproc"
                // "-t", "params"
-               //"-t", "bulk"
+               // "-t", "bulk"
                //"-t", "json" 
             ],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/samples/javascript",
+            // "cwd": "${workspaceFolder}/samples/javascript",
+            "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false
         },

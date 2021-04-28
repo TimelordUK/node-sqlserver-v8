@@ -53,6 +53,9 @@
         "thread": "cpp",
         "typeinfo": "cpp",
         "iostream": "cpp",
-        "locale": "cpp"
+        "locale": "cpp",
+        "xlocale": "cpp",
+        "xstring": "cpp",
+        "xutility": "cpp"
     }
 }
