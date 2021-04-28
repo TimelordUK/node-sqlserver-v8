@@ -56,9 +56,9 @@ namespace mssql
 		const auto context = exports->CreationContext();
   		Nan::HandleScope scope;
 		const auto initialized = OdbcConnection::InitializeEnvironment();
-		const nodeTypeFactory fact;
 		const auto name = Nan::New("Connection").ToLocalChecked();
 		if (!initialized) {
+			const nodeTypeFactory fact;
 			MutateJS::set_property_value(exports, name, Nan::Null());
 			fact.throwError("Unable to initialize msnodesql");
 			return;

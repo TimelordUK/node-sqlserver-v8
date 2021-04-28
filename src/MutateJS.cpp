@@ -17,8 +17,9 @@ namespace mssql
 
 	Local<Value> MutateJS::get_property_as_value(const Local<Object>& o, const Local<Value>& v)
 	{
-		const nodeTypeFactory fact;
-		if ( o->IsUndefined() || o->IsNull()) {
+		if ( o->IsUndefined() || o->IsNull())
+		{
+			const nodeTypeFactory fact;
 			return fact.null();
 		}
 		const auto p = Nan::Get(o,v).ToLocalChecked();
@@ -80,8 +81,9 @@ namespace mssql
 
 	Local<Value> MutateJS::get(const Local<Object> o, const char* v)
 	{
-		const nodeTypeFactory fact;
-		if (isUnDefined(o)) {
+		if (isUnDefined(o))
+		{
+			const nodeTypeFactory fact;
 			return fact.null();
 		}
 		const auto p = Nan::Get(o, Nan::New<String>(v).ToLocalChecked()).ToLocalChecked();

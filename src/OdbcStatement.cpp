@@ -349,7 +349,7 @@ namespace mssql
 	{
 		if (_cancelRequested || _resultset == nullptr) {
 			const nodeTypeFactory fact;
-	   		auto metadata = fact.new_array();
+			const auto metadata = fact.new_array();
 		    return metadata;
 		}
 		return _resultset->meta_to_value();
@@ -1377,9 +1377,9 @@ namespace mssql
 	{
 		const auto& bound_datum = _preparedStorage->atIndex(static_cast<int>(column));
 		auto& ind = bound_datum->get_ind_vec();
-		const auto size = sizeof(uint16_t);
 		const auto storage = bound_datum->get_storage();			
 		for (size_t row_id = 0; row_id < row_count; ++row_id) {
+			const auto size = sizeof(uint16_t);
 			const auto str_len_or_ind_ptr = ind[row_id];
 			if (str_len_or_ind_ptr == SQL_NULL_DATA)
 			{

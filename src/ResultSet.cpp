@@ -19,7 +19,6 @@
 
 #include "stdafx.h"
 #include <ResultSet.h>
-#include <MutateJS.h>
 
 namespace mssql
 {

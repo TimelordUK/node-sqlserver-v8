@@ -84,7 +84,7 @@ namespace mssql
 		_statement = _connection->getStatamentCache()->checkout(_statementId);
 		// int count = _statement.use_count();
 		// cerr << "fetch_statement statementId " << _statementId << " count " << count << endl;
-		bool res = _statement ? true : false;
+		const bool res = _statement ? true : false;
 		return res;
 	}
 

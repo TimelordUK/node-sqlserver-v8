@@ -238,16 +238,16 @@ namespace mssql
 		const auto max_str_len = max(1, get_max_str_len(p));
 		const auto arr = Local<Array>::Cast(p);
 		const auto array_len = arr->Length();
-		const auto size = sizeof(uint16_t);
 		reserve_w_var_char_array(max_str_len, array_len);
 		auto* const base = _storage->uint16vec_ptr->data();
 		for (uint32_t i = 0; i < array_len; ++i)
 		{
+			const auto size = sizeof(uint16_t);
 			auto* const itr = base + (max_str_len * i);
 			_indvec[i] = SQL_NULL_DATA;
 			auto elem = Nan::Get(arr, i);
 			if (elem.IsEmpty()) continue;
-			auto local_elem = elem.ToLocalChecked();
+			const auto local_elem = elem.ToLocalChecked();
 			if (local_elem->IsNullOrUndefined()) continue;
 			auto maybe_value = Nan::To<String>(local_elem);
 			const auto str = maybe_value.FromMaybe(Nan::EmptyString()); 	
@@ -260,11 +260,11 @@ namespace mssql
 	void BoundDatum::bind_w_var_char(const Local<Value>& p, const int precision)
 	{
 		const size_t max_str_len = max(1, precision);
-		const auto size = sizeof(uint16_t);
 		reserve_w_var_char_array(max_str_len, 1);	
 		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNullOrUndefined())
 		{
+			const auto size = sizeof(uint16_t);
 			const auto str_param = Nan::To<String>(p).FromMaybe(Nan::EmptyString());
 			auto* const first_p = _storage->uint16vec_ptr->data();
 			Nan::DecodeWrite(reinterpret_cast<char*>(first_p), str_param->Length()*2, str_param, Nan::UCS2);
@@ -437,7 +437,7 @@ namespace mssql
 			_indvec[i] = SQL_NULL_DATA;
 			auto elem = Nan::Get(arr, i);
 			if (elem.IsEmpty()) continue;
-			auto toLocal = elem.ToLocalChecked();
+			const auto toLocal = elem.ToLocalChecked();
 			if (toLocal->IsNullOrUndefined()) continue;
 			auto maybe_value = Nan::To<Object>(toLocal);
 			if (maybe_value.IsEmpty()) continue;
