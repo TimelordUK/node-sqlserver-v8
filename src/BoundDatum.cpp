@@ -718,21 +718,45 @@ namespace mssql
 		digits = sql_server_2008_default_datetime_scale;
 	}
 
+	void BoundDatum::bind_time_array(const Local<Value>& p)
+	{
+		const auto arr = Local<Array>::Cast(p);
+		const auto len = arr->Length();
+		reserve_time(len);
+		auto& vec = *_storage->time2vec_ptr;
+		for (uint32_t i = 0; i < len; ++i)
+		{
+			_indvec[i] = SQL_NULL_DATA;
+			const auto elem = Nan::Get(arr, i).ToLocalChecked();
+			if (!elem->IsNullOrUndefined())
+			{
+				// dates in JS are stored internally as ms count from Jan 1, 1970
+				const auto d = Local<Date>::Cast<Value>(elem);
+				auto& time2 = vec[i];
+				const auto local = Nan::To<Number>(d).ToLocalChecked() ;
+				const auto ms = local->Value() - offset * 60000;
+				const TimestampColumn sql_date(-1, ms);
+				sql_date.ToTime2Struct(time2);
+				_indvec[i] = sizeof(SQL_SS_TIME2_STRUCT);
+			}
+		}
+	}
+
 	void BoundDatum::bind_time(const Local<Value>& p)
 	{
 		reserve_time(1);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC
 		_indvec[0] = SQL_NULL_DATA;
+		auto& vec = *_storage->time2vec_ptr;
 		if (!p->IsNullOrUndefined())
 		{
-			const auto date_object = Local<Date>::Cast<Value>(p);
-			assert(!date_object.IsEmpty());
-			// dates in JS are stored internally as ms count from Jan 1, 1970
-			const auto local = Nan::To<Number>(date_object).ToLocalChecked();
-			const TimestampColumn sql_date(-1, local->Value());
-			auto& time2 = (*_storage->time2vec_ptr)[0];
-			sql_date.ToTime2Struct(time2);
-			_indvec[0] = buffer_len;
+				const auto d = Local<Date>::Cast<Value>(p);
+				auto& time2 = vec[0];
+				const auto local = Nan::To<Number>(d).ToLocalChecked() ;
+				const auto ms = local->Value() - offset * 60000;
+				const TimestampColumn sql_date(-1, ms);
+				sql_date.ToTime2Struct(time2);
+				_indvec[0] = sizeof(SQL_SS_TIME2_STRUCT);
 		}
 	}
 
@@ -1485,7 +1509,7 @@ namespace mssql
 	{
 		if (pp->IsArray())
 		{
-			bind_time_stamp_offset_array(pp);
+			bind_time_array(pp);
 		}
 		else
 		{

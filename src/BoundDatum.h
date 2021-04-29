@@ -128,10 +128,11 @@ namespace mssql
 		void bind_double_array(const Local<Value> & p);
 
 		void bind_time(const Local<Value> & p);
-		void bind_date_array(const Local<Value> & p);
+		void bind_time_array(const Local<Value> & p);
 		void reserve_time(SQLLEN len);
 
 		void bind_date(const Local<Value> & p);
+		void bind_date_array(const Local<Value> & p);
 		void reserve_date(SQLLEN len);
 
 		void bind_time_stamp(const Local<Value> & p);

@@ -163,6 +163,50 @@ suite('bulk', function () {
     return new Array(num + 1).join(c)
   }
 
+  function parseTime (ds) {
+    const [hours, minutes, seconds] = ds.split(':') // Using ES6 destructuring
+    // var time = "18:19:02".split(':'); // "Old" ES5 version
+    const d = new Date()
+    d.setHours(+hours) // Set the hours, using implicit type coercion
+    d.setMinutes(minutes) // You can pass Number or String. It doesn't really matter
+    d.setSeconds(seconds)
+    d.setMilliseconds(0)
+    return d
+  }
+
+  test('use tableMgr bulk insert single non UTC based time with time col', testDone => {
+    async function runner () {
+      const helper = new TypeTableHelper(theConnection, 'time')
+      const testDate = parseTime('16:47:04')
+      const expected = helper.getVec(1, () => testDate)
+      theConnection.setUseUTC(false)
+      const table = await helper.create()
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedSelect = util.promisify(table.selectRows)
+      try {
+        await promisedInsert(expected)
+        const res = await promisedSelect(expected)
+        res.forEach(a => {
+          const today = new Date()
+          const h = a.col_a.getHours()
+          const m = a.col_a.getMinutes()
+          const s = a.col_a.getSeconds()
+          today.setHours(h)
+          today.setMinutes(m)
+          today.setSeconds(s)
+          today.setMilliseconds(0)
+          a.col_a = today
+        })
+        assert.deepStrictEqual(res, expected)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
   test('use tableMgr bulk insert single date with date col', testDone => {
     async function runner () {
       const helper = new TypeTableHelper(theConnection, 'date')
