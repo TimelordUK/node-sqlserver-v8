@@ -671,7 +671,7 @@ namespace mssql
 				const auto d = Local<Date>::Cast<Value>(p);
 				auto& dt = vec[0];
 				const auto local = Nan::To<Number>(d).ToLocalChecked() ;
-				const auto ms = local->Value();
+				const auto ms = local->Value() - offset * 60000;
 				const TimestampColumn sql_date(-1, ms);
 				sql_date.ToDateStruct(dt);
 				_indvec[0] = sizeof(SQL_DATE_STRUCT);
@@ -693,7 +693,7 @@ namespace mssql
 				const auto d = Local<Date>::Cast<Value>(elem);
 				auto& dt = vec[i];
 				const auto local = Nan::To<Number>(d).ToLocalChecked() ;
-				const auto ms = local->Value();
+				const auto ms = local->Value() - offset * 60000;
 				const TimestampColumn sql_date(-1, ms);
 				sql_date.ToDateStruct(dt);
 				_indvec[i] = sizeof(SQL_DATE_STRUCT);
