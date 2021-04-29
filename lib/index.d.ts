@@ -280,6 +280,9 @@ export interface BulkMgrSummary {
 export interface BulkTableMgr {
     getSummary(): BulkMgrSummary
     asUserType(name:string): string
+    // the driver will be sent column types in table rather than deriving from data
+    // necessary to switch on for TZ adjustment i.e. for non UTC times sent
+    useMetaType(yn:boolean): void
     selectRows(cols: any[], cb: BulkSelectCb): void
     insertRows(rows: any[], cb: StatusCb): void
     deleteRows(rows: any[], cb: StatusCb): void
