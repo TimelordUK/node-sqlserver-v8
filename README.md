@@ -6,16 +6,19 @@
 [![npm](https://img.shields.io/npm/dm/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
 [![npm](https://img.shields.io/npm/dy/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
 
-1. *new* 64 bit x64 Linux now supported
+1. *new* 64 bit x64 Linux
+1. *new* includes MacOS support
 1. *new* use object based named params for proc calls - see WIKI
+1. *new* improved local date support via bound tables
+1. *new* support Node v16
 1. pause/resume long running query
 1. built in connection pool
 1. sequelize support directly included
 1. supports input/output parameters.
 1. captures return code from stored procedure.
 1. will obtain meta data describing parameters.
-1. compatible with Node 10, 11, 12, 13, 14
-1. electron 5, 6, 7, 8, 9 and 10 supported.
+1. compatible with Node versions greater 10.0
+1. electron version greater than 5.0
 1. includes 64 bit/ia32 precompiled libraries.
 1. npm install with npm install msnodesqlv8
 1. bulk table operations insert, delete, update
@@ -28,7 +31,7 @@
 Based on node-sqlserver, this version will compile in Visual Studio 2017/2019 and is built against the v8 node module API using the NAN abstraction.
 Releases include pre-compiled binaries for both x64 and x86 targets for Node and Electron.
 
-This library only works with Node versions greater than 10.0.
+This library only works with Node versions greater than 10.0 or electron greater than 5.0
 
 ## Linux (x64 only)
 
