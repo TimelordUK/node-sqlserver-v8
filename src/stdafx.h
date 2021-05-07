@@ -38,7 +38,7 @@
     #include <sqlspi.h>
     #include <sqlext.h>
     #include <sql.h>
-    #include "sqlncli-linux.h"
+    #include <msodbcsql.h>
 #endif
 
 #include <sqlucode.h>
