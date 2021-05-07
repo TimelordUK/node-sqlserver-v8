@@ -42,7 +42,7 @@ namespace mssql
         bool bind();
         bool send();
         int done();
-        wstring bcp::table_name();
+        wstring table_name();
         shared_ptr<OdbcConnectionHandle> _ch;
         shared_ptr<BoundDatumSet> _param_set;
         shared_ptr<vector<shared_ptr<OdbcError>>> _errors;

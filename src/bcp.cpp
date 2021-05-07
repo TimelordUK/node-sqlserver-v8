@@ -22,9 +22,9 @@ namespace mssql
         }
         DBINT current;
         LPCBYTE ptr() { return (LPCBYTE)&current; } 
+        size_t index;
         shared_ptr<BoundDatum> datum;
         int size() { return  datum->get_storage()->int32vec_ptr->size(); }
-        int index;
         bool next() {
             auto & storage = datum->get_storage()->int32vec_ptr;
             if (index == storage->size()) return false;
@@ -36,6 +36,7 @@ namespace mssql
     bcp::bcp(const shared_ptr<BoundDatumSet> param_set, shared_ptr<OdbcConnectionHandle> h) : 
         _ch(h),
         _param_set(param_set)  {
+            _errors = make_shared<vector<shared_ptr<OdbcError>>>();
     }
 
     wstring bcp::table_name() {
@@ -51,7 +52,7 @@ namespace mssql
         auto tn = table_name();
         if (tn.empty()) return false;
         const auto &ch = *_ch;
-		auto retcode = bcp_init(ch, tn.data(), NULL, NULL, DB_IN);
+		auto retcode = bcp_init(ch, reinterpret_cast<LPCWSTR>(tn.data()), NULL, NULL, DB_IN);
 		if ( (retcode != SUCCEED) ) {
 			ch.read_errors(_errors);
 			return false;
