@@ -139,6 +139,7 @@ namespace mssql
 		shared_ptr<char_vec_t> charvec_ptr;
 		shared_ptr<uint16_t_vec_t> uint16vec_ptr;
 		wstring schema;
+		wstring table;
 	private:
 
 	};

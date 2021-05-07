@@ -9,6 +9,7 @@
 
       'sources': [
         'src/ConnectionHandles.cpp',
+        'src/bcp.cpp',
         'src/addon.cpp',
         'src/QueryOperationParams.cpp',
         'src/MutateJS.cpp',
@@ -62,10 +63,19 @@
            }
         ],
         [ 'OS=="win"', {
+              'link_settings': {
+             'libraries': [
+               #'C:\\Program Files\\Microsoft SQL Server\\110\\SDK\\Lib\\x64\sqlncli11'
+               # C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.18362.0\\um\\x64\\odbc32.lib'
+               #'C:\\Program Files (x86)\Windows Kits\\10\\Lib\\10.0.18362.0\\um\\x64\\odbcbcp'
+               #'C:\\Program Files\\Microsoft SQL Server\\110\SDK\\Lib\\x64\\sqlncli11'
+               'C:\\Program Files\\Microsoft SQL Server\\Client SDK\\ODBC\\170\\SDK\\Lib\\x64\\msodbcsql17'
+               ],
+            },
           'defines': [
             'UNICODE=1',
-            '_UNICODE=1',
-            '_SQLNCLI_ODBC_',
+            #'_UNICODE=1',
+            #'_SQLNCLI_ODBC_',
             'WINDOWS_BUILD',
           ],
           }

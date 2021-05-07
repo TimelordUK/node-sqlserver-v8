@@ -29,6 +29,7 @@
 #include <QueryOperationParams.h>
 #include <ConnectionHandles.h>
 #include <iostream>
+#include <bcp.h>
 
 #ifdef LINUX_BUILD
 #include <unistd.h>
@@ -627,6 +628,26 @@ namespace mssql
 		return true;
 	}
 
+	bool OdbcStatement::try_bcp(const shared_ptr<BoundDatumSet>& param_set) {
+	
+		bcp b(param_set, _connectionHandles->connectionHandle());
+		b.insert();
+		_resultset = make_unique<ResultSet>(0);
+		_resultset->_end_of_rows = true;
+		return true;
+   } 
+
+/*
+bcp_bind(m_hdbc, (BYTE *)buffer, 4, sizeof(TIMESTAMP_STRUCT), 0, 0, SQLDATETIME2N, index);
+
+if (bcp_bind(hdbc, (LPCBYTE) szCompanyName, 0, SQL_VARLEN_DATA,  
+   (LPCBYTE) pTerm, strnlen(pTerm, sizeof(pTerm)), SQLCHARACTER, 2) == FAIL)  
+   {  
+   // Raise error and return.  
+   return;  
+   }  
+   */
+ 
 	bool OdbcStatement::bind_fetch(const shared_ptr<BoundDatumSet> & param_set)
 	{
 		if(!_statement) return false;
@@ -698,6 +719,15 @@ namespace mssql
 		_errors->clear();
 		_query = q;
 		const auto timeout = q->timeout();
+		auto &pars = *param_set;
+		
+		if (pars.size() > 0) {
+			const auto& first = (*param_set).atIndex(0);
+			if (first->is_bcp) {
+				return try_bcp(param_set);
+			}
+		}
+
 		const auto bound = bind_params(param_set);
 		if (!bound)
 		{

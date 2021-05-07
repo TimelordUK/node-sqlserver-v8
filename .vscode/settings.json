@@ -56,6 +56,13 @@
         "locale": "cpp",
         "xlocale": "cpp",
         "xstring": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "list": "cpp",
+        "queue": "cpp",
+        "xhash": "cpp",
+        "xtree": "cpp",
+        "stop_token": "cpp",
+        "xlocmon": "cpp",
+        "xlocnum": "cpp"
     }
 }

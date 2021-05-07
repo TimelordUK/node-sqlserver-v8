@@ -611,6 +611,10 @@ namespace mssql
 		buffer = _storage->int32vec_ptr->data();
 		param_size = size;
 		digits = 0;
+		if (is_bcp) {
+			sql_type = SQLINT4;
+			param_size = sizeof(DBINT);
+		}
 	}
 
 	void BoundDatum::bind_uint32(const Local<Value>& p)
@@ -1309,13 +1313,25 @@ namespace mssql
 
 	void BoundDatum::assign_precision(Local<Object>& pv)
 	{
-		const nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
+		const auto context = Nan::GetCurrentContext();
 		const auto precision = get("precision", pv);
 		if (!precision->IsUndefined())
 		{
 			const auto maybe_param_size = precision->Int32Value(context);
 			param_size = maybe_param_size.FromMaybe(0);
+		}
+
+		const auto bcp = get("bcp", pv);
+		if (!bcp->IsUndefined())
+		{
+			 is_bcp = Nan::To<bool>(bcp).ToChecked();
+			 if (is_bcp) {
+				const auto table_name_str = get_as_string(pv, "table_name");
+				if (!table_name_str->IsNullOrUndefined())
+				{
+					_storage->table = wide_from_js_string(table_name_str);
+				}
+			 }
 		}
 
 		const auto scale = get("scale", pv);

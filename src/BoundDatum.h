@@ -39,6 +39,7 @@ namespace mssql
 			buffer_len(0),
 			param_type(SQL_PARAM_INPUT),
 			offset(0),
+			is_bcp(false),
 			is_tvp(false),
 			tvp_no_cols(0),
 			definedPrecision(false),
@@ -71,6 +72,7 @@ namespace mssql
 		SQLLEN buffer_len;
 		uint16_t param_type;
 		int32_t offset;
+		bool is_bcp;
 		bool is_tvp;
 		int tvp_no_cols;
 		wstring name;
