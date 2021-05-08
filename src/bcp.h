@@ -32,7 +32,16 @@ namespace mssql
 	class DatumStorage;
 	class QueryOperationParams;
 	class ConnectionHandles;
-    struct storage;
+  
+    struct basestorage {
+        basestorage(shared_ptr<BoundDatum> d);
+		virtual size_t size() = 0;
+        virtual bool next() = 0;
+        DBINT current;
+        LPCBYTE ptr() { return (LPCBYTE)&current; } 
+        size_t index;
+        shared_ptr<BoundDatum> datum;
+    };
 
 	struct bcp 
 	{
@@ -46,7 +55,7 @@ namespace mssql
         shared_ptr<OdbcConnectionHandle> _ch;
         shared_ptr<BoundDatumSet> _param_set;
         shared_ptr<vector<shared_ptr<OdbcError>>> _errors;
-        vector<shared_ptr<storage>> _storage;
+        vector<shared_ptr<basestorage>> _storage;
 	};
 }
 

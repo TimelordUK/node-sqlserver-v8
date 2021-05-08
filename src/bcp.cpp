@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstring>
 #include <BoundDatum.h>
+#include <BoundDatumHelper.h>
 #include <BoundDatumSet.h>
 #include <OdbcHandle.h>
 #include <iostream>
@@ -14,20 +15,21 @@
 
 namespace mssql
 {
-    struct storage {
-        storage(shared_ptr<BoundDatum> d) : 
+    basestorage::basestorage(shared_ptr<BoundDatum> d) : 
             index(0),
             datum(d) {
+    }
+
+    struct storage_int : public basestorage {
+        shared_ptr<DatumStorage::int32_vec_t> vec;
+        storage_int(shared_ptr<BoundDatum> d) : basestorage(d)  {
+            vec = datum->get_storage()->int32vec_ptr;
         }
-        DBINT current;
-        LPCBYTE ptr() { return (LPCBYTE)&current; } 
-        size_t index;
-        shared_ptr<BoundDatum> datum;
-        int size() { return  datum->get_storage()->int32vec_ptr->size(); }
+        size_t size() { return vec->size(); }
         bool next() {
-            auto & storage = datum->get_storage()->int32vec_ptr;
-            if (index == storage->size()) return false;
-            current = (*storage)[index++];
+            auto & storage = *vec;
+            if (index == storage.size()) return false;
+            current = storage[index++];
             return true;
         }
     };
@@ -68,7 +70,7 @@ namespace mssql
 		for (auto itr = ps.begin(); itr != ps.end(); ++itr)
 		{ 
 			const auto& p = *itr;
-            auto s = make_shared<storage>(p);
+            auto s = make_shared<storage_int>(p);
             _storage.push_back(s);
 			if (bcp_bind(ch, s->ptr(), 0, p->param_size, NULL, 0, p->sql_type, ++column) == FAIL)  
    			{  
