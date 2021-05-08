@@ -159,7 +159,7 @@ namespace mssql
 		if (!CheckOdbcError(ret)) return false;
 		const auto len = static_cast<SQLSMALLINT>(connection_string.length());
 		auto vec = wstr2wcvec(connection_string);
-		ret = SQLSetConnectAttr(handle, SQL_COPT_SS_BCP, (SQLPOINTER) SQL_BCP_ON, SQL_IS_INTEGER);
+		ret = SQLSetConnectAttr(handle, SQL_COPT_SS_BCP, (SQLPOINTER)SQL_BCP_ON, SQL_IS_INTEGER);  
 		if (!CheckOdbcError(ret)) return false;
 
 		ret = SQLDriverConnect(handle, nullptr, vec.data(),

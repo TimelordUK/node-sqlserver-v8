@@ -82,7 +82,13 @@
         ],
         ['OS=="linux"', {
             'link_settings': {
-             'libraries': ['-L/usr/lib', '-lmsodbcsql-17'],
+             'libraries': [
+               #'-L/usr/lib', 
+               #'-lmsodbcsql-17',
+               #'-L/lib/x86_64-linux-gnu'
+               '-lodbc',
+               '-lmsodbcsql-17'
+               ],
             },
             'defines': [
               'LINUX_BUILD',

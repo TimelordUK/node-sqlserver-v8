@@ -54,9 +54,10 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/stephen/.nvm/versions/node/v14.8.0/bin/node",
+            "program": "/home/stephen/.nvm/versions/node/v15.12.0/bin/node",
             "args": [
-                "runtest", "-u",
+                "runtest", "-k", "linux",
+                "-t", "bulk", 
                 "-t", "querycancel",
                 "-t", "pause",
                 "-t", "datatypes",

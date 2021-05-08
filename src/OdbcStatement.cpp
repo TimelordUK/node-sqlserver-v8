@@ -131,7 +131,7 @@ namespace mssql
 		if(!_statement) return false;
 		// fprintf(stderr, "prepared_read");
 		const auto& statement = *_statement;
-		SQLROWSETSIZE row_count = 0;
+		SQLINTEGER row_count = 0;
 		SQLSetStmtAttr(statement, SQL_ATTR_ROWS_FETCHED_PTR, &row_count, 0);
 		const auto ret = SQLFetchScroll(statement, SQL_FETCH_NEXT, 0);
 		if (ret == SQL_NO_DATA)
