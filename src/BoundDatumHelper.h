@@ -74,7 +74,7 @@ namespace mssql
 			{
 				if (size > existing->capacity()) {
 					existing->reserve(size);
-					memset(existing->data(), 0, existing->capacity() * sizeof(T));
+					//memset(existing->data(), 0, existing->capacity() * sizeof(T));
 				}
 			}
 			return existing;

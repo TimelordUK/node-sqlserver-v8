@@ -164,10 +164,11 @@ namespace mssql
 			const auto& p = *itr;
             const auto s = get_storage(p);
             _storage.push_back(s);
-            LPCBYTE terminator = (p->param_size == SQL_VARLEN_DATA) ? reinterpret_cast<LPCBYTE>(L"") : NULL;
-            auto terminator_len = p->param_size == SQL_VARLEN_DATA ? sizeof(WCHAR) : 0;
-            //bcp_bind(hdbc, szName, 0, SQL_VARLEN_DATA, L"",  sizeof(WCHAR), SQLNCHAR, 2)  
-			if (plugin.bcp_bind(ch, s->ptr(), 0, p->param_size, terminator, terminator_len, p->sql_type, ++column) == FAIL)  
+            LPCBYTE terminator = (p->param_size == static_cast<SQLULEN>(SQL_VARLEN_DATA)) ? 
+                reinterpret_cast<LPCBYTE>(L"") : NULL;
+            auto terminator_len = (p->param_size == static_cast<SQLULEN>(SQL_VARLEN_DATA)) ? 
+                sizeof(WCHAR) : 0;
+            if (plugin.bcp_bind(ch, s->ptr(), 0, p->param_size, terminator, terminator_len, p->sql_type, ++column) == FAIL)  
    			{  
 				ch.read_errors(_errors);  
    				return false;  
@@ -179,7 +180,7 @@ namespace mssql
     bool bcp::send() {
         auto size = _storage[0]->size();
         const auto &ch = *_ch;
-        for (int i = 0; i <size; ++i) {
+        for (size_t i = 0; i < size; ++i) {
             for (auto itr = _storage.begin(); itr != _storage.end(); ++itr) {
                 if (!(*itr)->next()) return false;
             }

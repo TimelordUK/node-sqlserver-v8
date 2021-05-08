@@ -208,7 +208,7 @@ suite('bulk', function () {
     async function runner () {
       const helper = new BulkTableTest(theConnection, bulkTableDef)
       const expected = []
-      const rows = 3000
+      const rows = 4000
       for (let i = 0; i < rows; ++i) {
         expected.push({
           id: i,
@@ -220,16 +220,13 @@ suite('bulk', function () {
       const table = await helper.create()
       table.setUseBcp(true)
       const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedQuery = util.promisify(theConnection.query)
       try {
         const start = new Date()
         await promisedInsert(expected)
         console.log(`inserted ${rows} in ${new Date() - start} ms elapsed`)
-        const res = await promisedSelect(expected)
-        res.forEach(a => {
-          delete a.d1.nanosecondsDelta
-        })
-        assert.deepStrictEqual(res, expected)
+        const res = await promisedQuery(`select count(*) as rows from ${bulkTableDef.tableName}`)
+        assert.deepStrictEqual(res[0].rows, rows)
       } catch (e) {
         assert.ifError(e)
       }
