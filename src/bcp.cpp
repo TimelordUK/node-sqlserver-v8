@@ -20,13 +20,37 @@ namespace mssql
         hinstLib = LoadLibrary(shared_lib.data());
         if (hinstLib != NULL) 
         { 
-            bcp_init = (plug_bcp_init)GetProcAddress(hinstLib, "bcp_initW");
-            bcp_bind = (plug_bcp_bind)GetProcAddress(hinstLib, "bcp_bind");
-            bcp_sendrow = (plug_bcp_sendrow)GetProcAddress(hinstLib, "bcp_sendrow");
-            bcp_done = (plug_bcp_done)GetProcAddress(hinstLib, "bcp_done");
+            dll_bcp_init = (plug_bcp_init)GetProcAddress(hinstLib, "bcp_initW");
+            dll_bcp_bind = (plug_bcp_bind)GetProcAddress(hinstLib, "bcp_bind");
+            dll_bcp_sendrow = (plug_bcp_sendrow)GetProcAddress(hinstLib, "bcp_sendrow");
+            dll_bcp_done = (plug_bcp_done)GetProcAddress(hinstLib, "bcp_done");
             return true;
         }
         return false;
+    }
+
+    inline RETCODE plugin_bcp::bcp_bind(HDBC p1, LPCBYTE p2, INT p3, DBINT p4, LPCBYTE p5, INT p6, INT p7, INT p8) {
+            return (dll_bcp_bind != NULL) ?
+            (dll_bcp_bind)(p1, p2, p3, p4, p5, p6, p7, p8)
+            : -1;
+    }
+
+    inline RETCODE plugin_bcp::bcp_init(HDBC p1, LPCWSTR p2, LPCWSTR p3, LPCWSTR p4, INT p5) {
+            return (dll_bcp_init != NULL) ?
+            (dll_bcp_init)(p1, p2, p3, p4, p5)
+            : -1;
+    }
+
+    inline DBINT plugin_bcp::bcp_sendrow(HDBC p1) {
+            return (dll_bcp_sendrow != NULL) ?
+            (dll_bcp_sendrow)(p1)
+            : FAIL;
+    }
+
+    inline DBINT plugin_bcp::bcp_done(HDBC p1) {
+             return (dll_bcp_done != NULL) ?
+            (dll_bcp_done)(p1)
+            : -1;
     }
 
     plugin_bcp::~plugin_bcp() {

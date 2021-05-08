@@ -43,10 +43,10 @@ namespace mssql
         typedef RETCODE (__cdecl* plug_bcp_init)(HDBC, LPCWSTR, LPCWSTR, LPCWSTR, INT);
 		typedef DBINT (__cdecl* plug_bcp_sendrow)(HDBC);
 		typedef DBINT (__cdecl* plug_bcp_done)(HDBC);
-        plug_bcp_bind bcp_bind;
-        plug_bcp_init bcp_init;
-		plug_bcp_sendrow bcp_sendrow;
-		plug_bcp_done bcp_done;
+        plug_bcp_bind dll_bcp_bind;
+        plug_bcp_init dll_bcp_init;
+		plug_bcp_sendrow dll_bcp_sendrow;
+		plug_bcp_done dll_bcp_done;
         #endif
         inline RETCODE bcp_bind(HDBC, LPCBYTE, INT, DBINT, LPCBYTE, INT, INT, INT);
         inline RETCODE bcp_init(HDBC, LPCWSTR, LPCWSTR, LPCWSTR, INT); 
