@@ -35,17 +35,23 @@ namespace mssql
   
     struct plugin_bcp
     {
+        #ifdef WINDOWS_BUILD
 		~plugin_bcp();
 		bool load(const wstring &);
         HINSTANCE hinstLib = NULL;
         typedef RETCODE (__cdecl* plug_bcp_bind)(HDBC, LPCBYTE, INT, DBINT, LPCBYTE, INT, INT, INT);
         typedef RETCODE (__cdecl* plug_bcp_init)(HDBC, LPCWSTR, LPCWSTR, LPCWSTR, INT);
-		typedef RETCODE (__cdecl* plug_bcp_sendrow)(HDBC);
+		typedef DBINT (__cdecl* plug_bcp_sendrow)(HDBC);
 		typedef DBINT (__cdecl* plug_bcp_done)(HDBC);
         plug_bcp_bind bcp_bind;
         plug_bcp_init bcp_init;
 		plug_bcp_sendrow bcp_sendrow;
 		plug_bcp_done bcp_done;
+        #endif
+        inline RETCODE bcp_bind(HDBC, LPCBYTE, INT, DBINT, LPCBYTE, INT, INT, INT);
+        inline RETCODE bcp_init(HDBC, LPCWSTR, LPCWSTR, LPCWSTR, INT); 
+        inline DBINT bcp_sendrow(HDBC);
+        inline DBINT bcp_done(HDBC);
     };
 
     struct basestorage {
