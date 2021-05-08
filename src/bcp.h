@@ -33,6 +33,21 @@ namespace mssql
 	class QueryOperationParams;
 	class ConnectionHandles;
   
+    struct plugin_bcp
+    {
+		~plugin_bcp();
+		bool load(const wstring &);
+        HINSTANCE hinstLib = NULL;
+        typedef RETCODE (__cdecl* plug_bcp_bind)(HDBC, LPCBYTE, INT, DBINT, LPCBYTE, INT, INT, INT);
+        typedef RETCODE (__cdecl* plug_bcp_init)(HDBC, LPCWSTR, LPCWSTR, LPCWSTR, INT);
+		typedef RETCODE (__cdecl* plug_bcp_sendrow)(HDBC);
+		typedef DBINT (__cdecl* plug_bcp_done)(HDBC);
+        plug_bcp_bind bcp_bind;
+        plug_bcp_init bcp_init;
+		plug_bcp_sendrow bcp_sendrow;
+		plug_bcp_done bcp_done;
+    };
+
     struct basestorage {
         basestorage(shared_ptr<BoundDatum> d);
 		virtual size_t size() = 0;
@@ -56,6 +71,7 @@ namespace mssql
         shared_ptr<BoundDatumSet> _param_set;
         shared_ptr<vector<shared_ptr<OdbcError>>> _errors;
         vector<shared_ptr<basestorage>> _storage;
+		plugin_bcp plugin;
 	};
 }
 

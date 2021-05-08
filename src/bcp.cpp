@@ -15,6 +15,25 @@
 
 namespace mssql
 {
+    bool plugin_bcp::load(const wstring &shared_lib) {
+        hinstLib = LoadLibrary(shared_lib.data());
+        if (hinstLib != NULL) 
+        { 
+            bcp_init = (plug_bcp_init)GetProcAddress(hinstLib, "bcp_initW");
+            bcp_bind = (plug_bcp_bind)GetProcAddress(hinstLib, "bcp_bind");
+            bcp_sendrow = (plug_bcp_sendrow)GetProcAddress(hinstLib, "bcp_sendrow");
+            bcp_done = (plug_bcp_done)GetProcAddress(hinstLib, "bcp_done");
+            return true;
+        }
+        return false;
+    }
+
+    plugin_bcp::~plugin_bcp() {
+        if (hinstLib != NULL) {
+            FreeLibrary(hinstLib);
+        } 
+    }
+
     basestorage::basestorage(shared_ptr<BoundDatum> d) : 
             index(0),
             datum(d) {
@@ -25,8 +44,8 @@ namespace mssql
         storage_int(shared_ptr<BoundDatum> d) : basestorage(d)  {
             vec = datum->get_storage()->int32vec_ptr;
         }
-        size_t size() { return vec->size(); }
-        bool next() {
+        inline size_t size() { return vec->size(); }
+        inline bool next() {
             auto & storage = *vec;
             if (index == storage.size()) return false;
             current = storage[index++];
@@ -37,7 +56,7 @@ namespace mssql
     bcp::bcp(const shared_ptr<BoundDatumSet> param_set, shared_ptr<OdbcConnectionHandle> h) : 
         _ch(h),
         _param_set(param_set)  {
-            _errors = make_shared<vector<shared_ptr<OdbcError>>>();
+        _errors = make_shared<vector<shared_ptr<OdbcError>>>();
     }
 
     wstring bcp::table_name() {
@@ -55,7 +74,7 @@ namespace mssql
         const auto &ch = *_ch;
         auto vec = wstr2wcvec(tn);
         vec.push_back((uint16_t)0);
-		auto retcode = bcp_init(ch, reinterpret_cast<LPCWSTR>(vec.data()), NULL, NULL, DB_IN);
+		auto retcode = (plugin.bcp_init)(ch, reinterpret_cast<LPCWSTR>(vec.data()), NULL, NULL, DB_IN);
 		if ( (retcode != SUCCEED) ) {
 			ch.read_errors(_errors);
 			return false;
@@ -72,7 +91,7 @@ namespace mssql
 			const auto& p = *itr;
             auto s = make_shared<storage_int>(p);
             _storage.push_back(s);
-			if (bcp_bind(ch, s->ptr(), 0, p->param_size, NULL, 0, p->sql_type, ++column) == FAIL)  
+			if ((plugin.bcp_bind)(ch, s->ptr(), 0, p->param_size, NULL, 0, p->sql_type, ++column) == FAIL)  
    			{  
 				ch.read_errors(_errors);  
    				return false;  
@@ -88,7 +107,7 @@ namespace mssql
             for (auto itr = _storage.begin(); itr != _storage.end(); ++itr) {
                 if (!(*itr)->next()) return false;
             }
-            if (bcp_sendrow(ch) == FAIL)  {  
+            if ((plugin.bcp_sendrow)(ch) == FAIL)  {  
          	    ch.read_errors(_errors);  
          		    return false;  
          	}
@@ -99,7 +118,7 @@ namespace mssql
     int bcp::done() {
         DBINT nRowsProcessed;
         const auto &ch = *_ch;
-		if ((nRowsProcessed = bcp_done(ch)) == -1) {
+		if ((nRowsProcessed = (plugin.bcp_done)(ch)) == -1) {
 			ch.read_errors(_errors);    
    			return false;  
         }
@@ -107,6 +126,7 @@ namespace mssql
     }
 
     int bcp::insert() {
+        if (!plugin.load(L"msodbcsql17.dll")) return -1;
 		if (!init()) return -1;
         if (!bind()) return -1;
         if (!send()) return -1;
