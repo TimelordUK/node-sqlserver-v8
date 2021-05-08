@@ -81,6 +81,8 @@ namespace mssql
     }
 
     struct storage_int : public basestorage {
+        DBINT current;
+        inline LPCBYTE ptr() { return (LPCBYTE)&current; } 
         shared_ptr<DatumStorage::int32_vec_t> vec;
         storage_int(shared_ptr<BoundDatum> d) : basestorage(d)  {
             vec = datum->get_storage()->int32vec_ptr;
@@ -90,6 +92,25 @@ namespace mssql
             auto & storage = *vec;
             if (index == storage.size()) return false;
             current = storage[index++];
+            return true;
+        }
+    };
+
+    struct storage_varchar : public basestorage {
+        shared_ptr<DatumStorage::uint16_vec_t_vec_t> vec;
+        DatumStorage::uint16_t_vec_t current;
+        inline LPCBYTE ptr() { return (LPCBYTE)current.data(); } 
+        storage_varchar(shared_ptr<BoundDatum> d) : basestorage(d)  {
+            vec = datum->get_storage()->uint16_vec_vec_ptr;
+            current.reserve(d->buffer_len);
+        }
+        inline size_t size() { return vec->size(); }
+        inline bool next() {
+            auto & storage = *vec;
+            if (index == storage.size()) return false;
+            auto &src = *storage[index++];
+            current.clear();
+            copy(src.begin(), src.end(), back_inserter(current));
             return true;
         }
     };
@@ -123,6 +144,17 @@ namespace mssql
         return true;
     }
 
+    shared_ptr<basestorage> get_storage(shared_ptr<BoundDatum> p) {
+        shared_ptr<basestorage> r;
+        auto storage = p->get_storage();
+        if (storage->uint16_vec_vec_ptr && !storage->uint16_vec_vec_ptr->empty()) {
+            r = make_shared<storage_varchar>(p);
+        } else {
+            r = make_shared<storage_int>(p);
+        }
+        return r;
+    }
+
     bool bcp::bind() {
 		int column = 0;
         const auto &ch = *_ch;
@@ -130,9 +162,12 @@ namespace mssql
 		for (auto itr = ps.begin(); itr != ps.end(); ++itr)
 		{ 
 			const auto& p = *itr;
-            auto s = make_shared<storage_int>(p);
+            const auto s = get_storage(p);
             _storage.push_back(s);
-			if (plugin.bcp_bind(ch, s->ptr(), 0, p->param_size, NULL, 0, p->sql_type, ++column) == FAIL)  
+            LPCBYTE terminator = (p->param_size == SQL_VARLEN_DATA) ? reinterpret_cast<LPCBYTE>(L"") : NULL;
+            auto terminator_len = p->param_size == SQL_VARLEN_DATA ? sizeof(WCHAR) : 0;
+            //bcp_bind(hdbc, szName, 0, SQL_VARLEN_DATA, L"",  sizeof(WCHAR), SQLNCHAR, 2)  
+			if (plugin.bcp_bind(ch, s->ptr(), 0, p->param_size, terminator, terminator_len, p->sql_type, ++column) == FAIL)  
    			{  
 				ch.read_errors(_errors);  
    				return false;  

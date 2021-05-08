@@ -22,6 +22,7 @@ namespace mssql
 	public:
 
 		typedef vector<uint16_t> uint16_t_vec_t;
+		typedef vector<shared_ptr<uint16_t_vec_t>> uint16_vec_t_vec_t;
 		typedef vector<char> char_vec_t;
 		typedef vector<int32_t> int32_vec_t;
 		typedef vector<uint32_t> uint32_vec_t;
@@ -58,7 +59,8 @@ namespace mssql
 			datevec_ptr(nullptr),
 			numeric_ptr(nullptr),
 			charvec_ptr(nullptr),
-			uint16vec_ptr(nullptr)	
+			uint16vec_ptr(nullptr),
+			uint16_vec_vec_ptr(nullptr)
 		{
 		}
 
@@ -91,6 +93,11 @@ namespace mssql
 		inline void ReserveUint16(size_t len)
 		{
 			uint16vec_ptr = reserve_vec<uint16_t>(uint16vec_ptr, len);
+		}
+
+		inline void ReserveUint16Vec(size_t len)
+		{
+			uint16_vec_vec_ptr = reserve_vec<shared_ptr<uint16_t_vec_t>>(uint16_vec_vec_ptr, len);
 		}
 
 		inline void ReserveInt32(size_t len)
@@ -138,6 +145,7 @@ namespace mssql
 		shared_ptr<numeric_struct_vec_t> numeric_ptr;
 		shared_ptr<char_vec_t> charvec_ptr;
 		shared_ptr<uint16_t_vec_t> uint16vec_ptr;
+		shared_ptr<uint16_vec_t_vec_t> uint16_vec_vec_ptr;
 		wstring schema;
 		wstring table;
 	private:

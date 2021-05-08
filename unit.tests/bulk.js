@@ -188,7 +188,58 @@ suite('bulk', function () {
     }
   }
 
-  test('bcp int column', testDone => {
+  test('bcp varchar varchar', testDone => {
+    const bulkTableDef = {
+      tableName: 'test_table_bcp',
+      columns: [
+        {
+          name: 'id',
+          type: 'INT PRIMARY KEY'
+        },
+        {
+          name: 's1',
+          type: 'VARCHAR (255) NOT NULL'
+        },
+        {
+          name: 's2',
+          type: 'VARCHAR (100) NOT NULL'
+        }]
+    }
+    async function runner () {
+      const helper = new BulkTableTest(theConnection, bulkTableDef)
+      const expected = []
+      const rows = 3000
+      for (let i = 0; i < rows; ++i) {
+        expected.push({
+          id: i,
+          s1: `column1${i}`,
+          s2: `testing${i + 1}2Data`
+        })
+      }
+      theConnection.setUseUTC(false)
+      const table = await helper.create()
+      table.setUseBcp(true)
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedSelect = util.promisify(table.selectRows)
+      try {
+        const start = new Date()
+        await promisedInsert(expected)
+        console.log(`inserted ${rows} in ${new Date() - start} ms elapsed`)
+        const res = await promisedSelect(expected)
+        res.forEach(a => {
+          delete a.d1.nanosecondsDelta
+        })
+        assert.deepStrictEqual(res, expected)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
+  test('bcp int, int column', testDone => {
     async function runner () {
       const bulkTableDef = {
         tableName: 'test_table_bcp',

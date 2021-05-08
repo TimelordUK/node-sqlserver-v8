@@ -58,8 +58,7 @@ namespace mssql
         basestorage(shared_ptr<BoundDatum> d);
 		virtual size_t size() = 0;
         virtual bool next() = 0;
-        DBINT current;
-        LPCBYTE ptr() { return (LPCBYTE)&current; } 
+        virtual LPCBYTE ptr() = 0;
         size_t index;
         shared_ptr<BoundDatum> datum;
     };

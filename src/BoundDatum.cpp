@@ -233,8 +233,42 @@ namespace mssql
 		}
 	}
 
+	void BoundDatum::bind_w_var_char_array_bcp(const Local<Value>& p)
+	{
+		const auto arr = Local<Array>::Cast(p);
+		const auto array_len = arr->Length();
+		_storage->ReserveUint16Vec(array_len);
+		sql_type = SQLNCHAR;
+		param_size = SQL_VARLEN_DATA;
+		buffer_len = get_max_str_len(p) + 1;
+		auto & vec = *_storage->uint16_vec_vec_ptr;
+		for (uint32_t i = 0; i < array_len; ++i)
+		{
+			auto elem = Nan::Get(arr, i);
+			if (elem.IsEmpty()) continue;
+			const auto local_elem = elem.ToLocalChecked();
+			if (local_elem->IsNullOrUndefined()) {
+				continue;
+			}
+			auto maybe_value = Nan::To<String>(local_elem);
+			const auto str = maybe_value.FromMaybe(Nan::EmptyString()); 	
+			const auto width = str->Length();
+			auto store = make_shared<DatumStorage::uint16_t_vec_t>(width);
+			store->reserve(width);
+			store->resize(width);
+			vec[i] = store;
+			auto itr = store->data();
+			Nan::DecodeWrite(reinterpret_cast<char*>(&*itr), str->Length()*2, str, Nan::UCS2);
+			store->push_back(0);
+		}
+	}
+
 	void BoundDatum::bind_w_var_char_array(const Local<Value>& p)
 	{
+		if (is_bcp) {
+			bind_w_var_char_array_bcp(p);
+			return;
+		}
 		const auto max_str_len = max(1, get_max_str_len(p));
 		const auto arr = Local<Array>::Cast(p);
 		const auto array_len = arr->Length();

@@ -98,6 +98,7 @@ namespace mssql
 		void bind_w_var_char(const Local<Value>& p, int precision);
 		void reserve_w_var_char_array(size_t max_str_len, size_t  array_len);
 		void bind_w_var_char_array(const Local<Value> & p);
+		void bind_w_var_char_array_bcp(const Local<Value> & p);
 
 		void bind_boolean(const Local<Value> & p);
 		void reserve_boolean(SQLLEN len);
