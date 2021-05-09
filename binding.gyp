@@ -78,7 +78,6 @@
             'link_settings': {
              'libraries': [
                '-lodbc',
-               '-lmsodbcsql-17'
                ],
             },
             'defines': [

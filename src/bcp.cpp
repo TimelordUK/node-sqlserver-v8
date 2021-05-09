@@ -10,6 +10,7 @@
 #include <bcp.h>
 
 #ifdef LINUX_BUILD
+#include <dlfcn.h>
 #include <unistd.h>
 #endif
 
@@ -29,7 +30,36 @@ namespace mssql
         return false;
     }
 
-    inline RETCODE plugin_bcp::bcp_bind(HDBC p1, LPCBYTE p2, INT p3, DBINT p4, LPCBYTE p5, INT p6, INT p7, INT p8) {
+    plugin_bcp::~plugin_bcp() {
+        if (hinstLib != NULL) {
+            FreeLibrary(hinstLib);
+        } 
+    }
+    #endif
+
+    #ifdef LINUX_BUILD
+    bool plugin_bcp::load(const string &shared_lib) {
+        hinstLib = dlopen(shared_lib.data(), RTLD_NOW);
+        if (hinstLib != NULL) 
+        { 
+            dll_bcp_init = (plug_bcp_init)dlsym(hinstLib, "bcp_initW");
+            dll_bcp_bind = (plug_bcp_bind)dlsym(hinstLib, "bcp_bind");
+            dll_bcp_sendrow = (plug_bcp_sendrow)dlsym(hinstLib, "bcp_sendrow");
+            dll_bcp_done = (plug_bcp_done)dlsym(hinstLib, "bcp_done");
+            return true;
+        }
+        return false;
+    }
+
+    plugin_bcp::~plugin_bcp() {
+        if (hinstLib != NULL) {
+            dlclose(hinstLib);
+        } 
+    }
+
+    #endif
+
+   inline RETCODE plugin_bcp::bcp_bind(HDBC p1, LPCBYTE p2, INT p3, DBINT p4, LPCBYTE p5, INT p6, INT p7, INT p8) {
             return (dll_bcp_bind != NULL) ?
             (dll_bcp_bind)(p1, p2, p3, p4, p5, p6, p7, p8)
             : -1;
@@ -52,28 +82,6 @@ namespace mssql
             (dll_bcp_done)(p1)
             : -1;
     }
-
-    plugin_bcp::~plugin_bcp() {
-        if (hinstLib != NULL) {
-            FreeLibrary(hinstLib);
-        } 
-    }
-    #endif
-
-    #ifdef LINUX_BUILD
-        inline RETCODE plugin_bcp::bcp_bind(HDBC p1, LPCBYTE p2, INT p3, DBINT p4, LPCBYTE p5, INT p6, INT p7, INT p8) {
-            return ::bcp_bind(p1, p2, p3, p4, p5, p6, p7, p8);
-        }
-        inline RETCODE plugin_bcp::bcp_init(HDBC p1, LPCWSTR p2, LPCWSTR p3, LPCWSTR p4, INT p5) {
-            return ::bcp_init(p1, p2, p3, p4, p5);
-        } 
-        inline DBINT plugin_bcp::bcp_sendrow(HDBC p1) {
-            return ::bcp_sendrow(p1);
-        }
-        inline DBINT plugin_bcp::bcp_done(HDBC p1) {
-            return ::bcp_done(p1);
-        }
-    #endif
 
     basestorage::basestorage(shared_ptr<BoundDatum> d) : 
             index(0),
@@ -204,11 +212,35 @@ namespace mssql
 
     int bcp::insert() {
         #ifdef WINDOWS_BUILD
-        if (!plugin.load(L"msodbcsql17.dll")) return -1;
+        if (!plugin.load(L"msodbcsql17.dll")) {
+            _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to dynamically load msodbcsql17.dll", -1, 0, "", "", 0));
+            return -1;
         #endif
-		if (!init()) return -1;
-        if (!bind()) return -1;
-        if (!send()) return -1;
+        #ifdef LINUX_BUILD
+        if (!plugin.load("libmsodbcsql-17.so")) {
+            _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to dynamically load libmsodbcsql-17.so", -1, 0, "", "", 0));
+             return -1;
+        }
+        #endif
+        
+		if (!init()) {
+            if (_errors->empty()) {
+                _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to init yet no error was returned.", -1, 0, "", "", 0));
+            }
+            return -1;
+        }
+        if (!bind()) {
+            if (_errors->empty()) {
+                _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to bind yet no error was returned.", -1, 0, "", "", 0));
+            }
+            return -1;
+        }
+        if (!send()) {
+            if (_errors->empty()) {
+                _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to send yet no error was returned.", -1, 0, "", "", 0));
+            }
+            return -1;
+        }
         return done();
     }
 }
