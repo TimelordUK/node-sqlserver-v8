@@ -239,7 +239,7 @@ if (bcp_bind(hdbc, (LPCBYTE) szCompanyName, 0, SQL_VARLEN_DATA,
         }
         #endif
         #ifdef LINUX_BUILD
-        if ( !plugin.load("libmsodbcsql-17.so", _errors) && !plugin.load("libmsodbcsql-17.dylib", _errors, RTLD_LOCAL|RTLD_LAZY) ) {
+        if ( !plugin.load("libmsodbcsql-17.so", _errors) && !plugin.load("libmsodbcsql.17.dylib", _errors) ) {
              if (_errors->empty()) {
                 _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to dynamically load libmsodbcsql-17.so", -1, 0, "", "", 0));
              }
