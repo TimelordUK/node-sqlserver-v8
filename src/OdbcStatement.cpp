@@ -29,7 +29,7 @@
 #include <QueryOperationParams.h>
 #include <ConnectionHandles.h>
 #include <iostream>
-#include <algorithm>>
+#include <algorithm>
 #include <bcp.h>
 
 #ifdef LINUX_BUILD

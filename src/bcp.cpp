@@ -17,15 +17,19 @@
 namespace mssql
 {
     #ifdef WINDOWS_BUILD
-    bool plugin_bcp::load(const wstring &shared_lib) {
+    bool plugin_bcp::load(const wstring &shared_lib, shared_ptr<vector<shared_ptr<OdbcError>>> errors) {
         hinstLib = LoadLibrary(shared_lib.data());
         if (hinstLib != NULL) 
         { 
             dll_bcp_init = (plug_bcp_init)GetProcAddress(hinstLib, "bcp_initW");
+            if (!dll_bcp_init) errors->push_back(make_shared<OdbcError>("bcp", "bcp failed to get symbol bcp_initW.", -1, 0, "", "", 0));
             dll_bcp_bind = (plug_bcp_bind)GetProcAddress(hinstLib, "bcp_bind");
+            if (!dll_bcp_bind) errors->push_back(make_shared<OdbcError>("bcp", "bcp failed to get symbol dll_bcp_bind.", -1, 0, "", "", 0));
             dll_bcp_sendrow = (plug_bcp_sendrow)GetProcAddress(hinstLib, "bcp_sendrow");
+            if (!dll_bcp_sendrow) errors->push_back(make_shared<OdbcError>("bcp", "bcp failed to get symbol dll_bcp_sendrow.", -1, 0, "", "", 0));
             dll_bcp_done = (plug_bcp_done)GetProcAddress(hinstLib, "bcp_done");
-            return true;
+            if (!dll_bcp_sendrow) errors->push_back(make_shared<OdbcError>("bcp", "bcp failed to get symbol dll_bcp_done.", -1, 0, "", "", 0));
+            return errors->empty();
         }
         return false;
     }
@@ -38,15 +42,19 @@ namespace mssql
     #endif
 
     #ifdef LINUX_BUILD
-    bool plugin_bcp::load(const string &shared_lib) {
-        hinstLib = dlopen(shared_lib.data(), RTLD_NOW);
+    bool plugin_bcp::load(const string &shared_lib, shared_ptr<vector<shared_ptr<OdbcError>>> errors, int mode = RTLD_NOW) {
+        hinstLib = dlopen(shared_lib.data(), mode);
         if (hinstLib != NULL) 
         { 
             dll_bcp_init = (plug_bcp_init)dlsym(hinstLib, "bcp_initW");
+            if (!dll_bcp_init) errors->push_back(make_shared<OdbcError>("bcp", "bcp failed to get symbol bcp_initW.", -1, 0, "", "", 0));
             dll_bcp_bind = (plug_bcp_bind)dlsym(hinstLib, "bcp_bind");
+            if (!dll_bcp_bind) errors->push_back(make_shared<OdbcError>("bcp", "bcp failed to get symbol dll_bcp_bind.", -1, 0, "", "", 0));
             dll_bcp_sendrow = (plug_bcp_sendrow)dlsym(hinstLib, "bcp_sendrow");
+            if (!dll_bcp_sendrow) errors->push_back(make_shared<OdbcError>("bcp", "bcp failed to get symbol dll_bcp_sendrow.", -1, 0, "", "", 0));
             dll_bcp_done = (plug_bcp_done)dlsym(hinstLib, "bcp_done");
-            return true;
+            if (!dll_bcp_sendrow) errors->push_back(make_shared<OdbcError>("bcp", "bcp failed to get symbol dll_bcp_done.", -1, 0, "", "", 0));
+            return errors->empty();
         }
         return false;
     }
@@ -223,14 +231,18 @@ if (bcp_bind(hdbc, (LPCBYTE) szCompanyName, 0, SQL_VARLEN_DATA,
 
     int bcp::insert() {
         #ifdef WINDOWS_BUILD
-        if (!plugin.load(L"msodbcsql17.dll")) {
-            _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to dynamically load msodbcsql17.dll", -1, 0, "", "", 0));
+        if (!plugin.load(L"msodbcsql17.dll", _errors)) {
+            if (_errors->empty()) {
+                _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to dynamically load msodbcsql17.dll", -1, 0, "", "", 0));
+            }
             return -1;
         }
         #endif
         #ifdef LINUX_BUILD
-        if (!plugin.load("libmsodbcsql-17.so")) {
-            _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to dynamically load libmsodbcsql-17.so", -1, 0, "", "", 0));
+        if ( !plugin.load("libmsodbcsql-17.so", _errors) && !plugin.load("libmsodbcsql-17.dylib", _errors, RTLD_LOCAL|RTLD_LAZY) ) {
+             if (_errors->empty()) {
+                _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to dynamically load libmsodbcsql-17.so", -1, 0, "", "", 0));
+             }
              return -1;
         }
         #endif

@@ -37,7 +37,7 @@ namespace mssql
     {
         ~plugin_bcp();
         #ifdef WINDOWS_BUILD
-		bool load(const wstring &);
+		bool load(const wstring &, shared_ptr<vector<shared_ptr<OdbcError>>> errors);
         HINSTANCE hinstLib = NULL;
         typedef RETCODE (__cdecl* plug_bcp_bind)(HDBC, LPCBYTE, INT, DBINT, LPCBYTE, INT, INT, INT);
         typedef RETCODE (__cdecl* plug_bcp_init)(HDBC, LPCWSTR, LPCWSTR, LPCWSTR, INT);
@@ -53,7 +53,7 @@ namespace mssql
         typedef RETCODE (* plug_bcp_init)(HDBC, LPCWSTR, LPCWSTR, LPCWSTR, INT);
 		typedef DBINT (* plug_bcp_sendrow)(HDBC);
 		typedef DBINT (* plug_bcp_done)(HDBC);
-        bool load(const string &);
+        bool load(const string &, shared_ptr<vector<shared_ptr<OdbcError>>> errors, int m);
         void * hinstLib = NULL;
         #endif
         plug_bcp_bind dll_bcp_bind;
