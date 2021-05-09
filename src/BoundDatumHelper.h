@@ -90,6 +90,10 @@ namespace mssql
 			charvec_ptr = reserve_vec<char>(charvec_ptr, len);
 		}
 
+		inline bool isUint16() {
+			return uint16_vec_vec_ptr && !uint16_vec_vec_ptr->empty();
+		}
+
 		inline void ReserveUint16(size_t len)
 		{
 			uint16vec_ptr = reserve_vec<uint16_t>(uint16vec_ptr, len);
@@ -98,6 +102,10 @@ namespace mssql
 		inline void ReserveUint16Vec(size_t len)
 		{
 			uint16_vec_vec_ptr = reserve_vec<shared_ptr<uint16_t_vec_t>>(uint16_vec_vec_ptr, len);
+		}
+
+		inline bool isInt32() {
+			return int32vec_ptr  && !int32vec_ptr->empty();
 		}
 
 		inline void ReserveInt32(size_t len)
@@ -118,6 +126,10 @@ namespace mssql
 		inline void ReserveDouble(size_t len)
 		{
 			doublevec_ptr = reserve_vec<double>(doublevec_ptr, len);
+		}
+
+		inline bool isTimestamp() {
+			return timestampvec_ptr && !timestampvec_ptr->empty();
 		}
 
 		inline void ReserveTimestamp(size_t len)

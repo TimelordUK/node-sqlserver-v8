@@ -96,11 +96,11 @@ namespace mssql
             datum(d) {
     }
 
-    struct storage_int : public basestorage {
+    struct storage_int32 : public basestorage {
         DBINT current;
         inline LPCBYTE ptr() { return (LPCBYTE)&current; } 
         shared_ptr<DatumStorage::int32_vec_t> vec;
-        storage_int(shared_ptr<BoundDatum> d) : basestorage(d)  {
+        storage_int32(shared_ptr<BoundDatum> d) : basestorage(d)  {
             vec = datum->get_storage()->int32vec_ptr;
         }
         inline size_t size() { return vec->size(); }
@@ -180,27 +180,15 @@ namespace mssql
     shared_ptr<basestorage> get_storage(shared_ptr<BoundDatum> p) {
         shared_ptr<basestorage> r;
         auto storage = p->get_storage();
-        if (storage->timestampvec_ptr && !storage->timestampvec_ptr->empty()) {
+        if (storage->isTimestamp()) {
             r = make_shared<storage_timestamp>(p);
-        }
-        else if (storage->uint16_vec_vec_ptr && !storage->uint16_vec_vec_ptr->empty()) {
+        } else if (storage->isUint16()) {
             r = make_shared<storage_varchar>(p);
-        } else {
-            r = make_shared<storage_int>(p);
+        } else if (storage->isInt32()) {
+            r = make_shared<storage_int32>(p);
         }
         return r;
     }
-
-/*
-bcp_bind(m_hdbc, (BYTE *)buffer, 4, sizeof(TIMESTAMP_STRUCT), 0, 0, SQLDATETIME2N, index);
-
-if (bcp_bind(hdbc, (LPCBYTE) szCompanyName, 0, SQL_VARLEN_DATA,  
-   (LPCBYTE) pTerm, strnlen(pTerm, sizeof(pTerm)), SQLCHARACTER, 2) == FAIL)  
-   {  
-   // Raise error and return.  
-   return;  
-   }  
-   */
 
     bool bcp::bind() {
 		int column = 0;
