@@ -39,23 +39,20 @@ namespace mssql
         #ifdef WINDOWS_BUILD
 		bool load(const wstring &, shared_ptr<vector<shared_ptr<OdbcError>>> errors);
         HINSTANCE hinstLib = NULL;
-        typedef RETCODE (__cdecl* plug_bcp_bind)(HDBC, LPCBYTE, INT, DBINT, LPCBYTE, INT, INT, INT);
-        typedef RETCODE (__cdecl* plug_bcp_init)(HDBC, LPCWSTR, LPCWSTR, LPCWSTR, INT);
-		typedef DBINT (__cdecl* plug_bcp_sendrow)(HDBC);
-		typedef DBINT (__cdecl* plug_bcp_done)(HDBC);
         #endif
         inline RETCODE bcp_bind(HDBC, LPCBYTE, INT, DBINT, LPCBYTE, INT, INT, INT);
         inline RETCODE bcp_init(HDBC, LPCWSTR, LPCWSTR, LPCWSTR, INT); 
         inline DBINT bcp_sendrow(HDBC);
         inline DBINT bcp_done(HDBC);
         #ifdef LINUX_BUILD
-        typedef RETCODE (* plug_bcp_bind)(HDBC, LPCBYTE, INT, DBINT, LPCBYTE, INT, INT, INT);
-        typedef RETCODE (* plug_bcp_init)(HDBC, LPCWSTR, LPCWSTR, LPCWSTR, INT);
-		typedef DBINT (* plug_bcp_sendrow)(HDBC);
-		typedef DBINT (* plug_bcp_done)(HDBC);
+        #define __cdecl 
         bool load(const string &, shared_ptr<vector<shared_ptr<OdbcError>>> errors, int m);
         void * hinstLib = NULL;
         #endif
+        typedef RETCODE (__cdecl* plug_bcp_bind)(HDBC, LPCBYTE, INT, DBINT, LPCBYTE, INT, INT, INT);
+        typedef RETCODE (__cdecl* plug_bcp_init)(HDBC, LPCWSTR, LPCWSTR, LPCWSTR, INT);
+		typedef DBINT (__cdecl* plug_bcp_sendrow)(HDBC);
+		typedef DBINT (__cdecl* plug_bcp_done)(HDBC);
         plug_bcp_bind dll_bcp_bind;
         plug_bcp_init dll_bcp_init;
 		plug_bcp_sendrow dll_bcp_sendrow;

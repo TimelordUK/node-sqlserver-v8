@@ -131,6 +131,23 @@ namespace mssql
         }
     };
 
+    struct storage_timestamp : public basestorage {
+        shared_ptr<DatumStorage::timestamp_struct_vec_t> vec;
+        SQL_TIMESTAMP_STRUCT current;
+        inline LPCBYTE ptr() { return (LPCBYTE)&current; } 
+        storage_timestamp(shared_ptr<BoundDatum> d) : basestorage(d)  {
+            vec = datum->get_storage()->timestampvec_ptr;
+        }
+        inline size_t size() { return vec->size(); }
+        inline bool next() {
+            auto & storage = *vec;
+            if (index == storage.size()) return false;
+            auto &src = storage[index++];
+            current = src;
+            return true;
+        }
+    };
+
     bcp::bcp(const shared_ptr<BoundDatumSet> param_set, shared_ptr<OdbcConnectionHandle> h) : 
         _ch(h),
         _param_set(param_set)  {
@@ -163,7 +180,10 @@ namespace mssql
     shared_ptr<basestorage> get_storage(shared_ptr<BoundDatum> p) {
         shared_ptr<basestorage> r;
         auto storage = p->get_storage();
-        if (storage->uint16_vec_vec_ptr && !storage->uint16_vec_vec_ptr->empty()) {
+        if (storage->timestampvec_ptr && !storage->timestampvec_ptr->empty()) {
+            r = make_shared<storage_timestamp>(p);
+        }
+        else if (storage->uint16_vec_vec_ptr && !storage->uint16_vec_vec_ptr->empty()) {
             r = make_shared<storage_varchar>(p);
         } else {
             r = make_shared<storage_int>(p);
@@ -191,11 +211,7 @@ if (bcp_bind(hdbc, (LPCBYTE) szCompanyName, 0, SQL_VARLEN_DATA,
 			const auto& p = *itr;
             const auto s = get_storage(p);
             _storage.push_back(s);
-            LPCBYTE terminator = (p->param_size == static_cast<SQLULEN>(SQL_VARLEN_DATA)) ? 
-                reinterpret_cast<LPCBYTE>(L"") : NULL;
-            auto terminator_len = (p->param_size == static_cast<SQLULEN>(SQL_VARLEN_DATA)) ? 
-                sizeof(WCHAR) : 0;
-            if (plugin.bcp_bind(ch, s->ptr(), 0, p->param_size, terminator, terminator_len, p->sql_type, ++column) == FAIL)  
+            if (plugin.bcp_bind(ch, s->ptr(), 0, p->param_size, p->bcp_terminator, p->bcp_terminator_len, p->sql_type, ++column) == FAIL)  
    			{  
 				ch.read_errors(_errors);  
    				return false;  

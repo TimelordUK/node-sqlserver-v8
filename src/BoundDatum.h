@@ -40,6 +40,8 @@ namespace mssql
 			param_type(SQL_PARAM_INPUT),
 			offset(0),
 			is_bcp(false),
+			bcp_terminator_len(0),
+			bcp_terminator(NULL),
 			is_tvp(false),
 			tvp_no_cols(0),
 			definedPrecision(false),
@@ -73,6 +75,9 @@ namespace mssql
 		uint16_t param_type;
 		int32_t offset;
 		bool is_bcp;
+		SQLULEN bcp_terminator_len;
+		LPCBYTE bcp_terminator;
+
 		bool is_tvp;
 		int tvp_no_cols;
 		wstring name;

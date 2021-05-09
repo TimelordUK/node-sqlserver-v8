@@ -241,6 +241,8 @@ namespace mssql
 		sql_type = SQLNCHAR;
 		param_size = SQL_VARLEN_DATA;
 		buffer_len = get_max_str_len(p) + 1;
+		bcp_terminator = reinterpret_cast<LPCBYTE>(L"");
+		bcp_terminator_len = sizeof(WCHAR);
 		auto & vec = *_storage->uint16_vec_vec_ptr;
 		for (uint32_t i = 0; i < array_len; ++i)
 		{
@@ -871,6 +873,10 @@ namespace mssql
 		// TODO: Determine proper precision and size based on version of server we're talking to
 		param_size = sql_server_2008_default_timestamp_precision;
 		if (digits <= 0) digits = sql_server_2008_default_datetime_scale;
+		if (is_bcp) {
+			sql_type = SQLDATETIME2N;
+			param_size = sizeof(SQL_TIMESTAMP_STRUCT);
+		}
 	}
 
 	void BoundDatum::bind_time_stamp_offset(const Local<Value>& p)
