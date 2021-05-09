@@ -94,7 +94,7 @@
         }],
         ['OS=="mac"', {
             'link_settings': {
-             'libraries': ['-L/usr/local/lib', '-lmsodbcsql.17'],
+             'libraries': ['-lodbc'],
             },
             'defines': [
               'LINUX_BUILD',
