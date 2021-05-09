@@ -106,6 +106,7 @@
             'include_dirs': [
               '/usr/local/include/',
               '/usr/local/opt/msodbcsql17/include/',
+              '/usr/local/opt/msodbcsql17/include/msodbcsql17/'
             ],
         }],
       ]
