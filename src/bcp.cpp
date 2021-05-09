@@ -163,6 +163,17 @@ namespace mssql
         return r;
     }
 
+/*
+bcp_bind(m_hdbc, (BYTE *)buffer, 4, sizeof(TIMESTAMP_STRUCT), 0, 0, SQLDATETIME2N, index);
+
+if (bcp_bind(hdbc, (LPCBYTE) szCompanyName, 0, SQL_VARLEN_DATA,  
+   (LPCBYTE) pTerm, strnlen(pTerm, sizeof(pTerm)), SQLCHARACTER, 2) == FAIL)  
+   {  
+   // Raise error and return.  
+   return;  
+   }  
+   */
+
     bool bcp::bind() {
 		int column = 0;
         const auto &ch = *_ch;

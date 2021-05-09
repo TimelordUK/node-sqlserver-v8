@@ -29,6 +29,7 @@
 #include <QueryOperationParams.h>
 #include <ConnectionHandles.h>
 #include <iostream>
+#include <algorithm>>
 #include <bcp.h>
 
 #ifdef LINUX_BUILD
@@ -631,22 +632,13 @@ namespace mssql
 	bool OdbcStatement::try_bcp(const shared_ptr<BoundDatumSet>& param_set) {
 	
 		bcp b(param_set, _connectionHandles->connectionHandle());
-		b.insert();
+		auto ret = b.insert();
 		_resultset = make_unique<ResultSet>(0);
 		_resultset->_end_of_rows = true;
-		return true;
+		_errors->clear();
+        copy(b._errors->begin(), b._errors->end(), back_inserter(*_errors));
+		return ret > 0;
    } 
-
-/*
-bcp_bind(m_hdbc, (BYTE *)buffer, 4, sizeof(TIMESTAMP_STRUCT), 0, 0, SQLDATETIME2N, index);
-
-if (bcp_bind(hdbc, (LPCBYTE) szCompanyName, 0, SQL_VARLEN_DATA,  
-   (LPCBYTE) pTerm, strnlen(pTerm, sizeof(pTerm)), SQLCHARACTER, 2) == FAIL)  
-   {  
-   // Raise error and return.  
-   return;  
-   }  
-   */
  
 	bool OdbcStatement::bind_fetch(const shared_ptr<BoundDatumSet> & param_set)
 	{
