@@ -215,6 +215,7 @@ namespace mssql
         if (!plugin.load(L"msodbcsql17.dll")) {
             _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to dynamically load msodbcsql17.dll", -1, 0, "", "", 0));
             return -1;
+        }
         #endif
         #ifdef LINUX_BUILD
         if (!plugin.load("libmsodbcsql-17.so")) {
