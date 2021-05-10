@@ -96,17 +96,22 @@ namespace mssql
     }
 
     template<class T> struct storage_value_t : public basestorage {
+        SQLLEN iIndicator;
         T current;
         inline LPCBYTE ptr() { return (LPCBYTE)&current; } 
-        shared_ptr<vector<T>> vec;
-        storage_value_t(shared_ptr<vector<T>> v) : basestorage()  {
-            vec = v;
+        const vector<T>& vec;
+        const vector<SQLLEN>& ind;
+        storage_value_t(const vector<T>& v, const vector<SQLLEN> & i) 
+        : basestorage(), vec(v), ind(i)  {
         }
-        inline size_t size() { return vec->size(); }
+        inline size_t size() { return vec.size(); }
         inline bool next() {
-            auto & storage = *vec;
-            if (index == storage.size()) return false;
-            current = storage[index++];
+            if (index == vec.size()) return false;
+            iIndicator = ind[index];
+            if (iIndicator != SQL_NULL_DATA) {
+                current = vec[index]; 
+            }
+            index++;
             return true;
         }
     };
@@ -166,11 +171,11 @@ namespace mssql
         shared_ptr<basestorage> r;
         auto storage = p->get_storage();
         if (storage->isTimestamp()) {
-            r = make_shared<storage_timestamp>(p->get_storage()->timestampvec_ptr);
+            r = make_shared<storage_timestamp>(*storage->timestampvec_ptr, p->get_ind_vec());
         } else if (storage->isUint16()) {
             r = make_shared<storage_varchar>(p);
         } else if (storage->isInt32()) {
-            r = make_shared<storage_int32>(p->get_storage()->int32vec_ptr);
+            r = make_shared<storage_int32>(*storage->int32vec_ptr, p->get_ind_vec());
         }
         return r;
     }

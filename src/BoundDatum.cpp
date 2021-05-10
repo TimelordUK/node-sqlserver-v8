@@ -238,6 +238,7 @@ namespace mssql
 		const auto arr = Local<Array>::Cast(p);
 		const auto array_len = arr->Length();
 		_storage->ReserveUint16Vec(array_len);
+		_indvec.resize(array_len);
 		sql_type = SQLNCHAR;
 		param_size = SQL_VARLEN_DATA;
 		buffer_len = get_max_str_len(p) + 1;
@@ -246,6 +247,7 @@ namespace mssql
 		auto & vec = *_storage->uint16_vec_vec_ptr;
 		for (uint32_t i = 0; i < array_len; ++i)
 		{
+			_indvec[i] = SQL_NULL_DATA;
 			auto elem = Nan::Get(arr, i);
 			if (elem.IsEmpty()) continue;
 			const auto local_elem = elem.ToLocalChecked();
@@ -260,7 +262,8 @@ namespace mssql
 			store->resize(width);
 			vec[i] = store;
 			auto itr = store->data();
-			Nan::DecodeWrite(reinterpret_cast<char*>(&*itr), str->Length()*2, str, Nan::UCS2);
+			_indvec[i] = sizeof(SQLLEN);
+			Nan::DecodeWrite(reinterpret_cast<char*>(&*itr), width * sizeof(uint16_t), str, Nan::UCS2);
 			store->push_back(0);
 		}
 	}
@@ -630,7 +633,7 @@ namespace mssql
 				if (local_elem->IsNullOrUndefined()) continue;
 				const auto local = Nan::To<Int32>(local_elem).FromMaybe(Nan::New<Int32>(0));
 				vec[i] = local->Value();
-				_indvec[i] = 0;
+				_indvec[i] = is_bcp ? sizeof(SQLLEN) : 0;
 			}
 		}
 	}
@@ -714,7 +717,7 @@ namespace mssql
 				const auto ms = local->Value();
 				const TimestampColumn sql_date(-1, ms);
 				sql_date.ToDateStruct(dt);
-				_indvec[0] = sizeof(SQL_DATE_STRUCT);
+				_indvec[0] = is_bcp ? sizeof(SQLLEN) : sizeof(SQL_DATE_STRUCT);
 		}
 	}
 
@@ -736,7 +739,7 @@ namespace mssql
 				const auto ms = local->Value();
 				const TimestampColumn sql_date(-1, ms);
 				sql_date.ToDateStruct(dt);
-				_indvec[i] = sizeof(SQL_DATE_STRUCT);
+				_indvec[i] = is_bcp ? sizeof(SQLLEN) : sizeof(SQL_DATE_STRUCT);
 			}
 		}
 	}
@@ -854,7 +857,7 @@ namespace mssql
 				const auto ms = local->Value() - offset * 60000;
 				const TimestampColumn sql_date(-1, ms);
 				sql_date.to_timestamp_struct(ts);
-				_indvec[i] = buffer_len;
+				_indvec[i] = is_bcp ? sizeof(SQLLEN) : buffer_len;
 			}
 		}
 	}
