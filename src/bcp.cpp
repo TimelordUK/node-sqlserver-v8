@@ -98,7 +98,7 @@ namespace mssql
     template<class T> struct storage_value_t : public basestorage {
         SQLLEN iIndicator;
         T current;
-        inline LPCBYTE ptr() { return (LPCBYTE)&current; } 
+        inline LPCBYTE ptr() { return (LPCBYTE)&iIndicator; } 
         const vector<T>& vec;
         const vector<SQLLEN>& ind;
         storage_value_t(const vector<T>& v, const vector<SQLLEN> & i) 
@@ -120,20 +120,27 @@ namespace mssql
     typedef storage_value_t<SQL_TIMESTAMP_STRUCT> storage_timestamp;
 
     struct storage_varchar : public basestorage {
-        shared_ptr<DatumStorage::uint16_vec_t_vec_t> vec;
+        SQLLEN iIndicator;
         DatumStorage::uint16_t_vec_t current;
+        const vector<SQLLEN>& ind;
+        const DatumStorage::uint16_vec_t_vec_t& vec;
         inline LPCBYTE ptr() { return (LPCBYTE)current.data(); } 
-        storage_varchar(shared_ptr<BoundDatum> datum) : basestorage()  {
-            vec = datum->get_storage()->uint16_vec_vec_ptr;
-            current.reserve(datum->buffer_len);
+        storage_varchar(const DatumStorage::uint16_vec_t_vec_t&v, const vector<SQLLEN> & i, size_t max_len) : 
+        basestorage(),
+        vec(v),
+        ind(i) {
+            indicator = 0;
+            current.reserve(max_len);
         }
-        inline size_t size() { return vec->size(); }
+        inline size_t size() { return vec.size(); }
         inline bool next() {
-            auto & storage = *vec;
-            if (index == storage.size()) return false;
-            auto &src = *storage[index++];
-            current.clear();
-            copy(src.begin(), src.end(), back_inserter(current));
+            if (index == vec.size()) return false;
+            iIndicator = ind[index];
+            if (iIndicator != SQL_NULL_DATA) {
+                auto &src = *vec[index++];
+                current.clear();
+                copy(src.begin(), src.end(), back_inserter(current));
+            }
             return true;
         }
     };
@@ -173,7 +180,7 @@ namespace mssql
         if (storage->isTimestamp()) {
             r = make_shared<storage_timestamp>(*storage->timestampvec_ptr, p->get_ind_vec());
         } else if (storage->isUint16()) {
-            r = make_shared<storage_varchar>(p);
+            r = make_shared<storage_varchar>(*storage->uint16_vec_vec_ptr, p->get_ind_vec(), p->buffer_len);
         } else if (storage->isInt32()) {
             r = make_shared<storage_int32>(*storage->int32vec_ptr, p->get_ind_vec());
         }
@@ -189,7 +196,7 @@ namespace mssql
 			const auto& p = *itr;
             const auto s = get_storage(p);
             _storage.push_back(s);
-            if (plugin.bcp_bind(ch, s->ptr(), 0, p->param_size, p->bcp_terminator, p->bcp_terminator_len, p->sql_type, ++column) == FAIL)  
+            if (plugin.bcp_bind(ch, s->ptr(), s->indicator, p->param_size, p->bcp_terminator, p->bcp_terminator_len, p->sql_type, ++column) == FAIL)  
    			{  
 				ch.read_errors(_errors);  
    				return false;  

@@ -256,14 +256,16 @@ namespace mssql
 			}
 			auto maybe_value = Nan::To<String>(local_elem);
 			const auto str = maybe_value.FromMaybe(Nan::EmptyString()); 	
-			const auto width = str->Length();
-			auto store = make_shared<DatumStorage::uint16_t_vec_t>(width);
-			store->reserve(width);
-			store->resize(width);
+			const auto len = str->Length();
+			const auto size = sizeof(uint16_t);
+			auto store = make_shared<DatumStorage::uint16_t_vec_t>(len);
+			store->reserve(len);
+			store->resize(len);
 			vec[i] = store;
 			auto itr = store->data();
-			_indvec[i] = sizeof(SQLLEN);
-			Nan::DecodeWrite(reinterpret_cast<char*>(&*itr), width * sizeof(uint16_t), str, Nan::UCS2);
+			const auto width = len * size;
+			_indvec[i] = len;
+			Nan::DecodeWrite(reinterpret_cast<char*>(&*itr), str->Length()*2, str, Nan::UCS2);
 			store->push_back(0);
 		}
 	}
@@ -633,7 +635,7 @@ namespace mssql
 				if (local_elem->IsNullOrUndefined()) continue;
 				const auto local = Nan::To<Int32>(local_elem).FromMaybe(Nan::New<Int32>(0));
 				vec[i] = local->Value();
-				_indvec[i] = is_bcp ? sizeof(SQLLEN) : 0;
+				_indvec[i] = is_bcp ? sizeof(int32_t) : 0;
 			}
 		}
 	}
@@ -717,7 +719,7 @@ namespace mssql
 				const auto ms = local->Value();
 				const TimestampColumn sql_date(-1, ms);
 				sql_date.ToDateStruct(dt);
-				_indvec[0] = is_bcp ? sizeof(SQLLEN) : sizeof(SQL_DATE_STRUCT);
+				_indvec[0] = sizeof(SQL_DATE_STRUCT);
 		}
 	}
 
@@ -739,7 +741,7 @@ namespace mssql
 				const auto ms = local->Value();
 				const TimestampColumn sql_date(-1, ms);
 				sql_date.ToDateStruct(dt);
-				_indvec[i] = is_bcp ? sizeof(SQLLEN) : sizeof(SQL_DATE_STRUCT);
+				_indvec[i] = sizeof(SQL_DATE_STRUCT);
 			}
 		}
 	}
@@ -857,7 +859,7 @@ namespace mssql
 				const auto ms = local->Value() - offset * 60000;
 				const TimestampColumn sql_date(-1, ms);
 				sql_date.to_timestamp_struct(ts);
-				_indvec[i] = is_bcp ? sizeof(SQLLEN) : buffer_len;
+				_indvec[i] = sizeof(SQL_TIMESTAMP_STRUCT);
 			}
 		}
 	}

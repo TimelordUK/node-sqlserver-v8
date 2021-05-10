@@ -40,7 +40,8 @@
                // "-t", "datatypes",
                // "-t", "sproc"
                // "-t", "params"
-               "-t", "bulk"
+               // "-t", "bulk",
+               "-t", "bcp"
                //"-t", "json" 
             ],
             "stopAtEntry": false,

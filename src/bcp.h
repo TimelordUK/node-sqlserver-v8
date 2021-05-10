@@ -66,6 +66,7 @@ namespace mssql
         virtual bool next() = 0;
         virtual LPCBYTE ptr() = 0;
         size_t index;
+        INT indicator = sizeof(SQLLEN);
     };
 
 	struct bcp 

@@ -82,7 +82,56 @@ suite('bcp', function () {
     }
   }
 
-  test('bcp timestamp timestamp', testDone => {
+  test('bcp timestamp timestamp - mix with nulls', testDone => {
+    const bulkTableDef = {
+      tableName: 'test_table_bcp',
+      columns: [
+        {
+          name: 'id',
+          type: 'INT PRIMARY KEY'
+        },
+        {
+          name: 'd1',
+          type: 'datetime'
+        },
+        {
+          name: 'd2',
+          type: 'datetime'
+        }]
+    }
+    async function runner () {
+      const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
+      const helper = new BulkTableTest(theConnection, bulkTableDef)
+      const expected = []
+      const rows = 4000
+      for (let i = 0; i < rows; ++i) {
+        expected.push({
+          id: i,
+          d1: i % 2 === 0 ? null : new Date(testDate.getTime() + i * 60 * 60 * 1000),
+          d2: i % 3 === 0 ? null : new Date(testDate.getTime() - i * 60 * 60 * 1000)
+        })
+      }
+      theConnection.setUseUTC(false)
+      const table = await helper.create()
+      table.setUseBcp(true)
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedQuery = util.promisify(theConnection.query)
+      try {
+        const start = new Date()
+        await promisedInsert(expected)
+        console.log(`inserted ${rows} in ${new Date() - start} ms elapsed`)
+        const res = await promisedQuery(`select count(*) as rows from ${bulkTableDef.tableName}`)
+        assert.deepStrictEqual(res[0].rows, rows)
+      } catch (e) {
+        return e
+      }
+    }
+    runner().then((e) => {
+      testDone(e)
+    })
+  })
+
+  test('bcp timestamp timestamp - no null', testDone => {
     const bulkTableDef = {
       tableName: 'test_table_bcp',
       columns: [
@@ -157,6 +206,50 @@ suite('bcp', function () {
           id: i,
           s1: `column1${i}`,
           s2: `testing${i + 1}2Data`
+        })
+      }
+      theConnection.setUseUTC(false)
+      const table = await helper.create()
+      table.setUseBcp(true)
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedQuery = util.promisify(theConnection.query)
+      try {
+        const start = new Date()
+        await promisedInsert(expected)
+        console.log(`inserted ${rows} in ${new Date() - start} ms elapsed`)
+        const res = await promisedQuery(`select count(*) as rows from ${bulkTableDef.tableName}`)
+        assert.deepStrictEqual(res[0].rows, rows)
+      } catch (e) {
+        return e
+      }
+    }
+    runner().then((e) => {
+      testDone(e)
+    })
+  })
+
+  test('bcp int, int column - with nulls', testDone => {
+    async function runner () {
+      const bulkTableDef = {
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'val',
+            type: 'INT'
+          }
+        ]
+      }
+      const helper = new BulkTableTest(theConnection, bulkTableDef)
+      const expected = []
+      const rows = 50000
+      for (let i = 0; i < rows; ++i) {
+        expected.push({
+          id: i,
+          val: i % 2 === 0 ? null : i * 2
         })
       }
       theConnection.setUseUTC(false)
