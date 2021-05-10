@@ -264,7 +264,7 @@ namespace mssql
 			vec[i] = store;
 			auto itr = store->data();
 			const auto width = len * size;
-			_indvec[i] = len;
+			_indvec[i] = width;
 			Nan::DecodeWrite(reinterpret_cast<char*>(&*itr), str->Length()*2, str, Nan::UCS2);
 			store->push_back(0);
 		}

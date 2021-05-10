@@ -129,16 +129,22 @@ namespace mssql
         basestorage(),
         vec(v),
         ind(i) {
-            indicator = 0;
-            current.reserve(max_len);
+            indicator = sizeof(SQLLEN); 
+            current.reserve(max_len + 4);
         }
         inline size_t size() { return vec.size(); }
         inline bool next() {
             if (index == vec.size()) return false;
             iIndicator = ind[index];
+             auto &src = *vec[index++];
+            current.clear();
+            current.push_back(0);
+            current.push_back(0);
+            current.push_back(0);
+            current.push_back(0);
+            auto *const ptr = reinterpret_cast<SQLLEN*>(current.data());
+            *ptr = iIndicator;
             if (iIndicator != SQL_NULL_DATA) {
-                auto &src = *vec[index++];
-                current.clear();
                 copy(src.begin(), src.end(), back_inserter(current));
             }
             return true;
