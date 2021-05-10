@@ -91,17 +91,16 @@ namespace mssql
             : -1;
     }
 
-    basestorage::basestorage(shared_ptr<BoundDatum> d) : 
-            index(0),
-            datum(d) {
+    basestorage::basestorage() : 
+            index(0) {
     }
 
-    struct storage_int32 : public basestorage {
-        DBINT current;
+    template<class T> struct storage_value_t : public basestorage {
+        T current;
         inline LPCBYTE ptr() { return (LPCBYTE)&current; } 
-        shared_ptr<DatumStorage::int32_vec_t> vec;
-        storage_int32(shared_ptr<BoundDatum> d) : basestorage(d)  {
-            vec = datum->get_storage()->int32vec_ptr;
+        shared_ptr<vector<T>> vec;
+        storage_value_t(shared_ptr<vector<T>> v) : basestorage()  {
+            vec = v;
         }
         inline size_t size() { return vec->size(); }
         inline bool next() {
@@ -112,13 +111,16 @@ namespace mssql
         }
     };
 
+    typedef storage_value_t<int32_t> storage_int32;
+    typedef storage_value_t<SQL_TIMESTAMP_STRUCT> storage_timestamp;
+
     struct storage_varchar : public basestorage {
         shared_ptr<DatumStorage::uint16_vec_t_vec_t> vec;
         DatumStorage::uint16_t_vec_t current;
         inline LPCBYTE ptr() { return (LPCBYTE)current.data(); } 
-        storage_varchar(shared_ptr<BoundDatum> d) : basestorage(d)  {
+        storage_varchar(shared_ptr<BoundDatum> datum) : basestorage()  {
             vec = datum->get_storage()->uint16_vec_vec_ptr;
-            current.reserve(d->buffer_len);
+            current.reserve(datum->buffer_len);
         }
         inline size_t size() { return vec->size(); }
         inline bool next() {
@@ -127,23 +129,6 @@ namespace mssql
             auto &src = *storage[index++];
             current.clear();
             copy(src.begin(), src.end(), back_inserter(current));
-            return true;
-        }
-    };
-
-    struct storage_timestamp : public basestorage {
-        shared_ptr<DatumStorage::timestamp_struct_vec_t> vec;
-        SQL_TIMESTAMP_STRUCT current;
-        inline LPCBYTE ptr() { return (LPCBYTE)&current; } 
-        storage_timestamp(shared_ptr<BoundDatum> d) : basestorage(d)  {
-            vec = datum->get_storage()->timestampvec_ptr;
-        }
-        inline size_t size() { return vec->size(); }
-        inline bool next() {
-            auto & storage = *vec;
-            if (index == storage.size()) return false;
-            auto &src = storage[index++];
-            current = src;
             return true;
         }
     };
@@ -181,11 +166,11 @@ namespace mssql
         shared_ptr<basestorage> r;
         auto storage = p->get_storage();
         if (storage->isTimestamp()) {
-            r = make_shared<storage_timestamp>(p);
+            r = make_shared<storage_timestamp>(p->get_storage()->timestampvec_ptr);
         } else if (storage->isUint16()) {
             r = make_shared<storage_varchar>(p);
         } else if (storage->isInt32()) {
-            r = make_shared<storage_int32>(p);
+            r = make_shared<storage_int32>(p->get_storage()->int32vec_ptr);
         }
         return r;
     }

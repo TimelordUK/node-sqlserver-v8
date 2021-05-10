@@ -60,13 +60,12 @@ namespace mssql
     };
 
     struct basestorage {
-        basestorage(shared_ptr<BoundDatum> d);
+        basestorage();
         virtual ~basestorage() {}
 		virtual size_t size() = 0;
         virtual bool next() = 0;
         virtual LPCBYTE ptr() = 0;
         size_t index;
-        shared_ptr<BoundDatum> datum;
     };
 
 	struct bcp 
