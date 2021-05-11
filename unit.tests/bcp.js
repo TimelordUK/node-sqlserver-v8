@@ -114,6 +114,68 @@ suite('bcp', function () {
     }
   }
 
+  test('bcp bit bit - mix with nulls', testDone => {
+    async function test () {
+      const bcp = new BcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'b1',
+            type: 'bit'
+          },
+          {
+            name: 'b2',
+            type: 'bit'
+          }]
+      }, i => {
+        return {
+          id: i,
+          b1: i % 2 === 0 ? null : i % 3 === 0,
+          b2: i % 3 === 0 ? null : i % 5 === 0
+        }
+      })
+      return await bcp.runner()
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
+  test('bcp bit bit', testDone => {
+    async function test () {
+      const bcp = new BcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'b1',
+            type: 'bit'
+          },
+          {
+            name: 'b2',
+            type: 'bit'
+          }]
+      }, i => {
+        return {
+          id: i,
+          b1: i % 2 === 0,
+          b2: i % 3 === 0
+        }
+      })
+      return await bcp.runner()
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
   test('bcp timestamp timestamp - mix with nulls', testDone => {
     async function test () {
       const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')

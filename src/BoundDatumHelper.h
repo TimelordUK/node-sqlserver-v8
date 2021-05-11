@@ -85,6 +85,10 @@ namespace mssql
 			numeric_ptr = reserve_vec<SQL_NUMERIC_STRUCT>(numeric_ptr, len);
 		}
 
+		inline bool isChar() const {
+			return charvec_ptr && !charvec_ptr->empty();
+		}
+
 		inline void ReserveChars(size_t len)
 		{
 			charvec_ptr = reserve_vec<char>(charvec_ptr, len);

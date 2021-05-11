@@ -116,6 +116,7 @@ namespace mssql
         }
     };
 
+    typedef storage_value_t<char> storage_char;
     typedef storage_value_t<int32_t> storage_int32;
     typedef storage_value_t<SQL_TIMESTAMP_STRUCT> storage_timestamp;
 
@@ -185,6 +186,8 @@ namespace mssql
             r = make_shared<storage_varchar>(*storage.uint16_vec_vec_ptr, ind, p->buffer_len);
         } else if (storage.isInt32()) {
             r = make_shared<storage_int32>(*storage.int32vec_ptr, ind);
+        } else if (storage.isChar()) {
+            r = make_shared<storage_char>(*storage.charvec_ptr, ind);
         }
         return r;
     }

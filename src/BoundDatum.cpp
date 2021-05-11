@@ -519,7 +519,7 @@ namespace mssql
 				const auto v = MutateJS::as_boolean(elem);
 				const auto b = !v ? 0 : 1;
 				vec[i] = static_cast<char>(b);
-				_indvec[i] = 0;
+				_indvec[i] = is_bcp ? sizeof(int8_t) : 0;
 			}
 		}
 	}
@@ -536,6 +536,10 @@ namespace mssql
 		buffer = _storage->charvec_ptr->data();
 		param_size = size;
 		digits = 0;
+		if (is_bcp) {
+			sql_type = SQLBIT;
+			param_size = sizeof(DBBIT);
+		}
 	}
 
 	void BoundDatum::bind_numeric(const Local<Value>& p)
