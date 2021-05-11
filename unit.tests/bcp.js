@@ -114,6 +114,68 @@ suite('bcp', function () {
     }
   }
 
+  test('bcp binary binary - mix with nulls', testDone => {
+    async function test () {
+      const bcp = new BcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'b1',
+            type: 'varbinary(10)'
+          },
+          {
+            name: 'b2',
+            type: 'varbinary(10)'
+          }]
+      }, i => {
+        return {
+          id: i,
+          b1: i % 2 === 0 ? null : Buffer.from('0102030405060708090a', 'hex'),
+          b2: i % 3 === 0 ? null : Buffer.from('0102030405060708090a', 'hex')
+        }
+      })
+      return await bcp.runner()
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
+  test('bcp binary binary', testDone => {
+    async function test () {
+      const bcp = new BcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'b1',
+            type: 'varbinary(10)'
+          },
+          {
+            name: 'b2',
+            type: 'varbinary(10)'
+          }]
+      }, i => {
+        return {
+          id: i,
+          b1: Buffer.from('0102030405060708090a', 'hex'),
+          b2: Buffer.from('0102030405060708090a', 'hex')
+        }
+      })
+      return await bcp.runner()
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
   test('bcp bit bit - mix with nulls', testDone => {
     async function test () {
       const bcp = new BcpEntry({

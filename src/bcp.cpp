@@ -120,13 +120,14 @@ namespace mssql
     typedef storage_value_t<int32_t> storage_int32;
     typedef storage_value_t<SQL_TIMESTAMP_STRUCT> storage_timestamp;
 
-    struct storage_varchar : public basestorage {
+    struct storage_uint16 : public basestorage {
+
         SQLLEN iIndicator;
         DatumStorage::uint16_t_vec_t current;
         const DatumStorage::uint16_vec_t_vec_t& vec;
         const vector<SQLLEN>& ind;
         inline LPCBYTE ptr() { return (LPCBYTE)current.data(); } 
-        storage_varchar(const DatumStorage::uint16_vec_t_vec_t&v, const vector<SQLLEN> & i, size_t max_len) : 
+        storage_uint16(const DatumStorage::uint16_vec_t_vec_t&v, const vector<SQLLEN> & i, size_t max_len) : 
         basestorage(),
         vec(v),
         ind(i) {
@@ -138,6 +139,34 @@ namespace mssql
             iIndicator = ind[index];
             const auto &src = *vec[index++];
             current.resize(4);
+            auto *const ptr = reinterpret_cast<SQLLEN*>(current.data());
+            *ptr = iIndicator;
+            if (iIndicator != SQL_NULL_DATA) {
+                copy(src.begin(), src.end(), back_inserter(current));
+            }
+            return true;
+        }
+    };
+
+    struct storage_binary : public basestorage {
+
+        SQLLEN iIndicator;
+        DatumStorage::char_vec_t current;
+        const DatumStorage::char_vec_t_vec_t& vec;
+        const vector<SQLLEN>& ind;
+        inline LPCBYTE ptr() { return (LPCBYTE)current.data(); } 
+        storage_binary(const DatumStorage::char_vec_t_vec_t&v, const vector<SQLLEN> & i, size_t max_len) : 
+        basestorage(),
+        vec(v),
+        ind(i) {
+            current.reserve(max_len + sizeof(SQLLEN) / sizeof(char));
+        }
+        inline size_t size() { return vec.size(); }
+        inline bool next() {
+            if (index == vec.size()) return false;
+            iIndicator = ind[index];
+            const auto &src = *vec[index++];
+            current.resize(8);
             auto *const ptr = reinterpret_cast<SQLLEN*>(current.data());
             *ptr = iIndicator;
             if (iIndicator != SQL_NULL_DATA) {
@@ -182,9 +211,11 @@ namespace mssql
         const auto &ind = p->get_ind_vec();
         if (storage.isTimestamp()) {
             r = make_shared<storage_timestamp>(*storage.timestampvec_ptr, ind);
-        } else if (storage.isUint16()) {
-            r = make_shared<storage_varchar>(*storage.uint16_vec_vec_ptr, ind, p->buffer_len);
-        } else if (storage.isInt32()) {
+        } else if (storage.isUint16Vec()) {
+            r = make_shared<storage_uint16>(*storage.uint16_vec_vec_ptr, ind, p->buffer_len);
+        } else if (storage.isCharVec()) {
+            r = make_shared<storage_binary>(*storage.char_vec_vec_ptr, ind, p->buffer_len);
+        }else if (storage.isInt32()) {
             r = make_shared<storage_int32>(*storage.int32vec_ptr, ind);
         } else if (storage.isChar()) {
             r = make_shared<storage_char>(*storage.charvec_ptr, ind);

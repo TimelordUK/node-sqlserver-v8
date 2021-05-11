@@ -24,6 +24,7 @@ namespace mssql
 		typedef vector<uint16_t> uint16_t_vec_t;
 		typedef vector<shared_ptr<uint16_t_vec_t>> uint16_vec_t_vec_t;
 		typedef vector<char> char_vec_t;
+		typedef vector<shared_ptr<char_vec_t>> char_vec_t_vec_t;
 		typedef vector<int32_t> int32_vec_t;
 		typedef vector<uint32_t> uint32_vec_t;
 		typedef vector<int64_t> int64_vec_t;
@@ -60,7 +61,8 @@ namespace mssql
 			numeric_ptr(nullptr),
 			charvec_ptr(nullptr),
 			uint16vec_ptr(nullptr),
-			uint16_vec_vec_ptr(nullptr)
+			uint16_vec_vec_ptr(nullptr),
+			char_vec_vec_ptr(nullptr)
 		{
 		}
 
@@ -94,13 +96,13 @@ namespace mssql
 			charvec_ptr = reserve_vec<char>(charvec_ptr, len);
 		}
 
-		inline bool isUint16() const {
-			return uint16_vec_vec_ptr && !uint16_vec_vec_ptr->empty();
-		}
-
 		inline void ReserveUint16(size_t len)
 		{
 			uint16vec_ptr = reserve_vec<uint16_t>(uint16vec_ptr, len);
+		}
+
+		inline bool isUint16Vec() const {
+			return uint16_vec_vec_ptr && !uint16_vec_vec_ptr->empty();
 		}
 
 		inline void ReserveUint16Vec(size_t len)
@@ -150,6 +152,15 @@ namespace mssql
 			timestampoffsetvec_ptr = reserve_vec<SQL_SS_TIMESTAMPOFFSET_STRUCT>(timestampoffsetvec_ptr, len);
 		}
 
+		inline bool isCharVec() const {
+			return char_vec_vec_ptr && !char_vec_vec_ptr->empty();
+		}
+
+		inline void ReserveCharVec(size_t len)
+		{
+			char_vec_vec_ptr = reserve_vec<shared_ptr<char_vec_t>>(char_vec_vec_ptr, len);
+		}
+
 		shared_ptr<int32_vec_t> int32vec_ptr;
 		shared_ptr<uint32_vec_t> uint32vec_ptr;
 		shared_ptr<int64_vec_t> int64vec_ptr;
@@ -162,6 +173,8 @@ namespace mssql
 		shared_ptr<char_vec_t> charvec_ptr;
 		shared_ptr<uint16_t_vec_t> uint16vec_ptr;
 		shared_ptr<uint16_vec_t_vec_t> uint16_vec_vec_ptr;
+		shared_ptr<char_vec_t_vec_t> char_vec_vec_ptr;
+
 		wstring schema;
 		wstring table;
 	private:

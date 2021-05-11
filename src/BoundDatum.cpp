@@ -465,8 +465,48 @@ namespace mssql
 		}
 	}
 
+	void BoundDatum::bind_var_binary_array_bcp(const Local<Value>& p)
+	{
+		const auto arr = Local<Array>::Cast(p);
+		const auto array_len = arr->Length();
+		_storage->ReserveCharVec(array_len);
+		_indvec.resize(array_len);
+		sql_type = SQLVARBINARY;
+		param_size = SQL_VARLEN_DATA;
+		buffer_len = get_max_object_len(p);
+		auto & vec = *_storage->char_vec_vec_ptr;
+		for (uint32_t i = 0; i < array_len; ++i)
+		{
+			_indvec[i] = SQL_NULL_DATA;
+			auto elem = Nan::Get(arr, i);
+			if (elem.IsEmpty()) continue;
+			const auto local_elem = elem.ToLocalChecked();
+			if (local_elem->IsNullOrUndefined()) {
+				continue;
+			}
+			auto maybe_value = Nan::To<Object>(local_elem);
+			if (maybe_value.IsEmpty()) continue;
+			const auto local_instance = maybe_value.ToLocalChecked();
+			if (local_instance->IsNullOrUndefined()) continue;
+			auto* const ptr = node::Buffer::Data(local_instance);
+			const auto obj_len = node::Buffer::Length(local_instance);
+			_indvec[i] = obj_len;
+			auto store = make_shared<DatumStorage::char_vec_t>(obj_len);
+			store->reserve(obj_len);
+			store->resize(obj_len);
+			vec[i] = store;
+			auto itr = store->data();
+			memcpy(&*itr, ptr, obj_len);		
+		}
+	}
+
 	void BoundDatum::bind_var_binary_array(const Local<Value>& p)
 	{
+		if (is_bcp) {
+			bind_var_binary_array_bcp(p);
+			return;
+		}
+
 		const auto arr = Local<Array>::Cast(p);
 		const auto array_len = arr->Length();
 		const auto max_obj_len = get_max_object_len(p);

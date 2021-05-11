@@ -158,6 +158,7 @@ namespace mssql
 
 		void bind_var_binary( Local<Value> & p);
 		void bind_var_binary_array(const Local<Value> & p);
+		void bind_var_binary_array_bcp(const Local<Value> & p);
 		void reserve_var_binary_array(size_t max_obj_len, size_t  array_len);
 
 		bool bind_datum_type(Local<Value>& p);
