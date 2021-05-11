@@ -95,6 +95,36 @@ namespace mssql
             index(0) {
     }
 
+    template <class T> struct storage_jagged_t : public basestorage {
+
+        SQLLEN iIndicator;
+        typedef vector<T> vec_t;
+        typedef vector<shared_ptr<vec_t>> vec_vec_t; 
+        vec_t current;
+        const vector<shared_ptr<vec_t>>& vec;
+        const vector<SQLLEN>& ind;
+        inline LPCBYTE ptr() { return (LPCBYTE)current.data(); } 
+        storage_jagged_t(const vec_vec_t &v, const vector<SQLLEN> & i, size_t max_len) : 
+        basestorage(),
+        vec(v),
+        ind(i) {
+            current.reserve(max_len + sizeof(SQLLEN) / sizeof(T));
+        }
+        inline size_t size() { return vec.size(); }
+        inline bool next() {
+            if (index == vec.size()) return false;
+            iIndicator = ind[index];
+            const auto &src = *vec[index++];
+            current.resize(sizeof(SQLLEN) / sizeof(T));
+            auto *const ptr = reinterpret_cast<SQLLEN*>(current.data());
+            *ptr = iIndicator;
+            if (iIndicator != SQL_NULL_DATA) {
+                copy(src.begin(), src.end(), back_inserter(current));
+            }
+            return true;
+        }
+    };
+
     template<class T> struct storage_value_t : public basestorage {
         SQLLEN iIndicator;
         T current;
@@ -119,62 +149,8 @@ namespace mssql
     typedef storage_value_t<char> storage_char;
     typedef storage_value_t<int32_t> storage_int32;
     typedef storage_value_t<SQL_TIMESTAMP_STRUCT> storage_timestamp;
-
-    struct storage_uint16 : public basestorage {
-
-        SQLLEN iIndicator;
-        DatumStorage::uint16_t_vec_t current;
-        const DatumStorage::uint16_vec_t_vec_t& vec;
-        const vector<SQLLEN>& ind;
-        inline LPCBYTE ptr() { return (LPCBYTE)current.data(); } 
-        storage_uint16(const DatumStorage::uint16_vec_t_vec_t&v, const vector<SQLLEN> & i, size_t max_len) : 
-        basestorage(),
-        vec(v),
-        ind(i) {
-            current.reserve(max_len + sizeof(SQLLEN) / sizeof(uint16_t));
-        }
-        inline size_t size() { return vec.size(); }
-        inline bool next() {
-            if (index == vec.size()) return false;
-            iIndicator = ind[index];
-            const auto &src = *vec[index++];
-            current.resize(4);
-            auto *const ptr = reinterpret_cast<SQLLEN*>(current.data());
-            *ptr = iIndicator;
-            if (iIndicator != SQL_NULL_DATA) {
-                copy(src.begin(), src.end(), back_inserter(current));
-            }
-            return true;
-        }
-    };
-
-    struct storage_binary : public basestorage {
-
-        SQLLEN iIndicator;
-        DatumStorage::char_vec_t current;
-        const DatumStorage::char_vec_t_vec_t& vec;
-        const vector<SQLLEN>& ind;
-        inline LPCBYTE ptr() { return (LPCBYTE)current.data(); } 
-        storage_binary(const DatumStorage::char_vec_t_vec_t&v, const vector<SQLLEN> & i, size_t max_len) : 
-        basestorage(),
-        vec(v),
-        ind(i) {
-            current.reserve(max_len + sizeof(SQLLEN) / sizeof(char));
-        }
-        inline size_t size() { return vec.size(); }
-        inline bool next() {
-            if (index == vec.size()) return false;
-            iIndicator = ind[index];
-            const auto &src = *vec[index++];
-            current.resize(8);
-            auto *const ptr = reinterpret_cast<SQLLEN*>(current.data());
-            *ptr = iIndicator;
-            if (iIndicator != SQL_NULL_DATA) {
-                copy(src.begin(), src.end(), back_inserter(current));
-            }
-            return true;
-        }
-    };
+    typedef storage_jagged_t<uint16_t> storage_uint16; 
+    typedef storage_jagged_t<char> storage_binary; 
 
     bcp::bcp(const shared_ptr<BoundDatumSet> param_set, shared_ptr<OdbcConnectionHandle> h) : 
         _ch(h),
