@@ -123,8 +123,8 @@ namespace mssql
     struct storage_varchar : public basestorage {
         SQLLEN iIndicator;
         DatumStorage::uint16_t_vec_t current;
-        const vector<SQLLEN>& ind;
         const DatumStorage::uint16_vec_t_vec_t& vec;
+        const vector<SQLLEN>& ind;
         inline LPCBYTE ptr() { return (LPCBYTE)current.data(); } 
         storage_varchar(const DatumStorage::uint16_vec_t_vec_t&v, const vector<SQLLEN> & i, size_t max_len) : 
         basestorage(),
