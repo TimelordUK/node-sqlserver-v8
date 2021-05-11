@@ -129,19 +129,14 @@ namespace mssql
         basestorage(),
         vec(v),
         ind(i) {
-            indicator = sizeof(SQLLEN); 
-            current.reserve(max_len + 4);
+            current.reserve(max_len + sizeof(SQLLEN) / sizeof(uint16_t));
         }
         inline size_t size() { return vec.size(); }
         inline bool next() {
             if (index == vec.size()) return false;
             iIndicator = ind[index];
-             auto &src = *vec[index++];
-            current.clear();
-            current.push_back(0);
-            current.push_back(0);
-            current.push_back(0);
-            current.push_back(0);
+            const auto &src = *vec[index++];
+            current.resize(4);
             auto *const ptr = reinterpret_cast<SQLLEN*>(current.data());
             *ptr = iIndicator;
             if (iIndicator != SQL_NULL_DATA) {
@@ -182,13 +177,14 @@ namespace mssql
 
     shared_ptr<basestorage> get_storage(shared_ptr<BoundDatum> p) {
         shared_ptr<basestorage> r;
-        auto storage = p->get_storage();
-        if (storage->isTimestamp()) {
-            r = make_shared<storage_timestamp>(*storage->timestampvec_ptr, p->get_ind_vec());
-        } else if (storage->isUint16()) {
-            r = make_shared<storage_varchar>(*storage->uint16_vec_vec_ptr, p->get_ind_vec(), p->buffer_len);
-        } else if (storage->isInt32()) {
-            r = make_shared<storage_int32>(*storage->int32vec_ptr, p->get_ind_vec());
+        const auto &storage = *p->get_storage();
+        const auto &ind = p->get_ind_vec();
+        if (storage.isTimestamp()) {
+            r = make_shared<storage_timestamp>(*storage.timestampvec_ptr, ind);
+        } else if (storage.isUint16()) {
+            r = make_shared<storage_varchar>(*storage.uint16_vec_vec_ptr, ind, p->buffer_len);
+        } else if (storage.isInt32()) {
+            r = make_shared<storage_int32>(*storage.int32vec_ptr, ind);
         }
         return r;
     }
