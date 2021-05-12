@@ -149,6 +149,7 @@ namespace mssql
     typedef storage_value_t<char> storage_char;
     typedef storage_value_t<int32_t> storage_int32;
     typedef storage_value_t<SQL_TIMESTAMP_STRUCT> storage_timestamp;
+    typedef storage_value_t<SQL_SS_TIMESTAMPOFFSET_STRUCT> storage_timestamp_offset;
     typedef storage_jagged_t<uint16_t> storage_uint16; 
     typedef storage_jagged_t<char> storage_binary; 
 
@@ -187,6 +188,8 @@ namespace mssql
         const auto &ind = p->get_ind_vec();
         if (storage.isTimestamp()) {
             r = make_shared<storage_timestamp>(*storage.timestampvec_ptr, ind);
+        } else if (storage.isTimestampOffset()) {
+              r = make_shared<storage_timestamp_offset>(*storage.timestampoffsetvec_ptr, ind);
         } else if (storage.isUint16Vec()) {
             r = make_shared<storage_uint16>(*storage.uint16_vec_vec_ptr, ind, p->buffer_len);
         } else if (storage.isCharVec()) {

@@ -114,6 +114,70 @@ suite('bcp', function () {
     }
   }
 
+  test('bcp datetimeoffset datetimeoffset - mix with nulls', testDone => {
+    async function test () {
+      const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
+      const bcp = new BcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'd1',
+            type: 'datetimeoffset'
+          },
+          {
+            name: 'd2',
+            type: 'datetimeoffset'
+          }]
+      }, i => {
+        return {
+          id: i,
+          d1: i % 2 === 0 ? null : new Date(testDate.getTime() + i * 60 * 60 * 1000),
+          d2: i % 3 === 0 ? null : new Date(testDate.getTime() - i * 60 * 60 * 1000)
+        }
+      })
+      return await bcp.runner()
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
+  test('bcp datetimeoffset datetimeoffset', testDone => {
+    async function test () {
+      const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
+      const bcp = new BcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'd1',
+            type: 'datetimeoffset'
+          },
+          {
+            name: 'd2',
+            type: 'datetimeoffset'
+          }]
+      }, i => {
+        return {
+          id: i,
+          d1: new Date(testDate.getTime() + i * 60 * 60 * 1000),
+          d2: new Date(testDate.getTime() - i * 60 * 60 * 1000)
+        }
+      })
+      return await bcp.runner()
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
   test('bcp binary binary - mix with nulls', testDone => {
     async function test () {
       const bcp = new BcpEntry({

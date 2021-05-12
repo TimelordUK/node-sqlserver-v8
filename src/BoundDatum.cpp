@@ -960,6 +960,10 @@ namespace mssql
 		// TODO: Determine proper precision and size based on version of server we're talking to
 		param_size = sql_server_2008_default_datetime_precision;
 		if (digits <= 0) digits = sql_server_2008_default_datetime_scale;
+		if (is_bcp) {
+			sql_type = SQLDATETIMEOFFSETN;
+			param_size = sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT);
+		}
 	}
 
 	void BoundDatum::bind_time_stamp_offset_array(const Local<Value>& p)
