@@ -617,7 +617,6 @@ namespace mssql
 				const auto d = num->Value();
 				encode_numeric_struct(d, static_cast<int>(param_size), 0, ns);
 				param_size = max(static_cast<unsigned int>(param_size), static_cast<unsigned int>(ns.precision));
-				//digits = max(static_cast<unsigned char>(digits),static_cast<unsigned char>(ns.scale));
 				digits = 0;
 				_indvec[i] = sizeof(SQL_NUMERIC_STRUCT);
 			}
@@ -634,6 +633,10 @@ namespace mssql
 		c_type = SQL_C_NUMERIC;
 		sql_type = SQL_NUMERIC;
 		buffer = _storage->numeric_ptr->data();
+		if (is_bcp) {
+			sql_type = SQLNUMERICN;
+			param_size = sizeof(SQL_NUMERIC_STRUCT); 
+		}
 	}
 
 	void BoundDatum::bind_tiny_int(const Local<Value>& p)
@@ -1582,7 +1585,11 @@ namespace mssql
 	{
 		if (pp->IsArray())
 		{
-			bind_double_array(pp);
+			if (is_bcp) {
+				bind_numeric_array(pp);
+			} else {
+				bind_double_array(pp);
+			}
 		}
 		else
 		{

@@ -82,6 +82,10 @@ namespace mssql
 			return existing;
 		}
 
+		inline bool isNumeric() const {
+			return numeric_ptr && !numeric_ptr->empty();
+		}
+
 		inline void ReserveNumerics(size_t len)
 		{
 			numeric_ptr = reserve_vec<SQL_NUMERIC_STRUCT>(numeric_ptr, len);
