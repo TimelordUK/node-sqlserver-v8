@@ -153,6 +153,7 @@ namespace mssql
     typedef storage_value_t<SQL_NUMERIC_STRUCT> storage_numeric_offset;
     typedef storage_jagged_t<uint16_t> storage_uint16; 
     typedef storage_jagged_t<char> storage_binary; 
+    typedef storage_value_t<SQL_SS_TIME2_STRUCT> storage_time2;
 
     bcp::bcp(const shared_ptr<BoundDatumSet> param_set, shared_ptr<OdbcConnectionHandle> h) : 
         _ch(h),
@@ -189,7 +190,9 @@ namespace mssql
         const auto &ind = p->get_ind_vec();
         if (storage.isTimestamp()) {
             r = make_shared<storage_timestamp>(*storage.timestampvec_ptr, ind);
-        } else if (storage.isTimestampOffset()) {
+        }else if (storage.isTime2()) {
+            r = make_shared<storage_time2>(*storage.time2vec_ptr, ind);
+        }else if (storage.isTimestampOffset()) {
             r = make_shared<storage_timestamp_offset>(*storage.timestampoffsetvec_ptr, ind);
         } else if (storage.isNumeric()) {
             r = make_shared<storage_numeric_offset>(*storage.numeric_ptr, ind);

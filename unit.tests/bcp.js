@@ -109,9 +109,9 @@ suite('bcp', function () {
         assert.deepStrictEqual(res[0].rows, rows)
         const toCheck = expected.slice(0, 100)
         if (this.tester) {
-          this.tester(toCheck, top)
+          this.tester(top, toCheck)
         } else {
-          assert.deepStrictEqual(toCheck, top)
+          assert.deepStrictEqual(top, toCheck)
         }
       } catch (e) {
         return e
@@ -123,6 +123,59 @@ suite('bcp', function () {
   function repeat (c, num) {
     return new Array(num + 1).join(c)
   }
+
+  function parseTime (ds) {
+    const [hours, minutes, seconds] = ds.split(':') // Using ES6 destructuring
+    // var time = "18:19:02".split(':'); // "Old" ES5 version
+    const d = new Date()
+    d.setHours(+hours) // Set the hours, using implicit type coercion
+    d.setMinutes(minutes) // You can pass Number or String. It doesn't really matter
+    d.setSeconds(seconds)
+    d.setMilliseconds(0)
+    return d
+  }
+
+  test('bcp time', testDone => {
+    const testDate = parseTime('16:47:04')
+    const rows = 2000
+    async function test () {
+      const bcp = new BcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 't1',
+            type: 'time'
+          }]
+      }, i => {
+        return {
+          id: i,
+          t1: testDate
+        }
+      }, (actual, expected) => {
+        assert.deepStrictEqual(actual.length, expected.length)
+        actual.forEach(a => {
+          const today = new Date()
+          const h = a.t1.getHours()
+          const m = a.t1.getMinutes()
+          const s = a.t1.getSeconds()
+          today.setHours(h)
+          today.setMinutes(m)
+          today.setSeconds(s)
+          today.setMilliseconds(0)
+          a.t1 = today
+        })  
+        assert.deepStrictEqual(actual, expected)
+      })
+      return await bcp.runner(rows)
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
 
   test('bcp numeric', testDone => {
     function get (i) {

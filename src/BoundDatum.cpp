@@ -867,6 +867,10 @@ namespace mssql
 
 		param_size = sql_server_2008_default_time_precision;
 		if (digits <= 0) digits = sql_server_2008_default_datetime_scale;
+		if (is_bcp) {
+			sql_type = SQLTIMEN;
+			param_size = sizeof(SQL_SS_TIME2_STRUCT);
+		}
 	}
 
 	void BoundDatum::bind_time_stamp(const Local<Value>& p)

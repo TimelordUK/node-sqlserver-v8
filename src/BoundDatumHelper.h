@@ -147,6 +147,10 @@ namespace mssql
 			timestampvec_ptr = reserve_vec<SQL_TIMESTAMP_STRUCT>(timestampvec_ptr, len);
 		}
 
+		inline bool isTime2() const {
+			return time2vec_ptr && !time2vec_ptr->empty();
+		}
+
 		inline void Reservetime2(size_t len) {
 			time2vec_ptr = reserve_vec<SQL_SS_TIME2_STRUCT>(time2vec_ptr, len);
 		}
