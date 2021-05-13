@@ -135,6 +135,38 @@ suite('bcp', function () {
     return d
   }
 
+  //  min: 'F01251E5-96A3-448D-981E-0F99D789110D',
+  //  max: '45E8F437-670D-4409-93CB-F9424A40D6EE',
+
+  test('bcp uniqueidentifier', testDone => {
+    const rows = 2000
+    async function test () {
+      const g1 = 'F01251E5-96A3-448D-981E-0F99D789110D'
+      const g2 = '45E8F437-670D-4409-93CB-F9424A40D6EE'
+      const bcp = new BcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 's1',
+            type: 'uniqueidentifier'
+          }]
+      }, i => {
+        return {
+          id: i,
+          s1: i % 2 === 0 ? g1 : g2
+        }
+      })
+      return await bcp.runner(rows)
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
   test('bcp smallint', testDone => {
     const rows = 2000
     async function test () {
