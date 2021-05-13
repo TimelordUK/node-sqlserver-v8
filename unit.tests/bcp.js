@@ -135,6 +135,33 @@ suite('bcp', function () {
     return d
   }
 
+  test('bcp bigint with nulls', testDone => {
+    const rows = 2000
+    async function test () {
+      const bcp = new BcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'n1',
+            type: 'bigint'
+          }]
+      }, i => {
+        return {
+          id: i,
+          n1: i % 2 === 0 ? null : Math.pow(2, 40) - i
+        }
+      })
+      return await bcp.runner(rows)
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
   test('bcp bigint', testDone => {
     const rows = 2000
     async function test () {
@@ -152,7 +179,7 @@ suite('bcp', function () {
       }, i => {
         return {
           id: i,
-          n1: i % 2 === 0 ? Math.pow(2,40) + i : Math.pow(2,40) - i
+          n1: i % 2 === 0 ? Math.pow(2, 40) + i : Math.pow(2, 40) - i
         }
       })
       return await bcp.runner(rows)
@@ -194,7 +221,7 @@ suite('bcp', function () {
           today.setSeconds(s)
           today.setMilliseconds(0)
           a.t1 = today
-        })  
+        })
         assert.deepStrictEqual(actual, expected)
       })
       return await bcp.runner(rows)
