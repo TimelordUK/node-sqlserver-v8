@@ -135,6 +135,33 @@ suite('bcp', function () {
     return d
   }
 
+  test('bcp bigint', testDone => {
+    const rows = 2000
+    async function test () {
+      const bcp = new BcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'n1',
+            type: 'bigint'
+          }]
+      }, i => {
+        return {
+          id: i,
+          n1: i % 2 === 0 ? Math.pow(2,40) + i : Math.pow(2,40) - i
+        }
+      })
+      return await bcp.runner(rows)
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
   test('bcp time', testDone => {
     const testDate = parseTime('16:47:04')
     const rows = 2000

@@ -147,7 +147,9 @@ namespace mssql
     };
 
     typedef storage_value_t<char> storage_char;
+    typedef storage_value_t<int16_t> storage_int16;
     typedef storage_value_t<int32_t> storage_int32;
+    typedef storage_value_t<int64_t> storage_int64;
     typedef storage_value_t<SQL_TIMESTAMP_STRUCT> storage_timestamp;
     typedef storage_value_t<SQL_SS_TIMESTAMPOFFSET_STRUCT> storage_timestamp_offset;
     typedef storage_value_t<SQL_NUMERIC_STRUCT> storage_numeric_offset;
@@ -194,15 +196,19 @@ namespace mssql
             r = make_shared<storage_time2>(*storage.time2vec_ptr, ind);
         }else if (storage.isTimestampOffset()) {
             r = make_shared<storage_timestamp_offset>(*storage.timestampoffsetvec_ptr, ind);
-        } else if (storage.isNumeric()) {
+        }else if (storage.isNumeric()) {
             r = make_shared<storage_numeric_offset>(*storage.numeric_ptr, ind);
-        }else if (storage.isUint16Vec()) {
-            r = make_shared<storage_uint16>(*storage.uint16_vec_vec_ptr, ind, p->buffer_len);
-        } else if (storage.isCharVec()) {
+        }else if (storage.isCharVec()) {
             r = make_shared<storage_binary>(*storage.char_vec_vec_ptr, ind, p->buffer_len);
+        }else if (storage.isInt64()) {
+            r = make_shared<storage_int64>(*storage.int64vec_ptr, ind);
         }else if (storage.isInt32()) {
             r = make_shared<storage_int32>(*storage.int32vec_ptr, ind);
-        } else if (storage.isChar()) {
+        }else if (storage.isInt16()) {
+            r = make_shared<storage_int16>(*storage.int16vec_ptr, ind);
+        }else if (storage.isUint16Vec()) {
+            r = make_shared<storage_uint16>(*storage.uint16_vec_vec_ptr, ind, p->buffer_len);
+        }else if (storage.isChar()) {
             r = make_shared<storage_char>(*storage.charvec_ptr, ind);
         }
         return r;

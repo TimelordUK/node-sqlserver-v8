@@ -1021,6 +1021,10 @@ namespace mssql
 		buffer_len = size * len;
 		param_size = size;
 		digits = 0;
+		if (is_bcp) {
+			sql_type = SQLINT8;
+			param_size = sizeof(int64_t);
+		}
 	}
 
 	void BoundDatum::bind_integer_array(const Local<Value>& p)
