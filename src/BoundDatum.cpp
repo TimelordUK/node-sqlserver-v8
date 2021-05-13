@@ -1594,7 +1594,7 @@ namespace mssql
 	{
 		if (pp->IsArray())
 		{
-			bind_uint32_array(pp);
+			bind_int32_array(pp);
 			if (!is_bcp) {
 				sql_type = SQL_SMALLINT;
 			}
