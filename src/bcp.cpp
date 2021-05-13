@@ -147,12 +147,13 @@ namespace mssql
     };
 
     typedef storage_value_t<char> storage_char;
+    typedef storage_value_t<double> storage_double;
     typedef storage_value_t<int16_t> storage_int16;
     typedef storage_value_t<int32_t> storage_int32;
     typedef storage_value_t<int64_t> storage_int64;
     typedef storage_value_t<SQL_TIMESTAMP_STRUCT> storage_timestamp;
     typedef storage_value_t<SQL_SS_TIMESTAMPOFFSET_STRUCT> storage_timestamp_offset;
-    typedef storage_value_t<SQL_NUMERIC_STRUCT> storage_numeric_offset;
+    typedef storage_value_t<SQL_NUMERIC_STRUCT> storage_numeric;
     typedef storage_jagged_t<uint16_t> storage_uint16; 
     typedef storage_jagged_t<char> storage_binary; 
     typedef storage_value_t<SQL_SS_TIME2_STRUCT> storage_time2;
@@ -197,7 +198,9 @@ namespace mssql
         }else if (storage.isTimestampOffset()) {
             r = make_shared<storage_timestamp_offset>(*storage.timestampoffsetvec_ptr, ind);
         }else if (storage.isNumeric()) {
-            r = make_shared<storage_numeric_offset>(*storage.numeric_ptr, ind);
+            r = make_shared<storage_numeric>(*storage.numeric_ptr, ind);
+        }else if (storage.isDouble()) {
+            r = make_shared<storage_double>(*storage.doublevec_ptr, ind);
         }else if (storage.isCharVec()) {
             r = make_shared<storage_binary>(*storage.char_vec_vec_ptr, ind, p->buffer_len);
         }else if (storage.isInt64()) {

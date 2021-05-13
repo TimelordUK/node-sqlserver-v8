@@ -135,6 +135,84 @@ suite('bcp', function () {
     return d
   }
 
+  test('bcp real with null', testDone => {
+    function get (i) {
+      const v = Math.sqrt(i + 1)
+      return Math.round(v * 1e6) / 1e6
+    }
+    const rows = 2000
+    async function test () {
+      const bcp = new BcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'r1',
+            type: 'real'
+          }]
+      }, i => {
+        return {
+          id: i,
+          r1: i % 2 === 0 ? null : get(i) * 2
+        }
+      }, (actual, expected) => {
+        assert.deepStrictEqual(actual.length, expected.length)
+        for (let i = 0; i < actual.length; ++i) {
+          const lhs = actual[i]
+          const rhs = expected[i]
+          assert.deepStrictEqual(lhs.id, rhs.id)
+          assert(Math.abs(lhs.r1 - rhs.r1) < 1e-5)
+        }
+      })
+      return await bcp.runner(rows)
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
+  test('bcp real', testDone => {
+    function get (i) {
+      const v = Math.sqrt(i + 1)
+      return Math.round(v * 1e6) / 1e6
+    }
+    const rows = 2000
+    async function test () {
+      const bcp = new BcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'r1',
+            type: 'real'
+          }]
+      }, i => {
+        return {
+          id: i,
+          r1: i % 2 === 0 ? get(i) : get(i) * 2
+        }
+      }, (actual, expected) => {
+        assert.deepStrictEqual(actual.length, expected.length)
+        for (let i = 0; i < actual.length; ++i) {
+          const lhs = actual[i]
+          const rhs = expected[i]
+          assert.deepStrictEqual(lhs.id, rhs.id)
+          assert(Math.abs(lhs.r1 - rhs.r1) < 1e-5)
+        }
+      })
+      return await bcp.runner(rows)
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
   test('bcp bigint with nulls', testDone => {
     const rows = 2000
     async function test () {
@@ -593,11 +671,11 @@ suite('bcp', function () {
           },
           {
             name: 's1',
-            type: 'VARCHAR (255) NULL'
+            type: 'VARCHAR (255)'
           },
           {
             name: 's2',
-            type: 'VARCHAR (100) NULL'
+            type: 'VARCHAR (100)'
           }]
       }, i => {
         return {

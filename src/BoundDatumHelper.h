@@ -148,6 +148,10 @@ namespace mssql
 			int64vec_ptr = reserve_vec<int64_t>(int64vec_ptr, len);
 		}
 
+		inline bool isDouble() const {
+			return doublevec_ptr && !doublevec_ptr->empty();
+		}
+
 		inline void ReserveDouble(size_t len)
 		{
 			doublevec_ptr = reserve_vec<double>(doublevec_ptr, len);

@@ -1083,6 +1083,10 @@ namespace mssql
 		buffer_len = size * len;
 		param_size = size;
 		digits = 0;
+		if (is_bcp) {
+			sql_type = SQLFLT8;
+			param_size = sizeof(double);
+		}
 	}
 
 	void BoundDatum::bind_double_array(const Local<Value>& p)
@@ -1100,7 +1104,11 @@ namespace mssql
 			if (local_elem->IsNullOrUndefined()) continue;
 			const auto v = Nan::To<double>(local_elem).ToChecked();
 			vec[i] = v;
-			_indvec[i] = 0;
+			if (is_bcp) {
+				_indvec[i] = sizeof(double);
+			} else {
+				_indvec[i] = 0;
+			}
 		}
 	}
 
@@ -1542,7 +1550,9 @@ namespace mssql
 		if (pp->IsArray())
 		{
 			bind_double_array(pp);
-			sql_type = SQL_FLOAT;
+			if (!is_bcp) {
+				sql_type = SQL_FLOAT;
+			}
 		}
 		else
 		{
@@ -1555,7 +1565,9 @@ namespace mssql
 		if (pp->IsArray())
 		{
 			bind_double_array(pp);
-			sql_type = SQL_REAL;
+			if (!is_bcp) {
+				sql_type = SQL_REAL;
+			}
 		}
 		else
 		{
