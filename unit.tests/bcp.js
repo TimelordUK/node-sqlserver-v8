@@ -135,6 +135,59 @@ suite('bcp', function () {
     return d
   }
 
+  class Employee {
+    constructor (tableName) {
+      this.tableName = tableName
+    }
+
+    dropCreate (name) {
+      return new Promise((resolve, reject) => {
+        helper.dropCreateTable({
+          tableName: name
+        }, (e) => {
+          if (e) {
+            reject(e)
+          } else {
+            resolve(null)
+          }
+        })
+      })
+    }
+
+    async create () {
+      const promisedQuery = util.promisify(theConnection.query)
+      const dropTableSql = `IF OBJECT_ID('${this.tableName}', 'U') IS NOT NULL DROP TABLE ${this.tableName};`
+      const tm = theConnection.tableMgr()
+      const promisedGetTable = util.promisify(tm.getTable)
+      await promisedQuery(dropTableSql)
+      await this.dropCreate(this.tableName)
+      const table = await promisedGetTable(this.tableName)
+      return table
+    }
+
+    async insrtSelect (table) {
+      const parsedJSON = helper.getJSON()
+      table.setUseBcp(true)
+      const promisedInsert = util.promisify(table.insertRows)
+      const promisedSelect = util.promisify(table.selectRows)
+      await promisedInsert(parsedJSON)
+      const keys = helper.extractKey(parsedJSON, 'BusinessEntityID')
+      const results = await promisedSelect(keys)
+      assert.deepStrictEqual(results, parsedJSON, 'results didn\'t match')
+    }
+  }
+
+  test('employee via bcp', testDone => {
+    async function test () {
+      const employee = new Employee('employee')
+      const table = await employee.create()
+      await employee.insrtSelect(table)
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
   //  min: 'F01251E5-96A3-448D-981E-0F99D789110D',
   //  max: '45E8F437-670D-4409-93CB-F9424A40D6EE',
 
