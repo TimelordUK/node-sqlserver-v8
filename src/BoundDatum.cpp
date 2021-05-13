@@ -1580,7 +1580,9 @@ namespace mssql
 		if (pp->IsArray())
 		{
 			bind_int32_array(pp);
-			sql_type = SQL_TINYINT;
+			if (!is_bcp) {
+				sql_type = SQL_TINYINT;
+			}
 		}
 		else
 		{
@@ -1593,7 +1595,9 @@ namespace mssql
 		if (pp->IsArray())
 		{
 			bind_uint32_array(pp);
-			sql_type = SQL_SMALLINT;
+			if (!is_bcp) {
+				sql_type = SQL_SMALLINT;
+			}
 		}
 		else
 		{

@@ -135,6 +135,33 @@ suite('bcp', function () {
     return d
   }
 
+  test('bcp tinyint', testDone => {
+    const rows = 2000
+    async function test () {
+      const bcp = new BcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'n1',
+            type: 'tinyint'
+          }]
+      }, i => {
+        return {
+          id: i,
+          n1: i % 255
+        }
+      })
+      return await bcp.runner(rows)
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
   test('bcp real with null', testDone => {
     function get (i) {
       const v = Math.sqrt(i + 1)
