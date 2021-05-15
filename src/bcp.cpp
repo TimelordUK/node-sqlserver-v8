@@ -225,7 +225,6 @@ namespace mssql
     }
 
     bool bcp::bind() {
-		int column = 0;
         const auto &ch = *_ch;
         auto& ps = *_param_set;
 		for (auto itr = ps.begin(); itr != ps.end(); ++itr)
@@ -233,7 +232,7 @@ namespace mssql
 			const auto& p = *itr;
             const auto s = get_storage(p);
             _storage.push_back(s);
-            if (plugin.bcp_bind(ch, s->ptr(), s->indicator, p->param_size, p->bcp_terminator, p->bcp_terminator_len, p->sql_type, ++column) == FAIL)  
+            if (plugin.bcp_bind(ch, s->ptr(), s->indicator, p->param_size, p->bcp_terminator, p->bcp_terminator_len, p->sql_type, p->ordinal_position) == FAIL)  
    			{  
 				ch.read_errors(_errors);  
    				return false;  

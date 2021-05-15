@@ -165,23 +165,72 @@ suite('bcp', function () {
       return table
     }
 
-    async insrtSelect (table) {
+    createEmployees (count) {
       const parsedJSON = helper.getJSON()
+      const res = []
+      for (let i = 0; i < count; ++i) {
+        const x = helper.cloneEmployee(parsedJSON[i % parsedJSON.length])
+        x.BusinessEntityID = i
+        res.push(x)
+      }
+      return res
+    }
+
+    async insertSelect (table) {
+      const parsedJSON = this.createEmployees(10)
       table.setUseBcp(true)
       const promisedInsert = util.promisify(table.insertRows)
       const promisedSelect = util.promisify(table.selectRows)
+      const d = new Date()
       await promisedInsert(parsedJSON)
+      console.log(`ms = ${new Date() - d}`)
       const keys = helper.extractKey(parsedJSON, 'BusinessEntityID')
       const results = await promisedSelect(keys)
       assert.deepStrictEqual(results, parsedJSON, 'results didn\'t match')
     }
   }
 
-  test('employee via bcp', testDone => {
+  test('bcp bit bit', testDone => {
     async function test () {
-      const employee = new Employee('employee')
-      const table = await employee.create()
-      await employee.insrtSelect(table)
+      const bcp = new BcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'b1',
+            type: 'bit'
+          },
+          {
+            name: 'b2',
+            type: 'bit'
+          }]
+      }, i => {
+        return {
+          id: i,
+          b1: i % 2 === 0,
+          b2: i % 3 === 0
+        }
+      })
+      return await bcp.runner()
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
+  /*
+  test('bcp employee', testDone => {
+    async function test () {
+      try {
+        const employee = new Employee('employee')
+        const table = await employee.create()
+        await employee.insertSelect(table)
+      } catch (e) {
+        return e
+      }
     }
     test().then((e) => {
       testDone(e)
@@ -218,7 +267,7 @@ suite('bcp', function () {
     test().then((e) => {
       testDone(e)
     })
-  })
+  }) */
 
   test('bcp smallint', testDone => {
     const rows = 2000
@@ -664,37 +713,6 @@ suite('bcp', function () {
           id: i,
           b1: i % 2 === 0 ? null : i % 3 === 0,
           b2: i % 3 === 0 ? null : i % 5 === 0
-        }
-      })
-      return await bcp.runner()
-    }
-    test().then((e) => {
-      testDone(e)
-    })
-  })
-
-  test('bcp bit bit', testDone => {
-    async function test () {
-      const bcp = new BcpEntry({
-        tableName: 'test_table_bcp',
-        columns: [
-          {
-            name: 'id',
-            type: 'INT PRIMARY KEY'
-          },
-          {
-            name: 'b1',
-            type: 'bit'
-          },
-          {
-            name: 'b2',
-            type: 'bit'
-          }]
-      }, i => {
-        return {
-          id: i,
-          b1: i % 2 === 0,
-          b2: i % 3 === 0
         }
       })
       return await bcp.runner()

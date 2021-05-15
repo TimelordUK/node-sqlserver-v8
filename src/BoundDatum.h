@@ -40,6 +40,7 @@ namespace mssql
 			param_type(SQL_PARAM_INPUT),
 			offset(0),
 			is_bcp(false),
+			ordinal_position(0),
 			bcp_terminator_len(0),
 			bcp_terminator(NULL),
 			is_tvp(false),
@@ -75,6 +76,7 @@ namespace mssql
 		uint16_t param_type;
 		int32_t offset;
 		bool is_bcp;
+		uint32_t ordinal_position;
 		SQLULEN bcp_terminator_len;
 		LPCBYTE bcp_terminator;
 

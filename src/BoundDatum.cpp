@@ -1447,6 +1447,12 @@ namespace mssql
 				{
 					_storage->table = wide_from_js_string(table_name_str);
 				}
+				const auto position = get("ordinal_position", pv);
+				if (!position->IsUndefined())
+				{
+					const auto maybe_offset = position->Int32Value(context);
+					ordinal_position = static_cast<uint32_t>(maybe_offset.FromMaybe(0));
+				}		
 			 }
 		}
 

@@ -372,6 +372,28 @@ function DemoSupport (native) {
       }
     }
 
+    function cloneEmployee (src) {
+      const res = {
+        BusinessEntityID: src.BusinessEntityID,
+        NationalIDNumber: src.NationalIDNumber,
+        LoginID: src.LoginID,
+        OrganizationNode: src.OrganizationNode,
+        OrganizationLevel: src.OrganizationLevel,
+        JobTitle: src.JobTitle,
+        BirthDate: src.BirthDate,
+        MaritalStatus: src.MaritalStatus,
+        Gender: src.Gender,
+        HireDate: src.HireDate,
+        SalariedFlag: src.SalariedFlag,
+        VacationHours: src.VacationHours,
+        SickLeaveHours: src.SickLeaveHours,
+        CurrentFlag: src.CurrentFlag,
+        rowguid: src.rowguid,
+        ModifiedDate: src.ModifiedDate
+      }
+      return res
+    }
+
     function getJSON (stem) {
       const p = stem || '../../unit.tests/json'
       const folder = path.join(__dirname, p)
@@ -397,6 +419,7 @@ function DemoSupport (native) {
     this.dropCreateTable = dropCreateTable
     this.extractKey = extractKey
     this.setVerbose = setVerbose
+    this.cloneEmployee = cloneEmployee
 
     return this
   }
