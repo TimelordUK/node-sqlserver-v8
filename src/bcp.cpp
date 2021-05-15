@@ -294,13 +294,13 @@ namespace mssql
             if (_errors->empty()) {
                 _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to bind yet no error was returned.", -1, 0, "", "", 0));
             }
-            return -1;
+            return done();
         }
         if (!send()) {
             if (_errors->empty()) {
                 _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to send yet no error was returned.", -1, 0, "", "", 0));
             }
-            return -1;
+            return done();
         }
         return done();
     }

@@ -96,12 +96,13 @@ suite('bcp', function () {
       for (let i = 0; i < rows; ++i) {
         expected.push(this.factory(i))
       }
-      theConnection.setUseUTC(false)
-      const table = await helper.create()
-      table.setUseBcp(true)
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedQuery = util.promisify(theConnection.query)
       try {
+        theConnection.setUseUTC(false)
+        const table = await helper.create()
+        table.setUseBcp(true)
+        const promisedInsert = util.promisify(table.insertRows)
+        const promisedQuery = util.promisify(theConnection.query)
+
         await promisedInsert(expected)
         const res = await promisedQuery(`select count(*) as rows from ${this.definition.tableName}`)
         assert.deepStrictEqual(res[0].rows, rows)
@@ -190,6 +191,58 @@ suite('bcp', function () {
     }
   }
 
+  test('bcp small binary', testDone => {
+    async function test () {
+      const bcp = new BcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'b1',
+            type: 'varbinary(10)'
+          }]
+      }, i => {
+        return {
+          id: i,
+          b1: i % 2 === 0 ? Buffer.from('5AE178', 'hex') : Buffer.from('', 'hex')
+        }
+      })
+      return await bcp.runner()
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
+  test('bcp hierarchyid binary', testDone => {
+    async function test () {
+      const bcp = new BcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'b1',
+            type: 'hierarchyid'
+          }]
+      }, i => {
+        return {
+          id: i,
+          b1: i % 2 === 0 ? Buffer.from('5AE178', 'hex') : Buffer.from('', 'hex')
+        }
+      })
+      return await bcp.runner()
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
   test('bcp bit bit', testDone => {
     async function test () {
       const bcp = new BcpEntry({
@@ -221,7 +274,6 @@ suite('bcp', function () {
     })
   })
 
-  /*
   test('bcp employee', testDone => {
     async function test () {
       try {
@@ -267,7 +319,7 @@ suite('bcp', function () {
     test().then((e) => {
       testDone(e)
     })
-  }) */
+  })
 
   test('bcp smallint', testDone => {
     const rows = 2000
