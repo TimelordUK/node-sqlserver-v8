@@ -178,44 +178,18 @@ suite('bcp', function () {
     }
 
     async insertSelect (table) {
-      const parsedJSON = this.createEmployees(10)
+      const parsedJSON = this.createEmployees(1000)
       table.setUseBcp(true)
       const promisedInsert = util.promisify(table.insertRows)
       const promisedSelect = util.promisify(table.selectRows)
-      const d = new Date()
+      // const d = new Date()
       await promisedInsert(parsedJSON)
-      console.log(`ms = ${new Date() - d}`)
+      // console.log(`ms = ${new Date() - d}`)
       const keys = helper.extractKey(parsedJSON, 'BusinessEntityID')
       const results = await promisedSelect(keys)
       assert.deepStrictEqual(results, parsedJSON, 'results didn\'t match')
     }
   }
-
-  test('bcp small binary', testDone => {
-    async function test () {
-      const bcp = new BcpEntry({
-        tableName: 'test_table_bcp',
-        columns: [
-          {
-            name: 'id',
-            type: 'INT PRIMARY KEY'
-          },
-          {
-            name: 'b1',
-            type: 'varbinary(10)'
-          }]
-      }, i => {
-        return {
-          id: i,
-          b1: i % 2 === 0 ? Buffer.from('5AE178', 'hex') : Buffer.from('', 'hex')
-        }
-      })
-      return await bcp.runner()
-    }
-    test().then((e) => {
-      testDone(e)
-    })
-  })
 
   test('bcp hierarchyid binary', testDone => {
     async function test () {
@@ -229,6 +203,32 @@ suite('bcp', function () {
           {
             name: 'b1',
             type: 'hierarchyid'
+          }]
+      }, i => {
+        return {
+          id: i,
+          b1: i % 2 === 0 ? Buffer.from('5AE178', 'hex') : Buffer.from('58', 'hex')
+        }
+      })
+      return await bcp.runner()
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
+  test('bcp small binary', testDone => {
+    async function test () {
+      const bcp = new BcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'b1',
+            type: 'varbinary(10)'
           }]
       }, i => {
         return {

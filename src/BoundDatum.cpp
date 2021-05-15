@@ -190,8 +190,47 @@ namespace mssql
 		return str_len;
 	}
 
+	void BoundDatum::bind_var_char_array_bcp(const Local<Value>& p)
+	{
+		const auto arr = Local<Array>::Cast(p);
+		const auto array_len = arr->Length();
+		_storage->ReserveCharVec(array_len);
+		_indvec.resize(array_len);
+		sql_type = SQLVARCHAR;
+		param_size = SQL_VARLEN_DATA;
+		buffer_len = get_max_str_len(p);
+		auto & vec = *_storage->char_vec_vec_ptr;
+		for (uint32_t i = 0; i < array_len; ++i)
+		{
+			_indvec[i] = SQL_NULL_DATA;
+			auto elem = Nan::Get(arr, i);
+			if (elem.IsEmpty()) continue;
+			const auto local_elem = elem.ToLocalChecked();
+			if (local_elem->IsNullOrUndefined()) {
+				continue;
+			}
+			auto maybe_value = Nan::To<String>(elem.ToLocalChecked());
+			const auto str = maybe_value.FromMaybe(Nan::EmptyString()); 	
+			const auto width = str->Length();
+			_indvec[i] = width;
+			Nan::Utf8String x(str);
+			auto *x_p = *x;
+			_indvec[i] = width;
+			auto store = make_shared<DatumStorage::char_vec_t>(width);
+			store->reserve(width);
+			store->resize(width);
+			vec[i] = store;
+			auto itr = store->data();
+			memcpy(&*itr, x_p, width);		
+		}
+	}
+
 	void BoundDatum::bind_var_char_array(const Local<Value>& p)
 	{
+		if (is_bcp) {
+			bind_var_char_array_bcp(p);
+			return;
+		}
 		const auto max_str_len = max(1, get_max_str_len(p));
 		const auto arr = Local<Array>::Cast(p);
 		const auto array_len = arr->Length();
@@ -1647,7 +1686,11 @@ namespace mssql
 	{
 		if (pp->IsArray())
 		{
-			bind_w_var_char_array(pp);
+			if (is_bcp) {
+				bind_var_char_array(pp);
+			} else {
+				bind_w_var_char_array(pp);
+			}
 		}
 		else
 		{
@@ -1761,6 +1804,10 @@ namespace mssql
 			sql_integer(pp);
 			break;
 
+		case SQL_VARCHAR:
+			sql_varchar(pp);
+			break;
+
 		case SQL_WVARCHAR:
 			sql_wvarchar(pp);
 			break;
@@ -1803,10 +1850,6 @@ namespace mssql
 
 		case SQL_CHAR:
 			sql_char(pp);
-			break;
-
-		case SQL_VARCHAR:
-			sql_varchar(pp);
 			break;
 
 		case SQL_SS_TIME2:

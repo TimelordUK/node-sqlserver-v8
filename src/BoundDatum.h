@@ -171,6 +171,7 @@ namespace mssql
 		bool proc_bind(Local<Value> &p, Local<Value> &v);
 		void bind_char(const Local<Value> & pp);
 		void bind_var_char(const Local<Value> & p);
+		void bind_var_char_array_bcp(const Local<Value>& p);
 		void bind_var_char_array(const Local<Value>& p);
 		void bind_var_char(const Local<Value> & p, int precision);
 		void reserve_var_char(size_t precision, size_t  array_len);
