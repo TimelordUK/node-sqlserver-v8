@@ -33,22 +33,8 @@ namespace mssql
 		typedef vector<SQL_SS_TIMESTAMPOFFSET_STRUCT> timestamp_offset_vec_t;
 		typedef vector<SQL_SS_TIME2_STRUCT> time2_struct_vec_t;
 		typedef vector<SQL_TIMESTAMP_STRUCT> timestamp_struct_vec_t;
-		typedef vector<SQL_DATE_STRUCT > date_struct_vec_t;
+		typedef vector<SQL_DATE_STRUCT> date_struct_vec_t;
 		typedef vector<SQL_NUMERIC_STRUCT> numeric_struct_vec_t;
-
-/*
-		shared_ptr<int32_vec_t> int32vec_ptr;
-		shared_ptr<uint32_vec_t> uint32vec_ptr;
-		shared_ptr<int64_vec_t> int64vec_ptr;
-		shared_ptr<double_vec_t> doublevec_ptr;
-		shared_ptr<timestamp_offset_vec_t> timestampoffsetvec_ptr;
-		shared_ptr<time2_struct_vec_t> time2vec_ptr;
-		shared_ptr<timestamp_struct_vec_t> timestampvec_ptr;
-		shared_ptr<date_struct_vec_t> datevec_ptr;
-		shared_ptr<numeric_struct_vec_t> numeric_ptr;
-		shared_ptr<char_vec_t> charvec_ptr;
-		shared_ptr<uint16_t_vec_t> uint16vec_ptr;
-		*/
 
 		DatumStorage() :
 			int16vec_ptr(nullptr),
@@ -78,7 +64,6 @@ namespace mssql
 			{
 				if (size > existing->capacity()) {
 					existing->reserve(size);
-					//memset(existing->data(), 0, existing->capacity() * sizeof(T));
 				}
 			}
 			return existing;
@@ -132,6 +117,10 @@ namespace mssql
 		inline void ReserveInt16(size_t len)
 		{
 			int16vec_ptr = reserve_vec<int16_t>(int16vec_ptr, len);
+		}
+
+		inline bool isUInt32() const {
+			return uint32vec_ptr  && !uint32vec_ptr->empty();
 		}
 
 		inline void ReserveUInt32(size_t len)
@@ -190,6 +179,14 @@ namespace mssql
 		inline void ReserveCharVec(size_t len)
 		{
 			char_vec_vec_ptr = reserve_vec<shared_ptr<char_vec_t>>(char_vec_vec_ptr, len);
+		}
+
+		inline bool isDate() const {
+			return datevec_ptr && !datevec_ptr->empty();
+		}
+
+		inline void ReserveDate(size_t len) {
+			datevec_ptr = reserve_vec<SQL_DATE_STRUCT>(datevec_ptr, len);
 		}
 
 		shared_ptr<int16_vec_t> int16vec_ptr;

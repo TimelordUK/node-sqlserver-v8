@@ -796,7 +796,7 @@ namespace mssql
 	void BoundDatum::reserve_date(SQLLEN len)
 	{
 		buffer_len = sizeof(SQL_DATE_STRUCT);
-		_storage->datevec_ptr = make_shared<vector<SQL_DATE_STRUCT>>(len);
+		_storage->ReserveDate(len);
 		_indvec.resize(len);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC		
 		js_type = JS_DATE;
@@ -808,6 +808,10 @@ namespace mssql
 		if (param_size <= 0)
 			param_size = sql_server_2008_default_datetime_precision;
 		digits = sql_server_2008_default_datetime_scale;
+		if (is_bcp) {
+			param_size = sizeof(SQL_DATE_STRUCT);
+			sql_type = SQLDATEN;
+		}
 	}
 
 	void BoundDatum::bind_time_array(const Local<Value>& p)
