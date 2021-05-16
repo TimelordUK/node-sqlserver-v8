@@ -35,13 +35,13 @@
                // "-t", "multiple-errors", 
                // "-t", "geography",
                //"-t", "tvp",
-               // "-t", "warnings",
+               "-t", "warnings",
                // "-t", "txn",
                // "-t", "datatypes",
                // "-t", "sproc"
                // "-t", "params"
                // "-t", "bulk",
-               "-t", "bcp"
+               // "-t", "bcp"
                //"-t", "json" 
             ],
             "stopAtEntry": false,
@@ -55,15 +55,16 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/stephen/.nvm/versions/node/v16.0.0/bin/node",
+            "program": "/home/stephen/.nvm/versions/node/v15.12.0/bin/node",
             "args": [
-                "runtest", "-k", "linux",
-                "-t", "bulk", 
-                "-t", "querycancel",
-                "-t", "pause",
-                "-t", "datatypes",
-                "-t", "query",
-                "-t", "tvp"
+                "runtest", "-k", "wsl",
+                "-t", "warnings", 
+                // "-t", "bulk", 
+                // "-t", "querycancel",
+                // "-t", "pause",
+                // "-t", "datatypes",
+                // "-t", "query",
+                // "-t", "tvp"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
