@@ -178,7 +178,7 @@ suite('bcp', function () {
     }
 
     async insertSelect (table) {
-      const parsedJSON = this.createEmployees(1000)
+      const parsedJSON = this.createEmployees(100)
       table.setUseBcp(true)
       const promisedInsert = util.promisify(table.insertRows)
       const promisedSelect = util.promisify(table.selectRows)
@@ -190,6 +190,38 @@ suite('bcp', function () {
       assert.deepStrictEqual(results, parsedJSON, 'results didn\'t match')
     }
   }
+
+  test('bcp expect error duplicate primary key', testDone => {
+    const rows = 10
+    async function test () {
+      const bcp = new BcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'n1',
+            type: 'smallint'
+          }]
+      }, i => {
+        return {
+          id: i % 5,
+          n1: i % 2 === 0 ? Math.pow(2, 10) + i : -Math.pow(2, 10) - i
+        }
+      })
+      return await bcp.runner(rows)
+    }
+    /*
+'[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Violation of PRIMARY KEY constraint 'PK__test_tab__3213E83F11822873'. Cannot insert duplicate key in object 'dbo.test_table_bcp'. The duplicate key value is (0).'
+    */
+    test().then((e) => {
+      if (!e) testDone(new Error('expected violation constraint'))
+      assert(e.message.includes('Violation of PRIMARY KEY constraint'))
+      testDone()
+    })
+  })
 
   test('bcp hierarchyid binary', testDone => {
     async function test () {
@@ -414,7 +446,7 @@ suite('bcp', function () {
     })
   })
 
-  test('bcp real', testDone => {``
+  test('bcp real', testDone => {
     function get (i) {
       const v = Math.sqrt(i + 1)
       return Math.round(v * 1e6) / 1e6
