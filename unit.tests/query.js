@@ -43,7 +43,7 @@ suite('query', function () {
       driver = co.driver
       const myRegexp = /Driver=\{(.*?)\}.*$/g
       const match = myRegexp.exec(connStr)
-      driver = match[1]
+      driver = match ? match[1] : ''
       // database = co.database
       helper.setVerbose(false)
       sql.open(connStr, (err, conn) => {
@@ -465,7 +465,7 @@ suite('query', function () {
             assert(e instanceof Error)
             assert(e.serverName.length > 0)
             delete e.serverName
-            assert.deepStrictEqual(e, expectedError, 'Unexpected error returned')
+            assert(e.message.includes('Unclosed quotation mark after the character'))
             asyncDone()
           })
         })
@@ -478,7 +478,7 @@ suite('query', function () {
             assert(e instanceof Error)
             assert(e.serverName.length > 0)
             delete e.serverName
-            assert.deepStrictEqual(e, expectedError, 'Unexpected error returned')
+            assert(e.message.includes('Unclosed quotation mark after the character'))
             asyncDone()
           })
         })

@@ -58,6 +58,7 @@
             "program": "/home/stephen/.nvm/versions/node/v15.12.0/bin/node",
             "args": [
                 "runtest", "-k", "wsl",
+                "-t", "prepared", 
                 "-t", "warnings", 
                 // "-t", "bulk", 
                 // "-t", "querycancel",
