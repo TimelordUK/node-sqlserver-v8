@@ -9,6 +9,7 @@
 
       'sources': [
         'src/ConnectionHandles.cpp',
+        'src/bcp.cpp',
         'src/addon.cpp',
         'src/QueryOperationParams.cpp',
         'src/MutateJS.cpp',
@@ -62,17 +63,22 @@
            }
         ],
         [ 'OS=="win"', {
+              'link_settings': {
+             'libraries': [
+               'odbc32'
+               ],
+            },
           'defines': [
             'UNICODE=1',
-            '_UNICODE=1',
-            '_SQLNCLI_ODBC_',
             'WINDOWS_BUILD',
           ],
           }
         ],
         ['OS=="linux"', {
             'link_settings': {
-             'libraries': ['-L/usr/lib', '-lmsodbcsql-17'],
+             'libraries': [
+               '-lodbc',
+               ],
             },
             'defines': [
               'LINUX_BUILD',
@@ -88,7 +94,7 @@
         }],
         ['OS=="mac"', {
             'link_settings': {
-             'libraries': ['-L/usr/local/lib', '-lmsodbcsql.17'],
+             'libraries': ['-lodbc'],
             },
             'defines': [
               'LINUX_BUILD',
@@ -100,6 +106,7 @@
             'include_dirs': [
               '/usr/local/include/',
               '/usr/local/opt/msodbcsql17/include/',
+              '/usr/local/opt/msodbcsql17/include/msodbcsql17/'
             ],
         }],
       ]

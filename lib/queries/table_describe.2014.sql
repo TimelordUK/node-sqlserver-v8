@@ -25,7 +25,8 @@ t_name_cte(full_name, table_name) AS
 		LEFT OUTER JOIN t_exact_cte AS e ON e.id = f.id
 )
 SELECT
-    sc.table_catalog,
+  sc.ordinal_position,
+  sc.table_catalog,
 	sc.table_schema,
 	sc.table_name,
   c.name name,

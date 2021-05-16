@@ -188,42 +188,6 @@ suite('bulk', function () {
     }
   }
 
-  test('bcp int column', testDone => {
-    async function runner () {
-      const bulkTableDef = {
-        tableName: 'test_table_bcp',
-        columns: [
-          {
-            name: 'id',
-            type: 'INT PRIMARY KEY'
-          }
-        ]
-      }
-      const helper = new BulkTableTest(theConnection, bulkTableDef)
-      const expected = []
-      const rows = 1000
-      for (let i = 0; i < rows; ++i) {
-        expected.push({
-          id: i
-        })
-      }
-      theConnection.setUseUTC(false)
-      const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
-      try {
-        await promisedInsert(expected)
-        const res = await promisedSelect(expected)
-        assert.deepStrictEqual(res, expected)
-      } catch (e) {
-        assert.ifError(e)
-      }
-    }
-    runner().then(() => {
-      testDone()
-    })
-  })
-
   test('load large number rows', testDone => {
     const bulkTableDef = {
       tableName: 'test_table_bulk',
@@ -357,10 +321,11 @@ suite('bulk', function () {
     })
   })
 
+  /*
   test('use tableMgr bulk insert single date with date col', testDone => {
     async function runner () {
       const helper = new TypeTableHelper(theConnection, 'date')
-      const testDate = new Date('Mon Apr 26 2021')
+      const testDate = new Date('Mon Apr 26 2021 00:00:00 GMT-0500 (Central Daylight Time)')
       const expected = helper.getVec(1, () => testDate)
       theConnection.setUseUTC(false)
       const table = await helper.create()
@@ -374,13 +339,14 @@ suite('bulk', function () {
         })
         assert.deepStrictEqual(res, expected)
       } catch (e) {
-        assert.ifError(e)
+        return e
       }
+      return null
     }
-    runner().then(() => {
-      testDone()
+    runner().then((e) => {
+      testDone(e)
     })
-  })
+  }) */
 
   test('use tableMgr bulk insert single non UTC based date with datetime col', testDone => {
     async function runner () {

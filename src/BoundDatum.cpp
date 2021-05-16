@@ -190,8 +190,47 @@ namespace mssql
 		return str_len;
 	}
 
+	void BoundDatum::bind_var_char_array_bcp(const Local<Value>& p)
+	{
+		const auto arr = Local<Array>::Cast(p);
+		const auto array_len = arr->Length();
+		_storage->ReserveCharVec(array_len);
+		_indvec.resize(array_len);
+		sql_type = SQLVARCHAR;
+		param_size = SQL_VARLEN_DATA;
+		buffer_len = get_max_str_len(p);
+		auto & vec = *_storage->char_vec_vec_ptr;
+		for (uint32_t i = 0; i < array_len; ++i)
+		{
+			_indvec[i] = SQL_NULL_DATA;
+			auto elem = Nan::Get(arr, i);
+			if (elem.IsEmpty()) continue;
+			const auto local_elem = elem.ToLocalChecked();
+			if (local_elem->IsNullOrUndefined()) {
+				continue;
+			}
+			auto maybe_value = Nan::To<String>(elem.ToLocalChecked());
+			const auto str = maybe_value.FromMaybe(Nan::EmptyString()); 	
+			const auto width = str->Length();
+			_indvec[i] = width;
+			Nan::Utf8String x(str);
+			auto *x_p = *x;
+			_indvec[i] = width;
+			auto store = make_shared<DatumStorage::char_vec_t>(width);
+			store->reserve(width);
+			store->resize(width);
+			vec[i] = store;
+			auto itr = store->data();
+			memcpy(&*itr, x_p, width);		
+		}
+	}
+
 	void BoundDatum::bind_var_char_array(const Local<Value>& p)
 	{
+		if (is_bcp) {
+			bind_var_char_array_bcp(p);
+			return;
+		}
 		const auto max_str_len = max(1, get_max_str_len(p));
 		const auto arr = Local<Array>::Cast(p);
 		const auto array_len = arr->Length();
@@ -233,8 +272,49 @@ namespace mssql
 		}
 	}
 
+	void BoundDatum::bind_w_var_char_array_bcp(const Local<Value>& p)
+	{
+		const auto arr = Local<Array>::Cast(p);
+		const auto array_len = arr->Length();
+		_storage->ReserveUint16Vec(array_len);
+		_indvec.resize(array_len);
+		sql_type = SQLNCHAR;
+		param_size = SQL_VARLEN_DATA;
+		buffer_len = get_max_str_len(p) + 1;
+		bcp_terminator = reinterpret_cast<LPCBYTE>(L"");
+		bcp_terminator_len = sizeof(WCHAR);
+		auto & vec = *_storage->uint16_vec_vec_ptr;
+		for (uint32_t i = 0; i < array_len; ++i)
+		{
+			_indvec[i] = SQL_NULL_DATA;
+			auto elem = Nan::Get(arr, i);
+			if (elem.IsEmpty()) continue;
+			const auto local_elem = elem.ToLocalChecked();
+			if (local_elem->IsNullOrUndefined()) {
+				continue;
+			}
+			auto maybe_value = Nan::To<String>(local_elem);
+			const auto str = maybe_value.FromMaybe(Nan::EmptyString()); 	
+			const auto len = str->Length();
+			const auto size = sizeof(uint16_t);
+			auto store = make_shared<DatumStorage::uint16_t_vec_t>(len);
+			store->reserve(len);
+			store->resize(len);
+			vec[i] = store;
+			auto itr = store->data();
+			const auto width = len * size;
+			_indvec[i] = width;
+			Nan::DecodeWrite(reinterpret_cast<char*>(&*itr), str->Length()*2, str, Nan::UCS2);
+			store->push_back(0);
+		}
+	}
+
 	void BoundDatum::bind_w_var_char_array(const Local<Value>& p)
 	{
+		if (is_bcp) {
+			bind_w_var_char_array_bcp(p);
+			return;
+		}
 		const auto max_str_len = max(1, get_max_str_len(p));
 		const auto arr = Local<Array>::Cast(p);
 		const auto array_len = arr->Length();
@@ -424,8 +504,48 @@ namespace mssql
 		}
 	}
 
+	void BoundDatum::bind_var_binary_array_bcp(const Local<Value>& p)
+	{
+		const auto arr = Local<Array>::Cast(p);
+		const auto array_len = arr->Length();
+		_storage->ReserveCharVec(array_len);
+		_indvec.resize(array_len);
+		sql_type = SQLVARBINARY;
+		param_size = SQL_VARLEN_DATA;
+		buffer_len = get_max_object_len(p);
+		auto & vec = *_storage->char_vec_vec_ptr;
+		for (uint32_t i = 0; i < array_len; ++i)
+		{
+			_indvec[i] = SQL_NULL_DATA;
+			auto elem = Nan::Get(arr, i);
+			if (elem.IsEmpty()) continue;
+			const auto local_elem = elem.ToLocalChecked();
+			if (local_elem->IsNullOrUndefined()) {
+				continue;
+			}
+			auto maybe_value = Nan::To<Object>(local_elem);
+			if (maybe_value.IsEmpty()) continue;
+			const auto local_instance = maybe_value.ToLocalChecked();
+			if (local_instance->IsNullOrUndefined()) continue;
+			auto* const ptr = node::Buffer::Data(local_instance);
+			const auto obj_len = node::Buffer::Length(local_instance);
+			_indvec[i] = obj_len;
+			auto store = make_shared<DatumStorage::char_vec_t>(obj_len);
+			store->reserve(obj_len);
+			store->resize(obj_len);
+			vec[i] = store;
+			auto itr = store->data();
+			memcpy(&*itr, ptr, obj_len);		
+		}
+	}
+
 	void BoundDatum::bind_var_binary_array(const Local<Value>& p)
 	{
+		if (is_bcp) {
+			bind_var_binary_array_bcp(p);
+			return;
+		}
+
 		const auto arr = Local<Array>::Cast(p);
 		const auto array_len = arr->Length();
 		const auto max_obj_len = get_max_object_len(p);
@@ -478,7 +598,7 @@ namespace mssql
 				const auto v = MutateJS::as_boolean(elem);
 				const auto b = !v ? 0 : 1;
 				vec[i] = static_cast<char>(b);
-				_indvec[i] = 0;
+				_indvec[i] = is_bcp ? sizeof(int8_t) : 0;
 			}
 		}
 	}
@@ -495,6 +615,10 @@ namespace mssql
 		buffer = _storage->charvec_ptr->data();
 		param_size = size;
 		digits = 0;
+		if (is_bcp) {
+			sql_type = SQLBIT;
+			param_size = sizeof(DBBIT);
+		}
 	}
 
 	void BoundDatum::bind_numeric(const Local<Value>& p)
@@ -532,7 +656,6 @@ namespace mssql
 				const auto d = num->Value();
 				encode_numeric_struct(d, static_cast<int>(param_size), 0, ns);
 				param_size = max(static_cast<unsigned int>(param_size), static_cast<unsigned int>(ns.precision));
-				//digits = max(static_cast<unsigned char>(digits),static_cast<unsigned char>(ns.scale));
 				digits = 0;
 				_indvec[i] = sizeof(SQL_NUMERIC_STRUCT);
 			}
@@ -549,6 +672,10 @@ namespace mssql
 		c_type = SQL_C_NUMERIC;
 		sql_type = SQL_NUMERIC;
 		buffer = _storage->numeric_ptr->data();
+		if (is_bcp) {
+			sql_type = SQLNUMERICN;
+			param_size = sizeof(SQL_NUMERIC_STRUCT); 
+		}
 	}
 
 	void BoundDatum::bind_tiny_int(const Local<Value>& p)
@@ -594,7 +721,7 @@ namespace mssql
 				if (local_elem->IsNullOrUndefined()) continue;
 				const auto local = Nan::To<Int32>(local_elem).FromMaybe(Nan::New<Int32>(0));
 				vec[i] = local->Value();
-				_indvec[i] = 0;
+				_indvec[i] = is_bcp ? sizeof(int32_t) : 0;
 			}
 		}
 	}
@@ -611,6 +738,10 @@ namespace mssql
 		buffer = _storage->int32vec_ptr->data();
 		param_size = size;
 		digits = 0;
+		if (is_bcp) {
+			sql_type = SQLINT4;
+			param_size = sizeof(DBINT);
+		}
 	}
 
 	void BoundDatum::bind_uint32(const Local<Value>& p)
@@ -704,7 +835,7 @@ namespace mssql
 	void BoundDatum::reserve_date(SQLLEN len)
 	{
 		buffer_len = sizeof(SQL_DATE_STRUCT);
-		_storage->datevec_ptr = make_shared<vector<SQL_DATE_STRUCT>>(len);
+		_storage->ReserveDate(len);
 		_indvec.resize(len);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC		
 		js_type = JS_DATE;
@@ -716,6 +847,10 @@ namespace mssql
 		if (param_size <= 0)
 			param_size = sql_server_2008_default_datetime_precision;
 		digits = sql_server_2008_default_datetime_scale;
+		if (is_bcp) {
+			param_size = sizeof(SQL_DATE_STRUCT);
+			sql_type = SQLDATEN;
+		}
 	}
 
 	void BoundDatum::bind_time_array(const Local<Value>& p)
@@ -775,6 +910,10 @@ namespace mssql
 
 		param_size = sql_server_2008_default_time_precision;
 		if (digits <= 0) digits = sql_server_2008_default_datetime_scale;
+		if (is_bcp) {
+			sql_type = SQLTIMEN;
+			param_size = sizeof(SQL_SS_TIME2_STRUCT);
+		}
 	}
 
 	void BoundDatum::bind_time_stamp(const Local<Value>& p)
@@ -814,7 +953,7 @@ namespace mssql
 				const auto ms = local->Value() - offset * 60000;
 				const TimestampColumn sql_date(-1, ms);
 				sql_date.to_timestamp_struct(ts);
-				_indvec[i] = buffer_len;
+				_indvec[i] = sizeof(SQL_TIMESTAMP_STRUCT);
 			}
 		}
 	}
@@ -833,6 +972,10 @@ namespace mssql
 		// TODO: Determine proper precision and size based on version of server we're talking to
 		param_size = sql_server_2008_default_timestamp_precision;
 		if (digits <= 0) digits = sql_server_2008_default_datetime_scale;
+		if (is_bcp) {
+			sql_type = SQLDATETIME2N;
+			param_size = sizeof(SQL_TIMESTAMP_STRUCT);
+		}
 	}
 
 	void BoundDatum::bind_time_stamp_offset(const Local<Value>& p)
@@ -867,6 +1010,10 @@ namespace mssql
 		// TODO: Determine proper precision and size based on version of server we're talking to
 		param_size = sql_server_2008_default_datetime_precision;
 		if (digits <= 0) digits = sql_server_2008_default_datetime_scale;
+		if (is_bcp) {
+			sql_type = SQLDATETIMEOFFSETN;
+			param_size = sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT);
+		}
 	}
 
 	void BoundDatum::bind_time_stamp_offset_array(const Local<Value>& p)
@@ -917,6 +1064,10 @@ namespace mssql
 		buffer_len = size * len;
 		param_size = size;
 		digits = 0;
+		if (is_bcp) {
+			sql_type = SQLINT8;
+			param_size = sizeof(int64_t);
+		}
 	}
 
 	void BoundDatum::bind_integer_array(const Local<Value>& p)
@@ -975,6 +1126,10 @@ namespace mssql
 		buffer_len = size * len;
 		param_size = size;
 		digits = 0;
+		if (is_bcp) {
+			sql_type = SQLFLT8;
+			param_size = sizeof(double);
+		}
 	}
 
 	void BoundDatum::bind_double_array(const Local<Value>& p)
@@ -992,7 +1147,11 @@ namespace mssql
 			if (local_elem->IsNullOrUndefined()) continue;
 			const auto v = Nan::To<double>(local_elem).ToChecked();
 			vec[i] = v;
-			_indvec[i] = 0;
+			if (is_bcp) {
+				_indvec[i] = sizeof(double);
+			} else {
+				_indvec[i] = 0;
+			}
 		}
 	}
 
@@ -1309,13 +1468,31 @@ namespace mssql
 
 	void BoundDatum::assign_precision(Local<Object>& pv)
 	{
-		const nodeTypeFactory fact;
-		const auto context = fact.isolate->GetCurrentContext();
+		const auto context = Nan::GetCurrentContext();
 		const auto precision = get("precision", pv);
 		if (!precision->IsUndefined())
 		{
 			const auto maybe_param_size = precision->Int32Value(context);
 			param_size = maybe_param_size.FromMaybe(0);
+		}
+
+		const auto bcp = get("bcp", pv);
+		if (!bcp->IsUndefined())
+		{
+			 is_bcp = Nan::To<bool>(bcp).ToChecked();
+			 if (is_bcp) {
+				const auto table_name_str = get_as_string(pv, "table_name");
+				if (!table_name_str->IsNullOrUndefined())
+				{
+					_storage->table = wide_from_js_string(table_name_str);
+				}
+				const auto position = get("ordinal_position", pv);
+				if (!position->IsUndefined())
+				{
+					const auto maybe_offset = position->Int32Value(context);
+					ordinal_position = static_cast<uint32_t>(maybe_offset.FromMaybe(0));
+				}		
+			 }
 		}
 
 		const auto scale = get("scale", pv);
@@ -1422,7 +1599,9 @@ namespace mssql
 		if (pp->IsArray())
 		{
 			bind_double_array(pp);
-			sql_type = SQL_FLOAT;
+			if (!is_bcp) {
+				sql_type = SQL_FLOAT;
+			}
 		}
 		else
 		{
@@ -1435,7 +1614,9 @@ namespace mssql
 		if (pp->IsArray())
 		{
 			bind_double_array(pp);
-			sql_type = SQL_REAL;
+			if (!is_bcp) {
+				sql_type = SQL_REAL;
+			}
 		}
 		else
 		{
@@ -1448,7 +1629,9 @@ namespace mssql
 		if (pp->IsArray())
 		{
 			bind_int32_array(pp);
-			sql_type = SQL_TINYINT;
+			if (!is_bcp) {
+				sql_type = SQL_TINYINT;
+			}
 		}
 		else
 		{
@@ -1460,8 +1643,10 @@ namespace mssql
 	{
 		if (pp->IsArray())
 		{
-			bind_uint32_array(pp);
-			sql_type = SQL_SMALLINT;
+			bind_int32_array(pp);
+			if (!is_bcp) {
+				sql_type = SQL_SMALLINT;
+			}
 		}
 		else
 		{
@@ -1473,7 +1658,11 @@ namespace mssql
 	{
 		if (pp->IsArray())
 		{
-			bind_double_array(pp);
+			if (is_bcp) {
+				bind_numeric_array(pp);
+			} else {
+				bind_double_array(pp);
+			}
 		}
 		else
 		{
@@ -1497,7 +1686,11 @@ namespace mssql
 	{
 		if (pp->IsArray())
 		{
-			bind_w_var_char_array(pp);
+			if (is_bcp) {
+				bind_var_char_array(pp);
+			} else {
+				bind_w_var_char_array(pp);
+			}
 		}
 		else
 		{
@@ -1611,6 +1804,10 @@ namespace mssql
 			sql_integer(pp);
 			break;
 
+		case SQL_VARCHAR:
+			sql_varchar(pp);
+			break;
+
 		case SQL_WVARCHAR:
 			sql_wvarchar(pp);
 			break;
@@ -1653,10 +1850,6 @@ namespace mssql
 
 		case SQL_CHAR:
 			sql_char(pp);
-			break;
-
-		case SQL_VARCHAR:
-			sql_varchar(pp);
 			break;
 
 		case SQL_SS_TIME2:

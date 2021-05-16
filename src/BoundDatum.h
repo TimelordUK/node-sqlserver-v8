@@ -39,6 +39,10 @@ namespace mssql
 			buffer_len(0),
 			param_type(SQL_PARAM_INPUT),
 			offset(0),
+			is_bcp(false),
+			ordinal_position(0),
+			bcp_terminator_len(0),
+			bcp_terminator(NULL),
 			is_tvp(false),
 			tvp_no_cols(0),
 			definedPrecision(false),
@@ -71,6 +75,11 @@ namespace mssql
 		SQLLEN buffer_len;
 		uint16_t param_type;
 		int32_t offset;
+		bool is_bcp;
+		uint32_t ordinal_position;
+		SQLULEN bcp_terminator_len;
+		LPCBYTE bcp_terminator;
+
 		bool is_tvp;
 		int tvp_no_cols;
 		wstring name;
@@ -96,6 +105,7 @@ namespace mssql
 		void bind_w_var_char(const Local<Value>& p, int precision);
 		void reserve_w_var_char_array(size_t max_str_len, size_t  array_len);
 		void bind_w_var_char_array(const Local<Value> & p);
+		void bind_w_var_char_array_bcp(const Local<Value> & p);
 
 		void bind_boolean(const Local<Value> & p);
 		void reserve_boolean(SQLLEN len);
@@ -150,6 +160,7 @@ namespace mssql
 
 		void bind_var_binary( Local<Value> & p);
 		void bind_var_binary_array(const Local<Value> & p);
+		void bind_var_binary_array_bcp(const Local<Value> & p);
 		void reserve_var_binary_array(size_t max_obj_len, size_t  array_len);
 
 		bool bind_datum_type(Local<Value>& p);
@@ -160,6 +171,7 @@ namespace mssql
 		bool proc_bind(Local<Value> &p, Local<Value> &v);
 		void bind_char(const Local<Value> & pp);
 		void bind_var_char(const Local<Value> & p);
+		void bind_var_char_array_bcp(const Local<Value>& p);
 		void bind_var_char_array(const Local<Value>& p);
 		void bind_var_char(const Local<Value> & p, int precision);
 		void reserve_var_char(size_t precision, size_t  array_len);

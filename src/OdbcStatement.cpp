@@ -29,6 +29,8 @@
 #include <QueryOperationParams.h>
 #include <ConnectionHandles.h>
 #include <iostream>
+#include <algorithm>
+#include <bcp.h>
 
 #ifdef LINUX_BUILD
 #include <unistd.h>
@@ -130,7 +132,7 @@ namespace mssql
 		if(!_statement) return false;
 		// fprintf(stderr, "prepared_read");
 		const auto& statement = *_statement;
-		SQLROWSETSIZE row_count = 0;
+		SQLINTEGER row_count = 0;
 		SQLSetStmtAttr(statement, SQL_ATTR_ROWS_FETCHED_PTR, &row_count, 0);
 		const auto ret = SQLFetchScroll(statement, SQL_FETCH_NEXT, 0);
 		if (ret == SQL_NO_DATA)
@@ -627,6 +629,17 @@ namespace mssql
 		return true;
 	}
 
+	bool OdbcStatement::try_bcp(const shared_ptr<BoundDatumSet>& param_set) {
+	
+		bcp b(param_set, _connectionHandles->connectionHandle());
+		auto ret = b.insert();
+		_resultset = make_unique<ResultSet>(0);
+		_resultset->_end_of_rows = true;
+		_errors->clear();
+        copy(b._errors->begin(), b._errors->end(), back_inserter(*_errors));
+		return ret > 0;
+   } 
+ 
 	bool OdbcStatement::bind_fetch(const shared_ptr<BoundDatumSet> & param_set)
 	{
 		if(!_statement) return false;
@@ -698,6 +711,15 @@ namespace mssql
 		_errors->clear();
 		_query = q;
 		const auto timeout = q->timeout();
+		auto &pars = *param_set;
+		
+		if (pars.size() > 0) {
+			const auto& first = (*param_set).atIndex(0);
+			if (first->is_bcp) {
+				return try_bcp(param_set);
+			}
+		}
+
 		const auto bound = bind_params(param_set);
 		if (!bound)
 		{
