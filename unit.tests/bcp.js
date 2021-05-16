@@ -191,6 +191,38 @@ suite('bcp', function () {
     }
   }
 
+  test('bcp expect error null in non null column', testDone => {
+    const rows = 10
+    async function test () {
+      const bcp = new BcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'n1',
+            type: 'smallint not NULL'
+          }]
+      }, i => {
+        return {
+          id: i,
+          n1: i % 2 === 0 ? Math.pow(2, 10) + i : null
+        }
+      })
+      return await bcp.runner(rows)
+    }
+    /*
+''[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Cannot insert the value NULL into column 'n1', table 'node.dbo.test_table_bcp'; column does not allow nulls. INSERT fails.''
+    */
+    test().then((e) => {
+      if (!e) testDone(new Error('expected NULL constraint'))
+      assert(e.message.includes('Cannot insert the value NULL into column'))
+      testDone()
+    })
+  })
+
   test('bcp expect error duplicate primary key', testDone => {
     const rows = 10
     async function test () {
