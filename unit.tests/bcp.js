@@ -414,7 +414,7 @@ suite('bcp', function () {
     })
   })
 
-  test('bcp real', testDone => {
+  test('bcp real', testDone => {``
     function get (i) {
       const v = Math.sqrt(i + 1)
       return Math.round(v * 1e6) / 1e6

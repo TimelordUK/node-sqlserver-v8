@@ -266,7 +266,7 @@ namespace mssql
         return nRowsProcessed;
     }
 
-    int bcp::insert() {
+    int bcp::dynload() {
         #ifdef WINDOWS_BUILD
         if (!plugin.load(L"msodbcsql17.dll", _errors)) {
             if (_errors->empty()) {
@@ -284,26 +284,29 @@ namespace mssql
         }
         #endif
         
-		if (!init()) {
-            if (_errors->empty()) {
-                _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to init yet no error was returned.", -1, 0, "", "", 0));
-            }
-            done();
+    }
+
+    int bcp::clean(const string &step) {
+        if (_errors->empty()) {
+            const string msg = "bcp failed in step `" + step + "`, yet no error was returned.";
+            _errors->push_back(make_shared<OdbcError>("bcp", msg.c_str(), -1, 0, "", "", 0));
+        }
+        done();
+        return -1;
+    }
+
+    int bcp::insert() {
+        if (!dynload()) {
             return -1;
+        }
+		if (!init()) {
+            return clean("init");
         }
         if (!bind()) {
-            if (_errors->empty()) {
-                _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to bind yet no error was returned.", -1, 0, "", "", 0));
-            }
-            done();
-            return -1;
+            return clean("bind");
         }
         if (!send()) {
-            if (_errors->empty()) {
-                _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to send yet no error was returned.", -1, 0, "", "", 0));
-            }
-            done();
-            return -1;
+            return clean("send");
         }
         return done();
     }

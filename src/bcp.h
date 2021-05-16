@@ -76,7 +76,9 @@ namespace mssql
         bool init();
         bool bind();
         bool send();
+        int dynload();
         int done();
+        int clean(const string &step);
         wstring table_name();
         shared_ptr<OdbcConnectionHandle> _ch;
         shared_ptr<BoundDatumSet> _param_set;
