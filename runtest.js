@@ -9,36 +9,28 @@ function getConnection (jsonFile, key) {
   return config.connection[key]
 }
 
-function argvGet(argv, key) {
+function argvGet (argv, key) {
   if (Object.prototype.hasOwnProperty.call(argv, key)) {
     return argv[key] || true
   }
   return null
 }
 
-function resolve(argv) {
+function resolve (argv) {
   let connStr = ''
   const jsonFile = argvGet(argv, 'json') || 'runtest.json'
   const key = argvGet(argv, 'k')
   if (key) {
     connStr = getConnection(jsonFile, key)
-  }
-
-  else if (Object.prototype.hasOwnProperty.call(argv, 'a')) {
+  } else if (Object.prototype.hasOwnProperty.call(argv, 'a')) {
     const appVeyorVersion = argv.a
-    connStr = `Driver={SQL Server Native Client 11.0}; Server=(local)\\SQL${appVeyorVersion}; Database={master}; Uid=sa; Pwd=Password12!`
+    connStr = `Driver={ODBC Driver 17 for SQL Server}; Server=(local)\\SQL${appVeyorVersion}; Database={master}; Uid=sa; Pwd=Password12!`
     console.log(`set connStr as ${connStr}`)
-  }
-
-  else if (Object.prototype.hasOwnProperty.call(argv, 'l')) {
+  } else if (Object.prototype.hasOwnProperty.call(argv, 'l')) {
     connStr = 'Driver={SQL Server Native Client 11.0}; Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;'
-  }
-
-  else if (Object.prototype.hasOwnProperty.call(argv, 'u')) {
+  } else if (Object.prototype.hasOwnProperty.call(argv, 'u')) {
     connStr = 'Driver={ODBC Driver 17 for SQL Server}; database=node; Server=192.168.56.1; UID=linux; PWD=linux'
-  }
-
-  else if (Object.prototype.hasOwnProperty.call(argv, 'x')) {
+  } else if (Object.prototype.hasOwnProperty.call(argv, 'x')) {
     connStr = 'Driver={ODBC Driver 17 for SQL Server}; Server=localhost; Uid=SA; Pwd=Password12!'
   }
   return connStr
@@ -66,7 +58,7 @@ function runTest () {
       }
     )
 
-    var shown = false
+    let shown = false
     mocha.suite.on('pre-require', g => {
       g.native_sql = sql
       if (connStr) {
