@@ -283,7 +283,7 @@ namespace mssql
              return -1;
         }
         #endif
-        
+        return -1;
     }
 
     int bcp::clean(const string &step) {
