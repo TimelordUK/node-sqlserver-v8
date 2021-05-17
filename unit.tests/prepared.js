@@ -178,11 +178,13 @@ suite('prepared', function () {
     // console.log('teardown ....')
     const fns = [
       asyncDone => {
+        if (prepared.select) {
         // console.log('select free ')
-        prepared.select.free(() => {
+          prepared.select.free(() => {
           // console.log('done ')
-          asyncDone()
-        })
+            asyncDone()
+          })
+        }
       },
       asyncDone => {
         if (prepared.scan) {
@@ -241,6 +243,36 @@ suite('prepared', function () {
     })
   }
 
+  test('use prepared to reserve and read multiple rows.', testDone => {
+    const sql = 'select top 5 * from master..syscomments'
+    theConnection.prepare(sql, (err, preparedQuery) => {
+      assert(err === null || err === false)
+      preparedQuery.preparedQuery([], (err, res) => {
+        assert(res != null)
+        assert(res.length > 0)
+        assert.ifError(err)
+        preparedQuery.free(() => {
+          testDone()
+        })
+      })
+    })
+  })
+
+  test('use prepared to select 0 rows - expect no error', testDone => {
+    const sql = 'select * from master..syscomments where 1=0'
+    theConnection.prepare(sql, (err, preparedQuery) => {
+      assert(err === null || err === false)
+      preparedQuery.preparedQuery([], (err, res) => {
+        assert(res != null)
+        assert(res.length === 0)
+        assert.ifError(err)
+        preparedQuery.free(() => {
+          testDone()
+        })
+      })
+    })
+  })
+
   test('use prepared statement with params returning 0 rows. - expect no error', testDone => {
     const select = prepared.select
     const meta = select.getMeta()
@@ -266,36 +298,6 @@ suite('prepared', function () {
       assert(res != null)
       assert(res.length === 0)
       testDone()
-    })
-  })
-
-  test('use prepared to select 0 rows - expect no error', testDone => {
-    const sql = 'select * from master..syscomments where 1=0'
-    theConnection.prepare(sql, (err, preparedQuery) => {
-      assert(err === null || err === false)
-      preparedQuery.preparedQuery([], (err, res) => {
-        assert(res != null)
-        assert(res.length === 0)
-        assert.ifError(err)
-        preparedQuery.free(() => {
-          testDone()
-        })
-      })
-    })
-  })
-
-  test('use prepared to reserve and read multiple rows.', testDone => {
-    const sql = 'select top 500 * from master..syscomments'
-    theConnection.prepare(sql, (err, preparedQuery) => {
-      assert(err === null || err === false)
-      preparedQuery.preparedQuery([], (err, res) => {
-        assert(res != null)
-        assert(res.length > 0)
-        assert.ifError(err)
-        preparedQuery.free(() => {
-          testDone()
-        })
-      })
     })
   })
 

@@ -59,7 +59,7 @@
             "args": [
                 "runtest", "-k", "wsl",
                 "-t", "prepared", 
-                "-t", "warnings", 
+                // "-t", "warnings", 
                 // "-t", "bulk", 
                 // "-t", "querycancel",
                 // "-t", "pause",

@@ -132,9 +132,11 @@ namespace mssql
 		if(!_statement) return false;
 		// fprintf(stderr, "prepared_read");
 		const auto& statement = *_statement;
-		SQLINTEGER row_count = 0;
+		unsigned long row_count = 0;
 		SQLSetStmtAttr(statement, SQL_ATTR_ROWS_FETCHED_PTR, &row_count, 0);
+
 		const auto ret = SQLFetchScroll(statement, SQL_FETCH_NEXT, 0);
+		//cerr << " row_count " << row_count << endl;
 		if (ret == SQL_NO_DATA)
 		{
 			_resultset->_end_of_rows = true;
