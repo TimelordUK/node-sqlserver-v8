@@ -1,7 +1,7 @@
 version: 1.0.{build}
 
 image: 
-  - Visual Studio 2019
+  - Visual Studio 2017
   - Ubuntu
 
 platform: 
@@ -20,7 +20,7 @@ for:
   -
       matrix:
         only:
-          - image: Visual Studio 2019
+          - image: Visual Studio 2017
     
       clone_folder: c:\projects\node_modules\msnodesqlv8
 
