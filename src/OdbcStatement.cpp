@@ -536,7 +536,6 @@ namespace mssql
 		return true;
 	}
 
-#ifdef WINDOWS_BUILD
 	SQLRETURN OdbcStatement::poll_check(SQLRETURN ret, shared_ptr<vector<uint16_t>> query, const bool direct)
 	{
 		const auto& statement = *_statement;
@@ -547,7 +546,7 @@ namespace mssql
 			{
 				if (direct)
 				{
-					ret = SQLExecDirect(statement, reinterpret_cast<SQLWCHAR*>(L""), SQL_NTS);
+					ret = SQLExecDirect(statement, reinterpret_cast<SQLWCHAR*>(query->data()), SQL_NTS);
 				}
 				else
 				{
@@ -560,7 +559,12 @@ namespace mssql
 					break;
 				}
 
-				Sleep(1); // wait 1 MS			
+				#if defined(WINDOWS_BUILD)
+				Sleep(1); // wait 1 MS
+				#endif
+				#if defined(LINUX_BUILD)
+				usleep(1000); // wait 1 MS
+				#endif			
 				{
 					lock_guard<mutex> lock(g_i_mutex);
 					submit_cancel = _cancelRequested;
@@ -574,51 +578,6 @@ namespace mssql
 		}
 		return ret;
 	}
-#endif
-
-#ifdef LINUX_BUILD
-	SQLRETURN OdbcStatement::poll_check(SQLRETURN ret, shared_ptr<vector<uint16_t>> query, const bool direct)
-	{
-		const auto& statement = *_statement;
-
-		if (ret == SQL_STILL_EXECUTING)
-		{
-			bool running = true;
-			while (running)
-			{
-				if (direct)
-				{
-					ret = SQLExecDirect(statement, static_cast<SQLWCHAR*>(query->data()), query->size());
-				}
-				else
-				{
-					ret = SQLExecute(statement);
-				}
-
-				auto submit_cancel = false;
-				if (ret != SQL_STILL_EXECUTING)
-				{
-					break;
-				}
-
-				usleep(1000); // wait 1 MS	
-				{
-					lock_guard<mutex> lock(g_i_mutex);
-					submit_cancel = _cancelRequested;
-				}
-
-				if (submit_cancel)
-				{
-					_statementState = OdbcStatementState::STATEMENT_CANCELLED;
-					running = false;
-					ret = SQL_NO_DATA;
-					break;
-				}
-			}
-		}
-		return ret;
-	}
-	#endif
 
 	bool OdbcStatement::raise_cancel() {
 		_resultset = make_unique<ResultSet>(0);
