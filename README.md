@@ -6,6 +6,7 @@
 [![npm](https://img.shields.io/npm/dm/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
 [![npm](https://img.shields.io/npm/dy/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
 
+1. *new* fast BCP bulk insert
 1. *new* 64 bit x64 Linux
 1. *new* includes MacOS support
 1. *new* use object based named params for proc calls - see WIKI
@@ -32,6 +33,14 @@ Based on node-sqlserver, this version will compile in Visual Studio 2017/2019 an
 Releases include pre-compiled binaries for both x64 and x86 targets for Node and Electron.
 
 This library only works with Node versions greater than 10.0 or electron greater than 5.0
+
+## BCP (odbc v17 only)
+
+It is necessary to run with ODBC 'Driver={ODBC Driver 17 for SQL Server};' Connection must be establishes using TCP socket only. if you wish to use the bcp bulk insert feature. On windows this requires msodbcsql17.dll be installed. For Linux you need to be at version 17 to run at all.
+
+Note that no other configuration is tested or supported - attempting to use SQL Server Native Client 11.0 for example will crash the driver if bcp is attempted - all other functions will work as previously on old versions of ODBC
+
+see wiki for more details or bcp unit tests - bcp is accessed via the table manager i.e. binding to a table and enabling bcp on that table returned.
 
 ## Linux (x64 only)
 
