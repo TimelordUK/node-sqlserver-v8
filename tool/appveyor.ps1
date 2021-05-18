@@ -1,5 +1,5 @@
-[reflection.assembly]::LoadWithPartialName("Microsoft.SqlServer.Smo") | Out-Null;
-[reflection.assembly]::LoadWithPartialName("Microsoft.SqlServer.SqlWmiManagement") | Out-Null;
+Add-Type -AssemblyName "Microsoft.SqlServer.Smo"
+Add-Type -AssemblyName "Microsoft.SqlServer.SqlWmiManagement"
 
 powershell Get-Service MSSQL*
 
