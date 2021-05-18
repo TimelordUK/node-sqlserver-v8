@@ -1393,7 +1393,8 @@ waitfor delay @timeout;END
         const pm = theConnection.procedureMgr()
         pm.setTimeout(2)
         pm.callproc(spName, ['0:0:5'], err => {
-          assert.deepStrictEqual(err, expected)
+          assert(err)
+          assert(err.message.includes('Query timeout expired'))
           asyncDone()
         })
       }
