@@ -12,6 +12,5 @@ $tcp.Alter();
 
 Start-Service -Name "MSSQL`$$instancename";
 
-$wmi = New-Object('Microsoft.SqlServer.Management.Smo.Wmi.ManagedComputer');
 $ipall = $wmi.GetSmoObject("ManagedComputer[@Name='${env:computername}']/ServerInstance[@Name='${instancename}']/ServerProtocol[@Name='Tcp']/IPAddress[@Name='IPAll']");
 $port = $ipall.IPAddressProperties.Item("TcpDynamicPorts").Value;
