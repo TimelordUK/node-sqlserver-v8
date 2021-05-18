@@ -36,7 +36,7 @@ This library only works with Node versions greater than 10.0 or electron greater
 
 ## BCP (odbc v17 only)
 
-It is necessary to run with ODBC 'Driver={ODBC Driver 17 for SQL Server};' Connection must be establishes using TCP socket only. if you wish to use the bcp bulk insert feature. On windows this requires msodbcsql17.dll be installed. For Linux you need to be at version 17 to run at all.
+It is necessary to run with ODBC 'Driver={ODBC Driver 17 for SQL Server};' Connection must be establishes using TCP socket only. On windows this requires msodbcsql17.dll to be installedon client. For Linux you need to be at version 17 to run at all.
 
 Note that no other configuration is tested or supported - attempting to use SQL Server Native Client 11.0 for example will crash the driver if bcp is attempted - all other functions will work as previously on old versions of ODBC
 
