@@ -260,7 +260,11 @@ namespace mssql
         DBINT nRowsProcessed;
         const auto &ch = *_ch;
 		if ((nRowsProcessed = plugin.bcp_done(ch)) == -1) {
-			ch.read_errors(_errors);    
+			ch.read_errors(_errors);
+             if (_errors->empty()) {
+                const string msg = "bcp failed in step `done` yet no error was returned. No rows have likely been inserted";
+                _errors->push_back(make_shared<OdbcError>("bcp", msg.c_str(), -1, 0, "", "", 0));
+            }
    			return false;  
         }
         return nRowsProcessed;
