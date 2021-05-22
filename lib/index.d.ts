@@ -299,6 +299,10 @@ export interface BulkTableMgr {
     getUpdateColumns(): TableColumn[]
     getPrimaryColumns(): TableColumn[]
     getAssignableColumns(): TableColumn[]
+    // insert only - use bcp for increased bcp speed - 
+    // only works on ODBC Driver 17 for SQL Server
+    setUseBcp(bcp:boolean):void
+    getUseBcp():boolean
 }
 
 export interface TableValueParam {
