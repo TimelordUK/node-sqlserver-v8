@@ -189,7 +189,7 @@ namespace mssql
         return true;
     }
 
-    shared_ptr<basestorage> get_storage(shared_ptr<BoundDatum> p) {
+    inline shared_ptr<basestorage> get_storage(shared_ptr<BoundDatum> p) {
         shared_ptr<basestorage> r;
         const auto &storage = *p->get_storage();
         const auto &ind = p->get_ind_vec();
