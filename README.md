@@ -36,9 +36,33 @@ This library only works with Node versions greater than 10.0 or electron greater
 
 ## BCP (odbc v17 only)
 
-It is necessary to run with ODBC 'Driver={ODBC Driver 17 for SQL Server};' Connection must be establishes using TCP socket only. On windows this requires msodbcsql17.dll to be installedon client. For Linux you need to be at version 17 to run at all.
+BCP allows fast insert speed from client to a designated table.  This is achieved via allocating fixed positions in memory binding each column on that table and re-populating/sending each row to the server. It is in effect a memory copy from the client to the table.  
 
-Note that no other configuration is tested or supported - attempting to use SQL Server Native Client 11.0 for example will crash the driver if bcp is attempted - all other functions will work as previously on old versions of ODBC
+a 16 column Employee table mixed with binary, varchar, date, int and decimal can insert over 50k rows in 3 seconds (vs 25 seconds using non bcp) over a network, smaller tables speeds can be over 100k a second.
+
+```js
+    // see bcp.js unit tests - bind to a table
+    async create () {
+      const promisedQuery = util.promisify(theConnection.query)
+      const tm = theConnection.tableMgr()
+      const promisedGetTable = util.promisify(tm.getTable)
+      await promisedQuery(this.dropTableSql)
+      await promisedQuery(this.createTableSql)
+      const table = await promisedGetTable(this.tableName)
+      return table
+    }
+  }
+ // set the flag to turn on bcp and send rows to server using fast memory copy.
+ theConnection.setUseUTC(false)
+        const table = await helper.create()
+        table.setUseBcp(true)
+        const promisedInsert = util.promisify(table.insertRows)
+        const promisedQuery = util.promisify(theConnection.query)
+```
+
+This protocol is not part of the ODBC specification and its use therefore depends on using correct ODBC driver.  For linux users, this should work out the box as ODBC 17 is the only driver supported and this is one used for BCP.  The feature has been tested on Ubuntu, MacOS, Debian and Alpine.
+
+For windows users, older drivers can still be used on all non bcp functions just as before - however presently only ODBC 17 is supported for bcp. Hence you need to have installed ODBC data source "ODBC Driver 17 for SQL Server".  No other driver will work and attempts to do so will probably crash the node instance.
 
 see wiki for more details or bcp unit tests - bcp is accessed via the table manager i.e. binding to a table and enabling bcp on that table returned.
 
