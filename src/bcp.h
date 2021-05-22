@@ -40,10 +40,10 @@ namespace mssql
 		bool load(const wstring &, shared_ptr<vector<shared_ptr<OdbcError>>> errors);
         HINSTANCE hinstLib = NULL;
         #endif
-        inline RETCODE bcp_bind(HDBC, LPCBYTE, INT, DBINT, LPCBYTE, INT, INT, INT);
-        inline RETCODE bcp_init(HDBC, LPCWSTR, LPCWSTR, LPCWSTR, INT); 
-        inline DBINT bcp_sendrow(HDBC);
-        inline DBINT bcp_done(HDBC);
+        inline RETCODE bcp_bind(const HDBC, const LPCBYTE, const INT, const DBINT, const LPCBYTE, const INT, const INT, const INT) const;
+        inline RETCODE bcp_init(HDBC const, const LPCWSTR, const LPCWSTR, const LPCWSTR, const INT) const;
+        inline DBINT bcp_sendrow(HDBC const) const;
+        inline DBINT bcp_done(HDBC const) const;
         #ifdef LINUX_BUILD
         #define __cdecl 
         bool load(const string &, shared_ptr<vector<shared_ptr<OdbcError>>> errors, int m);
@@ -60,13 +60,17 @@ namespace mssql
     };
 
     struct basestorage {
-        basestorage();
+        basestorage() :
+        index(0),
+    	indicator(sizeof(SQLLEN))
+        {
+        }
         virtual ~basestorage() {}
 		virtual size_t size() = 0;
         virtual bool next() = 0;
         virtual LPCBYTE ptr() = 0;
         size_t index;
-        INT indicator = sizeof(SQLLEN);
+        INT indicator;
     };
 
 	struct bcp 
@@ -79,7 +83,7 @@ namespace mssql
         int dynload();
         int done();
         int clean(const string &step);
-        wstring table_name();
+        wstring table_name() const;
         shared_ptr<OdbcConnectionHandle> _ch;
         shared_ptr<BoundDatumSet> _param_set;
         shared_ptr<vector<shared_ptr<OdbcError>>> _errors;
@@ -87,4 +91,3 @@ namespace mssql
 		plugin_bcp plugin;
 	};
 }
-
