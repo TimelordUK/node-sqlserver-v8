@@ -178,18 +178,33 @@ suite('bcp', function () {
     }
 
     async insertSelect (table) {
-      const parsedJSON = this.createEmployees(100)
+      const parsedJSON = this.createEmployees(200)
       table.setUseBcp(true)
       const promisedInsert = util.promisify(table.insertRows)
       const promisedSelect = util.promisify(table.selectRows)
-      // const d = new Date()
+      const d = new Date()
       await promisedInsert(parsedJSON)
-      // console.log(`ms = ${new Date() - d}`)
+      console.log(`ms = ${new Date() - d}`)
       const keys = helper.extractKey(parsedJSON, 'BusinessEntityID')
       const results = await promisedSelect(keys)
       assert.deepStrictEqual(results, parsedJSON, 'results didn\'t match')
     }
   }
+
+  test('bcp employee', testDone => {
+    async function test () {
+      try {
+        const employee = new Employee('employee')
+        const table = await employee.create()
+        await employee.insertSelect(table)
+      } catch (e) {
+        return e
+      }
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
 
   test('bcp expect error null in non null column', testDone => {
     const rows = 10
@@ -378,22 +393,7 @@ suite('bcp', function () {
     })
   })
 
-  test('bcp employee', testDone => {
-    async function test () {
-      try {
-        const employee = new Employee('employee')
-        const table = await employee.create()
-        await employee.insertSelect(table)
-      } catch (e) {
-        return e
-      }
-    }
-    test().then((e) => {
-      testDone(e)
-    })
-  })
-
-  //  min: 'F01251E5-96A3-448D-981E-0F99D789110D',
+    //  min: 'F01251E5-96A3-448D-981E-0F99D789110D',
   //  max: '45E8F437-670D-4409-93CB-F9424A40D6EE',
 
   test('bcp uniqueidentifier', testDone => {
