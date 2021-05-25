@@ -40,15 +40,18 @@ namespace mssql
 		bool load(const wstring &, shared_ptr<vector<shared_ptr<OdbcError>>> errors);
         HINSTANCE hinstLib = NULL;
         #endif
+        #ifdef LINUX_BUILD
+        #define __cdecl 
+        bool load(const string &, shared_ptr<vector<shared_ptr<OdbcError>>> errors);
+        void * hinstLib = NULL;
+        #endif
+
+        bool load(const wstring &, shared_ptr<vector<shared_ptr<OdbcError>>> errors);
         inline RETCODE bcp_bind(const HDBC, const LPCBYTE, const INT, const DBINT, const LPCBYTE, const INT, const INT, const INT) const;
         inline RETCODE bcp_init(HDBC const, const LPCWSTR, const LPCWSTR, const LPCWSTR, const INT) const;
         inline DBINT bcp_sendrow(HDBC const) const;
         inline DBINT bcp_done(HDBC const) const;
-        #ifdef LINUX_BUILD
-        #define __cdecl 
-        bool load(const string &, shared_ptr<vector<shared_ptr<OdbcError>>> errors, int m);
-        void * hinstLib = NULL;
-        #endif
+
         typedef RETCODE (__cdecl* plug_bcp_bind)(HDBC, LPCBYTE, INT, DBINT, LPCBYTE, INT, INT, INT);
         typedef RETCODE (__cdecl* plug_bcp_init)(HDBC, LPCWSTR, LPCWSTR, LPCWSTR, INT);
 		typedef DBINT (__cdecl* plug_bcp_sendrow)(HDBC);

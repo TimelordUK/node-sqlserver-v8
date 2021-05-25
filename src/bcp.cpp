@@ -13,20 +13,38 @@
 #include <unistd.h>
 #endif
 
+#ifdef LINUX_BUILD
+#define SYN_SIG string
+#define DYN_SYM dlsym
+#define DYN_OPEN dlopen
+#define DYN_CLOSE dlclose
+#endif
+
+#ifdef WINDOWS_BUILD
+#define SYN_SIG wstring
+#define DYN_SYM GetProcAddress
+#define DYN_OPEN LoadLibrary
+#define DYN_CLOSE FreeLibrary
+#endif
+
 namespace mssql
 {
-    #ifdef WINDOWS_BUILD
-    bool plugin_bcp::load(const wstring &shared_lib, shared_ptr<vector<shared_ptr<OdbcError>>> errors) {
-        hinstLib = LoadLibrary(shared_lib.data());
-        if (hinstLib != nullptr) 
-        { 
-            dll_bcp_init = reinterpret_cast<plug_bcp_init>(GetProcAddress(hinstLib, "bcp_initW"));
+    bool plugin_bcp::load(const SYN_SIG& shared_lib, shared_ptr<vector<shared_ptr<OdbcError>>> errors) {
+        #ifdef WINDOWS_BUILD
+        hinstLib = DYN_OPEN(shared_lib.data());
+        #endif
+        #ifdef LINUX_BUILD
+        hinstLib = DYN_OPEN(shared_lib.data(), RTLD_NOW);
+        #endif
+        if (hinstLib != nullptr)
+        {
+            dll_bcp_init = reinterpret_cast<plug_bcp_init>(DYN_SYM(hinstLib, "bcp_initW"));
             if (!dll_bcp_init) errors->push_back(make_shared<OdbcError>("bcp", "bcp failed to get symbol bcp_initW.", -1, 0, "", "", 0));
-            dll_bcp_bind = reinterpret_cast<plug_bcp_bind>(GetProcAddress(hinstLib, "bcp_bind"));
+            dll_bcp_bind = reinterpret_cast<plug_bcp_bind>(DYN_SYM(hinstLib, "bcp_bind"));
             if (!dll_bcp_bind) errors->push_back(make_shared<OdbcError>("bcp", "bcp failed to get symbol dll_bcp_bind.", -1, 0, "", "", 0));
-            dll_bcp_sendrow = reinterpret_cast<plug_bcp_sendrow>(GetProcAddress(hinstLib, "bcp_sendrow"));
+            dll_bcp_sendrow = reinterpret_cast<plug_bcp_sendrow>(DYN_SYM(hinstLib, "bcp_sendrow"));
             if (!dll_bcp_sendrow) errors->push_back(make_shared<OdbcError>("bcp", "bcp failed to get symbol dll_bcp_sendrow.", -1, 0, "", "", 0));
-            dll_bcp_done = reinterpret_cast<plug_bcp_done>(GetProcAddress(hinstLib, "bcp_done"));
+            dll_bcp_done = reinterpret_cast<plug_bcp_done>(DYN_SYM(hinstLib, "bcp_done"));
             if (!dll_bcp_done) errors->push_back(make_shared<OdbcError>("bcp", "bcp failed to get symbol dll_bcp_done.", -1, 0, "", "", 0));
             return errors->empty();
         }
@@ -35,38 +53,11 @@ namespace mssql
 
     plugin_bcp::~plugin_bcp() {
         if (hinstLib != nullptr) {
-            FreeLibrary(hinstLib);
-        } 
-    }
-    #endif
-
-    #ifdef LINUX_BUILD
-    bool plugin_bcp::load(const string &shared_lib, shared_ptr<vector<shared_ptr<OdbcError>>> errors, int mode = RTLD_NOW) {
-        hinstLib = dlopen(shared_lib.data(), mode);
-        if (hinstLib != NULL) 
-        { 
-            dll_bcp_init = (plug_bcp_init)dlsym(hinstLib, "bcp_initW");
-            if (!dll_bcp_init) errors->push_back(make_shared<OdbcError>("bcp", "bcp failed to get symbol bcp_initW.", -1, 0, "", "", 0));
-            dll_bcp_bind = (plug_bcp_bind)dlsym(hinstLib, "bcp_bind");
-            if (!dll_bcp_bind) errors->push_back(make_shared<OdbcError>("bcp", "bcp failed to get symbol dll_bcp_bind.", -1, 0, "", "", 0));
-            dll_bcp_sendrow = (plug_bcp_sendrow)dlsym(hinstLib, "bcp_sendrow");
-            if (!dll_bcp_sendrow) errors->push_back(make_shared<OdbcError>("bcp", "bcp failed to get symbol dll_bcp_sendrow.", -1, 0, "", "", 0));
-            dll_bcp_done = (plug_bcp_done)dlsym(hinstLib, "bcp_done");
-            if (!dll_bcp_done) errors->push_back(make_shared<OdbcError>("bcp", "bcp failed to get symbol dll_bcp_done.", -1, 0, "", "", 0));
-            return errors->empty();
+            DYN_CLOSE(hinstLib);
         }
-        return false;
     }
-
-    plugin_bcp::~plugin_bcp() {
-        if (hinstLib != NULL) {
-            dlclose(hinstLib);
-        } 
-    }
-
-    #endif
-
-   inline RETCODE plugin_bcp::bcp_bind(const HDBC p1, const LPCBYTE p2, const INT p3, const DBINT p4, const LPCBYTE p5, const INT p6, const INT p7, const INT p8) const {
+	
+    inline RETCODE plugin_bcp::bcp_bind(const HDBC p1, const LPCBYTE p2, const INT p3, const DBINT p4, const LPCBYTE p5, const INT p6, const INT p7, const INT p8) const {
             return (dll_bcp_bind != nullptr) ?
             (dll_bcp_bind)(p1, p2, p3, p4, p5, p6, p7, p8)
             : -1;
