@@ -46,7 +46,6 @@ namespace mssql
         void * hinstLib = NULL;
         #endif
 
-        bool load(const wstring &, shared_ptr<vector<shared_ptr<OdbcError>>> errors);
         inline RETCODE bcp_bind(const HDBC, const LPCBYTE, const INT, const DBINT, const LPCBYTE, const INT, const INT, const INT) const;
         inline RETCODE bcp_init(HDBC const, const LPCWSTR, const LPCWSTR, const LPCWSTR, const INT) const;
         inline DBINT bcp_sendrow(HDBC const) const;
