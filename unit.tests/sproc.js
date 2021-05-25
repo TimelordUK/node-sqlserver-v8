@@ -1383,17 +1383,11 @@ waitfor delay @timeout;END
       },
 
       asyncDone => {
-        const expected = new Error(`[Microsoft][${driver}]Query timeout expired`)
-        expected.sqlstate = 'HYT00'
-        expected.code = 0
-        expected.severity = 0
-        expected.serverName = ''
-        expected.procName = ''
-        expected.lineNumber = 0
         const pm = theConnection.procedureMgr()
         pm.setTimeout(2)
         pm.callproc(spName, ['0:0:5'], err => {
-          assert.deepStrictEqual(err, expected)
+          assert(err)
+          assert(err.message.includes('Query timeout expired'))
           asyncDone()
         })
       }
@@ -1415,17 +1409,11 @@ waitfor delay @timeout;END
       },
 
       asyncDone => {
-        const expected = new Error(`[Microsoft][${driver}]Query timeout expired`)
-        expected.sqlstate = 'HYT00'
-        expected.code = 0
-        expected.severity = 0
-        expected.serverName = ''
-        expected.procName = ''
-        expected.lineNumber = 0
         const pm = theConnection.procedureMgr()
         pm.setTimeout(2)
         pm.callproc(spName, ['0:0:5'], err => {
-          assert.deepStrictEqual(err, expected)
+          assert(err)
+          assert(err.message.includes('Query timeout expired'))
           asyncDone()
         })
       },

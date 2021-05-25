@@ -593,7 +593,7 @@ namespace mssql
 	bool OdbcStatement::try_bcp(const shared_ptr<BoundDatumSet>& param_set) {
 	
 		bcp b(param_set, _connectionHandles->connectionHandle());
-		auto ret = b.insert();
+		const auto ret = b.insert();
 		_resultset = make_unique<ResultSet>(0);
 		_resultset->_end_of_rows = true;
 		_errors->clear();

@@ -178,18 +178,101 @@ suite('bcp', function () {
     }
 
     async insertSelect (table) {
-      const parsedJSON = this.createEmployees(100)
+      const parsedJSON = this.createEmployees(200)
       table.setUseBcp(true)
       const promisedInsert = util.promisify(table.insertRows)
       const promisedSelect = util.promisify(table.selectRows)
-      // const d = new Date()
+      const d = new Date()
       await promisedInsert(parsedJSON)
-      // console.log(`ms = ${new Date() - d}`)
+      console.log(`ms = ${new Date() - d}`)
       const keys = helper.extractKey(parsedJSON, 'BusinessEntityID')
       const results = await promisedSelect(keys)
       assert.deepStrictEqual(results, parsedJSON, 'results didn\'t match')
     }
   }
+
+  test('bcp employee', testDone => {
+    async function test () {
+      try {
+        const employee = new Employee('employee')
+        const table = await employee.create()
+        await employee.insertSelect(table)
+      } catch (e) {
+        return e
+      }
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
+  test('bcp 7 column mixed table ', testDone => {
+    async function test () {
+      function getNumeric (i) {
+        const v = Math.sqrt(i + 1)
+        return Math.round(v * 1e6) / 1e6
+      }
+      const bcp = new BcpEntry({
+        tableName: 'test_table_7_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 's1',
+            type: 'VARCHAR (255) NULL'
+          },
+          {
+            name: 's2',
+            type: 'VARCHAR (100) NULL'
+          },
+          {
+            name: 'i1',
+            type: 'int null'
+          },
+          {
+            name: 'i2',
+            type: 'int NULL'
+          },
+          {
+            name: 'n1',
+            type: 'numeric(18,6) NULL'
+          },
+          {
+            name: 'n2',
+            type: 'numeric(18,6) NULL'
+          }]
+      }, i => {
+        return {
+          id: i,
+          s1: i % 2 === 0 ? null : `column1${i}`,
+          s2: `testing${i + 1}2Data`,
+          i1: i * 5,
+          i2: i * 9,
+          n1: getNumeric(i),
+          n2: getNumeric(i)
+        }
+      }, (actual, expected) => {
+        assert.deepStrictEqual(actual.length, expected.length)
+        for (let i = 0; i < actual.length; ++i) {
+          const lhs = actual[i]
+          const rhs = expected[i]
+          assert.deepStrictEqual(lhs.id, rhs.id)
+          assert.deepStrictEqual(lhs.s1, rhs.s1)
+          assert.deepStrictEqual(lhs.s2, rhs.s2)
+          assert.deepStrictEqual(lhs.i1, rhs.i1)
+          assert.deepStrictEqual(lhs.i2, rhs.i2)
+          assert(Math.abs(lhs.n1 - rhs.n1) < 1e-5)
+          assert(Math.abs(lhs.n2 - rhs.n2) < 1e-5)
+        }
+      })
+      return await bcp.runner(1000)
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
 
   test('bcp expect error null in non null column', testDone => {
     const rows = 10
@@ -372,21 +455,6 @@ suite('bcp', function () {
         }
       })
       return await bcp.runner()
-    }
-    test().then((e) => {
-      testDone(e)
-    })
-  })
-
-  test('bcp employee', testDone => {
-    async function test () {
-      try {
-        const employee = new Employee('employee')
-        const table = await employee.create()
-        await employee.insertSelect(table)
-      } catch (e) {
-        return e
-      }
     }
     test().then((e) => {
       testDone(e)
