@@ -181,7 +181,7 @@ namespace mssql
     }
 
     inline shared_ptr<basestorage> get_storage(shared_ptr<BoundDatum> p) {
-        shared_ptr<basestorage> r;
+        shared_ptr<basestorage> r = nullptr;
         const auto storage = p->get_storage();
         const auto &ind = p->get_ind_vec();
 
@@ -222,12 +222,16 @@ namespace mssql
 		{ 
 			const auto& p = *itr;
             const auto s = get_storage(p);
-            _storage.push_back(s);
-            if (plugin.bcp_bind(ch, s->ptr(), s->indicator, p->param_size, p->bcp_terminator, p->bcp_terminator_len, p->sql_type, p->ordinal_position) == FAIL)  
-   			{  
-				ch.read_errors(_errors);  
-   				return false;  
-   			}
+            if (s) {
+                _storage.push_back(s);
+                if (plugin.bcp_bind(ch, s->ptr(), s->indicator, p->param_size, p->bcp_terminator, p->bcp_terminator_len, p->sql_type, p->ordinal_position) == FAIL)  
+   			    {  
+				    ch.read_errors(_errors);  
+   				    return false;  
+   			    }
+            } else {
+                return false;  
+            }
 		}
         return true;
     }
