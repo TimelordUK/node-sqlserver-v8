@@ -265,24 +265,15 @@ namespace mssql
         return n_rows_processed;
     }
 
-    int bcp::dynload() {
-        #ifdef WINDOWS_BUILD
-        if (!plugin.load(L"msodbcsql17.dll", _errors)) {
+
+    int bcp::dynload(const SYN_SIG name) {
+        if (!plugin.load(name, _errors)) {
             if (_errors->empty()) {
-                _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to dynamically load msodbcsql17.dll", -1, 0, "", "", 0));
+                _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to dynamically load msodbcsql v17", -1, 0, "", "", 0));
             }
-            return -1;
+            return false;
         }
-        #endif
-        #ifdef LINUX_BUILD
-        if ( !plugin.load("libmsodbcsql-17.so", _errors) && !plugin.load("libmsodbcsql.17.dylib", _errors) ) {
-             if (_errors->empty()) {
-                _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to dynamically load libmsodbcsql-17.so", -1, 0, "", "", 0));
-             }
-             return -1;
-        }
-        #endif
-        return -1;
+        return true;
     }
 
     int bcp::clean(const string &step) {
@@ -295,9 +286,16 @@ namespace mssql
     }
 
     int bcp::insert() {
-        if (!dynload()) {
+        #ifdef WINDOWS_BUILD
+        if (!dynload(L"msodbcsql17.dll")) {
             return -1;
         }
+        #endif
+        #ifdef LINUX_BUILD
+        if (!dynload("libmsodbcsql-17.so") && !dynload("libmsodbcsql.17.dylib")) {
+            return -1;
+        }
+        #endif
 		if (!init()) {
             return clean("init");
         }

@@ -82,7 +82,12 @@ namespace mssql
         bool init();
         bool bind();
         bool send();
-        int dynload();
+        #ifdef WINDOWS_BUILD
+        int dynload(const wstring name);
+        #endif
+        #ifdef LINUX_BUILD
+        int dynload(const string name);
+        #endif
         int done();
         int clean(const string &step);
         wstring table_name() const;
