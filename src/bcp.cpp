@@ -265,8 +265,8 @@ namespace mssql
         return n_rows_processed;
     }
 
-
     int bcp::dynload(const SYN_SIG name) {
+        _errors->clear();
         if (!plugin.load(name, _errors)) {
             if (_errors->empty()) {
                 _errors->push_back(make_shared<OdbcError>("unknown", "bcp failed to dynamically load msodbcsql v17", -1, 0, "", "", 0));
