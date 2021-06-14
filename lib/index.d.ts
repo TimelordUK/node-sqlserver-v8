@@ -139,7 +139,7 @@ export interface TableColumn {
 }
 
 export interface Connection {
-    getUserTypeTable(cb:TableCb):void
+    getUserTypeTable(name: string, cb:TableCb):void
     id:number
     setUseUTC(utc:boolean):void
     getUseUTC():boolean
