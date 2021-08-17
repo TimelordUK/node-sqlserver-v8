@@ -4,6 +4,25 @@
       'target_name': 'sqlserverv8',
 
       'variables': {
+        'conditions': [
+            [
+              'OS=="mac"', {
+                    'arch%': [
+                      '<!(uname -m)',
+                    ]
+              },
+              'OS=="linux"', {
+                    'arch%': [
+                      '<!(uname -m)',
+                    ]
+              },
+              'OS=="win"', {
+                  'arch%': [
+                    '<!(echo %PROCESSOR_ARCHITECTURE%)'
+                ]
+              }
+            ]
+        ],
         'target%': '<!(node -e "console.log(process.versions.node)")', # Set the target variable only if it is not passed in by prebuild 
       },
 
@@ -56,11 +75,17 @@
      'defines': [ 'NODE_GYP_V4' ],
 
       'conditions': [
-         ['target < "13.0"', {
+        ['target < "13.0"', {
                   'defines': [
                     'PRE_V13',
                   ],
-           }
+           },
+           'arch == "arm64"',{
+             'LINK_LIB%': ['/opt/homebrew/lib/libodbc.a']
+           },
+           'arch == "x86_64"',{
+             'LINK_LIB%': ['-lodbc']
+           },
         ],
         [ 'OS=="win"', {
               'link_settings': {
@@ -94,7 +119,7 @@
         }],
         ['OS=="mac"', {
             'link_settings': {
-             'libraries': ['-lodbc'],
+             'libraries': ['<!@(LINK_LIB)'],
             },
             'defines': [
               'LINUX_BUILD',
@@ -104,6 +129,8 @@
               '-std=c++1y'
             ],
             'include_dirs': [
+              '/opt/homebrew/include',
+              '/opt/homebrew/include/msodbcsql17'
               '/usr/local/include/',
               '/usr/local/opt/msodbcsql17/include/',
               '/usr/local/opt/msodbcsql17/include/msodbcsql17/'
