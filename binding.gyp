@@ -1,31 +1,34 @@
 {
+      'conditions': [
+            [
+              'OS=="mac"', {
+                'variables': {
+                    'arch%': '<!(uname -m)',
+                }
+              },
+              'OS=="linux"', {
+                'variables': {
+                    'arch%': '<!(uname -m)',
+                }
+              },
+              'OS=="win"', {
+                'variables': {
+                  'arch%': '<!(echo %PROCESSOR_ARCHITECTURE%)'
+                }
+              }
+            ]
+        ],
+
   'targets': [
     {
       'target_name': 'sqlserverv8',
 
       'variables': {
-        'conditions': [
-            [
-              'OS=="mac"', {
-                    'arch%': [
-                      '<!(uname -m)',
-                    ]
-              },
-              'OS=="linux"', {
-                    'arch%': [
-                      '<!(uname -m)',
-                    ]
-              },
-              'OS=="win"', {
-                  'arch%': [
-                    '<!(echo %PROCESSOR_ARCHITECTURE%)'
-                ]
-              }
-            ]
-        ],
         'target%': '<!(node -e "console.log(process.versions.node)")', # Set the target variable only if it is not passed in by prebuild 
+        'link_lib%': 'na'
       },
 
+    
       'sources': [
         'src/ConnectionHandles.cpp',
         'src/bcp.cpp',
@@ -73,20 +76,22 @@
       ],
 
      'defines': [ 'NODE_GYP_V4' ],
+      'actions': [
+          {
+            'action_name': 'print_variables',
+            'action': ['echo', 'arch: <(arch) link_lib: <(link_lib)'],
 
+            'inputs': [],
+            'outputs': ['src/ConnectionHandles.cpp']
+          }
+      ],
       'conditions': [
-        ['target < "13.0"', {
+            ['target < "13.0"', {
                   'defines': [
                     'PRE_V13',
                   ],
-           },
-           'arch == "arm64"',{
-             'LINK_LIB%': ['/opt/homebrew/lib/libodbc.a']
-           },
-           'arch == "x86_64"',{
-             'LINK_LIB%': ['-lodbc']
-           },
-        ],
+           }],
+   
         [ 'OS=="win"', {
               'link_settings': {
              'libraries': [
@@ -118,8 +123,23 @@
             ],
         }],
         ['OS=="mac"', {
+                'conditions': [
+                ['arch == "arm64"',{
+                  'variables': {
+                    'link_lib%': '/opt/homebrew/lib/libodbc.a'
+                  }
+                }],
+                ['arch == "x86_64"',{
+                  'variables': {
+                    'link_lib%': '-lodbc'
+                  }
+                }]
+            ],
             'link_settings': {
-             'libraries': ['<!@(LINK_LIB)'],
+             'libraries': [
+               '<(link_lib)'
+             #'-lodbc'
+               ],
             },
             'defines': [
               'LINUX_BUILD',
