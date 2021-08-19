@@ -25,7 +25,7 @@
 
       'variables': {
         'target%': '<!(node -e "console.log(process.versions.node)")', # Set the target variable only if it is not passed in by prebuild 
-        'link_lib%': 'na'
+        'link_lib%': '' # set for macos based on silicon
       },
 
       'sources' : [  
