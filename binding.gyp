@@ -25,7 +25,8 @@
 
       'variables': {
         'target%': '<!(node -e "console.log(process.versions.node)")', # Set the target variable only if it is not passed in by prebuild 
-        'link_lib%': '' # set for macos based on silicon
+        'link_lib%': '', # set for macos based on silicon
+        'msodbcsql%': 'msodbcsql17'
       },
 
       'sources' : [  
@@ -41,7 +42,7 @@
       'actions': [
           {
             'action_name': 'print_variables',
-            'action': ['echo', 'arch: <(arch) link_lib: <(link_lib)'],
+            'action': ['echo', 'arch: <(arch) | link_lib: <(link_lib) | msodbcsql <(msodbcsql)'],
 
             'inputs': [],
             'outputs': ['src/ConnectionHandles.cpp']
@@ -81,7 +82,7 @@
             ],
             'include_dirs': [
               '/usr/include/',
-              '/opt/microsoft/msodbcsql17/include/',
+              '/opt/microsoft/<(msodbcsql)/include/',
             ],
         }],
         ['OS=="mac"', {
@@ -112,10 +113,10 @@
             ],
             'include_dirs': [
               '/opt/homebrew/include',
-              '/opt/homebrew/include/msodbcsql17'
+              '/opt/homebrew/include/<(msodbcsql)'
               '/usr/local/include/',
-              '/usr/local/opt/msodbcsql17/include/',
-              '/usr/local/opt/msodbcsql17/include/msodbcsql17/'
+              '/usr/local/opt/<(msodbcsql)/include/',
+              '/usr/local/opt/<(msodbcsql)/include/<(msodbcsql)/'
             ],
         }],
       ]
