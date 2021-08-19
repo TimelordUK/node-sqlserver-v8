@@ -28,47 +28,9 @@
         'link_lib%': 'na'
       },
 
-    
-      'sources': [
-        'src/ConnectionHandles.cpp',
-        'src/bcp.cpp',
-        'src/addon.cpp',
-        'src/QueryOperationParams.cpp',
-        'src/MutateJS.cpp',
-        'src/BoundDatum.cpp',
-        'src/BoundDatumSet.cpp',
-        'src/ResultSet.cpp',
-        'src/Column.cpp',
-        'src/BinaryColumn.cpp',
-        'src/TimestampColumn.cpp',
-        'src/OdbcConnection.cpp',
-        'src/CollectOperation.cpp',
-        'src/EndTranOperation.cpp',
-        'src/CancelOperation.cpp',
-        'src/OpenOperation.cpp',
-        'src/PrepareOperation.cpp',
-        'src/PollingModeOperation.cpp',
-        'src/ProcedureOperation.cpp',
-        'src/QueryOperation.cpp',
-        'src/ReadColumnOperation.cpp',
-        'src/QueryPreparedOperation.cpp',
-        'src/FreeStatementOperation.cpp',
-        'src/ReadNextResultOperation.cpp',
-        'src/OdbcStatement.cpp',
-        'src/BeginTranOperation.cpp',
-        'src/CloseOperation.cpp',
-        'src/OdbcOperation.cpp',
-        'src/OdbcHandle.cpp',        
-        'src/UnbindOperation.cpp',
-        'src/OdbcStatementCache.cpp',
-        'src/OdbcError.cpp',
-        'src/OdbcConnectionBridge.cpp',
-        'src/Operation.cpp',
-        'src/OperationManager.cpp',
-        'src/Utility.cpp', 
-        'src/Connection.cpp',
-        'src/stdafx.cpp'
-		  ],
+      'sources' : [  
+        "<!@(node -p \"require('fs').readdirSync('./src').map(f=>'src/'+f).join(' ')\")" 
+      ],
 
       'include_dirs': [
         "<!(node -e \"require('nan')\")",
