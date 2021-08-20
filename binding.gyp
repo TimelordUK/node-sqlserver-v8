@@ -18,6 +18,10 @@
               }
             ]
         ],
+        'variables': {
+          'msodbcsql%': 'msodbcsql17',
+          'ext%': '.cpp'
+        },
 
   'targets': [
     {
@@ -26,8 +30,7 @@
       'variables': {
         'target%': '<!(node -e "console.log(process.versions.node)")', # Set the target variable only if it is not passed in by prebuild 
         'link_lib%': '', # set for macos based on silicon
-        'msodbcsql%': 'msodbcsql17',
-        'fileset%': ["<!@(node -p \"require('fs').readdirSync('./src').filter(x => x.endsWith('.cpp')).map(f=>'src/'+f).join(' ')\")"]
+        'fileset%': ["<!@(node -p \"require('fs').readdirSync('./src').filter(x => x.endsWith('<(ext)')).map(f=>'src/'+f).join(' ')\")"]
       },
 
       'sources' : [
