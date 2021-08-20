@@ -52,7 +52,10 @@
             'action': ['echo', 'arch: <(arch) | link_lib: <(link_lib) | msodbcsql <(msodbcsql) | fileset <(fileset)'],
 
             'inputs': [],
-            'outputs': ['src/ConnectionHandles.cpp']
+            'outputs': [
+              "<!@(node -p \"'<(fileset)'.split(' ')[0]\")"
+              ],
+            #'outputs': ['src/ConnectionHandles.cpp']
           }
       ],
       'conditions': [
