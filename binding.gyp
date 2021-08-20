@@ -20,7 +20,10 @@
         ],
         'variables': {
           'msodbcsql%': 'msodbcsql17',
-          'ext%': '.cpp'
+          'ext%': '.cpp',
+          'homebrew%': '/opt/homebrew/lib/libodbc.a',
+          'linuxodbc%': '-lodbc',
+          'winodbc%': 'odbc32'
         },
 
   'targets': [
@@ -62,7 +65,7 @@
         [ 'OS=="win"', {
               'link_settings': {
              'libraries': [
-               'odbc32'
+               '<(winodbc)'
                ],
             },
           'defines': [
@@ -74,7 +77,7 @@
         ['OS=="linux"', {
             'link_settings': {
              'libraries': [
-               '-lodbc',
+               '<(linuxodbc)',
                ],
             },
             'defines': [
@@ -93,12 +96,12 @@
                 'conditions': [
                 ['arch == "arm64"',{
                   'variables': {
-                    'link_lib%': '/opt/homebrew/lib/libodbc.a'
+                    'link_lib%': '<(homebrew)'
                   }
                 }],
                 ['arch == "x86_64"',{
                   'variables': {
-                    'link_lib%': '-lodbc'
+                    'link_lib%': '<(linuxodbc)'
                   }
                 }]
             ],
