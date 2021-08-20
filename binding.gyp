@@ -26,11 +26,12 @@
       'variables': {
         'target%': '<!(node -e "console.log(process.versions.node)")', # Set the target variable only if it is not passed in by prebuild 
         'link_lib%': '', # set for macos based on silicon
-        'msodbcsql%': 'msodbcsql17'
+        'msodbcsql%': 'msodbcsql17',
+        'fileset%': ["<!@(node -p \"require('fs').readdirSync('./src').filter(x => x.endsWith('.cpp')).map(f=>'src/'+f).join(' ')\")"]
       },
 
-      'sources' : [  
-        "<!@(node -p \"require('fs').readdirSync('./src').map(f=>'src/'+f).join(' ')\")" 
+      'sources' : [
+        "<!@(node -p \"'<(fileset)'.split(' ').join(' ')\")"
       ],
 
       'include_dirs': [
@@ -42,7 +43,7 @@
       'actions': [
           {
             'action_name': 'print_variables',
-            'action': ['echo', 'arch: <(arch) | link_lib: <(link_lib) | msodbcsql <(msodbcsql)'],
+            'action': ['echo', 'arch: <(arch) | link_lib: <(link_lib) | msodbcsql <(msodbcsql) | fileset <(fileset)'],
 
             'inputs': [],
             'outputs': ['src/ConnectionHandles.cpp']
