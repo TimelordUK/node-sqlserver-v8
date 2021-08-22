@@ -22,7 +22,7 @@
           'msodbcsql%': 'msodbcsql17',
           'ext%': '.cpp',
           'homebrew%': '/opt/homebrew/lib/libodbc.a',
-          'linuxlocalodbc%': '-l/usr/local/odbc',
+          'unixlocalodbc%': '-l/usr/local/odbc',
           'linuxodbc%': '-lodbc',
           'winodbc%': 'odbc32'
         },
@@ -105,7 +105,7 @@
                 }],
                 ['arch == "x86_64"',{
                   'variables': {
-                    'link_lib%': '<(linuxlocalodbc)'
+                    'link_lib%': '<(unixlocalodbc)'
                   }
                 }]
             ],
