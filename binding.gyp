@@ -25,7 +25,7 @@
           'unixlocalodbc%': '-l/usr/local/odbc',
           'linuxodbc%': '-lodbc',
           'winodbc%': 'odbc32',
-          'linkdir%': '/usr/local/odbc /usr/local/lib/odbc /usr/local/lib/odbc /opt/homebrew/lib /usr/lib .'
+          'linkdir%': '/usr/local/lib /opt/homebrew/lib /usr/lib .'
         },
 
   'targets': [
