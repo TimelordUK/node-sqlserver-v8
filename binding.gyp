@@ -114,11 +114,11 @@
               '-std=c++1y'
             ],
             'include_dirs': [
+              '/usr/local/opt/<(msodbcsql)/include/',
+              '/usr/local/opt/<(msodbcsql)/include/<(msodbcsql)/',
               '/opt/homebrew/include',
               '/opt/homebrew/include/<(msodbcsql)'
               '/usr/local/include/',
-              '/usr/local/opt/<(msodbcsql)/include/',
-              '/usr/local/opt/<(msodbcsql)/include/<(msodbcsql)/'
             ],
         }],
       ]
