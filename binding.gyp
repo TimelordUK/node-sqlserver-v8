@@ -24,7 +24,8 @@
           'homebrew%': '/opt/homebrew/lib/libodbc.a',
           'unixlocalodbc%': '-l/usr/local/odbc',
           'linuxodbc%': '-lodbc',
-          'winodbc%': 'odbc32'
+          'winodbc%': 'odbc32',
+          'linkdir%': '/usr/local/odbc /usr/local/lib/odbc /usr/local/lib/odbc /opt/homebrew/lib /usr/lib .'
         },
 
   'targets': [
@@ -33,8 +34,8 @@
 
       'variables': {
         'target%': '<!(node -e "console.log(process.versions.node)")', # Set the target variable only if it is not passed in by prebuild 
-        'link_lib%': '', # set for macos based on silicon
-        'fileset%': ["<!@(node -p \"require('fs').readdirSync('./src').filter(x => x.endsWith('<(ext)')).map(f=>'src/'+f).join(' ')\")"]
+        'link_path%': ["<!@(node -p \"'<(linkdir)'.split(' ').filter(x => require('fs').existsSync(x)).map(x=>'-L'+ x).join(' ')\")"], # set for macos based on silicon
+        'fileset%': ["<!@(node -p \"require('fs').readdirSync('./src').filter(x => x.endsWith('<(ext)')).map(f => 'src/'+f).join(' ')\")"]
       },
 
       'sources' : [
@@ -50,7 +51,7 @@
       'actions': [
           {
             'action_name': 'print_variables',
-            'action': ['echo', 'arch: <(arch) | link_lib: <(link_lib) | msodbcsql <(msodbcsql) | fileset <(fileset)'],
+            'action': ['echo', 'arch: <(arch) | link_path: <(link_path) | msodbcsql <(msodbcsql) | fileset <(fileset)'],
 
             'inputs': [],
             'outputs': [
@@ -81,6 +82,7 @@
         ['OS=="linux"', {
             'link_settings': {
              'libraries': [
+                "<!@(node -p \"'<(link_path)'.split(' ').join(' ')\")",
                '<(linuxodbc)',
                ],
             },
@@ -97,21 +99,10 @@
             ],
         }],
         ['OS=="mac"', {
-                'conditions': [
-                ['arch == "arm64"',{
-                  'variables': {
-                    'link_lib%': '<(homebrew)'
-                  }
-                }],
-                ['arch == "x86_64"',{
-                  'variables': {
-                    'link_lib%': '<(unixlocalodbc)'
-                  }
-                }]
-            ],
             'link_settings': {
              'libraries': [
-               '<(link_lib)'
+               '<(link_path)',
+               '<(linuxodbc)'
              #'-lodbc'
                ],
             },
