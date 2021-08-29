@@ -37,20 +37,24 @@
           # Set the target variable only if it is not passed in by prebuild 
         
         'link_path%': [
-          "<!@(node -p \"'<(linkdir)'"
+          "<!@(node -p \""
+              "'<(linkdir)'"
               ".split(' ')"
               ".filter(x => require('fs')"
               ".existsSync(x))"
               ".map(x => '-L'+ x)"
-              ".join(' ')\")"
+              ".join(' ')"
+              "\")"
           ], # set for macos based on silicon
 
         'fileset%': [
-          "<!@(node -p \"require('fs')"
+          "<!@(node -p \""
+            "require('fs')"
             ".readdirSync('./src')"
             ".filter(x => x.endsWith('<(ext)'))"
             ".map(f => 'src/'+f)"
-            ".join(' ')\")"
+            ".join(' ')"
+            "\")"
           ]
       },
 
