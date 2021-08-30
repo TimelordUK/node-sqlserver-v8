@@ -33,7 +33,7 @@ namespace mssql {
 
 	Local<Value> BinaryColumn::ToValue()
 	{
-		auto* const ptr = storage->data() + offset;
+		const auto* const ptr = storage->data() + offset;
 		const auto buff = Nan::CopyBuffer(ptr, len).ToLocalChecked();
 		storage->reserve(0);
 		storage = nullptr;

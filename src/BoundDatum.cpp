@@ -7,10 +7,10 @@
 
 namespace mssql
 {
-	const int sql_server_2008_default_time_precision = 16;
-	const int sql_server_2008_default_datetime_precision = 34;
-	const int sql_server_2008_default_timestamp_precision = 27;
-	const int sql_server_2008_default_datetime_scale = 7;
+	constexpr int sql_server_2008_default_time_precision = 16;
+	constexpr int sql_server_2008_default_datetime_precision = 34;
+	constexpr int sql_server_2008_default_timestamp_precision = 27;
+	constexpr int sql_server_2008_default_datetime_scale = 7;
 
 	static Local<Boolean> get_as_bool(const Local<Value> o, const char* v)
 	{
@@ -155,7 +155,7 @@ namespace mssql
 		_storage->ReserveChars(max(1, static_cast<int>(array_len * precision)));	
 		auto* itr_p = _storage->charvec_ptr->data();
 		buffer = itr_p;
-		buffer_len = precision;
+		buffer_len = static_cast<SQLLEN>(precision);
 		param_size = max(buffer_len, static_cast<SQLLEN>(1));
 	}
 	
@@ -166,7 +166,7 @@ namespace mssql
 		{	
 			const auto str_param = Nan::To<String>(p).FromMaybe(Nan::EmptyString());
 			Nan::Utf8String x(str_param);
-			auto *x_p = *x;
+			const auto *x_p = *x;
 			memcpy(_storage->charvec_ptr->data(), x_p, precision);	
 			_indvec[0] = precision;	
 		}
@@ -214,9 +214,9 @@ namespace mssql
 			const auto width = str->Length();
 			_indvec[i] = width;
 			Nan::Utf8String x(str);
-			auto *x_p = *x;
+			const auto *x_p = *x;
 			_indvec[i] = width;
-			auto store = make_shared<DatumStorage::char_vec_t>(width);
+			const auto store = make_shared<DatumStorage::char_vec_t>(width);
 			store->reserve(width);
 			store->resize(width);
 			vec[i] = store;
@@ -246,7 +246,7 @@ namespace mssql
 			const auto width = str->Length();
 			_indvec[i] = width;
 			Nan::Utf8String x(str);
-			auto *x_p = *x;
+			const auto *x_p = *x;
 			memcpy(&*itr, x_p, max_str_len);
 			itr += max_str_len;
 		}
@@ -257,11 +257,11 @@ namespace mssql
 		js_type = JS_STRING;
 		c_type = SQL_C_WCHAR;
 		sql_type = max_str_len > 2000 && max_str_len < 4000 ? SQL_WLONGVARCHAR : SQL_WVARCHAR;
-		const auto size = sizeof(uint16_t);
+		constexpr auto size = sizeof(uint16_t);
 		_indvec.resize(array_len);
 		_storage->ReserveUint16(array_len * max_str_len);
 		buffer = _storage->uint16vec_ptr->data();
-		buffer_len = max_str_len * size;
+		buffer_len = static_cast<SQLLEN>(max_str_len * size);
 		if (max_str_len >= 4000)
 		{
 			param_size = 0;
@@ -296,15 +296,16 @@ namespace mssql
 			auto maybe_value = Nan::To<String>(local_elem);
 			const auto str = maybe_value.FromMaybe(Nan::EmptyString()); 	
 			const auto len = str->Length();
-			const auto size = sizeof(uint16_t);
-			auto store = make_shared<DatumStorage::uint16_t_vec_t>(len);
+			constexpr auto size = sizeof(uint16_t);
+			const auto store = make_shared<DatumStorage::uint16_t_vec_t>(len);
 			store->reserve(len);
 			store->resize(len);
 			vec[i] = store;
 			const auto itr = store->data();
 			const auto width = len * size;
-			_indvec[i] = width;
-			Nan::DecodeWrite(reinterpret_cast<char*>(&*itr), str->Length()*2, str, Nan::UCS2);
+			_indvec[i] = static_cast<SQLLEN>(width);
+			const size_t strlen = static_cast<size_t>(str->Length()) * 2;
+			Nan::DecodeWrite(reinterpret_cast<char*>(&*itr), strlen, str, Nan::UCS2);
 			store->push_back(0);
 		}
 	}
@@ -322,8 +323,8 @@ namespace mssql
 		auto* const base = _storage->uint16vec_ptr->data();
 		for (uint32_t i = 0; i < array_len; ++i)
 		{
-			const auto size = sizeof(uint16_t);
-			auto* const itr = base + (max_str_len * i);
+			constexpr auto size = sizeof(uint16_t);
+			auto* const itr = base + static_cast<SQLLEN>(max_str_len * i);
 			_indvec[i] = SQL_NULL_DATA;
 			auto elem = Nan::Get(arr, i);
 			if (elem.IsEmpty()) continue;
@@ -332,8 +333,9 @@ namespace mssql
 			auto maybe_value = Nan::To<String>(local_elem);
 			const auto str = maybe_value.FromMaybe(Nan::EmptyString()); 	
 			const auto width = str->Length() * size;
-			_indvec[i] = width;
-			Nan::DecodeWrite(reinterpret_cast<char*>(&*itr), str->Length()*2, str, Nan::UCS2);
+			_indvec[i] = static_cast<SQLLEN>(width);
+			const auto strlen = static_cast<size_t>(str->Length() * 2);
+			Nan::DecodeWrite(reinterpret_cast<char*>(&*itr), strlen, str, Nan::UCS2);
 		}
 	}
 
@@ -344,10 +346,10 @@ namespace mssql
 		_indvec[0] = SQL_NULL_DATA;
 		if (!p->IsNullOrUndefined())
 		{
-			const auto size = sizeof(uint16_t);
+			constexpr auto size = sizeof(uint16_t);
 			const auto str_param = Nan::To<String>(p).FromMaybe(Nan::EmptyString());
 			auto* const first_p = _storage->uint16vec_ptr->data();
-			Nan::DecodeWrite(reinterpret_cast<char*>(first_p), str_param->Length()*2, str_param, Nan::UCS2);
+			DecodeWrite(reinterpret_cast<char*>(first_p), str_param->Length()*2, str_param, Nan::UCS2);
 			buffer_len = precision * size;
 			if (precision >= 4000)
 			{
@@ -393,7 +395,7 @@ namespace mssql
 		c_type = SQL_C_BINARY;
 		sql_type = max_obj_len > 2000 ? SQL_LONGVARBINARY : SQL_VARBINARY;
 		digits = 0;
-		const auto size = sizeof(uint8_t);
+		constexpr auto size = sizeof(uint8_t);
 		_storage->ReserveChars(array_len * max_obj_len);
 		_indvec.resize(array_len);
 		buffer = _storage->charvec_ptr->data();
@@ -440,7 +442,7 @@ namespace mssql
 	{		
 		wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
 		Nan::Utf8String x(s);
-		auto *x_p = *x;
+		const auto *x_p = *x;
 		const string narrow = x_p;
 		auto wide = converter.from_bytes(narrow);
 		return wide;
@@ -469,14 +471,14 @@ namespace mssql
 		_storage->ReserveUint16(static_cast<size_t>(precision) + 1);
 		auto* itr_p = _storage->charvec_ptr->data();
 		Nan::Utf8String x(type_id_str);
-		auto *x_p = *x;
+		const auto *x_p = *x;
 		memcpy(itr_p, x_p, precision);
 		//type_id_str->WriteUtf8(fact.isolate, itr_p, precision);
 		const string narrow = _storage->charvec_ptr->data();
 		const auto type_name = converter.from_bytes(narrow);
-		auto type_name_vec = wstr2wcvec(type_name);
-		const auto size = sizeof(type_name_vec[0]);
-		memcpy(static_cast<void*>(_storage->uint16vec_ptr->data()), type_name_vec.data(), precision * size);
+		const auto type_name_vec = wstr2wcvec(type_name);
+		constexpr auto size = sizeof(type_name_vec[0]);
+		memcpy(_storage->uint16vec_ptr->data(), type_name_vec.data(), precision * size);
 		buffer = _storage->uint16vec_ptr->data();
 		buffer_len = precision * size;
 		param_size = rows; // max no of rows.
@@ -498,7 +500,7 @@ namespace mssql
 		if (valid)
 		{
 			const auto itr = _storage->charvec_ptr->begin();
-			auto* const ptr = node::Buffer::Data(o);
+			const auto* const ptr = node::Buffer::Data(o);
 			_indvec[0] = obj_len;
 			memcpy(&*itr, ptr, obj_len);
 		}
@@ -512,7 +514,7 @@ namespace mssql
 		_indvec.resize(array_len);
 		sql_type = SQLVARBINARY;
 		param_size = SQL_VARLEN_DATA;
-		buffer_len = get_max_object_len(p);
+		buffer_len = static_cast<SQLLEN>(get_max_object_len(p));
 		auto & vec = *_storage->char_vec_vec_ptr;
 		for (uint32_t i = 0; i < array_len; ++i)
 		{
@@ -527,10 +529,10 @@ namespace mssql
 			if (maybe_value.IsEmpty()) continue;
 			const auto local_instance = maybe_value.ToLocalChecked();
 			if (local_instance->IsNullOrUndefined()) continue;
-			auto* const ptr = node::Buffer::Data(local_instance);
+			const auto* const ptr = node::Buffer::Data(local_instance);
 			const auto obj_len = node::Buffer::Length(local_instance);
-			_indvec[i] = obj_len;
-			auto store = make_shared<DatumStorage::char_vec_t>(obj_len);
+			_indvec[i] = static_cast<SQLLEN>(obj_len);
+			const auto store = make_shared<DatumStorage::char_vec_t>(obj_len);
 			store->reserve(obj_len);
 			store->resize(obj_len);
 			vec[i] = store;
@@ -563,9 +565,9 @@ namespace mssql
 			if (maybe_value.IsEmpty()) continue;
 			const auto local_instance = maybe_value.ToLocalChecked();
 			if (local_instance->IsNullOrUndefined()) continue;
-			auto* const ptr = node::Buffer::Data(local_instance);
+			const auto* const ptr = node::Buffer::Data(local_instance);
 			const auto obj_len = node::Buffer::Length(local_instance);
-			_indvec[i] = obj_len;
+			_indvec[i] = static_cast<SQLLEN>(obj_len);
 			memcpy(&*itr, ptr, obj_len);		
 		}
 	}
@@ -605,8 +607,8 @@ namespace mssql
 
 	void BoundDatum::reserve_boolean(const SQLLEN len)
 	{
-		const auto size = sizeof(char);
-		buffer_len = len * size;
+		constexpr auto size = sizeof(char);
+		buffer_len = static_cast<SQLLEN>(len) * size;
 		_storage->ReserveChars(len);
 		_indvec.resize(len);
 		js_type = JS_BOOLEAN;
@@ -728,7 +730,7 @@ namespace mssql
 
 	void BoundDatum::reserve_int32(const SQLLEN len)
 	{
-		const auto size = sizeof(int32_t);
+		constexpr auto size = sizeof(int32_t);
 		buffer_len = len * size;
 		_storage->ReserveInt32(len);
 		_indvec.resize(len);
@@ -779,8 +781,8 @@ namespace mssql
 
 	void BoundDatum::reserve_uint32(const SQLLEN len)
 	{
-		const auto size = sizeof(uint32_t);
-		buffer_len = len * size;
+		constexpr auto size = sizeof(uint32_t);
+		buffer_len = static_cast<SQLLEN>(len * size);
 		_storage->ReserveUInt32(len);
 		_indvec.resize(len);
 		js_type = JS_UINT;
@@ -897,7 +899,7 @@ namespace mssql
 
 	void BoundDatum::reserve_time(const SQLLEN len)
 	{
-		buffer_len = len * sizeof(SQL_SS_TIME2_STRUCT);
+		buffer_len = static_cast<SQLLEN>(len * sizeof(SQL_SS_TIME2_STRUCT));
 		_storage->Reservetime2(len);
 		_indvec.resize(len);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC		
@@ -960,7 +962,7 @@ namespace mssql
 
 	void BoundDatum::reserve_time_stamp(const SQLLEN len)
 	{
-		buffer_len = len * sizeof(SQL_TIMESTAMP_STRUCT);
+		buffer_len = static_cast<SQLLEN>(len) * sizeof(SQL_TIMESTAMP_STRUCT);
 		_storage->ReserveTimestamp(len);
 		_indvec.resize(len);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC		
@@ -1054,14 +1056,14 @@ namespace mssql
 
 	void BoundDatum::reserve_integer(const SQLLEN len)
 	{
-		const auto size = sizeof(int64_t);
+		constexpr auto size = sizeof(int64_t);
 		_storage->ReserveInt64(len);
 		_indvec.resize(len);
 		js_type = JS_NUMBER;
 		c_type = SQL_C_SBIGINT;
 		sql_type = SQL_BIGINT;
 		buffer = _storage->int64vec_ptr->data();
-		buffer_len = size * len;
+		buffer_len = static_cast<SQLLEN>(size) * len;
 		param_size = size;
 		digits = 0;
 		if (is_bcp) {
@@ -1116,14 +1118,14 @@ namespace mssql
 
 	void BoundDatum::reserve_double(const SQLLEN len)
 	{
-		const auto size = sizeof(double);
+		constexpr auto size = sizeof(double);
 		_storage->ReserveDouble(len);
 		_indvec.resize(len);
 		js_type = JS_NUMBER;
 		c_type = SQL_C_DOUBLE;
 		sql_type = SQL_DOUBLE;
 		buffer = _storage->doublevec_ptr->data();
-		buffer_len = size * len;
+		buffer_len = static_cast<SQLLEN>(size) * len;
 		param_size = size;
 		digits = 0;
 		if (is_bcp) {
@@ -1215,7 +1217,7 @@ namespace mssql
 		return false;
 	}
 
-	bool is_numeric(wstring& v)
+	bool is_numeric(const wstring& v)
 	{
 		const auto res = v == L"numeric"
 			|| v == L"decimal"
@@ -1270,7 +1272,7 @@ namespace mssql
 	bool sql_type_s_maps_to_numeric(const Local<Value> p)
 	{
 		const auto str = get_as_string(p, "type_id");
-		auto v = FromV8String(str);
+		const auto v = FromV8String(str);
 		const auto res = is_numeric(v);
 		return res;
 	}
@@ -1768,7 +1770,7 @@ namespace mssql
 
 	bool BoundDatum::user_bind(Local<Value>& p, Local<Value>& v)
 	{
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
 		const auto maybe_sql_type = v->Int32Value(fact.isolate->GetCurrentContext());
 		const auto local_sql_type = maybe_sql_type.FromMaybe(0);
@@ -2023,7 +2025,7 @@ namespace mssql
 		else
 		{
 			const nodeTypeFactory fact;
-			auto& vec = *_storage->int64vec_ptr;
+			const auto& vec = *_storage->int64vec_ptr;
 			v = fact.new_int64(vec[0]);
 		}
 		return v;
@@ -2056,7 +2058,7 @@ namespace mssql
 			break;
 
 		case SQL_BIT:
-			reserve_boolean(row_count);
+			reserve_boolean(static_cast<SQLLEN>(row_count));
 			break;
 
 		case SQL_SMALLINT:
@@ -2069,7 +2071,7 @@ namespace mssql
 		case SQL_C_USHORT:
 		case SQL_C_UTINYINT:
 		case SQL_BIGINT:
-			reserve_integer(row_count);
+			reserve_integer(static_cast<SQLLEN>(row_count));
 			break;
 
 		case SQL_DECIMAL:
@@ -2077,7 +2079,7 @@ namespace mssql
 		case SQL_REAL:
 		case SQL_FLOAT:
 		case SQL_DOUBLE:
-			reserve_double(row_count);
+			reserve_double(static_cast<SQLLEN>(row_count));
 			break;
 
 		case SQL_BINARY:
@@ -2088,19 +2090,19 @@ namespace mssql
 			break;
 
 		case SQL_SS_TIMESTAMPOFFSET:
-			reserve_time_stamp_offset(row_count);
+			reserve_time_stamp_offset(static_cast<SQLLEN>(row_count));
 			break;
 
 		case SQL_TYPE_TIME:
 		case SQL_SS_TIME2:
-			reserve_time(row_count);
+			reserve_time(static_cast<SQLLEN>(row_count));
 			break;
 
 		case SQL_TIMESTAMP:
 		case SQL_DATETIME:
 		case SQL_TYPE_TIMESTAMP:
 		case SQL_TYPE_DATE:
-			reserve_time_stamp(row_count);
+			reserve_time_stamp(static_cast<SQLLEN>(row_count));
 			break;
 
 		default:

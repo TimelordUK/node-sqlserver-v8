@@ -21,7 +21,7 @@ namespace mssql {
 		// fprintf(stderr, "destruct OdbcStatementCache\n");
 
 		for_each(_statementHandles.begin(), _statementHandles.end(), [&](const auto & p) {
-            shared_ptr<OdbcStatementHandle> s = (p.second);
+			const shared_ptr<OdbcStatementHandle> s = (p.second);
 			// std::cerr << " clear " << p.first << " p = " << this << std::endl;
             s->free();
 			ids.insert(ids.begin(), p.first);
@@ -58,7 +58,7 @@ namespace mssql {
 		}
 		auto statement = find(statement_id);
 		if (statement) return statement;
-        auto handle = make_shared<OdbcStatementHandle>(statement_id);
+		const auto handle = make_shared<OdbcStatementHandle>(statement_id);
         handle->alloc(*_connectionHandle);
 		//std::cerr << " checkout " << statement_id << " p = " << this <<  endl;
 		return store(handle);
@@ -66,7 +66,7 @@ namespace mssql {
 
     void ConnectionHandles::checkin(long statementId) { 
 		// std::cerr << " checkin " << statementId << " p = " << this <<  endl;
-        auto handle = find(statementId);
+		const auto handle = find(statementId);
         if (handle == nullptr) return;
 		 _statementHandles.erase(statementId);
         handle->free(); 

@@ -24,10 +24,10 @@ namespace mssql {
 
 	namespace {
 
-		const int64_t ms_per_second = static_cast<int64_t>(1e3);
-		const int64_t ms_per_minute = 60 * ms_per_second;
-		const int64_t ms_per_hour = 60 * ms_per_minute;
-		const int64_t ms_per_day = 24 * ms_per_hour;
+		constexpr int64_t ms_per_second = static_cast<int64_t>(1e3);
+		constexpr int64_t ms_per_minute = 60 * ms_per_second;
+		constexpr int64_t ms_per_hour = 60 * ms_per_minute;
+		constexpr int64_t ms_per_day = 24 * ms_per_hour;
 
 		bool is_leap_year(const int64_t year)
 		{
@@ -39,7 +39,7 @@ namespace mssql {
 	double TimestampColumn::DaysSinceEpoch(const SQLSMALLINT y, const SQLUSMALLINT m, const SQLUSMALLINT d) const
 	{
 		// table derived from ECMA 262 15.9.1.4
-		static const double days_in_months[] = { 0.0, 31.0, 59.0, 90.0, 120.0, 151.0, 181.0, 212.0, 243.0, 273.0, 304.0, 334.0 };
+		static constexpr double days_in_months[] = { 0.0, 31.0, 59.0, 90.0, 120.0, 151.0, 181.0, 212.0, 243.0, 273.0, 304.0, 334.0 };
 
 		// calculate the number of days to the start of the year
 		auto days = 365.0 * (y - 1970.0) + floor((y - 1969.0) / 4.0) - floor((y - 1901.0) / 100.0) + floor((y - 1601.0) / 400.0);
@@ -140,8 +140,8 @@ namespace mssql {
 	// since Jan 1, 1970.  Dates before 1970 are represented as negative numbers.
 	void TimestampColumn::DateFromMilliseconds(SQL_SS_TIMESTAMPOFFSET_STRUCT& date) const
 	{
-		static const int64_t days_in_months[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-		static const int64_t leap_days_in_months[] = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+		static constexpr int64_t days_in_months[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+		static constexpr int64_t leap_days_in_months[] = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
 		const auto* start_days = days_in_months;
 
