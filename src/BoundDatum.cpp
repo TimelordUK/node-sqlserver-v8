@@ -324,7 +324,7 @@ namespace mssql
 		for (uint32_t i = 0; i < array_len; ++i)
 		{
 			constexpr auto size = sizeof(uint16_t);
-			auto* const itr = base + static_cast<SQLLEN>(max_str_len * i);
+			auto* const itr = base + static_cast<SQLLEN>(max_str_len ) * i;
 			_indvec[i] = SQL_NULL_DATA;
 			auto elem = Nan::Get(arr, i);
 			if (elem.IsEmpty()) continue;
@@ -334,7 +334,7 @@ namespace mssql
 			const auto str = maybe_value.FromMaybe(Nan::EmptyString()); 	
 			const auto width = str->Length() * size;
 			_indvec[i] = static_cast<SQLLEN>(width);
-			const auto strlen = static_cast<size_t>(str->Length() * 2);
+			const auto strlen = static_cast<size_t>(str->Length()) * 2;
 			Nan::DecodeWrite(reinterpret_cast<char*>(&*itr), strlen, str, Nan::UCS2);
 		}
 	}
@@ -349,8 +349,8 @@ namespace mssql
 			constexpr auto size = sizeof(uint16_t);
 			const auto str_param = Nan::To<String>(p).FromMaybe(Nan::EmptyString());
 			auto* const first_p = _storage->uint16vec_ptr->data();
-			DecodeWrite(reinterpret_cast<char*>(first_p), str_param->Length()*2, str_param, Nan::UCS2);
-			buffer_len = precision * size;
+			DecodeWrite(reinterpret_cast<char*>(first_p), static_cast<size_t>(str_param->Length()) * 2, str_param, Nan::UCS2);
+			buffer_len = static_cast<SQLLEN>(precision) * static_cast<SQLLEN>(size);
 			if (precision >= 4000)
 			{
 				param_size = 0;
@@ -399,7 +399,7 @@ namespace mssql
 		_storage->ReserveChars(array_len * max_obj_len);
 		_indvec.resize(array_len);
 		buffer = _storage->charvec_ptr->data();
-		buffer_len = max_obj_len * size;
+		buffer_len = static_cast<SQLLEN>(max_obj_len) * static_cast<SQLLEN>(size);
 		param_size = max_obj_len;
 	}
 
@@ -466,9 +466,9 @@ namespace mssql
 			_storage->schema = wide_from_js_string(schema_str);
 		}
 		_indvec.resize(1);
-		const auto precision = type_id_str->Length();
-		_storage->ReserveChars(static_cast<size_t>(precision) + 1);
-		_storage->ReserveUint16(static_cast<size_t>(precision) + 1);
+		const size_t precision = type_id_str->Length();
+		_storage->ReserveChars(precision + 1);
+		_storage->ReserveUint16(precision + 1);
 		auto* itr_p = _storage->charvec_ptr->data();
 		Nan::Utf8String x(type_id_str);
 		const auto *x_p = *x;
@@ -480,7 +480,7 @@ namespace mssql
 		constexpr auto size = sizeof(type_name_vec[0]);
 		memcpy(_storage->uint16vec_ptr->data(), type_name_vec.data(), precision * size);
 		buffer = _storage->uint16vec_ptr->data();
-		buffer_len = precision * size;
+		buffer_len = static_cast<SQLLEN>(precision) * static_cast<SQLLEN>(size);
 		param_size = rows; // max no of rows.
 		_indvec[0] = rows; // no of rows.
 		digits = 0;
@@ -501,7 +501,7 @@ namespace mssql
 		{
 			const auto itr = _storage->charvec_ptr->begin();
 			const auto* const ptr = node::Buffer::Data(o);
-			_indvec[0] = obj_len;
+			_indvec[0] = static_cast<SQLLEN>(obj_len);
 			memcpy(&*itr, ptr, obj_len);
 		}
 	}
@@ -608,7 +608,7 @@ namespace mssql
 	void BoundDatum::reserve_boolean(const SQLLEN len)
 	{
 		constexpr auto size = sizeof(char);
-		buffer_len = static_cast<SQLLEN>(len) * size;
+		buffer_len = static_cast<SQLLEN>(len) * static_cast<SQLLEN>(size);
 		_storage->ReserveChars(len);
 		_indvec.resize(len);
 		js_type = JS_BOOLEAN;
@@ -710,11 +710,11 @@ namespace mssql
 	void BoundDatum::bind_int32_array(const Local<Value>& p)
 	{
 		const auto arr = Local<Array>::Cast(p);
-		const int len = arr->Length();
+		const auto len = arr->Length();
 		reserve_int32(len);
 		auto& vec = *_storage->int32vec_ptr;
 
-		for (auto i = 0; i < len; ++i)
+		for (unsigned int i = 0; i < len; ++i)
 		{
 			_indvec[i] = SQL_NULL_DATA;
 			auto maybe_elem = Nan::Get(arr, i);
@@ -731,7 +731,7 @@ namespace mssql
 	void BoundDatum::reserve_int32(const SQLLEN len)
 	{
 		constexpr auto size = sizeof(int32_t);
-		buffer_len = len * size;
+		buffer_len = len * static_cast<SQLLEN>(size);
 		_storage->ReserveInt32(len);
 		_indvec.resize(len);
 		js_type = JS_INT;
@@ -962,7 +962,7 @@ namespace mssql
 
 	void BoundDatum::reserve_time_stamp(const SQLLEN len)
 	{
-		buffer_len = static_cast<SQLLEN>(len) * sizeof(SQL_TIMESTAMP_STRUCT);
+		buffer_len = static_cast<SQLLEN>(len) * static_cast<SQLLEN>(sizeof(SQL_TIMESTAMP_STRUCT));
 		_storage->ReserveTimestamp(len);
 		_indvec.resize(len);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC		

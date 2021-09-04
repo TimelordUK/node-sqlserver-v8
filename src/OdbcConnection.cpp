@@ -94,7 +94,7 @@ namespace mssql
 			if (connectionState != Closed)
 			{
 				const auto ch = _connectionHandles->connectionHandle();
-				auto& connection = *ch;
+				const auto& connection = *ch;
 				SQLDisconnect(connection);
 				connectionState = Closed;
 			}
@@ -107,7 +107,7 @@ namespace mssql
 	{
 		_errors->clear();
 		const auto ch = _connectionHandles->connectionHandle();
-		auto& connection = *ch;
+		const auto& connection = *ch;
 		connection.read_errors(_errors);
 		// fprintf(stderr, "RETURN_ODBC_ERROR - free connection handle\n\n");
 		TryClose();
@@ -128,7 +128,7 @@ namespace mssql
 		if (timeout > 0)
 		{
 			const auto ch = _connectionHandles->connectionHandle();
-			auto& connection = *ch;
+			const auto& connection = *ch;
 			auto* const to = reinterpret_cast<SQLPOINTER>(static_cast<long long>(timeout));
 			auto ret = SQLSetConnectAttr(connection, SQL_ATTR_CONNECTION_TIMEOUT, to, 0);
 			if (!CheckOdbcError(ret)) return false;
@@ -159,7 +159,7 @@ namespace mssql
 		if (!CheckOdbcError(ret)) return false;
 		const auto len = static_cast<SQLSMALLINT>(connection_string.length());
 		auto vec = wstr2wcvec(connection_string);
-		ret = SQLSetConnectAttr(handle, SQL_COPT_SS_BCP, (SQLPOINTER)SQL_BCP_ON, SQL_IS_INTEGER);  
+		ret = SQLSetConnectAttr(handle, SQL_COPT_SS_BCP, reinterpret_cast<SQLPOINTER>(SQL_BCP_ON), SQL_IS_INTEGER);  
 		if (!CheckOdbcError(ret)) return false;
 
 		ret = SQLDriverConnect(handle, nullptr, vec.data(),

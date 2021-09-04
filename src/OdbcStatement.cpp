@@ -44,7 +44,7 @@ namespace mssql
 	{
 		const auto f = params.begin();
 		if (f == params.end()) return 0;
-		auto p = *f;
+		const auto p = *f;
 		if (p->is_tvp)
 		{
 			//return p->param_size;
@@ -223,7 +223,7 @@ namespace mssql
 	{
 		if(!_statement) return false;
 		const auto& statement = *_statement;
-		for (auto& tvp : tvps)
+		for (const auto& tvp : tvps)
 		{
 			auto tvpret = SQLSetStmtAttr(statement, SQL_SOPT_SS_PARAM_FOCUS,
 			                             reinterpret_cast<SQLPOINTER>(static_cast<long long>(tvp.first)), SQL_IS_INTEGER);
@@ -521,7 +521,7 @@ namespace mssql
 		_preparedStorage->reserve(_resultset, prepared_rows_to_bind);
 
 		auto i = 0;
-		for (auto& datum : *_preparedStorage)
+		for (const auto& datum : *_preparedStorage)
 		{
 			ret = SQLBindCol(statement, static_cast<SQLUSMALLINT>(i + 1), datum->c_type, datum->buffer, datum->buffer_len, datum->get_ind_vec().data());
 			if (!check_odbc_error(ret)) return false;
@@ -651,7 +651,7 @@ namespace mssql
 	bool OdbcStatement::cancel_handle()
 	{
 		if(!_statement) return false;
-		auto &hnd = *_statement;
+		const auto &hnd = *_statement;
 		const auto ret2 = SQLCancelHandle(hnd.HandleType, hnd.get());
 		if (!check_odbc_error(ret2))
 		{
@@ -930,8 +930,7 @@ namespace mssql
 	{
 		const auto& statement = *_statement;
 		SQLLEN str_len_or_ind_ptr = 0;
-		SQL_SS_TIME2_STRUCT time;
-		memset(&time, 0, sizeof(time));
+		SQL_SS_TIME2_STRUCT time = {};
 
 		const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_DEFAULT, &time, sizeof(time), &str_len_or_ind_ptr);
 		if (!check_odbc_error(ret)) return false;
@@ -941,9 +940,7 @@ namespace mssql
 			return true;
 		}
 
-		SQL_SS_TIMESTAMPOFFSET_STRUCT datetime;
-		// not necessary, but simple precaution
-		memset(&datetime, 0, sizeof datetime);
+		SQL_SS_TIMESTAMPOFFSET_STRUCT datetime = {};
 		datetime.year = SQL_SERVER_DEFAULT_YEAR;
 		datetime.month = SQL_SERVER_DEFAULT_MONTH;
 		datetime.day = SQL_SERVER_DEFAULT_DAY;
@@ -1030,7 +1027,7 @@ namespace mssql
 	bool OdbcStatement::reserved_bit(const size_t row_count, const size_t column) const
 	{
 		const auto& bound_datum = _preparedStorage->atIndex(static_cast<int>(column));
-		auto& ind = bound_datum->get_ind_vec();
+		const auto& ind = bound_datum->get_ind_vec();
 		const auto storage = bound_datum->get_storage();
 		for (size_t row_id = 0; row_id < row_count; ++row_id) {			
 			const auto str_len_or_ind_ptr = ind[row_id];
@@ -1048,7 +1045,7 @@ namespace mssql
 	bool OdbcStatement::reserved_int(const size_t row_count, const size_t column) const
 	{
 		const auto& bound_datum = _preparedStorage->atIndex(static_cast<int>(column));
-		auto& ind = bound_datum->get_ind_vec();
+		const auto& ind = bound_datum->get_ind_vec();
 		const auto storage = bound_datum->get_storage();
 		for (size_t row_id = 0; row_id < row_count; ++row_id) {
 			auto v = (*storage->int64vec_ptr)[row_id];
@@ -1066,7 +1063,7 @@ namespace mssql
 	bool OdbcStatement::reserved_decimal(const size_t row_count, const size_t column) const
 	{
 		const auto& bound_datum = _preparedStorage->atIndex(static_cast<int>(column));
-		auto& ind = bound_datum->get_ind_vec();
+		const auto& ind = bound_datum->get_ind_vec();
 		const auto storage = bound_datum->get_storage();
 		for (size_t row_id = 0; row_id < row_count; ++row_id) {
 			auto v = (*storage->doublevec_ptr)[row_id];
@@ -1120,10 +1117,10 @@ namespace mssql
 	bool OdbcStatement::reserved_time(const size_t row_count, const size_t column) const
 	{
 		const auto& bound_datum = _preparedStorage->atIndex(static_cast<int>(column));
-		auto& ind = bound_datum->get_ind_vec();
+		const auto& ind = bound_datum->get_ind_vec();
 		const auto storage = bound_datum->get_storage();
 		for (size_t row_id = 0; row_id < row_count; ++row_id) {
-			auto & time = (*storage->time2vec_ptr)[row_id];
+			const auto & time = (*storage->time2vec_ptr)[row_id];
 			const auto str_len_or_ind_ptr = ind[row_id];
 			if (str_len_or_ind_ptr == SQL_NULL_DATA)
 			{
@@ -1131,9 +1128,7 @@ namespace mssql
 				continue;
 			}
 
-			SQL_SS_TIMESTAMPOFFSET_STRUCT datetime;
-			// not necessary, but simple precaution
-			memset(&datetime, 0, sizeof(datetime));
+			SQL_SS_TIMESTAMPOFFSET_STRUCT datetime = {};
 			datetime.year = SQL_SERVER_DEFAULT_YEAR;
 			datetime.month = SQL_SERVER_DEFAULT_MONTH;
 			datetime.day = SQL_SERVER_DEFAULT_DAY;
@@ -1169,10 +1164,10 @@ namespace mssql
 		auto storage = make_shared<DatumStorage>();
 
 		const auto& statement = *_statement;
-		const SQLLEN atomic_read = 24 * 1024;
+		constexpr SQLLEN atomic_read = 24 * 1024;
 		auto bytes_to_read = atomic_read;
 		storage->ReserveChars(bytes_to_read + 1);
-		auto & char_data = storage->charvec_ptr;
+		const auto & char_data = storage->charvec_ptr;
 		auto* write_ptr = char_data->data();
 		SQLLEN total_bytes_to_read = 0;
 		auto r = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY, write_ptr, bytes_to_read, &total_bytes_to_read);
@@ -1336,7 +1331,7 @@ namespace mssql
 		capture.on_first_read();
 		while (more)
 		{
-			capture.bytes_to_read = min(static_cast<SQLLEN>(capture.atomic_read_bytes), capture.total_bytes_to_read);
+			capture.bytes_to_read = min(capture.atomic_read_bytes, capture.total_bytes_to_read);
 			r = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
 			capture.on_next_read();
 			if (!check_odbc_error(r)) {
@@ -1359,10 +1354,10 @@ namespace mssql
 	bool OdbcStatement::reserved_string(const size_t row_count, const size_t column_size, const size_t column) const
 	{
 		const auto& bound_datum = _preparedStorage->atIndex(static_cast<int>(column));
-		auto& ind = bound_datum->get_ind_vec();
+		const auto& ind = bound_datum->get_ind_vec();
 		const auto storage = bound_datum->get_storage();			
 		for (size_t row_id = 0; row_id < row_count; ++row_id) {
-			const auto size = sizeof(uint16_t);
+			constexpr auto size = sizeof(uint16_t);
 			const auto str_len_or_ind_ptr = ind[row_id];
 			if (str_len_or_ind_ptr == SQL_NULL_DATA)
 			{
@@ -1400,7 +1395,7 @@ namespace mssql
 		// cerr << "bounded_string ... " << endl;
 
 		const auto storage = make_shared<DatumStorage>();
-		const auto size = sizeof(uint16_t);
+		constexpr auto size = sizeof(uint16_t);
 		SQLLEN value_len = 0;
 
 		display_size++;

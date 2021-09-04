@@ -138,7 +138,7 @@ namespace mssql
 			args[1] = fact.new_array();
 		}
 		args[2] = Nan::New(more);
-		const auto argc = 3;
+		constexpr auto argc = 3;
 		return argc;
 	}
 

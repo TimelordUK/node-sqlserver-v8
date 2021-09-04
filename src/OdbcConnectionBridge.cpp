@@ -103,7 +103,7 @@ namespace mssql
 
 	int32_t getint32(const Local<Number> l)
 	{
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
 		if (!l->IsNull())
 		{
@@ -119,7 +119,7 @@ namespace mssql
 
 	Local<String> getstring(const Local<Value> l)
 	{
-		nodeTypeFactory fact;
+		const nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
 		if (!l->IsNull())
 		{
