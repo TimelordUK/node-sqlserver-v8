@@ -277,7 +277,16 @@ export interface BulkMgrSummary {
     assignableColumns: TableColumn
 }
 
+export interface BulkTableMgrPromises
+{
+    select(cols: any[]): Promise<BulkSelectCb>
+    insert(rows: any[]): Promise<StatusCb>
+    delete(rows: any[]): Promise<StatusCb>
+    update(rows: any[]): Promise<StatusCb>
+}
+
 export interface BulkTableMgr {
+    promises: BulkTableMgrPromises
     getSummary(): BulkMgrSummary
     asUserType(name:string): string
     // the driver will be sent column types in table rather than deriving from data
