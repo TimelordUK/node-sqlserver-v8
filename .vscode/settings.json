@@ -64,5 +64,6 @@
         "stop_token": "cpp",
         "xlocmon": "cpp",
         "xlocnum": "cpp"
-    }
+    },
+    "cmake.configureOnOpen": false
 }

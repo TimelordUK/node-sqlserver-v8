@@ -1,4 +1,5 @@
 const sql = require('msnodesqlv8')
+const { utilModule } = require('msnodesqlv8/lib/util')
 const util = require('util')
 
 function getConnection () {
@@ -101,7 +102,7 @@ async function messages (connectionProxy, invocations, procTimeout) {
     await helper.create()
     const promises = []
     for (let i = 0; i < invocations; ++i) {
-      promises.push(helper.callprocAggregator([], { timeoutMs: procTimeout, raw: i % 2 === 0 }))
+      promises.push(helper.call([], { timeoutMs: procTimeout, raw: i % 2 === 0 }))
     }
     const res = await Promise.all(promises)
     return res
@@ -124,13 +125,13 @@ async function testTimeout (connectionProxy, invocations, procTimeout) {
   }
   for (let i = 0; i < invocations; ++i) {
     try {
-      const res = await helper.callprocAggregator(p, { timeoutMs: procTimeout })
+      const res = await helper.call(p, { timeoutMs: procTimeout })
       console.log(`${longspName}: testTimeout [${i} - ${procTimeout}] done - sets returned ${res.results.length} [${res.results.map(r => r.length).join(', ')}]`)
     } catch (e) {
       console.log(`rejection: ${e.message} - test connection still good.`)
       // test can still use the connection
-      const promisedQuery = util.promisify(connectionProxy.query)
-      promisedQuery('SELECT @@version as version').then(res => {
+
+      helper.query('SELECT @@version as version').then(res => {
         console.log(`good ${JSON.stringify(res, null, 4)}`)
       }).catch(e2 => {
         console.log(`bad ${e2.message}`)
@@ -173,7 +174,7 @@ async function test (connectionProxy, invocations) {
       param: 'hello world'
     }
     for (let i = 0; i < invocations; ++i) {
-      promises.push(helper.callprocAggregator(p))
+      promises.push(helper.call(p))
     }
     const res = await Promise.all(promises)
     const elapsed = new Date() - d
@@ -203,6 +204,7 @@ class ProcedureHelper {
     this.defition = def
     this.dropProcedureSql = dropProcedureSql
     this.connectionProxy = connectionProxy
+    this.aggregator = new utilModule.QueryAggregator(connectionProxy)
   }
 
   async create () {
@@ -211,7 +213,11 @@ class ProcedureHelper {
     await promisedQuery(this.defition)
   }
 
-  callprocAggregator (o, options) {
-    return this.connectionProxy.callprocAggregator(this.procName, o, options)
+  query (sql, params, options) {
+    return this.aggregator.query(sql, params, options)
+  }
+
+  call (o, options) {
+    return this.aggregator.callProc(this.procName, o, options)
   }
 }

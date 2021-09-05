@@ -235,8 +235,8 @@ suite('bulk', function () {
       }
       theConnection.setUseUTC(false)
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
