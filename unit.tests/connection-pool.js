@@ -47,10 +47,7 @@ suite('connection-pool', function () {
           ceiling: size
         })
         await pool.promises.open()
-        const all = []
-        for (let i = 0; i < 100; ++i) {
-          all.push(pool.promises.query('select @@SPID as spid'))
-        }
+        const all = Array(8).fill(100).map((_, i) => pool.promises.query(`select ${i} as i, @@SPID as spid`))
         const promised = await Promise.all(all)
         const res = promised.map(r => r.first[0].spid)
         assert(res !== null)
