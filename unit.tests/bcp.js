@@ -72,12 +72,10 @@ suite('bcp', function () {
     }
 
     async create () {
-      const promisedQuery = util.promisify(theConnection.query)
-      const tm = theConnection.tableMgr()
-      const promisedGetTable = util.promisify(tm.getTable)
-      await promisedQuery(this.dropTableSql)
-      await promisedQuery(this.createTableSql)
-      const table = await promisedGetTable(this.tableName)
+      const promises = this.theConnection.promises
+      await promises.query(this.dropTableSql)
+      await promises.query(this.createTableSql)
+      const table = await promises.getTable(this.tableName)
       return table
     }
   }
@@ -100,10 +98,9 @@ suite('bcp', function () {
         theConnection.setUseUTC(false)
         const table = await helper.create()
         table.setUseBcp(true)
-        const promisedInsert = util.promisify(table.insertRows)
         const promisedQuery = util.promisify(theConnection.query)
 
-        await promisedInsert(expected)
+        await table.promises.insert(expected)
         const res = await promisedQuery(`select count(*) as rows from ${this.definition.tableName}`)
         assert.deepStrictEqual(res[0].rows, rows)
         const top = await promisedQuery(`select top 100 * from ${this.definition.tableName}`)
@@ -180,13 +177,11 @@ suite('bcp', function () {
     async insertSelect (table) {
       const parsedJSON = this.createEmployees(200)
       table.setUseBcp(true)
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
       const d = new Date()
-      await promisedInsert(parsedJSON)
+      await table.promises.insert(parsedJSON)
       console.log(`ms = ${new Date() - d}`)
       const keys = helper.extractKey(parsedJSON, 'BusinessEntityID')
-      const results = await promisedSelect(keys)
+      const results = await table.promises.select(keys)
       assert.deepStrictEqual(results, parsedJSON, 'results didn\'t match')
     }
   }

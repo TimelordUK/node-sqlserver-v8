@@ -87,12 +87,9 @@ suite('bulk', function () {
       }
 
       async function create () {
-        const promisedQuery = util.promisify(theConnection.query)
-        const tm = theConnection.tableMgr()
-        const promisedGetTable = util.promisify(tm.getTable)
-        await promisedQuery(dropTableSql)
-        await promisedQuery(createTableSql)
-        const table = await promisedGetTable(tableName)
+        await theConnection.promises.query(dropTableSql)
+        await theConnection.promises.query(createTableSql)
+        const table = await theConnection.promises.getTable(tableName)
         return table
       }
 
@@ -125,12 +122,9 @@ suite('bulk', function () {
       }
 
       async function create () {
-        const promisedQuery = util.promisify(theConnection.query)
-        const tm = theConnection.tableMgr()
-        const promisedGetTable = util.promisify(tm.getTable)
-        await promisedQuery(dropTableSql)
-        await promisedQuery(createTableSql)
-        const table = await promisedGetTable(tableName)
+        await theConnection.promises.query(dropTableSql)
+        await theConnection.promises.query(createTableSql)
+        const table = await theConnection.promises.getTable(tableName)
         return table
       }
 
@@ -178,12 +172,9 @@ suite('bulk', function () {
     }
 
     async create () {
-      const promisedQuery = util.promisify(theConnection.query)
-      const tm = theConnection.tableMgr()
-      const promisedGetTable = util.promisify(tm.getTable)
-      await promisedQuery(this.dropTableSql)
-      await promisedQuery(this.createTableSql)
-      const table = await promisedGetTable(this.tableName)
+      await theConnection.promises.query(this.dropTableSql)
+      await theConnection.promises.query(this.createTableSql)
+      const table = await theConnection.promises.getTable(this.tableName)
       return table
     }
   }
@@ -235,11 +226,9 @@ suite('bulk', function () {
       }
       theConnection.setUseUTC(false)
       const table = await helper.create()
-      const promisedInsert = table.promises.insert
-      const promisedSelect = table.promises.select
       try {
-        await promisedInsert(expected)
-        const res = await promisedSelect(expected)
+        await table.promises.insert(expected)
+        const res = await table.promises.select(expected)
         res.forEach(a => {
           delete a.d1.nanosecondsDelta
         })
