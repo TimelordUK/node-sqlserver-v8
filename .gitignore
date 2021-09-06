@@ -72,3 +72,7 @@ build/
 tags
 tags.lock
 tags.temp
+runtest-linux
+.gitignore
+runtest-win.exe
+runtest-macos

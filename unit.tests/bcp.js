@@ -3,7 +3,6 @@
 
 const supp = require('msnodesqlv8/samples/typescript/demo-support')
 const assert = require('assert')
-const util = require('util')
 
 suite('bcp', function () {
   let theConnection
@@ -356,10 +355,9 @@ suite('bcp', function () {
     test().then(async (e) => {
       if (!e) testDone(new Error('expected violation constraint'))
       assert(e.message.includes('Violation of PRIMARY KEY constraint'))
-      const promisedQuery = util.promisify(theConnection.query)
       try {
-        const res = await promisedQuery(`select count(*) as count from ${name}`)
-        assert.deepStrictEqual(res[0].count, 0)
+        const res = await theConnection.promises.query(`select count(*) as count from ${name}`)
+        assert.deepStrictEqual(res.first[0].count, 0)
       } catch (e) {
         testDone(e)
       }

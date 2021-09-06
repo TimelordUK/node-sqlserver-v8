@@ -3,7 +3,6 @@
 
 const supp = require('../samples/typescript/demo-support')
 const assert = require('assert')
-const util = require('util')
 
 suite('bulk', function () {
   let theConnection
@@ -284,8 +283,8 @@ suite('bulk', function () {
       const expected = helper.getVec(1, () => testDate)
       theConnection.setUseUTC(false)
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
@@ -344,8 +343,8 @@ suite('bulk', function () {
       const expected = helper.getVec(1, () => testDate)
       theConnection.setUseUTC(false)
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
@@ -369,8 +368,8 @@ suite('bulk', function () {
       const expected = helper.getVec(1, () => testDate)
       theConnection.setUseUTC(false)
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
@@ -393,8 +392,8 @@ suite('bulk', function () {
       const helper = new TypeTableHelper(theConnection, 'NVARCHAR(MAX)')
       const expected = helper.getVec(10, i => b)
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
@@ -414,8 +413,8 @@ suite('bulk', function () {
       const helper = new TypeTableHelper(theConnection, 'NVARCHAR(MAX)')
       const expected = helper.getVec(10, i => b)
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
@@ -435,8 +434,8 @@ suite('bulk', function () {
       const helper = new TypeTableHelper(theConnection, 'NVARCHAR(MAX)')
       const expected = helper.getVec(10, i => b)
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
@@ -456,8 +455,8 @@ suite('bulk', function () {
       const helper = new TypeTableHelper(theConnection, 'varbinary(10)')
       const expected = helper.getVec(10, i => i % 2 === 0 ? null : b)
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
@@ -478,8 +477,8 @@ suite('bulk', function () {
       const helper = new TypeTableHelper(theConnection, 'varbinary(10)')
       const expected = helper.getVec(10, i => i % 2 === 0 ? emptyBuffer : b)
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
@@ -499,8 +498,8 @@ suite('bulk', function () {
       const helper = new TypeTableHelper(theConnection, 'varbinary(20)')
       const expected = helper.getVec(10, _ => b)
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
@@ -519,8 +518,8 @@ suite('bulk', function () {
       const helper = new TypeTableHelper(theConnection, 'datetime')
       const expected = helper.getVec(10, i => addDays(i))
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
@@ -542,8 +541,8 @@ suite('bulk', function () {
       const helper = new TypeTableHelper(theConnection, 'datetime')
       const expected = helper.getVec(10, i => i % 2 === 0 ? null : addDays(i))
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
@@ -567,8 +566,8 @@ suite('bulk', function () {
       const helper = new TypeTableHelper(theConnection, 'decimal(20,18)')
       const expected = helper.getVec(10, i => 1 / (i + 2.5))
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
@@ -587,8 +586,8 @@ suite('bulk', function () {
       const helper = new TypeTableHelper(theConnection, 'decimal(20,18)')
       const expected = helper.getVec(10, i => i % 2 === 0 ? null : 1 / (i + 2.5))
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
@@ -607,8 +606,8 @@ suite('bulk', function () {
       const helper = new TypeTableHelper(theConnection, 'bit')
       const expected = helper.getVec(10, i => i % 2 === 0 ? null : i % 2 === 0)
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
@@ -627,8 +626,8 @@ suite('bulk', function () {
       const helper = new TypeTableHelper(theConnection, 'bit')
       const expected = helper.getVec(10, i => i % 2 === 0)
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
@@ -647,8 +646,8 @@ suite('bulk', function () {
       const helper = new TypeTableHelper(theConnection, 'int')
       const expected = helper.getVec(10, i => i % 2 === 0 ? null : i * 10)
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
@@ -667,8 +666,8 @@ suite('bulk', function () {
       const helper = new TypeTableHelper(theConnection, 'int')
       const expected = helper.getVec(10, i => i * 10)
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
@@ -687,8 +686,8 @@ suite('bulk', function () {
       const helper = new TypeTableHelper(theConnection, 'varchar(100)')
       const expected = helper.getVec(10, i => i % 2 === 0 ? null : `string ${i}`)
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
@@ -707,8 +706,8 @@ suite('bulk', function () {
       const helper = new TypeTableHelper(theConnection, 'varchar(100)')
       const expected = helper.getVec(10, i => `string ${i}`)
       const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
+      const promisedInsert = table.promises.insert
+      const promisedSelect = table.promises.select
       try {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
@@ -772,8 +771,8 @@ suite('bulk', function () {
             col_f: e.col_f
           }
         })
-        const promisedUpdate = util.promisify(table.updateRows)
-        const promisedSelect = util.promisify(table.selectRows)
+        const promisedUpdate = table.promises.update
+        const promisedSelect = table.promises.select
         try {
           await promisedUpdate(updated)
           const res = await promisedSelect(updated)
@@ -1321,28 +1320,18 @@ suite('bulk', function () {
     let selected
 
     const fns = [
-      asyncDone => {
-        const tm = theConnection.tableMgr()
-        tm.bind(tableName, bulk => {
-          bulkMgr = bulk
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        bulkMgr.insertRows(parsedJSON, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        bulkMgr.selectRows(keys, (err, results) => {
-          assert(err === null || err === false)
+      async asyncDone => {
+        try {
+          bulkMgr = await theConnection.promises.getTable(tableName)
+          await bulkMgr.promises.insert(parsedJSON)
+          const results = await bulkMgr.promises.select(keys)
           assert(results.length === parsedJSON.length)
           assert.deepStrictEqual(results, parsedJSON, 'results didn\'t match')
           selected = results
           asyncDone()
-        })
+        } catch (err) {
+          asyncDone(err)
+        }
       }
     ]
 
