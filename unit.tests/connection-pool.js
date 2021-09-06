@@ -38,6 +38,40 @@ suite('connection-pool', function () {
     })
   })
 
+  test('using promises to open, query, close pool', testDone => {
+    async function exec () {
+      try {
+        const size = 4
+        const pool = new sql.Pool({
+          connectionString: connStr,
+          ceiling: size
+        })
+        await pool.promises.open()
+        const all = []
+        for (let i = 0; i < 100; ++i) {
+          all.push(pool.promises.query('select @@SPID as spid'))
+        }
+        const promised = await Promise.all(all)
+        const res = promised.map(r => r.first[0].spid)
+        assert(res !== null)
+        const min = Math.min(...res)
+        const sizes = res.reduce((agg, current) => {
+          agg[(current - min) % size]++
+          return agg
+        }, Array(size).fill(0))
+        const set = new Set(sizes)
+        assert.strictEqual(set.size, 1)
+        await pool.promises.close()
+        return null
+      } catch (err) {
+        return err
+      }
+    }
+    exec().then(res => {
+      testDone(res)
+    })
+  })
+
   test('submit 10 queries with errors (no callback) to pool of 4', testDone => {
     const iterations = 10
     tester(iterations, 4, () => 'select a;', 2000, true, err => {
