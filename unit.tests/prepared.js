@@ -85,16 +85,13 @@ suite('prepared', function () {
   let prepared
   let parsedJSON
   const sql = global.native_sql
-  this.timeout(10000)
+  this.timeout(100 * 1000)
 
   const actions = [
     // open a connection.
-    asyncDone => {
-      sql.open(connStr, (err, newConn) => {
-        assert(err === null || err === false)
-        theConnection = newConn
-        asyncDone()
-      })
+    async asyncDone => {
+      theConnection = await sql.promises.open(connStr)
+      asyncDone()
     },
 
     // drop / create an Employee table.
@@ -107,45 +104,19 @@ suite('prepared', function () {
     },
 
     // insert test set using bulk insert
-    asyncDone => {
-      const tm = theConnection.tableMgr()
-      tm.bind(tableName, bulkMgr => {
-        bulkMgr.insertRows(parsedJSON, () => {
-          asyncDone()
-        })
-      })
+    async asyncDone => {
+      const bulkMgr = await theConnection.promises.getTable(tableName)
+      await bulkMgr.promises.insert(parsedJSON)
+      asyncDone()
     },
 
     // prepare a select statement.
-    asyncDone => {
-      employeePrepare(empSelectSQL(), ps => {
-        prepared.select = ps
-        asyncDone()
-      })
-    },
-
-    // prepare a select all statement.
-    asyncDone => {
-      employeePrepare(empNoParamsSQL(), ps => {
-        prepared.scan = ps
-        asyncDone()
-      })
-    },
-
-    // prepare a delete statement.
-    asyncDone => {
-      employeePrepare(empDeleteSQL(), ps => {
-        prepared.delete = ps
-        asyncDone()
-      })
-    },
-
-    // prepare a update statement.
-    asyncDone => {
-      employeePrepare(empUpdateSQL(), ps => {
-        prepared.update = ps
-        asyncDone()
-      })
+    async asyncDone => {
+      prepared.select = await theConnection.promises.prepare(empSelectSQL())
+      prepared.scan = await theConnection.promises.prepare(empNoParamsSQL())
+      prepared.delete = await theConnection.promises.prepare(empDeleteSQL())
+      prepared.update = await theConnection.promises.prepare(empUpdateSQL())
+      asyncDone()
     }
   ]
 
@@ -177,57 +148,29 @@ suite('prepared', function () {
   teardown(done => {
     // console.log('teardown ....')
     const fns = [
-      asyncDone => {
+      async asyncDone => {
         if (prepared.select) {
-        // console.log('select free ')
-          prepared.select.free(() => {
-          // console.log('done ')
-            asyncDone()
-          })
+          await prepared.select.promises.free()
+          prepared.select = null
         }
-      },
-      asyncDone => {
         if (prepared.scan) {
-        // console.log('scan free ')
-          prepared.scan.free(() => {
-          // console.log('done ')
-            asyncDone()
-          })
-        } else {
-          asyncDone()
+          await prepared.scan.promises.free()
+          prepared.scan = null
         }
-      },
-      asyncDone => {
-        // console.log('delete free ')
         if (prepared.delete) {
-          // console.log('scan free ')
-          prepared.delete.free(() => {
-            // console.log('done ')
-            asyncDone()
-          })
-        } else {
-          asyncDone()
+          await prepared.delete.promises.free()
+          prepared.delete = null
         }
-      },
-      asyncDone => {
-        // console.log('update free ')
         if (prepared.update) {
-          // console.log('scan free ')
-          prepared.update.free(() => {
-            // console.log('done ')
-            asyncDone()
-          })
-        } else {
-          asyncDone()
+          await prepared.update.promises.free()
+          prepared.update = null
         }
+        asyncDone()
       },
-      asyncDone => {
-        theConnection.close((err) => {
-          // console.log('close free ')
-          assert.ifError(err)
-          // console.log('done ')
-          asyncDone()
-        })
+
+      async asyncDone => {
+        await theConnection.promises.close()
+        asyncDone()
       }
     ]
 
@@ -236,12 +179,46 @@ suite('prepared', function () {
     })
   })
 
-  function employeePrepare (query, done) {
-    theConnection.prepare(query, (err, ps) => {
-      assert(err === null || err === false)
-      done(ps)
+  test('use prepared to select 0 rows - expect no error (await promise)', testDone => {
+    async function exec () {
+      try {
+        const sql = 'select * from master..syscomments where 1=0'
+        const preparedQuery = await theConnection.promises.prepare(sql)
+        const results = await preparedQuery.promises.query([])
+        assert(results != null)
+        assert(results.first.length === 0)
+        await preparedQuery.promises.free()
+        return null
+      } catch (err) {
+        return err
+      }
+    }
+    exec().then(r => {
+      testDone(r)
     })
-  }
+  })
+
+  test('use prepared to select 0 rows - expect no error (promise then)', testDone => {
+    const sql = 'select * from master..syscomments where 1=0'
+    theConnection.promises.prepare(sql)
+      .then(preparedQuery => {
+        preparedQuery.promises.query([])
+          .then(results => {
+            assert(results != null)
+            assert(results.first.length === 0)
+            preparedQuery.promises.free()
+              .then(() => {
+                testDone()
+              }).catch(err => {
+                testDone(err)
+              })
+          }).catch(err => {
+            testDone(err)
+          })
+      }).catch(err => {
+        testDone(err)
+      })
+  })
 
   test('use prepared to reserve and read multiple rows.', testDone => {
     const sql = 'select top 5 * from master..syscomments'
@@ -250,21 +227,6 @@ suite('prepared', function () {
       preparedQuery.preparedQuery([], (err, res) => {
         assert(res != null)
         assert(res.length > 0)
-        assert.ifError(err)
-        preparedQuery.free(() => {
-          testDone()
-        })
-      })
-    })
-  })
-
-  test('use prepared to select 0 rows - expect no error', testDone => {
-    const sql = 'select * from master..syscomments where 1=0'
-    theConnection.prepare(sql, (err, preparedQuery) => {
-      assert(err === null || err === false)
-      preparedQuery.preparedQuery([], (err, res) => {
-        assert(res != null)
-        assert(res.length === 0)
         assert.ifError(err)
         preparedQuery.free(() => {
           testDone()

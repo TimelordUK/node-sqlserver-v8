@@ -98,17 +98,15 @@ suite('bcp', function () {
         theConnection.setUseUTC(false)
         const table = await helper.create()
         table.setUseBcp(true)
-        const promisedQuery = util.promisify(theConnection.query)
-
         await table.promises.insert(expected)
         const res = await theConnection.promises.query(`select count(*) as rows from ${this.definition.tableName}`)
-        assert.deepStrictEqual(res.results[0][0].rows, rows)
-        const top = await promisedQuery(`select top 100 * from ${this.definition.tableName}`)
+        assert.deepStrictEqual(res.first[0].rows, rows)
+        const top = await theConnection.promises.query(`select top 100 * from ${this.definition.tableName}`)
         const toCheck = expected.slice(0, 100)
         if (this.tester) {
-          this.tester(top, toCheck)
+          this.tester(top.first, toCheck)
         } else {
-          assert.deepStrictEqual(top, toCheck)
+          assert.deepStrictEqual(top.first, toCheck)
         }
       } catch (e) {
         return e
@@ -152,13 +150,10 @@ suite('bcp', function () {
     }
 
     async create () {
-      const promisedQuery = util.promisify(theConnection.query)
       const dropTableSql = `IF OBJECT_ID('${this.tableName}', 'U') IS NOT NULL DROP TABLE ${this.tableName};`
-      const tm = theConnection.tableMgr()
-      const promisedGetTable = util.promisify(tm.getTable)
-      await promisedQuery(dropTableSql)
+      await theConnection.promises.query(dropTableSql)
       await this.dropCreate(this.tableName)
-      const table = await promisedGetTable(this.tableName)
+      const table = await theConnection.promises.getTable(this.tableName)
       return table
     }
 
