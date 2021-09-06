@@ -101,10 +101,9 @@ suite('bcp', function () {
         const promisedQuery = util.promisify(theConnection.query)
 
         await table.promises.insert(expected)
-        const res = await promisedQuery(`select count(*) as rows from ${this.definition.tableName}`)
-        assert.deepStrictEqual(res[0].rows, rows)
+        const res = await theConnection.promises.query(`select count(*) as rows from ${this.definition.tableName}`)
+        assert.deepStrictEqual(res.results[0][0].rows, rows)
         const top = await promisedQuery(`select top 100 * from ${this.definition.tableName}`)
-        assert.deepStrictEqual(res[0].rows, rows)
         const toCheck = expected.slice(0, 100)
         if (this.tester) {
           this.tester(top, toCheck)
