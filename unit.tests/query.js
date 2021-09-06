@@ -60,6 +60,24 @@ suite('query', function () {
     })
   })
 
+  test('simple query with a promise open-query-close-resolve var%', done => {
+    async function exec () {
+      try {
+        const like = 'var%'
+        const results = await sql.promises.query(connStr, 'SELECT name FROM sys.types WHERE name LIKE ?', [like])
+        for (let row = 0; row < results.first.length; ++row) {
+          assert(results.first[row].name.substr(0, 3) === 'var')
+        }
+        return null
+      } catch (err) {
+        return err
+      }
+    }
+    exec().then(res => {
+      done(res)
+    })
+  })
+
   test('test retrieving a string with null embedded', testDone => {
     const embeddedNull = String.fromCharCode(65, 66, 67, 68, 0, 69, 70)
 
