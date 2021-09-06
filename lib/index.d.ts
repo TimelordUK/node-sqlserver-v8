@@ -2,7 +2,15 @@
  * Created by admin on 19/01/2017.
  */
 
+import { AggregateOptions } from "msnodesqlv8/node_modules/@types/sequelize";
+
+interface SqlClientPromises {
+    open: Promise<Connection>
+    query(conn_str: string, sql: string, options?: AggregateOptions): Promise<QueryAggregatorResults>
+}
+
 export interface SqlClient {
+    promises: SqlClientPromises
     open(description: ConnectDescription, cb: OpenCb): void
     open(conn_str: string, cb: OpenCb): void
     query(conn_str: string, sql: string, cb?: QueryCb): Query
@@ -70,16 +78,17 @@ export interface PoolOptions {
     connectionString: string
 }
 
-export interface CallProcedureAggregatorResults {
+export interface QueryAggregatorResults {
     elapsed: number // elapsed ms for call to complete
     meta: Meta[][] // array of meta for each query
+    first: any[] // first set of rows i.e. results[0] if any else null
     results: any[][] // each result set either as array of arrays or array of objects
     output: null // output params if any
     info: string[] // prints from procedure collected
     returns: null // return code from procedure
   }
 
-export interface CallProcedureAggregatorOptions {
+export interface QueryAggregatorOptions {
     timeoutMs?: number // default 0 i.e. no timeout
     raw?: boolean // results as arrays or objects with column names
 }
@@ -96,7 +105,7 @@ export interface Pool {
     queryRaw(sql: string, params?: any[], cb?: QueryRawCb): Query
     queryRaw(sql: string, cb: QueryRawCb): Query
     callproc(name: string, params?: any[], cb?: CallProcedureCb): Query
-    callprocAggregator(name: string, params?: any[], optons?: CallProcedureAggregatorOptions): Promise<CallProcedureAggregatorResults>
+    callprocAggregator(name: string, params?: any[], optons?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
     // pool.on('debug', msg => { console.log(msg) })
     on(debug: string, cb?: MessageCb): void 
     // pool.on('open', options = {} )
@@ -138,7 +147,17 @@ export interface TableColumn {
     generated_always_desc: string
 }
 
+interface ConnectionPromises {
+    prepare(sql: string): Promise<PreparedStatement>
+    callProc(name: string, options?: AggregateOptions): Promise<QueryAggregatorResults>
+    query(conn_str: string, sql: string, options?: AggregateOptions): Promise<QueryAggregatorResults>
+    getTable(name: string): Promise<BulkTableMgr>
+    close(name: string): Promise<StatusCb>
+    cancel(name: string): Promise<StatusCb>
+}
+
 export interface Connection {
+    promises: ConnectionPromises
     getUserTypeTable(name: string, cb:TableCb):void
     id:number
     setUseUTC(utc:boolean):void
@@ -163,7 +182,7 @@ export interface Connection {
     prepare(description: QueryDescription, cb: PrepareCb): void
     setFilterNonCriticalErrors(flag:boolean):void
     callproc(name: string, params?: any[], cb?: CallProcedureCb): Query
-    callprocAggregator(name: string, params?: any[], optons?: CallProcedureAggregatorOptions): Promise<CallProcedureAggregatorResults>
+    callprocAggregator(name: string, params?: any[], optons?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
 }
 
 export interface Query {
