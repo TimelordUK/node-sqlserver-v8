@@ -1,5 +1,3 @@
-
-
 'use strict'
 /* global suite teardown teardown test setup */
 
@@ -87,25 +85,41 @@ suite('promises', function () {
   test('use query aggregator to drop, create, insert, select, drop', testDone => {
     async function test () {
       try {
+        const tableName = 'rowsAffectedTest'
+        const m1 = `create table ${tableName}`
+        const m2 = `insert table ${tableName}`
+        const m3 = `select table ${tableName}`
+        const m4 = `drop table ${tableName}`
         const sql = `if exists(select * from information_schema.tables
-            where table_name = 'rowsAffectedTest' and TABLE_SCHEMA='dbo')
-                drop table rowsAffectedTest;
-            print('create table');
-            create table rowsAffectedTest (id int, val int);
-            print('insert table')
-            insert into rowsAffectedTest values (1, 5);
-            print('select table')
-            select * from rowsAffectedTest;
-            print('drop table')
-            drop table rowsAffectedTest;`
+            where table_name = '${tableName}' and TABLE_SCHEMA='dbo')
+                drop table ${tableName};
+            print('${m1}');
+            create table ${tableName} (id int, val int);
+            print('${m2}');
+            insert into ${tableName} values (1, 5);
+            print('${m3}');
+            select * from ${tableName};
+            print('${m4}');
+            drop table ${tableName};`
 
         const res = await theConnection.promises.query(sql)
         assert(res !== null)
+        assert(res.meta !== null)
+        assert.deepStrictEqual(res.meta.length, 1)
+        const meta0 = res.meta[0]
+        assert.deepStrictEqual(meta0[0].name, 'id')
+        assert.deepStrictEqual(meta0[1].name, 'val')
+
+        const expectedMessages = [m1, m2, m3, m4]
         assert.deepStrictEqual(res.info.length, 4)
-        assert.deepStrictEqual(res.info[0], 'create table')
-        assert.deepStrictEqual(res.info[1], 'insert table')
-        assert.deepStrictEqual(res.info[2], 'select table')
-        assert.deepStrictEqual(res.info[3], 'drop table')
+        assert.deepStrictEqual(res.info, expectedMessages)
+
+        assert(res.first !== null)
+        assert.deepStrictEqual(res.results.length, 1)
+        assert.deepStrictEqual(res.first, [{
+          id: 1,
+          val: 5
+        }])
       } catch (e) {
         return e
       }
