@@ -47,17 +47,12 @@ suite('connection-pool', function () {
           ceiling: size
         })
         await pool.promises.open()
-        const all = Array(8).fill(100).map((_, i) => pool.promises.query(`select ${i} as i, @@SPID as spid`))
+        const all = Array(100).fill(0).map((_, i) => pool.promises.query(`select ${i} as i, @@SPID as spid`))
         const promised = await Promise.all(all)
         const res = promised.map(r => r.first[0].spid)
         assert(res !== null)
-        const min = Math.min(...res)
-        const sizes = res.reduce((agg, current) => {
-          agg[(current - min) % size]++
-          return agg
-        }, Array(size).fill(0))
-        const set = new Set(sizes)
-        assert.strictEqual(set.size, 1)
+        const set = new Set(res)
+        assert.strictEqual(set.size, size)
         await pool.promises.close()
         return null
       } catch (err) {

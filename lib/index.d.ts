@@ -6,7 +6,8 @@ import { AggregateOptions } from "msnodesqlv8/node_modules/@types/sequelize";
 
 interface SqlClientPromises {
     open: Promise<Connection>
-    query(conn_str: string, sql: string, options?: AggregateOptions): Promise<QueryAggregatorResults>
+    query(conn_str: string, sql: string, params?: any[], options?: AggregateOptions): Promise<QueryAggregatorResults>
+    callProc(conn_str: string, name: string, params?: any[], options?: AggregateOptions): Promise<QueryAggregatorResults>
 }
 
 export interface SqlClient {
@@ -93,6 +94,13 @@ export interface QueryAggregatorOptions {
     raw?: boolean // results as arrays or objects with column names
 }
 
+export interface PoolPromises {
+    open(): Promise<Pool>
+    close(): Promise<any>
+    query(sql: string, params?: any[], options?: AggregateOptions): Promise<QueryAggregatorResults>
+    callProc(name: string, params?: any[], options?: AggregateOptions): Promise<QueryAggregatorResults>
+}
+
 export interface Pool {
     open(cb?: PoolOpenCb): void
     close(cb: StatusCb): void
@@ -152,8 +160,8 @@ interface ConnectionPromises {
     callProc(name: string, options?: AggregateOptions): Promise<QueryAggregatorResults>
     query(conn_str: string, sql: string, options?: AggregateOptions): Promise<QueryAggregatorResults>
     getTable(name: string): Promise<BulkTableMgr>
-    close(name: string): Promise<StatusCb>
-    cancel(name: string): Promise<StatusCb>
+    close(name: string): Promise<any>
+    cancel(name: string): Promise<any>
 }
 
 export interface Connection {
@@ -298,10 +306,10 @@ export interface BulkMgrSummary {
 
 export interface BulkTableMgrPromises
 {
-    select(cols: any[]): Promise<BulkSelectCb>
-    insert(rows: any[]): Promise<StatusCb>
-    delete(rows: any[]): Promise<StatusCb>
-    update(rows: any[]): Promise<StatusCb>
+    select(cols: any[]): Promise<any[]>
+    insert(rows: any[]): Promise<any>
+    delete(rows: any[]): Promise<any>
+    update(rows: any[]): Promise<any>
 }
 
 export interface BulkTableMgr {
@@ -405,7 +413,13 @@ export interface TableManager {
     getTable(tableName: string, cb: GetTableCb): void // promise friendly (err, table)
 }
 
+export interface PreparedPromises {
+    free(): Promise<any>
+    query(params?: any[], options?: QueryAggregatorOptions) : Promise<QueryAggregatorResults>
+}
+
 export interface PreparedStatement {
+    promises: PreparedPromises
     preparedQuery(params?: any[], cb ?: QueryCb): Query
     free(cb: StatusCb): void
     getSignature(): string
