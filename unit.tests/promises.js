@@ -82,7 +82,7 @@ suite('promises', function () {
     }
   }
 
-  test('use query aggregator to drop, create, insert, select, drop', testDone => {
+  test('query aggregator: drop, create, insert, select, drop', testDone => {
     async function test () {
       try {
         const tableName = 'rowsAffectedTest'
@@ -120,6 +120,37 @@ suite('promises', function () {
           id: 1,
           val: 5
         }])
+      } catch (e) {
+        return e
+      }
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
+  test('query aggregator: 4 inserts, 2 updates, 2 updates, update all', testDone => {
+    async function test () {
+      try {
+        const tableName = 'rowsAffectedTest'
+        const sql = `create table ${tableName} (id int, val int);
+       insert into ${tableName} values (1, 5);
+       insert into ${tableName} values (2, 10);
+       insert into ${tableName} values (3, 20);
+       insert into ${tableName} values (4, 30);
+
+       update ${tableName} set val = 100  where id in (1, 2);
+       update ${tableName} set val = 100  where id in (3, 4);
+       update ${tableName} set val = 100  where id in (1, 2, 3, 4);
+
+       drop table ${tableName};`
+        const expectedCounts = [1, 1, 1, 1, 2, 2, 4]
+        const res = await theConnection.promises.query(sql)
+        assert(res !== null)
+        assert(res.meta !== null)
+        assert.deepStrictEqual(res.meta, [])
+        assert.deepStrictEqual(res.results, [])
+        assert.deepStrictEqual(res.counts, expectedCounts)
       } catch (e) {
         return e
       }
