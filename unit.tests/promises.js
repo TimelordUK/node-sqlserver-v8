@@ -160,6 +160,25 @@ suite('promises', function () {
     })
   })
 
+  test('query aggregator: insert into invalid table', testDone => {
+    async function test () {
+      try {
+        const tableName = 'invalidTable'
+        const sql = `
+        insert into ${tableName} values (1, 5);`
+
+        await theConnection.promises.query(sql)
+        return new Error('expecting error')
+      } catch (e) {
+        assert(e.message.indexOf('Invalid object name \'invalidTable\'') > 0)
+        return null
+      }
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
   test('bcp employee', testDone => {
     async function test () {
       try {
