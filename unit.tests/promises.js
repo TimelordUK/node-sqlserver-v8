@@ -127,6 +127,38 @@ suite('promises', function () {
     }
   }
 
+  const spName = 'sp_test'
+
+  const def = `create PROCEDURE ${spName} @param VARCHAR(50) 
+  AS 
+  BEGIN 
+   RETURN LEN(@param); 
+  END 
+  `
+  const dropProcedureSql = `IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('${spName}'))
+  begin drop PROCEDURE ${spName} end `
+
+  test('adhoc proc promise: open call close', testDone => {
+    async function exec () {
+      try {
+        const msg = 'hello world'
+        await sql.promises.query(connStr, dropProcedureSql)
+        await sql.promises.query(connStr, def)
+        const res = await sql.promises.callProc(connStr, spName, {
+          param: msg
+        })
+        assert(res !== null)
+        assert(res.output !== null)
+        assert.deepStrictEqual(res.output[0], msg.length)
+      } catch (e) {
+        return e
+      }
+    }
+    exec().then((e) => {
+      testDone(e)
+    })
+  })
+
   test('promises for table insert select rows', testDone => {
     const bulkTableDef = {
       tableName: 'test_table_bulk',
