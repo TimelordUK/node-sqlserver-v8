@@ -1,15 +1,15 @@
 version: 1.0.{build}
 
 image: 
-  - Visual Studio 2017
   - Ubuntu
+  - Visual Studio 2017
 
 platform: 
   - x64
 
 environment:
     matrix:
-      - nodejs_version: 15
+      - nodejs_version: 16
       - nodejs_version: 14
       - nodejs_version: 12
       - nodejs_version: 10
@@ -50,7 +50,7 @@ for:
       
       test_script:
         - sh: "sleep 2"
-        - sh: "node runtest -x -t bcp -t json -t connection-pool -t pause -t concurrent -t multiple-errors -t geography -t tvp -t warnings.js -t compoundqueries.js -t querycancel.js -t txn.js -t datatypes.js -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t sproc.js -t prepared.js -t userbind.js -t dates.js 2>&1"
+        - sh: "node runtest -x -t promises -t bcp -t json -t connection-pool -t pause -t concurrent -t multiple-errors -t geography -t tvp -t warnings.js -t compoundqueries.js -t querycancel.js -t txn.js -t datatypes.js -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t sproc.js -t prepared.js -t userbind.js -t dates.js 2>&1"
 
       install:
         - nvm install $nodejs_version
