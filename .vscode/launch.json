@@ -27,6 +27,7 @@
             "args": [
                // "procedure"
                "runtest", "-k", "linux", 
+               // "runtest", "-k", "linux", 
                //  "-t", "querycancel",
                // "-t", "pause"
                // "-t", "prepared",
@@ -35,14 +36,15 @@
                // "-t", "multiple-errors", 
                // "-t", "geography",
                //"-t", "tvp",
-               "-t", "warnings",
+               //"-t", "warnings",
                // "-t", "txn",
                // "-t", "datatypes",
                // "-t", "sproc"
                // "-t", "params"
                // "-t", "bulk",
                // "-t", "bcp"
-               //"-t", "json" 
+               //"-t", "json"
+               "-t", "promises" 
             ],
             "stopAtEntry": false,
             // "cwd": "${workspaceFolder}/samples/javascript",

@@ -82,6 +82,41 @@ suite('promises', function () {
     }
   }
 
+  test('query aggregator: insert 1 valid 1, ivalid table', testDone => {
+    async function test () {
+      const tableName = 'rowsAffectedTest'
+      try {
+        const sql = `if exists(select * from information_schema.tables
+          where table_name = '${tableName}' and TABLE_SCHEMA='dbo')
+              drop table ${tableName};
+       create table ${tableName} (id int, val int);
+       
+       insert into ${tableName} values (1, 5);
+       insert into ${tableName} values (2, 10);
+       insert into ${tableName} values (3, 20);
+       insert into ${tableName} values (4, 30);
+
+       select x from ${tableName};`
+
+        await theConnection.promises.query(sql)
+        return new Error('expecting error')
+      } catch (e) {
+        // we lose 1 count from driver
+        const res = e._results
+        assert(res !== null)
+        assert(res.meta !== null)
+        assert.deepStrictEqual(res.errors.length, 1)
+        assert.deepStrictEqual(res.meta, [])
+        assert.deepStrictEqual(res.results, [])
+        // assert.deepStrictEqual(res.counts, expectedCounts)
+        return null
+      }
+    }
+    test().then((e) => {
+      testDone(e)
+    })
+  })
+
   test('query aggregator: drop, create, insert, select, drop', testDone => {
     async function test () {
       try {
@@ -133,7 +168,10 @@ suite('promises', function () {
     async function test () {
       try {
         const tableName = 'rowsAffectedTest'
-        const sql = `create table ${tableName} (id int, val int);
+        const sql = `if exists(select * from information_schema.tables
+          where table_name = '${tableName}' and TABLE_SCHEMA='dbo')
+              drop table ${tableName};
+       create table ${tableName} (id int, val int);
        insert into ${tableName} values (1, 5);
        insert into ${tableName} values (2, 10);
        insert into ${tableName} values (3, 20);
