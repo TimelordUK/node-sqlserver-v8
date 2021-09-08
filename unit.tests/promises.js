@@ -82,6 +82,32 @@ suite('promises', function () {
     }
   }
 
+  test('using promises to open, query, close pool', testDone => {
+    async function exec () {
+      try {
+        const size = 4
+        const pool = new sql.Pool({
+          connectionString: connStr,
+          ceiling: size
+        })
+        await pool.promises.open()
+        const all = Array(size * 2).fill(0).map((_, i) => pool.promises.query(`select ${i} as i, @@SPID as spid`))
+        const promised = await Promise.all(all)
+        const res = promised.map(r => r.first[0].spid)
+        assert(res !== null)
+        const set = new Set(res)
+        assert.strictEqual(set.size, size)
+        await pool.promises.close()
+        return null
+      } catch (err) {
+        return err
+      }
+    }
+    exec().then(res => {
+      testDone(res)
+    })
+  })
+
   test('adhoc promise: open select close', testDone => {
     async function exec () {
       try {
