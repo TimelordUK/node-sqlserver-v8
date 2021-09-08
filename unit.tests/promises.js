@@ -127,23 +127,31 @@ suite('promises', function () {
     }
   }
 
-  const spName = 'sp_test'
+  class ProcTest {
+    async create (connStr, def) {
+      await sql.promises.query(connStr, this.dropProcedureSql)
+      await sql.promises.query(connStr, def)
+    }
 
-  const def = `create PROCEDURE ${spName} @param VARCHAR(50) 
-  AS 
-  BEGIN 
-   RETURN LEN(@param); 
-  END 
-  `
-  const dropProcedureSql = `IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('${spName}'))
+    constructor (spName) {
+      this.dropProcedureSql = `IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('${spName}'))
   begin drop PROCEDURE ${spName} end `
+    }
+  }
 
   test('adhoc proc promise: open call close', testDone => {
     async function exec () {
       try {
+        const spName = 'sp_test'
+        const def = `create PROCEDURE ${spName} @param VARCHAR(50) 
+        AS 
+        BEGIN 
+         RETURN LEN(@param); 
+        END 
+        `
         const msg = 'hello world'
-        await sql.promises.query(connStr, dropProcedureSql)
-        await sql.promises.query(connStr, def)
+        const proc = new ProcTest(spName)
+        await proc.create(connStr, def)
         const res = await sql.promises.callProc(connStr, spName, {
           param: msg
         })
