@@ -82,6 +82,22 @@ suite('promises', function () {
     }
   }
 
+  test('adhoc promise: open select close', testDone => {
+    async function exec () {
+      try {
+        const res = await sql.promises.query(connStr, 'select @@SPID as spid')
+        assert(res !== null)
+        assert(res.first !== null)
+        assert(Object.prototype.hasOwnProperty.call(res.first[0], 'spid'))
+      } catch (e) {
+        return e
+      }
+    }
+    exec().then((e) => {
+      testDone(e)
+    })
+  })
+
   test('query aggregator: insert 1 valid 1, ivalid table', testDone => {
     async function test () {
       const tableName = 'rowsAffectedTest'
