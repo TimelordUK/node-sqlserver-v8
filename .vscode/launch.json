@@ -84,14 +84,13 @@
         },
         
         {
+            "cwd": "${workspaceFolder}/samples/typescript",
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "runtimeVersion": "14.5.0",
-            "program": "${workspaceFolder}/samples/javascript/sequelize.js"
-        }
+            "name": "Launch Node TS",
+            "program": "dist/promises.js",
+            // "preLaunchTask": "tsc: build tsconfig.json",
+            "outFiles": ["${workspaceFolder}/samples/typescript/dist/**/*.js"]
+          }
     ]
 }

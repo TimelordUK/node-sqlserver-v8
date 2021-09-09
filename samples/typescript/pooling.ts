@@ -3,13 +3,13 @@ import {Error, PoolOptions, Query, SqlClient, QueryDescription, Pool, PoolStatus
 // require the module so it can be used in your node JS code.
 export const sql : SqlClient = require('msnodesqlv8');
 
-function getConnection () {
+function getConnection () : string {
   const path = require('path')
   const config = require(path.join(__dirname, '..\\javascript\\config.json'))
   return config.connection.local
 }
 
-const str = getConnection()
+const str: string = getConnection()
 const pool: Pool = new sql.Pool({
   connectionString: str
 })

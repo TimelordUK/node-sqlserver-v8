@@ -8,6 +8,6 @@
     "sourceMap": true,
     "inlineSources": true,
     "pretty": true,
-    "outDir": "./dist"
+    "outDir": "dist"
   }
 }

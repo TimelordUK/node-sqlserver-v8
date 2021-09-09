@@ -2,12 +2,15 @@
  * Created by admin on 19/01/2017.
  */
 
-import { AggregateOptions } from "msnodesqlv8/node_modules/@types/sequelize";
-
-interface SqlClientPromises {
-    open: Promise<Connection>
-    query(conn_str: string, sql: string, params?: any[], options?: AggregateOptions): Promise<QueryAggregatorResults>
-    callProc(conn_str: string, name: string, params?: any[], options?: AggregateOptions): Promise<QueryAggregatorResults>
+export interface AggregatorPromises {
+    query(sql: string, params?: any[], options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
+    callProc(name: string, params?: any, options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
+}
+   
+interface SqlClientPromises  {
+    query(conn_str: string, sql: string, params?: any[], options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
+    callProc(conn_str: string, name: string, params?: any, options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
+    open(conn_str: string): Promise<Connection>
 }
 
 export interface SqlClient {
@@ -86,7 +89,9 @@ export interface QueryAggregatorResults {
     results: any[][] // each result set either as array of arrays or array of objects
     output: null // output params if any
     info: string[] // prints from procedure collected
+    counts: number[] // row counts returned from update, insert, delete statements.
     returns: null // return code from procedure
+    errors: Error[] // errors collected by running sql (up to promise reject)
   }
 
 export interface QueryAggregatorOptions {
@@ -94,14 +99,13 @@ export interface QueryAggregatorOptions {
     raw?: boolean // results as arrays or objects with column names
 }
 
-export interface PoolPromises {
+export interface PoolPromises extends AggregatorPromises {
     open(): Promise<Pool>
     close(): Promise<any>
-    query(sql: string, params?: any[], options?: AggregateOptions): Promise<QueryAggregatorResults>
-    callProc(name: string, params?: any[], options?: AggregateOptions): Promise<QueryAggregatorResults>
 }
 
-export interface Pool {
+export interface Pool  {
+    promises: PoolPromises
     open(cb?: PoolOpenCb): void
     close(cb: StatusCb): void
     query(sql: string, cb?: QueryCb): Query
@@ -112,8 +116,6 @@ export interface Pool {
     queryRaw(description: QueryDescription, params?: any[], cb?: QueryRawCb): Query
     queryRaw(sql: string, params?: any[], cb?: QueryRawCb): Query
     queryRaw(sql: string, cb: QueryRawCb): Query
-    callproc(name: string, params?: any[], cb?: CallProcedureCb): Query
-    callprocAggregator(name: string, params?: any[], optons?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
     // pool.on('debug', msg => { console.log(msg) })
     on(debug: string, cb?: MessageCb): void 
     // pool.on('open', options = {} )
@@ -155,12 +157,10 @@ export interface TableColumn {
     generated_always_desc: string
 }
 
-interface ConnectionPromises {
+interface ConnectionPromises extends AggregatorPromises {
     prepare(sql: string): Promise<PreparedStatement>
-    callProc(name: string, options?: AggregateOptions): Promise<QueryAggregatorResults>
-    query(conn_str: string, sql: string, options?: AggregateOptions): Promise<QueryAggregatorResults>
     getTable(name: string): Promise<BulkTableMgr>
-    close(name: string): Promise<any>
+    close(): Promise<any>
     cancel(name: string): Promise<any>
 }
 
@@ -190,7 +190,7 @@ export interface Connection {
     prepare(description: QueryDescription, cb: PrepareCb): void
     setFilterNonCriticalErrors(flag:boolean):void
     callproc(name: string, params?: any[], cb?: CallProcedureCb): Query
-    callprocAggregator(name: string, params?: any[], optons?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
+    callprocAggregator(name: string, params?: any, optons?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
 }
 
 export interface Query {
@@ -225,9 +225,13 @@ export interface Meta {
 
 export interface Error
 {
-    message:string
-    sqlstate?: string
     code?: number
+    severity?: number
+    lineNumber?: number
+    serverName?: string
+    procName?: string
+    message:string
+    sqlstate?: string   
 }
 
 export interface RawData {
