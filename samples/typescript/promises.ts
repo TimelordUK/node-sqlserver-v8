@@ -33,9 +33,25 @@ async function ashoc() {
     }
 }
 
+async function pool() {
+    const connStr: string = getConnection()
+    const size = 4
+    const pool = new sql.Pool({
+      connectionString: connStr,
+      ceiling: size
+    })
+    await pool.promises.open()
+    const all = Array(size * 2).fill(0).map((_, i) => pool.promises.query(`select ${i} as i, @@SPID as spid`))
+    const promised = await Promise.all(all)
+    const res = promised.map(r => r.first[0].spid)
+    await pool.promises.close()
+    console.log(`pool spids ${res.join(', ')}`)
+}
+
 async function run() {
     await openSelectClose()
-    await ashoc() 
+    await ashoc()
+    await pool()
 }
 
 run().then(() => {
