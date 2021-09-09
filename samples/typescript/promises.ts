@@ -12,7 +12,6 @@ function getConnection () : string {
 async function openSelectClose() {
     try {
         const connStr: string = getConnection()
-        console.log(`openSelectClose open ${connStr}`)
         const conn: Connection = await sql.promises.open(connStr)
         const res = await conn.promises.query('select @@SPID as spid')
         console.log(JSON.stringify(res, null, 4))
@@ -25,7 +24,6 @@ async function openSelectClose() {
 async function ashoc() {
     try {
         const connStr: string = getConnection()
-        console.log(`ashoc open ${connStr}`)
         const res = await sql.promises.query(connStr, 'select @@SPID as spid')
         console.log(`ashoc spid ${res.first[0].spid}`)
     } catch (e: any) {
@@ -48,8 +46,32 @@ async function pool() {
     console.log(`pool spids ${res.join(', ')}`)
 }
 
+async function proc() {
+    const spName = 'sp_test'
+    const def = `create PROCEDURE ${spName} @param VARCHAR(50) 
+    AS 
+    BEGIN 
+     RETURN LEN(@param); 
+    END 
+    `
+    const dropProcedureSql = `IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('${spName}'))
+    begin drop PROCEDURE ${spName} end `
+    const connStr: string = getConnection()
+    const conn: Connection = await sql.promises.open(connStr)
+    await conn.promises.query(dropProcedureSql)
+    await conn.promises.query(def)
+    const msg = 'hello world'
+    const res = await conn.promises.callProc(spName, {
+        param: msg
+      })
+    await conn.promises.close()
+
+    console.log(`proc returns ${res.returns} from param '${msg}''`)
+}
+
 async function run() {
     await openSelectClose()
+    await proc()
     await ashoc()
     await pool()
 }

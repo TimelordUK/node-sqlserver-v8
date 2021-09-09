@@ -87,10 +87,10 @@ export interface QueryAggregatorResults {
     meta: Meta[][] // array of meta for each query
     first: any[] // first set of rows i.e. results[0] if any else null
     results: any[][] // each result set either as array of arrays or array of objects
-    output: null // output params if any
+    output: any[] // output params if any
     info: string[] // prints from procedure collected
     counts: number[] // row counts returned from update, insert, delete statements.
-    returns: null // return code from procedure
+    returns: any // return code from procedure
     errors: Error[] // errors collected by running sql (up to promise reject)
   }
 
