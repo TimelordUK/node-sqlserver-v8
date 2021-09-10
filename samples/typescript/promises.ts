@@ -66,8 +66,13 @@ async function proc() {
         param: msg
       })
     await promises.close()
-
     console.log(`proc returns ${res.returns} from param '${msg}''`)
+
+    const res2: QueryAggregatorResults = await sql.promises.callProc(connStr, spName, {
+        param: msg
+      })
+
+    console.log(`adhoc proc returns ${res2.returns} from param '${msg}''`)
 }
 
 async function run() {
