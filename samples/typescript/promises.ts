@@ -1,4 +1,4 @@
-import {Error, PoolOptions, Query, SqlClient, QueryDescription, Pool, PoolStatusRecord, Connection, QueryAggregatorResults, ConnectionPromises} from 'msnodesqlv8';
+import {Error, PoolOptions, Query, SqlClient, QueryDescription, Pool, PoolStatusRecord, Connection, QueryAggregatorResults, ConnectionPromises, BulkTableMgr} from 'msnodesqlv8';
 
 // require the module so it can be used in your node JS code.
 export const sql : SqlClient = require('msnodesqlv8');
@@ -21,7 +21,7 @@ async function openSelectClose() {
     }
 }
 
-async function ashoc() {
+async function adhocQuery() {
     try {
         const connStr: string = getConnection()
         const res: QueryAggregatorResults = await sql.promises.query(connStr, 'select @@SPID as spid')
@@ -51,37 +51,84 @@ async function pool() {
     }
 }
 
+class ProcTest {
+    dropProcedureSql: string
+    
+    constructor (public connStr: string, public def: ProcDef) {
+        this.dropProcedureSql = `IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('${def.name}'))
+        begin drop PROCEDURE ${def.name} end `
+    }
+
+    async create () {
+        try {
+            const conn: Connection = await sql.promises.open(this.connStr)
+            const promises: ConnectionPromises = conn.promises
+            await promises.query(this.dropProcedureSql)
+            await promises.query(this.def.sql)
+            await conn.promises.close()
+        } catch (e) {
+            console.log(e)
+        }
+    }
+
+    async drop () {
+        try {
+            const conn: Connection = await sql.promises.open(this.connStr)
+            const promises: ConnectionPromises = conn.promises
+            await promises.query(this.dropProcedureSql)
+            await conn.promises.close()
+        } catch (e) {
+            console.log(e)
+        }
+    }
+}
+
+interface ProcDef {
+    name: string,
+    sql: string
+}
+
+const sampleProc: ProcDef = {
+    name: 'sp_test',
+    sql: `create PROCEDURE sp_test @param VARCHAR(50) 
+    AS 
+    BEGIN 
+    RETURN LEN(@param); 
+    END 
+    `
+}
+
+async function adhocProc() {
+    try {
+        const connStr: string = getConnection()
+        const proc = new ProcTest(connStr, sampleProc)
+        await proc.create()    
+        const msg = 'hello world'
+        const res: QueryAggregatorResults = await sql.promises.callProc(connStr, sampleProc.name, {
+            param: msg
+        })        
+        await proc.drop()
+        console.log(`adhocProc returns ${res.returns} from param '${msg}''`)
+    } catch (e) {
+        console.log(e)
+    }
+}
+
 async function proc() {
     try {
-        const spName = 'sp_test'
-        const def = `create PROCEDURE ${spName} @param VARCHAR(50) 
-        AS 
-        BEGIN 
-        RETURN LEN(@param); 
-        END 
-        `
-        const dropProcedureSql = `IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('${spName}'))
-        begin drop PROCEDURE ${spName} end `
         const connStr: string = getConnection()
+        const proc = new ProcTest(connStr, sampleProc)
+        await proc.create()    
         const conn: Connection = await sql.promises.open(connStr)
         const promises: ConnectionPromises = conn.promises
-        await promises.query(dropProcedureSql)
-        await promises.query(def)
         const msg = 'hello world'
-        const res: QueryAggregatorResults = await promises.callProc(spName, {
+        const res: QueryAggregatorResults = await promises.callProc(sampleProc.name, {
             param: msg
         })
        
         console.log(`proc returns ${res.returns} from param '${msg}''`)
-
-        const res2: QueryAggregatorResults = await sql.promises.callProc(connStr, spName, {
-            param: msg
-        })
-
-        await promises.query(dropProcedureSql)
+        await proc.drop()
         await promises.close()
-
-        console.log(`adhoc proc returns ${res2.returns} from param '${msg}''`)
     } catch (e) {
         console.log(e)
     }
@@ -138,11 +185,12 @@ async function table() {
         const connStr: string = getConnection()
         const connection = await sql.promises.open(connStr)
         const tm: BulkTableTest = new BulkTableTest(connection, TableDef)
-        const table = await tm.create()
+        const table: BulkTableMgr = await tm.create()
         const vec = getInsertVec(10)
+        console.log(`table = ${tm.createTableSql}`)
         await table.promises.insert(vec)
         const read = await connection.promises.query(tm.selectSql)
-        console.log(`table read ${read.first.length} rows from ${tm.tableName}`)
+        console.log(`table ${read.first.length} rows from ${tm.tableName}`)
         console.log(JSON.stringify(read.first, null, 4))
         await tm.drop()
         await connection.promises.close()
@@ -154,7 +202,8 @@ async function table() {
 async function run() {
     await openSelectClose()
     await proc()
-    await ashoc()
+    await adhocProc()
+    await adhocQuery()
     await pool()
     await table()
 }
