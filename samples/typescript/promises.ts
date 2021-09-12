@@ -134,59 +134,74 @@ async function proc() {
     }
 }
 
-function getInsertVec (rows: number): any[] {
+function getInsertVec (rows: number): SampleRecord[] {
     const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
       const expected = []
       for (let i = 0; i < rows; ++i) {
-        expected.push({
-          id: i,
-          d1: testDate,
-          s1: `${i}`,
-          s2: `testing${i + 1}2Data`,
-          s3: `testing${i + 2}2Data`,
-          s4: `testing${i + 3}2Data`
-        })
+        expected.push(new SampleRecord(
+          i,
+          testDate,
+          `${i}`,
+          `testing${i + 1}2Data`,
+          `testing${i + 2}2Data`,
+          `testing${i + 3}2Data`
+        ))
       }
       return expected
 }
 
-async function table() {
-    const TableDef: TableDef = {
-        tableName: 'test_table_bulk',
-        columns: [
-          {
-            name: 'id',
-            type: 'INT PRIMARY KEY'
-          },
-          {
-            name: 'd1',
-            type: 'datetime'
-          },
-          {
-            name: 's1',
-            type: 'VARCHAR (255) NOT NULL'
-          },
-          {
-            name: 's2',
-            type: 'VARCHAR (100) NOT NULL'
-          },
-          {
-            name: 's3',
-            type: 'VARCHAR (50) NOT NULL'
-          },
-          {
-            name: 's4',
-            type: 'VARCHAR (50) NOT NULL'
-          }
+class SampleRecord {
+    constructor(public id: number, public d1: Date, public s1: string, public s2: string, public s3: string, public s4: string) {
+    }
+    asArray(): any[] {
+        return[
+            this.id,
+            this.d1,
+            this.s1,
+            this.s2,
+            this.s3,
+            this.s4
         ]
-      }
+    }
+}
 
+const sampleTableDef: TableDef = {
+    tableName: 'test_table_bulk',
+    columns: [
+      {
+        name: 'id',
+        type: 'INT PRIMARY KEY'
+      },
+      {
+        name: 'd1',
+        type: 'datetime'
+      },
+      {
+        name: 's1',
+        type: 'VARCHAR (255) NOT NULL'
+      },
+      {
+        name: 's2',
+        type: 'VARCHAR (100) NOT NULL'
+      },
+      {
+        name: 's3',
+        type: 'VARCHAR (50) NOT NULL'
+      },
+      {
+        name: 's4',
+        type: 'VARCHAR (50) NOT NULL'
+      }
+    ]
+  }
+
+async function table() {
       try {
         const connStr: string = getConnection()
         const connection = await sql.promises.open(connStr)
-        const tm: BulkTableTest = new BulkTableTest(connection, TableDef)
+        const tm: BulkTableTest = new BulkTableTest(connection, sampleTableDef)
         const table: BulkTableMgr = await tm.create()
-        const vec = getInsertVec(10)
+        const vec: SampleRecord[] = getInsertVec(10)
         console.log(`table = ${tm.createTableSql}`)
         await table.promises.insert(vec)
         const read = await connection.promises.query(tm.selectSql)
@@ -199,6 +214,28 @@ async function table() {
       }
 }
 
+async function prepared() {
+    try {
+      const connStr: string = getConnection()
+      const connection = await sql.promises.open(connStr)
+      const tm: BulkTableTest = new BulkTableTest(connection, sampleTableDef)
+      const vec: SampleRecord[] = getInsertVec(2)
+      await tm.create()
+      console.log(`prepared = ${tm.createTableSql}`)
+      const p1 = await connection.promises.prepare(tm.insertParamsSql)
+      await p1.preparedQuery(vec[0].asArray())
+      await p1.preparedQuery(vec[1].asArray())
+      const read = await connection.promises.query(tm.selectSql)
+      console.log(`prepared ${read.first.length} rows from ${tm.tableName}`)
+      console.log(JSON.stringify(read.first, null, 4))
+      await p1.promises.free()
+      await tm.drop()
+      await connection.promises.close()
+     } catch (e) {
+      console.log(e)
+    }
+}
+
 async function run() {
     await openSelectClose()
     await proc()
@@ -206,6 +243,7 @@ async function run() {
     await adhocQuery()
     await pool()
     await table()
+    await prepared()
 }
 
 run().then(() => {
