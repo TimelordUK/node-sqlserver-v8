@@ -1,11 +1,33 @@
-import {Error, PoolOptions, Query, SqlClient, QueryDescription, Pool, PoolStatusRecord, Connection, QueryAggregatorResults, ConnectionPromises, BulkTableMgr} from 'msnodesqlv8';
+import {
+    PoolOptions,  
+    SqlClient,  
+    Pool,  
+    Connection, 
+    QueryAggregatorResults, 
+    ConnectionPromises, 
+    BulkTableMgr
+} from 'msnodesqlv8';
 
 // require the module so it can be used in your node JS code.
 export const sql : SqlClient = require('msnodesqlv8');
 
+async function run() {
+    await openSelectClose()
+    await proc()
+    await adhocProc()
+    await adhocQuery()
+    await pool()
+    await table()
+    await prepared()
+}
+
+run().then(() => {
+    console.log('finished')
+})
+
 function getConnection () : string {
   const path = require('path')
-  const config = require(path.join(__dirname, '..\\config.json'))
+  const config = require(path.join(__dirname, '../config.json'))
   return config.connection.local
 }
 
@@ -236,19 +258,6 @@ async function prepared() {
     }
 }
 
-async function run() {
-    await openSelectClose()
-    await proc()
-    await adhocProc()
-    await adhocQuery()
-    await pool()
-    await table()
-    await prepared()
-}
-
-run().then(() => {
-    console.log('finished')
-})
 
 interface TableColumn {
     name: string
