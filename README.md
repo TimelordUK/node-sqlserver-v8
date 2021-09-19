@@ -6,7 +6,8 @@
 [![npm](https://img.shields.io/npm/dm/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
 [![npm](https://img.shields.io/npm/dy/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
 
-1. *new* fast BCP bulk insert
+1. *new* promises - see WIKI
+1. *new* fast BCP bulk insert - see WIKI
 1. *new* 64 bit x64 Linux
 1. *new* includes MacOS support
 1. *new* use object based named params for proc calls - see WIKI
