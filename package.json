@@ -56,25 +56,25 @@
     }
   },
   "dependencies": {
-    "nan": "^2.14.2",
-    "node-abi": "^2.30.0",
-    "prebuild-install": "^6.1.2"
+    "nan": "^2.15.0",
+    "node-abi": "^3.1.0",
+    "prebuild-install": "^6.1.4"
   },
   "devDependencies": {
-    "@types/electron": "^1.4.31",
-    "@types/node": "^14.14.41",
-    "@types/sequelize": "^4.28.9",
+    "@types/electron": "^1.4.38",
+    "@types/node": "^16.9.6",
+    "@types/sequelize": "^4.28.10",
     "asynquence": "^0.10.2",
     "asynquence-contrib": "^0.28.2",
-    "electron": "^12.0.5",
-    "electron-rebuild": "^2.3.4",
+    "electron": "^15.0.0",
+    "electron-rebuild": "^3.2.3",
     "minimist": "^1.2.5",
-    "mocha": "^8.3.2",
-    "node-gyp": "^7.1.2",
-    "prebuild": "^10.0.1",
-    "sequelize": "^6.6.2",
+    "mocha": "^9.1.1",
+    "node-gyp": "^8.2.0",
+    "prebuild": "^11.0.0",
+    "sequelize": "^6.6.5",
     "standard": "^16.0.3",
-    "tedious": "^9.2.1"
+    "tedious": "^12.2.0"
   },
   "os": [
     "win32",
