@@ -32,7 +32,7 @@ namespace mssql
 		vector<char> c_str;
 		c_str.reserve(l + 1);
 		c_str.resize(l + 1);
-		const auto c = static_cast<int>(sizeof(SQLWCHAR));
+		constexpr auto c = static_cast<int>(sizeof(SQLWCHAR));
 		const auto* ptr = reinterpret_cast<const char*>(v.data());
 		for (size_t i = 0, j = 0; i < l * c; i+=c, j++) {
 			c_str[j] = ptr[i];
@@ -74,7 +74,7 @@ namespace mssql
 	wstring FromV8String(const Local<String> input) {
 		
 		Nan::Utf8String cons(input);
-		auto* x = *cons;
+		const auto* x = *cons;
 		const string cc = x;
 		auto wides = s2ws(cc);
 		return wides;

@@ -1081,7 +1081,7 @@ namespace mssql
 	bool OdbcStatement::reserved_timestamp(const size_t row_count, const size_t column) const
 	{
 		const auto& bound_datum = _preparedStorage->atIndex(static_cast<int>(column));
-		auto& ind = bound_datum->get_ind_vec();
+		const auto& ind = bound_datum->get_ind_vec();
 		const auto storage = bound_datum->get_storage();
 		for (size_t row_id = 0; row_id < row_count; ++row_id) {
 			auto v = (*storage->timestampvec_ptr)[row_id];
@@ -1099,7 +1099,7 @@ namespace mssql
 	bool OdbcStatement::reserved_timestamp_offset(const size_t row_count, const size_t column) const
 	{
 		const auto& bound_datum = _preparedStorage->atIndex(static_cast<int>(column));
-		auto& ind = bound_datum->get_ind_vec();
+		const auto& ind = bound_datum->get_ind_vec();
 		const auto storage = bound_datum->get_storage();
 		for (size_t row_id = 0; row_id < row_count; ++row_id) {
 			auto v = (*storage->timestampoffsetvec_ptr)[row_id];

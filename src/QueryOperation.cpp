@@ -42,7 +42,7 @@ namespace mssql
 
 		Local<Value> args[1];
 		args[0] = err;
-		const auto argc = 1;
+		constexpr auto argc = 1;
 
 		Nan::Call(Nan::New(_callback), Nan::GetCurrentContext()->Global(), argc, args);
 

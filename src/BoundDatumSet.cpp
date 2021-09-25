@@ -106,7 +106,7 @@ namespace mssql
 		const auto arr = fact.new_array(_output_param_count);
 		auto i = 0;
 
-		std::for_each(_bindings->begin(), _bindings->end(), [&](shared_ptr<BoundDatum> & param) mutable
+		std::for_each(_bindings->begin(), _bindings->end(), [&](const shared_ptr<BoundDatum> & param) mutable
 			{
 				switch (param->param_type)
 				{
