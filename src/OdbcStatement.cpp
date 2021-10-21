@@ -393,7 +393,7 @@ namespace mssql
 
 	bool OdbcStatement::read_col_attributes(ResultSet::ColumnDefinition& current, const int column)
 	{
-		const size_t l = 1024;
+		constexpr size_t l = 1024;
 		vector<SQLWCHAR> type_name(l);
 		SQLSMALLINT type_name_len = 0;
 		const auto index = column + 1;
@@ -1264,9 +1264,9 @@ namespace mssql
 			++reads;
 			if (total_bytes_to_read < 0)
 			{
-				const int previous = src_data->size();
+				const auto previous = src_data->size();
 				total_bytes_to_read = bytes_to_read * (reads + 1);
-				const auto n_items = total_bytes_to_read / item_size;
+				n_items = total_bytes_to_read / item_size;
 				src_data->reserve(n_items + 1);
 				src_data->resize(n_items);
 				write_ptr = src_data->data() + previous;

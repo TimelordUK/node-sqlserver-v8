@@ -60,13 +60,13 @@ namespace mssql
     inline RETCODE plugin_bcp::bcp_bind(const HDBC p1, const LPCBYTE p2, const INT p3, const DBINT p4, const LPCBYTE p5, const INT p6, const INT p7, const INT p8) const {
             return (dll_bcp_bind != nullptr) ?
             (dll_bcp_bind)(p1, p2, p3, p4, p5, p6, p7, p8)
-            : -1;
+            : static_cast<RETCODE>(-1);
     }
 
     inline RETCODE plugin_bcp::bcp_init(HDBC const p1, const LPCWSTR p2, const LPCWSTR p3, const LPCWSTR p4, const INT p5) const {
             return (dll_bcp_init != nullptr) ?
             (dll_bcp_init)(p1, p2, p3, p4, p5)
-            : -1;
+            : static_cast<RETCODE>(-1);
     }
 
     inline DBINT plugin_bcp::bcp_sendrow(HDBC const p1) const {
@@ -78,7 +78,7 @@ namespace mssql
     inline DBINT plugin_bcp::bcp_done(HDBC const p1) const {
              return (dll_bcp_done != nullptr) ?
             (dll_bcp_done)(p1)
-            : -1;
+            : static_cast<RETCODE>(-1);
     }
 
     template <class T> struct storage_jagged_t final : basestorage {
@@ -224,7 +224,7 @@ namespace mssql
             const auto s = get_storage(p);
             if (s) {
                 _storage.push_back(s);
-                if (plugin.bcp_bind(ch, s->ptr(), s->indicator, p->param_size, p->bcp_terminator, p->bcp_terminator_len, p->sql_type, p->ordinal_position) == FAIL)  
+                if (plugin.bcp_bind(ch, s->ptr(), s->indicator, static_cast<DBINT>(p->param_size), p->bcp_terminator, static_cast<int>(p->bcp_terminator_len), p->sql_type, static_cast<int>(p->ordinal_position)) == FAIL)  
    			    {  
 				    ch.read_errors(_errors);  
    				    return false;  
