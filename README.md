@@ -12,7 +12,8 @@
 1. *new* includes MacOS support
 1. *new* use object based named params for proc calls - see WIKI
 1. *new* improved local date support via bound tables
-1. *new* support Node v16
+1. *new* support Node v17
+1. *new* support electron v15
 1. pause/resume long running query
 1. built in connection pool
 1. sequelize support directly included
@@ -26,9 +27,11 @@
 1. bulk table operations insert, delete, update
 1. prepared statements
 1. table value parameters
-1. use with sequelize
+1. native sequelize support
 
-## Node JS support for SQL server
+## Node JS support for SQL server (and other databases with ODBC compliant driver)
+
+This library has full compatibility with MS SQL Server using an MS ODBC driver. Many functions e.g. open, query, connection pool, prepare, transactions, close will work with any ODBC compatible driver with its repsective database.
 
 Based on node-sqlserver, this version will compile in Visual Studio 2017/2019 and is built against the v8 node module API using the NAN abstraction.
 Releases include pre-compiled binaries for both x64 and x86 targets for Node and Electron.
