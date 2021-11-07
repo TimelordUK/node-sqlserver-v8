@@ -55,6 +55,59 @@ Please give the module a try and feel free to offer suggestions for improvement.
 
 if running on Linux, the odbc driver needs to be installed as outlined here [ODBC 17](https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-ver15). Please use version >= 17.5 which has been tested with this library.  We are running test suite for Linux on AppVeyor which you can see via the badge at top of this page. Linux distros tested so far are Ubuntu 18.04, Alpine 3.12, Ubuntu 20.04, Debian 10.5 and Fedora 32.  The driver also works under windows linux subsystem 2 (WLS).
 
+## debian crash - ssl stack trace ##
+
+if the library crashes with segmentation fault it is likely related to version of ssl
+
+if you have access to brew
+
+```bash
+brew install openssl
+cd /usr/lib
+sudo ln -s /home/linuxbrew/.linuxbrew/opt/openssl@3/lib/libssl.so libssl.so.1.1
+export LD_PRELOAD=/usr/lib/libssl.so.1.1
+
+me@me-pc:~/dev/js/published/samples/javascript$ export LD_PRELOAD=/usr/lib/libssl.so.1.1
+me@me-pc:~/dev/js/published/samples/javascript$ ps -ef | grep node
+me   6350  1576 54 15:57 pts/0    00:00:39 node pooling.js
+me   6634  6370  0 15:58 pts/1    00:00:00 grep node
+me@me-pc:~/dev/js/published/samples/javascript$ pldd 6350
+6350:	/home/me/.nvm/versions/node/v16.13.0/bin/node
+linux-vdso.so.1
+/usr/lib/libssl.so.1.1
+/lib/x86_64-linux-gnu/libdl.so.2
+/lib/x86_64-linux-gnu/libstdc++.so.6
+/lib/x86_64-linux-gnu/libm.so.6
+/lib/x86_64-linux-gnu/libgcc_s.so.1
+/lib/x86_64-linux-gnu/libpthread.so.0
+/lib/x86_64-linux-gnu/libc.so.6
+/lib64/ld-linux-x86-64.so.2
+/home/linuxbrew/.linuxbrew/Cellar/openssl@1.1/1.1.1l_1/lib/libcrypto.so.1.1
+/home/me/dev/js/published/node_modules/msnodesqlv8/build/Release/sqlserverv8.node
+/lib/x86_64-linux-gnu/libodbc.so.2
+/usr/lib/x86_64-linux-gnu/gconv/UTF-16.so
+/opt/microsoft/msodbcsql17/lib64/libmsodbcsql-17.8.so.1.1
+/lib/x86_64-linux-gnu/librt.so.1
+/lib/x86_64-linux-gnu/libodbcinst.so.2
+/lib/x86_64-linux-gnu/libkrb5.so.3
+/lib/x86_64-linux-gnu/libgssapi_krb5.so.2
+/lib/x86_64-linux-gnu/libk5crypto.so.3
+/lib/x86_64-linux-gnu/libcom_err.so.2
+/lib/x86_64-linux-gnu/libkrb5support.so.0
+/lib/x86_64-linux-gnu/libkeyutils.so.1
+/lib/x86_64-linux-gnu/libresolv.so.2
+/lib/x86_64-linux-gnu/libnss_files.so.2
+me@me-pc:~/dev/js/published/samples/javascript$ 
+
+me@me-pc:~/dev/js/published/samples/javascript$ uname -a
+Linux me-pc 4.19.0-18-amd64 #1 SMP Debian 4.19.208-1 (2021-09-29) x86_64 GNU/Linux
+me@me-pc:~/dev/js/published/samples/javascript$ node simple-demo.js 
+rows.length 36 elapsed 48
+rows.length 36 elapsed 30
+me@me-pc:~/dev/js/published/samples/javascript$ 
+
+```
+
 ## darwin ##
 
 Note the driver has been tested on macOS High Sierra.  MacOS native binaries are now supplied and should be available via NPM
