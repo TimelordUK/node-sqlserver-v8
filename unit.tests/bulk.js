@@ -6,7 +6,7 @@ const assert = require('assert')
 
 suite('bulk', function () {
   let theConnection
-  this.timeout(10000)
+  this.timeout(30000)
   let tm
   let connStr
   const totalObjectsForInsert = 10

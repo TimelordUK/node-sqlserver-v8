@@ -212,7 +212,7 @@ suite('promises', function () {
           s4: `testing${i + 3}2Data`
         })
       }
-      theConnection.setUseUTC(false)
+      theConnection.setUseUTC(true)
       const table = await helper.create()
       try {
         await table.promises.insert(expected)
