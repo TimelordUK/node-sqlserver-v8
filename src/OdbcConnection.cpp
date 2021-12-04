@@ -157,13 +157,12 @@ namespace mssql
 		_statements = make_shared<OdbcStatementCache>(_connectionHandles);
 		auto ret = open_timeout(timeout);
 		if (!CheckOdbcError(ret)) return false;
-		const auto len = static_cast<SQLSMALLINT>(connection_string.length());
 		auto vec = wstr2wcvec(connection_string);
 		ret = SQLSetConnectAttr(handle, SQL_COPT_SS_BCP, reinterpret_cast<SQLPOINTER>(SQL_BCP_ON), SQL_IS_INTEGER);  
 		if (!CheckOdbcError(ret)) return false;
 
 		ret = SQLDriverConnect(handle, nullptr, vec.data(),
-		                       len, nullptr, 0, nullptr, SQL_DRIVER_NOPROMPT);
+		                       vec.size(), nullptr, 0, nullptr, SQL_DRIVER_NOPROMPT);
 		if (!CheckOdbcError(ret)) return false;
 		connectionState = Open;
 		return true;

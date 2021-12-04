@@ -94,7 +94,7 @@ suite('bcp', function () {
         expected.push(this.factory(i))
       }
       try {
-        theConnection.setUseUTC(false)
+        theConnection.setUseUTC(true)
         const table = await helper.create()
         table.setUseBcp(true)
         await table.promises.insert(expected)
@@ -800,6 +800,21 @@ suite('bcp', function () {
           d1: i % 2 === 0 ? null : new Date(testDate.getTime() + i * 60 * 60 * 1000),
           d2: i % 3 === 0 ? null : new Date(testDate.getTime() - i * 60 * 60 * 1000)
         }
+      }, (actual, expected) => {
+        assert.deepStrictEqual(actual.length, expected.length)
+        for (let i = 0; i < actual.length; ++i) {
+          const lhs = actual[i]
+          const rhs = expected[i]
+          assert.deepStrictEqual(lhs.id, rhs.id)
+          if (rhs.d1) {
+            delete lhs.d1.nanosecondsDelta
+            assert.deepStrictEqual(lhs.d1, rhs.d1)
+          }
+          if (rhs.d2) {
+            delete lhs.d2.nanosecondsDelta
+            assert.deepStrictEqual(lhs.d2, rhs.d2)
+          }
+        }
       })
       return await bcp.runner()
     }
@@ -831,6 +846,17 @@ suite('bcp', function () {
           id: i,
           d1: new Date(testDate.getTime() + i * 60 * 60 * 1000),
           d2: new Date(testDate.getTime() - i * 60 * 60 * 1000)
+        }
+      }, (actual, expected) => {
+        assert.deepStrictEqual(actual.length, expected.length)
+        for (let i = 0; i < actual.length; ++i) {
+          const lhs = actual[i]
+          const rhs = expected[i]
+          assert.deepStrictEqual(lhs.id, rhs.id)
+          delete lhs.d1.nanosecondsDelta
+          delete lhs.d2.nanosecondsDelta
+          assert.deepStrictEqual(lhs.d1, rhs.d1)
+          assert.deepStrictEqual(lhs.d2, rhs.d2)
         }
       })
       return await bcp.runner()
@@ -957,6 +983,21 @@ suite('bcp', function () {
           d1: i % 2 === 0 ? null : new Date(testDate.getTime() + i * 60 * 60 * 1000),
           d2: i % 3 === 0 ? null : new Date(testDate.getTime() - i * 60 * 60 * 1000)
         }
+      }, (actual, expected) => {
+        assert.deepStrictEqual(actual.length, expected.length)
+        for (let i = 0; i < actual.length; ++i) {
+          const lhs = actual[i]
+          const rhs = expected[i]
+          assert.deepStrictEqual(lhs.id, rhs.id)
+          if (rhs.d1) {
+            delete lhs.d1.nanosecondsDelta
+            assert.deepStrictEqual(lhs.d1, rhs.d1)
+          }
+          if (rhs.d2) {
+            delete lhs.d2.nanosecondsDelta
+            assert.deepStrictEqual(lhs.d2, rhs.d2)
+          }
+        }
       })
       return await bcp.runner()
     }
@@ -988,6 +1029,17 @@ suite('bcp', function () {
           id: i,
           d1: new Date(testDate.getTime() + i * 60 * 60 * 1000),
           d2: new Date(testDate.getTime() - i * 60 * 60 * 1000)
+        }
+      }, (actual, expected) => {
+        assert.deepStrictEqual(actual.length, expected.length)
+        for (let i = 0; i < actual.length; ++i) {
+          const lhs = actual[i]
+          const rhs = expected[i]
+          assert.deepStrictEqual(lhs.id, rhs.id)
+          delete lhs.d1.nanosecondsDelta
+          delete lhs.d2.nanosecondsDelta
+          assert.deepStrictEqual(lhs.d1, rhs.d1)
+          assert.deepStrictEqual(lhs.d2, rhs.d2)
         }
       })
       return await bcp.runner()

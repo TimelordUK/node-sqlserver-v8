@@ -6,7 +6,7 @@ const assert = require('assert')
 
 suite('bulk', function () {
   let theConnection
-  this.timeout(100000)
+  this.timeout(10000)
   let tm
   let connStr
   const totalObjectsForInsert = 10
@@ -212,7 +212,7 @@ suite('bulk', function () {
       const helper = new BulkTableTest(theConnection, bulkTableDef)
       const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
       const expected = []
-      const rows = 3000
+      const rows = 500
       for (let i = 0; i < rows; ++i) {
         expected.push({
           id: i,
@@ -223,7 +223,7 @@ suite('bulk', function () {
           s4: `testing${i + 3}2Data`
         })
       }
-      theConnection.setUseUTC(false)
+      theConnection.setUseUTC(true)
       const table = await helper.create()
       try {
         await table.promises.insert(expected)
@@ -281,7 +281,7 @@ suite('bulk', function () {
       const helper = new TypeTableHelper(theConnection, 'time')
       const testDate = parseTime('16:47:04')
       const expected = helper.getVec(1, () => testDate)
-      theConnection.setUseUTC(false)
+      theConnection.setUseUTC(true)
       const table = await helper.create()
       const promisedInsert = table.promises.insert
       const promisedSelect = table.promises.select
@@ -341,7 +341,7 @@ suite('bulk', function () {
       const helper = new TypeTableHelper(theConnection, 'datetime')
       const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
       const expected = helper.getVec(1, () => testDate)
-      theConnection.setUseUTC(false)
+      theConnection.setUseUTC(true)
       const table = await helper.create()
       const promisedInsert = table.promises.insert
       const promisedSelect = table.promises.select
@@ -366,7 +366,7 @@ suite('bulk', function () {
       const helper = new TypeTableHelper(theConnection, 'DATETIMEOFFSET')
       const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
       const expected = helper.getVec(1, () => testDate)
-      theConnection.setUseUTC(false)
+      theConnection.setUseUTC(true)
       const table = await helper.create()
       const promisedInsert = table.promises.insert
       const promisedSelect = table.promises.select
