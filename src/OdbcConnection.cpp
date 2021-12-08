@@ -24,6 +24,7 @@
 #include <OdbcOperation.h>
 #include <ConnectionHandles.h>
 #include <NodeColumns.h>
+#include <sqltypes.h>
 
 namespace mssql
 {
@@ -139,7 +140,7 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcConnection::try_open(const wstring& connection_string, const int timeout)
+	bool OdbcConnection::try_open(shared_ptr<vector<uint16_t>> connection_string, const int timeout)
 	{
 		assert(connectionState == Closed);
 		_errors->clear();
@@ -157,12 +158,11 @@ namespace mssql
 		_statements = make_shared<OdbcStatementCache>(_connectionHandles);
 		auto ret = open_timeout(timeout);
 		if (!CheckOdbcError(ret)) return false;
-		auto vec = wstr2wcvec(connection_string);
 		ret = SQLSetConnectAttr(handle, SQL_COPT_SS_BCP, reinterpret_cast<SQLPOINTER>(SQL_BCP_ON), SQL_IS_INTEGER);  
 		if (!CheckOdbcError(ret)) return false;
 
-		ret = SQLDriverConnect(handle, nullptr, vec.data(),
-		                       vec.size(), nullptr, 0, nullptr, SQL_DRIVER_NOPROMPT);
+		ret = SQLDriverConnect(handle, nullptr, reinterpret_cast<SQLWCHAR*>(connection_string->data()),
+		                       connection_string->size(), nullptr, 0, nullptr, SQL_DRIVER_NOPROMPT);
 		if (!CheckOdbcError(ret)) return false;
 		connectionState = Open;
 		return true;

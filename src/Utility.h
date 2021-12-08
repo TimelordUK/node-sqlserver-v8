@@ -29,6 +29,7 @@ namespace mssql
     using namespace std;
     using namespace v8;
 
+	shared_ptr<vector<uint16_t>> js2u16(Local<String> str);
 	vector<SQLWCHAR> wstr2wcvec(const wstring & s);
 	vector<SQLWCHAR> str2wcvec(const string & cs);
 	string swcvec2str(vector<SQLWCHAR> &v, size_t l);

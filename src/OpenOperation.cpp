@@ -4,10 +4,13 @@
 
 namespace mssql
 {
-	OpenOperation::OpenOperation(const shared_ptr<OdbcConnection> &connection, const wstring& connection_string, const int timeout, const Local<Object> callback,
+	OpenOperation::OpenOperation(const shared_ptr<OdbcConnection> &connection, 
+								 Local<String> connection_string,
+								 const int timeout, 
+								 const Local<Object> callback,
 	                             const Local<Object> backpointer)
 		: OdbcOperation(connection, callback),
-		connectionString(connection_string),
+		connectionString(js2u16(connection_string)),
 		backpointer(Isolate::GetCurrent(), backpointer),
 		timeout(timeout)
 	{

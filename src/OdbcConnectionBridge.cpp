@@ -231,8 +231,7 @@ namespace mssql
 			timeout = local->Value();
 		}
 
-		const auto cc= FromV8String(connection_string);
-		auto* const op = new OpenOperation(connection, cc, timeout, callback, backpointer);
+		auto* const op = new OpenOperation(connection, connection_string, timeout, callback, backpointer);
 		connection->send(op);
 		return Nan::Null();
 	}

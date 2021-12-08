@@ -42,7 +42,7 @@ namespace mssql
 		bool try_begin_tran();
 		void send(OdbcOperation* op) const;
 		bool try_end_tran(SQLSMALLINT completion_type);
-		bool try_open(const wstring& connection_string, int timeout);
+		bool try_open(shared_ptr<vector<uint16_t>> connection_string, int timeout);
 		shared_ptr<vector<shared_ptr<OdbcError>>> errors(void) const { return _errors; }
 		bool TryClose();
 		shared_ptr<OdbcStatementCache> getStatamentCache() { return _statements; }

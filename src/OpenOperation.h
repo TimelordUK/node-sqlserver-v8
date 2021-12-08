@@ -20,6 +20,7 @@
 #pragma once
 
 #include <OdbcOperation.h>
+#include <vector>
 
 namespace mssql
 {
@@ -30,13 +31,16 @@ namespace mssql
 
 	class OpenOperation : public OdbcOperation
 	{
-		wstring connectionString;
+		shared_ptr<vector<uint16_t>> connectionString;
 		Persistent<Object> backpointer;
 		int timeout;
 
 	public:
-		OpenOperation(const shared_ptr<OdbcConnection> &connection, const wstring& connectionString,
-			int timeout, Local<Object> callback, Local<Object> backpointer);
+		OpenOperation(const shared_ptr<OdbcConnection> &connection, 
+			Local<String> connectionString,
+			int timeout, 
+			Local<Object> callback, 
+			Local<Object> backpointer);
 		virtual ~OpenOperation(void);
 		bool TryInvokeOdbc() override;
 		Local<Value> CreateCompletionArg() override;

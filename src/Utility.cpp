@@ -42,6 +42,17 @@ namespace mssql
 		return s;
 	}
 
+	shared_ptr<vector<uint16_t>> js2u16(Local<String> str) {
+		const auto str_len = str->Length();
+		shared_ptr<vector<uint16_t>> query_string = make_shared<vector<uint16_t>>();
+		query_string->reserve(str_len);
+		query_string->resize(str_len);
+		Nan::DecodeWrite(reinterpret_cast<char*>(query_string->data()),
+		static_cast<size_t>(str->Length()*2), 
+		str, Nan::UCS2);
+		return query_string;
+	}
+
 	vector<SQLWCHAR> wstr2wcvec(const wstring & s) {
 		const auto cs = w2sqlc(s);
 		return str2wcvec(cs);
