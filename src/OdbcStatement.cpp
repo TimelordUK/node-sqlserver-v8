@@ -735,8 +735,7 @@ namespace mssql
 			// cerr << "SQL_SUCCESS_WITH_INFO = " << ret << endl;
 			return_odbc_error();
 			_boundParamsSet = param_set;
-			const auto res = start_reading_results();
-			if (res)
+			if (start_reading_results())
 			{
 				_resultset->_end_of_rows = false;
 			}

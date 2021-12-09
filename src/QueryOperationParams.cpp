@@ -12,8 +12,7 @@ namespace mssql
 		const auto qs = Nan::Get(query_object, Nan::New("query_str").ToLocalChecked()).ToLocalChecked();
 		const auto maybe_value = Nan::To<String>(qs);
 		const auto str = maybe_value.FromMaybe(Nan::EmptyString());
-		const auto str_len = str->Length();
-		
+
 		_query_string = js2u16(str);
 		_timeout = MutateJS::getint32(query_object, "query_timeout");
 		_polling = MutateJS::getbool(query_object, "query_polling");

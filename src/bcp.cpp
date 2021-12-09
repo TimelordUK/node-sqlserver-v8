@@ -221,8 +221,7 @@ namespace mssql
 		for (auto itr = ps.begin(); itr != ps.end(); ++itr)
 		{ 
 			const auto& p = *itr;
-            const auto s = get_storage(p);
-            if (s) {
+			if (const auto s = get_storage(p)) {
                 _storage.push_back(s);
                 if (plugin.bcp_bind(ch, s->ptr(), s->indicator, static_cast<DBINT>(p->param_size), p->bcp_terminator, static_cast<int>(p->bcp_terminator_len), p->sql_type, static_cast<int>(p->ordinal_position)) == FAIL)  
    			    {  

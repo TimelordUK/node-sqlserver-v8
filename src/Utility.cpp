@@ -44,7 +44,7 @@ namespace mssql
 
 	shared_ptr<vector<uint16_t>> js2u16(Local<String> str) {
 		const auto str_len = str->Length();
-		shared_ptr<vector<uint16_t>> query_string = make_shared<vector<uint16_t>>();
+		auto query_string = make_shared<vector<uint16_t>>();
 		query_string->reserve(str_len);
 		query_string->resize(str_len);
 		Nan::DecodeWrite(reinterpret_cast<char*>(query_string->data()),
@@ -79,7 +79,7 @@ namespace mssql
 		using convert_type = codecvt_utf8<wchar_t>;
 		wstring_convert<convert_type, wchar_t> converter;
 		const auto c_cs = converter.from_bytes(s);
-		return wstring(c_cs);
+		return wstring{ c_cs };
 	}
 
 	wstring FromV8String(const Local<String> input) {
@@ -141,7 +141,7 @@ namespace mssql
 			n >>= 4;
 		} while (n);
 
-		return string(res.rbegin(), res.rend());
+		return string{ res.rbegin(), res.rend() };
 	}
 
 	void encode_numeric_struct(const double v, const int precision, int upscale_limit, SQL_NUMERIC_STRUCT & numeric) {
