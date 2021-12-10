@@ -17,8 +17,8 @@ namespace mssql
 	{
 		for (uint32_t i = 0; i < set->get_column_count(); ++i) {
 			const auto binding = make_shared<BoundDatum>();
-			const auto& [name, columnSize, dataType, dataTypeName, decimalDigits, nullable, udtTypeName] = set->get_meta_data(i);
-			binding->reserve_column_type(dataType, columnSize, row_count);
+			const auto& def = set->get_meta_data(i);
+			binding->reserve_column_type(def.dataType, def.columnSize, row_count);
 			_bindings->push_back(binding);
 		}
 		return true;
