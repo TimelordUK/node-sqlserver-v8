@@ -4,23 +4,35 @@ const { GetConnection } = require('./get-connection')
 
 const connectionString = new GetConnection().connectionString
 
+async function compute (msg) {
+  try {
+    console.log(`worker receive task ${msg.num}`)
+    const conn = await sql.promises.open(connectionString)
+    const query = `select ${msg.num} as i, @@SPID as spid`
+    const res = await conn.promises.query(query)
+    await conn.promises.close()
+    parentPort.postMessage(
+      {
+        command: 'task_result',
+        data: `spid ${res.first[0].spid}`,
+        num: msg.num,
+        fib: getFib(msg.num)
+      })
+  } catch (e) {
+    parentPort.emit('error', e)
+  }
+}
+
 parentPort.on('message', async msg => {
   switch (msg.command) {
     case 'task': {
-      console.log(`worker receive task ${msg.num}`)
-      const conn = await sql.promises.open(connectionString)
-      const query = `select ${msg.num} as i, @@SPID as spid`
-      const res = await conn.promises.query(query)
-      await conn.promises.close()
-      parentPort.postMessage(
-        {
-          command: 'task_result',
-          data: `spid ${res.first[0].spid}`,
-          num: msg.num,
-          fib: getFib(msg.num)
-        })
-    }
+      await compute(msg)
       break
+    }
+    default: {
+      console.log(`unknown command ${msg.command}`)
+      break
+    }
   }
 })
 

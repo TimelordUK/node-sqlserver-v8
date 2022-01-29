@@ -33,8 +33,7 @@ function asTvpTable (table, allGeography) {
     // each row is represented as an array of columns
     table.rows[table.rows.length] = [l]
   })
-  const tp = sql.TvpFromTable(table)
-  return tp
+  return sql.TvpFromTable(table)
 }
 
 async function asFunction (theConnection) {
@@ -120,8 +119,7 @@ END
       await exec(dropTypeSql)
       await exec(createType)
       await exec(createProcedureSql)
-      const table = await theConnection.promises.getUserTypeTable(tableTypeName)
-      return table
+      return await theConnection.promises.getUserTypeTable(tableTypeName)
     }
 
     const expectedPoints = [
@@ -172,8 +170,7 @@ END
       const lines = this.asLines(coordinates)
       const points = this.asPoints(coordinates)
       const polygon = this.asPoly(coordinates)
-      const allGeography = lines.concat(points).concat(polygon)
-      return allGeography
+      return lines.concat(points).concat(polygon)
     }
 
     function asLine (coords) {

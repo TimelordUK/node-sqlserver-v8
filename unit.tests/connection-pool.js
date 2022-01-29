@@ -38,6 +38,32 @@ suite('connection-pool', function () {
     })
   })
 
+  test('submit error queries on pool with no on.error catch', testDone => {
+    async function exec () {
+      const size = 4
+      const iterations = 8
+      const pool = new sql.Pool({
+        connectionString: connStr,
+        ceiling: size
+      })
+
+      await pool.promises.open()
+
+      const testSql = 'select a;'
+      for (let i = 0; i < iterations; ++i) {
+        try {
+          await pool.promises.query(testSql)
+        } catch (e) {}
+      }
+
+      await pool.promises.close()
+    }
+
+    exec().then(res => {
+      testDone(res)
+    })
+  })
+
   test('using promises to open, query, close pool', testDone => {
     async function exec () {
       try {
