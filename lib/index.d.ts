@@ -160,6 +160,8 @@ export interface TableColumn {
 interface ConnectionPromises extends AggregatorPromises {
     prepare(sql: string): Promise<PreparedStatement>
     getTable(name: string): Promise<BulkTableMgr>
+    getProc(name: string): Promise<ProcedureDefinition>
+    getUserTypeTable(name: string): Promise<Table>
     close(): Promise<any>
     cancel(name: string): Promise<any>
 }

@@ -1,12 +1,8 @@
 const sql = require('msnodesqlv8')
 const { utilModule } = require('msnodesqlv8/lib/util')
-const util = require('util')
+const { GetConnection } = require('./get-connection')
 
-function getConnection () {
-  const path = require('path')
-  const config = require(path.join(__dirname, 'config.json'))
-  return config.connection.local
-}
+const connectionString = new GetConnection().connectionString
 
 const spName = 'test_sp'
 
@@ -52,10 +48,7 @@ async function main (invocations) {
 }
 
 async function getTheConnection () {
-  const connectionString = getConnection()
-  const promisedOpen = util.promisify(sql.open)
-  const con = await promisedOpen(connectionString)
-  return con
+  return await sql.promises.open(connectionString)
 }
 
 async function asConnectionMessages (procTimeout, invocations) {
@@ -76,7 +69,6 @@ async function asPoolMessages (procTimeout, invocations) {
 }
 
 async function getPool (size) {
-  const connectionString = getConnection()
   const pool = new sql.Pool({
     connectionString: connectionString,
     ceiling: size
@@ -84,15 +76,13 @@ async function getPool (size) {
   pool.on('error', e => {
     throw e
   })
-  const promisedOpen = util.promisify(pool.open)
-  const options = await promisedOpen()
+  const options = await pool.promises.open()
   console.log(`pool opened : ${JSON.stringify(options, null, 4)}`)
   return pool
 }
 
 async function killPool (pool) {
-  const promisedClose = util.promisify(pool.close)
-  await promisedClose()
+  await pool.promises.close()
   console.log('pool closed')
 }
 
@@ -104,8 +94,7 @@ async function messages (connectionProxy, invocations, procTimeout) {
     for (let i = 0; i < invocations; ++i) {
       promises.push(helper.call([], { timeoutMs: procTimeout, raw: i % 2 === 0 }))
     }
-    const res = await Promise.all(promises)
-    return res
+    return await Promise.all(promises)
   } catch (e) {
     console.log(e.message)
   }
@@ -145,8 +134,7 @@ async function asConnection (invocations) {
     const con = await getTheConnection()
     const res = await test(con, invocations)
     console.log(`${spName}: asConnection ${invocations} invocations, elapsed = ${res.elapsed}, res length=${res.results.length}`)
-    const promisedClose = util.promisify(con.close)
-    await promisedClose()
+    await con.promises.close()
   } catch (err) {
     console.log(err.message)
   }
@@ -208,9 +196,8 @@ class ProcedureHelper {
   }
 
   async create () {
-    const promisedQuery = util.promisify(this.connectionProxy.query)
-    await promisedQuery(this.dropProcedureSql)
-    await promisedQuery(this.defition)
+    await this.connectionProxy.promises.query(this.dropProcedureSql)
+    await this.connectionProxy.promises.query(this.defition)
   }
 
   query (sql, params, options) {

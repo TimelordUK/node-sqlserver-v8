@@ -64,7 +64,7 @@ namespace mssql
 
 	shared_ptr<OdbcStatement> OdbcStatementCache::store(shared_ptr<OdbcStatement> statement)
 	{
-		statements.insert(pair<long, shared_ptr<OdbcStatement>>(statement->get_statement_id(), statement));
+		statements.insert(pair(statement->get_statement_id(), statement));
 		return statement;
 	}
 

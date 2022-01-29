@@ -42,6 +42,7 @@ namespace mssql
 
 	bool OdbcHandle::alloc()
 	{
+		if (handle) return true;
 		assert(handle == SQL_NULL_HANDLE);
 		const auto ret = SQLAllocHandle(HandleType, nullptr, &handle);
 		if (!SQL_SUCCEEDED(ret))
@@ -54,6 +55,7 @@ namespace mssql
 	
 	bool OdbcHandle::alloc(const OdbcHandle &parent)
 	{
+		if (handle) return true;
 		assert(handle == SQL_NULL_HANDLE);
 		const auto ret = SQLAllocHandle(HandleType, parent, &handle);
 		//fprintf(stderr, "Alloc OdbcHandle %i %p\n", HandleType, handle);

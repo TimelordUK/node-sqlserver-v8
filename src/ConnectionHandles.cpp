@@ -35,12 +35,12 @@ namespace mssql {
 
 	shared_ptr<OdbcStatementHandle> ConnectionHandles::find(const long statement_id)
 	{
-		shared_ptr<OdbcStatementHandle> statementHandle = nullptr;
+		shared_ptr<OdbcStatementHandle> statement_handle = nullptr;
 		const auto itr = _statementHandles.find(statement_id);
 		if (itr != _statementHandles.end()) {
-			statementHandle = itr->second;
+			statement_handle = itr->second;
 		}
-		return statementHandle;
+		return statement_handle;
 	}
 
 	shared_ptr<OdbcStatementHandle> ConnectionHandles::store(shared_ptr<OdbcStatementHandle> handle)

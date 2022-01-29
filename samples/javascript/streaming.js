@@ -1,13 +1,7 @@
 const sql = require('msnodesqlv8')
-const util = require('util')
+const { GetConnection } = require('./get-connection')
 
-function getConnection () {
-  const path = require('path')
-  const config = require(path.join(__dirname, 'config.json'))
-  return config.connection.local
-}
-
-const connectionString = getConnection()
+const connectionString = new GetConnection().connectionString
 
 function dispatch (con, query) {
   return new Promise((resolve, reject) => {
@@ -64,8 +58,7 @@ function dispatch (con, query) {
 
 async function run () {
   console.log(`run with ${connectionString}`)
-  const promised = util.promisify(sql.open)
-  const conn = await promised(connectionString)
+  const conn = await sql.promises.open(connectionString)
   for (let i = 0; i < 5; ++i) {
     const d = new Date()
     const rows = await dispatch(conn, 'select top 5 * from master..syscolumns')

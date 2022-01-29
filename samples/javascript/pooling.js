@@ -1,14 +1,10 @@
 const sql = require('msnodesqlv8')
+const { GetConnection } = require('./get-connection')
 
-function getConnection () {
-  const path = require('path')
-  const config = require(path.join(__dirname, 'config.json'))
-  return config.connection.local
-}
+const connectionString = new GetConnection().connectionString
 
-const str = getConnection()
 const pool = new sql.Pool({
-  connectionString: str
+  connectionString: connectionString
 })
 
 pool.on('open', (options) => {

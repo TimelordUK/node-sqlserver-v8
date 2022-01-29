@@ -18,7 +18,6 @@
 //---------------------------------------------------------------------------------------------------------------------------------
 
 #include "stdafx.h"
-#include <locale>
 #include <OdbcConnection.h>
 #include <OdbcStatementCache.h>
 #include <OdbcOperation.h>

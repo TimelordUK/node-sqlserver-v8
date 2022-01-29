@@ -1,12 +1,7 @@
 const Sequelize = require('sequelize')
+const { GetConnection } = require('./get-connection')
 
-function getConnection () {
-  const path = require('path')
-  const config = require(path.join(__dirname, 'config.json'))
-  return config.connection.local
-}
-
-const str = getConnection()
+const connectionString = new GetConnection().connectionString
 
 const sequelize = new Sequelize({
   dialect: 'mssql',
@@ -17,7 +12,7 @@ const sequelize = new Sequelize({
     database: 'node',
     options: {
       driver: '',
-      connectionString: str,
+      connectionString: connectionString,
       trustedConnection: true,
       instanceName: ''
     }

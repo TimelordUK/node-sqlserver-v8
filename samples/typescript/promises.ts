@@ -9,7 +9,7 @@ import {
 } from 'msnodesqlv8';
 
 // require the module so it can be used in your node JS code.
-export const sql : SqlClient = require('msnodesqlv8');
+export const sql: SqlClient = require('msnodesqlv8');
 
 async function run() {
     await openSelectClose()

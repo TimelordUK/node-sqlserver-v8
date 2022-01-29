@@ -100,7 +100,7 @@ namespace mssql
 		return res;
 	}
 
-	Local<Array> BoundDatumSet::unbind()
+	Local<Array> BoundDatumSet::unbind() const
 	{
 		const nodeTypeFactory fact;
 		const auto arr = fact.new_array(_output_param_count);

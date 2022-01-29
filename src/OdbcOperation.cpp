@@ -106,7 +106,7 @@ namespace mssql
 	int OdbcOperation::error(Local<Value> args[])
 	{
 		const nodeTypeFactory fact;
-		const auto error_count = _failures ? _failures->size() : 0;
+		const unsigned int error_count = _failures ? static_cast<int>(_failures->size()) : 0;
 		const auto errors = fact.new_array(error_count);
 		for (unsigned int i = 0; i < error_count; ++i)
 		{
@@ -114,10 +114,10 @@ namespace mssql
 			const auto err = fact.error(failure->Message());
 			Nan::Set(err, Nan::New("sqlstate").ToLocalChecked(), Nan::New(failure->SqlState()).ToLocalChecked());
 			Nan::Set(err, Nan::New("code").ToLocalChecked(), Nan::New(failure->Code()));
-			Nan::Set(err, Nan::New("severity").ToLocalChecked(), Nan::New(static_cast<int32_t>(failure->Severity())));
+			Nan::Set(err, Nan::New("severity").ToLocalChecked(), Nan::New(failure->Severity()));
 			Nan::Set(err, Nan::New("serverName").ToLocalChecked(), Nan::New(failure->ServerName()).ToLocalChecked());
 			Nan::Set(err, Nan::New("procName").ToLocalChecked(), Nan::New(failure->ProcName()).ToLocalChecked());
-			Nan::Set(err, Nan::New("lineNumber").ToLocalChecked(), Nan::New(static_cast<uint32_t>(failure->LineNumber())));
+			Nan::Set(err, Nan::New("lineNumber").ToLocalChecked(), Nan::New(failure->LineNumber()));
 			Nan::Set(errors, i, err);
 		}
 		

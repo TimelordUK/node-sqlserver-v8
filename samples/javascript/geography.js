@@ -2,26 +2,19 @@
 
 const path = require('path')
 const sql = require('msnodesqlv8')
-const util = require('util')
+const { GetConnection } = require('./get-connection')
 
-function getConnection () {
-  const path = require('path')
-  const config = require(path.join(__dirname, 'config.json'))
-  return config.connection.local
-}
+const connectionString = new GetConnection().connectionString
 
 main().then(() => {
   console.log('done')
 })
 
 async function main () {
-  const connectionString = getConnection()
-  const promisedOpen = util.promisify(sql.open)
   try {
-    const con = await promisedOpen(connectionString)
-    const promisedClose = util.promisify(con.close)
+    const con = await sql.promises.open(connectionString)
     await asFunction((con))
-    await promisedClose()
+    await con.promises.close()
   } catch (err) {
     if (err) {
       if (Array.isArray(err)) {
@@ -48,9 +41,6 @@ async function asFunction (theConnection) {
   console.log('work with SQL server Geography using tvp')
 
   const geographyHelper = new GeographyHelper(theConnection)
-  const pm = theConnection.procedureMgr()
-  const promisedGetProcedure = util.promisify(pm.getProc) // promise safe
-  const promisedQuery = util.promisify(theConnection.query)
   const coordinates = geographyHelper.getCoordinates()
   const allGeography = geographyHelper.all(coordinates)
 
@@ -58,15 +48,13 @@ async function asFunction (theConnection) {
 
   const table = await geographyHelper.createGeographyTable()
   const procName = 'InsertGeographyTvp'
-  const procedure = await promisedGetProcedure(procName)
-  const promisedProcCall = util.promisify(procedure.call)
 
   const tp = asTvpTable(table, allGeography)
   table.rows = []
   console.log(`call proc ${procName} with tvp to bulk insert ${allGeography.length} rows`)
-  await promisedProcCall([tp])
+  await theConnection.promises.callProc(procName, [tp])
   console.log(`select all data '${geographyHelper.selectSql}'`)
-  const res = await promisedQuery(geographyHelper.selectSql)
+  const res = await theConnection.promises.query(geographyHelper.selectSql)
   const json = JSON.stringify(res, null, 4)
   console.log(`json = ${json}`)
 }
@@ -122,8 +110,7 @@ END
     async function createGeographyTable () {
       async function exec (sql) {
         console.log(`exec '${sql}' ....`)
-        const promisedQuery = util.promisify(theConnection.query)
-        await promisedQuery(sql)
+        await theConnection.promises.query(sql)
         console.log('... done')
       }
 
@@ -133,8 +120,7 @@ END
       await exec(dropTypeSql)
       await exec(createType)
       await exec(createProcedureSql)
-      const promisedUserType = util.promisify(theConnection.getUserTypeTable)
-      const table = await promisedUserType(tableTypeName)
+      const table = await theConnection.promises.getUserTypeTable(tableTypeName)
       return table
     }
 

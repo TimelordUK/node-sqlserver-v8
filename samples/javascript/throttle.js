@@ -1,24 +1,16 @@
 const sql = require('msnodesqlv8')
-const util = require('util')
-
-function getConnection () {
-  const path = require('path')
-  const config = require(path.join(__dirname, 'config.json'))
-  return config.connection.local
-}
+const { GetConnection } = require('./get-connection')
 
 main().then(() => {
   console.log('done')
 })
 
 async function main () {
-  const connectionString = getConnection()
-  const promisedOpen = util.promisify(sql.open)
+  const connectionString = new GetConnection().connectionString
   try {
-    const con = await promisedOpen(connectionString)
-    const promisedClose = util.promisify(con.close)
+    const con = await sql.promises.open(connectionString)
     await asStream((con))
-    await promisedClose()
+    await con.promises.close()
   } catch (err) {
     if (err) {
       if (Array.isArray(err)) {

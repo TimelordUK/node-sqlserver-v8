@@ -57,7 +57,7 @@ namespace mssql
         }
     }
 	
-    inline RETCODE plugin_bcp::bcp_bind(const HDBC p1, const LPCBYTE p2, const INT p3, const DBINT p4, const LPCBYTE p5, const INT p6, const INT p7, const INT p8) const {
+    inline RETCODE plugin_bcp::bcp_bind(HDBC const p1, const LPCBYTE p2, const INT p3, const DBINT p4, const LPCBYTE p5, const INT p6, const INT p7, const INT p8) const {
             return (dll_bcp_bind != nullptr) ?
             (dll_bcp_bind)(p1, p2, p3, p4, p5, p6, p7, p8)
             : static_cast<RETCODE>(-1);
@@ -172,7 +172,7 @@ namespace mssql
         const auto &ch = *_ch;
         auto vec = wstr2wcvec(tn);
         vec.push_back(static_cast<uint16_t>(0));
-		const auto retcode = plugin.bcp_init(ch, reinterpret_cast<LPCWSTR>(vec.data()), nullptr, nullptr, DB_IN);
+		const auto retcode = plugin.bcp_init(ch, vec.data(), nullptr, nullptr, DB_IN);
 		if ( (retcode != SUCCEED) ) {
 			ch.read_errors(_errors);
 			return false;

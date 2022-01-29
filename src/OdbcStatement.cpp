@@ -269,7 +269,7 @@ namespace mssql
 			auto* const name_ptr = const_cast<wchar_t*>(name.c_str());
 			r = SQLGetStmtAttr(statement, SQL_ATTR_IMP_PARAM_DESC, &ipd, SQL_IS_POINTER, &string_length);
 			if (!check_odbc_error(r)) return false;
-			SQLSetDescField(ipd, current_param, SQL_DESC_NAME, reinterpret_cast<SQLPOINTER>(name_ptr), name.size() * sizeof(wchar_t));
+			SQLSetDescField(ipd, current_param, SQL_DESC_NAME, name_ptr, name.size() * sizeof(wchar_t));
 			if (!check_odbc_error(r)) return false;
 		}
 		

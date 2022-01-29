@@ -1,26 +1,18 @@
 'use strict'
 
 const sql = require('msnodesqlv8')
-const util = require('util')
-
-function getConnection () {
-  const path = require('path')
-  const config = require(path.join(__dirname, 'config.json'))
-  return config.connection.local
-}
+const { GetConnection } = require('./get-connection')
 
 main().then(() => {
   console.log('done')
 })
 
 async function main () {
-  const connectionString = getConnection()
-  const promisedOpen = util.promisify(sql.open)
+  const connectionString = new GetConnection().connectionString
   try {
-    const con = await promisedOpen(connectionString)
-    const promisedClose = util.promisify(con.close)
+    const con = await sql.promises.open(connectionString)
     await asFunction((con))
-    await promisedClose()
+    await con.promises.close()
   } catch (err) {
     if (err) {
       if (Array.isArray(err)) {
@@ -37,7 +29,6 @@ async function main () {
 async function asFunction (theConnection) {
   console.log('work with tvp type to bulk insert')
 
-  const promisedQuery = util.promisify(theConnection.query)
   const tableName = 'TestTvp'
   const helper = new TvpHelper(theConnection, tableName)
   const vec = helper.getExtendedVec(10)
@@ -47,10 +38,10 @@ async function asFunction (theConnection) {
   table.rows = []
   const execSql = 'exec insertTestTvp @tvp = ?;'
   console.log(`exec ${execSql}`)
-  await promisedQuery(execSql, [tp])
+  await theConnection.promises.query(execSql, [tp])
   const selectSql = `select * from ${tableName}`
   console.log(`select results ${selectSql}`)
-  const res = await promisedQuery(selectSql)
+  const res = await theConnection.promises.query(selectSql)
   const json = JSON.stringify(res, null, 4)
   console.log(`json = ${json}`)
 }
@@ -232,8 +223,7 @@ END
     async function create () {
       async function exec (sql) {
         console.log(`exec '${sql}' ....`)
-        const promisedQuery = util.promisify(theConnection.query)
-        await promisedQuery(sql)
+        await theConnection.promises.query(sql)
         console.log('... done')
       }
 
@@ -249,8 +239,8 @@ END
       await exec(callProcedureFromProcedureSql)
       await exec(dropLocalTableProcedureSql)
       await exec(localTableProcNameSql)
-      const promisedUserType = util.promisify(theConnection.getUserTypeTable)
-      const table = await promisedUserType(tableTypeName)
+
+      const table = await theConnection.promises.getUserTypeTable(tableTypeName)
       return table
     }
     function repeat (a, num) {

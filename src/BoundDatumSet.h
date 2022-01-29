@@ -14,7 +14,7 @@ namespace mssql
 		BoundDatumSet();
 		bool reserve(const shared_ptr<ResultSet> &set, size_t row_count) const;
 		bool bind(Local<Array> &node_params);
-		Local<Array> unbind();	
+		Local<Array> unbind() const;	
 		void clear() { _bindings->clear(); }
 		size_t size() { return _bindings->size(); }
 		shared_ptr<BoundDatum> & atIndex(int i) { return (*_bindings)[i]; }
@@ -22,7 +22,7 @@ namespace mssql
 		param_bindings::iterator end() { return _bindings->end(); }
 
 		char * err;
-		int first_error;
+		uint32_t first_error;
 
 	private:
 		bool tvp(Local<Value> &v) const;

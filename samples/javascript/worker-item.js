@@ -1,31 +1,26 @@
 const { parentPort } = require('worker_threads')
-let queryId = 0
+const sql = require('msnodesqlv8')
+const { GetConnection } = require('./get-connection')
 
-parentPort.on('message', msg => {
+const connectionString = new GetConnection().connectionString
+
+parentPort.on('message', async msg => {
   switch (msg.command) {
     case 'task': {
-      const query = ++queryId
       console.log(`worker receive task ${msg.num}`)
-      // let main master thread run query on pool and post back results
-      parentPort.postMessage(
-        {
-          query_id: query,
-          sql: `select ${msg.num} as i, @@SPID as spid`,
-          command: 'sql_query',
-          data: msg.num
-        })
-    }
-      break
-    // now we have sql results run expensive calc
-    case 'sql_result': {
+      const conn = await sql.promises.open(connectionString)
+      const query = `select ${msg.num} as i, @@SPID as spid`
+      const res = await conn.promises.query(query)
+      await conn.promises.close()
       parentPort.postMessage(
         {
           command: 'task_result',
-          data: `spid ${msg.rows[0].spid}`,
-          num: msg.data,
-          fib: getFib(msg.data)
+          data: `spid ${res.first[0].spid}`,
+          num: msg.num,
+          fib: getFib(msg.num)
         })
     }
+      break
   }
 })
 
