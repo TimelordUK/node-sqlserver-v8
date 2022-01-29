@@ -17,7 +17,7 @@ namespace mssql
 	{
 		lock_guard<mutex> lock(g_i_mutex);
 		operation_ptr->OperationID = static_cast<int>(++_id);
-		operations.insert(pair(operation_ptr->OperationID, operation_ptr));
+		operations.insert(pair<size_t, shared_ptr<Operation>>(operation_ptr->OperationID, operation_ptr));
 		operation_ptr->work.data = operation_ptr.get();
 
 		const auto result = uv_queue_work(uv_default_loop(), &operation_ptr->work, on_background, reinterpret_cast<uv_after_work_cb>(on_foreground));
