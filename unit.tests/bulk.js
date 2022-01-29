@@ -6,7 +6,7 @@ const assert = require('assert')
 
 suite('bulk', function () {
   let theConnection
-  this.timeout(30000)
+  this.timeout(60000)
   let tm
   let connStr
   const totalObjectsForInsert = 10
@@ -905,7 +905,7 @@ suite('bulk', function () {
           const byName = meta.getColumnsByName()
           assert(byName !== null)
 
-          const testVec = getInsertVector(10000)
+          const testVec = getInsertVector(5000)
           t.insertRows(testVec, (e, res) => {
             assert.ifError(e)
             asyncDone()
