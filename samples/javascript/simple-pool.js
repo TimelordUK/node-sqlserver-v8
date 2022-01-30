@@ -20,7 +20,7 @@ async function run (iterations) {
     try {
       await pool.promises.query(testSql)
     } catch (e) {
-      console.log(e)
+      console.error('error', e)
     }
   }
 
