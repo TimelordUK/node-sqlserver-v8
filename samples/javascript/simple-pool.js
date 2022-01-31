@@ -13,6 +13,9 @@ async function run (iterations) {
     connectionString: connectionString
   })
 
+  pool.on('error', err => {
+    console.error('pool error was an uncaught error', err)
+  })
   await pool.promises.open()
 
   const testSql = 'select a;'
