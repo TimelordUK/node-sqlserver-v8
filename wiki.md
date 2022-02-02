@@ -18,6 +18,7 @@
 1. [How does the driver handle SQL_VARIANT types](#handling-variant)
 1. [Errors when passing strings > 2k in length.](#long-strings)
 1. [Api](#api)
+1. [thread pooling](#thread-pooling)
 1. [promises](#promises)
 1. [Table Value Parameters TVP](#table-value-parameters)
 1. [User Binding](#user-binding)
@@ -871,6 +872,117 @@ can also get a Table representing the database table
         })
       }
 
+```
+
+## thread pooling ##
+
+the library can now be used by a thread worker as outlined below.
+
+master worker
+
+```js
+
+const path = require('path')
+const filePath = path.resolve(__dirname, './worker-item.js')
+const { Worker } = require('worker_threads')
+
+const worker1 = new Worker(filePath)
+const worker2 = new Worker(filePath)
+
+function dispatch (worker) {
+  worker.on('message', msg => {
+    switch (msg.command) {
+      case 'task_result': {
+        console.log(JSON.stringify(msg, null, 4))
+      }
+    }
+  })
+
+  worker.on('error', error => {
+    console.log(error)
+  })
+}
+
+dispatch(worker1)
+dispatch(worker2)
+
+function sendTask (worker, num) {
+  worker.postMessage(
+    {
+      command: 'task',
+      num: num
+    })
+}
+
+function clean () {
+  setTimeout(async () => {
+    console.log('exit.')
+    await Promise.all([
+      worker1.terminate(),
+      worker2.terminate()
+    ])
+  }, 5000)
+}
+
+for (let i = 0; i < 40; i += 2) {
+  sendTask(worker1, i)
+  sendTask(worker2, i + 1)
+}
+
+clean()
+
+```
+
+worker
+
+```js
+const { parentPort } = require('worker_threads')
+const sql = require('msnodesqlv8')
+const { GetConnection } = require('./get-connection')
+
+const connectionString = new GetConnection().connectionString
+
+async function compute (msg) {
+  try {
+    console.log(`worker receive task ${msg.num}`)
+    const conn = await sql.promises.open(connectionString)
+    const query = `select ${msg.num} as i, @@SPID as spid`
+    const res = await conn.promises.query(query)
+    await conn.promises.close()
+    parentPort.postMessage(
+      {
+        command: 'task_result',
+        data: `spid ${res.first[0].spid}`,
+        num: msg.num,
+        fib: getFib(msg.num)
+      })
+  } catch (e) {
+    parentPort.emit('error', e)
+  }
+}
+
+parentPort.on('message', async msg => {
+  switch (msg.command) {
+    case 'task': {
+      await compute(msg)
+      break
+    }
+    default: {
+      console.log(`unknown command ${msg.command}`)
+      break
+    }
+  }
+})
+
+function getFib (num) {
+  if (num === 0) {
+    return 0
+  } else if (num === 1) {
+    return 1
+  } else {
+    return getFib(num - 1) + getFib(num - 2)
+  }
+}
 ```
 
 ## promises ##
