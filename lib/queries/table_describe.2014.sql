@@ -29,6 +29,7 @@ SELECT
   sc.table_catalog,
 	sc.table_schema,
 	sc.table_name,
+  sc.column_default,
   c.name name,
   t.Name type,
   c.max_length,

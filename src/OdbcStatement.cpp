@@ -432,15 +432,12 @@ namespace mssql
 	{
 		if(!_statement) return false;
 		const auto& statement = *_statement;
-		SQLSMALLINT name_length = 0;
+		SQLSMALLINT name_length = 1024;
 		const auto index = column + 1;
-		auto ret = SQLDescribeCol(statement, index, nullptr, 0, &name_length, nullptr, nullptr, nullptr, nullptr);
-		if (!check_odbc_error(ret)) return false;
-
 		auto& current = _resultset->get_meta_data(column);
 		const auto l = name_length + static_cast<SQLSMALLINT>(1);
 		vector<SQLWCHAR> buffer(l);
-		ret = SQLDescribeCol(statement, index, buffer.data(), name_length + 1, &name_length, &current.dataType,
+		auto ret = SQLDescribeCol(statement, index, buffer.data(), buffer.size(), &name_length, &current.dataType,
 		                     &current.columnSize, &current.decimalDigits, &current.nullable);
 		if (!check_odbc_error(ret)) return false;
 		const auto s = swcvec2str(buffer, name_length);

@@ -178,6 +178,52 @@ suite('bulk', function () {
     }
   }
 
+  test('table with default values', testDone => {
+    const defS1 = 'def1'
+    const defN1 = 2
+    const bulkTableDef = {
+      tableName: 'test_default_val_table_bulk',
+      columns: [
+        {
+          name: 'id',
+          type: 'INT PRIMARY KEY'
+        },
+        {
+          name: 's1',
+          type: `VARCHAR (255) NOT NULL default '${defS1}'`
+        },
+        {
+          name: 'n1',
+          type: `int NOT NULL default ${defN1}`
+        }
+      ]
+    }
+    async function runner () {
+      const helper = new BulkTableTest(theConnection, bulkTableDef)
+      const expected = []
+      const rows = 50
+      for (let i = 0; i < rows; ++i) {
+        expected.push({
+          id: i,
+          s1: `${i}`,
+          n1: i * 2
+        })
+      }
+      theConnection.setUseUTC(true)
+      const table = await helper.create()
+      try {
+        await table.promises.insert(expected)
+        const res = await table.promises.select(expected)
+        assert.deepStrictEqual(res, expected)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
   test('load large number rows', testDone => {
     const bulkTableDef = {
       tableName: 'test_table_bulk',

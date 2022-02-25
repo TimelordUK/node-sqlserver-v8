@@ -9,7 +9,7 @@ sql.open(connectionString, function (err, con) {
   if (err) {
     console.log(`failed to open ${err.message}`)
   }
-  let d = new Date()
+  const d = new Date()
   con.query(query, function (err, rows) {
     if (err) {
       console.log(err.message)
@@ -17,14 +17,6 @@ sql.open(connectionString, function (err, con) {
     }
     const elapsed = new Date() - d
     console.log(`rows.length ${rows.length} elapsed ${elapsed}`)
-    d = new Date()
-    con.query(query, function (err, rows) {
-      if (err) {
-        console.log(err.message)
-        return
-      }
-      const elapsed = new Date() - d
-      console.log(`rows.length ${rows.length} elapsed ${elapsed}`)
-    })
+    console.log(`${JSON.stringify(rows, null, 4)}`)
   })
 })

@@ -63,7 +63,14 @@
         "xtree": "cpp",
         "stop_token": "cpp",
         "xlocmon": "cpp",
-        "xlocnum": "cpp"
+        "xlocnum": "cpp",
+        "charconv": "cpp",
+        "compare": "cpp",
+        "xlocinfo": "cpp",
+        "xloctime": "cpp",
+        "xmemory": "cpp",
+        "xstddef": "cpp",
+        "*.rh": "cpp"
     },
     "cmake.configureOnOpen": false
 }

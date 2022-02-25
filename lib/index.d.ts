@@ -138,6 +138,7 @@ export interface TableColumn {
     column_id: number
     ordered_column: string
     column_name: string
+    column_default: string,
     name: string
     data_type: string
     type_id: string
