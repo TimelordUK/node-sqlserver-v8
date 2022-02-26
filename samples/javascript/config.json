@@ -1,8 +1,8 @@
 {
     "connection": {
-        "local_": "Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;",
+        "local": "Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;",
         "linux": "Driver={SQL Server Native Client 17.0}; Server=192.168.1.102;UID=linux; PWD=linux; Database=node",
-        "local": "Driver={Adaptive Server Enterprise}; app=myAppName; server=DESKTOP-9RLN5E4; port=5000; db=pubs3; uid=tech_user; pwd=tech_user;"   
+        "sybase": "Driver={Adaptive Server Enterprise}; app=myAppName; server=localhost; port=5000; db=pubs3; uid=sa; pwd=sa;"   
     }
 }
 

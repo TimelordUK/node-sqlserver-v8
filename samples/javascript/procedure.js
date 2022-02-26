@@ -38,13 +38,13 @@ const helloSpDef = `create PROCEDURE ${helloSpName} AS
     END
     `
 async function main (invocations) {
+  await asConnection(invocations)
+  await asPool(invocations)
   await asConnectionMessages(10000, 2)
   await asPoolMessages(10000, 2)
   await asConnectionTimeout(10000, 2)
   await asConnectionTimeout(200, 1)
   await asConnectionTimeout(200, 1)
-  await asConnection(invocations)
-  await asPool(invocations)
 }
 
 async function getTheConnection () {
