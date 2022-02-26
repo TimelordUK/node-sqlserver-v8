@@ -400,6 +400,25 @@ export interface ProcedureSummary {
     params: ProcedureParam[]
 }
 
+/*
+  user define and register a proc e.g. for Sybase Adaptive Server
+
+  const def = `create or replace proc tmp_name_concat 
+  @lastname varchar(30) = "knowles", 
+  @firstname varchar(18) = "beyonce" as 
+  select @firstname + " " + @lastname `
+
+  const connection = await sql.promises.open(connectionString)
+  const pm = connection.procedureMgr()
+  const spName = 'tmp_name_concat'
+  const params = [
+    pm.makeParam(spName, '@last_name', 'varchar', 30, false),
+    pm.makeParam(spName, '@first_name', 'varchar', 18, false)
+  ]
+
+  pm.addProc(spName, params)
+*/
+
 export interface ProcedureManager {
     /**
      * @deprecated Please use `getProc`
@@ -407,9 +426,26 @@ export interface ProcedureManager {
     get(name:string, cb?:GetProcedureCb):void  // cannot promisify (proc)
     getProc(name:string, cb?:GetProcCb):void // promise friendly (err, proc)
     callproc(name: string, params?: any[], cb?: CallProcedureCb): Query
+    makeParam (procName: string, paramName: string, paramType: string, paramLength: number, isOutput: boolean): ProcedureParamMeta
+    addProc (name: string, paramVector: ProcedureParamMeta[]): ProcedureDefinition
     describe(name: string, cb?: DescribeProcedureCb): void
     setTimeout(timeout: number): void
     setPolling(poll:boolean):void;
+}
+
+export interface ProcedureParamMeta {
+        proc_name: string,
+        type_desc: string,
+        object_id: number,
+        has_default_value: boolean,
+        default_value: string,
+        is_output: boolean,
+        name: string,
+        type_id: string,
+        max_length: number,
+        order: number,
+        collation: string,
+        is_user_defined: boolean
 }
 
 export interface TableManager {
