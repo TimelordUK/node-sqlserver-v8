@@ -72,6 +72,9 @@ async function proc () {
 
     await runProcWith(connection, spName, {})
     await runProcWith(connection, spName, {
+      first_name: 'Baby'
+    })
+    await runProcWith(connection, spName, {
       first_name: 'Miley',
       last_name: 'Cyrus'
     })
