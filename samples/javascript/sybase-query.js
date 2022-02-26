@@ -65,14 +65,17 @@ async function proc () {
     pm.makeParam(spName, '@first_name', 'varchar', 18, false)
   ]
 
-  pm.addProc(spName, params)
+  const proc = pm.addProc(spName, params)
+  proc.setDialect(pm.ServerDialect.Sybase)
   try {
     await connection.promises.query(def)
+
+    await runProcWith(connection, spName, {})
     await runProcWith(connection, spName, {
       first_name: 'Miley',
       last_name: 'Cyrus'
     })
-    await runProcWith(connection, spName, {})
+
     await connection.promises.close()
   } catch (err) {
     console.error(err)
