@@ -51,25 +51,35 @@ async function runProcWith (connection, spName, p) {
   console.log(`proc with params returns ${returns}`)
 }
 
-async function proc () {
-  const def = `create or replace proc tmp_name_concat 
+async function makeProc (connection, spName) {
+  try {
+    const pm = connection.procedureMgr()
+    const def = `create or replace proc tmp_name_concat 
   @last_name varchar(30) = "knowles", 
   @first_name varchar(18) = "beyonce" as 
   select @first_name + " " + @last_name `
 
-  const connection = await sql.promises.open(connectionString)
-  const pm = connection.procedureMgr()
-  const spName = 'tmp_name_concat'
-  const params = [
-    pm.makeParam(spName, '@last_name', 'varchar', 30, false),
-    pm.makeParam(spName, '@first_name', 'varchar', 18, false)
-  ]
-
-  const proc = pm.addProc(spName, params)
-  proc.setDialect(pm.ServerDialect.Sybase)
-  try {
     await connection.promises.query(def)
 
+    const params = [
+      pm.makeParam(spName, '@last_name', 'varchar', 30, false),
+      pm.makeParam(spName, '@first_name', 'varchar', 18, false)
+    ]
+
+    const proc = pm.addProc(spName, params)
+    proc.setDialect(pm.ServerDialect.Sybase)
+    return proc
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+async function proc () {
+  const connection = await sql.promises.open(connectionString)
+  const spName = 'tmp_name_concat'
+  await makeProc(connection, spName)
+
+  try {
     await runProcWith(connection, spName, {})
     await runProcWith(connection, spName, {
       first_name: 'Baby'
