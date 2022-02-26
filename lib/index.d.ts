@@ -403,10 +403,9 @@ export interface ProcedureSummary {
 /*
   user define and register a proc e.g. for Sybase Adaptive Server
 
-  const def = `create or replace proc tmp_name_concat 
-  @lastname varchar(30) = "knowles", 
-  @firstname varchar(18) = "beyonce" as 
-  select @firstname + " " + @lastname `
+   @last_name varchar(30) = "knowles", 
+  @first_name varchar(18) = "beyonce" as 
+  select @first_name + " " + @last_name `
 
   const connection = await sql.promises.open(connectionString)
   const pm = connection.procedureMgr()

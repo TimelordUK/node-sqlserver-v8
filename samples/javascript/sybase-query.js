@@ -46,9 +46,9 @@ async function q1 () {
 
 async function proc () {
   const def = `create or replace proc tmp_name_concat 
-  @lastname varchar(30) = "knowles", 
-  @firstname varchar(18) = "beyonce" as 
-  select @firstname + " " + @lastname `
+  @last_name varchar(30) = "knowles", 
+  @first_name varchar(18) = "beyonce" as 
+  select @first_name + " " + @last_name `
 
   const connection = await sql.promises.open(connectionString)
   const pm = connection.procedureMgr()
