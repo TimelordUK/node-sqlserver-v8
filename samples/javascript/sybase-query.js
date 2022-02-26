@@ -44,6 +44,13 @@ async function q1 () {
   }
 }
 
+async function runProcWith (connection, spName, p) {
+  console.log(`call proc ${spName} with params ${JSON.stringify(p, null, 4)}`)
+  const res = await connection.promises.callProc(spName, p)
+  const returns = res.first[0]['']
+  console.log(`proc with params returns ${returns}`)
+}
+
 async function proc () {
   const def = `create or replace proc tmp_name_concat 
   @last_name varchar(30) = "knowles", 
@@ -61,14 +68,12 @@ async function proc () {
   pm.addProc(spName, params)
   try {
     await connection.promises.query(def)
-    const res = await connection.promises.callProc(spName, {
+    await runProcWith(connection, spName, {
       first_name: 'Miley',
       last_name: 'Cyrus'
     })
+    await runProcWith(connection, spName, {})
     await connection.promises.close()
-    console.log(`proc ${JSON.stringify(res, null, 4)}`)
-    const returns = res.first[0]['']
-    console.log(`proc returns ${returns}`)
   } catch (err) {
     console.error(err)
   }
