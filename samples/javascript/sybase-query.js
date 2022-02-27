@@ -80,10 +80,10 @@ async function proc () {
   await makeProc(connection, spName)
 
   try {
-    await runProcWith(connection, spName, {})
     await runProcWith(connection, spName, {
       first_name: 'Baby'
     })
+    await runProcWith(connection, spName, {})
     await runProcWith(connection, spName, {
       first_name: 'Miley',
       last_name: 'Cyrus'
@@ -95,7 +95,53 @@ async function proc () {
   }
 }
 
+async function runOutputProcWith (connection, spName, p) {
+  console.log(`call output proc ${spName} with params ${JSON.stringify(p, null, 4)}`)
+  const res = await connection.promises.callProc(spName, p)
+  console.log(`output proc with params returns ${JSON.stringify(res, null, 4)}`)
+}
+
+async function makeOutputProc (connection, spName) {
+  try {
+    const pm = connection.procedureMgr()
+    const def = `create or replace proc tmp_square 
+    @num decimal, 
+    @square decimal output as 
+  select @square=@num* @num`
+
+    await connection.promises.query(def)
+
+    const params = [
+      pm.makeParam(spName, '@num', 'decimal', 17, false),
+      pm.makeParam(spName, '@square', 'decimal', 17, true)
+    ]
+
+    const proc = pm.addProc(spName, params)
+    proc.setDialect(pm.ServerDialect.Sybase)
+    return proc
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+async function procOuput () {
+  const connection = await sql.promises.open(connectionString)
+  const spName = 'tmp_square'
+  await makeOutputProc(connection, spName)
+
+  try {
+    await runOutputProcWith(connection, spName, {
+      num: 15
+    })
+
+    await connection.promises.close()
+  } catch (err) {
+    console.error(err)
+  }
+}
+
 async function run () {
+  await procOuput()
   await proc()
   await q1()
   await promised()
