@@ -140,7 +140,59 @@ async function procOuput () {
   }
 }
 
+async function makeSelectProc (connection, spName) {
+  try {
+    const pm = connection.procedureMgr()
+    const def = `create or replace proc tmp_input_output
+    @len_last int output,
+    @len_first int output,
+    @first_last varchar(48) output, 
+    @last_name varchar(30) = 'knowles', 
+    @first_name varchar(18) = 'beyonce'
+    as begin
+      select @first_last = @first_name + " " + @last_name
+      select @len_first = len(@first_name)
+      select @len_last = len(@last_name)
+      select len(@first_last)
+    end`
+
+    await connection.promises.query(def)
+
+    const params = [
+      pm.makeParam(spName, '@len_last', 'int', 4, true),
+      pm.makeParam(spName, '@len_first', 'int', 4, true),
+      pm.makeParam(spName, '@first_last', 'varchar', 48, true),
+      pm.makeParam(spName, '@last_name', 'varchar', 30, false),
+      pm.makeParam(spName, '@first_name', 'varchar', 18, false)
+    ]
+
+    const proc = pm.addProc(spName, params)
+    proc.setDialect(pm.ServerDialect.Sybase)
+    return proc
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+async function procAsSelect () {
+  const connection = await sql.promises.open(connectionString)
+  const spName = 'tmp_input_output'
+
+  try {
+    const proc = await makeSelectProc(connection, spName)
+    const meta = proc.getMeta()
+    const select = meta.select
+    console.log(select)
+    const res = await connection.promises.query(select, ['Miley', 'Cyrus'])
+    console.log(JSON.stringify(res, null, 4))
+    await connection.promises.close()
+  } catch (err) {
+    console.error(err)
+  }
+}
+
 async function run () {
+  await procAsSelect()
   await procOuput()
   await proc()
   await q1()
