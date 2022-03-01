@@ -18,6 +18,7 @@
 1. [How does the driver handle SQL_VARIANT types](#handling-variant)
 1. [Errors when passing strings > 2k in length.](#long-strings)
 1. [Api](#api)
+1. [Sybase Adaptive Server](#sybase-adaptive-server)
 1. [thread pooling](#thread-pooling)
 1. [promises](#promises)
 1. [Table Value Parameters TVP](#table-value-parameters)
@@ -31,6 +32,7 @@
 1. [Cancel A Query](#cancel-a-query)
 1. [Subscribing To Driver Events](#subscribing-to-driver-events)
 1. [Capturing Print Output](#capture-print)
+1. [Register Stored Procedure](#register-stored-procedure)
 1. [Executing Stored Procedures](#executing-stored-procedures)
 1. [Table Binding](#table-binding)
 1. [BCP](#bcp)
@@ -874,6 +876,60 @@ can also get a Table representing the database table
 
 ```
 
+## Sybase Adaptive Server ##
+
+the library runs most features against Sybase such as below with promised query or legacy callback.
+
+```js
+const sql = require('msnodesqlv8')
+const { GetConnection } = require('./get-connection')
+
+const connectionString = new GetConnection().connectionString
+const query = 'SELECT top 5 * FROM syscomments'
+
+// "Driver={Adaptive Server Enterprise}; app=myAppName; server=localhost port=5000; db=pubs3; uid=sa; pwd=ooooo;"
+
+function legacyQuery () {
+  return new Promise((resolve, reject) => {
+    sql.open(connectionString, (err, con) => {
+      if (err) {
+        reject(err)
+      }
+      con.query(query, (err, rows) => {
+        if (err) {
+          reject(err)
+        }
+        con.close(() => {
+          resolve(rows)
+        })
+      })
+    })
+  })
+}
+
+async function promised () {
+  const connection = await sql.promises.open(connectionString)
+  const res = await connection.promises.query(query)
+  console.log(`promised ${JSON.stringify(res, null, 4)}`)
+  await connection.promises.close()
+  return res
+}
+
+async function q1 () {
+  const d = new Date()
+  try {
+    const rows = await legacyQuery()
+    const elapsed = new Date() - d
+    console.log(`legacyQuery rows.length ${rows.length} elapsed ${elapsed}`)
+    console.log(`legacyQuery ${JSON.stringify(rows, null, 4)}`)
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+
+```
+
 ## thread pooling ##
 
 the library can now be used by a thread worker as outlined below.
@@ -1439,9 +1495,169 @@ pool.open()
 
 ```
 
-### Executing Stored Procedures ###
+## Register Stored Procedure ##
 
-#### call a procedure directly from opened connecion or pool ####
+when running against SQLServer, the library will try and fetch a stored procedure definition from the database hence it will be registered automatically and cached
+
+However for other ODBC connections such as Sybase the proc must be registered manually.
+
+see examples below for usage
+
+```js
+async function runProcWith (connection, spName, p) {
+  console.log(`call proc ${spName} with params ${JSON.stringify(p, null, 4)}`)
+  const res = await connection.promises.callProc(spName, p)
+  const returns = res.first[0]['']
+  console.log(`proc with params returns ${returns}`)
+}
+
+async function makeProc (connection, spName) {
+  try {
+    const pm = connection.procedureMgr()
+    const def = `create or replace proc tmp_name_concat 
+  @last_name varchar(30) = "knowles", 
+  @first_name varchar(18) = "beyonce" as 
+  select @first_name + " " + @last_name `
+
+    await connection.promises.query(def)
+
+    const params = [
+      pm.makeParam(spName, '@last_name', 'varchar', 30, false),
+      pm.makeParam(spName, '@first_name', 'varchar', 18, false)
+    ]
+
+    const proc = pm.addProc(spName, params)
+    proc.setDialect(pm.ServerDialect.Sybase)
+    return proc
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+async function proc () {
+  const connection = await sql.promises.open(connectionString)
+  const spName = 'tmp_name_concat'
+  await makeProc(connection, spName)
+
+  try {
+    await runProcWith(connection, spName, {
+      first_name: 'Baby'
+    })
+    await runProcWith(connection, spName, {})
+    await runProcWith(connection, spName, {
+      first_name: 'Miley',
+      last_name: 'Cyrus'
+    })
+
+    await connection.promises.close()
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+async function runOutputProcWith (connection, spName, p) {
+  console.log(`call output proc ${spName} with params ${JSON.stringify(p, null, 4)}`)
+  const res = await connection.promises.callProc(spName, p)
+  console.log(`output proc with params returns ${JSON.stringify(res, null, 4)}`)
+}
+
+async function makeOutputProc (connection, spName) {
+  try {
+    const pm = connection.procedureMgr()
+    const def = `create or replace proc tmp_square 
+    @num decimal, 
+    @square decimal output as 
+  select @square=@num* @num`
+
+    await connection.promises.query(def)
+
+    const params = [
+      pm.makeParam(spName, '@num', 'decimal', 17, false),
+      pm.makeParam(spName, '@square', 'decimal', 17, true)
+    ]
+
+    const proc = pm.addProc(spName, params)
+    proc.setDialect(pm.ServerDialect.Sybase)
+    return proc
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+async function procOuput () {
+  const connection = await sql.promises.open(connectionString)
+  const spName = 'tmp_square'
+  await makeOutputProc(connection, spName)
+
+  try {
+    await runOutputProcWith(connection, spName, {
+      num: 15
+    })
+
+    await connection.promises.close()
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+async function makeSelectProc (connection, spName) {
+  try {
+    const pm = connection.procedureMgr()
+    const def = `create or replace proc tmp_input_output
+    @len_last int output,
+    @len_first int output,
+    @first_last varchar(48) output, 
+    @last_name varchar(30) = 'knowles', 
+    @first_name varchar(18) = 'beyonce'
+    as begin
+      select @first_last = @first_name + " " + @last_name
+      select @len_first = len(@first_name)
+      select @len_last = len(@last_name)
+      select len(@first_last)
+    end`
+
+    await connection.promises.query(def)
+
+    const params = [
+      pm.makeParam(spName, '@len_last', 'int', 4, true),
+      pm.makeParam(spName, '@len_first', 'int', 4, true),
+      pm.makeParam(spName, '@first_last', 'varchar', 48, true),
+      pm.makeParam(spName, '@last_name', 'varchar', 30, false),
+      pm.makeParam(spName, '@first_name', 'varchar', 18, false)
+    ]
+
+    const proc = pm.addProc(spName, params)
+    proc.setDialect(pm.ServerDialect.Sybase)
+    return proc
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+async function procAsSelect () {
+  const connection = await sql.promises.open(connectionString)
+  const spName = 'tmp_input_output'
+
+  try {
+    const proc = await makeSelectProc(connection, spName)
+    const meta = proc.getMeta()
+    const select = meta.select
+    console.log(select)
+    const res = await connection.promises.query(select, ['Miley', 'Cyrus'])
+    console.log(JSON.stringify(res, null, 4))
+    await connection.promises.close()
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+```
+
+
+
+## Executing Stored Procedures ##
+
+### call a procedure directly from opened connecion or pool ###
 
 ```typescript
 

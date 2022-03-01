@@ -28,7 +28,9 @@
     "msnodesql",
     "node-sqlserver",
     "tvp",
-    "sequelize"
+    "sequelize",
+    "sybase",
+    "adaptive"
   ],
   "homepage": "https://github.com/TimelordUK/node-sqlserver-v8",
   "bugs": {

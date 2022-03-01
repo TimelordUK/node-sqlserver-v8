@@ -6,6 +6,8 @@
 [![npm](https://img.shields.io/npm/dm/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
 [![npm](https://img.shields.io/npm/dy/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
 
+1. *new* Sybase Adaptive Server Enterprise support - see WIKI
+1. *new* manually register and execute stored proc
 1. *new* promises - see WIKI
 1. *new* fast BCP bulk insert - see WIKI
 1. *new* 64 bit x64 Linux
@@ -13,14 +15,14 @@
 1. *new* use object based named params for proc calls - see WIKI
 1. *new* improved local date support via bound tables
 1. *new* support Node v17
-1. *new* support electron v15
+1. *new* support electron v17
 1. pause/resume long running query
 1. built in connection pool
 1. sequelize support directly included
 1. supports input/output parameters.
 1. captures return code from stored procedure.
 1. will obtain meta data describing parameters.
-1. compatible with Node versions greater 10.0
+1. compatible with Node versions greater 12.0
 1. electron version greater than 5.0
 1. includes 64 bit/ia32 precompiled libraries.
 1. npm install with npm install msnodesqlv8
