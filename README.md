@@ -7,6 +7,7 @@
 [![npm](https://img.shields.io/npm/dy/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
 
 1. *new* Sybase Adaptive Server Enterprise support - see WIKI
+1. *new* thread worker support - see WIKI
 1. *new* manually register and execute stored proc
 1. *new* promises - see WIKI
 1. *new* fast BCP bulk insert - see WIKI
