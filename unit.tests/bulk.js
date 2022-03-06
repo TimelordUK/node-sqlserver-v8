@@ -3,7 +3,6 @@
 
 const supp = require('../samples/typescript/demo-support')
 const assert = require('assert')
-const util = require('util')
 
 suite('bulk', function () {
   let theConnection
@@ -438,33 +437,6 @@ suite('bulk', function () {
       testDone()
     })
   })
-
-  /*
-  test('use tableMgr bulk insert single date with date col', testDone => {
-    async function runner () {
-      const helper = new TypeTableHelper(theConnection, 'date')
-      const testDate = new Date('Mon Apr 26 2021 00:00:00 GMT-0500 (Central Daylight Time)')
-      const expected = helper.getVec(1, () => testDate)
-      theConnection.setUseUTC(false)
-      const table = await helper.create()
-      const promisedInsert = util.promisify(table.insertRows)
-      const promisedSelect = util.promisify(table.selectRows)
-      try {
-        await promisedInsert(expected)
-        const res = await promisedSelect(expected)
-        res.forEach(a => {
-          delete a.col_a.nanosecondsDelta
-        })
-        assert.deepStrictEqual(res, expected)
-      } catch (e) {
-        return e
-      }
-      return null
-    }
-    runner().then((e) => {
-      testDone(e)
-    })
-  }) */
 
   test('use tableMgr bulk insert single non UTC based date with datetime col', testDone => {
     async function runner () {

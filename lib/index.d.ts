@@ -153,6 +153,27 @@ export interface TableColumn {
     is_hidden: number,
     is_primary_key: number,
     is_foreign_key: number
+
+    isComputed (v: number): TableColumn 
+    isIdentity (v:number): TableColumn
+    isHidden (v: number): TableColumn
+    isPrimaryKey (v: number): TableColumn
+    isForeignKey (v: number): TableColumn 
+    asBit (): TableColumn 
+    asInt (): TableColumn
+    asNVarChar (length: number): TableColumn 
+    asVarChar (length: number): TableColumn 
+    asDate (): TableColumn 
+    asTime (): TableColumn 
+    asDateTime (): TableColumn
+    asDateTimeOffset (): TableColumn     
+    asNumeric (precision: number, length: number): TableColumn 
+    asDecimal (precision: number, scale: number): TableColumn 
+    asUniqueIdentifier (): TableColumn 
+    asHiearchyId (): TableColumn 
+    asVarBiary (length: number): TableColumn 
+    asReal (): TableColumn 
+    asNChar (length: number): TableColumn
 }
 
 interface ConnectionPromises extends AggregatorPromises {
