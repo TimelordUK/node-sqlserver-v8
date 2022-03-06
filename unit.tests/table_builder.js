@@ -72,6 +72,24 @@ suite('table_builder', function () {
     }
   }
 
+  test('use table builder to bind to a table int, bit', testDone => {
+    function makeOne (i) {
+      return {
+        id: i,
+        col_a: i % 2 === 0
+      }
+    }
+
+    run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asBit()
+    }, makeOne).then((e) => {
+      testDone(e)
+    }).catch(e => {
+      testDone(e)
+    })
+  })
+
   test('use table builder to bind to a table int, decimal', testDone => {
     function makeOne (i) {
       return {
@@ -85,14 +103,10 @@ suite('table_builder', function () {
       assert(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)
     }
 
-    async function test () {
-      run(builder => {
-        builder.addColumn('id').asInt().isPrimaryKey(1)
-        builder.addColumn('col_a').asDecimal(23, 18)
-      }, makeOne, checkOne)
-    }
-
-    test().then((e) => {
+    run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asDecimal(23, 18)
+    }, makeOne, checkOne).then((e) => {
       testDone(e)
     }).catch(e => {
       testDone(e)
@@ -126,18 +140,14 @@ suite('table_builder', function () {
       }
     }
 
-    async function test () {
-      run(builder => {
-        builder.addColumn('id').asInt().isPrimaryKey(1)
-        builder.addColumn('col_a').asInt()
-        builder.addColumn('col_b').asVarChar(100)
-        builder.addColumn('col_c').asInt()
-        builder.addColumn('col_d').asInt()
-        builder.addColumn('col_e').asVarChar(100)
-      }, makeOne)
-    }
-
-    test().then((e) => {
+    run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asInt()
+      builder.addColumn('col_b').asVarChar(100)
+      builder.addColumn('col_c').asInt()
+      builder.addColumn('col_d').asInt()
+      builder.addColumn('col_e').asVarChar(100)
+    }, makeOne).then((e) => {
       testDone(e)
     }).catch(e => {
       testDone(e)
