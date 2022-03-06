@@ -517,7 +517,6 @@ export interface PreparedPromises {
     free(): Promise<any>
     query(params?: any[], options?: QueryAggregatorOptions) : Promise<QueryAggregatorResults>
 }
-
 export interface PreparedStatement {
     promises: PreparedPromises
     preparedQuery(params?: any[], cb ?: QueryCb): Query
