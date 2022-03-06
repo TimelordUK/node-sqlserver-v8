@@ -276,6 +276,9 @@ function DemoSupport (native) {
           if (fileName.charAt(0) === '#') {
             fileName = fileName.substr(1)
           }
+          if (fileName.charAt(0) === '#') {
+            fileName = fileName.substr(1)
+          }
           let file = folder + '/sql/' + fileName
           file += '.sql'
 

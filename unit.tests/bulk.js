@@ -1284,6 +1284,32 @@ suite('bulk', function () {
     })
   })
 
+  test('employee global tmp table complex json object array bulk operations', testDone => {
+    const tableName = '##employee'
+
+    const fns = [
+
+      asyncDone => {
+        helper.dropCreateTable({
+          tableName: tableName,
+          theConnection: theConnection
+        }, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        bindInsert(tableName, () => {
+          asyncDone()
+        })
+      }
+    ]
+
+    async.series(fns, () => {
+      testDone()
+    })
+  })
+
   test('employee tmp table complex json object array bulk operations', testDone => {
     const tableName = '#employee'
 
