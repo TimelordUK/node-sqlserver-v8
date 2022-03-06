@@ -465,12 +465,51 @@ export interface ProcedureParamMeta {
         is_user_defined: boolean
 }
 
+/*
+        const tableName = 'tmpTableBuilder'
+        const mgr = theConnection.tableMgr()
+        const builder = mgr.makeBuilder(tableName, 'scratch')
+
+        builder.addColumn('id').asInt().isPrimaryKey(1)
+        builder.addColumn('col_a').asInt()
+        builder.addColumn('col_b').asVarChar(100)
+        builder.addColumn('col_c').asInt()
+        builder.addColumn('col_d').asInt()
+        builder.addColumn('col_e').asVarChar(100)
+
+        const table = builder.toTable()
+        await builder.drop()
+        await builder.create()
+        const vec = getVec(20)
+*/
+
+export interface TableBuilder {
+    addColumn (columnName: string, columnType?: string, maxLength?:number, isPrimaryKey?: number): TableColumn
+    compute () : void
+    toTable () : BulkTableMgr
+    drop (): Promise<any> 
+    create (): Promise<any>
+    truncate () : Promise<any>
+    clear (): void
+    dropTableSql: string
+    createTableSql: string
+    clusteredSql: string
+    selectSql: string
+    insertSql: string
+    truncateSql: string
+    paramsSql: string
+    insertParamsSql: string
+  }
+
 export interface TableManager {
     /**
      * @deprecated Please use `getTable`
      */
     bind(tableName: string, cb: BindCb): void // cannot promisify (table)
     getTable(tableName: string, cb: GetTableCb): void // promise friendly (err, table)
+    // manually create a table binding
+    addTable(tableName: string, cols: TableColumn[]): BulkTableMgr
+    makeBuilder (tableName: string, tableCatelog: string, tableSchema: string): TableBuilder
     makeColumn (tableName: string, tableSchema: string, position: number, columnName: string, paramType: string, paramLength: number, isPrimaryKey: number): TableColumn
 }
 
