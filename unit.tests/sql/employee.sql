@@ -5,7 +5,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 CREATE TABLE [<name>](
-  [BusinessEntityID] [int] NOT NULL,
+  [BusinessEntityID] int primary key,
   [NationalIDNumber] [nvarchar](15) NOT NULL,
   [LoginID] [nvarchar](256) NOT NULL,
   [OrganizationNode] [hierarchyid] NULL,
@@ -20,13 +20,8 @@ CREATE TABLE [<name>](
   [SickLeaveHours] [smallint] NOT NULL,
   [CurrentFlag] [bit] NOT NULL,
   [rowguid] [uniqueidentifier] ROWGUIDCOL  NOT NULL,
-  [ModifiedDate] [datetime] NOT NULL,
-  CONSTRAINT [PK_Employee_BusinessEntityID] PRIMARY KEY CLUSTERED
-    (
-      [BusinessEntityID] ASC
-    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-
+  [ModifiedDate] [datetime] NOT NULL
+)
 GO
 
 ALTER TABLE [<name>] ADD  CONSTRAINT [DF_Employee_SalariedFlag]  DEFAULT ((1)) FOR [SalariedFlag]

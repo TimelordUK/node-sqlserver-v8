@@ -3,6 +3,7 @@
 
 const supp = require('../samples/typescript/demo-support')
 const assert = require('assert')
+const util = require('util')
 
 suite('bulk', function () {
   let theConnection
@@ -177,6 +178,89 @@ suite('bulk', function () {
       return table
     }
   }
+
+  test('employee tmp table created on 2 connections - check name clash', testDone => {
+    const tableName = '#test_table'
+
+    const dropTableSql = `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL DROP TABLE ${tableName};`
+
+    const createTableSql = `CREATE TABLE ${tableName} (
+      id INT PRIMARY KEY,
+      col_a int,
+      col_b varchar(100), 
+      col_c int,
+      col_d int,
+      col_e varchar(100)
+     );`
+
+    function getVec (c) {
+      const d = []
+      for (let i = 0; i < c; ++i) {
+        d.push({
+          id: i,
+          col_a: i * 5,
+          col_b: `str_${i}`,
+          col_c: i + 1,
+          col_d: i - 1,
+          col_e: `str2_${i}`
+        })
+      }
+      return d
+    }
+
+    async function runner (f) {
+      try {
+        const c1 = await sql.promises.open(connStr)
+        const c2 = await sql.promises.open(connStr)
+        await c1.promises.query(dropTableSql)
+        await c2.promises.query(dropTableSql)
+
+        await c1.promises.query(createTableSql)
+        await c2.promises.query(createTableSql)
+
+        const t1 = await c1.promises.getTable(tableName)
+        const t2 = await c2.promises.getTable(tableName)
+
+        assert(t1)
+        assert(t2)
+
+        const vec = getVec(20)
+        const keys = vec.map(o => {
+          return {
+            id: o.id
+          }
+        })
+
+        await t1.promises.insert(vec)
+        await t2.promises.insert(vec)
+
+        const s1 = await t1.promises.select(keys)
+        const s2 = await t2.promises.select(keys)
+
+        assert.deepStrictEqual(vec, s1)
+        assert.deepStrictEqual(vec, s2)
+
+        const m1 = t1.getMeta()
+        const m2 = t2.getMeta()
+        assert(m1.colByName.id.object_id !== m2.colByName.id.object_id)
+        await c1.promises.query(`drop table ${tableName}`)
+        await c2.promises.query(`drop table ${tableName}`)
+        await c1.promises.close()
+        await c2.promises.close()
+      } catch (e) {
+        return e
+      }
+    }
+
+    try {
+      runner().then((e) => {
+        testDone(e)
+      })
+    } catch (e) {
+      assert(e)
+      testDone(e)
+    }
+  })
 
   test('table with default values', testDone => {
     const defS1 = 'def1'

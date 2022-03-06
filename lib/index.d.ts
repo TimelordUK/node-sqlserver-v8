@@ -134,30 +134,25 @@ export interface TableColumnType {
 }
 
 export interface TableColumn {
-    table_name: string,
+    ordinal_position: number,
+    table_catalog: string,
     table_schema: string,
-    type_name: string
-    column_id: number
-    ordered_column: string
-    column_name: string
+    table_name: string,
     column_default: string,
-    name: string
-    data_type: string
-    type_id: string
-    declaration: string
-    nullable: string
-    max_length: number
-    precision: number
-    scale: 0
-    collation: string
-    is_output: number
-    system_type_id: number
-    type:string,
-    is_identity: number,
+    name: string,
+    type: string,
+    max_length: number,
+    precision: number,
+    scale: number,
+    is_nullable: number,
     is_computed: number,
+    is_identity: number,
+    object_id: number,
+    generated_always_type: bigint,
+    generated_always_type_desc: string,
     is_hidden: number,
-    generated_always_type: number,
-    generated_always_desc: string
+    is_primary_key: number,
+    is_foreign_key: number
 }
 
 interface ConnectionPromises extends AggregatorPromises {
