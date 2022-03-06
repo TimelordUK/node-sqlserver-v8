@@ -1,0 +1,27 @@
+{ _: [], l: true, t: 'bulk' }
+use conn_str Driver={SQL Server Native Client 11.0}; Server=(localdb)\node;Database=scratch;Trusted_Connection=yes;
+
+
+  bulk
+    Ô£ö table with default values (323ms)
+    Ô£ö load large number rows (462ms)
+    Ô£ö use tableMgr bulk insert single non UTC based time with time col (287ms)
+    Ô£ö use tableMgr bulk insert single non UTC based date with datetime col
+    Ô£ö use tableMgr bulk insert single non UTC based date with DATETIMEOFFSET col (39ms)
+    Ô£ö use tableMgr bulk insert varchar vector - exactly 4001 chars (45ms)
+    Ô£ö use tableMgr bulk insert varchar vector - exactly 4000 chars
+    Ô£ö use tableMgr bulk insert varchar vector - exactly 3999 chars
+    Ô£ö use tableMgr bulk insert varbinary vector - with null
+    Ô£ö use tableMgr bulk insert varbinary vector - with empty
+    Ô£ö use tableMgr bulk insert varbinary vector - no nulls
+    Ô£ö use tableMgr bulk insert datetime vector - no nulls
+    Ô£ö use tableMgr bulk insert datetime vector - with nulls
+    Ô£ö use tableMgr bulk insert decimal vector - no nulls
+    Ô£ö use tableMgr bulk insert decimal vector - with nulls
+    Ô£ö use tableMgr bulk insert bit vector - with nulls
+    Ô£ö use tableMgr bulk insert bit vector - no nulls
+    Ô£ö use tableMgr bulk insert int vector - with nulls
+    Ô£ö use tableMgr bulk insert int vector - no nulls
+    Ô£ö use tableMgr bulk insert varchar vector - with nulls
+    Ô£ö use tableMgr bulk insert var char vector - no nulls
+    Ô£ö use tableMgr get Table and update 2 columns

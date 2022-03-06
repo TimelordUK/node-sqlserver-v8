@@ -1285,9 +1285,29 @@ suite('bulk', function () {
   })
 
   test('employee global tmp table complex json object array bulk operations', testDone => {
-    const tableName = '##employee'
+    const tableName = '##Employee'
 
     const fns = [
+
+      asyncDone => {
+        theConnection.query('drop constraint \'PK_Employee_BusinessEntityID\'', () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.query('drop table Employee', () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.query(`drop table ${tableName}`, () => {
+          asyncDone()
+        })
+
+        // PK_Employee_BusinessEntityID
+      },
 
       asyncDone => {
         helper.dropCreateTable({
@@ -1300,6 +1320,12 @@ suite('bulk', function () {
 
       asyncDone => {
         bindInsert(tableName, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        theConnection.query(`drop table ${tableName}`, () => {
           asyncDone()
         })
       }

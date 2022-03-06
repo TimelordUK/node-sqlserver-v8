@@ -134,6 +134,8 @@ export interface TableColumnType {
 }
 
 export interface TableColumn {
+    table_name: string,
+    table_schema: string,
     type_name: string
     column_id: number
     ordered_column: string
