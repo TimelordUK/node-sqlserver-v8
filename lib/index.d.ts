@@ -471,6 +471,7 @@ export interface TableManager {
      */
     bind(tableName: string, cb: BindCb): void // cannot promisify (table)
     getTable(tableName: string, cb: GetTableCb): void // promise friendly (err, table)
+    makeColumn (tableName: string, tableSchema: string, position: number, columnName: string, paramType: string, paramLength: number, isPrimaryKey: number): TableColumn
 }
 
 export interface PreparedPromises {
