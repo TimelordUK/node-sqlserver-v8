@@ -32,54 +32,6 @@ suite('promises', function () {
     })
   })
 
-  class Employee {
-    constructor (tableName) {
-      this.tableName = tableName
-    }
-
-    dropCreate (name) {
-      return new Promise((resolve, reject) => {
-        helper.dropCreateTable({
-          tableName: name
-        }, (e) => {
-          if (e) {
-            reject(e)
-          } else {
-            resolve(null)
-          }
-        })
-      })
-    }
-
-    async create () {
-      const dropTableSql = `IF OBJECT_ID('${this.tableName}', 'U') IS NOT NULL DROP TABLE ${this.tableName};`
-      await theConnection.promises.query(dropTableSql)
-      await this.dropCreate(this.tableName)
-      const table = await theConnection.promises.getTable(this.tableName)
-      return table
-    }
-
-    createEmployees (count) {
-      const parsedJSON = helper.getJSON()
-      const res = []
-      for (let i = 0; i < count; ++i) {
-        const x = helper.cloneEmployee(parsedJSON[i % parsedJSON.length])
-        x.BusinessEntityID = i
-        res.push(x)
-      }
-      return res
-    }
-
-    async insertSelect (table) {
-      const parsedJSON = this.createEmployees(200)
-      table.setUseBcp(true)
-      await table.promises.insert(parsedJSON)
-      const keys = helper.extractKey(parsedJSON, 'BusinessEntityID')
-      const results = await table.promises.select(keys)
-      assert.deepStrictEqual(results, parsedJSON, 'results didn\'t match')
-    }
-  }
-
   class BulkTableTest {
     constructor (c, def) {
       function where (list, primitive) {
@@ -400,21 +352,6 @@ suite('promises', function () {
       } catch (e) {
         assert(e.message.indexOf('Invalid object name \'invalidTable\'') > 0)
         return null
-      }
-    }
-    test().then((e) => {
-      testDone(e)
-    })
-  })
-
-  test('bcp employee', testDone => {
-    async function test () {
-      try {
-        const employee = new Employee('employee')
-        const table = await employee.create()
-        await employee.insertSelect(table)
-      } catch (e) {
-        return e
       }
     }
     test().then((e) => {
