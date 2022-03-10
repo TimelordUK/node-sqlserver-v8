@@ -161,6 +161,7 @@ export interface TableColumn {
     isForeignKey (v: number): TableColumn 
     asBit (): TableColumn 
     asInt (): TableColumn
+    asBigInt (): TableColumn
     asNVarChar (length: number): TableColumn 
     asVarChar (length: number): TableColumn 
     asDate (): TableColumn 

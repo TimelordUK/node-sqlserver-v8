@@ -90,6 +90,24 @@ suite('table_builder', function () {
     })
   })
 
+  test('use table builder to bind to a table int, bigbit', testDone => {
+    function makeOne (i) {
+      return {
+        id: i,
+        col_a: i % 2 === 0
+      }
+    }
+
+    run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asBigInt()
+    }, makeOne).then((e) => {
+      testDone(e)
+    }).catch(e => {
+      testDone(e)
+    })
+  })
+
   test('use table builder to bind to a table int, bit', testDone => {
     function makeOne (i) {
       return {

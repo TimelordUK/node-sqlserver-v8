@@ -1690,6 +1690,27 @@ suite('bulk', function () {
     })
   }
 
+  function bigIntTest (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
+    const params = {
+      columnType: 'bigint',
+      buildFunction: i => i % 2 === 0 && i > 0 ? -i : i,
+      updateFunction: runUpdateFunction ? i => i * 3 : null,
+      check: selectAfterInsert,
+      deleteAfterTest: false,
+      batchSize: batchSize
+    }
+
+    simpleColumnBulkTest(params, () => {
+      testDone()
+    })
+  }
+
+  test(`bulk insert/select bigint column of signed batchSize ${test1BatchSize}`, testDone => {
+    bigIntTest(test1BatchSize, true, false, () => {
+      testDone()
+    })
+  })
+
   test(`bulk insert/select int column of signed batchSize ${test1BatchSize}`, testDone => {
     signedTest(test1BatchSize, true, false, () => {
       testDone()
