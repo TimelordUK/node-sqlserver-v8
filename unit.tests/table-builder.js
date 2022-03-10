@@ -72,6 +72,26 @@ suite('table_builder', function () {
     }
   }
 
+  test('use table builder to bind to a table int, uniqueidentifier', testDone => {
+    const g1 = 'F01251E5-96A3-448D-981E-0F99D789110D'
+    const g2 = '45E8F437-670D-4409-93CB-F9424A40D6EE'
+    function makeOne (i) {
+      return {
+        id: i,
+        col_a: i % 2 === 0 ? g1 : g2
+      }
+    }
+
+    run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asUniqueIdentifier()
+    }, makeOne).then((e) => {
+      testDone(e)
+    }).catch(e => {
+      testDone(e)
+    })
+  })
+
   test('use table builder to bind to a table int, varbinary', testDone => {
     function makeOne (i) {
       return {
