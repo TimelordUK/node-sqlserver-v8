@@ -3,6 +3,7 @@
 
 const supp = require('msnodesqlv8/samples/typescript/demo-support')
 const assert = require('assert')
+const Employee = require('./employee').Employee
 
 suite('table_builder', function () {
   let theConnection
@@ -110,7 +111,25 @@ suite('table_builder', function () {
     })
   })
 
-  test('use table builder to bind to a table int, bigbit', testDone => {
+  test('use table builder to bind to a table int, smallint', testDone => {
+    function makeOne (i) {
+      return {
+        id: i,
+        col_a: i % 2 === 0
+      }
+    }
+
+    run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asSmallInt()
+    }, makeOne).then((e) => {
+      testDone(e)
+    }).catch(e => {
+      testDone(e)
+    })
+  })
+
+  test('use table builder to bind to a table int, bigint', testDone => {
     function makeOne (i) {
       return {
         id: i,
