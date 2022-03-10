@@ -72,6 +72,24 @@ suite('table_builder', function () {
     }
   }
 
+  test('use table builder to bind to a table int, varbinary', testDone => {
+    function makeOne (i) {
+      return {
+        id: i,
+        col_a: Buffer.from('0102030405060708090a', 'hex')
+      }
+    }
+
+    run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asVarBinary(10)
+    }, makeOne).then((e) => {
+      testDone(e)
+    }).catch(e => {
+      testDone(e)
+    })
+  })
+
   test('use table builder to bind to a table int, bit', testDone => {
     function makeOne (i) {
       return {
@@ -84,6 +102,86 @@ suite('table_builder', function () {
       builder.addColumn('id').asInt().isPrimaryKey(1)
       builder.addColumn('col_a').asBit()
     }, makeOne).then((e) => {
+      testDone(e)
+    }).catch(e => {
+      testDone(e)
+    })
+  })
+
+  function parseTime (ds) {
+    const [hours, minutes, seconds] = ds.split(':') // Using ES6 destructuring
+    // var time = "18:19:02".split(':'); // "Old" ES5 version
+    const d = new Date()
+    d.setHours(+hours) // Set the hours, using implicit type coercion
+    d.setMinutes(minutes) // You can pass Number or String. It doesn't really matter
+    d.setSeconds(seconds)
+    d.setMilliseconds(0)
+    return d
+  }
+
+  test('use table builder to bind to a table int, real', testDone => {
+    function makeOne (i) {
+      return {
+        id: i,
+        col_a: i * 1.0 / (i * i * 1.0)
+      }
+    }
+
+    function checkOne (lhs, rhs) {
+      assert.deepStrictEqual(lhs.id, rhs.id)
+      assert(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)
+    }
+
+    run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asReal()
+    }, makeOne, checkOne).then((e) => {
+      testDone(e)
+    }).catch(e => {
+      testDone(e)
+    })
+  })
+
+  test('use table builder to bind to a table int, time', testDone => {
+    function makeOne (i) {
+      return {
+        id: i,
+        col_a: parseTime('16:47:04')
+      }
+    }
+
+    function checkOne (lhs, rhs) {
+      assert.deepStrictEqual(lhs.id, rhs.id)
+      assert(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)
+    }
+
+    run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asTime()
+    }, makeOne, checkOne).then((e) => {
+      testDone(e)
+    }).catch(e => {
+      testDone(e)
+    })
+  })
+
+  test('use table builder to bind to a table int, numeric', testDone => {
+    function makeOne (i) {
+      return {
+        id: i,
+        col_a: i * 1.0 / (i * i * 1.0)
+      }
+    }
+
+    function checkOne (lhs, rhs) {
+      assert.deepStrictEqual(lhs.id, rhs.id)
+      assert(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)
+    }
+
+    run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asNumeric(18, 6)
+    }, makeOne, checkOne).then((e) => {
       testDone(e)
     }).catch(e => {
       testDone(e)
