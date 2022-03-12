@@ -74,29 +74,6 @@ suite('table_builder', function () {
     }
   }
 
-  /*
-        return {
-          id: i,
-          d1: i % 2 === 0 ? null : new Date(testDate.getTime() + i * 60 * 60 * 1000),
-          d2: i % 3 === 0 ? null : new Date(testDate.getTime() - i * 60 * 60 * 1000)
-        }
-      }, (actual, expected) => {
-        assert.deepStrictEqual(actual.length, expected.length)
-        for (let i = 0; i < actual.length; ++i) {
-          const lhs = actual[i]
-          const rhs = expected[i]
-          assert.deepStrictEqual(lhs.id, rhs.id)
-          if (rhs.d1) {
-            delete lhs.d1.nanosecondsDelta
-            assert.deepStrictEqual(lhs.d1, rhs.d1)
-          }
-          if (rhs.d2) {
-            delete lhs.d2.nanosecondsDelta
-            assert.deepStrictEqual(lhs.d2, rhs.d2)
-          }
-        }
-*/
-
   test('use table builder to bind to a table int, datetime', testDone => {
     const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
 
@@ -203,7 +180,7 @@ suite('table_builder', function () {
     function makeOne (i) {
       return {
         id: i,
-        col_a: i % 2 === 0
+        col_a: i % 2 === 0 ? i * i : i
       }
     }
 
@@ -221,7 +198,7 @@ suite('table_builder', function () {
     function makeOne (i) {
       return {
         id: i,
-        col_a: i % 2 === 0
+        col_a: i % 1000
       }
     }
 
@@ -235,11 +212,29 @@ suite('table_builder', function () {
     })
   })
 
+  test('use table builder to bind to a table int, tinyint', testDone => {
+    function makeOne (i) {
+      return {
+        id: i,
+        col_a: i % 100
+      }
+    }
+
+    run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asTinyInt()
+    }, makeOne).then((e) => {
+      testDone(e)
+    }).catch(e => {
+      testDone(e)
+    })
+  })
+
   test('use table builder to bind to a table int, bigint', testDone => {
     function makeOne (i) {
       return {
         id: i,
-        col_a: i % 2 === 0
+        col_a: i % 2 === i * i
       }
     }
 

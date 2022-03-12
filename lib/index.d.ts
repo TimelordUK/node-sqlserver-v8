@@ -163,6 +163,7 @@ export interface TableColumn {
     asInt (): TableColumn
     asBigInt (): TableColumn
     asSmallInt (): TableColumn
+    asTinyInt (): TableColumn
     asNVarChar (length: number): TableColumn 
     asVarChar (length: number): TableColumn 
     asDate (): TableColumn 

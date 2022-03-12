@@ -1713,12 +1713,31 @@ suite('bulk', function () {
       check: selectAfterInsert,
       deleteAfterTest: false,
       batchSize: batchSize
-    }
-
+    }  
     simpleColumnBulkTest(params, () => {
       testDone()
     })
   }
+
+  function tinyIntTest (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
+    const params = {
+      columnType: 'tinyint',
+      buildFunction: i => i % 50,
+      updateFunction: runUpdateFunction ? i => i - 1 : null,
+      check: selectAfterInsert,
+      deleteAfterTest: false,
+      batchSize: batchSize
+    }
+    simpleColumnBulkTest(params, () => {
+      testDone()
+    })
+  }
+
+  test(`bulk insert/select tinyint column of signed batchSize ${test1BatchSize}`, testDone => {
+    tinyIntTest(test1BatchSize, true, false, () => {
+      testDone()
+    })
+  })
 
   test(`bulk insert/select smallint column of signed batchSize ${test1BatchSize}`, testDone => {
     smallIntTest(test1BatchSize, true, false, () => {
