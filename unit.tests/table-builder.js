@@ -21,6 +21,7 @@ suite('table_builder', function () {
       sql.open(connStr, (err, newConn) => {
         assert(err === null || err === false)
         theConnection = newConn
+        theConnection.setUseUTC(true)
         testDone()
       })
     }, global.conn_str)
@@ -73,6 +74,36 @@ suite('table_builder', function () {
     }
   }
 
+  test('use table builder to bind to a table int, datetimeoffset', testDone => {
+    const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
+
+    function makeOne (i) {
+      return {
+        id: i,
+        col_a: new Date(testDate.getTime() + i * 60 * 60 * 1000),
+        col_b: new Date(testDate.getTime() - i * 60 * 60 * 1000)
+      }
+    }
+
+    function checkOne (lhs, rhs) {
+      assert.deepStrictEqual(lhs.id, rhs.id)
+      delete lhs.d1.nanosecondsDelta
+      delete lhs.d2.nanosecondsDelta
+      assert.deepStrictEqual(lhs.d1, rhs.d1)
+      assert.deepStrictEqual(lhs.d2, rhs.d2)
+    }
+
+    run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asDateTimeOffset()
+      builder.addColumn('col_b').asDateTimeOffset()
+    }, makeOne, checkOne).then((e) => {
+      testDone(e)
+    }).catch(e => {
+      testDone(e)
+    })
+  })
+
   test('use table builder to bind to a table int, uniqueidentifier', testDone => {
     const g1 = 'F01251E5-96A3-448D-981E-0F99D789110D'
     const g2 = '45E8F437-670D-4409-93CB-F9424A40D6EE'
@@ -104,6 +135,24 @@ suite('table_builder', function () {
     run(builder => {
       builder.addColumn('id').asInt().isPrimaryKey(1)
       builder.addColumn('col_a').asVarBinary(10)
+    }, makeOne).then((e) => {
+      testDone(e)
+    }).catch(e => {
+      testDone(e)
+    })
+  })
+
+  test('use table builder to bind to a table int, int', testDone => {
+    function makeOne (i) {
+      return {
+        id: i,
+        col_a: i % 2 === 0
+      }
+    }
+
+    run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asInt()
     }, makeOne).then((e) => {
       testDone(e)
     }).catch(e => {
