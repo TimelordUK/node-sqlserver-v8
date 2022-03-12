@@ -384,6 +384,28 @@ suite('table_builder', function () {
     }
   }
 
+  function repeat (c, num) {
+    return new Array(num + 1).join(c)
+  }
+
+  test('use table builder to bind to a table int, nvarchar(max)', testDone => {
+    function makeOne (i) {
+      return {
+        id: i,
+        col_a: repeat('z', 4000)
+      }
+    }
+
+    run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asNVarCharMax()
+    }, makeOne).then((e) => {
+      testDone(e)
+    }).catch(e => {
+      testDone(e)
+    })
+  })
+
   test('use table builder to bind to a table int, varchar', testDone => {
     function makeOne (i) {
       return {
