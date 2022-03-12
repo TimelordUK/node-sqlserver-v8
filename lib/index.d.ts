@@ -154,6 +154,7 @@ export interface TableColumn {
     is_primary_key: number,
     is_foreign_key: number
 
+    // helper methods when manually adding tables with table builder
     isComputed (v: number): TableColumn 
     isIdentity (v:number): TableColumn
     isHidden (v: number): TableColumn
@@ -170,7 +171,8 @@ export interface TableColumn {
     asDate (): TableColumn 
     asTime (): TableColumn 
     asDateTime (): TableColumn
-    asDateTimeOffset (): TableColumn     
+    asDateTimeOffset (): TableColumn
+    asSmallMoney (): TableColumn 
     asNumeric (precision: number, length: number): TableColumn 
     asDecimal (precision: number, scale: number): TableColumn 
     asUniqueIdentifier (): TableColumn 
@@ -488,6 +490,7 @@ export interface ProcedureParamMeta {
 */
 
 export interface TableBuilder {
+    // can use utility method e.g. builder.addColumn('col_b').asVarChar(100)
     addColumn (columnName: string, columnType?: string, maxLength?:number, isPrimaryKey?: number): TableColumn
     compute () : void
     toTable () : BulkTableMgr
@@ -511,9 +514,11 @@ export interface TableManager {
      */
     bind(tableName: string, cb: BindCb): void // cannot promisify (table)
     getTable(tableName: string, cb: GetTableCb): void // promise friendly (err, table)
-    // manually create a table binding
+    // manually register a table
     addTable(tableName: string, cols: TableColumn[]): BulkTableMgr
+    // utility class to help manually add tables
     makeBuilder (tableName: string, tableCatelog: string, tableSchema: string): TableBuilder
+    // or use builder to build columns
     makeColumn (tableName: string, tableSchema: string, position: number, columnName: string, paramType: string, paramLength: number, isPrimaryKey: number): TableColumn
 }
 

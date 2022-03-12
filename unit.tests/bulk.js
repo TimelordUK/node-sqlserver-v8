@@ -1713,7 +1713,7 @@ suite('bulk', function () {
       check: selectAfterInsert,
       deleteAfterTest: false,
       batchSize: batchSize
-    }  
+    }
     simpleColumnBulkTest(params, () => {
       testDone()
     })
