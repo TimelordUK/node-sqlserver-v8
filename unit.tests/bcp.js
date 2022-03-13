@@ -130,62 +130,10 @@ suite('bcp', function () {
     return d
   }
 
-  /*
-  class Employee {
-    constructor (tableName) {
-      this.tableName = tableName
-    }
-
-    dropCreate (name) {
-      return new Promise((resolve, reject) => {
-        helper.dropCreateTable({
-          tableName: name
-        }, (e) => {
-          if (e) {
-            reject(e)
-          } else {
-            resolve(null)
-          }
-        })
-      })
-    }
-
-    async create () {
-      const dropTableSql = `IF OBJECT_ID('${this.tableName}', 'U') IS NOT NULL DROP TABLE ${this.tableName};`
-      await theConnection.promises.query(dropTableSql)
-      await this.dropCreate(this.tableName)
-      const table = await theConnection.promises.getTable(this.tableName)
-      return table
-    }
-
-    createEmployees (count) {
-      const parsedJSON = helper.getJSON()
-      const res = []
-      for (let i = 0; i < count; ++i) {
-        const x = helper.cloneEmployee(parsedJSON[i % parsedJSON.length])
-        x.BusinessEntityID = i
-        res.push(x)
-      }
-      return res
-    }
-
-    async insertSelect (table) {
-      const parsedJSON = this.createEmployees(200)
-      table.setUseBcp(true)
-      const d = new Date()
-      await table.promises.insert(parsedJSON)
-      console.log(`ms = ${new Date() - d}`)
-      const keys = helper.extractKey(parsedJSON, 'BusinessEntityID')
-      const results = await table.promises.select(keys)
-      assert.deepStrictEqual(results, parsedJSON, 'results didn\'t match')
-    }
-  }
-*/
-
   test('bcp employee', testDone => {
     async function test () {
       try {
-        const employee = new Employee('employee')
+        const employee = new Employee('employee', helper, theConnection)
         const table = await employee.create()
         const records = employee.make(200)
         const res = await employee.insertSelect(table, records)
