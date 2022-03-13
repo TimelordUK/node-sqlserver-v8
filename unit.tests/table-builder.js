@@ -465,11 +465,11 @@ suite('table_builder', function () {
     })
   })
 
-
   async function run (adder, makeOne, checkOne) {
     const tableName = 'tmpTableBuilder'
     const mgr = theConnection.tableMgr()
-    const builder = mgr.makeBuilder(tableName, 'scratch')
+    const res = await theConnection.promises.query('SELECT db_NAME() as [db]')
+    const builder = mgr.makeBuilder(tableName, res.first[0].db || 'node')
 
     adder(builder)
 
