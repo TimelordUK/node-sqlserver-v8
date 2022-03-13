@@ -38,8 +38,13 @@ class Employee {
     return res
   }
 
-  async insertSelect (table) {
-    const parsedJSON = this.createEmployees(200)
+  make (n) {
+    n = n || 200
+    const parsedJSON = this.createEmployees(n)
+    return parsedJSON
+  }
+
+  async insertSelect (table, parsedJSON) {
     table.setUseBcp(true)
     const d = new Date()
     await table.promises.insert(parsedJSON)

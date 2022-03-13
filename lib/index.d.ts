@@ -155,7 +155,8 @@ export interface TableColumn {
     is_foreign_key: number
 
     // helper methods when manually adding tables with table builder
-    isComputed (v: number): TableColumn 
+    isComputed (v?: number): TableColumn
+    asExpression(s: string): TableColumn // 'AS ([OrganizationNode].[GetLevel]())'
     isIdentity (v:number): TableColumn
     isHidden (v: number): TableColumn
     isPrimaryKey (v: number): TableColumn
@@ -176,7 +177,7 @@ export interface TableColumn {
     asNumeric (precision: number, length: number): TableColumn 
     asDecimal (precision: number, scale: number): TableColumn 
     asUniqueIdentifier (): TableColumn 
-    asHiearchyId (): TableColumn 
+    asHierarchyId (): TableColumn 
     asVarBiary (length: number): TableColumn 
     asReal (): TableColumn 
     asNChar (length: number): TableColumn

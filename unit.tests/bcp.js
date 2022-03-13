@@ -3,6 +3,7 @@
 
 const supp = require('msnodesqlv8/samples/typescript/demo-support')
 const assert = require('assert')
+const Employee = require('./employee').Employee
 
 suite('bcp', function () {
   let theConnection
@@ -129,6 +130,7 @@ suite('bcp', function () {
     return d
   }
 
+  /*
   class Employee {
     constructor (tableName) {
       this.tableName = tableName
@@ -178,13 +180,16 @@ suite('bcp', function () {
       assert.deepStrictEqual(results, parsedJSON, 'results didn\'t match')
     }
   }
+*/
 
   test('bcp employee', testDone => {
     async function test () {
       try {
         const employee = new Employee('employee')
         const table = await employee.create()
-        await employee.insertSelect(table)
+        const records = employee.make(200)
+        const res = await employee.insertSelect(table, records)
+        assert.deepStrictEqual(res, records)
       } catch (e) {
         return e
       }
