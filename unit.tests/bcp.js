@@ -1117,19 +1117,4 @@ suite('bcp', function () {
       testDone(e)
     })
   })
-
-  test('bcp employee', testDone => {
-    async function test () {
-      try {
-        const employee = new Employee('employee')
-        const table = await employee.create()
-        await employee.insertSelect(table)
-      } catch (e) {
-        return e
-      }
-    }
-    test().then((e) => {
-      testDone(e)
-    })
-  })
 })
