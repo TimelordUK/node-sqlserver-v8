@@ -1340,6 +1340,7 @@ suite('bulk', function () {
     })
   })
 
+  /*
   test('employee global tmp table complex json object array bulk operations', testDone => {
     const tableName = '##Employee'
 
@@ -1391,6 +1392,7 @@ suite('bulk', function () {
       testDone()
     })
   })
+*/
 
   test('employee tmp table complex json object array bulk operations', testDone => {
     const tableName = '#employee'
