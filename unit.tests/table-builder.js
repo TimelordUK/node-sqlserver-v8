@@ -90,11 +90,20 @@ suite('table_builder', function () {
     function makeOne (i) {
       return {
         id: i,
-        col_a: parseTime('16:47:04')
+        col_a: parseTime(`16:47:${i + 10}`)
       }
     }
 
     function checkOne (lhs, rhs) {
+      const today = new Date()
+      const h = rhs.col_a.getHours()
+      const m = rhs.col_a.getMinutes()
+      const s = rhs.col_a.getSeconds()
+      today.setHours(h)
+      today.setMinutes(m)
+      today.setSeconds(s)
+      today.setMilliseconds(0)
+      rhs.col_a = today
       assert.deepStrictEqual(lhs.id, rhs.id)
       assert(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)
     }

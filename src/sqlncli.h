@@ -723,6 +723,11 @@ typedef DWORD DBASYNCHPHASE;
 
 #endif       // This is already defined in oledb.h
 
+#ifndef _SQLNCLI_OLEDB_IGNORE_DEPRECATION_WARNING_
+    #define _SQLNCLI_OLEDB_DEPRECATE_WARNING __declspec(deprecated("The SQL Server Native Client OLEDB provider is deprecated and will be removed in a future release of SQL Server Native Client. To disable this warning, define the following symbol in your application: _SQLNCLI_OLEDB_IGNORE_DEPRECATION_WARNING_"))
+#else
+    #define _SQLNCLI_OLEDB_DEPRECATE_WARNING
+#endif
 //-------------------------------------------------------------------
 // Variant Access macros, similar to ole automation.
 //-------------------------------------------------------------------
@@ -2362,24 +2367,24 @@ EXTERN_C const IID IID_ISSAsynchStatus;
 
 #if SQLNCLI_VER >= 1100
 
-extern const GUID OLEDBDECLSPEC CLSID_SQLNCLI11                = {0x397C2819L,0x8272,0x4532,{0xAD,0x3A,0xFB,0x5E,0x43,0xBE,0xAA,0x39}};
-extern const GUID OLEDBDECLSPEC CLSID_SQLNCLI11_ERROR          = {0xCA99D701L,0xE6E7,0x4db4,{0xA5,0xCC,0x81,0x54,0x1C,0x75,0x18,0x8A}};
-extern const GUID OLEDBDECLSPEC CLSID_SQLNCLI11_ENUMERATOR     = {0x8F612DD2L,0x7E28,0x424f,{0xA2,0xFD,0xC2,0xEE,0xCC,0x31,0x4A,0xA2}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI11                = {0x397C2819L,0x8272,0x4532,{0xAD,0x3A,0xFB,0x5E,0x43,0xBE,0xAA,0x39}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI11_ERROR          = {0xCA99D701L,0xE6E7,0x4db4,{0xA5,0xCC,0x81,0x54,0x1C,0x75,0x18,0x8A}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI11_ENUMERATOR     = {0x8F612DD2L,0x7E28,0x424f,{0xA2,0xFD,0xC2,0xEE,0xCC,0x31,0x4A,0xA2}};
 
 #endif
 
 #if SQLNCLI_VER >= 1000
 
-extern const GUID OLEDBDECLSPEC CLSID_SQLNCLI10                = {0x8F4A6B68L,0x4F36,0x4e3c,{0xBE,0x81,0xBC,0x7C,0xA4,0xE9,0xC4,0x5C}};
-extern const GUID OLEDBDECLSPEC CLSID_SQLNCLI10_ERROR          = {0x53F9C3BCL,0x275F,0x4FA5,{0xB3,0xE6,0x25,0xED,0xCD,0x51,0x20,0x23}};
-extern const GUID OLEDBDECLSPEC CLSID_SQLNCLI10_ENUMERATOR     = {0x91E4F2A5L,0x1B07,0x45f6,{0x86,0xBF,0x92,0x03,0xC7,0xC7,0x2B,0xE3}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI10                = {0x8F4A6B68L,0x4F36,0x4e3c,{0xBE,0x81,0xBC,0x7C,0xA4,0xE9,0xC4,0x5C}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI10_ERROR          = {0x53F9C3BCL,0x275F,0x4FA5,{0xB3,0xE6,0x25,0xED,0xCD,0x51,0x20,0x23}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI10_ENUMERATOR     = {0x91E4F2A5L,0x1B07,0x45f6,{0x86,0xBF,0x92,0x03,0xC7,0xC7,0x2B,0xE3}};
 
 #endif
 
-extern const GUID OLEDBDECLSPEC CLSID_SQLNCLI                = {0x85ecafccL,0xbdd9,0x4b03,{0x97,0xa8,0xfa,0x65,0xcb,0xe3,0x85,0x9b}};
-extern const GUID OLEDBDECLSPEC CLSID_SQLNCLI_ERROR          = {0xe8bc0a7aL,0xea71,0x4263,{0x8c,0xda,0x94,0xf3,0x88,0xb8,0xed,0x10}};
-extern const GUID OLEDBDECLSPEC CLSID_SQLNCLI_ENUMERATOR     = {0x4898ad37L,0xfe05,0x42df,{0x92,0xf9,0xe8,0x57,0xdd,0xfe,0xe7,0x30}};
-extern const GUID OLEDBDECLSPEC CLSID_ROWSET_TVP             = {0xc7ef28d5L,0x7bee,0x443f,{0x86,0xda,0xe3,0x98,0x4f,0xcd,0x4d,0xf9}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI                = {0x85ecafccL,0xbdd9,0x4b03,{0x97,0xa8,0xfa,0x65,0xcb,0xe3,0x85,0x9b}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI_ERROR          = {0xe8bc0a7aL,0xea71,0x4263,{0x8c,0xda,0x94,0xf3,0x88,0xb8,0xed,0x10}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI_ENUMERATOR     = {0x4898ad37L,0xfe05,0x42df,{0x92,0xf9,0xe8,0x57,0xdd,0xfe,0xe7,0x30}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_ROWSET_TVP             = {0xc7ef28d5L,0x7bee,0x443f,{0x86,0xda,0xe3,0x98,0x4f,0xcd,0x4d,0xf9}};
 
 //----------------------------------------------------------------------------
 // Provider-specific Interface Ids
@@ -3333,7 +3338,7 @@ typedef FnLocalDBFormatMessage* PFnLocalDBFormatMessage;
 //
 // MessageText:
 //
-// Local Database is not installed.
+// LocalDB is not installed.
 //
 #define LOCALDB_ERROR_NOT_INSTALLED            ((HRESULT)0x89C50116L)
 
@@ -3553,7 +3558,7 @@ typedef HRESULT __cdecl FnLocalDBGetInstanceInfo(
 		__in_z		PCWSTR					wszInstanceName, 
 		// O		instance information
 		__out		PLocalDBInstanceInfo	pInfo,
-		// I		Size of LocalDBVersionInfo structure in bytes
+		// I		Size of LocalDBInstanceInfo structure in bytes
 		__in		DWORD					cbInfo);
 
 // type definition for pointer to LocalDBGetInstances function
@@ -3727,30 +3732,6 @@ typedef FnLocalDBUnshareInstance* PFnLocalDBUnshareInstance;
 //	HRESULT
 //
 FnLocalDBUnshareInstance LocalDBUnshareInstance;
-
-// type definition for LocalDBGetSharedName function
-typedef HRESULT __cdecl FnLocalDBGetSharedName(
-		// I		the SID of the LocalDB instance owner
-		__in_opt	PSID 											pOwnerSID, 
-		// I		the private name of LocalDB instance whose shared name should be returned
-		__in_z		PCWSTR											wszPrivateLocalDBInstanceName,
-		// O		the shared name
-		__out_ecount_z_opt(MAX_LOCALDB_INSTANCE_NAME_LENGTH + 1)	LPWSTR	wszSharedName);
-
-// type definition for pointer to LocalDBGetSharedName function
-typedef FnLocalDBGetSharedName* PFnLocalDBGetSharedName;
-
-// Function: LocalDBGetSharedName
-//
-// Description: For given private LocalDB instance name and owner of that instance, this function will return
-// if that private instance is shared and the name of the shared instance (in case if it is shared).
-//
-// Return values:
-//	S_OK - if operation is successful
-//	LOCALDB_ERROR_INSTANCE_NOT_SHARED - if the given LocalDB private instance is not shared
-//	LOCALDB_ERROR_INTERNAL_ERROR - if an internal error occured
-//
-FnLocalDBGetSharedName LocalDBGetSharedName;
 
 #ifdef __cplusplus
 } // extern "C"
@@ -4052,7 +4033,7 @@ LocalDBGetInstanceInfo(
 		__in_z		PCWSTR					wszInstanceName, 
 		// O		instance information
 		__out		PLocalDBInstanceInfo	pInfo,
-		// I		Size of LocalDBVersionInfo structure in bytes
+		// I		Size of LocalDBInstanceInfo structure in bytes
 		__in		DWORD					cbInfo
 )
 {
@@ -4117,18 +4098,6 @@ LocalDBGetVersionInfo(
 		__in			DWORD						cbVersionInfo)
 {
 	LOCALDB_PROXY(LocalDBGetVersionInfo)(wszVersion, pVersionInfo, cbVersionInfo);
-}
-
-HRESULT __cdecl
-LocalDBGetSharedName(
-		// I		the SID of the LocalDB instance owner
-		__in_opt	PSID 											pOwnerSID, 
-		// I		the private name of LocalDB instance whose shared name should be returned
-		__in_z		PCWSTR											wszPrivateLocalDBInstanceName,
-		// O		the shared name
-		__out_ecount_z_opt(MAX_LOCALDB_INSTANCE_NAME_LENGTH + 1)	LPWSTR	wszSharedName)
-{
-	LOCALDB_PROXY(LocalDBGetSharedName)(pOwnerSID, wszPrivateLocalDBInstanceName, wszSharedName);
 }
 
 #endif
@@ -4197,7 +4166,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Cannot create folder for the Local Database instance at: %%LOCALAPPDATA%%\Microsoft\Microsoft SQL Server Local DB\Instances\<instance name>.
+// Cannot create folder for the LocalDB instance at: %%LOCALAPPDATA%%\Microsoft\Microsoft SQL Server Local DB\Instances\<instance name>.
 //
 #define LOCALDB_ERROR_CANNOT_CREATE_INSTANCE_FOLDER ((HRESULT)0x89C50100L)
 
@@ -4206,7 +4175,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// The parameter for the Local Database Instance API method is incorrect. Consult the API documentation.
+// The parameter for the LocalDB Instance API method is incorrect. Consult the API documentation.
 //
 #define LOCALDB_ERROR_INVALID_PARAMETER  ((HRESULT)0x89C50101L)
 
@@ -4215,7 +4184,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Unable to create the Local Database instance with specified version. An instance with the same name already exists, but it has lower version than the specified version.
+// Unable to create the LocalDB instance with specified version. An instance with the same name already exists, but it has lower version than the specified version.
 //
 #define LOCALDB_ERROR_INSTANCE_EXISTS_WITH_LOWER_VERSION ((HRESULT)0x89C50102L)
 
@@ -4233,8 +4202,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// The full path length of the Local Database instance folder is longer than MAX_PATH. The instance must be stored in folder: 
-// %%LOCALAPPDATA%%\Microsoft\Microsoft SQL Server Local DB\Instances\<instance name>.
+// The full path length of the LocalDB instance folder is longer than MAX_PATH. The instance must be stored in folder: %%LOCALAPPDATA%%\Microsoft\Microsoft SQL Server Local DB\Instances\<instance name>.
 //
 #define LOCALDB_ERROR_INSTANCE_FOLDER_PATH_TOO_LONG ((HRESULT)0x89C50104L)
 
@@ -4243,7 +4211,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Cannot access Local Database instance folder: %%LOCALAPPDATA%%\Microsoft\Microsoft SQL Server Local DB\Instances\<instance name>.
+// Cannot access LocalDB instance folder: %%LOCALAPPDATA%%\Microsoft\Microsoft SQL Server Local DB\Instances\<instance name>.
 //
 #define LOCALDB_ERROR_CANNOT_ACCESS_INSTANCE_FOLDER ((HRESULT)0x89C50105L)
 
@@ -4252,7 +4220,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Unexpected error occurred while trying to access the Local Database instance registry configuration. See the Windows Application event log for error details.
+// Unexpected error occurred while trying to access the LocalDB instance registry configuration. See the Windows Application event log for error details.
 //
 #define LOCALDB_ERROR_CANNOT_ACCESS_INSTANCE_REGISTRY ((HRESULT)0x89C50106L)
 
@@ -4261,7 +4229,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// The specified Local Database instance does not exist.
+// The specified LocalDB instance does not exist.
 //
 #define LOCALDB_ERROR_UNKNOWN_INSTANCE   ((HRESULT)0x89C50107L)
 
@@ -4270,7 +4238,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Unexpected error occurred inside a Local Database instance API method call. See the Windows Application event log for error details.
+// Unexpected error occurred inside a LocalDB instance API method call. See the Windows Application event log for error details.
 //
 #define LOCALDB_ERROR_INTERNAL_ERROR     ((HRESULT)0x89C50108L)
 
@@ -4279,7 +4247,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Unexpected error occurred while trying to modify the registry configuration for the Local Database instance. See the Windows Application event log for error details.
+// Unexpected error occurred while trying to modify the registry configuration for the LocalDB instance. See the Windows Application event log for error details.
 //
 #define LOCALDB_ERROR_CANNOT_MODIFY_INSTANCE_REGISTRY ((HRESULT)0x89C50109L)
 
@@ -4288,7 +4256,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Error occurred during Local Database instance startup: SQL Server process failed to start.
+// Error occurred during LocalDB instance startup: SQL Server process failed to start.
 //
 #define LOCALDB_ERROR_SQL_SERVER_STARTUP_FAILED ((HRESULT)0x89C5010AL)
 
@@ -4297,7 +4265,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Local Database instance is corrupted. See the Windows Application event log for error details.
+// LocalDB instance is corrupted. See the Windows Application event log for error details.
 //
 #define LOCALDB_ERROR_INSTANCE_CONFIGURATION_CORRUPT ((HRESULT)0x89C5010BL)
 
@@ -4306,7 +4274,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Error occurred during Local Database instance startup: unable to create the SQL Server process.
+// Error occurred during LocalDB instance startup: unable to create the SQL Server process.
 //
 #define LOCALDB_ERROR_CANNOT_CREATE_SQL_PROCESS ((HRESULT)0x89C5010CL)
 
@@ -4315,7 +4283,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// The specified Local Database version is not available on this computer.
+// The specified LocalDB version is not available on this computer.
 //
 #define LOCALDB_ERROR_UNKNOWN_VERSION    ((HRESULT)0x89C5010DL)
 
@@ -4333,7 +4301,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Stop operation for Local Database instance failed to complete within the specified time.
+// Stop operation for LocalDB instance failed to complete within the specified time.
 //
 #define LOCALDB_ERROR_INSTANCE_STOP_FAILED ((HRESULT)0x89C5010FL)
 
@@ -4351,7 +4319,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// The Local Database version available on this workstation is lower than the requested Local Database version.
+// The LocalDB version available on this workstation is lower than the requested LocalDB version.
 //
 #define LOCALDB_ERROR_VERSION_REQUESTED_NOT_INSTALLED ((HRESULT)0x89C50111L)
 
@@ -4360,7 +4328,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Requested operation on Local Database instance cannot be performed because specified instance is currently in use. Stop the instance and try again.
+// Requested operation on LocalDB instance cannot be performed because specified instance is currently in use. Stop the instance and try again.
 //
 #define LOCALDB_ERROR_INSTANCE_BUSY      ((HRESULT)0x89C50112L)
 
@@ -4369,7 +4337,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Default Local Database instances cannot be created, stopped or deleted manually.
+// Default LocalDB instances cannot be created, stopped or deleted manually.
 //
 #define LOCALDB_ERROR_INVALID_OPERATION  ((HRESULT)0x89C50113L)
 
@@ -4378,7 +4346,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// The buffer passed to the Local Database instance API method has insufficient size.
+// The buffer passed to the LocalDB instance API method has insufficient size.
 //
 #define LOCALDB_ERROR_INSUFFICIENT_BUFFER ((HRESULT)0x89C50114L)
 
@@ -4387,7 +4355,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Timeout occurred inside the Local Database instance API method.
+// Timeout occurred inside the LocalDB instance API method.
 //
 #define LOCALDB_ERROR_WAIT_TIMEOUT       ((HRESULT)0x89C50115L)
 
@@ -4399,7 +4367,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Failed to start XEvent engine within the Local Database Instance API.
+// Failed to start XEvent engine within the LocalDB Instance API.
 //
 #define LOCALDB_ERROR_XEVENT_FAILED      ((HRESULT)0x89C50117L)
 
@@ -4426,7 +4394,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// API caller is not Local Database instance owner.
+// API caller is not LocalDB instance owner.
 //
 #define LOCALDB_ERROR_CALLER_IS_NOT_OWNER ((HRESULT)0x89C5011AL)
 
@@ -4435,7 +4403,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Specified Local Database instance name is invalid.
+// Specified LocalDB instance name is invalid.
 //
 #define LOCALDB_ERROR_INVALID_INSTANCE_NAME ((HRESULT)0x89C5011BL)
 
@@ -4444,7 +4412,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// The specified Local Database instance is already shared with different shared name.
+// The specified LocalDB instance is already shared with different shared name.
 //
 #define LOCALDB_ERROR_INSTANCE_ALREADY_SHARED ((HRESULT)0x89C5011CL)
 
@@ -4453,7 +4421,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// The specified Local Database instance is not shared.
+// The specified LocalDB instance is not shared.
 //
 #define LOCALDB_ERROR_INSTANCE_NOT_SHARED ((HRESULT)0x89C5011DL)
 
@@ -4471,10 +4439,27 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// There are too many shared instance and we cannot generate unique User Instance Name.
-// Unshare some of the existing shared instances.
+// Unable to share a LocalDB instance - maximum number of shared LocalDB instances reached.
 //
 #define LOCALDB_ERROR_TOO_MANY_SHARED_INSTANCES ((HRESULT)0x89C5011FL)
+
+//
+// MessageId: LOCALDB_ERROR_CANNOT_GET_LOCAL_APP_DATA_PATH
+//
+// MessageText:
+//
+// Cannot get a local application data path. Most probably a user profile is not loaded. If LocalDB is executed under IIS, make sure that profile loading is enabled for the current user.
+//
+#define LOCALDB_ERROR_CANNOT_GET_LOCAL_APP_DATA_PATH ((HRESULT)0x89C50120L)
+
+//
+// MessageId: LOCALDB_ERROR_CANNOT_LOAD_RESOURCES
+//
+// MessageText:
+//
+// Cannot load resources for this DLL. Resources for this DLL should be stored in a subfolder Resources, with the same file name as this DLL and the extension ".RLL".
+//
+#define LOCALDB_ERROR_CANNOT_LOAD_RESOURCES ((HRESULT)0x89C50121L)
 
  // Detailed error descriptions
 //
@@ -4482,7 +4467,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// The "DataDirectory" registry value is missing in the Local Database instance registry key: %1
+// The "DataDirectory" registry value is missing in the LocalDB instance registry key: %1
 //
 #define LOCALDB_EDETAIL_DATADIRECTORY_IS_MISSING ((HRESULT)0x89C50200L)
 
@@ -4491,7 +4476,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Cannot access Local Database instance folder: %1
+// Cannot access LocalDB instance folder: %1
 //
 #define LOCALDB_EDETAIL_CANNOT_ACCESS_INSTANCE_FOLDER ((HRESULT)0x89C50201L)
 
@@ -4500,7 +4485,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// The "DataDirectory" registry value is too long in the Local Database instance registry key: %1
+// The "DataDirectory" registry value is too long in the LocalDB instance registry key: %1
 //
 #define LOCALDB_EDETAIL_DATADIRECTORY_IS_TOO_LONG ((HRESULT)0x89C50202L)
 
@@ -4509,7 +4494,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// The "Parent Instance" registry value is missing in the Local Database instance registry key: %1
+// The "Parent Instance" registry value is missing in the LocalDB instance registry key: %1
 //
 #define LOCALDB_EDETAIL_PARENT_INSTANCE_IS_MISSING ((HRESULT)0x89C50203L)
 
@@ -4518,7 +4503,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// The "Parent Instance" registry value is too long in the Local Database instance registry key: %1
+// The "Parent Instance" registry value is too long in the LocalDB instance registry key: %1
 //
 #define LOCALDB_EDETAIL_PARENT_INSTANCE_IS_TOO_LONG ((HRESULT)0x89C50204L)
 
@@ -4527,7 +4512,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Data directory for Local Database instance is invalid: %1
+// Data directory for LocalDB instance is invalid: %1
 //
 #define LOCALDB_EDETAIL_DATA_DIRECTORY_INVALID ((HRESULT)0x89C50205L)
 
@@ -4536,7 +4521,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Local Database instance API: XEvent engine assert: %1 in %2:%3 (%4)
+// LocalDB instance API: XEvent engine assert: %1 in %2:%3 (%4)
 //
 #define LOCALDB_EDETAIL_XEVENT_ASSERT    ((HRESULT)0x89C50206L)
 
@@ -4545,7 +4530,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Local Database instance API: XEvent error: %1
+// LocalDB instance API: XEvent error: %1
 //
 #define LOCALDB_EDETAIL_XEVENT_ERROR     ((HRESULT)0x89C50207L)
 
@@ -4554,7 +4539,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Local Database installation is corrupted. Reinstall the Local Database.
+// LocalDB installation is corrupted. Reinstall the LocalDB.
 //
 #define LOCALDB_EDETAIL_INSTALLATION_CORRUPTED ((HRESULT)0x89C50208L)
 
@@ -4563,7 +4548,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Local Database XEvent error: cannot determine %ProgramFiles% folder location.
+// LocalDB XEvent error: cannot determine %ProgramFiles% folder location.
 //
 #define LOCALDB_EDETAIL_CANNOT_GET_PROGRAM_FILES_LOCATION ((HRESULT)0x89C50209L)
 
@@ -4572,7 +4557,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Local Database XEvent error: Cannot initialize XEvent engine.
+// LocalDB XEvent error: Cannot initialize XEvent engine.
 //
 #define LOCALDB_EDETAIL_XEVENT_CANNOT_INITIALIZE ((HRESULT)0x89C5020AL)
 
@@ -4581,7 +4566,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Local Database XEvent error: Cannot find XEvents configuration file: %1
+// LocalDB XEvent error: Cannot find XEvents configuration file: %1
 //
 #define LOCALDB_EDETAIL_XEVENT_CANNOT_FIND_CONF_FILE ((HRESULT)0x89C5020BL)
 
@@ -4590,7 +4575,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Local Database XEvent error: Cannot configure XEvents engine with the configuration file: %1
+// LocalDB XEvent error: Cannot configure XEvents engine with the configuration file: %1
 // HRESULT returned: %2
 //
 #define LOCALDB_EDETAIL_XEVENT_CANNOT_CONFIGURE ((HRESULT)0x89C5020CL)
@@ -4600,7 +4585,7 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Local Database XEvent error: XEvents engine configuration file too long
+// LocalDB XEvent error: XEvents engine configuration file too long
 //
 #define LOCALDB_EDETAIL_XEVENT_CONF_FILE_NAME_TOO_LONG ((HRESULT)0x89C5020DL)
 
@@ -4618,11 +4603,10 @@ LocalDBGetSharedName(
 //
 // MessageText:
 //
-// Local Database parent instance version is invalid: %1
+// LocalDB parent instance version is invalid: %1
 //
 #define LOCALDB_EDETAIL_PARENT_INSTANCE_VERSION_INVALID ((HRESULT)0x89C5020FL)
 
-// The following section are the message definitions. Those messages will be used for logging in the Windows Application event log.
 //
 // MessageId: LOCALDB_EDETAIL_WINAPI_ERROR
 //
@@ -4630,7 +4614,16 @@ LocalDBGetSharedName(
 //
 // Windows API call %1 returned error code: %2. Windows system error message is: %3Reported at line: %4. %5
 //
-#define LOCALDB_EDETAIL_WINAPI_ERROR     ((DWORD)0xC9C50500L)
+#define LOCALDB_EDETAIL_WINAPI_ERROR     ((HRESULT)0xC9C50210L)
+
+//
+// MessageId: LOCALDB_EDETAIL_UNEXPECTED_RESULT
+//
+// MessageText:
+//
+// Function %1 returned %2 at line %3.
+//
+#define LOCALDB_EDETAIL_UNEXPECTED_RESULT ((HRESULT)0x89C50211L)
 
 //
 #endif

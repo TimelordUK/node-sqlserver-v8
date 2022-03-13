@@ -25,9 +25,11 @@
             "request": "launch",
             "program": "C:/Program Files/nodejs/node.exe",
             "args": [
-               "simple-demo"
+               // "simple-demo"
                // "runtest", "-k", "linux", 
-               // "runtest", "-k", "linux", 
+               // "runtest", "-k", "linux",
+               "runtest",
+                 "-t", "table-builder", 
                //  "-t", "querycancel",
                // "-t", "pause"
                // "-t", "prepared",
@@ -44,11 +46,11 @@
                // "-t", "bulk",
                // "-t", "bcp"
                //"-t", "json"
-               "-t", "promises" 
+               //"-t", "promises" 
             ],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/samples/javascript",
-            // "cwd": "${workspaceFolder}",
+           // "cwd": "${workspaceFolder}/samples/javascript",
+             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false
         },

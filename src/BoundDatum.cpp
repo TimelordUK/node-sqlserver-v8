@@ -867,6 +867,7 @@ namespace mssql
 			const auto elem = Nan::Get(arr, i).ToLocalChecked();
 			if (!elem->IsNullOrUndefined())
 			{
+				//    rc = SQLBindParameter(hstmt, 2, SQL_PARAM_INPUT, SQL_C_BINARY, SQL_SS_TIME2, 16, 7, &time2, 0, &cbtime2);  
 				// dates in JS are stored internally as ms count from Jan 1, 1970
 				const auto d = Local<Date>::Cast<Value>(elem);
 				auto& time2 = vec[i];
@@ -874,6 +875,8 @@ namespace mssql
 				const auto ms = local->Value() - offset * 60000;
 				const TimestampColumn sql_date(-1, ms);
 				sql_date.ToTime2Struct(time2);
+				sql_type = SQL_SS_TIME2;
+				c_type = SQL_TIME;
 				_indvec[i] = sizeof(SQL_SS_TIME2_STRUCT);
 			}
 		}
@@ -894,6 +897,7 @@ namespace mssql
 				const TimestampColumn sql_date(-1, ms);
 				sql_date.ToTime2Struct(time2);
 				_indvec[0] = sizeof(SQL_SS_TIME2_STRUCT);
+				param_size = sizeof(SQL_SS_TIME2_STRUCT);
 		}
 	}
 
@@ -1704,7 +1708,8 @@ namespace mssql
 	{
 		if (pp->IsArray())
 		{
-			bind_time_array(pp);
+			// bind_time_array(pp);
+			bind_time_stamp_offset_array(pp);
 		}
 		else
 		{
