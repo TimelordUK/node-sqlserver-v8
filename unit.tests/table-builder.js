@@ -86,6 +86,42 @@ suite('table_builder', function () {
     return d
   }
 
+  test('use table builder to bind to a table provide no catalogue', testDone => {
+    function makeOne (i) {
+      return {
+        id: i,
+        col_a: i * 5,
+        col_b: `str_${i}`,
+        col_c: i + 1,
+        col_d: i - 1,
+        col_e: `str2_${i}`
+      }
+    }
+
+    async function runLocal (adder, makeOne, checkOne) {
+      const tableName = 'tmpTableBuilder'
+      const mgr = theConnection.tableMgr()
+      const builder = mgr.makeBuilder(tableName)
+      adder(builder)
+      const checker = new Checker(builder)
+      await checker.check(makeOne, checkOne)
+    }
+
+    runLocal(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asInt()
+      builder.addColumn('col_b').asVarChar(100)
+      builder.addColumn('col_c').asInt()
+      builder.addColumn('col_d').asInt()
+      builder.addColumn('col_e').asVarChar(100)
+    }, makeOne).then((e) => {
+      testDone(e)
+    }).catch(e => {
+      assert(e)
+      testDone(e)
+    })
+  })
+
   test('use table builder to bind to a table int, time', testDone => {
     function makeOne (i) {
       return {
@@ -480,6 +516,7 @@ suite('table_builder', function () {
   function repeat (c, num) {
     return new Array(num + 1).join(c)
   }
+
 
   test('use table builder to bind to a table int, varchar', testDone => {
     function makeOne (i) {
