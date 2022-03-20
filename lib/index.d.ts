@@ -371,6 +371,8 @@ export interface BulkTableMgr {
     // only works on ODBC Driver 17 for SQL Server
     setUseBcp(bcp:boolean):void
     getUseBcp():boolean
+    // for a set of objects abstract primary key fields only
+    keys(vec:any[]): any[]
 }
 
 export interface TableValueParam {
@@ -492,7 +494,7 @@ export interface ProcedureParamMeta {
         const vec = getVec(20)
 */
 
-enum ServerDialect {
+export enum ServerDialect {
     SqlServer,
     Sybase
 }

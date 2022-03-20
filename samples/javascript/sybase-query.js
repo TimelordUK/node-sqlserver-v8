@@ -43,7 +43,7 @@ async function builder () {
     console.log(create)
     await builder.create()
     await t.promises.insert(vec)
-    const keys = builder.keys(vec)
+    const keys = t.keys(vec)
     const res = await t.promises.select(keys)
     console.log(JSON.stringify(res, null, 4))
     await builder.drop()
