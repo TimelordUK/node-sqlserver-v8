@@ -493,30 +493,30 @@ Further enhancements will be made to the library over the coming months - please
 
 ## Use with Sequelize
 
-This library now  direct support for sequelize, up to v5, the popular JS ORM. For sequelize v4:
+This library now has direct support for sequelize v6, the popular ORM:
 
 ```js
+const Sequelize = require('sequelize')
+
 const sequelize = new Sequelize({
   dialect: 'mssql',
   dialectModulePath: 'msnodesqlv8/lib/sequelize',
   dialectOptions: {
-    connectionString: 'Driver={SQL Server Native Client 11.0};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;',
-  },
-})
-```
-
-For sequelize v5:
-
-```js
-const sequelize = new Sequelize({
-  dialect: 'mssql',
-  dialectModule: require('./dialect-module'),
-  bindParam: false,
-  dialectOptions: {
+    user: '',
+    password: '',
+    database: 'node',
     options: {
-      connectionString: 'Driver={SQL Server Native Client 11.0};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;',
-    },
+      driver: '',
+      connectionString: 'Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\node;Database=scratch;Trusted_Connection=yes;',
+      trustedConnection: true,
+      instanceName: ''
+    }
   },
+  pool: {
+    min: 0,
+    max: 5,
+    idle: 10000
+  }
 })
 ```
 

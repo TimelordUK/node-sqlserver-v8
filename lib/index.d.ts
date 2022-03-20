@@ -410,6 +410,7 @@ export interface ProcedureParam {
 
 export interface ProcedureDefinition
 {
+    setDialect(dialect: ServerDialect): boolean
     paramsArray(params: any[]): any[]
     call(params?: any[], cb?: CallProcedureCb): Query
     setTimeout(to:number): void
@@ -455,6 +456,7 @@ export interface ProcedureManager {
     describe(name: string, cb?: DescribeProcedureCb): void
     setTimeout(timeout: number): void
     setPolling(poll:boolean):void;
+    ServerDialect:ServerDialect
 }
 
 export interface ProcedureParamMeta {
@@ -490,9 +492,16 @@ export interface ProcedureParamMeta {
         const vec = getVec(20)
 */
 
+enum ServerDialect {
+    SqlServer,
+    Sybase
+}
+
 export interface TableBuilder {
     // can use utility method e.g. builder.addColumn('col_b').asVarChar(100)
     addColumn (columnName: string, columnType?: string, maxLength?:number, isPrimaryKey?: number): TableColumn
+     // builder.setDialect(mgr.ServerDialect.Sybase)
+    setDialect(dialect: ServerDialect): boolean
     compute () : void
     toTable () : BulkTableMgr
     drop (): Promise<any> 
@@ -520,6 +529,7 @@ export interface TableManager {
     // utility class to help manually add tables
     makeBuilder (tableName: string, tableCatelog: string, tableSchema: string): TableBuilder
     // or use builder to build columns
+    ServerDialect:ServerDialect
     makeColumn (tableName: string, tableSchema: string, position: number, columnName: string, paramType: string, paramLength: number, isPrimaryKey: number): TableColumn
 }
 
@@ -527,6 +537,7 @@ export interface PreparedPromises {
     free(): Promise<any>
     query(params?: any[], options?: QueryAggregatorOptions) : Promise<QueryAggregatorResults>
 }
+
 export interface PreparedStatement {
     promises: PreparedPromises
     preparedQuery(params?: any[], cb ?: QueryCb): Query
