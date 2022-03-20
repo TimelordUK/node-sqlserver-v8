@@ -517,7 +517,6 @@ suite('table_builder', function () {
     return new Array(num + 1).join(c)
   }
 
-
   test('use table builder to bind to a table int, varchar', testDone => {
     function makeOne (i) {
       return {

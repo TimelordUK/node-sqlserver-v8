@@ -6,6 +6,61 @@ const query = 'SELECT top 5 * FROM syscomments'
 
 // "Driver={Adaptive Server Enterprise}; app=myAppName; server=localhost port=5000; db=pubs3; uid=sa; pwd=ooooo;"
 
+async function builder () {
+  function makeOne (i) {
+    return {
+      id: i,
+      col_a: i * 5,
+      col_b: `str_${i}`,
+      col_c: i + 1,
+      col_d: i - 1,
+      col_e: `str2_${i}`
+    }
+  }
+
+  try {
+    const rows = 5
+    const connection = await sql.promises.open(connectionString)
+    const tableName = 'tmpTableBuilder'
+    const mgr = connection.tableMgr()
+    const builder = mgr.makeBuilder(tableName)
+    builder.setDialect(mgr.ServerDialect.Sybase)
+    builder.addColumn('id').asInt().isPrimaryKey(1)
+    builder.addColumn('col_a').asInt()
+    builder.addColumn('col_b').asVarChar(100)
+    builder.addColumn('col_c').asInt()
+    builder.addColumn('col_d').asInt()
+    builder.addColumn('col_e').asVarChar(100)
+    const vec = []
+    for (let i = 0; i < rows; ++i) {
+      vec.push(makeOne(i))
+    }
+    const t = builder.toTable()
+    const create = builder.createTableSql
+    const drop = builder.dropTableSql
+    console.log(drop)
+    await builder.drop()
+    console.log(create)
+    await builder.create()
+    await t.promises.insert(vec)
+    const primaryCols = builder.primaryColumns
+    const keys = vec.map(elem => {
+      return primaryCols.reduce(function (obj, column) {
+        if (Object.prototype.hasOwnProperty.call(elem, column.name)) {
+          obj[column.name] = elem[column.name]
+        }
+        return obj
+      }, {})
+    })
+    const res = await t.promises.select(keys)
+    console.log(JSON.stringify(res, null, 4))
+    await builder.drop()
+    await connection.promises.close()
+  } catch (e) {
+    console.log(e)
+  }
+}
+
 function legacyQuery () {
   return new Promise((resolve, reject) => {
     sql.open(connectionString, (err, con) => {
@@ -192,6 +247,7 @@ async function procAsSelect () {
 }
 
 async function run () {
+  await builder()
   await procAsSelect()
   await procOuput()
   await proc()
