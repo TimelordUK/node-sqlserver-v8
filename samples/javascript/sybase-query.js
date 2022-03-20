@@ -43,15 +43,7 @@ async function builder () {
     console.log(create)
     await builder.create()
     await t.promises.insert(vec)
-    const primaryCols = builder.primaryColumns
-    const keys = vec.map(elem => {
-      return primaryCols.reduce(function (obj, column) {
-        if (Object.prototype.hasOwnProperty.call(elem, column.name)) {
-          obj[column.name] = elem[column.name]
-        }
-        return obj
-      }, {})
-    })
+    const keys = builder.keys(vec)
     const res = await t.promises.select(keys)
     console.log(JSON.stringify(res, null, 4))
     await builder.drop()
