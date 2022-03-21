@@ -1,10 +1,35 @@
 const sql = require('msnodesqlv8')
 const { GetConnection } = require('./get-connection')
 
-const connectionString = new GetConnection().connectionString
+const connectionString = new GetConnection('ase').connectionString
 const query = 'SELECT top 5 * FROM syscomments'
 
 // "Driver={Adaptive Server Enterprise}; app=myAppName; server=localhost port=5000; db=pubs3; uid=sa; pwd=ooooo;"
+
+async function getPool (size) {
+  const pool = new sql.Pool({
+    connectionString: connectionString,
+    ceiling: size
+  })
+  pool.on('error', e => {
+    throw e
+  })
+  const options = await pool.promises.open()
+  console.log(`pool opened : ${JSON.stringify(options, null, 4)}`)
+  return pool
+}
+
+async function killPool (pool) {
+  await pool.promises.close()
+  console.log('pool closed')
+}
+
+async function pool () {
+  const pool = await getPool(5)
+  const res = await pool.promises.query(query)
+  console.log(JSON.stringify(res, null, 4))
+  await killPool(pool)
+}
 
 async function builder () {
   function makeOne (i) {
@@ -239,6 +264,7 @@ async function procAsSelect () {
 }
 
 async function run () {
+  await pool()
   await builder()
   await procAsSelect()
   await procOuput()

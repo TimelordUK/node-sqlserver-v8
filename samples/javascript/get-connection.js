@@ -1,9 +1,10 @@
 
 class GetConnection {
-  getConnection () {
+  getConnection (key) {
+    key = key || 'local'
     const path = require('path')
     const config = require(path.join(__dirname, 'config.json'))
-    return config.connection.local
+    return config.connection[key]
   }
 
   constructor () {
