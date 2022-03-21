@@ -494,9 +494,9 @@ export interface ProcedureParamMeta {
         const vec = getVec(20)
 */
 
-export enum ServerDialect {
-    SqlServer,
-    Sybase
+export interface ServerDialect {
+    SqlServer: ServerDialect
+    Sybase: ServerDialect
 }
 
 export interface TableBuilder {
@@ -529,7 +529,7 @@ export interface TableManager {
     // manually register a table
     addTable(tableName: string, cols: TableColumn[]): BulkTableMgr
     // utility class to help manually add tables
-    makeBuilder (tableName: string, tableCatelog: string, tableSchema: string): TableBuilder
+    makeBuilder (tableName: string, tableCatelog?: string, tableSchema?: string): TableBuilder
     // or use builder to build columns
     ServerDialect:ServerDialect
     makeColumn (tableName: string, tableSchema: string, position: number, columnName: string, paramType: string, paramLength: number, isPrimaryKey: number): TableColumn
