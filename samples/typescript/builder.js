@@ -54,7 +54,7 @@ function builder() {
                 col_e: "str2_" + i
             };
         }
-        var rows, connection, tableName, mgr, builder_1, vec, i, t, create, drop, keys, res, e_1;
+        var rows, connection, tableName, mgr, builder_1, vec, t, create, drop, keys, res, e_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -73,10 +73,7 @@ function builder() {
                     builder_1.addColumn('col_c').asInt();
                     builder_1.addColumn('col_d').asInt();
                     builder_1.addColumn('col_e').asVarChar(100);
-                    vec = [];
-                    for (i = 0; i < rows; ++i) {
-                        vec.push(makeOne(i));
-                    }
+                    vec = Array(rows).fill(0).map(function (_, i) { return makeOne(i); });
                     t = builder_1.toTable();
                     create = builder_1.createTableSql;
                     drop = builder_1.dropTableSql;

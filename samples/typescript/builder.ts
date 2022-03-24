@@ -33,11 +33,7 @@ async function builder () {
       builder.addColumn('col_c').asInt()
       builder.addColumn('col_d').asInt()
       builder.addColumn('col_e').asVarChar(100)
-      
-      const vec = []
-      for (let i = 0; i < rows; ++i) {
-        vec.push(makeOne(i))
-      }
+      const vec = Array(rows).fill(0).map((_, i) => makeOne(i))
       const t = builder.toTable()
       const create: string = builder.createTableSql
       const drop: string = builder.dropTableSql
