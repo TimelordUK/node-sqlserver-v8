@@ -1,7 +1,7 @@
 import { SqlClient, TableBuilder, Connection, TableManager } from 'msnodesqlv8';
 
 // require the module so it can be used in your node JS code.
-export const sql : SqlClient = require('msnodesqlv8');
+export const sql: SqlClient = require('msnodesqlv8');
 const path = require('path')
 const { GetConnection } = require(path.join(__dirname, '..\\javascript\\', '../javascript/get-connection'))
 
@@ -59,5 +59,4 @@ async function builder () {
   run().then(() => {
     console.log('done')
   })
-  
   
