@@ -131,14 +131,15 @@ suite('table_builder', function () {
     }
 
     function checkOne (lhs, rhs) {
-      const today = new Date()
-      const h = rhs.col_a.getHours()
-      const m = rhs.col_a.getMinutes()
-      const s = rhs.col_a.getSeconds()
-      today.setHours(h)
-      today.setMinutes(m)
-      today.setSeconds(s)
-      today.setMilliseconds(0)
+      const localDate = new Date()
+      const today = Date.UTC(
+        localDate.getUTCFullYear(),
+        localDate.getUTCMonth(),
+        localDate.getUTCDate(),
+        rhs.col_a.getUTCHours(),
+        rhs.col_a.getMinutes(),
+        rhs.col_a.getSeconds(),
+        0)
       rhs.col_a = today
       assert.deepStrictEqual(lhs.id, rhs.id)
       assert(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)

@@ -19,7 +19,12 @@ namespace mssql
 		{
 		}
 
-		inline Local<Value> ToValue() override
+	   inline Local<Value> ToString() override
+	   {
+		   return AsString<bool>(value);
+	   }
+
+		inline Local<Value> ToNative() override
 		{
 			return Nan::New<Boolean>(value);
 		}

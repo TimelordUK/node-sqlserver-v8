@@ -19,7 +19,12 @@ namespace mssql
 	   {
 	   }
 
-	   inline Local<Value> ToValue() override
+	   inline Local<Value> ToString() override
+	   {
+		   return AsString<int64_t>(value);
+	   }
+
+	   inline Local<Value> ToNative() override
 	   {
 		 	return Nan::New(static_cast<int32_t>(value));
 	   }

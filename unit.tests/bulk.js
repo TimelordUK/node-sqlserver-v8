@@ -405,6 +405,19 @@ suite('bulk', function () {
     return d
   }
 
+  function getUTCTime (a) {
+    const localDate = new Date()
+    const today = Date.UTC(
+      localDate.getUTCFullYear(),
+      localDate.getUTCMonth(),
+      localDate.getUTCDate(),
+      a.getUTCHours(),
+      a.getMinutes(),
+      a.getSeconds(),
+      0)
+    return today
+  }
+
   test('use tableMgr bulk insert single non UTC based time with time col', testDone => {
     async function runner () {
       const helper = new TypeTableHelper(theConnection, 'time')
@@ -418,16 +431,18 @@ suite('bulk', function () {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
         res.forEach(a => {
-          const today = new Date()
-          const h = a.col_a.getHours()
-          const m = a.col_a.getMinutes()
-          const s = a.col_a.getSeconds()
-          today.setHours(h)
-          today.setMinutes(m)
-          today.setSeconds(s)
-          today.setMilliseconds(0)
+          const today = getUTCTime(a.col_a)
           a.col_a = today
         })
+        expected.forEach(a => {
+          const today = getUTCTime(a.col_a)
+          a.col_a = today
+          return a
+        })
+        // console.log('res')
+        // console.log(JSON.stringify(res, null, 4))
+        // console.log('expected')
+        // console.log(JSON.stringify(expected, null, 4))
         assert.deepStrictEqual(res, expected)
       } catch (e) {
         assert.ifError(e)
@@ -898,8 +913,8 @@ suite('bulk', function () {
 
       asyncDone => {
         helper.dropCreateTable({
-          tableName: tableName,
-          theConnection: theConnection
+          tableName,
+          theConnection
         }, () => {
           asyncDone()
         })
@@ -1052,7 +1067,7 @@ suite('bulk', function () {
       updateFunction: runUpdateFunction ? i => i * 3 : null,
       check: selectAfterInsert,
       deleteAfterTest: false,
-      batchSize: batchSize
+      batchSize
     }
 
     simpleColumnBulkTest(params, () => {
@@ -1067,7 +1082,7 @@ suite('bulk', function () {
       updateFunction: runUpdateFunction ? i => i * 3 : null,
       check: selectAfterInsert,
       deleteAfterTest: false,
-      batchSize: batchSize
+      batchSize
     }
 
     simpleColumnBulkTest(params, () => {
@@ -1193,8 +1208,8 @@ suite('bulk', function () {
 
       asyncDone => {
         helper.dropCreateTable({
-          tableName: tableName,
-          theConnection: theConnection,
+          tableName,
+          theConnection,
           columnName: 'test_field',
           type: 'nvarchar(12)'
         }, () => {
@@ -1311,7 +1326,7 @@ suite('bulk', function () {
     const fns = [
       asyncDone => {
         helper.dropCreateTable({
-          tableName: tableName
+          tableName
         }, () => {
           asyncDone()
         })
@@ -1401,8 +1416,8 @@ suite('bulk', function () {
 
       asyncDone => {
         helper.dropCreateTable({
-          tableName: tableName,
-          theConnection: theConnection
+          tableName,
+          theConnection
         }, () => {
           asyncDone()
         })
@@ -1451,7 +1466,7 @@ suite('bulk', function () {
 
       asyncDone => {
         helper.dropCreateTable({
-          tableName: tableName
+          tableName
         }, () => {
           asyncDone()
         })
@@ -1510,7 +1525,7 @@ suite('bulk', function () {
 
       asyncDone => {
         helper.dropCreateTable({
-          tableName: tableName
+          tableName
         }, () => {
           asyncDone()
         })
@@ -1557,7 +1572,7 @@ suite('bulk', function () {
 
       asyncDone => {
         helper.dropCreateTable({
-          tableName: tableName
+          tableName
         }, () => {
           asyncDone()
         })
@@ -1609,7 +1624,7 @@ suite('bulk', function () {
       updateFunction: runUpdateFunction ? i => i % 3 === 0 : null,
       check: selectAfterInsert,
       deleteAfterTest: false,
-      batchSize: batchSize
+      batchSize
     }
 
     simpleColumnBulkTest(params, () => {
@@ -1642,7 +1657,7 @@ suite('bulk', function () {
       updateFunction: null,
       check: selectAfterInsert,
       deleteAfterTest: false,
-      batchSize: batchSize
+      batchSize
     }
 
     simpleColumnBulkTest(params, () => {
@@ -1665,7 +1680,7 @@ suite('bulk', function () {
       updateFunction: null,
       check: selectAfterInsert,
       deleteAfterTest: false,
-      batchSize: batchSize
+      batchSize
     }
 
     simpleColumnBulkTest(params, testDone)
@@ -1684,7 +1699,7 @@ suite('bulk', function () {
       updateFunction: runUpdateFunction ? i => i * 3 : null,
       check: selectAfterInsert,
       deleteAfterTest: false,
-      batchSize: batchSize
+      batchSize
     }
 
     simpleColumnBulkTest(params, () => {
@@ -1699,7 +1714,7 @@ suite('bulk', function () {
       updateFunction: runUpdateFunction ? i => i * 3 : null,
       check: selectAfterInsert,
       deleteAfterTest: false,
-      batchSize: batchSize
+      batchSize
     }
 
     simpleColumnBulkTest(params, () => {
@@ -1714,7 +1729,7 @@ suite('bulk', function () {
       updateFunction: runUpdateFunction ? i => i * 3 : null,
       check: selectAfterInsert,
       deleteAfterTest: false,
-      batchSize: batchSize
+      batchSize
     }
     simpleColumnBulkTest(params, () => {
       testDone()
@@ -1728,7 +1743,7 @@ suite('bulk', function () {
       updateFunction: runUpdateFunction ? i => i - 1 : null,
       check: selectAfterInsert,
       deleteAfterTest: false,
-      batchSize: batchSize
+      batchSize
     }
     simpleColumnBulkTest(params, () => {
       testDone()
@@ -1772,7 +1787,7 @@ suite('bulk', function () {
       updateFunction: runUpdateFunction ? i => i * 3 : null,
       check: selectAfterInsert,
       deleteAfterTest: false,
-      batchSize: batchSize
+      batchSize
     }
 
     simpleColumnBulkTest(params, () => {
@@ -1805,7 +1820,7 @@ suite('bulk', function () {
       updateFunction: runUpdateFunction ? i => i % 3 === 0 : null,
       check: selectAfterInsert,
       deleteAfterTest: false,
-      batchSize: batchSize
+      batchSize
     }
 
     simpleColumnBulkTest(params, () => {
@@ -1837,8 +1852,8 @@ suite('bulk', function () {
       buildFunction: i => (i * 10) + (i * 0.1),
       updateFunction: runUpdateFunction ? i => (i * 1) + (i * 0.2) : null,
       check: selectAfterInsert,
-      deleteAfterTest: deleteAfterTest,
-      batchSize: batchSize
+      deleteAfterTest,
+      batchSize
     }
 
     simpleColumnBulkTest(params, testDone)
@@ -1876,13 +1891,13 @@ suite('bulk', function () {
       },
       updateFunction: runUpdateFunction
         ? i => {
-            const idx = 9 - (i % 10)
-            return arr[idx]
-          }
+          const idx = 9 - (i % 10)
+          return arr[idx]
+        }
         : null,
       check: selectAfterInsert,
-      deleteAfterTest: deleteAfterTest,
-      batchSize: batchSize
+      deleteAfterTest,
+      batchSize
     }
 
     simpleColumnBulkTest(params, testDone)
@@ -1930,7 +1945,7 @@ suite('bulk', function () {
     const tableName = 'bulkTest'
 
     helper.dropCreateTable({
-      tableName: tableName
+      tableName
     }, go)
 
     function go () {
@@ -1993,9 +2008,9 @@ suite('bulk', function () {
 
       asyncDone => {
         helper.dropCreateTable({
-          tableName: tableName,
-          columnName: columnName,
-          type: type
+          tableName,
+          columnName,
+          type
         }, () => {
           asyncDone()
         })
@@ -2132,7 +2147,7 @@ suite('bulk', function () {
       updateFunction: null,
       check: selectAfterInsert,
       deleteAfterTest: false,
-      batchSize: batchSize
+      batchSize
     }
 
     simpleColumnBulkTest(params, testDone)

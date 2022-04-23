@@ -3,6 +3,7 @@
 #include <v8.h>
 #include <Column.h>
 #include <BoundDatumHelper.h>
+#include <string>
 
 namespace mssql
 {
@@ -20,7 +21,12 @@ namespace mssql
 		{			
 		}
 
-	   inline Local<Value> ToValue() override
+	   inline Local<Value> ToString() override
+	   {
+		   return AsString<double>(value);
+	   }
+
+	   inline Local<Value> ToNative() override
 	   {
 		  return Nan::New(value);
 	   }

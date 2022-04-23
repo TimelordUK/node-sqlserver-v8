@@ -12,12 +12,14 @@ namespace mssql
 
     class BinaryColumn : public Column
     {
+
     public:
 		BinaryColumn(const int id, shared_ptr<DatumStorage> s, size_t l);
 		BinaryColumn(const int id, shared_ptr<DatumStorage> s, size_t offset, size_t l);
-		Local<Value> ToValue() override;
-    private:
+		Local<Value> ToNative() override;
+    Local<Value> ToString() override;
 
+    private:
 		shared_ptr<DatumStorage::char_vec_t> storage;
 		size_t len;
 		size_t offset;

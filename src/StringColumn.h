@@ -44,8 +44,13 @@ namespace mssql
 	   offset(offset)
 	   {
 	   }
-	
-	   inline Local<Value> ToValue() override
+
+	   inline Local<Value> ToString() override
+	   {
+		  	return ToValue();
+	   }
+
+	   inline Local<Value> ToNative() override
 	   {
 		   	auto sptr = storage->data();
 		  	auto s = Nan::Encode(sptr + offset, size * 2, Nan::UCS2);

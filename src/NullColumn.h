@@ -15,7 +15,13 @@ namespace mssql
 		{		
 		}
 
-	   Local<Value> ToValue() override
+	   inline Local<Value> ToString() override
+	   {
+		  nodeTypeFactory fact;
+		  return fact.null();
+	   }
+
+	   Local<Value> ToNative() override
 	   {
 		  nodeTypeFactory fact;
 		  return fact.null();

@@ -30,13 +30,33 @@ namespace mssql
 	class Column
 	{
 	public:
-		Column(int id) : _id(id)
+		Column(int id) : _id(id), _asNative(true)
 		{			
 		}
-		virtual ~Column();		
-		virtual Local<Value> ToValue() = 0;
+		virtual ~Column();
+
+		virtual Local<Value> ToNative() = 0;
+		virtual Local<Value> ToValue() {
+			return _asNative ? ToNative() : ToString();
+		}
+		
+		virtual Local<Value> ToString() = 0;
+
 		int Id() const { return _id; }
+		void AsString() {
+			_asNative = false;
+		}
+
+		template<class T> Local<Value> AsString(T value)
+	    {
+			auto str = to_string(value);
+			auto sptr = str.data();
+			auto s = Nan::Encode(sptr, str.size() * 2, Nan::UCS2);
+			return s;
+	    }
+
 	private:
 		int _id;
+		bool _asNative;
 	};
 }
