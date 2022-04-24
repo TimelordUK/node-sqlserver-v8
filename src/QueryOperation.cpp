@@ -65,6 +65,7 @@ namespace mssql
 		_statement = _connection->getStatamentCache()->checkout(_statementId);
 		if (!_statement) return false;
 		_statement->set_polling(_query->polling());
+		_statement->set_numeric_string(_query->numeric_string());
 		const auto res = _statement->try_execute_direct(_query, _params);
 		return res;
 	}

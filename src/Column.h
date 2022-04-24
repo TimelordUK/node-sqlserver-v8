@@ -49,7 +49,7 @@ namespace mssql
 
 		template<class T> Local<Value> AsString(T value)
 	    {
-			auto str = to_string(value);
+			auto str = to_wstring(value);
 			auto sptr = str.data();
 			auto s = Nan::Encode(sptr, str.size() * 2, Nan::UCS2);
 			return s;

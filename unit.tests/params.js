@@ -138,6 +138,43 @@ suite('params', function () {
       })
   }
 
+  test('query a numeric - configure query to return as string', testDone => {
+    async function runner () {
+      const num = '12345678.876000'
+      theConnection.setUseNumericString(true)
+      const q = `select ${num} as number`
+      const res = await theConnection.promises.query({
+        query_str: q,
+        numeric_string: true
+      })
+      try {
+        assert.deepStrictEqual(res.first[0].number, num)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
+  test('query a numeric - configure connection to return as string', testDone => {
+    async function runner () {
+      const num = '12345678.876000'
+      theConnection.setUseNumericString(true)
+      const q = `select ${num} as number`
+      const res = await theConnection.promises.query(q)
+      try {
+        assert.deepStrictEqual(res.first[0].number, num)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
   test('bind via a declare and insert', testDone => {
     const tableName = 'tmp_int'
     const tableFieldsSql = `(

@@ -27,26 +27,26 @@
             "args": [
                // "simple-demo"
                // "runtest", "-k", "linux", 
-               // "runtest", "-k", "linux",
-               "runtest",
-                 "-t", "table-builder", 
-               //  "-t", "querycancel",
+               "runtest", "-k", "linux",
+               // "runtest",
+               // "-t", "table-builder", 
+               // "-t", "querycancel",
                // "-t", "pause"
                // "-t", "prepared",
                // "-t", "compoundqueries",
                // "-t", "query",
                // "-t", "multiple-errors", 
                // "-t", "geography",
-               //"-t", "tvp",
-               //"-t", "warnings",
+               // "-t", "tvp",
+               // "-t", "warnings",
                // "-t", "txn",
                // "-t", "datatypes",
                // "-t", "sproc"
-               // "-t", "params"
+               "-t", "params"
                // "-t", "bulk",
                // "-t", "bcp"
-               //"-t", "json"
-               //"-t", "promises" 
+               // "-t", "json"
+               // "-t", "promises" 
             ],
             "stopAtEntry": false,
            // "cwd": "${workspaceFolder}/samples/javascript",

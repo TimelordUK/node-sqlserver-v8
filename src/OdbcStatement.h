@@ -75,6 +75,7 @@ namespace mssql
 		Local<Value> end_of_rows() const;
 		Local<Value> get_column_values() const;
 		bool set_polling(bool mode);
+		bool set_numeric_string(bool mode);
 
 		shared_ptr<vector<shared_ptr<OdbcError>>> errors(void) const
 		{
@@ -151,6 +152,7 @@ namespace mssql
 		bool _prepared;
 		bool _cancelRequested;
 		bool _pollingEnabled;
+		bool _numericStringEnabled;
 
 		OdbcStatementState _statementState = OdbcStatementState::STATEMENT_CREATED;
 

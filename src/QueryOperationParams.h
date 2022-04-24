@@ -10,12 +10,12 @@ namespace mssql
 	class QueryOperationParams
 	{
 	public:
-
 		shared_ptr<vector<uint16_t>> query_string() { return _query_string; }
 		int64_t id() { return _id; }
 		int32_t timeout() { return _timeout; }
 		int32_t query_tz_adjustment() { return _query_tz_adjustment; }
 		bool polling() { return _polling; }
+		bool numeric_string() { return _numeric_string; }
 		
 		QueryOperationParams(Local<Number> query_id, Local<Object> query_object);
 	private:
@@ -23,6 +23,7 @@ namespace mssql
 		int32_t _timeout;
 		int32_t _query_tz_adjustment;
 		int64_t _id;
+		bool _numeric_string;
 		bool _polling;
 	};
 }

@@ -69,6 +69,7 @@ namespace mssql
 		_prepared(false),
 		_cancelRequested(false),
 		_pollingEnabled(false),
+		_numericStringEnabled(false),
 		_resultset(nullptr),
 		_boundParamsSet(nullptr)
 	{
@@ -216,6 +217,13 @@ namespace mssql
 	{
 		lock_guard<mutex> lock(g_i_mutex);
 		_pollingEnabled = mode;
+		return true;
+	}
+
+	bool OdbcStatement::set_numeric_string(const bool mode)
+	{
+		lock_guard<mutex> lock(g_i_mutex);
+		_numericStringEnabled = mode;
 		return true;
 	}
 
@@ -999,7 +1007,11 @@ namespace mssql
 			_resultset->add_column(row_id, make_shared<NullColumn>(column));
 			return true;
 		}
-		_resultset->add_column(row_id, make_shared<IntColumn>(column, v));
+		auto col = make_shared<IntColumn>(column, v);
+		if (_numericStringEnabled) {
+			col->AsString();
+		}
+		_resultset->add_column(row_id, col);
 		return true;
 	}
 
@@ -1051,7 +1063,11 @@ namespace mssql
 				_resultset->add_column(row_id, make_shared<NullColumn>(column));
 				continue;
 			}
-			_resultset->add_column(row_id, make_shared<IntColumn>(column, v));
+			auto col = make_shared<IntColumn>(column, v);
+			if (_numericStringEnabled) {
+				col->AsString();
+			}
+			_resultset->add_column(row_id, col);
 		}
 		return true;
 	}
@@ -1069,7 +1085,11 @@ namespace mssql
 				_resultset->add_column(row_id, make_shared<NullColumn>(column));
 				continue;
 			}
-			_resultset->add_column(row_id, make_shared<NumberColumn>(column, v));
+			auto col = make_shared<NumberColumn>(column, v);
+			if (_numericStringEnabled) {
+				col->AsString();
+			}
+			_resultset->add_column(row_id, col);
 		}
 		return true;
 	}
@@ -1151,7 +1171,13 @@ namespace mssql
 			_resultset->add_column(row_id, make_shared<NullColumn>(column));
 			return true;
 		}
-		_resultset->add_column(row_id, make_shared<NumberColumn>(column, v));
+		
+		auto col = make_shared<NumberColumn>(column, v);
+		if (_numericStringEnabled) {
+			col->AsString();
+		}
+
+		_resultset->add_column(row_id, col);
 		return true;
 	}
 

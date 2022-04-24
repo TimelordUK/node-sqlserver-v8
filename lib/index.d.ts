@@ -78,7 +78,8 @@ export interface PoolOptions {
     heartbeatSecs?: number
     heartbeatSql?: string
     inactivityTimeoutSecs?: number
-    useUTC?:boolean
+    useUTC?: boolean
+    useNumericString?: boolean
     connectionString: string
 }
 
@@ -198,6 +199,8 @@ export interface Connection {
     id:number
     setUseUTC(utc:boolean):void
     getUseUTC():boolean
+    setUseNumericString(numericString:boolean):void
+    getUseNumericString():boolean
     close(cb: StatusCb): void
     query(sql: string, cb?: QueryCb): Query
     query(sql: string, params?: any[], cb?: QueryCb): Query
