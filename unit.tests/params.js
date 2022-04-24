@@ -141,7 +141,6 @@ suite('params', function () {
   test('query a numeric - configure query to return as string', testDone => {
     async function runner () {
       const num = '12345678.876000'
-      theConnection.setUseNumericString(true)
       const q = `select ${num} as number`
       const res = await theConnection.promises.query({
         query_str: q,
