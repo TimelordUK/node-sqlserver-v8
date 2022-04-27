@@ -1,4 +1,5 @@
 #include <BoundDatum.h>
+#include <BoundDatumHelper.h>
 #include <TimestampColumn.h>
 #include <MutateJS.h>
 #include <codecvt>
@@ -1058,6 +1059,24 @@ namespace mssql
 		}
 	}
 
+	void BoundDatum::reserve_big_integer(const SQLLEN len)
+	{
+		constexpr auto size = sizeof(DatumStorage::bigint_t);
+		_storage->ReserveBigInt(len);
+		_indvec.resize(len);
+		js_type = JS_NUMBER;
+		c_type = SQL_C_SBIGINT;
+		sql_type = SQL_BIGINT;
+		buffer = _storage->bigint_vec_ptr->data();
+		buffer_len = static_cast<SQLLEN>(size) * len;
+		param_size = size;
+		digits = 0;
+		if (is_bcp) {
+			sql_type = SQLINT8;
+			param_size = sizeof(int64_t);
+		}
+	}
+
 	void BoundDatum::reserve_integer(const SQLLEN len)
 	{
 		constexpr auto size = sizeof(int64_t);
@@ -2075,8 +2094,11 @@ namespace mssql
 		case SQL_C_ULONG:
 		case SQL_C_USHORT:
 		case SQL_C_UTINYINT:
-		case SQL_BIGINT:
 			reserve_integer(static_cast<SQLLEN>(row_count));
+			break;
+
+		case SQL_BIGINT:
+			reserve_big_integer(static_cast<SQLLEN>(row_count));
 			break;
 
 		case SQL_DECIMAL:

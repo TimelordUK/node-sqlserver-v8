@@ -130,6 +130,8 @@ namespace mssql
 		void reserve_integer(SQLLEN len);
 		void bind_integer_array(const Local<Value> & p);
 
+		void reserve_big_integer(SQLLEN len);
+	
 		void bind_float(const Local<Value> & p);
 		void bind_real(const Local<Value> & p);
 

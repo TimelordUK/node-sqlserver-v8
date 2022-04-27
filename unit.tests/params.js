@@ -138,6 +138,51 @@ suite('params', function () {
       })
   }
 
+  test('insert bigint as parameter', testDone => {
+    testBoilerPlate('bigint_param_test', { bigint_test: 'bigint' },
+      done => {
+        theConnection.queryRaw('INSERT INTO bigint_param_test (bigint_test) VALUES (?)', [0x80000000], e => {
+          assert.ifError(e)
+          done()
+        })
+      },
+
+      done => {
+        theConnection.queryRaw('SELECT bigint_test FROM bigint_param_test', (e, r) => {
+          assert.ifError(e)
+          const expected = {
+            meta: [{ name: 'bigint_test', size: 19, nullable: true, type: 'number', sqlType: 'bigint' }],
+            rows: [[0x80000000]]
+          }
+          assert.deepStrictEqual(expected, r)
+          done()
+        })
+      },
+
+      () => {
+        testDone()
+      })
+  })
+
+  test('query a bigint - configure query to return as string', testDone => {
+    async function runner () {
+      const num = '9223372036854775807'
+      const q = `SELECT CAST(${num} AS bigint) as number`
+      const res = await theConnection.promises.query({
+        query_str: q,
+        numeric_string: true
+      })
+      try {
+        assert.deepStrictEqual(res.first[0].number, num)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
   test('query a numeric - configure query to return as string', testDone => {
     async function runner () {
       const num = '12345678.876000'
@@ -852,32 +897,6 @@ suite('params', function () {
           done()
         })
       },
-      () => {
-        testDone()
-      })
-  })
-
-  test('insert bigint as parameter', testDone => {
-    testBoilerPlate('bigint_param_test', { bigint_test: 'bigint' },
-      done => {
-        theConnection.queryRaw('INSERT INTO bigint_param_test (bigint_test) VALUES (?)', [0x80000000], e => {
-          assert.ifError(e)
-          done()
-        })
-      },
-
-      done => {
-        theConnection.queryRaw('SELECT bigint_test FROM bigint_param_test', (e, r) => {
-          assert.ifError(e)
-          const expected = {
-            meta: [{ name: 'bigint_test', size: 19, nullable: true, type: 'number', sqlType: 'bigint' }],
-            rows: [[0x80000000]]
-          }
-          assert.deepStrictEqual(expected, r)
-          done()
-        })
-      },
-
       () => {
         testDone()
       })

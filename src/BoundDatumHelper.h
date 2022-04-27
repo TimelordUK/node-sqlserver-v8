@@ -21,6 +21,7 @@ namespace mssql
 	{
 	public:
 
+		typedef long long int bigint_t; 
 		typedef vector<uint16_t> uint16_t_vec_t;
 		typedef vector<shared_ptr<uint16_t_vec_t>> uint16_vec_t_vec_t;
 		typedef vector<char> char_vec_t;
@@ -30,6 +31,7 @@ namespace mssql
 		typedef vector<uint32_t> uint32_vec_t;
 		typedef vector<int64_t> int64_vec_t;
 		typedef vector<double> double_vec_t;
+		typedef vector<bigint_t> bigint_vec_t;
 		typedef vector<SQL_SS_TIMESTAMPOFFSET_STRUCT> timestamp_offset_vec_t;
 		typedef vector<SQL_SS_TIME2_STRUCT> time2_struct_vec_t;
 		typedef vector<SQL_TIMESTAMP_STRUCT> timestamp_struct_vec_t;
@@ -50,7 +52,8 @@ namespace mssql
 			charvec_ptr(nullptr),
 			uint16vec_ptr(nullptr),
 			uint16_vec_vec_ptr(nullptr),
-			char_vec_vec_ptr(nullptr)
+			char_vec_vec_ptr(nullptr),
+			bigint_vec_ptr(nullptr)
 		{
 		}
 
@@ -85,6 +88,15 @@ namespace mssql
 		inline void ReserveChars(size_t len)
 		{
 			charvec_ptr = reserve_vec<char>(charvec_ptr, len);
+		}
+
+		inline bool isBigInt() const {
+			return bigint_vec_ptr && !bigint_vec_ptr->empty();
+		}
+
+		inline void ReserveBigInt(size_t len)
+		{
+			bigint_vec_ptr = reserve_vec<bigint_t>(bigint_vec_ptr, len);
 		}
 
 		inline void ReserveUint16(size_t len)
@@ -203,6 +215,7 @@ namespace mssql
 		shared_ptr<uint16_t_vec_t> uint16vec_ptr;
 		shared_ptr<uint16_vec_t_vec_t> uint16_vec_vec_ptr;
 		shared_ptr<char_vec_t_vec_t> char_vec_vec_ptr;
+		shared_ptr<bigint_vec_t> bigint_vec_ptr;
 
 		wstring schema;
 		wstring table;

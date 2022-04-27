@@ -8,3 +8,4 @@
 #include <TimestampColumn.h>
 #include <BinaryColumn.h>
 #include <StringColumn.h>
+#include <BigIntColumn.h>

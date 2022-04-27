@@ -793,12 +793,15 @@ namespace mssql
 			res = reserved_int(rows_read, column);
 			break;
 
+		case SQL_BIGINT:
+			res = reserved_big_int(rows_read, column);
+			break;
+
 		case SQL_DECIMAL:
 		case SQL_NUMERIC:
 		case SQL_REAL:
 		case SQL_FLOAT:
 		case SQL_DOUBLE:
-		case SQL_BIGINT:
 			res = reserved_decimal(rows_read, column);
 			break;
 
@@ -871,12 +874,15 @@ namespace mssql
 			res = get_data_long(row_id, column);
 			break;
 
+		case SQL_BIGINT:
+			res = get_data_big_int(row_id, column);
+			break;
+
 		case SQL_DECIMAL:
 		case SQL_NUMERIC:
 		case SQL_REAL:
 		case SQL_FLOAT:
 		case SQL_DOUBLE:
-		case SQL_BIGINT:
 			res = get_data_decimal(row_id, column);
 			break;
 
@@ -993,6 +999,27 @@ namespace mssql
 		return true;
 	}
 
+	bool OdbcStatement::get_data_big_int(const size_t row_id, const size_t column)
+	{
+		const auto& statement = *_statement;
+		DatumStorage::bigint_t v = 0;
+		SQLLEN str_len_or_ind_ptr = 0;
+		const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SBIGINT, &v, sizeof(DatumStorage::bigint_t),
+		                            &str_len_or_ind_ptr);
+		if (!check_odbc_error(ret)) return false;
+		if (str_len_or_ind_ptr == SQL_NULL_DATA)
+		{
+			_resultset->add_column(row_id, make_shared<NullColumn>(column));
+			return true;
+		}
+		auto col = make_shared<BigIntColumn>(column, v);
+		if (_numericStringEnabled) {
+			col->AsString();
+		}
+		_resultset->add_column(row_id, col);
+		return true;
+	}
+
 	bool OdbcStatement::get_data_long(const size_t row_id, const size_t column)
 	{
 		const auto& statement = *_statement;
@@ -1047,6 +1074,28 @@ namespace mssql
 			auto v = (*storage->charvec_ptr)[row_id];
 			_resultset->add_column(row_id, make_shared<BoolColumn>(column, v));
 		}		
+		return true;
+	}
+
+	bool OdbcStatement::reserved_big_int(const size_t row_count, const size_t column) const
+	{
+		const auto& bound_datum = _preparedStorage->atIndex(static_cast<int>(column));
+		const auto& ind = bound_datum->get_ind_vec();
+		const auto storage = bound_datum->get_storage();
+		for (size_t row_id = 0; row_id < row_count; ++row_id) {
+			auto v = (*storage->bigint_vec_ptr)[row_id];
+			const auto str_len_or_ind_ptr = ind[row_id];
+			if (str_len_or_ind_ptr == SQL_NULL_DATA)
+			{
+				_resultset->add_column(row_id, make_shared<NullColumn>(column));
+				continue;
+			}
+			auto col = make_shared<BigIntColumn>(column, v);
+			if (_numericStringEnabled) {
+				col->AsString();
+			}
+			_resultset->add_column(row_id, col);
+		}
 		return true;
 	}
 

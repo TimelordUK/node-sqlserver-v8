@@ -103,6 +103,7 @@ namespace mssql
 		bool get_data_bit(size_t row_id, size_t column);
 		bool get_data_timestamp(size_t row_id, size_t column);
 		bool get_data_long(size_t row_id, size_t column);
+		bool get_data_big_int(size_t row_id, size_t column);
 		bool get_data_timestamp_offset(size_t row_id, size_t column);
 
 		bool start_reading_results();
@@ -114,6 +115,7 @@ namespace mssql
 		bool reserved_binary(const size_t row_count, const size_t column_size, size_t const column) const;
 		bool reserved_bit(const size_t row_count, const size_t column) const;
 		bool reserved_int(const size_t row_count, const size_t column) const;
+		bool reserved_big_int(const size_t row_count, const size_t column) const;
 		bool reserved_decimal(const size_t row_count, const size_t column) const;
 		bool reserved_time(const size_t row_count, const size_t column) const;
 		bool reserved_timestamp(const size_t row_count, const size_t column) const;
