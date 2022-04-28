@@ -36,7 +36,8 @@ namespace mssql
     string w2sqlc(const wstring & s);
 	wstring s2ws(const string & s);
     wstring FromV8String(Local<String> input);
-	void encode_numeric_struct(double v, int precision, int upscale_limit, SQL_NUMERIC_STRUCT & numeric);
+	void encode_numeric_struct(long double v, int precision, int upscale_limit, SQL_NUMERIC_STRUCT & numeric);
+	double decode_numeric_struct(const SQL_NUMERIC_STRUCT & numeric);
 
     struct nodeTypeFactory
     {

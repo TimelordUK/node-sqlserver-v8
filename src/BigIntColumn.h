@@ -32,6 +32,6 @@ namespace mssql
 	   }
 
     private:
-	   long long int value;
+	   DatumStorage::bigint_t value;
     };
 }

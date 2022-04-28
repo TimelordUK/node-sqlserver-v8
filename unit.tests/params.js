@@ -116,27 +116,109 @@ suite('params', function () {
       })
   }
 
-  function runTest (columnDef, len, testDone) {
-    testBoilerPlate('test_large_insert', { large_insert: columnDef },
+  test('insert min and max number values', testDone => {
+    testBoilerPlate(
+      'minmax_test',
+      { f: 'float' },
+
       done => {
-        const largeText = repeat('A', len)
-        theConnection.query('INSERT INTO test_large_insert (large_insert) VALUES (?)', [largeText], e => {
-          assert.ifError(e, 'Error inserting large string')
+        const fns =
+          [
+            asyncDone => {
+              theConnection.queryRaw('INSERT INTO minmax_test (f) VALUES (?)', [Number.MAX_VALUE],
+                e => {
+                  assert.ifError(e)
+                  asyncDone()
+                })
+            },
+
+            asyncDone => {
+              theConnection.queryRaw('INSERT INTO minmax_test (f) VALUES (?)', [-Number.MAX_VALUE],
+                e => {
+                  assert.ifError(e)
+                  asyncDone()
+                })
+            }
+          ]
+
+        async.series(fns, () => {
           done()
         })
       },
 
       done => {
-        theConnection.query('SELECT large_insert FROM test_large_insert', (e, r) => {
+        theConnection.queryRaw('SELECT f FROM minmax_test order by id', (e, r) => {
           assert.ifError(e)
-          assert(r[0].large_insert.length === len, 'Incorrect length for large insert')
+          const expected = {
+            meta: [
+              { name: 'f', size: 53, nullable: true, type: 'number', sqlType: 'float' }],
+            rows: [
+              [1.7976931348623157e+308],
+              [-1.7976931348623157e+308]]
+          }
+          assert.deepStrictEqual(r, expected, 'minmax results don\'t match')
           done()
         })
       },
       () => {
         testDone()
       })
-  }
+  })
+
+  test('query a numeric - configure connection to return as string', testDone => {
+    async function runner () {
+      const num = '12345678.876000'
+      theConnection.setUseNumericString(true)
+      const q = `SELECT CAST(${num} AS numeric(11, 3)) as number`
+      const res = await theConnection.promises.query(q)
+      try {
+        assert.deepStrictEqual(res.first[0].number, num)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
+  test('query a -ve numeric - configure query to return as string', testDone => {
+    async function runner () {
+      const num = '-12345678'
+      const q = `select ${num} as number`
+      const res = await theConnection.promises.query({
+        query_str: q,
+        numeric_string: true
+      })
+      try {
+        assert.deepStrictEqual(res.first[0].number, num)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
+  test('query as numeric - configure query to return as string', testDone => {
+    async function runner () {
+      const num = '1234567891'
+      const q = `SELECT CAST(${num} AS numeric(10, 0)) as number`
+      const res = await theConnection.promises.query({
+        query_str: q,
+        numeric_string: true
+      })
+      try {
+        assert.deepStrictEqual(res.first[0].number, num)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
 
   test('insert bigint as parameter', testDone => {
     testBoilerPlate('bigint_param_test', { bigint_test: 'bigint' },
@@ -164,6 +246,28 @@ suite('params', function () {
       })
   })
 
+  function runTest (columnDef, len, testDone) {
+    testBoilerPlate('test_large_insert', { large_insert: columnDef },
+      done => {
+        const largeText = repeat('A', len)
+        theConnection.query('INSERT INTO test_large_insert (large_insert) VALUES (?)', [largeText], e => {
+          assert.ifError(e, 'Error inserting large string')
+          done()
+        })
+      },
+
+      done => {
+        theConnection.query('SELECT large_insert FROM test_large_insert', (e, r) => {
+          assert.ifError(e)
+          assert(r[0].large_insert.length === len, 'Incorrect length for large insert')
+          done()
+        })
+      },
+      () => {
+        testDone()
+      })
+  }
+
   test('query a bigint - configure query to return as string', testDone => {
     async function runner () {
       const num = '9223372036854775807'
@@ -172,42 +276,6 @@ suite('params', function () {
         query_str: q,
         numeric_string: true
       })
-      try {
-        assert.deepStrictEqual(res.first[0].number, num)
-      } catch (e) {
-        assert.ifError(e)
-      }
-    }
-    runner().then(() => {
-      testDone()
-    })
-  })
-
-  test('query a numeric - configure query to return as string', testDone => {
-    async function runner () {
-      const num = '12345678.876000'
-      const q = `select ${num} as number`
-      const res = await theConnection.promises.query({
-        query_str: q,
-        numeric_string: true
-      })
-      try {
-        assert.deepStrictEqual(res.first[0].number, num)
-      } catch (e) {
-        assert.ifError(e)
-      }
-    }
-    runner().then(() => {
-      testDone()
-    })
-  })
-
-  test('query a numeric - configure connection to return as string', testDone => {
-    async function runner () {
-      const num = '12345678.876000'
-      theConnection.setUseNumericString(true)
-      const q = `select ${num} as number`
-      const res = await theConnection.promises.query(q)
       try {
         assert.deepStrictEqual(res.first[0].number, num)
       } catch (e) {
@@ -498,55 +566,6 @@ suite('params', function () {
           assert.ifError(e)
           assert(r.rows.length = 1)
           assert.deepStrictEqual(r.rows[0][0], b)
-          done()
-        })
-      },
-      () => {
-        testDone()
-      })
-  })
-
-  test('insert min and max number values', testDone => {
-    testBoilerPlate(
-      'minmax_test',
-      { f: 'float' },
-
-      done => {
-        const fns =
-          [
-            asyncDone => {
-              theConnection.queryRaw('INSERT INTO minmax_test (f) VALUES (?)', [Number.MAX_VALUE],
-                e => {
-                  assert.ifError(e)
-                  asyncDone()
-                })
-            },
-
-            asyncDone => {
-              theConnection.queryRaw('INSERT INTO minmax_test (f) VALUES (?)', [-Number.MAX_VALUE],
-                e => {
-                  assert.ifError(e)
-                  asyncDone()
-                })
-            }
-          ]
-
-        async.series(fns, () => {
-          done()
-        })
-      },
-
-      done => {
-        theConnection.queryRaw('SELECT f FROM minmax_test order by id', (e, r) => {
-          assert.ifError(e)
-          const expected = {
-            meta: [
-              { name: 'f', size: 53, nullable: true, type: 'number', sqlType: 'float' }],
-            rows: [
-              [1.7976931348623157e+308],
-              [-1.7976931348623157e+308]]
-          }
-          assert.deepStrictEqual(r, expected, 'minmax results don\'t match')
           done()
         })
       },

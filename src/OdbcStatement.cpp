@@ -874,12 +874,17 @@ namespace mssql
 			res = get_data_long(row_id, column);
 			break;
 
+		case SQL_C_SBIGINT:
+		case SQL_C_UBIGINT:
 		case SQL_BIGINT:
 			res = get_data_big_int(row_id, column);
 			break;
 
-		case SQL_DECIMAL:
 		case SQL_NUMERIC:
+			res = get_data_decimal(row_id, column);
+			break;
+
+		case SQL_DECIMAL:
 		case SQL_REAL:
 		case SQL_FLOAT:
 		case SQL_DOUBLE:
@@ -1207,6 +1212,39 @@ namespace mssql
 		return true;
 	}
 
+	bool OdbcStatement::get_data_numeric(const size_t row_id, const size_t column)
+	{
+		const auto& statement = *_statement;
+		SQLLEN str_len_or_ind_ptr = 0;
+		SQL_NUMERIC_STRUCT v;
+		const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_NUMERIC, &v, sizeof(SQL_NUMERIC_STRUCT),
+		                            &str_len_or_ind_ptr);
+		if (!check_odbc_error(ret)) return false;
+		if (str_len_or_ind_ptr == SQL_NULL_DATA)
+		{
+			_resultset->add_column(row_id, make_shared<NullColumn>(column));
+			return true;
+		}
+		
+		auto x = decode_numeric_struct(v);
+		if (trunc(x) == x) {
+			auto bi = (DatumStorage::bigint_t)x;
+			auto col = make_shared<BigIntColumn>(column, bi);
+			if (_numericStringEnabled) {
+				col->AsString();
+			}
+			_resultset->add_column(row_id, col);
+		} else {
+			auto col = make_shared<NumberColumn>(column, (double)x);
+			if (_numericStringEnabled) {
+				col->AsString();
+			}
+			_resultset->add_column(row_id, col);
+		}
+
+		return true;
+	}
+
 	bool OdbcStatement::get_data_decimal(const size_t row_id, const size_t column)
 	{
 		const auto& statement = *_statement;
@@ -1221,12 +1259,25 @@ namespace mssql
 			return true;
 		}
 		
-		auto col = make_shared<NumberColumn>(column, v);
-		if (_numericStringEnabled) {
-			col->AsString();
+		auto v2 = trunc(v);
+		if (v2 == v && 
+			v2 >= static_cast<long double>(numeric_limits<DatumStorage::bigint_t>::min()) &&
+			v2 <= static_cast<long double>(numeric_limits<DatumStorage::bigint_t>::max())
+		) {
+			auto bi = (DatumStorage::bigint_t)v;
+			auto col = make_shared<BigIntColumn>(column, bi);
+			if (_numericStringEnabled) {
+				col->AsString();
+			}
+			_resultset->add_column(row_id, col);
+		} else {
+			auto col = make_shared<NumberColumn>(column, v);
+			if (_numericStringEnabled) {
+				col->AsString();
+			}
+			_resultset->add_column(row_id, col);
 		}
 
-		_resultset->add_column(row_id, col);
 		return true;
 	}
 
