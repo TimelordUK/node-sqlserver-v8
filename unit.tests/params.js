@@ -116,6 +116,23 @@ suite('params', function () {
       })
   }
 
+  test('query a numeric - configure connection to return as string', testDone => {
+    async function runner () {
+      const num = '12345678.876'
+      theConnection.setUseNumericString(true)
+      const q = `SELECT CAST(${num} AS numeric(11, 3)) as number`
+      const res = await theConnection.promises.query(q)
+      try {
+        assert.deepStrictEqual(res.first[0].number, num)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
   test('insert min and max number values', testDone => {
     testBoilerPlate(
       'minmax_test',
@@ -163,23 +180,6 @@ suite('params', function () {
       () => {
         testDone()
       })
-  })
-
-  test('query a numeric - configure connection to return as string', testDone => {
-    async function runner () {
-      const num = '12345678.876000'
-      theConnection.setUseNumericString(true)
-      const q = `SELECT CAST(${num} AS numeric(11, 3)) as number`
-      const res = await theConnection.promises.query(q)
-      try {
-        assert.deepStrictEqual(res.first[0].number, num)
-      } catch (e) {
-        assert.ifError(e)
-      }
-    }
-    runner().then(() => {
-      testDone()
-    })
   })
 
   test('query a -ve numeric - configure query to return as string', testDone => {
@@ -268,7 +268,26 @@ suite('params', function () {
       })
   }
 
-  test('query a bigint - configure query to return as string', testDone => {
+  test('query a bigint implicit - configure query to return as string', testDone => {
+    async function runner () {
+      const num = '9223372036854775807'
+      const q = `SELECT ${num} as number`
+      const res = await theConnection.promises.query({
+        query_str: q,
+        numeric_string: true
+      })
+      try {
+        assert.deepStrictEqual(res.first[0].number, num)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
+  test('query a bigint with cast - configure query to return as string', testDone => {
     async function runner () {
       const num = '9223372036854775807'
       const q = `SELECT CAST(${num} AS bigint) as number`

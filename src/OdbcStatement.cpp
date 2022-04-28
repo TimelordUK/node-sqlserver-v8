@@ -871,17 +871,29 @@ namespace mssql
 		case SQL_C_ULONG:
 		case SQL_C_USHORT:
 		case SQL_C_UTINYINT:
-			res = get_data_long(row_id, column);
+			if (_numericStringEnabled) {
+				res = try_read_string(false, row_id, column);
+			} else {
+				res = get_data_long(row_id, column);
+			}
 			break;
 
 		case SQL_C_SBIGINT:
 		case SQL_C_UBIGINT:
 		case SQL_BIGINT:
-			res = get_data_big_int(row_id, column);
+			if (_numericStringEnabled) {
+				res = try_read_string(false, row_id, column);
+			} else {
+				res = get_data_big_int(row_id, column);
+			}
 			break;
 
 		case SQL_NUMERIC:
-			res = get_data_decimal(row_id, column);
+			if (_numericStringEnabled) {
+				res = try_read_string(false, row_id, column);
+			} else {
+				res = get_data_decimal(row_id, column);
+			}
 			break;
 
 		case SQL_DECIMAL:
