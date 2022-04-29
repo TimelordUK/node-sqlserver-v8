@@ -371,26 +371,6 @@ suite('bulk', function () {
     })
   })
 
-  function toUTCDate (localDate) {
-    return new Date(
-      Date.UTC(
-        localDate.getUTCFullYear(),
-        localDate.getUTCMonth(),
-        localDate.getUTCDate(),
-        localDate.getUTCHours(),
-        0,
-        0,
-        0))
-  }
-
-  function addDays (days) {
-    const localDate = new Date()
-    const utcDate = toUTCDate(localDate)
-    const result = new Date(utcDate)
-    result.setDate(result.getDate() + days)
-    return result
-  }
-
   function repeat (c, num) {
     return new Array(num + 1).join(c)
   }
@@ -610,8 +590,9 @@ suite('bulk', function () {
 
   test('use tableMgr bulk insert datetime vector - no nulls', testDone => {
     async function runner () {
+      const timeHelper = new TimeHelper()
       const helper = new TypeTableHelper(theConnection, 'datetime')
-      const expected = helper.getVec(10, i => addDays(i))
+      const expected = helper.getVec(10, i => timeHelper.addDays(i))
       const table = await helper.create()
       const promisedInsert = table.promises.insert
       const promisedSelect = table.promises.select
@@ -633,8 +614,9 @@ suite('bulk', function () {
 
   test('use tableMgr bulk insert datetime vector - with nulls', testDone => {
     async function runner () {
+      const timeHelper = new TimeHelper()
       const helper = new TypeTableHelper(theConnection, 'datetime')
-      const expected = helper.getVec(10, i => i % 2 === 0 ? null : addDays(i))
+      const expected = helper.getVec(10, i => i % 2 === 0 ? null : timeHelper.addDays(i))
       const table = await helper.create()
       const promisedInsert = table.promises.insert
       const promisedSelect = table.promises.select

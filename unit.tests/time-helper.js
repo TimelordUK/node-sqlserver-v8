@@ -22,6 +22,26 @@ class TimeHelper {
       0)
     return today
   }
+
+  toUTCDate (localDate) {
+    return new Date(
+      Date.UTC(
+        localDate.getUTCFullYear(),
+        localDate.getUTCMonth(),
+        localDate.getUTCDate(),
+        localDate.getUTCHours(),
+        0,
+        0,
+        0))
+  }
+
+  addDays (days) {
+    const localDate = new Date()
+    const utcDate = this.toUTCDate(localDate)
+    const result = new Date(utcDate)
+    result.setDate(result.getDate() + days)
+    return result
+  }
 }
 
 module.exports = {
