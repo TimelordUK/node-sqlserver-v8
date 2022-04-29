@@ -4,6 +4,7 @@
 const supp = require('msnodesqlv8/samples/typescript/demo-support')
 const assert = require('assert')
 const Employee = require('./employee').Employee
+const TimeHelper = require('./time-helper').TimeHelper
 
 suite('table_builder', function () {
   let theConnection
@@ -75,17 +76,6 @@ suite('table_builder', function () {
     }
   }
 
-  function parseTime (ds) {
-    const [hours, minutes, seconds] = ds.split(':') // Using ES6 destructuring
-    // var time = "18:19:02".split(':'); // "Old" ES5 version
-    const d = new Date()
-    d.setHours(+hours) // Set the hours, using implicit type coercion
-    d.setMinutes(minutes) // You can pass Number or String. It doesn't really matter
-    d.setSeconds(seconds)
-    d.setMilliseconds(0)
-    return d
-  }
-
   test('use table builder to bind to a table provide no catalogue', testDone => {
     function makeOne (i) {
       return {
@@ -123,23 +113,16 @@ suite('table_builder', function () {
   })
 
   test('use table builder to bind to a table int, time', testDone => {
+    const th = new TimeHelper()
     function makeOne (i) {
       return {
         id: i,
-        col_a: parseTime(`16:47:${i + 10}`)
+        col_a: th.parseTime(`16:47:${i + 10}`)
       }
     }
 
     function checkOne (lhs, rhs) {
-      const localDate = new Date()
-      const today = Date.UTC(
-        localDate.getUTCFullYear(),
-        localDate.getUTCMonth(),
-        localDate.getUTCDate(),
-        rhs.col_a.getUTCHours(),
-        rhs.col_a.getMinutes(),
-        rhs.col_a.getSeconds(),
-        0)
+      const today = th.getUTCTime(rhs.col_a)
       rhs.col_a = today
       assert.deepStrictEqual(lhs.id, rhs.id)
       assert(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)

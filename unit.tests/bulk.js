@@ -3,6 +3,7 @@
 
 const supp = require('../samples/typescript/demo-support')
 const assert = require('assert')
+const TimeHelper = require('./time-helper').TimeHelper
 
 suite('bulk', function () {
   let theConnection
@@ -394,34 +395,11 @@ suite('bulk', function () {
     return new Array(num + 1).join(c)
   }
 
-  function parseTime (ds) {
-    const [hours, minutes, seconds] = ds.split(':') // Using ES6 destructuring
-    // var time = "18:19:02".split(':'); // "Old" ES5 version
-    const d = new Date()
-    d.setHours(+hours) // Set the hours, using implicit type coercion
-    d.setMinutes(minutes) // You can pass Number or String. It doesn't really matter
-    d.setSeconds(seconds)
-    d.setMilliseconds(0)
-    return d
-  }
-
-  function getUTCTime (a) {
-    const localDate = new Date()
-    const today = Date.UTC(
-      localDate.getUTCFullYear(),
-      localDate.getUTCMonth(),
-      localDate.getUTCDate(),
-      a.getUTCHours(),
-      a.getMinutes(),
-      a.getSeconds(),
-      0)
-    return today
-  }
-
   test('use tableMgr bulk insert single non UTC based time with time col', testDone => {
     async function runner () {
+      const timeHelper = new TimeHelper()
       const helper = new TypeTableHelper(theConnection, 'time')
-      const testDate = parseTime('16:47:04')
+      const testDate = timeHelper.parseTime('16:47:04')
       const expected = helper.getVec(1, () => testDate)
       theConnection.setUseUTC(true)
       const table = await helper.create()
@@ -431,11 +409,11 @@ suite('bulk', function () {
         await promisedInsert(expected)
         const res = await promisedSelect(expected)
         res.forEach(a => {
-          const today = getUTCTime(a.col_a)
+          const today = timeHelper.getUTCTime(a.col_a)
           a.col_a = today
         })
         expected.forEach(a => {
-          const today = getUTCTime(a.col_a)
+          const today = timeHelper.getUTCTime(a.col_a)
           a.col_a = today
           return a
         })

@@ -8,32 +8,21 @@ const util = require('util')
 suite('sproc', function () {
   let connStr
   let theConnection
-  let driver
   let support
   let async
   let helper
   let procedureHelper
   const sql = global.native_sql
   let promisedCreate
-  let promisedCreateIfNotExist
 
   this.timeout(60000)
 
   setup(testDone => {
     supp.GlobalConn.init(sql, co => {
       connStr = global.conn_str || co.conn_str
-      const regexp = /Driver={(.*)};.*/
-      const res = connStr.match(regexp)
-      if (res) {
-        driver = res[1]
-      } else {
-        driver = co.driver
-      }
       support = co.support
       procedureHelper = new support.ProcedureHelper(connStr)
       promisedCreate = util.promisify(procedureHelper.createProcedure)
-      promisedCreateIfNotExist = util.promisify(procedureHelper.createProcedureIfNotExist)
-
       procedureHelper.setVerbose(false)
       async = co.async
       helper = co.helper
@@ -71,7 +60,7 @@ suite('sproc', function () {
             }, [])
             resolve({
               results: selects,
-              output: output
+              output
             })
           }
         }
@@ -283,6 +272,7 @@ suite('sproc', function () {
     t4(theConnection, 1, testDone)
   })
 
+  /*
   async function t5 (connectionProxy, iterations, testDone) {
     const spName = 'test_sp_get_optional_p'
     const a = 10
@@ -329,7 +319,6 @@ suite('sproc', function () {
     testDone()
   }
 
-  /*
   test('pool: two parameters same name mixed case - should error', testDone => {
     usePoolCallProc(t5, 5, testDone)
   })
@@ -929,12 +918,12 @@ END
       const expected = [
         {
           BusinessEntityID: 1,
-          NationalIDNumber: NationalIDNumber,
+          NationalIDNumber,
           LoginID: loginId
         },
         {
           BusinessEntityID: newBusinessId,
-          NationalIDNumber: NationalIDNumber,
+          NationalIDNumber,
           LoginID: loginId
         }
       ]
@@ -1215,8 +1204,8 @@ END
         // console.log('done ....')
         assert.strictEqual(true, submitted)
         resolve({
-          rows: rows,
-          info: info
+          rows,
+          info
         })
       })
 

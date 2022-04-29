@@ -4,6 +4,7 @@
 const supp = require('msnodesqlv8/samples/typescript/demo-support')
 const assert = require('assert')
 const Employee = require('./employee').Employee
+const TimeHelper = require('./time-helper').TimeHelper
 
 suite('bcp', function () {
   let theConnection
@@ -117,17 +118,6 @@ suite('bcp', function () {
 
   function repeat (c, num) {
     return new Array(num + 1).join(c)
-  }
-
-  function parseTime (ds) {
-    const [hours, minutes, seconds] = ds.split(':') // Using ES6 destructuring
-    // var time = "18:19:02".split(':'); // "Old" ES5 version
-    const d = new Date()
-    d.setHours(+hours) // Set the hours, using implicit type coercion
-    d.setMinutes(minutes) // You can pass Number or String. It doesn't really matter
-    d.setSeconds(seconds)
-    d.setMilliseconds(0)
-    return d
   }
 
   test('bcp employee', testDone => {
@@ -620,7 +610,8 @@ suite('bcp', function () {
   })
 
   test('bcp time', testDone => {
-    const testDate = parseTime('16:47:04')
+    const timeHelper = new TimeHelper()
+    const testDate = timeHelper.parseTime('16:47:04')
     const rows = 2000
     async function test () {
       const bcp = new BcpEntry({
@@ -642,15 +633,13 @@ suite('bcp', function () {
       }, (actual, expected) => {
         assert.deepStrictEqual(actual.length, expected.length)
         actual.forEach(a => {
-          const today = new Date()
-          const h = a.t1.getHours()
-          const m = a.t1.getMinutes()
-          const s = a.t1.getSeconds()
-          today.setHours(h)
-          today.setMinutes(m)
-          today.setSeconds(s)
-          today.setMilliseconds(0)
+          const today = timeHelper.getUTCTime(a.t1)
           a.t1 = today
+        })
+        expected.forEach(a => {
+          const today = timeHelper.getUTCTime(a.t1)
+          a.t1 = today
+          return a
         })
         assert.deepStrictEqual(actual, expected)
       })
