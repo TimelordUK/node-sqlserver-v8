@@ -724,7 +724,7 @@ namespace mssql
 	{
 		if (!_statement)
 			return false;
-		// fprintf(stderr, "try_execute_direct\n");
+		// cout << "id " << _statementId << " try_execute_direct" << endl;
 		_errors->clear();
 		_query = q;
 		const auto timeout = q->timeout();
@@ -792,7 +792,6 @@ namespace mssql
 
 		if (ret == SQL_SUCCESS_WITH_INFO)
 		{
-			// cerr << "SQL_SUCCESS_WITH_INFO = " << ret << endl;
 			return_odbc_error();
 			_boundParamsSet = param_set;
 			if (start_reading_results())
@@ -804,11 +803,11 @@ namespace mssql
 				_resultset = make_unique<ResultSet>(0);
 				_resultset->_end_of_rows = true;
 			}
-
+			// cout << "id " << _statementId << "SQL_SUCCESS_WITH_INFO = " << ret << endl;
 			return false;
 		}
 		_boundParamsSet = param_set;
-		// cerr << "start_reading_results = " << ret << endl;
+		// cout << "id " << _statementId << " start_reading_results ret " << ret << endl;
 		return start_reading_results();
 	}
 

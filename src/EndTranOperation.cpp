@@ -9,6 +9,7 @@ namespace mssql
 		: OdbcOperation(connection, callback),
 		completionType(completion_type)
 	{
+		_can_lock = false;
 	}
 
 	bool EndTranOperation::TryInvokeOdbc()

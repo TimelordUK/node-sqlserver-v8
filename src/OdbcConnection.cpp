@@ -109,6 +109,7 @@ namespace mssql
 		const auto ch = _connectionHandles->connectionHandle();
 		const auto& connection = *ch;
 		connection.read_errors(_errors);
+		cerr << " RETURN_ODBC_ERROR " << endl;
 		// fprintf(stderr, "RETURN_ODBC_ERROR - free connection handle\n\n");
 		TryClose();
 		return false;
@@ -189,6 +190,7 @@ namespace mssql
 		const auto connection = _connectionHandles->connectionHandle();
 		if (!connection) return false;
 		auto ret = SQLEndTran(SQL_HANDLE_DBC, *connection, completion_type);
+		// cout << " try_end_tran " << "ret = " << ret << endl;
 		if (!CheckOdbcError(ret)) return false;
 		auto* const acon = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_ON);
 		// put the connection back into auto commit mode
