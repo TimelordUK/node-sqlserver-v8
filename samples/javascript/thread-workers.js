@@ -27,7 +27,7 @@ function sendTask (worker, num) {
   worker.postMessage(
     {
       command: 'task',
-      num: num
+      num
     })
 }
 

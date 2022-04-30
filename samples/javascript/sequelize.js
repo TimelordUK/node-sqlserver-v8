@@ -12,7 +12,7 @@ const sequelize = new Sequelize({
     database: 'node',
     options: {
       driver: '',
-      connectionString: connectionString,
+      connectionString,
       trustedConnection: true,
       instanceName: ''
     }

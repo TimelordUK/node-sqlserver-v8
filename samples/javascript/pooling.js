@@ -4,7 +4,7 @@ const { GetConnection } = require('./get-connection')
 const connectionString = new GetConnection().connectionString
 
 const pool = new sql.Pool({
-  connectionString: connectionString
+  connectionString
 })
 
 pool.on('open', (options) => {

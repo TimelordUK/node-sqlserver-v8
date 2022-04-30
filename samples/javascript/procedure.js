@@ -70,7 +70,7 @@ async function asPoolMessages (procTimeout, invocations) {
 
 async function getPool (size) {
   const pool = new sql.Pool({
-    connectionString: connectionString,
+    connectionString,
     ceiling: size
   })
   pool.on('error', e => {
@@ -168,7 +168,7 @@ async function test (connectionProxy, invocations) {
     const elapsed = new Date() - d
     return {
       results: res,
-      elapsed: elapsed
+      elapsed
     }
   } catch (err) {
     if (err) {

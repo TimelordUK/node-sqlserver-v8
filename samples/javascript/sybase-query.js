@@ -8,7 +8,7 @@ const query = 'SELECT top 5 * FROM syscomments'
 
 async function getPool (size) {
   const pool = new sql.Pool({
-    connectionString: connectionString,
+    connectionString,
     ceiling: size
   })
   pool.on('error', e => {

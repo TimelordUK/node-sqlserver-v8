@@ -10,7 +10,7 @@ process.on('uncaughtException', err => {
 
 async function run (iterations) {
   const pool = new sql.Pool({
-    connectionString: connectionString
+    connectionString
   })
 
   pool.on('error', err => {
