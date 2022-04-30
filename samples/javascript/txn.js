@@ -45,14 +45,16 @@ async function runner () {
     countSql: `select count(*) as count from ${table}`
   }
 
-  const scenario = scenario2
+  const scenario = scenario1
 
-  const promises = Array(scenario.connections).fill(10).map(() => mssql.promises.open(connectionString))
+  const promises = Array(scenario.connections).fill(0).map(() => mssql.promises.open(connectionString))
   const connections = await Promise.all(promises)
-
+  const sp = await promised(0, connections, 'select @@SPID as spid')
+  const spids = sp.map(s => s.first[0].spid)
+  console.log(`using pool ${scenario.connections} spids ${spids.join(', ')}`)
   for (let i = 0; i < scenario.iterations; ++i) {
     console.log(`[${i}] ...`)
-    await once(i, connections, scenario2)
+    await once(i, connections, scenario)
     console.log('')
   }
 }
