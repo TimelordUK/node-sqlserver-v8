@@ -109,7 +109,7 @@ namespace mssql
 		const auto ch = _connectionHandles->connectionHandle();
 		const auto& connection = *ch;
 		connection.read_errors(_errors);
-		cerr << " RETURN_ODBC_ERROR " << endl;
+		// cerr << " RETURN_ODBC_ERROR " << endl;
 		// fprintf(stderr, "RETURN_ODBC_ERROR - free connection handle\n\n");
 		TryClose();
 		return false;
