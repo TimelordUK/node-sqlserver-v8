@@ -6,7 +6,6 @@ namespace mssql
 	BeginTranOperation::BeginTranOperation(const shared_ptr<OdbcConnection> &connection, const Local<Object> callback)
 		: OdbcOperation(connection, callback)
 	{
-		_can_lock = false;
 	}
 
 	bool BeginTranOperation::TryInvokeOdbc()
