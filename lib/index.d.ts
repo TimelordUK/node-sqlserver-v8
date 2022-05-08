@@ -191,6 +191,9 @@ interface ConnectionPromises extends AggregatorPromises {
     getUserTypeTable(name: string): Promise<Table>
     close(): Promise<any>
     cancel(name: string): Promise<any>
+    beginTransaction(): Promise<any>
+    commit(): Promise<any>
+    rollback(): Promise<any>
 }
 
 export interface Connection {
