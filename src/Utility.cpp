@@ -197,15 +197,13 @@ namespace mssql
 		return final_val;
 	}
 
-	void encode_numeric_struct(const long double v, const int precision, int upscale_limit, SQL_NUMERIC_STRUCT &numeric)
-	{
+	void encode_numeric_struct(const double v, const int precision, int upscale_limit, SQL_NUMERIC_STRUCT & numeric) {
 		auto encode = fabs(v);
 		double intpart;
 		auto scale = 0;
 		char hex[SQL_MAX_NUMERIC_LEN];
 
-		if (upscale_limit <= 0)
-			upscale_limit = SQL_MAX_NUMERIC_LEN;
+		if (upscale_limit <= 0) upscale_limit = SQL_MAX_NUMERIC_LEN;
 
 		auto dmod = modf(encode, &intpart);
 		while (scale < upscale_limit && dmod != 0.0)
@@ -219,8 +217,7 @@ namespace mssql
 		memset(numeric.val, 0, SQL_MAX_NUMERIC_LEN);
 		memset(hex, 0, SQL_MAX_NUMERIC_LEN);
 		auto ss = hexify(ull);
-		if (ss.size() % 2 == 1)
-			ss = "0" + ss;
+		if (ss.size() % 2 == 1) ss = "0" + ss;
 		const auto len = hex2_bin(ss.c_str(), hex);
 		auto j = 0;
 		for (auto i = len - 1; i >= 0; --i)
@@ -232,6 +229,7 @@ namespace mssql
 		numeric.precision = precision > 0 ? static_cast<SQLCHAR>(precision) : static_cast<SQLCHAR>(log10(encode) + 1);
 		numeric.scale = static_cast<SQLSCHAR>(min(upscale_limit, scale));
 	}
+
 
 	nodeTypeFactory::nodeTypeFactory()
 	{
