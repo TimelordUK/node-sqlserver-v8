@@ -51,6 +51,9 @@ async function locks (id, saConnection) {
 
 // with read uncomitted clause will run but dangerous dirty reads
 const isolation = 'SNAPSHOT'
+// default this induces  Bookmark lookup deadlock
+
+// const isolation = 'READ COMMITTED '
 
 async function run (id, saConnection) {
   const conn = await mssql.promises.open(connectionString)
@@ -95,7 +98,7 @@ async function iterate (id, conn, saConnection) {
 async function runner () {
   await create()
   const saConnection = await mssql.promises.open(saString)
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 3; i++) {
     run(i, saConnection)
   }
 }

@@ -158,7 +158,7 @@ export interface TableColumn {
     // helper methods when manually adding tables with table builder
     isComputed (v?: number): TableColumn
     asExpression(s: string): TableColumn // 'AS ([OrganizationNode].[GetLevel]())'
-    isIdentity (v:number): TableColumn
+    isIdentity (v:number, start?:number, inc?:number): TableColumn
     isHidden (v: number): TableColumn
     isPrimaryKey (v: number): TableColumn
     isForeignKey (v: number): TableColumn 
@@ -199,6 +199,7 @@ export interface Connection {
     id:number
     setUseUTC(utc:boolean):void
     getUseUTC():boolean
+    // optionally return all number based columns as strings
     setUseNumericString(numericString:boolean):void
     getUseNumericString():boolean
     close(cb: StatusCb): void
@@ -241,6 +242,7 @@ export interface ConnectDescription {
 
 export interface QueryDescription {
     query_str: string
+    numeric_string?: boolean // for BigInt can return string to avoid overflow
     query_timeout?: number
     query_polling?: boolean
     query_tz_adjustment?: number
