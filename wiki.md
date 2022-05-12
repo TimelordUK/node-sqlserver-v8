@@ -18,6 +18,7 @@
 1. [How does the driver handle SQL_VARIANT types](#handling-variant)
 1. [Errors when passing strings > 2k in length.](#long-strings)
 1. [Api](#api)
+1. [Read BigInt numbers as JS strings](#bigint-strings)
 1. [Sybase Adaptive Server](#sybase-adaptive-server)
 1. [thread pooling](#thread-pooling)
 1. [promises](#promises)
@@ -874,6 +875,53 @@ can also get a Table representing the database table
         })
       }
 
+```
+
+## BigInt Strings ##
+
+configure either the oonnection to return all numbers as strings.
+
+```js
+  test('query a numeric - configure connection to return as string', testDone => {
+    async function runner () {
+      const num = '12345678.876'
+      theConnection.setUseNumericString(true)
+      const q = `SELECT CAST(${num} AS numeric(11, 3)) as number`
+      const res = await theConnection.promises.query(q)
+      try {
+        assert.deepStrictEqual(res.first[0].number, num)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
+
+```
+
+or issue as a query
+
+```js
+test('query a -ve numeric - configure query to return as string', testDone => {
+    async function runner () {
+      const num = '-12345678'
+      const q = `select ${num} as number`
+      const res = await theConnection.promises.query({
+        query_str: q,
+        numeric_string: true
+      })
+      try {
+        assert.deepStrictEqual(res.first[0].number, num)
+      } catch (e) {
+        assert.ifError(e)
+      }
+    }
+    runner().then(() => {
+      testDone()
+    })
+  })
 ```
 
 ## Sybase Adaptive Server ##

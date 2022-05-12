@@ -26,7 +26,7 @@ async function create () {
 
   await builder.drop()
   await builder.create()
-  await builder.index()
+  // await builder.index()
 
   await theConnection.promises.close()
 }
@@ -50,10 +50,10 @@ async function locks (id, saConnection) {
 }
 
 // with read uncomitted clause will run but dangerous dirty reads
-const isolation = 'SNAPSHOT'
+// const isolation = 'SNAPSHOT'
 // default this induces  Bookmark lookup deadlock
 
-// const isolation = 'READ COMMITTED '
+const isolation = 'READ COMMITTED '
 
 async function run (id, saConnection) {
   const conn = await mssql.promises.open(connectionString)
