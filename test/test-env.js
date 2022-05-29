@@ -1,5 +1,8 @@
 
-class GetConnection {
+const supp = require('../samples/typescript/demo-support')
+const sql = require('msnodesqlv8')
+
+class TestEnv {
   readJson (path) {
     const fs = require('fs')
     return JSON.parse(fs.readFileSync(path, 'utf8'))
@@ -21,7 +24,12 @@ class GetConnection {
 
   constructor () {
     this.connectionString = this.getConnection()
+    const ds = new supp.DemoSupport(sql)
+    this.support = ds
+    this.helper = new ds.EmployeeHelper(sql, this.connectionString)
+    this.procedureHelper = new ds.ProcedureHelper(this.connectionString)
+    this.async = new ds.Async()
   }
 }
 
-exports.GetConnection = GetConnection
+exports.TestEnv = TestEnv

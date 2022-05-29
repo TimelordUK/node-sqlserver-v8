@@ -1,35 +1,17 @@
 'use strict'
 
-/* globals describe before it */
+/* globals describe it */
 
 const path = require('path')
 const assert = require('assert')
-const supp = require('../samples/typescript/demo-support')
 const sql = require('msnodesqlv8')
-const { GetConnection } = require(path.join(__dirname, './get-connection'))
-const connectionString = new GetConnection().connectionString
+const { TestEnv } = require(path.join(__dirname, './test-env'))
+const connectionString = new TestEnv().connectionString
 
 describe('connection tests', function () {
-  let connStr
-  let support
-  let helper
   this.timeout(10000)
-  let procedureHelper
-
-  before(done => {
-    supp.GlobalConn.init(sql, co => {
-      connStr = connectionString || co.conn_str
-      support = co.support
-      procedureHelper = new support.ProcedureHelper(connStr)
-      procedureHelper.setVerbose(false)
-      helper = co.helper
-      helper.setVerbose(false)
-      done()
-    }, connectionString)
-  })
-
   it('connection closes OK in sequence with query', done => {
-    sql.open(connStr,
+    sql.open(connectionString,
       (err, conn) => {
         const expected = [{
           n: 1
@@ -43,5 +25,64 @@ describe('connection tests', function () {
           })
         })
       })
+  })
+
+  it('verify closed connection throws an exception', done => {
+    sql.open(connectionString, (err, conn) => {
+      assert(err === null || err === false)
+      conn.close(() => {
+        let thrown = false
+        try {
+          conn.query('SELECT 1', err => {
+            assert.ifError(err)
+          })
+        } catch (e) {
+          assert.deepStrictEqual(e, new Error('[msnodesql] Connection is closed.'))
+          thrown = true
+        }
+        assert(thrown)
+        done()
+      })
+    })
+  })
+
+  it('verify connection is not closed prematurely until a query is complete', done => {
+    sql.open(connectionString, (err, conn) => {
+      assert(err === null || err === false)
+      const stmt = conn.queryRaw('select 1')
+      stmt.on('meta', () => {
+      })
+      stmt.on('column', (c, d) => {
+        assert(c === 0 && d === 1)
+      })
+      stmt.on('error', err => {
+        assert(err === null || err === false)
+      })
+      stmt.on('row', r => {
+        assert(r === 0)
+        conn.close(() => {
+          done()
+        })
+      })
+    })
+  })
+
+  it('verify that close immediately flag only accepts booleans', done => {
+    sql.open(connectionString, (err, conn) => {
+      assert(err === null || err === false)
+      let thrown = false
+      try {
+        conn.close('SELECT 1', err => {
+          assert(err === null || err === false)
+        })
+      } catch (e) {
+        assert.deepStrictEqual(e, new Error('[msnodesql] Invalid parameters passed to close.'))
+        thrown = true
+      }
+      conn.close(() => {
+        assert(thrown)
+        done()
+      })
+    })
   })
 })
