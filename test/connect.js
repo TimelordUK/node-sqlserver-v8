@@ -6,10 +6,19 @@ const path = require('path')
 const assert = require('assert')
 const sql = require('msnodesqlv8')
 const { TestEnv } = require(path.join(__dirname, './test-env'))
-const connectionString = new TestEnv().connectionString
-
+const env = new TestEnv()
+const connectionString = env.connectionString
 describe('connection tests', function () {
   this.timeout(10000)
+
+  this.beforeEach(done => {
+    env.open().then(() => done())
+  })
+
+  this.afterEach(done => {
+    env.close().then(() => done())
+  })
+
   it('connection closes OK in sequence with query', done => {
     sql.open(connectionString,
       (err, conn) => {

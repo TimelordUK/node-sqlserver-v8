@@ -22,7 +22,19 @@ class TestEnv {
     }
   }
 
+  async open () {
+    this.theConnection = await sql.promises.open(this.connectionString)
+  }
+
+  async close () {
+    if (this.theConnection) {
+      await this.theConnection.promises.close()
+      this.theConnection = null
+    }
+  }
+
   constructor () {
+    this.theConnection = null
     this.connectionString = this.getConnection()
     const ds = new supp.DemoSupport(sql)
     this.support = ds
