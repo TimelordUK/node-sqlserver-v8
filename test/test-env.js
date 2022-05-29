@@ -51,6 +51,7 @@ class TestEnv {
     this.async = new ds.Async()
     this.timeHelper = new TimeHelper()
     this.commonTestFns = commonTestFns
+    this.sql = sql
   }
 }
 
