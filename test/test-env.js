@@ -1,6 +1,8 @@
 
 const supp = require('../samples/typescript/demo-support')
 const sql = require('msnodesqlv8')
+const TimeHelper = require('./time-helper').TimeHelper
+const Employee = require('./employee').Employee
 
 class TestEnv {
   readJson (path) {
@@ -24,23 +26,29 @@ class TestEnv {
 
   async open () {
     this.theConnection = await sql.promises.open(this.connectionString)
+    this.employee = new Employee('employee', this.helper, this.theConnection)
   }
 
   async close () {
     if (this.theConnection) {
       await this.theConnection.promises.close()
       this.theConnection = null
+      this.employee = null
     }
   }
 
   constructor () {
     this.theConnection = null
+    this.employee = null
     this.connectionString = this.getConnection()
     const ds = new supp.DemoSupport(sql)
     this.support = ds
     this.helper = new ds.EmployeeHelper(sql, this.connectionString)
+    this.helper.setVerbose(false)
     this.procedureHelper = new ds.ProcedureHelper(this.connectionString)
+    this.procedureHelper.setVerbose(false)
     this.async = new ds.Async()
+    this.timeHelper = new TimeHelper()
   }
 }
 

@@ -74,6 +74,7 @@
     "minimist": "^1.2.6",
     "mocha": "^10.0.0",
     "node-gyp": "^9.0.0",
+    "nyc": "^15.1.0",
     "prebuild": "^11.0.3",
     "sequelize": "^6.20.1",
     "standard": "^17.0.0",
