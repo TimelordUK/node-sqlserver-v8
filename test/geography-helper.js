@@ -1,4 +1,3 @@
-const util = require('util')
 const path = require('path')
 
 class GeographyHelper {
@@ -51,7 +50,7 @@ END
 
     async function createGeographyTable () {
       async function exec (sql) {
-        const promisedQuery = util.promisify(theConnection.query)
+        const promisedQuery = theConnection.promises.query
         await promisedQuery(sql)
       }
 
@@ -61,7 +60,7 @@ END
       await exec(dropTypeSql)
       await exec(createType)
       await exec(createProcedureSql)
-      const promisedUserType = util.promisify(theConnection.getUserTypeTable)
+      const promisedUserType = theConnection.promises.getUserTypeTable
       const table = await promisedUserType(tableTypeName)
       return table
     }
