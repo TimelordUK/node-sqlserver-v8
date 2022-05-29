@@ -2,25 +2,30 @@
 
 /* globals describe before it */
 
+const path = require('path')
 const assert = require('assert')
 const supp = require('../samples/typescript/demo-support')
 const sql = require('msnodesqlv8')
+const { GetConnection } = require(path.join(__dirname, './get-connection'))
+const connectionString = new GetConnection().connectionString
 
-describe('connection tests', () => {
+describe('connection tests', function () {
   let connStr
   let support
   let helper
+  this.timeout(10000)
   let procedureHelper
+
   before(done => {
     supp.GlobalConn.init(sql, co => {
-      connStr = global.conn_str || co.conn_str
+      connStr = connectionString || co.conn_str
       support = co.support
       procedureHelper = new support.ProcedureHelper(connStr)
       procedureHelper.setVerbose(false)
       helper = co.helper
       helper.setVerbose(false)
       done()
-    }, global.conn_str)
+    }, connectionString)
   })
 
   it('connection closes OK in sequence with query', done => {

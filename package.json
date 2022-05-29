@@ -70,6 +70,7 @@
     "asynquence-contrib": "^0.28.2",
     "electron": "^19.0.1",
     "electron-rebuild": "^3.2.7",
+    "env-cmd": "^10.1.0",
     "minimist": "^1.2.6",
     "mocha": "^10.0.0",
     "node-gyp": "^9.0.0",
