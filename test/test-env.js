@@ -3,6 +3,7 @@ const supp = require('../samples/typescript/demo-support')
 const sql = require('msnodesqlv8')
 const TimeHelper = require('./time-helper').TimeHelper
 const Employee = require('./employee').Employee
+const commonTestFns = require('./CommonTestFunctions')
 
 class TestEnv {
   readJson (path) {
@@ -49,6 +50,7 @@ class TestEnv {
     this.procedureHelper.setVerbose(false)
     this.async = new ds.Async()
     this.timeHelper = new TimeHelper()
+    this.commonTestFns = commonTestFns
   }
 }
 
