@@ -5,7 +5,9 @@ const TimeHelper = require('./time-helper').TimeHelper
 const Employee = require('./employee').Employee
 const commonTestFns = require('./CommonTestFunctions')
 const path = require('path')
+const { json } = require('stream/consumers')
 const { GeographyHelper } = require(path.join(__dirname, './geography-helper'))
+const { JsonHelper } = require(path.join(__dirname, './json-helper'))
 
 class TestEnv {
   readJson (path) {
@@ -25,6 +27,14 @@ class TestEnv {
       const subSection = config.test
       return subSection[key]
     }
+  }
+
+  jsonHelper (tableName, procName, procNameJson) {
+    tableName = tableName || 'employeeJson'
+    procName = procName || 'AddUpdateEmployeeJsonRecord'
+    procNameJson = procNameJson || 'ParseJsonArray'
+    const jsonHelper = new JsonHelper(this.theConnection, tableName, procName, procNameJson)
+    return jsonHelper
   }
 
   async open () {
