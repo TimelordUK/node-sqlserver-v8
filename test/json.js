@@ -10,7 +10,7 @@ const { TestEnv } = require(path.join(__dirname, './test-env'))
 const env = new TestEnv()
 
 describe('json', function () {
-  this.timeout(10000)
+  this.timeout(30000)
 
   this.beforeEach(done => {
     env.open().then(() => done())
