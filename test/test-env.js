@@ -4,6 +4,8 @@ const sql = require('msnodesqlv8')
 const TimeHelper = require('./time-helper').TimeHelper
 const Employee = require('./employee').Employee
 const commonTestFns = require('./CommonTestFunctions')
+const path = require('path')
+const { GeographyHelper } = require(path.join(__dirname, './geography-helper'))
 
 class TestEnv {
   readJson (path) {
@@ -28,6 +30,7 @@ class TestEnv {
   async open () {
     this.theConnection = await sql.promises.open(this.connectionString)
     this.employee = new Employee('employee', this.helper, this.theConnection)
+    this.geographyHelper = new GeographyHelper(this.theConnection)
   }
 
   async close () {
@@ -35,6 +38,7 @@ class TestEnv {
       await this.theConnection.promises.close()
       this.theConnection = null
       this.employee = null
+      this.geographyHelper = null
     }
   }
 
