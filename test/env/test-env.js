@@ -4,9 +4,11 @@ const sql = require('msnodesqlv8')
 const TimeHelper = require('./time-helper').TimeHelper
 const Employee = require('./employee').Employee
 const commonTestFns = require('./CommonTestFunctions')
-const path = require('path')
-const { GeographyHelper } = require(path.join(__dirname, './geography-helper'))
-const { JsonHelper } = require(path.join(__dirname, './json-helper'))
+const { GeographyHelper } = require('./geography-helper')
+const { JsonHelper } = require('./json-helper')
+const { TableHelper } = require('./table-helper')
+const { TypeTableHelper } = require('./type-table-helper')
+const { BulkTableTest } = require('./bulk-table-test')
 
 class TestEnv {
   readJson (path) {
@@ -26,6 +28,18 @@ class TestEnv {
       const subSection = config.test
       return subSection[key]
     }
+  }
+
+  bulkTableTest (def) {
+    return new BulkTableTest(this.theConnection, def)
+  }
+
+  tableHelper () {
+    return new TableHelper(this.theConnection)
+  }
+
+  typeTableHelper (sqlType) {
+    return new TypeTableHelper(this.theConnection, sqlType)
   }
 
   jsonHelper (tableName, procName, procNameJson) {

@@ -38,131 +38,6 @@ describe('bulk', function () {
     return v
   }
 
-  class TableHelper {
-    constructor (theConnection) {
-      const tableName = 'test_bulk_table'
-      const dropTableSql = `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL 
-    DROP TABLE ${tableName};`
-
-      const createTableSql = `CREATE TABLE ${tableName} (
-        id INT PRIMARY KEY,
-        col_a int,
-        col_b int, 
-        col_c int,
-        col_d int,
-        col_e int,
-        col_f int,
-    );`
-
-      function getVec (count) {
-        const v = []
-        for (let i = 0; i < count; ++i) {
-          v.push({
-            id: i,
-            col_a: (i + 1) * 10 + i,
-            col_b: (i + 1) * 100 + i,
-            col_c: (i + 1) * 1000 + i,
-            col_d: (i + 1) * 10000 + i,
-            col_e: (i + 1) * 100000 + i,
-            col_f: (i + 1) * 1000000 + i
-          })
-        }
-        return v
-      }
-
-      async function create () {
-        await theConnection.promises.query(dropTableSql)
-        await theConnection.promises.query(createTableSql)
-        const table = await theConnection.promises.getTable(tableName)
-        return table
-      }
-
-      this.create = create
-      this.getVec = getVec
-    }
-  }
-
-  class TypeTableHelper {
-    constructor (theConnection, sqlType) {
-      const tableName = 'test_bulk_table'
-      const dropTableSql = `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL 
-    DROP TABLE ${tableName};`
-
-      const createTableSql = `CREATE TABLE ${tableName} (
-        id INT PRIMARY KEY,
-        col_a ${sqlType}
-    );`
-
-      function getVec (count, generator) {
-        const v = []
-        for (let i = 0; i < count; ++i) {
-          const val = generator(i)
-          v.push({
-            id: i,
-            col_a: val
-          })
-        }
-        return v
-      }
-
-      async function create () {
-        await theConnection.promises.query(dropTableSql)
-        await theConnection.promises.query(createTableSql)
-        const table = await theConnection.promises.getTable(tableName)
-        return table
-      }
-
-      this.create = create
-      this.getVec = getVec
-    }
-  }
-
-  class BulkTableTest {
-    constructor (c, def) {
-      function where (list, primitive) {
-        return list.reduce((agg, latest) => {
-          if (primitive(latest)) {
-            agg.push(latest)
-          }
-          return agg
-        }, [])
-      }
-      const tableName = def.tableName
-      const columns = def.columns.map(e => `${e.name} ${e.type}`).join(', ')
-      const insertColumnNames = where(def.columns, c => {
-        const res = !c.type.includes('identity')
-        return res
-      }).map(e => `${e.name}`).join(', ')
-      const columnNames = def.columns.map(e => `${e.name}`).join(', ')
-      const dropTableSql = `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL DROP TABLE ${tableName};`
-      const createTableSql = `CREATE TABLE ${tableName} (${columns})`
-      const clusteredSql = `CREATE CLUSTERED INDEX IX_${tableName} ON ${tableName}(id)`
-      const insertSql = `INSERT INTO ${tableName} (${insertColumnNames}) VALUES `
-      const selectSql = `SELECT ${columnNames} FROM ${tableName}`
-      const trucateSql = `TRUNCATE TABLE ${tableName}`
-      const paramsSql = `(${def.columns.map(_ => '?').join(', ')})`
-
-      this.definition = def
-      env.theConnection = c
-      this.dropTableSql = dropTableSql
-      this.createTableSql = createTableSql
-      this.clusteredSql = clusteredSql
-      this.selectSql = selectSql
-      this.insertSql = insertSql
-      this.truncateSql = trucateSql
-      this.tableName = def.tableName
-      this.paramsSql = paramsSql
-      this.insertParamsSql = `${insertSql} ${paramsSql}`
-    }
-
-    async create () {
-      await env.theConnection.promises.query(this.dropTableSql)
-      await env.theConnection.promises.query(this.createTableSql)
-      const table = await env.theConnection.promises.getTable(this.tableName)
-      return table
-    }
-  }
-
   it('employee tmp table created on 2 connections - check name clash', testDone => {
     const tableName = '#test_table'
 
@@ -267,7 +142,7 @@ describe('bulk', function () {
       ]
     }
     async function runner () {
-      const helper = new BulkTableTest(env.theConnection, bulkTableDef)
+      const helper = env.bulkTableTest(bulkTableDef)
       const expected = []
       const rows = 50
       for (let i = 0; i < rows; ++i) {
@@ -323,7 +198,7 @@ describe('bulk', function () {
       ]
     }
     async function runner () {
-      const helper = new BulkTableTest(env.theConnection, bulkTableDef)
+      const helper = env.bulkTableTest(bulkTableDef)
       const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
       const expected = []
       const rows = 500
@@ -362,7 +237,7 @@ describe('bulk', function () {
   it('use tableMgr bulk insert single non UTC based time with time col', testDone => {
     async function runner () {
       const timeHelper = env.timeHelper
-      const helper = new TypeTableHelper(env.theConnection, 'time')
+      const helper = env.typeTableHelper('time')
       const testDate = timeHelper.parseTime('16:47:04')
       const expected = helper.getVec(1, () => testDate)
       env.theConnection.setUseUTC(true)
@@ -397,7 +272,7 @@ describe('bulk', function () {
 
   it('use tableMgr bulk insert single non UTC based date with datetime col', testDone => {
     async function runner () {
-      const helper = new TypeTableHelper(env.theConnection, 'datetime')
+      const helper = env.typeTableHelper('datetime')
       const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
       const expected = helper.getVec(1, () => testDate)
       env.theConnection.setUseUTC(true)
@@ -422,7 +297,7 @@ describe('bulk', function () {
 
   it('use tableMgr bulk insert single non UTC based date with DATETIMEOFFSET col', testDone => {
     async function runner () {
-      const helper = new TypeTableHelper(env.theConnection, 'DATETIMEOFFSET')
+      const helper = env.typeTableHelper('DATETIMEOFFSET')
       const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
       const expected = helper.getVec(1, () => testDate)
       env.theConnection.setUseUTC(true)
@@ -448,7 +323,7 @@ describe('bulk', function () {
   it('use tableMgr bulk insert varchar vector - exactly 4001 chars', testDone => {
     async function runner () {
       const b = repeat('z', 4000)
-      const helper = new TypeTableHelper(env.theConnection, 'NVARCHAR(MAX)')
+      const helper = env.typeTableHelper('NVARCHAR(MAX)')
       const expected = helper.getVec(10, i => b)
       const table = await helper.create()
       const promisedInsert = table.promises.insert
@@ -469,7 +344,7 @@ describe('bulk', function () {
   it('use tableMgr bulk insert varchar vector - exactly 4000 chars', testDone => {
     async function runner () {
       const b = repeat('z', 4000)
-      const helper = new TypeTableHelper(env.theConnection, 'NVARCHAR(MAX)')
+      const helper = env.typeTableHelper('NVARCHAR(MAX)')
       const expected = helper.getVec(10, i => b)
       const table = await helper.create()
       const promisedInsert = table.promises.insert
@@ -490,7 +365,7 @@ describe('bulk', function () {
   it('use tableMgr bulk insert varchar vector - exactly 3999 chars', testDone => {
     async function runner () {
       const b = repeat('z', 4000)
-      const helper = new TypeTableHelper(env.theConnection, 'NVARCHAR(MAX)')
+      const helper = env.typeTableHelper('NVARCHAR(MAX)')
       const expected = helper.getVec(10, i => b)
       const table = await helper.create()
       const promisedInsert = table.promises.insert
@@ -511,7 +386,7 @@ describe('bulk', function () {
   it('use tableMgr bulk insert varbinary vector - with null', testDone => {
     async function runner () {
       const b = Buffer.from('0102030405060708090a', 'hex')
-      const helper = new TypeTableHelper(env.theConnection, 'varbinary(10)')
+      const helper = env.typeTableHelper('varbinary(10)')
       const expected = helper.getVec(10, i => i % 2 === 0 ? null : b)
       const table = await helper.create()
       const promisedInsert = table.promises.insert
@@ -533,7 +408,7 @@ describe('bulk', function () {
     async function runner () {
       const b = Buffer.from('0102030405060708090a', 'hex')
       const emptyBuffer = Buffer.alloc(0)
-      const helper = new TypeTableHelper(env.theConnection, 'varbinary(10)')
+      const helper = env.typeTableHelper('varbinary(10)')
       const expected = helper.getVec(10, i => i % 2 === 0 ? emptyBuffer : b)
       const table = await helper.create()
       const promisedInsert = table.promises.insert
@@ -554,7 +429,7 @@ describe('bulk', function () {
   it('use tableMgr bulk insert varbinary vector - no nulls', testDone => {
     async function runner () {
       const b = Buffer.from('0102030405060708090a', 'hex')
-      const helper = new TypeTableHelper(env.theConnection, 'varbinary(20)')
+      const helper = env.typeTableHelper('varbinary(20)')
       const expected = helper.getVec(10, _ => b)
       const table = await helper.create()
       const promisedInsert = table.promises.insert
@@ -575,7 +450,7 @@ describe('bulk', function () {
   it('use tableMgr bulk insert datetime vector - no nulls', testDone => {
     async function runner () {
       const timeHelper = env.timeHelper
-      const helper = new TypeTableHelper(env.theConnection, 'datetime')
+      const helper = env.typeTableHelper('datetime')
       const expected = helper.getVec(10, i => timeHelper.addDays(i))
       const table = await helper.create()
       const promisedInsert = table.promises.insert
@@ -599,7 +474,7 @@ describe('bulk', function () {
   it('use tableMgr bulk insert datetime vector - with nulls', testDone => {
     async function runner () {
       const timeHelper = env.timeHelper
-      const helper = new TypeTableHelper(env.theConnection, 'datetime')
+      const helper = env.typeTableHelper('datetime')
       const expected = helper.getVec(10, i => i % 2 === 0 ? null : timeHelper.addDays(i))
       const table = await helper.create()
       const promisedInsert = table.promises.insert
@@ -624,7 +499,7 @@ describe('bulk', function () {
 
   it('use tableMgr bulk insert decimal vector - no nulls', testDone => {
     async function runner () {
-      const helper = new TypeTableHelper(env.theConnection, 'decimal(20,18)')
+      const helper = env.typeTableHelper('decimal(20,18)')
       const expected = helper.getVec(10, i => 1 / (i + 2.5))
       const table = await helper.create()
       const promisedInsert = table.promises.insert
@@ -644,7 +519,7 @@ describe('bulk', function () {
 
   it('use tableMgr bulk insert decimal vector - with nulls', testDone => {
     async function runner () {
-      const helper = new TypeTableHelper(env.theConnection, 'decimal(20,18)')
+      const helper = env.typeTableHelper('decimal(20,18)')
       const expected = helper.getVec(10, i => i % 2 === 0 ? null : 1 / (i + 2.5))
       const table = await helper.create()
       const promisedInsert = table.promises.insert
@@ -664,7 +539,7 @@ describe('bulk', function () {
 
   it('use tableMgr bulk insert bit vector - with nulls', testDone => {
     async function runner () {
-      const helper = new TypeTableHelper(env.theConnection, 'bit')
+      const helper = env.typeTableHelper('bit')
       const expected = helper.getVec(10, i => i % 2 === 0 ? null : i % 2 === 0)
       const table = await helper.create()
       const promisedInsert = table.promises.insert
@@ -684,7 +559,7 @@ describe('bulk', function () {
 
   it('use tableMgr bulk insert bit vector - no nulls', testDone => {
     async function runner () {
-      const helper = new TypeTableHelper(env.theConnection, 'bit')
+      const helper = env.typeTableHelper('bit')
       const expected = helper.getVec(10, i => i % 2 === 0)
       const table = await helper.create()
       const promisedInsert = table.promises.insert
@@ -704,7 +579,7 @@ describe('bulk', function () {
 
   it('use tableMgr bulk insert int vector - with nulls', testDone => {
     async function runner () {
-      const helper = new TypeTableHelper(env.theConnection, 'int')
+      const helper = env.typeTableHelper('int')
       const expected = helper.getVec(10, i => i % 2 === 0 ? null : i * 10)
       const table = await helper.create()
       const promisedInsert = table.promises.insert
@@ -724,7 +599,7 @@ describe('bulk', function () {
 
   it('use tableMgr bulk insert int vector - no nulls', testDone => {
     async function runner () {
-      const helper = new TypeTableHelper(env.theConnection, 'int')
+      const helper = env.typeTableHelper('int')
       const expected = helper.getVec(10, i => i * 10)
       const table = await helper.create()
       const promisedInsert = table.promises.insert
@@ -744,7 +619,7 @@ describe('bulk', function () {
 
   it('use tableMgr bulk insert varchar vector - with nulls', testDone => {
     async function runner () {
-      const helper = new TypeTableHelper(env.theConnection, 'varchar(100)')
+      const helper = env.typeTableHelper('varchar(100)')
       const expected = helper.getVec(10, i => i % 2 === 0 ? null : `string ${i}`)
       const table = await helper.create()
       const promisedInsert = table.promises.insert
@@ -764,7 +639,7 @@ describe('bulk', function () {
 
   it('use tableMgr bulk insert var char vector - no nulls', testDone => {
     async function runner () {
-      const helper = new TypeTableHelper(env.theConnection, 'varchar(100)')
+      const helper = env.typeTableHelper('varchar(100)')
       const expected = helper.getVec(10, i => `string ${i}`)
       const table = await helper.create()
       const promisedInsert = table.promises.insert
@@ -783,7 +658,7 @@ describe('bulk', function () {
   })
 
   it('use tableMgr get Table and update 2 columns', testDone => {
-    const helper = new TableHelper(env.theConnection)
+    const helper = env.tableHelper()
     const expected = helper.getVec(10)
     let table
     const fns = [
