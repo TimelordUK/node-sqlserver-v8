@@ -37,9 +37,10 @@ class BulkTableTest {
   }
 
   async create () {
-    await this.theConnection.promises.query(this.dropTableSql)
-    await this.theConnection.promises.query(this.createTableSql)
-    const table = await this.theConnection.promises.getTable(this.tableName)
+    const promises = this.theConnection.promises
+    await promises.query(this.dropTableSql)
+    await promises.query(this.createTableSql)
+    const table = await promises.getTable(this.tableName)
     return table
   }
 }
