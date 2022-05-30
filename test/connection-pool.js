@@ -3,7 +3,7 @@
 
 const path = require('path')
 const assert = require('assert')
-const { TestEnv } = require(path.join(__dirname, './test-env'))
+const { TestEnv } = require(path.join(__dirname, './env/test-env'))
 const env = new TestEnv()
 
 describe('connection-pool', function () {

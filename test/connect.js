@@ -5,7 +5,7 @@
 const path = require('path')
 const assert = require('assert')
 const sql = require('msnodesqlv8')
-const { TestEnv } = require(path.join(__dirname, './test-env'))
+const { TestEnv } = require(path.join(__dirname, './env/test-env'))
 const env = new TestEnv()
 const connectionString = env.connectionString
 describe('connection tests', function () {

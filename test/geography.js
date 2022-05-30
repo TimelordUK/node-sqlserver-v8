@@ -5,7 +5,7 @@ const path = require('path')
 
 /* globals describe it */
 
-const { TestEnv } = require(path.join(__dirname, './test-env'))
+const { TestEnv } = require(path.join(__dirname, './env/test-env'))
 const env = new TestEnv()
 /*
 create PROCEDURE InsertGeographyTvp @tvp geographyTvpType READONLY

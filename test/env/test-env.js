@@ -1,5 +1,5 @@
 
-const supp = require('../samples/typescript/demo-support')
+const supp = require('../../samples/typescript/demo-support')
 const sql = require('msnodesqlv8')
 const TimeHelper = require('./time-helper').TimeHelper
 const Employee = require('./employee').Employee
@@ -22,7 +22,7 @@ class TestEnv {
     } else {
       key = key || fallback
       const path = require('path')
-      const config = this.readJson(path.join(__dirname, '../.env-cmdrc'))
+      const config = this.readJson(path.join(__dirname, '../../.env-cmdrc'))
       const subSection = config.test
       return subSection[key]
     }

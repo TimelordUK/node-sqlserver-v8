@@ -6,7 +6,7 @@ const util = require('util')
 /* globals describe it */
 
 const path = require('path')
-const { TestEnv } = require(path.join(__dirname, './test-env'))
+const { TestEnv } = require(path.join(__dirname, './env/test-env'))
 const env = new TestEnv()
 
 describe('json', function () {
