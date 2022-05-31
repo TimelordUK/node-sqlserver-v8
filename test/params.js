@@ -445,19 +445,19 @@ describe('params', function () {
 
   // declare @str nvarchar (MAX);set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @s AS s;
 
-  it('insert string 100 in nchar(100)', testDone => {
+  it('insert string 100 in nchar.100', testDone => {
     runTest('nchar(100)', 100, () => {
       testDone()
     })
   })
 
-  it('insert string 500 in nvarchar(1000)', testDone => {
+  it('insert string 500 in nvarchar.1000', testDone => {
     runTest('nvarchar(1000)', 500, () => {
       testDone()
     })
   })
 
-  it('insert string 1 x 1000 in varchar(max)', testDone => {
+  it('insert string 1 x 1000 in varchar.max', testDone => {
     runTest('varchar(max)', 1 * 1000, () => {
       testDone()
     })
