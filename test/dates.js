@@ -19,10 +19,9 @@
 
 /* globals describe it */
 
-const path = require('path')
 const util = require('util')
 const assert = require('assert')
-const { TestEnv } = require(path.join(__dirname, './env/test-env'))
+const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 
 describe('dates', function () {

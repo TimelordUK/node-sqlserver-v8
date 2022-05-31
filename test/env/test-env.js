@@ -65,10 +65,18 @@ class TestEnv {
     }
   }
 
+  decodeDriver () {
+    const myRegexp = /Driver=\{(.*?)\}.*$/g
+    const match = myRegexp.exec(this.connectionString)
+    const driver = match[1]
+    return driver
+  }
+
   constructor () {
     this.theConnection = null
     this.employee = null
     this.connectionString = this.getConnection()
+    this.driver = this.decodeDriver()
     const ds = new supp.DemoSupport(sql)
     this.support = ds
     this.helper = new ds.EmployeeHelper(sql, this.connectionString)

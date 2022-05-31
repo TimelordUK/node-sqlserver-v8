@@ -2,8 +2,7 @@
 /* globals describe it */
 
 const assert = require('assert')
-const path = require('path')
-const { TestEnv } = require(path.join(__dirname, './env/test-env'))
+const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 const sql = require('msnodesqlv8')
 
