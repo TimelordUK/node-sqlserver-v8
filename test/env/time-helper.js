@@ -10,6 +10,18 @@ class TimeHelper {
     return d
   }
 
+  getUTCDateTime () {
+    const localDate = new Date()
+    const utcDate = new Date(Date.UTC(localDate.getUTCFullYear(),
+      localDate.getUTCMonth(),
+      localDate.getUTCDate(),
+      localDate.getUTCHours(),
+      localDate.getUTCMinutes(),
+      localDate.getUTCSeconds(),
+      localDate.getUTCMilliseconds()))
+    return utcDate
+  }
+
   getUTCTime (a) {
     const localDate = new Date()
     const today = Date.UTC(
