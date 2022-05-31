@@ -1104,14 +1104,7 @@ describe('params', function () {
   })
 
   it('verify js date inserted into datetime field', testDone => {
-    const localDate = new Date()
-    const utcDate = new Date(Date.UTC(localDate.getUTCFullYear(),
-      localDate.getUTCMonth(),
-      localDate.getUTCDate(),
-      localDate.getUTCHours(),
-      localDate.getUTCMinutes(),
-      localDate.getUTCSeconds(),
-      localDate.getUTCMilliseconds()))
+    const utcDate = env.timeHelper.getUTCDateTime()
 
     testBoilerPlate('datetime_test', { datetime_test: 'datetime' },
 
@@ -1137,13 +1130,7 @@ describe('params', function () {
 
   it('verify js date before 1970 inserted into datetime field', testDone => {
     const ancientDate = new Date(1492, 10, 11, 6, 32, 46, 578)
-    const utcDate = new Date(Date.UTC(ancientDate.getUTCFullYear(),
-      ancientDate.getUTCMonth(),
-      ancientDate.getUTCDate(),
-      ancientDate.getUTCHours(),
-      ancientDate.getUTCMinutes(),
-      ancientDate.getUTCSeconds(),
-      ancientDate.getUTCMilliseconds()))
+    const utcDate = env.timeHelper.getUTCDateTime(ancientDate)
 
     testBoilerPlate('datetime_test', { datetime_test: 'datetimeoffset(3)' },
 
