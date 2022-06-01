@@ -11,6 +11,7 @@ const { TypeTableHelper } = require('./type-table-helper')
 const { BulkTableTest } = require('./bulk-table-test')
 const { ProcTest } = require('./proc-helper')
 const { BcpEntry } = require('./bcp-entry')
+const { BuilderChecker } = require('./builder-checker')
 const util = require('util')
 
 class TestEnv {
@@ -51,6 +52,10 @@ class TestEnv {
 
   bcpEntry (def, factory, tester) {
     return new BcpEntry(this, def, factory, tester)
+  }
+
+  builderChecker (builder) {
+    return new BuilderChecker(builder)
   }
 
   jsonHelper (tableName, procName, procNameJson) {
