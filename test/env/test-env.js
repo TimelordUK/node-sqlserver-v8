@@ -1,9 +1,10 @@
 
+const commonTestFns = require('./CommonTestFunctions')
+
 const supp = require('../../samples/typescript/demo-support')
 const sql = require('msnodesqlv8')
 const TimeHelper = require('./time-helper').TimeHelper
 const Employee = require('./employee').Employee
-const commonTestFns = require('./CommonTestFunctions')
 const { GeographyHelper } = require('./geography-helper')
 const { JsonHelper } = require('./json-helper')
 const { TableHelper } = require('./table-helper')
@@ -12,6 +13,7 @@ const { BulkTableTest } = require('./bulk-table-test')
 const { ProcTest } = require('./proc-helper')
 const { BcpEntry } = require('./bcp-entry')
 const { BuilderChecker } = require('./builder-checker')
+const { TvpHelper } = require('./tvp-helper')
 const util = require('util')
 
 class TestEnv {
@@ -56,6 +58,10 @@ class TestEnv {
 
   builderChecker (builder) {
     return new BuilderChecker(builder)
+  }
+
+  tvpHelper (tableName) {
+    return new TvpHelper(this.theConnection, tableName)
   }
 
   jsonHelper (tableName, procName, procNameJson) {
