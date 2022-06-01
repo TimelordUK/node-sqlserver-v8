@@ -9,6 +9,7 @@ const { JsonHelper } = require('./json-helper')
 const { TableHelper } = require('./table-helper')
 const { TypeTableHelper } = require('./type-table-helper')
 const { BulkTableTest } = require('./bulk-table-test')
+const { ProcTest } = require('./proc-helper')
 
 class TestEnv {
   readJson (path) {
@@ -40,6 +41,10 @@ class TestEnv {
 
   typeTableHelper (sqlType) {
     return new TypeTableHelper(this.theConnection, sqlType)
+  }
+
+  procTest (name, def) {
+    return new ProcTest(this.theConnection, name, def)
   }
 
   jsonHelper (tableName, procName, procNameJson) {
