@@ -16,45 +16,6 @@ describe('bcp', function () {
     env.close().then(() => done())
   })
 
-  class BcpEntry {
-    constructor (definition, factory, tester) {
-      this.definition = definition
-      this.factory = factory
-      this.tester = tester
-    }
-
-    async runner (count) {
-      const helper = env.bulkTableTest(this.definition)
-      const expected = []
-      const rows = count || 5000
-      for (let i = 0; i < rows; ++i) {
-        expected.push(this.factory(i))
-      }
-      try {
-        env.theConnection.setUseUTC(true)
-        const table = await helper.create()
-        table.setUseBcp(true)
-        await table.promises.insert(expected)
-        const res = await env.theConnection.promises.query(`select count(*) as rows from ${this.definition.tableName}`)
-        assert.deepStrictEqual(res.first[0].rows, rows)
-        const top = await env.theConnection.promises.query(`select top 100 * from ${this.definition.tableName}`)
-        const toCheck = expected.slice(0, 100)
-        if (this.tester) {
-          this.tester(top.first, toCheck)
-        } else {
-          assert.deepStrictEqual(top.first, toCheck)
-        }
-      } catch (e) {
-        return e
-      }
-      return null
-    }
-  }
-
-  function repeat (c, num) {
-    return new Array(num + 1).join(c)
-  }
-
   it('bcp employee', testDone => {
     async function test () {
       try {
@@ -78,7 +39,7 @@ describe('bcp', function () {
         const v = Math.sqrt(i + 1)
         return Math.round(v * 1e6) / 1e6
       }
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_7_bcp',
         columns: [
           {
@@ -143,7 +104,7 @@ describe('bcp', function () {
   it('bcp expect error null in non null column', testDone => {
     const rows = 10
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -175,7 +136,7 @@ describe('bcp', function () {
   it('bcp expect error duplicate primary key', testDone => {
     const rows = 10
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -208,7 +169,7 @@ describe('bcp', function () {
     const rows = 10
     const name = 'test_table_bcp'
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: name,
         columns: [
           {
@@ -245,7 +206,7 @@ describe('bcp', function () {
 
   it('bcp hierarchyid binary', testDone => {
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -271,7 +232,7 @@ describe('bcp', function () {
 
   it('bcp small binary', testDone => {
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -297,7 +258,7 @@ describe('bcp', function () {
 
   it('bcp bit bit', testDone => {
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -334,7 +295,7 @@ describe('bcp', function () {
     async function test () {
       const g1 = 'F01251E5-96A3-448D-981E-0F99D789110D'
       const g2 = '45E8F437-670D-4409-93CB-F9424A40D6EE'
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -361,7 +322,7 @@ describe('bcp', function () {
   it('bcp smallint', testDone => {
     const rows = 2000
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -388,7 +349,7 @@ describe('bcp', function () {
   it('bcp tinyint', testDone => {
     const rows = 2000
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -419,7 +380,7 @@ describe('bcp', function () {
     }
     const rows = 2000
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -458,7 +419,7 @@ describe('bcp', function () {
     }
     const rows = 2000
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -493,7 +454,7 @@ describe('bcp', function () {
   it('bcp bigint with nulls', testDone => {
     const rows = 2000
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -520,7 +481,7 @@ describe('bcp', function () {
   it('bcp bigint', testDone => {
     const rows = 2000
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -549,7 +510,7 @@ describe('bcp', function () {
     const testDate = timeHelper.parseTime('16:47:04')
     const rows = 2000
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -592,7 +553,7 @@ describe('bcp', function () {
     }
     const rows = 2000
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -628,8 +589,8 @@ describe('bcp', function () {
     const rows = 150
     const length = 10 * 1000
     async function test () {
-      const b = repeat('z', length)
-      const bcp = new BcpEntry({
+      const b = env.repeat('z', length)
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -656,7 +617,7 @@ describe('bcp', function () {
   it('bcp datetimeoffset datetimeoffset - mix with nulls', testDone => {
     async function test () {
       const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -703,7 +664,7 @@ describe('bcp', function () {
   it('bcp datetimeoffset datetimeoffset', testDone => {
     async function test () {
       const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -745,7 +706,7 @@ describe('bcp', function () {
 
   it('bcp binary binary - mix with nulls', testDone => {
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -776,7 +737,7 @@ describe('bcp', function () {
 
   it('bcp binary binary', testDone => {
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -807,7 +768,7 @@ describe('bcp', function () {
 
   it('bcp bit bit - mix with nulls', testDone => {
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -839,7 +800,7 @@ describe('bcp', function () {
   it('bcp timestamp timestamp - mix with nulls', testDone => {
     async function test () {
       const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -886,7 +847,7 @@ describe('bcp', function () {
   it('bcp timestamp timestamp - no null', testDone => {
     async function test () {
       const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -928,7 +889,7 @@ describe('bcp', function () {
 
   it('bcp varchar varchar with nulls', testDone => {
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -959,7 +920,7 @@ describe('bcp', function () {
 
   it('bcp varchar varchar', testDone => {
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -990,7 +951,7 @@ describe('bcp', function () {
 
   it('bcp int, int column - with nulls', testDone => {
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {
@@ -1017,7 +978,7 @@ describe('bcp', function () {
 
   it('bcp int, int column', testDone => {
     async function test () {
-      const bcp = new BcpEntry({
+      const bcp = env.bcpEntry({
         tableName: 'test_table_bcp',
         columns: [
           {

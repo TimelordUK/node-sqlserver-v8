@@ -10,6 +10,7 @@ const { TableHelper } = require('./table-helper')
 const { TypeTableHelper } = require('./type-table-helper')
 const { BulkTableTest } = require('./bulk-table-test')
 const { ProcTest } = require('./proc-helper')
+const { BcpEntry } = require('./bcp-entry')
 
 class TestEnv {
   readJson (path) {
@@ -47,6 +48,10 @@ class TestEnv {
     return new ProcTest(this.theConnection, name, def)
   }
 
+  bcpEntry (def, factory, tester) {
+    return new BcpEntry(this, def, factory, tester)
+  }
+
   jsonHelper (tableName, procName, procNameJson) {
     tableName = tableName || 'employeeJson'
     procName = procName || 'AddUpdateEmployeeJsonRecord'
@@ -75,6 +80,10 @@ class TestEnv {
     const match = myRegexp.exec(this.connectionString)
     const driver = match[1]
     return driver
+  }
+
+  repeat (c, num) {
+    return new Array(num + 1).join(c)
   }
 
   constructor () {
