@@ -11,6 +11,7 @@ const { TypeTableHelper } = require('./type-table-helper')
 const { BulkTableTest } = require('./bulk-table-test')
 const { ProcTest } = require('./proc-helper')
 const { BcpEntry } = require('./bcp-entry')
+const util = require('util')
 
 class TestEnv {
   readJson (path) {
@@ -96,6 +97,7 @@ class TestEnv {
     this.helper = new ds.EmployeeHelper(sql, this.connectionString)
     this.helper.setVerbose(false)
     this.procedureHelper = new ds.ProcedureHelper(this.connectionString)
+    this.promisedCreate = util.promisify(this.procedureHelper.createProcedure)
     this.procedureHelper.setVerbose(false)
     this.async = new ds.Async()
     this.timeHelper = new TimeHelper()
