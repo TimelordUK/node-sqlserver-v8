@@ -71,7 +71,7 @@ supp.GlobalConn.init(sql, (co: any) => {
         procedureHelper.setVerbose(false);
         let async = co.async;
         helper = co.helper;
-        parsedJSON = helper.getJSON('../../unit.tests/json');
+        parsedJSON = helper.getJSON('../../test/json');
 
         console.log(conn_str);
         async.series(demos, () => {

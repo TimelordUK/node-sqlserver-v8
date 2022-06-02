@@ -1,1 +1,1 @@
-node unit.tests\cmd-test.js -t busy --delay=500 --severity=9
+node test\env\\cmd-test.js -t busy --delay=500 --severity=9

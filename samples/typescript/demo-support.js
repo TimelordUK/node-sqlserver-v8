@@ -225,7 +225,7 @@ function DemoSupport (native) {
     function dropCreateTable (params, doneFunction) {
       const async = new Async()
       const tableName = params.tableName
-      const rootPath = params.rootPath || '../../unit.tests'
+      const rootPath = params.rootPath || '../../test'
       const columnName = params.columnName || 'col1'
       const type = params.type
       const theConnection = params.theConnection
@@ -398,7 +398,7 @@ function DemoSupport (native) {
     }
 
     function getJSON (stem) {
-      const p = stem || '../../unit.tests/json'
+      const p = stem || '../../test/env/json'
       const folder = path.join(__dirname, p)
       const fs = require('fs')
 

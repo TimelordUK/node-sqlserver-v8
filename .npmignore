@@ -4,7 +4,6 @@ prebuilds/
 samples/
 test/
 tool/
-unit.tests/
 .npmignore
 appveyor.yml
 runtest.js
