@@ -24,9 +24,11 @@ class TestEnv {
 
   getConnection (key) {
     const fallback = 'LINUX'
-    const rckey = process.env.CONNECTION_KEY || process.env[fallback]
-    if (rckey) {
-      return process.env[rckey]
+    const rcRes = process.env[fallback] || process.env.DEFAULT
+    if (rcRes) {
+      return rcRes
+    } else if (process.env.CONNECTION_KEY) {
+      return process.env[process.env.CONNECTION_KEY]
     } else {
       key = key || fallback
       const path = require('path')

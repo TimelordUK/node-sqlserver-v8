@@ -49,7 +49,7 @@ for:
       
       test_script:
         - sh: "sleep 2"
-        - sh: "node runtest -x -t table-builder -t promises -t bcp -t json -t connection-pool -t pause -t concurrent -t multiple-errors -t geography -t tvp -t warnings.js -t compoundqueries.js -t querycancel.js -t txn.js -t datatypes.js -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t sproc.js -t prepared.js -t userbind.js -t dates.js 2>&1"
+        - sh: "./node_modules/.bin/env-cmd -e appv-ubuntu ./node_modules/.bin/mocha 2>&1"
 
       install:
         - nvm install $nodejs_version
