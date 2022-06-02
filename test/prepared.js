@@ -25,57 +25,6 @@ const assert = require('assert')
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 
-function empSelectSQL () {
-  return 'SELECT [BusinessEntityID] ' +
-     ',[NationalIDNumber] ' +
-     ',[LoginID] ' +
-     ',[OrganizationNode] ' +
-     ',[OrganizationLevel] ' +
-     ',[JobTitle] ' +
-     ',[BirthDate] ' +
-     ',[MaritalStatus] ' +
-     ',[Gender] ' +
-     ',[HireDate] ' +
-     ',[SalariedFlag] ' +
-     ',[VacationHours] ' +
-     ',[SickLeaveHours] ' +
-     ',[CurrentFlag] ' +
-     ',[rowguid] ' +
-     ',[ModifiedDate] ' +
-     'FROM [dbo].[Employee] ' +
-     ' WHERE BusinessEntityID = ? '
-}
-
-function empUpdateSQL () {
-  return 'UPDATE [dbo].[Employee] SET [LoginID] = ?' +
-    ' WHERE BusinessEntityID = ?'
-}
-
-function empDeleteSQL () {
-  return 'DELETE FROM [dbo].[Employee] ' +
-        'WHERE BusinessEntityID = ?'
-}
-
-function empNoParamsSQL () {
-  return 'SELECT [BusinessEntityID] ' +
-     ',[NationalIDNumber] ' +
-     ',[LoginID] ' +
-     ',[OrganizationNode] ' +
-     ',[OrganizationLevel] ' +
-     ',[JobTitle] ' +
-     ',[BirthDate] ' +
-     ',[MaritalStatus] ' +
-     ',[Gender] ' +
-     ',[HireDate] ' +
-     ',[SalariedFlag] ' +
-     ',[VacationHours] ' +
-     ',[SickLeaveHours] ' +
-     ',[CurrentFlag] ' +
-     ',[rowguid] ' +
-     ',[ModifiedDate] ' +
-     'FROM [dbo].[Employee]'
-}
-
 describe('prepared', function () {
   const tableName = 'employee'
 
@@ -110,10 +59,12 @@ describe('prepared', function () {
 
     // prepare a select statement.
     async asyncDone => {
-      prepared.select = await theConnection.promises.prepare(empSelectSQL())
-      prepared.scan = await theConnection.promises.prepare(empNoParamsSQL())
-      prepared.delete = await theConnection.promises.prepare(empDeleteSQL())
-      prepared.update = await theConnection.promises.prepare(empUpdateSQL())
+      const employee = env.employee
+      const promises = theConnection.promises
+      prepared.select = await promises.prepare(employee.empSelectSQL())
+      prepared.scan = await promises.prepare(employee.empNoParamsSQL())
+      prepared.delete = await promises.prepare(employee.empDeleteSQL())
+      prepared.update = await promises.prepare(employee.empUpdateSQL())
       asyncDone()
     }
   ]

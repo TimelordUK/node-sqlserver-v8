@@ -5,6 +5,57 @@ class Employee {
     this.helper = helper
   }
 
+  empSelectSQL () {
+    return 'SELECT [BusinessEntityID] ' +
+       ',[NationalIDNumber] ' +
+       ',[LoginID] ' +
+       ',[OrganizationNode] ' +
+       ',[OrganizationLevel] ' +
+       ',[JobTitle] ' +
+       ',[BirthDate] ' +
+       ',[MaritalStatus] ' +
+       ',[Gender] ' +
+       ',[HireDate] ' +
+       ',[SalariedFlag] ' +
+       ',[VacationHours] ' +
+       ',[SickLeaveHours] ' +
+       ',[CurrentFlag] ' +
+       ',[rowguid] ' +
+       ',[ModifiedDate] ' +
+       'FROM [dbo].[Employee] ' +
+       ' WHERE BusinessEntityID = ? '
+  }
+
+  empUpdateSQL () {
+    return 'UPDATE [dbo].[Employee] SET [LoginID] = ?' +
+      ' WHERE BusinessEntityID = ?'
+  }
+
+  empDeleteSQL () {
+    return 'DELETE FROM [dbo].[Employee] ' +
+          'WHERE BusinessEntityID = ?'
+  }
+
+  empNoParamsSQL () {
+    return 'SELECT [BusinessEntityID] ' +
+       ',[NationalIDNumber] ' +
+       ',[LoginID] ' +
+       ',[OrganizationNode] ' +
+       ',[OrganizationLevel] ' +
+       ',[JobTitle] ' +
+       ',[BirthDate] ' +
+       ',[MaritalStatus] ' +
+       ',[Gender] ' +
+       ',[HireDate] ' +
+       ',[SalariedFlag] ' +
+       ',[VacationHours] ' +
+       ',[SickLeaveHours] ' +
+       ',[CurrentFlag] ' +
+       ',[rowguid] ' +
+       ',[ModifiedDate] ' +
+       'FROM [dbo].[Employee]'
+  }
+
   dropCreate (name) {
     return new Promise((resolve, reject) => {
       this.helper.dropCreateTable({

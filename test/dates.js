@@ -35,37 +35,6 @@ describe('dates', function () {
     env.close().then(() => done())
   })
 
-  class DateTableTest {
-    constructor (c, def) {
-      const tableName = def.tableName
-      const columns = def.columns.map(e => `${e.name} ${e.type}`).join(', ')
-      const columnNames = def.columns.map(e => `${e.name}`).join(', ')
-      const dropTableSql = `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL DROP TABLE ${tableName};`
-      const createTableSql = `CREATE TABLE ${tableName} (id int identity, ${columns})`
-      const clusteredSql = `CREATE CLUSTERED INDEX IX_${tableName} ON ${tableName}(id)`
-      const insertSql = `INSERT INTO ${tableName} (${columnNames}) VALUES `
-      const selectSql = `SELECT ${columnNames} FROM ${tableName} ORDER BY id`
-      const trucateSql = `TRUNCATE TABLE ${tableName}`
-
-      this.definition = def
-      this.theConnection = c
-      this.dropTableSql = dropTableSql
-      this.createTableSql = createTableSql
-      this.clusteredSql = clusteredSql
-      this.selectSql = selectSql
-      this.insertSql = insertSql
-      this.truncateSql = trucateSql
-      this.tableName = def.tableName
-    }
-
-    async create () {
-      const promisedRaw = util.promisify(this.env.theConnection.queryRaw)
-      await promisedRaw(this.dropTableSql)
-      await promisedRaw(this.createTableSql)
-      await promisedRaw(this.clusteredSql)
-    }
-  }
-
   class InsertSqlHelper {
     constructor (tt) {
       const randomHour = Math.floor(Math.random() * 24)
@@ -142,7 +111,7 @@ describe('dates', function () {
       ]
     }
     const promisedRaw = util.promisify(env.theConnection.queryRaw)
-    const tt = new DateTableTest(env.theConnection, tableDef)
+    const tt = env.bulkTableTest(tableDef)
     const ih = new InsertSqlHelper(tt)
 
     const fns =
@@ -334,7 +303,7 @@ describe('dates', function () {
       ]
     }
     const promisedRaw = util.promisify(env.theConnection.queryRaw)
-    const tt = new DateTableTest(env.theConnection, tableDef)
+    const tt = env.bulkTableTest(tableDef)
 
     // 'INSERT INTO date_test (test_date) VALUES ('1-1-1970'),('12-31-1969'),('2-29-1904'),('2-29-2000');
 
@@ -426,7 +395,7 @@ describe('dates', function () {
       ]
     }
 
-    const tt = new DateTableTest(env.theConnection, tableDef)
+    const tt = env.bulkTableTest(tableDef)
     const insertDatesQuery = `${tt.insertSql} ${testDates.map(d => `('${d.date1}', '${d.date2}')`)}`
 
     const promisedRaw = util.promisify(env.theConnection.queryRaw)
@@ -484,7 +453,7 @@ describe('dates', function () {
       ]
     }
 
-    const tt = new DateTableTest(env.theConnection, tableDef)
+    const tt = env.bulkTableTest(tableDef)
 
     // there are some timezones not on hour boundaries, but we aren't testing those in these unit tests
     // INSERT INTO datetimeoffset_test (test_datetimeoffset) VALUES ('1970-1-1 0:0:0-12:00'),('1970-1-1 0:0:0-11:00'),
