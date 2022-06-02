@@ -1,4 +1,3 @@
-// ---------------------------------------------------------------------------------------------------------------------------------
 // File: dates.js
 // Contents: test suite for queries and parameters dealing with dates
 //
