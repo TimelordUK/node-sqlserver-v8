@@ -222,13 +222,7 @@ describe('userbind', function () {
 
   it('user bind SmallDateTime to sql type smalldatetime', testDone => {
     const now = new Date()
-    const smalldt = new Date(Date.UTC(now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate(),
-      now.getUTCHours(),
-      now.getUTCMinutes(),
-      0,
-      0))
+    const smalldt = env.timeHelper.getUTCDateHHMM(now)
     smalldt.nanosecondsDelta = 0
     const params = {
       query: 'declare @v smalldatetime = ?; select @v as v',
@@ -365,13 +359,7 @@ describe('userbind', function () {
 
   it('user bind Date', testDone => {
     const today = new Date()
-    const dateOnly = new Date(Date.UTC(today.getUTCFullYear(),
-      today.getUTCMonth(),
-      today.getUTCDate(),
-      0,
-      0,
-      0,
-      0))
+    const dateOnly = env.timeHelper.getUTCDate()
     dateOnly.nanosecondsDelta = 0
     const params = {
       query: 'declare @v date = ?; select @v as v',

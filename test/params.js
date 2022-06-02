@@ -707,25 +707,13 @@ describe('params', function () {
     })
   })
 
-  function toUTC (localDate) {
-    return new Date(
-      Date.UTC(
-        localDate.getUTCFullYear(),
-        localDate.getUTCMonth(),
-        localDate.getUTCDate(),
-        localDate.getUTCHours(),
-        0,
-        0,
-        0))
-  }
-
   it('verify getdate (datetime) to sql_variant', testDone => {
-    const smalldt = toUTC(new Date())
+    const smalldt = env.timeHelper.getUTCDateHH(new Date())
     env.theConnection.query('select cast(convert(datetime, ?) as sql_variant) as data', [smalldt], (err, res) => {
       assert.ifError(err)
       let date = res[0].data
       assert(date instanceof Date)
-      date = toUTC(date)
+      date = env.timeHelper.getUTCDateHH(date)
       assert(smalldt.getYear() === date.getYear())
       assert(smalldt.getMonth() === date.getMonth())
       assert(smalldt.getDay() === date.getDay())

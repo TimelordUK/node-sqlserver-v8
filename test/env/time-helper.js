@@ -10,6 +10,42 @@ class TimeHelper {
     return d
   }
 
+  getUTCDate (date) {
+    const localDate = date || new Date()
+    const smalldt = new Date(Date.UTC(localDate.getUTCFullYear(),
+      localDate.getUTCMonth(),
+      localDate.getUTCDate(),
+      0,
+      0,
+      0,
+      0))
+    return smalldt
+  }
+
+  getUTCDateHH (date) {
+    const localDate = date || new Date()
+    const smalldt = new Date(Date.UTC(localDate.getUTCFullYear(),
+      localDate.getUTCMonth(),
+      localDate.getUTCDate(),
+      localDate.getUTCHours(),
+      0,
+      0,
+      0))
+    return smalldt
+  }
+
+  getUTCDateHHMM (date) {
+    const localDate = date || new Date()
+    const smalldt = new Date(Date.UTC(localDate.getUTCFullYear(),
+      localDate.getUTCMonth(),
+      localDate.getUTCDate(),
+      localDate.getUTCHours(),
+      localDate.getUTCMinutes(),
+      0,
+      0))
+    return smalldt
+  }
+
   getUTCDateTime (date) {
     const localDate = date || new Date()
     const utcDate = new Date(Date.UTC(localDate.getUTCFullYear(),
