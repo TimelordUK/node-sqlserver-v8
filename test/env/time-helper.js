@@ -46,6 +46,26 @@ class TimeHelper {
     return smalldt
   }
 
+  makeUTCJan1900HH (expectedHour) {
+    return new Date(Date.UTC(1900, 0, 1, expectedHour, 0, 0, 0))
+  }
+
+  makeUTCJan1900HHMM (expectedHour, expectedMinute) {
+    return new Date(Date.UTC(1900, 0, 1, expectedHour, expectedMinute, 0, 0))
+  }
+
+  makeUTCJan1900HHMMSS (expectedHour, expectedMinute, expectedSecond) {
+    return new Date(Date.UTC(1900, 0, 1, expectedHour, expectedMinute, expectedSecond, 0))
+  }
+
+  makeUTCJan1900HHMMSSMS (expectedHour, expectedMinute, expectedSecond, expectedms) {
+    return new Date(Date.UTC(1900, 0, 1, expectedHour, expectedMinute, expectedSecond, expectedms))
+  }
+
+  makeUTCDateHHMMSS (tzYear, tzMonth, tzDay, tzHour, tzMinute, tzSecond) {
+    return new Date(Date.UTC(tzYear, tzMonth, tzDay, tzHour, tzMinute, tzSecond))
+  }
+
   getUTCDateTime (date) {
     const localDate = date || new Date()
     const utcDate = new Date(Date.UTC(localDate.getUTCFullYear(),

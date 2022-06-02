@@ -136,7 +136,7 @@ describe('dates', function () {
             ++expectedHour
             assert(c === 0)
             assert(!more)
-            const expectedDate = new Date(Date.UTC(1900, 0, 1, expectedHour, 0, 0, 0))
+            const expectedDate = env.timeHelper.makeUTCJan1900HH(expectedHour)
             expectedDate.nanosecondsDelta = 0
             assert.deepStrictEqual(d, expectedDate)
           })
@@ -170,7 +170,7 @@ describe('dates', function () {
             ++expectedMinute
             assert(c === 0)
             assert(!more)
-            const expectedDate = new Date(Date.UTC(1900, 0, 1, ih.randomHour, expectedMinute, 0, 0))
+            const expectedDate = env.timeHelper.makeUTCJan1900HHMM(ih.randomHour, expectedMinute)
             expectedDate.nanosecondsDelta = 0
             assert.deepStrictEqual(d, expectedDate)
           })
@@ -203,7 +203,7 @@ describe('dates', function () {
             ++expectedSecond
             assert(c === 0)
             assert(!more)
-            const expectedDate = new Date(Date.UTC(1900, 0, 1, ih.randomHour, ih.randomMinute, expectedSecond, 0))
+            const expectedDate = env.timeHelper.makeUTCJan1900HHMMSS(ih.randomHour, ih.randomMinute, expectedSecond)
             expectedDate.nanosecondsDelta = 0
             assert.deepStrictEqual(d, expectedDate)
           })
@@ -238,7 +238,7 @@ describe('dates', function () {
             ++msCount
             assert(c === 0)
             assert(!more)
-            const expectedDate = new Date(Date.UTC(1900, 0, 1, ih.randomHour, ih.randomMinute, ih.randomSecond, ih.randomMs[msCount]))
+            const expectedDate = env.timeHelper.makeUTCJan1900HHMMSSMS(ih.randomHour, ih.randomMinute, ih.randomSecond, ih.randomMs[msCount])
             expectedDate.nanosecondsDelta = 0
             assert.deepStrictEqual(d, expectedDate, 'Milliseconds didn\'t match')
           })
@@ -272,7 +272,7 @@ describe('dates', function () {
             ++nsCount
             assert(c === 0)
             assert(!more)
-            const expectedDate = new Date(Date.UTC(1900, 0, 1, ih.randomHour, ih.randomMinute, ih.randomSecond, ih.nanoseconds[nsCount] * 1000))
+            const expectedDate = env.timeHelper.makeUTCJan1900HHMMSSMS(ih.randomHour, ih.randomMinute, ih.randomSecond, ih.nanoseconds[nsCount] * 1000)
             expectedDate.nanosecondsDelta = ih.nanosecondsDeltaExpected[nsCount]
             assert.deepStrictEqual(d, expectedDate, 'Nanoseconds didn\'t match')
           })
@@ -309,15 +309,8 @@ describe('dates', function () {
 
     const insertDatesQuery = `${tt.insertSql} ${testDates.map(d => `('${d}')`)}`
 
-    const expectedDates = []
-    for (const testDate of testDates) {
-      const d = new Date(testDate)
-      // eslint-disable-next-line camelcase
-      const now_utc = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(),
-        d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds())
-      const expectedDate = new Date(now_utc)
-      expectedDates.push([expectedDate])
-    }
+    const expectedDates = testDates.map(testDate => [env.timeHelper.getUTCDateTime(new Date(testDate))])
+
     const expectedResults = {
       meta: [{ name: 'test_date', size: 10, nullable: true, type: 'date', sqlType: 'date' }],
       rows: expectedDates
@@ -440,7 +433,7 @@ describe('dates', function () {
     const tzMinute = 0
     const tzSecond = 0
 
-    const insertedDate = new Date(Date.UTC(tzYear, tzMonth, tzDay, tzHour, tzSecond))
+    const insertedDate = env.timeHelper.makeUTCDateHHMMSS(tzYear, tzMonth, tzDay, tzHour, tzMinute, tzSecond)
     const msPerHour = 1000 * 60 * 60
 
     const tableDef = {
