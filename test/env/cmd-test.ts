@@ -70,15 +70,15 @@ class PrintConnection implements SimpleTest {
 class Benchmark implements SimpleTest {
 
     public run(conn_str: string, argv: any): void {
-        let delay: number = argv.delay || 500;
-        let repeats: number = argv.repeats || 10;
-        let prepared: boolean = argv.hasOwnProperty('prepared') || false;
-        let stream: boolean = argv.hasOwnProperty('stream') || false;
-        let table: string = argv.table || 'syscomments';
-        let schema: string = argv.schema || 'master.';
-        let columns:string = argv.columns || '*';
-        let top:number = argv.top || -1;
-        let query = top < 0 ?
+        const delay: number = argv.delay || 500;
+        const repeats: number = argv.repeats || 10;
+        const prepared: boolean = argv.hasOwnProperty('prepared') || false;
+        const stream: boolean = argv.hasOwnProperty('stream') || false;
+        const table: string = argv.table || 'syscomments';
+        const schema: string = argv.schema || 'master.';
+        const columns:string = argv.columns || '*';
+        const top:number = argv.top || -1;
+        const query = top < 0 ?
             `select ${columns} from ${schema}.${table}` :
             `select top ${top} ${columns} from ${schema}.${table}`;
         console.log(`Benchmark query ${query}`);
@@ -87,22 +87,19 @@ class Benchmark implements SimpleTest {
         let statement: PreparedStatement = null;
 
         function get_ready(done:Function) {
-            sql.open(conn_str, (err, conn) => {
-                if (err) {
-                    console.log(err);
-                    throw err;
-                }
-
+            sql.promises.open(conn_str).then(conn => {
                 if (prepared) {
                     console.log(`preparing query ${query}`);
                     conn.prepare(query, function (err, statement) {
-                        let cols = statement.getMeta().map(x=>x.name).join();
+                        let cols = statement.getMeta().map(x => x.name).join();
                         console.log(cols);
                         done(err, conn, statement)
                     })
                 } else {
-                    done(err, conn)
+                    done(null, conn, null)
                 }
+            }).catch(err => {
+                done(err, null, null)
             })
         }
 
@@ -110,7 +107,7 @@ class Benchmark implements SimpleTest {
             let rows:any[] = [];
             if (prepared) {
                 if (stream) {
-                    let q = statement.preparedQuery([]);
+                    const q = statement.preparedQuery([]);
                     q.on('done', ()=> {
                         cb(null, rows)
                     });
@@ -122,7 +119,7 @@ class Benchmark implements SimpleTest {
                 }
             } else {
                 if (stream) {
-                    let q = conn.query(query);
+                    const q = conn.query(query);
                     q.on('done', ()=> {
                         cb(null, rows)
                     });

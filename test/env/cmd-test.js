@@ -99,11 +99,7 @@ var Benchmark = /** @class */ (function () {
         var total = 0;
         var statement = null;
         function get_ready(done) {
-            sql.open(conn_str, function (err, conn) {
-                if (err) {
-                    console.log(err);
-                    throw err;
-                }
+            sql.promises.open(conn_str).then(function (conn) {
                 if (prepared) {
                     console.log("preparing query ".concat(query));
                     conn.prepare(query, function (err, statement) {
@@ -113,8 +109,10 @@ var Benchmark = /** @class */ (function () {
                     });
                 }
                 else {
-                    done(err, conn);
+                    done(null, conn, null);
                 }
+            })["catch"](function (err) {
+                done(err, null, null);
             });
         }
         function get_data(conn, cb) {
