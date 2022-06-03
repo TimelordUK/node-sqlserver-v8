@@ -36,6 +36,10 @@ class BulkTableTest {
     this.insertParamsSql = `${insertSql} ${paramsSql}`
   }
 
+  async drop () {
+    await this.theConnection.promises.query(this.dropTableSql)
+  }
+
   async create () {
     const promises = this.theConnection.promises
     await promises.query(this.dropTableSql)

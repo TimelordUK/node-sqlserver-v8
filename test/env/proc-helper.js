@@ -1,15 +1,30 @@
 class ProcTest {
-  async create () {
-    const promises = this.theConnection.promises
-    await promises.query(this.dropProcedureSql)
-    await promises.query(this.def)
+  dropProcedureSql
+
+  constructor (theConnection, def) {
+    this.def = def
+    this.theConnection = theConnection
+    this.dropProcedureSql = `IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('${def.name}'))
+      begin drop PROCEDURE ${def.name} end `
   }
 
-  constructor (theConnection, spName, def) {
-    this.dropProcedureSql = `IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('${spName}'))
-begin drop PROCEDURE ${spName} end `
-    this.theConnection = theConnection
-    this.def = def
+  async create () {
+    try {
+      const promises = this.theConnection.promises
+      await promises.query(this.dropProcedureSql)
+      await promises.query(this.def.sql)
+    } catch (e) {
+      console.log(e)
+    }
+  }
+
+  async drop () {
+    try {
+      const promises = this.theConnection.promises
+      await promises.query(this.dropProcedureSql)
+    } catch (e) {
+      console.log(e)
+    }
   }
 }
 
