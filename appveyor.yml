@@ -36,7 +36,7 @@ for:
         - ps: (New-Object Net.WebClient).DownloadFile('https://www.microsoft.com/en-us/download/confirmation.aspx?id=56567&6B49FDFB-8E5B-4B07-BC31-15695C5A2143=1', $msiPath)
         - ps: Write-Host "Installing..."
         - ps: Write-Host $msiPath
-        - cmd: cmd /c start /wait msiexec /i "$msiPath" /q
+        - cmd /c start /wait msiexec /i "$msiPath" /q
     
       build_script:
         - cmd: node --version
