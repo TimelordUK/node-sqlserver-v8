@@ -37,12 +37,12 @@ for:
         - ps: Write-Host "Installing..."
         - ps: Write-Host $msiPath
         - cmd: cmd /c start /wait msiexec /i "$msiPath" /q
-        - ps: Get-OdbcDriver
-        
+    
       build_script:
         - cmd: node --version
 
       test_script:
+        - ps: Get-OdbcDriver
         - cmd: tool\appveyor-win.cmd
   -        
       matrix:
