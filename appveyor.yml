@@ -30,6 +30,13 @@ for:
       install:
         - ps: Install-Product node $env:nodejs_version $env:platform
         - npm install
+        - ps: Write-Host "Installing ODBC driver..." -ForegroundColor Cyan
+        - ps: Write-Host "Downloading..."
+        - ps: $msiPath = "$($env:USERPROFILE)\msodbcsql.msi"
+        - ps: (New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/D/5/E/D5EEF288-A277-45C8-855B-8E2CB7E25B96/x64/msodbcsql.msi', $msiPath)
+        - ps: Write-Host "Installing..."
+        - cmd: msiexec /i "$msiPath" /q
+        - cmd: del $msiPath
 
       build_script:
         - cmd: node --version
