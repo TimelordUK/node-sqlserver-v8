@@ -1,8 +1,8 @@
 const sql = require('msnodesqlv8')
-const { GetConnection } = require('./get-connection')
-
-const connectionString = new GetConnection('ase').connectionString
+const { TestEnv } = require('../../test/env/test-env')
+const env = new TestEnv('sybase')
 const query = 'SELECT top 5 * FROM syscomments'
+const connectionString = env.connectionString
 
 // "Driver={Adaptive Server Enterprise}; app=myAppName; server=localhost port=5000; db=pubs3; uid=sa; pwd=ooooo;"
 
@@ -264,6 +264,7 @@ async function procAsSelect () {
 }
 
 async function run () {
+  await env.open()
   await pool()
   await builder()
   await procAsSelect()
@@ -271,6 +272,7 @@ async function run () {
   await proc()
   await q1()
   await promised()
+  await env.close()
 }
 
 run().then(() => {

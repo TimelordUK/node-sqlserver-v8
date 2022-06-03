@@ -33,8 +33,8 @@ class TestEnv {
       key = key || fallback
       const path = require('path')
       const config = this.readJson(path.join(__dirname, '../../.env-cmdrc'))
-      const subSection = config.test
-      return subSection[key]
+      const subSection = config[key] ?? config.test
+      return subSection[key] || config[key]?.DEFAULT
     }
   }
 
@@ -100,10 +100,10 @@ class TestEnv {
     return new Array(num + 1).join(c)
   }
 
-  constructor () {
+  constructor (key) {
     this.theConnection = null
     this.employee = null
-    this.connectionString = this.getConnection()
+    this.connectionString = this.getConnection(key)
     this.driver = this.decodeDriver()
     const ds = new supp.DemoSupport(sql)
     this.support = ds
