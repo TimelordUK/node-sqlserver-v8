@@ -38,7 +38,6 @@ for:
         - ps: Get-Item -Path $msiPath
         - ps: Write-Host $msiPath
         - ps: msiexec /quiet /qn /norestart /log $msiLog /i $msiPath IACCEPTMSODBCSQLLICENSETERMS=YES
-        - ps: cat $msiLog
         - npm install
       build_script:
         - cmd: node --version
