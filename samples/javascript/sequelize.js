@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize')
-const { GetConnection } = require('./get-connection')
-
-const connectionString = new GetConnection().connectionString
+const { TestEnv } = require('../../test/env/test-env')
+const env = new TestEnv()
+const connectionString = env.connectionString
 
 const sequelize = new Sequelize({
   dialect: 'mssql',
