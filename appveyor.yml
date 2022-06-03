@@ -33,10 +33,13 @@ for:
         - ps: Write-Host "Installing ODBC driver..." -ForegroundColor Cyan
         - ps: Write-Host "Downloading..."
         - ps: $msiPath = "$($env:USERPROFILE)\msodbcsql.msi"
+        - ps: $msiLog = "$($env:USERPROFILE)\msodbcsql.txt"
         - ps: (New-Object Net.WebClient).DownloadFile('https://www.microsoft.com/en-us/download/confirmation.aspx?id=56567&6B49FDFB-8E5B-4B07-BC31-15695C5A2143=1', $msiPath)
         - ps: Write-Host "Installing..."
+        - ps: Get-Item -Path $msiPath
         - ps: Write-Host $msiPath
-        - cmd /c start /wait msiexec /i "$msiPath" /q
+        - cmd /c start /wait msiexec /i "$msiPath" /q /L "$msiLog"
+        - cmd: cat $msiLog
     
       build_script:
         - cmd: node --version
