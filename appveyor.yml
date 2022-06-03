@@ -35,7 +35,8 @@ for:
         - ps: $msiPath = "$($env:USERPROFILE)\msodbcsql.msi"
         - ps: (New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/D/5/E/D5EEF288-A277-45C8-855B-8E2CB7E25B96/x64/msodbcsql.msi', $msiPath)
         - ps: Write-Host "Installing..."
-        - cmd: msiexec /i "$msiPath" /q
+        - ps: Write-Host $msiPath
+        - cmd: cmd /c start /wait msiexec /i "$msiPath" /q
         - cmd: del $msiPath
 
       build_script:
