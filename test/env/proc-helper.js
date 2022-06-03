@@ -12,7 +12,7 @@ class ProcTest {
     try {
       const promises = this.theConnection.promises
       await promises.query(this.dropProcedureSql)
-      await promises.query(this.def.sql)
+      await promises.query(this.def.sql || this.def.def)
     } catch (e) {
       console.log(e)
     }

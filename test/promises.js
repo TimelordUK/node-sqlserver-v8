@@ -21,14 +21,18 @@ describe('promises', function () {
     async function exec () {
       try {
         const spName = 'sp_test'
-        const def = `create PROCEDURE ${spName} @param VARCHAR(50) 
-        AS 
-        BEGIN 
-         RETURN LEN(@param); 
-        END 
-        `
+        const def = {
+          name: spName,
+          sql: `create PROCEDURE ${spName} @param VARCHAR(50) 
+          AS 
+          BEGIN 
+           RETURN LEN(@param); 
+          END 
+          `
+        }
+
         const msg = 'hello world'
-        const proc = env.procTest(spName, def)
+        const proc = env.procTest(def)
         await proc.create()
         const res = await env.sql.promises.callProc(env.connectionString, spName, {
           param: msg
