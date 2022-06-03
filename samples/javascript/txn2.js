@@ -1,15 +1,17 @@
-const mssql = require('msnodesqlv8')
-const { GetConnection } = require('./get-connection')
+const { TestEnv } = require('../../test/env/test-env')
+const env = new TestEnv()
 
-const connectionString = new GetConnection().getConnection('linux')
-const saString = new GetConnection().getConnection('sa')
-
+const connectionString = env.connectionString
 console.log(`connectionString = ${connectionString}`)
+
+const saString = env.getConnection('sa')
+
+console.log(`saString = ${saString}`)
 
 const table = '_customer2'
 
 async function create () {
-  const theConnection = await mssql.promises.open(connectionString)
+  const theConnection = await env.sql.promises.open(connectionString)
 
   const mgr = theConnection.tableMgr()
   const res = await theConnection.promises.query('SELECT db_NAME() as [db]')
@@ -53,10 +55,10 @@ async function locks (id, saConnection) {
 // const isolation = 'SNAPSHOT'
 // default this induces  Bookmark lookup deadlock
 
-const isolation = 'READ COMMITTED '
+const isolation = 'SNAPSHOT '
 
 async function run (id, saConnection) {
-  const conn = await mssql.promises.open(connectionString)
+  const conn = await env.sql.promises.open(connectionString)
   await conn.promises.query(`SET TRANSACTION ISOLATION LEVEL ${isolation}`)
   iterate(id, conn, saConnection)
 }
@@ -97,7 +99,7 @@ async function iterate (id, conn, saConnection) {
 
 async function runner () {
   await create()
-  const saConnection = await mssql.promises.open(saString)
+  const saConnection = await env.sql.promises.open(saString)
   for (let i = 0; i < 3; i++) {
     run(i, saConnection)
   }

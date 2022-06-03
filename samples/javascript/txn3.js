@@ -1,14 +1,14 @@
 
-const mssql = require('msnodesqlv8')
-const { GetConnection } = require('./get-connection')
+const { TestEnv } = require('../../test/env/test-env')
+const env = new TestEnv()
 
-const connectionString = new GetConnection().getConnection('linux')
+const connectionString = env.connectionString
 console.log(`connectionString = ${connectionString}`)
 
 const isolation = 'SNAPSHOT'
 
 async function run (id) {
-  const conn = await mssql.promises.open(connectionString)
+  const conn = await env.sql.promises.open(connectionString)
   await conn.promises.query(`SET TRANSACTION ISOLATION LEVEL ${isolation}`)
   iterate(id, conn)
 }

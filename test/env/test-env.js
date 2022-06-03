@@ -23,7 +23,7 @@ class TestEnv {
   }
 
   getConnection (key, fallback) {
-    fallback = fallback ?? 'LINUX'
+    fallback = fallback || 'LINUX'
     const rcRes = process.env[fallback] || process.env.DEFAULT
     if (rcRes) {
       return rcRes
@@ -32,8 +32,9 @@ class TestEnv {
     } else {
       key = key || fallback
       const path = require('path')
-      const config = this.readJson(path.join(__dirname, '../../.env-cmdrc'))
-      const subSection = config[key] ?? config.test
+      const rcPath = path.join(__dirname, '../../.env-cmdrc')
+      const config = this.readJson(rcPath)
+      const subSection = config[key] || config.test
       return subSection[key] || config[key]?.DEFAULT
     }
   }
