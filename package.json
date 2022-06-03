@@ -64,11 +64,11 @@
   },
   "devDependencies": {
     "@types/electron": "^1.4.38",
-    "@types/node": "^17.0.36",
+    "@types/node": "^17.0.39",
     "@types/sequelize": "^4.28.13",
     "asynquence": "^0.10.2",
     "asynquence-contrib": "^0.28.2",
-    "electron": "^19.0.1",
+    "electron": "^19.0.3",
     "electron-rebuild": "^3.2.7",
     "env-cmd": "^10.1.0",
     "minimist": "^1.2.6",
