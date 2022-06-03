@@ -39,8 +39,7 @@ for:
         - ps: Get-Item -Path $msiPath
         - ps: Write-Host $msiPath
         - ps: msiexec /i "$msiPath" /q /L "$msiLog"
-        - ps: cat $msiLog
-    
+        
       build_script:
         - cmd: node --version
 
