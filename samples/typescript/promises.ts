@@ -25,15 +25,12 @@ run().then(() => {
     console.log('finished')
 })
 
-function getConnection () : string {
-  const path = require('path')
-  const config = require(path.join(__dirname, '../config.json'))
-  return config.connection.local
-}
+const { TestEnv } = require('../../../test/env/test-env')
+const env = new TestEnv()
 
 async function openSelectClose() {
     try {
-        const connStr: string = getConnection()
+        const connStr = env.connectionString
         const conn: Connection = await sql.promises.open(connStr)
         const res: QueryAggregatorResults = await conn.promises.query('select @@SPID as spid')
         console.log(JSON.stringify(res, null, 4))
@@ -45,7 +42,7 @@ async function openSelectClose() {
 
 async function adhocQuery() {
     try {
-        const connStr: string = getConnection()
+        const connStr = env.connectionString
         const res: QueryAggregatorResults = await sql.promises.query(connStr, 'select @@SPID as spid')
         console.log(`ashoc spid ${res.first[0].spid}`)
     } catch (e) {
@@ -55,7 +52,7 @@ async function adhocQuery() {
 
 async function pool() {
     try {
-        const connStr: string = getConnection()
+        const connStr = env.connectionString
         const size = 4
         const options: PoolOptions = {
             connectionString: connStr,
@@ -122,7 +119,7 @@ const sampleProc: ProcDef = {
 
 async function adhocProc() {
     try {
-        const connStr: string = getConnection()
+        const connStr = env.connectionString
         const proc = new ProcTest(connStr, sampleProc)
         await proc.create()    
         const msg = 'hello world'
@@ -138,7 +135,7 @@ async function adhocProc() {
 
 async function proc() {
     try {
-        const connStr: string = getConnection()
+        const connStr = env.connectionString
         const proc = new ProcTest(connStr, sampleProc)
         await proc.create()    
         const conn: Connection = await sql.promises.open(connStr)
@@ -219,7 +216,7 @@ const sampleTableDef: TableDef = {
 
 async function table() {
       try {
-        const connStr: string = getConnection()
+        const connStr = env.connectionString
         const connection = await sql.promises.open(connStr)
         const tm: BulkTableTest = new BulkTableTest(connection, sampleTableDef)
         const table: BulkTableMgr = await tm.create()
@@ -238,7 +235,7 @@ async function table() {
 
 async function prepared() {
     try {
-      const connStr: string = getConnection()
+        const connStr = env.connectionString
       const connection = await sql.promises.open(connStr)
       const tm: BulkTableTest = new BulkTableTest(connection, sampleTableDef)
       const vec: SampleRecord[] = getInsertVec(2)
