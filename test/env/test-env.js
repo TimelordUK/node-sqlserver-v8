@@ -22,8 +22,8 @@ class TestEnv {
     return JSON.parse(fs.readFileSync(path, 'utf8'))
   }
 
-  getConnection (key) {
-    const fallback = 'LINUX'
+  getConnection (key, fallback) {
+    fallback = fallback ?? 'LINUX'
     const rcRes = process.env[fallback] || process.env.DEFAULT
     if (rcRes) {
       return rcRes

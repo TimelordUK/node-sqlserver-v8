@@ -1,8 +1,8 @@
 const { parentPort } = require('worker_threads')
 const sql = require('msnodesqlv8')
-const { GetConnection } = require('./get-connection')
-
-const connectionString = new GetConnection().connectionString
+const { TestEnv } = require('../../test/env/test-env')
+const env = new TestEnv()
+const connectionString = env.connectionString
 
 async function compute (msg) {
   try {
