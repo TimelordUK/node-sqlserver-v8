@@ -38,7 +38,7 @@ for:
         - ps: Write-Host "Installing..."
         - ps: Get-Item -Path $msiPath
         - ps: Write-Host $msiPath
-        - ps: cmd /c start /wait msiexec /i "$msiPath" /q /L "$msiLog"
+        - ps: msiexec /i "$msiPath" /q /L "$msiLog"
         - ps: cat $msiLog
     
       build_script:
