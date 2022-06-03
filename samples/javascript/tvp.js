@@ -1,18 +1,17 @@
 'use strict'
 
-const sql = require('msnodesqlv8')
-const { GetConnection } = require('./get-connection')
+const { TestEnv } = require('../../test/env/test-env')
+const env = new TestEnv()
 
 main().then(() => {
   console.log('done')
 })
 
 async function main () {
-  const connectionString = new GetConnection().connectionString
   try {
-    const con = await sql.promises.open(connectionString)
-    await asFunction((con))
-    await con.promises.close()
+    await env.open()
+    await asFunction(env.theConnection)
+    await env.close()
   } catch (err) {
     if (err) {
       if (Array.isArray(err)) {
@@ -34,7 +33,7 @@ async function asFunction (theConnection) {
   const vec = helper.getExtendedVec(10)
   const table = await helper.create()
   table.addRowsFromObjects(vec)
-  const tp = sql.TvpFromTable(table)
+  const tp = env.sql.TvpFromTable(table)
   table.rows = []
   const execSql = 'exec insertTestTvp @tvp = ?;'
   console.log(`exec ${execSql}`)
