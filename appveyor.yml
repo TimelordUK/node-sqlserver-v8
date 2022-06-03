@@ -37,7 +37,7 @@ for:
         - ps: Write-Host "Installing..."
         - ps: Get-Item -Path $msiPath
         - ps: Write-Host $msiPath
-        - ps: msiexec /i $msiPath /quiet /qn /norstart /log $msiLog
+        - ps: msiexec /i $msiPath /quiet /qn /norestart /log $msiLog
         - ps: npm install
         
       build_script:
