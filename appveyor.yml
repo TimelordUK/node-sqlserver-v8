@@ -29,6 +29,7 @@ for:
 
       install:
         - ps: Install-Product node $env:nodejs_version $env:platform
+        - ps: npm install
         - ps: Write-Host "Installing ODBC driver..." -ForegroundColor Cyan
         - ps: Write-Host "Downloading..."
         - ps: $msiPath = "$($env:USERPROFILE)\msodbcsql.msi"
@@ -38,7 +39,6 @@ for:
         - ps: Get-Item -Path $msiPath
         - ps: Write-Host $msiPath
         - ps: msiexec /i $msiPath /quiet /qn /norestart /log $msiLog
-        - ps: npm install
         
       build_script:
         - cmd: node --version
