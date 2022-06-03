@@ -33,7 +33,7 @@ for:
         - ps: Write-Host "Downloading..."
         - ps: $msiPath = "$($env:USERPROFILE)\msodbcsql.msi"
         - ps: $msiLog = "$($env:USERPROFILE)\msodbcsql.txt"
-        - ps: (New-Object Net.WebClient).DownloadFile('https://www.microsoft.com/en-us/download/confirmation.aspx?id=56567&6B49FDFB-8E5B-4B07-BC31-15695C5A2143=1', $msiPath)
+        - ps: (New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/E/6/B/E6BFDC7A-5BCD-4C51-9912-635646DA801E/en-US/17.5.2.1/x64/msodbcsql.msi', $msiPath)
         - ps: Write-Host "Installing..."
         - ps: Get-Item -Path $msiPath
         - ps: Write-Host $msiPath
