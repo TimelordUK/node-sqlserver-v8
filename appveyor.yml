@@ -37,7 +37,7 @@ for:
         - ps: Write-Host "Installing..."
         - ps: Get-Item -Path $msiPath
         - ps: Write-Host $msiPath
-        - ps: msiexec /i $msiPath /quiet /qn /norestart /log $msiLog
+        - ps: msiexec /quiet /qn /norestart /log $msiLog /i $msiPath IACCEPTMSODBCSQLLICENSETERMS=YES
         - ps: cat $msiLog
         - npm install
       build_script:
