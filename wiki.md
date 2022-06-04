@@ -2695,8 +2695,12 @@ using the connection details provided by info, you should be able to connect to 
 
 Note, some useful commands are shown [here](http://stackoverflow.com/questions/14153509/how-to-prevent-sql-server-localdb-auto-shutdown) which prevents your local SQL server instance from shutting down within a period of inactivity.  Very useful during periods of development.
 
-if you wish to run a unit test through an IDE, then the following file :-
+if you wish to run a unit test through an IDE, then for example install visual studio code mocha sidebar and run a test
 
-[runtest.js](https://github.com/TimelordUK/node-sqlserver-v8/blob/master/runtest.js)
+ensure the connection details are added in .env-cmdrc
+
+the test are run with command line mocha
+
+npm run test. Look at the setup for appveyor.yml as an example.
 
 provides a simple start point.  Simply change the test run to whichever you require such as [query.js](https://github.com/TimelordUK/node-sqlserver-v8/blob/master/test/query.js)
