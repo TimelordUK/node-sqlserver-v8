@@ -1,8 +1,6 @@
-const sql = require('msnodesqlv8')
 
 const { TestEnv } = require('../../test/env/test-env')
 const env = new TestEnv()
-const connectionString = env.connectionString
 
 main().then(() => {
   console.log('done')
@@ -10,11 +8,12 @@ main().then(() => {
 
 async function main () {
   try {
-    const con = await sql.promises.open(connectionString)
-    await asFunction((con))
+    await env.open()
+    const con = env.theConnection
+    await asFunction(con)
     console.log('')
-    await asStream((con))
-    await await con.promises.close()
+    await asStream(con)
+    await env.close()
   } catch (err) {
     if (err) {
       if (Array.isArray(err)) {
