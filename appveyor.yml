@@ -1,8 +1,8 @@
 version: 1.0.{build}
 
 image: 
-  - Ubuntu
   - Visual Studio 2017
+  - Ubuntu
 
 platform: 
   - x64
@@ -42,7 +42,7 @@ for:
 
       build_script:
         - cmd: node --version
-        - cmd: tsc
+        - cmd: npm run build
 
       test_script:
         - ps: Get-OdbcDriver
@@ -59,11 +59,11 @@ for:
       clone_folder: /home/appveyor/projects/node_modules/msnodesqlv8 
       
       build_script:
-        - cmd: node --version
-        - cmd: tsc
+        - sh: node --version
+        - sh: npm run build
 
       test_script:
-        - sh: "sleep 2"
+        - sh: "sleep 4"
         - sh: "./node_modules/.bin/env-cmd -e appv-ubuntu ./node_modules/.bin/mocha 2>&1"
 
       install:
