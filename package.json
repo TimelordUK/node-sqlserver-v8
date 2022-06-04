@@ -93,8 +93,8 @@
     "prebuild-node-ia32": "prebuild -t 10.16.0 -t 11.15.0 -t 12.18.3 -t 13.14.0 -t 14.14.0 -t 15.11.0 -t 16.13.0 -t 17.0.1 -a ia32 --strip",
     "prebuild-electron": "prebuild -t 6.1.9 -t 7.2.1 -t 8.2.3 -t 9.0.5 -t 10.1.4 -t 11.3.0 -t 12.0.0 -t 13.0.0 -t 14.0.0 -t 14.2.5 -t 15.0.0 -t 16.0.1 -t 17.0.0 -t 18.1.0 -r electron --strip",
     "prebuild-electron-ia32": "prebuild -t 6.1.9 -t 7.2.1 -t 8.2.3 -t 9.0.5 -t 10.1.4 -t 11.3.0 -t 12.0.0 -t 13.0.0 -t 14.0.0 -t 14.2.5 -t 15.0.0 -t 16.0.1 -t 17.0.0 -t 18.1.0 -r electron -a ia32 --strip",
-    "test": "node runtest -l -t table-builder -t promises -t json -t connection-pool -t pause -t concurrent -t multiple-errors -t geography -t tvp -t warnings.js -t compoundqueries.js -t querycancel.js -t txn.js -t datatypes.js -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t sproc.js -t prepared.js -t userbind.js -t dates.js 2>&1",
-    "linux-test": "node runtest -u -l -t table-builder -t promises -t json -t connection-pool -t pause -t concurrent -t multiple-errors -t geography -t tvp -t warnings.js -t compoundqueries.js -t querycancel.js -t txn.js -t datatypes.js -t params.js -t query.js -t querytimeout.js -t connect.js -t bulk.js -t sproc.js -t prepared.js -t userbind.js -t dates.js 2>&1"
+    "test": "mocha",
+    "build": "tsc"
   },
   "directories": {}
 }
