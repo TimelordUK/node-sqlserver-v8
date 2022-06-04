@@ -39,8 +39,10 @@ for:
         - ps: Write-Host $msiPath
         - ps: msiexec /quiet /qn /norestart /log $msiLog /i $msiPath IACCEPTMSODBCSQLLICENSETERMS=YES
         - npm install
+
       build_script:
         - cmd: node --version
+        - cmd: tsc
 
       test_script:
         - ps: Get-OdbcDriver
@@ -56,6 +58,10 @@ for:
 
       clone_folder: /home/appveyor/projects/node_modules/msnodesqlv8 
       
+      build_script:
+        - cmd: node --version
+        - cmd: tsc
+
       test_script:
         - sh: "sleep 2"
         - sh: "./node_modules/.bin/env-cmd -e appv-ubuntu ./node_modules/.bin/mocha 2>&1"

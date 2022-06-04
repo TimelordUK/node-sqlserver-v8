@@ -9,7 +9,7 @@ import {
 } from 'msnodesqlv8';
 
 const sql: SqlClient = require('msnodesqlv8');
-const { TestEnv } = require('./test-env')
+const { TestEnv } = require('../../../test/env/test-env')
 let argv = require('minimist')(process.argv.slice(2));
 let assert = require('assert');
 

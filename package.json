@@ -78,7 +78,8 @@
     "prebuild": "^11.0.3",
     "sequelize": "^6.20.1",
     "standard": "^17.0.0",
-    "tedious": "^14.5.0"
+    "tedious": "^14.5.0",
+    "typescript": "^4.7.2"
   },
   "os": [
     "win32",
@@ -94,6 +95,8 @@
     "prebuild-electron": "prebuild -t 6.1.9 -t 7.2.1 -t 8.2.3 -t 9.0.5 -t 10.1.4 -t 11.3.0 -t 12.0.0 -t 13.0.0 -t 14.0.0 -t 14.2.5 -t 15.0.0 -t 16.0.1 -t 17.0.0 -t 18.1.0 -r electron --strip",
     "prebuild-electron-ia32": "prebuild -t 6.1.9 -t 7.2.1 -t 8.2.3 -t 9.0.5 -t 10.1.4 -t 11.3.0 -t 12.0.0 -t 13.0.0 -t 14.0.0 -t 14.2.5 -t 15.0.0 -t 16.0.1 -t 17.0.0 -t 18.1.0 -r electron -a ia32 --strip",
     "test": "mocha",
+    "bench-comments": "node dist/test/env/cmd-test.js -t benchmark --repeats=5 --delay=4500 2>&1",
+    "bench-columns": "node dist/test/env/cmd-test.js -t benchmark --table=syscolumns --repeats=5 --delay=5000 2>&1",
     "build": "tsc"
   },
   "directories": {}
