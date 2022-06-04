@@ -22,6 +22,24 @@ class TestEnv {
     return JSON.parse(fs.readFileSync(path, 'utf8'))
   }
 
+  fromJson (key) {
+    const path = require('path')
+    const rcPath = path.join(__dirname, '../../.env-cmdrc')
+    const config = this.readJson(rcPath)
+    const subSection = config[key] || config.test
+    let ret = null
+    if (subSection) {
+      ret = subSection[key]
+    }
+    if (!ret) {
+      if (config[key]) {
+        ret = config[key].DEFAULT
+      }
+    }
+    // subSection[key] || config[key]?.DEFAULT
+    return ret
+  }
+
   getConnection (key, fallback) {
     fallback = fallback || 'LINUX'
     const rcRes = process.env[fallback] || process.env.DEFAULT
@@ -30,12 +48,7 @@ class TestEnv {
     } else if (process.env.CONNECTION_KEY) {
       return process.env[process.env.CONNECTION_KEY]
     } else {
-      key = key || fallback
-      const path = require('path')
-      const rcPath = path.join(__dirname, '../../.env-cmdrc')
-      const config = this.readJson(rcPath)
-      const subSection = config[key] || config.test
-      return subSection[key] || config[key]?.DEFAULT
+      return this.fromJson(key || fallback)
     }
   }
 
