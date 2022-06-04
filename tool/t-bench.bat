@@ -1,1 +1,1 @@
-node unit.tests\cmd-test.js -t benchmark --delay=500
+node test\env\cmd-test.js -t benchmark --delay=500

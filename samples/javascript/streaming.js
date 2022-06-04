@@ -1,7 +1,5 @@
-const sql = require('msnodesqlv8')
-const { GetConnection } = require('./get-connection')
-
-const connectionString = new GetConnection().connectionString
+const { TestEnv } = require('../../test/env/test-env')
+const env = new TestEnv()
 
 function dispatch (con, query) {
   return new Promise((resolve, reject) => {
@@ -57,18 +55,23 @@ function dispatch (con, query) {
 }
 
 async function run () {
+  await env.open()
+  const connectionString = env.connectionString
   console.log(`run with ${connectionString}`)
-  const conn = await sql.promises.open(connectionString)
+  const conn = env.theConnection
+
   for (let i = 0; i < 5; ++i) {
     const d = new Date()
     const rows = await dispatch(conn, 'select top 5 * from master..syscolumns')
     const elapsed = new Date() - d
     console.log(`${rows.length} rows returned elapsed ${elapsed}`)
   }
+
+  await env.close()
   return []
 }
 
-run(connectionString).then(() => {
+run().then(() => {
   console.log('finished')
 }).catch(err => {
   console.log(err)

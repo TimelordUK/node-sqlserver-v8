@@ -1,10 +1,9 @@
 const http = require('http')
 const hostname = 'localhost'
 const port = 2020
-const sql = require('msnodesqlv8')
-const { GetConnection } = require('./get-connection')
-
-const connectionString = new GetConnection().connectionString
+const { TestEnv } = require('../../test/env/test-env')
+const env = new TestEnv()
+const connectionString = env.connectionString
 
 const query = 'select top 50 object_name(c.object_id), (select dc.definition from sys.default_constraints as dc where dc.object_id = c.default_object_id) as DefaultValueExpression from sys.columns as c'
 
@@ -15,7 +14,7 @@ async function test (request, response) {
   console.log('>> test')
   try {
     console.log('sqlOpen ....')
-    const connection = await sql.promises.open(connectionString)
+    const connection = await env.sql.promises.open(connectionString)
     console.log('..... sqlOpen')
     try {
       const d = new Date()

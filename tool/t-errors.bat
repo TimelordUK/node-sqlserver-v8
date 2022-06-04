@@ -1,1 +1,1 @@
-node unit.tests\cmd-test.js -t errors
+node test\env\cmd-test.js -t errors

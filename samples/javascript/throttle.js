@@ -1,14 +1,14 @@
-const sql = require('msnodesqlv8')
-const { GetConnection } = require('./get-connection')
+const { TestEnv } = require('../../test/env/test-env')
+const env = new TestEnv()
 
 main().then(() => {
   console.log('done')
 })
 
 async function main () {
-  const connectionString = new GetConnection().connectionString
+  const connectionString = env.connectionString
   try {
-    const con = await sql.promises.open(connectionString)
+    const con = await env.sql.promises.open(connectionString)
     await asStream((con))
     await con.promises.close()
   } catch (err) {

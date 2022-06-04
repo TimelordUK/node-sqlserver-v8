@@ -1,7 +1,6 @@
-const { GetConnection } = require('./get-connection')
-const sql = require('msnodesqlv8')
-
-const connectionString = new GetConnection().connectionString
+const { TestEnv } = require('../../test/env/test-env')
+const env = new TestEnv()
+const connectionString = env.connectionString
 
 process.on('uncaughtException', err => {
   console.error('There was an uncaught error', err)
@@ -9,7 +8,7 @@ process.on('uncaughtException', err => {
 })
 
 async function run (iterations) {
-  const pool = new sql.Pool({
+  const pool = new env.sql.Pool({
     connectionString
   })
 

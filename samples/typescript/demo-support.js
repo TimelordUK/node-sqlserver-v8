@@ -74,8 +74,8 @@ const GlobalConn = (() => {
     if (!candidateConnStr) {
       getLocalConnStr(cs => {
         const ret = {
-          driver: driver,
-          database: database,
+          driver,
+          database,
           conn_str: cs,
           support: new DemoSupport(sql, cs),
           async: new ds.Async(),
@@ -85,8 +85,8 @@ const GlobalConn = (() => {
       })
     } else {
       const ret = {
-        driver: driver,
-        database: database,
+        driver,
+        database,
         conn_str: candidateConnStr,
         support: new DemoSupport(sql, candidateConnStr),
         async: new ds.Async(),
@@ -101,8 +101,8 @@ const GlobalConn = (() => {
   }
 
   return {
-    init: init,
-    getConnStr: getConnStr
+    init,
+    getConnStr
   }
 })()
 
@@ -225,7 +225,7 @@ function DemoSupport (native) {
     function dropCreateTable (params, doneFunction) {
       const async = new Async()
       const tableName = params.tableName
-      const rootPath = params.rootPath || '../../unit.tests'
+      const rootPath = params.rootPath || '../../test'
       const columnName = params.columnName || 'col1'
       const type = params.type
       const theConnection = params.theConnection
@@ -398,7 +398,7 @@ function DemoSupport (native) {
     }
 
     function getJSON (stem) {
-      const p = stem || '../../unit.tests/json'
+      const p = stem || '../../test/env/json'
       const folder = path.join(__dirname, p)
       const fs = require('fs')
 
