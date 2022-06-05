@@ -64,8 +64,8 @@ class TestEnv {
     return new TypeTableHelper(this.theConnection, sqlType)
   }
 
-  procTest (name, def) {
-    return new ProcTest(this.theConnection, name, def)
+  procTest (def) {
+    return new ProcTest(this.theConnection, def)
   }
 
   bcpEntry (def, factory, tester) {
