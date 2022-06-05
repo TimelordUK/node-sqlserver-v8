@@ -97,6 +97,10 @@
     "test": "mocha",
     "bench-comments": "node dist/test/env/cmd-test.js -t benchmark --repeats=5 --delay=4500 2>&1",
     "bench-columns": "node dist/test/env/cmd-test.js -t benchmark --table=syscolumns --repeats=5 --delay=5000 2>&1",
+    "bench-objects": "node dist/test/env/cmd-test.js -t benchmark --table=sysobjects --delay=250 --repeats=20 2>&1",
+    "cmd-busy": "node dist/test/env/cmd-test.js -t busy --delay=500 --severity=9 2>&1",
+    "cmd-busy14": "node dist/test/env/cmd-test.js -t busy --delay=500 --severity=14 2>&1",
+    "cmd-memory": "node dist/test/env/cmd-test.js -t memory --delay=500 2>&1",
     "build": "tsc"
   },
   "directories": {}
