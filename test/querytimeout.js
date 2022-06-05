@@ -73,20 +73,18 @@ describe('querytimeout', function () {
         const ph = env.procTest(def)
         await ph.create()
         const p = {
-          timeout: '0:0:05'
+          timeout: '0:0:02'
         }
-        env.theConnection.callprocAggregator(def.name, p, {
+        const res = await env.theConnection.callprocAggregator(def.name, p, {
           timeoutMs: 1000
-        }).catch(e => {
-          if (e.message.indexOf('timeout') >= 0) {
-            return null
-          }
-          return e
-        }).then(res => {
-          return new Error(`res = ${JSON.stringify(res, null, 4)}`)
         })
+        return new Error(`res = ${JSON.stringify(res, null, 4)}`)
       } catch (e) {
-        done(e)
+        if (e.message.indexOf('timeout') >= 0) {
+          return null
+        } else {
+          return e
+        }
       }
     }
 
@@ -115,20 +113,55 @@ describe('querytimeout', function () {
         const ph = env.procTest(def)
         await ph.create()
         const p = {
-          timeout: '0:0:05'
+          timeout: '0:0:02'
         }
-        env.theConnection.promises.callProc(def.name, p, {
+        const res = await env.theConnection.promises.callProc(def.name, p, {
           timeoutMs: 1000
-        }).catch(e => {
-          if (e.message.indexOf('timeout') >= 0) {
-            return null
-          }
-          return e
-        }).then(res => {
-          return new Error(`res = ${JSON.stringify(res, null, 4)}`)
         })
+        return new Error(`res = ${JSON.stringify(res, null, 4)}`)
       } catch (e) {
-        done(e)
+        if (e.message.indexOf('timeout') >= 0) {
+          return null
+        } else {
+          return e
+        }
+      }
+    }
+
+    run().then(e => {
+      done(e)
+    })
+  })
+
+  it('call long running proc with timeout - complete in time', done => {
+    const name = 'long_sp'
+    const def = {
+      name,
+      def: `create PROCEDURE ${name} (
+  @timeout datetime
+  )AS
+  BEGIN
+    select top 100 * from sysobjects;
+    waitfor delay @timeout;
+    select top 100 * from syscolumns;
+  END
+  `
+    }
+
+    async function run () {
+      try {
+        const ph = env.procTest(def)
+        await ph.create()
+        const p = {
+          timeout: '0:0:01'
+        }
+        const res = await env.theConnection.promises.callProc(def.name, p, {
+          timeoutMs: 30000
+        })
+        assert(res !== null)
+        assert.deepStrictEqual(res.results.length, 2)
+      } catch (e) {
+        return e
       }
     }
 
