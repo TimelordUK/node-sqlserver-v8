@@ -59,12 +59,7 @@ describe('prepared', function () {
 
     // prepare a select statement.
     async asyncDone => {
-      const employee = env.employee
-      const promises = theConnection.promises
-      prepared.select = await promises.prepare(employee.empSelectSQL())
-      prepared.scan = await promises.prepare(employee.empNoParamsSQL())
-      prepared.delete = await promises.prepare(employee.empDeleteSQL())
-      prepared.update = await promises.prepare(employee.empUpdateSQL())
+      prepared = await env.employee.prepare()
       asyncDone()
     }
   ]
@@ -86,36 +81,9 @@ describe('prepared', function () {
   })
 
   this.afterEach(done => {
-    const fns = [
-      async asyncDone => {
-        if (prepared.select) {
-          await prepared.select.promises.free()
-          prepared.select = null
-        }
-        if (prepared.scan) {
-          await prepared.scan.promises.free()
-          prepared.scan = null
-        }
-        if (prepared.delete) {
-          await prepared.delete.promises.free()
-          prepared.delete = null
-        }
-        if (prepared.update) {
-          await prepared.update.promises.free()
-          prepared.update = null
-        }
-        asyncDone()
-      },
-
-      async asyncDone => {
-        await env.close()
-        asyncDone()
-      }
-    ]
-
-    env.async.series(fns, () => {
-      done()
-    })
+    env.employee.free(prepared)
+      .then(() => env.close())
+      .then(() => done())
   })
 
   it('use prepared to select 0 rows - expect no error (await promise)', testDone => {

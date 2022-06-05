@@ -56,6 +56,36 @@ class Employee {
        'FROM [dbo].[Employee]'
   }
 
+  async prepare () {
+    const prepared = {}
+    const promises = this.theConnection.promises
+    prepared.select = await promises.prepare(this.empSelectSQL())
+    prepared.scan = await promises.prepare(this.empNoParamsSQL())
+    prepared.delete = await promises.prepare(this.empDeleteSQL())
+    prepared.update = await promises.prepare(this.empUpdateSQL())
+    return prepared
+  }
+
+  async free (prepared) {
+    if (!prepared) return
+    if (prepared.select) {
+      await prepared.select.promises.free()
+      prepared.select = null
+    }
+    if (prepared.scan) {
+      await prepared.scan.promises.free()
+      prepared.scan = null
+    }
+    if (prepared.delete) {
+      await prepared.delete.promises.free()
+      prepared.delete = null
+    }
+    if (prepared.update) {
+      await prepared.update.promises.free()
+      prepared.update = null
+    }
+  }
+
   dropCreate (name) {
     return new Promise((resolve, reject) => {
       this.helper.dropCreateTable({
