@@ -53,21 +53,21 @@ describe('querytimeout', function () {
     })
   })
 
-  it('call long running proc with timeout aggregator', async function handler () {
-    const name = 'long_sp'
-    const def = {
-      name,
-      def: `create PROCEDURE ${name} (
-  @timeout datetime
-  )AS
-  BEGIN
-    select top 100 * from sysobjects;
-    waitfor delay @timeout;
-    select top 100 * from syscolumns;
-  END
-  `
-    }
+  const name = 'long_sp'
+  const def = {
+    name,
+    def: `create PROCEDURE ${name} (
+@timeout datetime
+)AS
+BEGIN
+  select top 100 * from sysobjects;
+  waitfor delay @timeout;
+  select top 100 * from syscolumns;
+END
+`
+  }
 
+  it('call long running proc with timeout aggregator', async function handler () {
     try {
       const ph = env.procTest(def)
       await ph.create()
@@ -88,20 +88,6 @@ describe('querytimeout', function () {
   })
 
   it('call long running proc with timeout', async function handler () {
-    const name = 'long_sp'
-    const def = {
-      name,
-      def: `create PROCEDURE ${name} (
-  @timeout datetime
-  )AS
-  BEGIN
-    select top 100 * from sysobjects;
-    waitfor delay @timeout;
-    select top 100 * from syscolumns;
-  END
-  `
-    }
-
     try {
       const ph = env.procTest(def)
       await ph.create()
@@ -122,20 +108,6 @@ describe('querytimeout', function () {
   })
 
   it('call long running proc with timeout - complete in time', async function handler () {
-    const name = 'long_sp'
-    const def = {
-      name,
-      def: `create PROCEDURE ${name} (
-  @timeout datetime
-  )AS
-  BEGIN
-    select top 100 * from sysobjects;
-    waitfor delay @timeout;
-    select top 100 * from syscolumns;
-  END
-  `
-    }
-
     try {
       const ph = env.procTest(def)
       await ph.create()
