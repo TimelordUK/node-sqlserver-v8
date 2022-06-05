@@ -26,6 +26,14 @@ class ProcTest {
       console.log(e)
     }
   }
+
+  query (sql, params, options) {
+    return this.theConnection.promises.query(sql, params, options)
+  }
+
+  call (o, options) {
+    return this.theConnection.promises.callProc(this.procName, o, options)
+  }
 }
 
 module.exports = {
