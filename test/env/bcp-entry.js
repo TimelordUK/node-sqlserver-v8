@@ -15,25 +15,20 @@ class BcpEntry {
     for (let i = 0; i < rows; ++i) {
       expected.push(this.factory(i))
     }
-    try {
-      const theConnection = this.env.theConnection
-      theConnection.setUseUTC(true)
-      const table = await helper.create()
-      table.setUseBcp(true)
-      await table.promises.insert(expected)
-      const res = await theConnection.promises.query(`select count(*) as rows from ${this.definition.tableName}`)
-      assert.deepStrictEqual(res.first[0].rows, rows)
-      const top = await theConnection.promises.query(`select top 100 * from ${this.definition.tableName}`)
-      const toCheck = expected.slice(0, 100)
-      if (this.tester) {
-        this.tester(top.first, toCheck)
-      } else {
-        assert.deepStrictEqual(top.first, toCheck)
-      }
-    } catch (e) {
-      return e
+    const theConnection = this.env.theConnection
+    theConnection.setUseUTC(true)
+    const table = await helper.create()
+    table.setUseBcp(true)
+    await table.promises.insert(expected)
+    const res = await theConnection.promises.query(`select count(*) as rows from ${this.definition.tableName}`)
+    assert.deepStrictEqual(res.first[0].rows, rows)
+    const top = await theConnection.promises.query(`select top 100 * from ${this.definition.tableName}`)
+    const toCheck = expected.slice(0, 100)
+    if (this.tester) {
+      this.tester(top.first, toCheck)
+    } else {
+      assert.deepStrictEqual(top.first, toCheck)
     }
-    return null
   }
 }
 
