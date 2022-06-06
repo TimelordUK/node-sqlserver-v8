@@ -17,15 +17,11 @@ describe('bcp', function () {
   })
 
   it('bcp employee', async function handler () {
-    try {
-      const employee = env.employee
-      const table = await employee.create()
-      const records = employee.make(200)
-      const res = await employee.insertSelect(table, records)
-      assert.deepStrictEqual(res, records)
-    } catch (e) {
-      return e
-    }
+    const employee = env.employee
+    const table = await employee.create()
+    const records = employee.make(200)
+    const res = await employee.insertSelect(table, records)
+    assert.deepStrictEqual(res, records)
   })
 
   it('bcp 7 column mixed table ', async function handler () {
@@ -92,31 +88,27 @@ describe('bcp', function () {
   })
 
   it('bcp expect error null in non null column', async function handler () {
-    try {
-      const rows = 10
-      const bcp = env.bcpEntry({
-        tableName: 'test_table_bcp',
-        columns: [
-          {
-            name: 'id',
-            type: 'INT PRIMARY KEY'
-          },
-          {
-            name: 'n1',
-            type: 'smallint not NULL'
-          }]
-      }, i => {
-        return {
-          id: i,
-          n1: i % 2 === 0 ? Math.pow(2, 10) + i : null
-        }
-      })
-      const e = await bcp.runner(rows)
-      if (!e) return new Error('expected NULL constraint')
-      assert(e.message.includes('Cannot insert the value NULL into column'))
-    } catch (e) {
-      return e
-    }
+    const rows = 10
+    const bcp = env.bcpEntry({
+      tableName: 'test_table_bcp',
+      columns: [
+        {
+          name: 'id',
+          type: 'INT PRIMARY KEY'
+        },
+        {
+          name: 'n1',
+          type: 'smallint not NULL'
+        }]
+    }, i => {
+      return {
+        id: i,
+        n1: i % 2 === 0 ? Math.pow(2, 10) + i : null
+      }
+    })
+    const e = await bcp.runner(rows)
+    if (!e) return new Error('expected NULL constraint')
+    assert(e.message.includes('Cannot insert the value NULL into column'))
   })
   /*
 ''[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Cannot insert the value NULL into column 'n1', table 'node.dbo.test_table_bcp'; column does not allow nulls. INSERT fails.''
@@ -124,30 +116,27 @@ describe('bcp', function () {
 
   it('bcp expect error duplicate primary key', async function handler () {
     const rows = 10
-    try {
-      const bcp = env.bcpEntry({
-        tableName: 'test_table_bcp',
-        columns: [
-          {
-            name: 'id',
-            type: 'INT PRIMARY KEY'
-          },
-          {
-            name: 'n1',
-            type: 'smallint'
-          }]
-      }, i => {
-        return {
-          id: i % 5,
-          n1: i % 2 === 0 ? Math.pow(2, 10) + i : -Math.pow(2, 10) - i
-        }
-      })
-      const e = await bcp.runner(rows)
-      if (!e) return new Error('expected violation constraint')
-      assert(e.message.includes('Violation of PRIMARY KEY constraint'))
-    } catch (e) {
-      return e
-    }
+    const bcp = env.bcpEntry({
+      tableName: 'test_table_bcp',
+      columns: [
+        {
+          name: 'id',
+          type: 'INT PRIMARY KEY'
+        },
+        {
+          name: 'n1',
+          type: 'smallint'
+        }]
+    }, i => {
+      return {
+        id: i % 5,
+        n1: i % 2 === 0 ? Math.pow(2, 10) + i : -Math.pow(2, 10) - i
+      }
+    })
+    const e = await bcp.runner(rows)
+    if (!e) throw new Error('expected violation constraint')
+    assert(e.message.includes('Violation of PRIMARY KEY constraint'))
+
     /*
 '[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Violation of PRIMARY KEY constraint 'PK__test_tab__3213E83F11822873'. Cannot insert duplicate key in object 'dbo.test_table_bcp'. The duplicate key value is (0).'
     */
