@@ -209,16 +209,13 @@ describe('bulk', function () {
     }
     env.theConnection.setUseUTC(true)
     const table = await helper.create()
-    try {
-      await table.promises.insert(expected)
-      const res = await table.promises.select(expected)
-      res.forEach(a => {
-        delete a.d1.nanosecondsDelta
-      })
-      assert.deepStrictEqual(res, expected)
-    } catch (e) {
-      assert.ifError(e)
-    }
+
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
+    res.forEach(a => {
+      delete a.d1.nanosecondsDelta
+    })
+    assert.deepStrictEqual(res, expected)
   })
 
   function repeat (c, num) {
@@ -234,26 +231,23 @@ describe('bulk', function () {
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
-    try {
-      await promisedInsert(expected)
-      const res = await promisedSelect(expected)
-      res.forEach(a => {
-        const today = timeHelper.getUTCTime(a.col_a)
-        a.col_a = today
-      })
-      expected.forEach(a => {
-        const today = timeHelper.getUTCTime(a.col_a)
-        a.col_a = today
-        return a
-      })
-      // console.log('res')
-      // console.log(JSON.stringify(res, null, 4))
-      // console.log('expected')
-      // console.log(JSON.stringify(expected, null, 4))
-      assert.deepStrictEqual(res, expected)
-    } catch (e) {
-      assert.ifError(e)
-    }
+
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    res.forEach(a => {
+      const today = timeHelper.getUTCTime(a.col_a)
+      a.col_a = today
+    })
+    expected.forEach(a => {
+      const today = timeHelper.getUTCTime(a.col_a)
+      a.col_a = today
+      return a
+    })
+    // console.log('res')
+    // console.log(JSON.stringify(res, null, 4))
+    // console.log('expected')
+    // console.log(JSON.stringify(expected, null, 4))
+    assert.deepStrictEqual(res, expected)
   })
 
   it('use tableMgr bulk insert single non UTC based date with datetime col', async function handler () {
@@ -264,16 +258,13 @@ describe('bulk', function () {
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
-    try {
-      await promisedInsert(expected)
-      const res = await promisedSelect(expected)
-      res.forEach(a => {
-        delete a.col_a.nanosecondsDelta
-      })
-      assert.deepStrictEqual(res, expected)
-    } catch (e) {
-      assert.ifError(e)
-    }
+
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    res.forEach(a => {
+      delete a.col_a.nanosecondsDelta
+    })
+    assert.deepStrictEqual(res, expected)
   })
 
   it('use tableMgr bulk insert single non UTC based date with DATETIMEOFFSET col', async function handler () {
@@ -284,16 +275,13 @@ describe('bulk', function () {
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
-    try {
-      await promisedInsert(expected)
-      const res = await promisedSelect(expected)
-      res.forEach(a => {
-        delete a.col_a.nanosecondsDelta
-      })
-      assert.deepStrictEqual(res, expected)
-    } catch (e) {
-      assert.ifError(e)
-    }
+
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    res.forEach(a => {
+      delete a.col_a.nanosecondsDelta
+    })
+    assert.deepStrictEqual(res, expected)
   })
 
   it('use tableMgr bulk insert varchar vector - exactly 4001 chars', async function handler () {
@@ -303,13 +291,10 @@ describe('bulk', function () {
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
-    try {
-      await promisedInsert(expected)
-      const res = await promisedSelect(expected)
-      assert.deepStrictEqual(res, expected)
-    } catch (e) {
-      assert.ifError(e)
-    }
+
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    assert.deepStrictEqual(res, expected)
   })
 
   it('use tableMgr bulk insert varchar vector - exactly 4000 chars', async function handler () {
@@ -319,13 +304,10 @@ describe('bulk', function () {
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
-    try {
-      await promisedInsert(expected)
-      const res = await promisedSelect(expected)
-      assert.deepStrictEqual(res, expected)
-    } catch (e) {
-      assert.ifError(e)
-    }
+
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    assert.deepStrictEqual(res, expected)
   })
 
   it('use tableMgr bulk insert varchar vector - exactly 3999 chars', async function handler () {
@@ -335,13 +317,9 @@ describe('bulk', function () {
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
-    try {
-      await promisedInsert(expected)
-      const res = await promisedSelect(expected)
-      assert.deepStrictEqual(res, expected)
-    } catch (e) {
-      assert.ifError(e)
-    }
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    assert.deepStrictEqual(res, expected)
   })
 
   it('use tableMgr bulk insert varbinary vector - with null', async function handler () {
@@ -351,13 +329,10 @@ describe('bulk', function () {
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
-    try {
-      await promisedInsert(expected)
-      const res = await promisedSelect(expected)
-      assert.deepStrictEqual(res, expected)
-    } catch (e) {
-      assert.ifError(e)
-    }
+
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    assert.deepStrictEqual(res, expected)
   })
 
   it('use tableMgr bulk insert varbinary vector - with empty', async function handler () {
@@ -368,13 +343,10 @@ describe('bulk', function () {
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
-    try {
-      await promisedInsert(expected)
-      const res = await promisedSelect(expected)
-      assert.deepStrictEqual(res, expected)
-    } catch (e) {
-      assert.ifError(e)
-    }
+
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    assert.deepStrictEqual(res, expected)
   })
 
   it('use tableMgr bulk insert varbinary vector - no nulls', async function handler () {
@@ -384,13 +356,10 @@ describe('bulk', function () {
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
-    try {
-      await promisedInsert(expected)
-      const res = await promisedSelect(expected)
-      assert.deepStrictEqual(res, expected)
-    } catch (e) {
-      assert.ifError(e)
-    }
+
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    assert.deepStrictEqual(res, expected)
   })
 
   it('use tableMgr bulk insert datetime vector - no nulls', async function handler () {
@@ -400,16 +369,13 @@ describe('bulk', function () {
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
-    try {
-      await promisedInsert(expected)
-      const res = await promisedSelect(expected)
-      res.forEach(a => {
-        delete a.col_a.nanosecondsDelta
-      })
-      assert.deepStrictEqual(res, expected)
-    } catch (e) {
-      assert.ifError(e)
-    }
+
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    res.forEach(a => {
+      delete a.col_a.nanosecondsDelta
+    })
+    assert.deepStrictEqual(res, expected)
   })
 
   it('use tableMgr bulk insert datetime vector - with nulls', async function handler () {
@@ -419,18 +385,14 @@ describe('bulk', function () {
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
-    try {
-      await promisedInsert(expected)
-      const res = await promisedSelect(expected)
-      res.forEach(a => {
-        if (a.col_a) {
-          delete a.col_a.nanosecondsDelta
-        }
-      })
-      assert.deepStrictEqual(res, expected)
-    } catch (e) {
-      assert.ifError(e)
-    }
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    res.forEach(a => {
+      if (a.col_a) {
+        delete a.col_a.nanosecondsDelta
+      }
+    })
+    assert.deepStrictEqual(res, expected)
   })
 
   it('use tableMgr bulk insert decimal vector - no nulls', async function handler () {
@@ -439,13 +401,10 @@ describe('bulk', function () {
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
-    try {
-      await promisedInsert(expected)
-      const res = await promisedSelect(expected)
-      assert.deepStrictEqual(expected, res)
-    } catch (e) {
-      assert.ifError(e)
-    }
+
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    assert.deepStrictEqual(expected, res)
   })
 
   it('use tableMgr bulk insert decimal vector - with nulls', async function handler () {
@@ -454,13 +413,10 @@ describe('bulk', function () {
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
-    try {
-      await promisedInsert(expected)
-      const res = await promisedSelect(expected)
-      assert.deepStrictEqual(expected, res)
-    } catch (e) {
-      assert.ifError(e)
-    }
+
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    assert.deepStrictEqual(expected, res)
   })
 
   it('use tableMgr bulk insert bit vector - with nulls', async function handler () {
@@ -469,13 +425,10 @@ describe('bulk', function () {
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
-    try {
-      await promisedInsert(expected)
-      const res = await promisedSelect(expected)
-      assert.deepStrictEqual(expected, res)
-    } catch (e) {
-      assert.ifError(e)
-    }
+
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    assert.deepStrictEqual(expected, res)
   })
 
   it('use tableMgr bulk insert bit vector - no nulls', async function handler () {
@@ -484,13 +437,10 @@ describe('bulk', function () {
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
-    try {
-      await promisedInsert(expected)
-      const res = await promisedSelect(expected)
-      assert.deepStrictEqual(expected, res)
-    } catch (e) {
-      assert.ifError(e)
-    }
+
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    assert.deepStrictEqual(expected, res)
   })
 
   it('use tableMgr bulk insert int vector - with nulls', async function handler () {
@@ -499,13 +449,9 @@ describe('bulk', function () {
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
-    try {
-      await promisedInsert(expected)
-      const res = await promisedSelect(expected)
-      assert.deepStrictEqual(expected, res)
-    } catch (e) {
-      assert.ifError(e)
-    }
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    assert.deepStrictEqual(expected, res)
   })
 
   it('use tableMgr bulk insert int vector - no nulls', async function handler () {
@@ -514,13 +460,10 @@ describe('bulk', function () {
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
-    try {
-      await promisedInsert(expected)
-      const res = await promisedSelect(expected)
-      assert.deepStrictEqual(expected, res)
-    } catch (e) {
-      assert.ifError(e)
-    }
+
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    assert.deepStrictEqual(expected, res)
   })
 
   it('use tableMgr bulk insert varchar vector - with nulls', async function handler () {
@@ -529,13 +472,10 @@ describe('bulk', function () {
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
-    try {
-      await promisedInsert(expected)
-      const res = await promisedSelect(expected)
-      assert.deepStrictEqual(expected, res)
-    } catch (e) {
-      assert.ifError(e)
-    }
+
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    assert.deepStrictEqual(expected, res)
   })
 
   it('use tableMgr bulk insert var char vector - no nulls', async function handler () {
@@ -544,13 +484,9 @@ describe('bulk', function () {
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
-    try {
-      await promisedInsert(expected)
-      const res = await promisedSelect(expected)
-      assert.deepStrictEqual(expected, res)
-    } catch (e) {
-      assert.ifError(e)
-    }
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    assert.deepStrictEqual(expected, res)
   })
 
   it('use tableMgr get Table and update 2 columns', testDone => {

@@ -35,61 +35,39 @@ describe('json', function () {
     })
   }
 
-  it('use proc to insert a JSON array and bulk parse on server', testDone => {
-    async function work () {
-      try {
-        const tableName = 'employeeJson'
-        const procName = 'AddUpdateEmployeeJsonRecord'
-        const procNameJson = 'ParseJsonArray'
-        const h = env.jsonHelper(tableName, procName, procNameJson)
-        await h.create()
-        const parsedJSON = env.helper.getJSON()
-        const promisedGetProc = env.theConnection.promises.getProc
-        const p = await promisedGetProc(procNameJson)
-        const json = JSON.stringify(parsedJSON, null, 4)
-        const promisedCall = util.promisify(p.call)
-        const res = await promisedCall({
-          json
-        })
-        assert(res)
-        assert(Array.isArray(res))
-      } catch (e) {
-        assert.ifError(e)
-      }
-    }
-    work().then(() => {
-      testDone()
-    }).catch(e => {
-      assert.ifError(e)
+  it('use proc to insert a JSON array and bulk parse on server', async function handler () {
+    const tableName = 'employeeJson'
+    const procName = 'AddUpdateEmployeeJsonRecord'
+    const procNameJson = 'ParseJsonArray'
+    const h = env.jsonHelper(tableName, procName, procNameJson)
+    await h.create()
+    const parsedJSON = env.helper.getJSON()
+    const promisedGetProc = env.theConnection.promises.getProc
+    const p = await promisedGetProc(procNameJson)
+    const json = JSON.stringify(parsedJSON, null, 4)
+    const promisedCall = util.promisify(p.call)
+    const res = await promisedCall({
+      json
     })
+    assert(res)
+    assert(Array.isArray(res))
   })
 
-  it('use proc to insert a JSON based complex object', testDone => {
-    async function work () {
-      try {
-        const tableName = 'employeeJson'
-        const procName = 'AddUpdateEmployeeJsonRecord'
-        const procNameJson = 'ParseJsonArray'
-        const h = env.jsonHelper(tableName, procName, procNameJson)
-        await h.create()
-        const parsedJSON = env.helper.getJSON()
-        const promisedGetProc = env.theConnection.promises.getProc
-        const p = await promisedGetProc(procName)
-        let id = 0
-        const promises = parsedJSON.map(r => insertRec(p, id++, r))
-        const expected = await Promise.all(promises)
-        const promisedQuery = env.theConnection.promises.query
-        const selectedRecords = await promisedQuery(`select * from ${tableName} order by id asc`)
-        const selected = selectedRecords.first.map(rec => rec.json)
-        assert.deepStrictEqual(expected, selected)
-      } catch (e) {
-        assert.ifError(e)
-      }
-    }
-    work().then(() => {
-      testDone()
-    }).catch(e => {
-      assert.ifError(e)
-    })
+  it('use proc to insert a JSON based complex object', async function handler () {
+    const tableName = 'employeeJson'
+    const procName = 'AddUpdateEmployeeJsonRecord'
+    const procNameJson = 'ParseJsonArray'
+    const h = env.jsonHelper(tableName, procName, procNameJson)
+    await h.create()
+    const parsedJSON = env.helper.getJSON()
+    const promisedGetProc = env.theConnection.promises.getProc
+    const p = await promisedGetProc(procName)
+    let id = 0
+    const promises = parsedJSON.map(r => insertRec(p, id++, r))
+    const expected = await Promise.all(promises)
+    const promisedQuery = env.theConnection.promises.query
+    const selectedRecords = await promisedQuery(`select * from ${tableName} order by id asc`)
+    const selected = selectedRecords.first.map(rec => rec.json)
+    assert.deepStrictEqual(expected, selected)
   })
 })
