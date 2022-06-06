@@ -179,12 +179,8 @@ describe('bcp', function () {
       assert(e.message.includes('Violation of PRIMARY KEY constraint'))
     }
 
-    try {
-      const res = await env.theConnection.promises.query(`select count(*) as count from ${name}`)
-      assert.deepStrictEqual(res.first[0].count, 0)
-    } catch (e) {
-      return e
-    }
+    const res = await env.theConnection.promises.query(`select count(*) as count from ${name}`)
+    assert.deepStrictEqual(res.first[0].count, 0)
   })
 
   it('bcp hierarchyid binary', async function handler () {
