@@ -18,30 +18,26 @@ describe('promises', function () {
   })
 
   it('adhoc proc promise: open call close', async function handler () {
-    try {
-      const spName = 'sp_test'
-      const def = {
-        name: spName,
-        sql: `create PROCEDURE ${spName} @param VARCHAR(50) 
+    const spName = 'sp_test'
+    const def = {
+      name: spName,
+      sql: `create PROCEDURE ${spName} @param VARCHAR(50) 
           AS 
           BEGIN 
            RETURN LEN(@param); 
           END 
           `
-      }
-
-      const msg = 'hello world'
-      const proc = env.procTest(def)
-      await proc.create()
-      const res = await env.sql.promises.callProc(env.connectionString, spName, {
-        param: msg
-      })
-      assert(res !== null)
-      assert(res.output !== null)
-      assert.deepStrictEqual(res.output[0], msg.length)
-    } catch (e) {
-      return e
     }
+
+    const msg = 'hello world'
+    const proc = env.procTest(def)
+    await proc.create()
+    const res = await env.sql.promises.callProc(env.connectionString, spName, {
+      param: msg
+    })
+    assert(res !== null)
+    assert(res.output !== null)
+    assert.deepStrictEqual(res.output[0], msg.length)
   })
 
   it('promises for table insert select rows', async function handler () {
@@ -91,48 +87,35 @@ describe('promises', function () {
     }
     env.theConnection.setUseUTC(true)
     const table = await helper.create()
-    try {
-      await table.promises.insert(expected)
-      const res = await table.promises.select(expected)
-      res.forEach(a => {
-        delete a.d1.nanosecondsDelta
-      })
-      assert.deepStrictEqual(res, expected)
-    } catch (e) {
-      return e
-    }
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
+    res.forEach(a => {
+      delete a.d1.nanosecondsDelta
+    })
+    assert.deepStrictEqual(res, expected)
   })
 
   it('using promises to open, query, close pool', async function handler () {
-    try {
-      const size = 4
-      const pool = new env.sql.Pool({
-        connectionString: env.connectionString,
-        ceiling: size
-      })
-      await pool.promises.open()
-      const all = Array(size * 2).fill(0).map((_, i) => pool.promises.query(`select ${i} as i, @@SPID as spid`))
-      const promised = await Promise.all(all)
-      const res = promised.map(r => r.first[0].spid)
-      assert(res !== null)
-      const set = new Set(res)
-      assert.strictEqual(set.size, size)
-      await pool.promises.close()
-      return null
-    } catch (err) {
-      return err
-    }
+    const size = 4
+    const pool = new env.sql.Pool({
+      connectionString: env.connectionString,
+      ceiling: size
+    })
+    await pool.promises.open()
+    const all = Array(size * 2).fill(0).map((_, i) => pool.promises.query(`select ${i} as i, @@SPID as spid`))
+    const promised = await Promise.all(all)
+    const res = promised.map(r => r.first[0].spid)
+    assert(res !== null)
+    const set = new Set(res)
+    assert.strictEqual(set.size, size)
+    await pool.promises.close()
   })
 
   it('adhoc promise: open select close', async function handler () {
-    try {
-      const res = await env.sql.promises.query(env.connectionString, 'select @@SPID as spid')
-      assert(res !== null)
-      assert(res.first !== null)
-      assert(Object.prototype.hasOwnProperty.call(res.first[0], 'spid'))
-    } catch (e) {
-      return e
-    }
+    const res = await env.sql.promises.query(env.connectionString, 'select @@SPID as spid')
+    assert(res !== null)
+    assert(res.first !== null)
+    assert(Object.prototype.hasOwnProperty.call(res.first[0], 'spid'))
   })
 
   it('query aggregator: insert 1 valid 1, ivalid table', async function handler () {
@@ -166,13 +149,12 @@ describe('promises', function () {
   })
 
   it('query aggregator: drop, create, insert, select, drop', async function handler () {
-    try {
-      const tableName = 'rowsAffectedTest'
-      const m1 = `create table ${tableName}`
-      const m2 = `insert table ${tableName}`
-      const m3 = `select table ${tableName}`
-      const m4 = `drop table ${tableName}`
-      const sql = `if exists(select * from information_schema.tables
+    const tableName = 'rowsAffectedTest'
+    const m1 = `create table ${tableName}`
+    const m2 = `insert table ${tableName}`
+    const m3 = `select table ${tableName}`
+    const m4 = `drop table ${tableName}`
+    const sql = `if exists(select * from information_schema.tables
             where table_name = '${tableName}' and TABLE_SCHEMA='dbo')
                 drop table ${tableName};
             print('${m1}');
@@ -184,33 +166,29 @@ describe('promises', function () {
             print('${m4}');
             drop table ${tableName};`
 
-      const res = await env.theConnection.promises.query(sql)
-      assert(res !== null)
-      assert(res.meta !== null)
-      assert.deepStrictEqual(res.meta.length, 1)
-      const meta0 = res.meta[0]
-      assert.deepStrictEqual(meta0[0].name, 'id')
-      assert.deepStrictEqual(meta0[1].name, 'val')
+    const res = await env.theConnection.promises.query(sql)
+    assert(res !== null)
+    assert(res.meta !== null)
+    assert.deepStrictEqual(res.meta.length, 1)
+    const meta0 = res.meta[0]
+    assert.deepStrictEqual(meta0[0].name, 'id')
+    assert.deepStrictEqual(meta0[1].name, 'val')
 
-      const expectedMessages = [m1, m2, m3, m4]
-      assert.deepStrictEqual(res.info.length, 4)
-      assert.deepStrictEqual(res.info, expectedMessages)
+    const expectedMessages = [m1, m2, m3, m4]
+    assert.deepStrictEqual(res.info.length, 4)
+    assert.deepStrictEqual(res.info, expectedMessages)
 
-      assert(res.first !== null)
-      assert.deepStrictEqual(res.results.length, 1)
-      assert.deepStrictEqual(res.first, [{
-        id: 1,
-        val: 5
-      }])
-    } catch (e) {
-      return e
-    }
+    assert(res.first !== null)
+    assert.deepStrictEqual(res.results.length, 1)
+    assert.deepStrictEqual(res.first, [{
+      id: 1,
+      val: 5
+    }])
   })
 
   it('query aggregator: 4 inserts, 2 updates, 2 updates, update all', async function handler () {
-    try {
-      const tableName = 'rowsAffectedTest'
-      const sql = `if exists(select * from information_schema.tables
+    const tableName = 'rowsAffectedTest'
+    const sql = `if exists(select * from information_schema.tables
           where table_name = '${tableName}' and TABLE_SCHEMA='dbo')
               drop table ${tableName};
        create table ${tableName} (id int, val int);
@@ -224,16 +202,13 @@ describe('promises', function () {
        update ${tableName} set val = 100  where id in (1, 2, 3, 4);
 
        drop table ${tableName};`
-      const expectedCounts = [1, 1, 1, 1, 2, 2, 4]
-      const res = await env.theConnection.promises.query(sql)
-      assert(res !== null)
-      assert(res.meta !== null)
-      assert.deepStrictEqual(res.meta, [])
-      assert.deepStrictEqual(res.results, [])
-      assert.deepStrictEqual(res.counts, expectedCounts)
-    } catch (e) {
-      return e
-    }
+    const expectedCounts = [1, 1, 1, 1, 2, 2, 4]
+    const res = await env.theConnection.promises.query(sql)
+    assert(res !== null)
+    assert(res.meta !== null)
+    assert.deepStrictEqual(res.meta, [])
+    assert.deepStrictEqual(res.results, [])
+    assert.deepStrictEqual(res.counts, expectedCounts)
   })
 
   it('query aggregator: insert into invalid table', async function handler () {
