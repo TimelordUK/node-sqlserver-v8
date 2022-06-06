@@ -194,8 +194,8 @@ END
       await exec(callProcedureFromProcedureSql)
       await exec(dropLocalTableProcedureSql)
       await exec(localTableProcNameSql)
-      const promisedUserType = util.promisify(theConnection.getUserTypeTable)
-      const table = await promisedUserType(tableTypeName)
+
+      const table = await theConnection.promises.getUserTypeTable(tableTypeName)
       return table
     }
     function repeat (a, num) {
