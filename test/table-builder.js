@@ -17,7 +17,7 @@ describe('table-builder', function () {
     env.close().then(() => done())
   })
 
-  it('use table builder to bind to a table provide no catalogue', testDone => {
+  it('use table builder to bind to a table provide no catalogue', async function handler () {
     function makeOne (i) {
       return {
         id: i,
@@ -38,22 +38,23 @@ describe('table-builder', function () {
       await checker.check(makeOne, checkOne)
     }
 
-    runLocal(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asInt()
-      builder.addColumn('col_b').asVarChar(100)
-      builder.addColumn('col_c').asInt()
-      builder.addColumn('col_d').asInt()
-      builder.addColumn('col_e').asVarChar(100)
-    }, makeOne).then((e) => {
-      testDone(e)
-    }).catch(e => {
+    try {
+      const e = await runLocal(builder => {
+        builder.addColumn('id').asInt().isPrimaryKey(1)
+        builder.addColumn('col_a').asInt()
+        builder.addColumn('col_b').asVarChar(100)
+        builder.addColumn('col_c').asInt()
+        builder.addColumn('col_d').asInt()
+        builder.addColumn('col_e').asVarChar(100)
+      }, makeOne)
+      return e
+    } catch (e) {
       assert(e)
-      testDone(e)
-    })
+      return e
+    }
   })
 
-  it('use table builder to bind to a table int, time', testDone => {
+  it('use table builder to bind to a table int, time', async function handler () {
     const th = env.timeHelper
     function makeOne (i) {
       return {
@@ -69,18 +70,19 @@ describe('table-builder', function () {
       assert(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)
     }
 
-    run(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asTime()
-    }, makeOne, checkOne).then((e) => {
-      testDone(e)
-    }).catch(e => {
+    try {
+      const e = await run(builder => {
+        builder.addColumn('id').asInt().isPrimaryKey(1)
+        builder.addColumn('col_a').asTime()
+      }, makeOne, checkOne)
+      return e
+    } catch (e) {
       assert(e)
-      testDone(e)
-    })
+      return e
+    }
   })
 
-  it('use table builder to bind to a table int, datetimeoffset', testDone => {
+  it('use table builder to bind to a table int, datetimeoffset', async function handler () {
     const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
 
     function makeOne (i) {
@@ -101,19 +103,20 @@ describe('table-builder', function () {
       assert.deepStrictEqual(lhs.col_b, rhs.col_b)
     }
 
-    run(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asDateTimeOffset()
-      builder.addColumn('col_b').asDateTimeOffset()
-    }, makeOne, checkOne).then((e) => {
-      testDone(e)
-    }).catch(e => {
+    try {
+      const e = await run(builder => {
+        builder.addColumn('id').asInt().isPrimaryKey(1)
+        builder.addColumn('col_a').asDateTimeOffset()
+        builder.addColumn('col_b').asDateTimeOffset()
+      }, makeOne, checkOne)
+      return e
+    } catch (e) {
       assert(e)
-      testDone(e)
-    })
+      return e
+    }
   })
 
-  it('use table builder to bind to a table int, nvarchar(max)', testDone => {
+  it('use table builder to bind to a table int, nvarchar(max)', async function handler () {
     function makeOne (i) {
       return {
         id: i,
@@ -121,18 +124,19 @@ describe('table-builder', function () {
       }
     }
 
-    run(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asNVarCharMax()
-    }, makeOne).then(() => {
-      testDone()
-    }).catch(e => {
+    try {
+      const e = await run(builder => {
+        builder.addColumn('id').asInt().isPrimaryKey(1)
+        builder.addColumn('col_a').asNVarCharMax()
+      }, makeOne)
+      return e
+    } catch (e) {
       assert(e)
-      testDone(e)
-    })
+      return e
+    }
   })
 
-  it('use table builder to bind to a table int, decimal', testDone => {
+  it('use table builder to bind to a table int, decimal', async function handler () {
     function makeOne (i) {
       return {
         id: i,
@@ -145,18 +149,19 @@ describe('table-builder', function () {
       assert(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)
     }
 
-    run(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asDecimal(23, 18)
-    }, makeOne, checkOne).then((e) => {
-      testDone(e)
-    }).catch(e => {
+    try {
+      const e = await run(builder => {
+        builder.addColumn('id').asInt().isPrimaryKey(1)
+        builder.addColumn('col_a').asDecimal(23, 18)
+      }, makeOne, checkOne)
+      return e
+    } catch (e) {
       assert(e)
-      testDone(e)
-    })
+      return e
+    }
   })
 
-  it('use table builder to bind to a table int, numeric', testDone => {
+  it('use table builder to bind to a table int, numeric', async function handler () {
     function makeOne (i) {
       return {
         id: i,
@@ -169,18 +174,19 @@ describe('table-builder', function () {
       assert(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)
     }
 
-    run(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asNumeric(18, 6)
-    }, makeOne, checkOne).then((e) => {
-      testDone(e)
-    }).catch(e => {
+    try {
+      const e = await run(builder => {
+        builder.addColumn('id').asInt().isPrimaryKey(1)
+        builder.addColumn('col_a').asNumeric(18, 6)
+      }, makeOne, checkOne)
+      return e
+    } catch (e) {
       assert(e)
-      testDone(e)
-    })
+      return e
+    }
   })
 
-  it('use table builder to bind to a table int, real', testDone => {
+  it('use table builder to bind to a table int, real', async function handler () {
     function makeOne (i) {
       return {
         id: i,
@@ -193,18 +199,19 @@ describe('table-builder', function () {
       assert(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)
     }
 
-    run(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asReal()
-    }, makeOne, checkOne).then((e) => {
-      testDone(e)
-    }).catch(e => {
+    try {
+      const e = await run(builder => {
+        builder.addColumn('id').asInt().isPrimaryKey(1)
+        builder.addColumn('col_a').asReal()
+      }, makeOne, checkOne)
+      return e
+    } catch (e) {
       assert(e)
-      testDone(e)
-    })
+      return e
+    }
   })
 
-  it('use table builder to bind to a table int, bigint', testDone => {
+  it('use table builder to bind to a table int, bigint', async function handler () {
     function makeOne (i) {
       return {
         id: i,
@@ -212,15 +219,16 @@ describe('table-builder', function () {
       }
     }
 
-    run(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asBigInt()
-    }, makeOne).then((e) => {
-      testDone(e)
-    }).catch(e => {
+    try {
+      const e = await run(builder => {
+        builder.addColumn('id').asInt().isPrimaryKey(1)
+        builder.addColumn('col_a').asBigInt()
+      }, makeOne)
+      return e
+    } catch (e) {
       assert(e)
-      testDone(e)
-    })
+      return e
+    }
   })
 
   /*
@@ -242,7 +250,7 @@ describe('table-builder', function () {
   [ModifiedDate] [datetime] NOT NULL
   */
 
-  it('use table builder to bind to a complex employee table', testDone => {
+  it('use table builder to bind to a complex employee table', async function handler () {
     // tableName, helper, connection
     const employee = env.employee
     const records = employee.make(250)
@@ -250,32 +258,33 @@ describe('table-builder', function () {
       return records[i % records.length]
     }
 
-    run(builder => {
-      builder.addColumn('[BusinessEntityID]').asInt().isPrimaryKey(1)
-      builder.addColumn('[NationalIDNumber]').asNVarChar(15).notNull()
-      builder.addColumn('[LoginID]').asNVarChar(256).notNull()
-      builder.addColumn('[OrganizationNode]').asHierarchyId().null()
-      builder.addColumn('[OrganizationLevel]').asInt().asExpression('AS ([OrganizationNode].[GetLevel]())')
-      builder.addColumn('[JobTitle]').asNVarChar(50).notNull()
-      builder.addColumn('[BirthDate]').asDate().notNull()
-      builder.addColumn('[MaritalStatus]').asNChar(1).notNull()
-      builder.addColumn('[Gender]').asNChar(1).notNull()
-      builder.addColumn('[HireDate]').asDate().notNull()
-      builder.addColumn('[SalariedFlag]').asBit().notNull()
-      builder.addColumn('[VacationHours]').asSmallInt().notNull()
-      builder.addColumn('[SickLeaveHours]').asSmallInt().notNull()
-      builder.addColumn('[CurrentFlag]').asBit().notNull()
-      builder.addColumn('[rowguid]').asUniqueIdentifier().withDecorator('ROWGUIDCOL  NOT NULL')
-      builder.addColumn('[ModifiedDate]').asDateTime().notNull()
-    }, makeOne).then(() => {
-      testDone()
-    }).catch(e => {
+    try {
+      const e = await run(builder => {
+        builder.addColumn('[BusinessEntityID]').asInt().isPrimaryKey(1)
+        builder.addColumn('[NationalIDNumber]').asNVarChar(15).notNull()
+        builder.addColumn('[LoginID]').asNVarChar(256).notNull()
+        builder.addColumn('[OrganizationNode]').asHierarchyId().null()
+        builder.addColumn('[OrganizationLevel]').asInt().asExpression('AS ([OrganizationNode].[GetLevel]())')
+        builder.addColumn('[JobTitle]').asNVarChar(50).notNull()
+        builder.addColumn('[BirthDate]').asDate().notNull()
+        builder.addColumn('[MaritalStatus]').asNChar(1).notNull()
+        builder.addColumn('[Gender]').asNChar(1).notNull()
+        builder.addColumn('[HireDate]').asDate().notNull()
+        builder.addColumn('[SalariedFlag]').asBit().notNull()
+        builder.addColumn('[VacationHours]').asSmallInt().notNull()
+        builder.addColumn('[SickLeaveHours]').asSmallInt().notNull()
+        builder.addColumn('[CurrentFlag]').asBit().notNull()
+        builder.addColumn('[rowguid]').asUniqueIdentifier().withDecorator('ROWGUIDCOL  NOT NULL')
+        builder.addColumn('[ModifiedDate]').asDateTime().notNull()
+      }, makeOne)
+      return e
+    } catch (e) {
       assert(e)
-      testDone(e)
-    })
+      return e
+    }
   })
 
-  it('use table builder to bind to a table int, datetime', testDone => {
+  it('use table builder to bind to a table int, datetime', async function handler () {
     const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
 
     function makeOne (i) {
@@ -298,19 +307,20 @@ describe('table-builder', function () {
       }
     }
 
-    run(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asDateTime()
-      builder.addColumn('col_b').asDateTime()
-    }, makeOne, checkOne).then((e) => {
-      testDone(e)
-    }).catch(e => {
+    try {
+      const e = await run(builder => {
+        builder.addColumn('id').asInt().isPrimaryKey(1)
+        builder.addColumn('col_a').asDateTime()
+        builder.addColumn('col_b').asDateTime()
+      }, makeOne, checkOne)
+      return e
+    } catch (e) {
       assert(e)
-      testDone(e)
-    })
+      return e
+    }
   })
 
-  it('use table builder to bind to a table int, uniqueidentifier', testDone => {
+  it('use table builder to bind to a table int, uniqueidentifier', async function handler () {
     const g1 = 'F01251E5-96A3-448D-981E-0F99D789110D'
     const g2 = '45E8F437-670D-4409-93CB-F9424A40D6EE'
     function makeOne (i) {
@@ -320,18 +330,19 @@ describe('table-builder', function () {
       }
     }
 
-    run(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asUniqueIdentifier()
-    }, makeOne).then((e) => {
-      testDone(e)
-    }).catch(e => {
+    try {
+      const e = await run(builder => {
+        builder.addColumn('id').asInt().isPrimaryKey(1)
+        builder.addColumn('col_a').asUniqueIdentifier()
+      }, makeOne)
+      return e
+    } catch (e) {
       assert(e)
-      testDone(e)
-    })
+      return e
+    }
   })
 
-  it('use table builder to bind to a table int, varbinary', testDone => {
+  it('use table builder to bind to a table int, varbinary', async function handler () {
     function makeOne (i) {
       return {
         id: i,
@@ -339,18 +350,19 @@ describe('table-builder', function () {
       }
     }
 
-    run(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asVarBinary(10)
-    }, makeOne).then((e) => {
-      testDone(e)
-    }).catch(e => {
-      testDone(e)
+    try {
+      const e = await run(builder => {
+        builder.addColumn('id').asInt().isPrimaryKey(1)
+        builder.addColumn('col_a').asVarBinary(10)
+      }, makeOne)
+      return e
+    } catch (e) {
       assert(e)
-    })
+      return e
+    }
   })
 
-  it('use table builder to bind to a table int, int', testDone => {
+  it('use table builder to bind to a table int, int', async function handler () {
     function makeOne (i) {
       return {
         id: i,
@@ -358,18 +370,19 @@ describe('table-builder', function () {
       }
     }
 
-    run(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asInt()
-    }, makeOne).then((e) => {
-      testDone(e)
-    }).catch(e => {
-      testDone(e)
+    try {
+      const e = await run(builder => {
+        builder.addColumn('id').asInt().isPrimaryKey(1)
+        builder.addColumn('col_a').asInt()
+      }, makeOne)
+      return e
+    } catch (e) {
       assert(e)
-    })
+      return e
+    }
   })
 
-  it('use table builder to bind to a table int, smallint', testDone => {
+  it('use table builder to bind to a table int, smallint', async function handler () {
     function makeOne (i) {
       return {
         id: i,
@@ -377,18 +390,19 @@ describe('table-builder', function () {
       }
     }
 
-    run(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asSmallInt()
-    }, makeOne).then((e) => {
-      testDone(e)
-    }).catch(e => {
-      testDone(e)
+    try {
+      const e = await run(builder => {
+        builder.addColumn('id').asInt().isPrimaryKey(1)
+        builder.addColumn('col_a').asSmallInt()
+      }, makeOne)
+      return e
+    } catch (e) {
       assert(e)
-    })
+      return e
+    }
   })
 
-  it('use table builder to bind to a table int, tinyint', testDone => {
+  it('use table builder to bind to a table int, tinyint', async function handler () {
     function makeOne (i) {
       return {
         id: i,
@@ -396,18 +410,19 @@ describe('table-builder', function () {
       }
     }
 
-    run(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asTinyInt()
-    }, makeOne).then((e) => {
-      testDone(e)
-    }).catch(e => {
+    try {
+      const e = await run(builder => {
+        builder.addColumn('id').asInt().isPrimaryKey(1)
+        builder.addColumn('col_a').asTinyInt()
+      }, makeOne)
+      return e
+    } catch (e) {
       assert(e)
-      testDone(e)
-    })
+      return e
+    }
   })
 
-  it('use table builder to bind to a table int, bit', testDone => {
+  it('use table builder to bind to a table int, bit', async function handler () {
     function makeOne (i) {
       return {
         id: i,
@@ -415,15 +430,16 @@ describe('table-builder', function () {
       }
     }
 
-    run(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asBit()
-    }, makeOne).then((e) => {
-      testDone(e)
-    }).catch(e => {
+    try {
+      const e = await run(builder => {
+        builder.addColumn('id').asInt().isPrimaryKey(1)
+        builder.addColumn('col_a').asBit()
+      }, makeOne)
+      return e
+    } catch (e) {
       assert(e)
-      testDone(e)
-    })
+      return e
+    }
   })
 
   async function run (adder, makeOne, checkOne) {
@@ -442,7 +458,7 @@ describe('table-builder', function () {
     return new Array(num + 1).join(c)
   }
 
-  it('use table builder to bind to a table int, varchar', testDone => {
+  it('use table builder to bind to a table int, varchar', async function handler () {
     function makeOne (i) {
       return {
         id: i,
@@ -454,18 +470,19 @@ describe('table-builder', function () {
       }
     }
 
-    run(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asInt()
-      builder.addColumn('col_b').asVarChar(100)
-      builder.addColumn('col_c').asInt()
-      builder.addColumn('col_d').asInt()
-      builder.addColumn('col_e').asVarChar(100)
-    }, makeOne).then((e) => {
-      testDone(e)
-    }).catch(e => {
+    try {
+      const e = await run(builder => {
+        builder.addColumn('id').asInt().isPrimaryKey(1)
+        builder.addColumn('col_a').asInt()
+        builder.addColumn('col_b').asVarChar(100)
+        builder.addColumn('col_c').asInt()
+        builder.addColumn('col_d').asInt()
+        builder.addColumn('col_e').asVarChar(100)
+      }, makeOne)
+      return e
+    } catch (e) {
       assert(e)
-      testDone(e)
-    })
+      return e
+    }
   })
 })
