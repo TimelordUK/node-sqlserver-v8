@@ -38,19 +38,16 @@ describe('table-builder', function () {
       await checker.check(makeOne, checkOne)
     }
 
-    try {
-      const e = await runLocal(builder => {
-        builder.addColumn('id').asInt().isPrimaryKey(1)
-        builder.addColumn('col_a').asInt()
-        builder.addColumn('col_b').asVarChar(100)
-        builder.addColumn('col_c').asInt()
-        builder.addColumn('col_d').asInt()
-        builder.addColumn('col_e').asVarChar(100)
-      }, makeOne)
-      return e
-    } catch (e) {
-      assert(e)
-      return e
+    const e = await runLocal(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asInt()
+      builder.addColumn('col_b').asVarChar(100)
+      builder.addColumn('col_c').asInt()
+      builder.addColumn('col_d').asInt()
+      builder.addColumn('col_e').asVarChar(100)
+    }, makeOne)
+    if (e) {
+      throw (e)
     }
   })
 
@@ -70,15 +67,12 @@ describe('table-builder', function () {
       assert(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)
     }
 
-    try {
-      const e = await run(builder => {
-        builder.addColumn('id').asInt().isPrimaryKey(1)
-        builder.addColumn('col_a').asTime()
-      }, makeOne, checkOne)
-      return e
-    } catch (e) {
-      assert(e)
-      return e
+    const e = await run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asTime()
+    }, makeOne, checkOne)
+    if (e) {
+      throw (e)
     }
   })
 
@@ -103,16 +97,13 @@ describe('table-builder', function () {
       assert.deepStrictEqual(lhs.col_b, rhs.col_b)
     }
 
-    try {
-      const e = await run(builder => {
-        builder.addColumn('id').asInt().isPrimaryKey(1)
-        builder.addColumn('col_a').asDateTimeOffset()
-        builder.addColumn('col_b').asDateTimeOffset()
-      }, makeOne, checkOne)
-      return e
-    } catch (e) {
-      assert(e)
-      return e
+    const e = await run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asDateTimeOffset()
+      builder.addColumn('col_b').asDateTimeOffset()
+    }, makeOne, checkOne)
+    if (e) {
+      throw (e)
     }
   })
 
@@ -124,15 +115,12 @@ describe('table-builder', function () {
       }
     }
 
-    try {
-      const e = await run(builder => {
-        builder.addColumn('id').asInt().isPrimaryKey(1)
-        builder.addColumn('col_a').asNVarCharMax()
-      }, makeOne)
-      return e
-    } catch (e) {
-      assert(e)
-      return e
+    const e = await run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asNVarCharMax()
+    }, makeOne)
+    if (e) {
+      throw (e)
     }
   })
 
@@ -149,15 +137,12 @@ describe('table-builder', function () {
       assert(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)
     }
 
-    try {
-      const e = await run(builder => {
-        builder.addColumn('id').asInt().isPrimaryKey(1)
-        builder.addColumn('col_a').asDecimal(23, 18)
-      }, makeOne, checkOne)
-      return e
-    } catch (e) {
-      assert(e)
-      return e
+    const e = await run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asDecimal(23, 18)
+    }, makeOne, checkOne)
+    if (e) {
+      throw (e)
     }
   })
 
@@ -174,15 +159,12 @@ describe('table-builder', function () {
       assert(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)
     }
 
-    try {
-      const e = await run(builder => {
-        builder.addColumn('id').asInt().isPrimaryKey(1)
-        builder.addColumn('col_a').asNumeric(18, 6)
-      }, makeOne, checkOne)
-      return e
-    } catch (e) {
-      assert(e)
-      return e
+    const e = await run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asNumeric(18, 6)
+    }, makeOne, checkOne)
+    if (e) {
+      throw (e)
     }
   })
 
@@ -199,15 +181,12 @@ describe('table-builder', function () {
       assert(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)
     }
 
-    try {
-      const e = await run(builder => {
-        builder.addColumn('id').asInt().isPrimaryKey(1)
-        builder.addColumn('col_a').asReal()
-      }, makeOne, checkOne)
-      return e
-    } catch (e) {
-      assert(e)
-      return e
+    const e = await run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asReal()
+    }, makeOne, checkOne)
+    if (e) {
+      throw (e)
     }
   })
 
@@ -219,15 +198,12 @@ describe('table-builder', function () {
       }
     }
 
-    try {
-      const e = await run(builder => {
-        builder.addColumn('id').asInt().isPrimaryKey(1)
-        builder.addColumn('col_a').asBigInt()
-      }, makeOne)
-      return e
-    } catch (e) {
-      assert(e)
-      return e
+    const e = await run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asBigInt()
+    }, makeOne)
+    if (e) {
+      throw (e)
     }
   })
 
@@ -258,29 +234,26 @@ describe('table-builder', function () {
       return records[i % records.length]
     }
 
-    try {
-      const e = await run(builder => {
-        builder.addColumn('[BusinessEntityID]').asInt().isPrimaryKey(1)
-        builder.addColumn('[NationalIDNumber]').asNVarChar(15).notNull()
-        builder.addColumn('[LoginID]').asNVarChar(256).notNull()
-        builder.addColumn('[OrganizationNode]').asHierarchyId().null()
-        builder.addColumn('[OrganizationLevel]').asInt().asExpression('AS ([OrganizationNode].[GetLevel]())')
-        builder.addColumn('[JobTitle]').asNVarChar(50).notNull()
-        builder.addColumn('[BirthDate]').asDate().notNull()
-        builder.addColumn('[MaritalStatus]').asNChar(1).notNull()
-        builder.addColumn('[Gender]').asNChar(1).notNull()
-        builder.addColumn('[HireDate]').asDate().notNull()
-        builder.addColumn('[SalariedFlag]').asBit().notNull()
-        builder.addColumn('[VacationHours]').asSmallInt().notNull()
-        builder.addColumn('[SickLeaveHours]').asSmallInt().notNull()
-        builder.addColumn('[CurrentFlag]').asBit().notNull()
-        builder.addColumn('[rowguid]').asUniqueIdentifier().withDecorator('ROWGUIDCOL  NOT NULL')
-        builder.addColumn('[ModifiedDate]').asDateTime().notNull()
-      }, makeOne)
-      return e
-    } catch (e) {
-      assert(e)
-      return e
+    const e = await run(builder => {
+      builder.addColumn('[BusinessEntityID]').asInt().isPrimaryKey(1)
+      builder.addColumn('[NationalIDNumber]').asNVarChar(15).notNull()
+      builder.addColumn('[LoginID]').asNVarChar(256).notNull()
+      builder.addColumn('[OrganizationNode]').asHierarchyId().null()
+      builder.addColumn('[OrganizationLevel]').asInt().asExpression('AS ([OrganizationNode].[GetLevel]())')
+      builder.addColumn('[JobTitle]').asNVarChar(50).notNull()
+      builder.addColumn('[BirthDate]').asDate().notNull()
+      builder.addColumn('[MaritalStatus]').asNChar(1).notNull()
+      builder.addColumn('[Gender]').asNChar(1).notNull()
+      builder.addColumn('[HireDate]').asDate().notNull()
+      builder.addColumn('[SalariedFlag]').asBit().notNull()
+      builder.addColumn('[VacationHours]').asSmallInt().notNull()
+      builder.addColumn('[SickLeaveHours]').asSmallInt().notNull()
+      builder.addColumn('[CurrentFlag]').asBit().notNull()
+      builder.addColumn('[rowguid]').asUniqueIdentifier().withDecorator('ROWGUIDCOL  NOT NULL')
+      builder.addColumn('[ModifiedDate]').asDateTime().notNull()
+    }, makeOne)
+    if (e) {
+      throw (e)
     }
   })
 
@@ -307,16 +280,13 @@ describe('table-builder', function () {
       }
     }
 
-    try {
-      const e = await run(builder => {
-        builder.addColumn('id').asInt().isPrimaryKey(1)
-        builder.addColumn('col_a').asDateTime()
-        builder.addColumn('col_b').asDateTime()
-      }, makeOne, checkOne)
-      return e
-    } catch (e) {
-      assert(e)
-      return e
+    const e = await run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asDateTime()
+      builder.addColumn('col_b').asDateTime()
+    }, makeOne, checkOne)
+    if (e) {
+      throw (e)
     }
   })
 
@@ -329,16 +299,12 @@ describe('table-builder', function () {
         col_a: i % 2 === 0 ? g1 : g2
       }
     }
-
-    try {
-      const e = await run(builder => {
-        builder.addColumn('id').asInt().isPrimaryKey(1)
-        builder.addColumn('col_a').asUniqueIdentifier()
-      }, makeOne)
-      return e
-    } catch (e) {
-      assert(e)
-      return e
+    const e = await run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asUniqueIdentifier()
+    }, makeOne)
+    if (e) {
+      throw (e)
     }
   })
 
@@ -350,15 +316,12 @@ describe('table-builder', function () {
       }
     }
 
-    try {
-      const e = await run(builder => {
-        builder.addColumn('id').asInt().isPrimaryKey(1)
-        builder.addColumn('col_a').asVarBinary(10)
-      }, makeOne)
-      return e
-    } catch (e) {
-      assert(e)
-      return e
+    const e = await run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asVarBinary(10)
+    }, makeOne)
+    if (e) {
+      throw (e)
     }
   })
 
@@ -370,15 +333,12 @@ describe('table-builder', function () {
       }
     }
 
-    try {
-      const e = await run(builder => {
-        builder.addColumn('id').asInt().isPrimaryKey(1)
-        builder.addColumn('col_a').asInt()
-      }, makeOne)
-      return e
-    } catch (e) {
-      assert(e)
-      return e
+    const e = await run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asInt()
+    }, makeOne)
+    if (e) {
+      throw (e)
     }
   })
 
@@ -390,15 +350,12 @@ describe('table-builder', function () {
       }
     }
 
-    try {
-      const e = await run(builder => {
-        builder.addColumn('id').asInt().isPrimaryKey(1)
-        builder.addColumn('col_a').asSmallInt()
-      }, makeOne)
-      return e
-    } catch (e) {
-      assert(e)
-      return e
+    const e = await run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asSmallInt()
+    }, makeOne)
+    if (e) {
+      throw (e)
     }
   })
 
@@ -410,15 +367,12 @@ describe('table-builder', function () {
       }
     }
 
-    try {
-      const e = await run(builder => {
-        builder.addColumn('id').asInt().isPrimaryKey(1)
-        builder.addColumn('col_a').asTinyInt()
-      }, makeOne)
-      return e
-    } catch (e) {
-      assert(e)
-      return e
+    const e = await run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asTinyInt()
+    }, makeOne)
+    if (e) {
+      throw (e)
     }
   })
 
@@ -430,15 +384,12 @@ describe('table-builder', function () {
       }
     }
 
-    try {
-      const e = await run(builder => {
-        builder.addColumn('id').asInt().isPrimaryKey(1)
-        builder.addColumn('col_a').asBit()
-      }, makeOne)
-      return e
-    } catch (e) {
-      assert(e)
-      return e
+    const e = await run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asBit()
+    }, makeOne)
+    if (e) {
+      throw (e)
     }
   })
 
@@ -470,19 +421,16 @@ describe('table-builder', function () {
       }
     }
 
-    try {
-      const e = await run(builder => {
-        builder.addColumn('id').asInt().isPrimaryKey(1)
-        builder.addColumn('col_a').asInt()
-        builder.addColumn('col_b').asVarChar(100)
-        builder.addColumn('col_c').asInt()
-        builder.addColumn('col_d').asInt()
-        builder.addColumn('col_e').asVarChar(100)
-      }, makeOne)
-      return e
-    } catch (e) {
-      assert(e)
-      return e
+    const e = await run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asInt()
+      builder.addColumn('col_b').asVarChar(100)
+      builder.addColumn('col_c').asInt()
+      builder.addColumn('col_d').asInt()
+      builder.addColumn('col_e').asVarChar(100)
+    }, makeOne)
+    if (e) {
+      throw (e)
     }
   })
 })

@@ -86,23 +86,14 @@ describe('prepared', function () {
       .then(() => done())
   })
 
-  it('use prepared to select 0 rows - expect no error (await promise)', testDone => {
-    async function exec () {
-      try {
-        const sql = 'select * from master..syscomments where 1=0'
-        const preparedQuery = await theConnection.promises.prepare(sql)
-        const results = await preparedQuery.promises.query([])
-        assert(results != null)
-        assert(results.first.length === 0)
-        await preparedQuery.promises.free()
-        return null
-      } catch (err) {
-        return err
-      }
-    }
-    exec().then(r => {
-      testDone(r)
-    })
+  it('use prepared to select 0 rows - expect no error (await promise)', async function handler () {
+    const sql = 'select * from master..syscomments where 1=0'
+    const preparedQuery = await theConnection.promises.prepare(sql)
+    const results = await preparedQuery.promises.query([])
+    assert(results != null)
+    assert(results.first.length === 0)
+    await preparedQuery.promises.free()
+    return null
   })
 
   it('use prepared to select 0 rows - expect no error (promise then)', testDone => {
@@ -127,19 +118,13 @@ describe('prepared', function () {
       })
   })
 
-  it('use prepared to reserve and read multiple rows.', testDone => {
+  it('use prepared to reserve and read multiple rows.', async function handler () {
     const sql = 'select top 5 * from master..syscomments'
-    theConnection.prepare(sql, (err, preparedQuery) => {
-      assert(err === null || err === false)
-      preparedQuery.preparedQuery([], (err, res) => {
-        assert(res != null)
-        assert(res.length > 0)
-        assert.ifError(err)
-        preparedQuery.free(() => {
-          testDone()
-        })
-      })
-    })
+    const pq = await theConnection.promises.prepare(sql)
+    const res = await pq.promises.query([])
+    assert(res != null)
+    assert(res.first.length > 0)
+    await pq.free()
   })
 
   it('use prepared statement with params returning 0 rows. - expect no error', testDone => {
