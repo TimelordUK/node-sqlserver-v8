@@ -86,6 +86,24 @@ describe('prepared', function () {
       .then(() => done())
   })
 
+  it('use prepared and select nvarchar(max)', async function handler () {
+    const s = 'hello'
+    const q = `DECLARE @v NVARCHAR(MAX) = '${s}'; SELECT @v AS v`
+    const prepared = await env.theConnection.promises.prepare(q)
+    const res = await prepared.promises.query([])
+    assert.deepStrictEqual(res.first[0].v, s)
+    await prepared.free()
+  })
+
+  it('use prepared to reserve and read multiple rows.', async function handler () {
+    const sql = 'select top 5 * from master..syscomments'
+    const pq = await theConnection.promises.prepare(sql)
+    const res = await pq.promises.query([])
+    assert(res != null)
+    assert(res.first.length > 0)
+    await pq.free()
+  })
+
   it('use prepared to select 0 rows - expect no error (await promise)', async function handler () {
     const sql = 'select * from master..syscomments where 1=0'
     const preparedQuery = await theConnection.promises.prepare(sql)
@@ -116,15 +134,6 @@ describe('prepared', function () {
       }).catch(err => {
         testDone(err)
       })
-  })
-
-  it('use prepared to reserve and read multiple rows.', async function handler () {
-    const sql = 'select top 5 * from master..syscomments'
-    const pq = await theConnection.promises.prepare(sql)
-    const res = await pq.promises.query([])
-    assert(res != null)
-    assert(res.first.length > 0)
-    await pq.free()
   })
 
   it('use prepared statement with params returning 0 rows. - expect no error', testDone => {

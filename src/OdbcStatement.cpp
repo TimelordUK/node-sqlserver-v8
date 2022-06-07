@@ -143,8 +143,7 @@ namespace mssql
 			return false;
 		// fprintf(stderr, "prepared_read");
 		const auto &statement = *_statement;
-		unsigned long row_count = 0;
-		SQLSetStmtAttr(statement, SQL_ATTR_ROWS_FETCHED_PTR, &row_count, 0);
+		SQLSetStmtAttr(statement, SQL_ATTR_ROWS_FETCHED_PTR, &_resultset->_row_count, 0);
 
 		const auto ret = SQLFetchScroll(statement, SQL_FETCH_NEXT, 0);
 		// cerr << " row_count " << row_count << endl;
@@ -162,7 +161,7 @@ namespace mssql
 		{
 			const auto &definition = _resultset->get_meta_data(c);
 			// having bound a block, will collect 50 rows worth of data in 1 call.
-			res = dispatch_prepared(definition.dataType, definition.columnSize, row_count, c);
+			res = dispatch_prepared(definition.dataType, definition.columnSize, _resultset->_row_count, c);
 			if (!res)
 			{
 				res = false;
@@ -556,7 +555,7 @@ namespace mssql
 		if (!check_odbc_error(ret))
 			return false;
 
-		_preparedStorage = make_shared<BoundDatumSet>();
+		_preparedStorage = make_shared<BoundDatumSet>(q);
 		_resultset = make_unique<ResultSet>(num_cols);
 
 		for (auto i = 0; i < num_cols; i++)

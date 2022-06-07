@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include <BoundDatum.h>
 #include <BoundDatumSet.h>
+#include <QueryOperationParams.h>
 #include <ResultSet.h>
 
 namespace mssql
@@ -8,16 +9,23 @@ namespace mssql
 	BoundDatumSet::BoundDatumSet() :
 		err(nullptr),
 		first_error(0),
-		_output_param_count(-1)
+		_output_param_count(-1),
+		_params(nullptr)
 	{
 		_bindings = make_shared<param_bindings>();
+	}
+
+	BoundDatumSet::BoundDatumSet(shared_ptr<QueryOperationParams> params) : 
+	BoundDatumSet()
+	{
+		_params = params;
 	}
 
 	bool BoundDatumSet::reserve(const shared_ptr<ResultSet>& set, const size_t row_count) const
 	{
 		for (uint32_t i = 0; i < set->get_column_count(); ++i) {
-			const auto binding = make_shared<BoundDatum>();
-			const auto& def = set->get_meta_data(i);
+			const auto binding = make_shared<BoundDatum>(_params);
+			auto& def = set->get_meta_data(i);
 			binding->reserve_column_type(def.dataType, def.columnSize, row_count);
 			_bindings->push_back(binding);
 		}

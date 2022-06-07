@@ -7,11 +7,12 @@
 namespace mssql
 {
 	using namespace std;
+	class QueryOperationParams;
 
 	class BoundDatum {
 	public:
 		bool bind(Local<Value> &p);
-		void reserve_column_type(SQLSMALLINT type, const size_t len, const size_t row_count);
+		void reserve_column_type(SQLSMALLINT type, size_t& len, const size_t row_count);
 
 		bool get_defined_precision() const {
 			return definedPrecision;
@@ -29,7 +30,7 @@ namespace mssql
 
 		shared_ptr<DatumStorage> get_storage() { return _storage; }
 
-		BoundDatum(void) :
+		BoundDatum() :
 			js_type(JS_UNKNOWN),
 			c_type(0),
 			sql_type(0),
@@ -47,10 +48,16 @@ namespace mssql
 			tvp_no_cols(0),
 			definedPrecision(false),
 			definedScale(false),
-			err(nullptr)	
+			err(nullptr)
 		{
 			_indvec = vector<SQLLEN>(1);
 			_storage = make_shared<DatumStorage>();
+			_params = nullptr;
+		}
+
+		BoundDatum(shared_ptr<QueryOperationParams> params) : BoundDatum()
+		{
+			_params = params;
 		}
 
 		enum JS_TYPE {
@@ -89,6 +96,7 @@ namespace mssql
 	
 		vector<SQLLEN> _indvec;
 		shared_ptr<DatumStorage> _storage;
+		shared_ptr<QueryOperationParams> _params;
 		bool definedPrecision;
 		bool definedScale;
 
@@ -199,6 +207,7 @@ namespace mssql
 		void sql_type_timestamp(Local<Value> pp);
 		void sql_ss_timestampoffset(Local<Value> pp);
 		void sql_varbinary(Local<Value> pp);
+		size_t get_default_size(size_t len);
 
 		static Local<Value> unbind_null();
 		Local<Value> unbind_string() const;

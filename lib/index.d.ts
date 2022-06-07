@@ -79,7 +79,8 @@ export interface PoolOptions {
     heartbeatSql?: string
     inactivityTimeoutSecs?: number
     useUTC?: boolean
-    useNumericString?: boolean
+    useNumericString?: boolean,
+    maxPreparedColumnSize?: number,
     connectionString: string
 }
 
@@ -205,6 +206,9 @@ export interface Connection {
     // optionally return all number based columns as strings
     setUseNumericString(numericString:boolean):void
     getUseNumericString():boolean
+    // set max length of prepared strings or binary columns
+    setMaxPreparedColumnSize(size:number):void
+    getMaxPreparedColumnSize():number
     close(cb: StatusCb): void
     query(sql: string, cb?: QueryCb): Query
     query(sql: string, params?: any[], cb?: QueryCb): Query
@@ -248,7 +252,9 @@ export interface QueryDescription {
     numeric_string?: boolean // for BigInt can return string to avoid overflow
     query_timeout?: number
     query_polling?: boolean
-    query_tz_adjustment?: number
+    query_tz_adjustment?: number,
+    // constrain nvarchar(max) for prepared statements
+    max_prepared_column_size?: number 
 }
 
 export interface Meta {

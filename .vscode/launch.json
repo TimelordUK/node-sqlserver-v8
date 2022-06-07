@@ -25,9 +25,11 @@
             "request": "launch",
             "program": "C:/Program Files/nodejs/node.exe",
             "args": [
+                "./node_modules/mocha/bin/mocha.js",
+               "test/prepared"
                // "simple-demo"
                // "runtest", "-k", "linux", 
-               "runtest", "-k", "linux",
+               // "runtest", "-k", "linux",
                // "runtest",
                // "-t", "table-builder", 
                // "-t", "querycancel",
@@ -42,7 +44,7 @@
                // "-t", "txn",
                // "-t", "datatypes",
                // "-t", "sproc"
-               "-t", "params"
+               //"-t", "params"
                // "-t", "bulk",
                // "-t", "bcp"
                // "-t", "json"
@@ -52,7 +54,7 @@
            // "cwd": "${workspaceFolder}/samples/javascript",
              "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": false
+            "console": "integratedTerminal"
         },
        
         {

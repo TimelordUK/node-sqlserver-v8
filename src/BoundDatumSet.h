@@ -6,12 +6,14 @@
 namespace mssql
 {
 	class ResultSet;
+	class QueryOperationParams;
 
 	class BoundDatumSet
 	{
 	public:	
 		typedef vector<shared_ptr<BoundDatum>> param_bindings;
 		BoundDatumSet();
+		BoundDatumSet(const shared_ptr<QueryOperationParams> params);
 		bool reserve(const shared_ptr<ResultSet> &set, size_t row_count) const;
 		bool bind(Local<Array> &node_params);
 		Local<Array> unbind() const;	
@@ -28,5 +30,6 @@ namespace mssql
 		bool tvp(Local<Value> &v) const;
 		int _output_param_count;
 		shared_ptr<param_bindings> _bindings;
+		shared_ptr<QueryOperationParams> _params;
 	};
 }

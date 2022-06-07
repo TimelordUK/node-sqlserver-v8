@@ -10,7 +10,7 @@ namespace mssql
 	QueryOperationParams::QueryOperationParams(const Local<Number> query_id, 
 		const Local<Object> query_object) :
 		_timeout(MutateJS::getint32(query_object, "query_timeout")),
-		_query_tz_adjustment(MutateJS::getint32(query_object, "query_tz_adjustment")),
+		_max_prepared_column_size(MutateJS::getint64(query_object, "max_prepared_column_size")),
 		_id(MutateJS::getint32(query_id)),
 		_polling(MutateJS::getbool(query_object, "query_polling")),
 		_numeric_string(MutateJS::getbool(query_object, "numeric_string"))

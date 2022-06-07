@@ -1,6 +1,7 @@
 #include <BoundDatum.h>
 #include <BoundDatumHelper.h>
 #include <TimestampColumn.h>
+#include <QueryOperationParams.h>
 #include <MutateJS.h>
 #include <codecvt>
 #include <locale>
@@ -2062,7 +2063,14 @@ namespace mssql
 		return tsc.ToValue();
 	}
 
-	void BoundDatum::reserve_column_type(const SQLSMALLINT type, const size_t len, const size_t row_count)
+	size_t BoundDatum::get_default_size(size_t len) {
+		if (len != 0) return len;
+		const uint32_t defaultSize = _params->max_prepared_column_size();
+		len = defaultSize > 0 ? defaultSize : 8 * 1024;
+		return len;
+	}
+
+	void BoundDatum::reserve_column_type(const SQLSMALLINT type,  size_t& len, const size_t row_count)
 	{
 		switch (type)
 		{
@@ -2078,6 +2086,7 @@ namespace mssql
 		case SQL_WLONGVARCHAR:
 		case SQL_SS_XML:
 		case SQL_GUID:
+			len = max(len, get_default_size(len));
 			reserve_w_var_char_array(len + 1, row_count);
 			break;
 
@@ -2113,6 +2122,7 @@ namespace mssql
 		case SQL_VARBINARY:
 		case SQL_LONGVARBINARY:
 		case SQL_SS_UDT:
+			len = max(len, get_default_size(len));
 			reserve_var_binary_array(len, row_count);
 			break;
 
@@ -2133,6 +2143,7 @@ namespace mssql
 			break;
 
 		default:
+			len = max(len, get_default_size(len));
 			reserve_w_var_char_array(len, row_count);
 			break;
 		}
