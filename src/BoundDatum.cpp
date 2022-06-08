@@ -2075,6 +2075,7 @@ namespace mssql
 		switch (type)
 		{
 		case SQL_SS_VARIANT:
+			len = max(len, get_default_size(len));
 			reserve_w_var_char_array(len, row_count);
 			break;
 

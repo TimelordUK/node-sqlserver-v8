@@ -1616,7 +1616,9 @@ namespace mssql
 				continue;
 			}
 			auto offset = (column_size + 1) * row_id;
-			const auto value = make_shared<StringColumn>(column, storage->uint16vec_ptr, offset, ind[row_id] / size);
+			size_t actual_size = ind[row_id] / size;
+			auto to_read = min(actual_size, column_size);
+			const auto value = make_shared<StringColumn>(column, storage->uint16vec_ptr, offset, to_read);
 			_resultset->add_column(row_id, value);
 		}
 		return true;
