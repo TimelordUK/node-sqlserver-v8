@@ -28,6 +28,7 @@ describe('connection-pool', function () {
     const insertSql = helper.callProcWithTVpSql
     // 'exec insertTestTvp @tvp = ?;'
     await env.theConnection.promises.query(insertSql, [tp])
+    // use a connection having inserted with pool
     const res = await env.theConnection.promises.query(`select * from ${tableName}`)
     assert.deepStrictEqual(res.first, vec)
     await pool.close()

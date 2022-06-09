@@ -79,8 +79,8 @@ export interface PoolOptions {
     heartbeatSql?: string
     inactivityTimeoutSecs?: number
     useUTC?: boolean
-    useNumericString?: boolean,
-    maxPreparedColumnSize?: number,
+    useNumericString?: boolean, // avoid bigint overflow return string 
+    maxPreparedColumnSize?: number, // nvarchar(max) prepared columns must be constrained (Default 8k)
     connectionString: string
 }
 
