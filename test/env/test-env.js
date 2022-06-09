@@ -76,8 +76,9 @@ class TestEnv {
     return new BuilderChecker(builder)
   }
 
-  tvpHelper (tableName) {
-    return new TvpHelper(this.theConnection, tableName)
+  tvpHelper (tableName, connectionProxy) {
+    connectionProxy = connectionProxy || this.theConnection
+    return new TvpHelper(connectionProxy, tableName)
   }
 
   jsonHelper (tableName, procName, procNameJson) {
@@ -101,6 +102,15 @@ class TestEnv {
       this.employee = null
       this.geographyHelper = null
     }
+  }
+
+  pool (size) {
+    size = size || 4
+    const pool = new this.sql.Pool({
+      connectionString: this.connectionString,
+      ceiling: size
+    })
+    return pool
   }
 
   decodeDriver () {

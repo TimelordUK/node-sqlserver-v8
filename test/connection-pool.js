@@ -16,6 +16,21 @@ describe('connection-pool', function () {
     env.close().then(() => done())
   })
 
+  it('use pool for tvp insert', async function handler () {
+    const pool = env.pool(4)
+    await pool.promises.open()
+    const tableName = 'TestTvp'
+    const helper = env.tvpHelper(tableName, pool)
+    const vec = helper.getExtendedVec(1)
+    const table = await helper.create(tableName)
+    table.addRowsFromObjects(vec)
+    const tp = env.sql.TvpFromTable(table)
+    await env.theConnection.promises.query('exec insertTestTvp @tvp = ?;', [tp])
+    const res = await env.theConnection.promises.query(`select * from ${tableName}`)
+    assert.deepStrictEqual(res.first, vec)
+    await pool.close()
+  })
+
   it('submit error queries on pool with no on.error catch', testDone => {
     async function exec () {
       const size = 4

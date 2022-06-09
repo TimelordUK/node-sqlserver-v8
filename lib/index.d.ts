@@ -104,6 +104,7 @@ export interface QueryAggregatorOptions {
 export interface PoolPromises extends AggregatorPromises {
     open(): Promise<Pool>
     close(): Promise<any>
+    getUserTypeTable(name: string): Promise<Table>
 }
 
 export interface Pool  {

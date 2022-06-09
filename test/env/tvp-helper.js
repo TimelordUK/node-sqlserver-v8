@@ -1,5 +1,3 @@
-const util = require('util')
-
 class TvpHelper {
   constructor (theConnection, tableName) {
     let schemaName = 'dbo'
@@ -177,8 +175,7 @@ END
     async function create () {
       async function exec (sql) {
         // console.log(`exec '${sql}' ....`)
-        const promisedQuery = util.promisify(theConnection.query)
-        await promisedQuery(sql)
+        await theConnection.promises.query(sql)
         // console.log('... done')
       }
 
