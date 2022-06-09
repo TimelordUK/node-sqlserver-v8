@@ -253,6 +253,7 @@ END
     this.create = create
     this.getVec = getVec
     this.getExtendedVec = getExtendedVec
+    this.callProcWithTVpSql = `exec ${insertProcedureTypeName} @tvp = ?;`
   }
 }
 

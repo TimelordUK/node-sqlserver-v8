@@ -25,62 +25,41 @@ describe('connection-pool', function () {
     const table = await helper.create(tableName)
     table.addRowsFromObjects(vec)
     const tp = env.sql.TvpFromTable(table)
-    await env.theConnection.promises.query('exec insertTestTvp @tvp = ?;', [tp])
+    const insertSql = helper.callProcWithTVpSql
+    // 'exec insertTestTvp @tvp = ?;'
+    await env.theConnection.promises.query(insertSql, [tp])
     const res = await env.theConnection.promises.query(`select * from ${tableName}`)
     assert.deepStrictEqual(res.first, vec)
     await pool.close()
   })
 
-  it('submit error queries on pool with no on.error catch', testDone => {
-    async function exec () {
-      const size = 4
-      const iterations = 8
-      const pool = new env.sql.Pool({
-        connectionString: env.connectionString,
-        ceiling: size
-      })
+  it('submit error queries on pool with no on.error catch', async function handler () {
+    const pool = env.pool(4)
+    await pool.promises.open()
+    const iterations = 8
 
-      await pool.promises.open()
-
-      const testSql = 'select a;'
-      for (let i = 0; i < iterations; ++i) {
-        try {
-          await pool.promises.query(testSql)
-        } catch (e) {}
-      }
-
-      await pool.promises.close()
+    const testSql = 'select a;'
+    for (let i = 0; i < iterations; ++i) {
+      try {
+        await pool.promises.query(testSql)
+      } catch (e) {}
     }
 
-    exec().then(res => {
-      testDone(res)
-    })
+    await pool.promises.close()
   })
 
-  it('using promises to open, query, close pool', testDone => {
-    async function exec () {
-      try {
-        const size = 4
-        const pool = new env.sql.Pool({
-          connectionString: env.connectionString,
-          ceiling: size
-        })
-        await pool.promises.open()
-        const all = Array(100).fill(0).map((_, i) => pool.promises.query(`select ${i} as i, @@SPID as spid`))
-        const promised = await Promise.all(all)
-        const res = promised.map(r => r.first[0].spid)
-        assert(res !== null)
-        const set = new Set(res)
-        assert.strictEqual(set.size, size)
-        await pool.promises.close()
-        return null
-      } catch (err) {
-        return err
-      }
-    }
-    exec().then(res => {
-      testDone(res)
-    })
+  it('using promises to open, query, close pool', async function handler () {
+    const size = 4
+    const pool = env.pool(size)
+    await pool.promises.open()
+    const all = Array(100).fill(0).map((_, i) => pool.promises.query(`select ${i} as i, @@SPID as spid`))
+    const promised = await Promise.all(all)
+    const res = promised.map(r => r.first[0].spid)
+    assert(res !== null)
+    const set = new Set(res)
+    assert.strictEqual(set.size, size)
+    await pool.promises.close()
+    return null
   })
 
   it('submit 10 queries with errors (no callback) to pool of 4', testDone => {
