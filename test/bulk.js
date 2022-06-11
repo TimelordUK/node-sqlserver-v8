@@ -37,7 +37,7 @@ describe('bulk', function () {
     return v
   }
 
-  it('employee tmp table created on 2 connections - check name clash', testDone => {
+  it('employee tmp table created on 2 connections - check name clash', async function handler () {
     const tableName = '#test_table'
 
     const dropTableSql = `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL DROP TABLE ${tableName};`
@@ -66,61 +66,46 @@ describe('bulk', function () {
       return d
     }
 
-    async function runner (f) {
-      try {
-        const c1 = await sql.promises.open(env.connectionString)
-        const c2 = await sql.promises.open(env.connectionString)
-        await c1.promises.query(dropTableSql)
-        await c2.promises.query(dropTableSql)
+    const c1 = await sql.promises.open(env.connectionString)
+    const c2 = await sql.promises.open(env.connectionString)
+    await c1.promises.query(dropTableSql)
+    await c2.promises.query(dropTableSql)
 
-        await c1.promises.query(createTableSql)
-        await c2.promises.query(createTableSql)
+    await c1.promises.query(createTableSql)
+    await c2.promises.query(createTableSql)
 
-        const t1 = await c1.promises.getTable(tableName)
-        const t2 = await c2.promises.getTable(tableName)
+    const t1 = await c1.promises.getTable(tableName)
+    const t2 = await c2.promises.getTable(tableName)
 
-        assert(t1)
-        assert(t2)
+    assert(t1)
+    assert(t2)
 
-        const vec = getVec(20)
-        const keys = vec.map(o => {
-          return {
-            id: o.id
-          }
-        })
-
-        await t1.promises.insert(vec)
-        await t2.promises.insert(vec)
-
-        const s1 = await t1.promises.select(keys)
-        const s2 = await t2.promises.select(keys)
-
-        assert.deepStrictEqual(vec, s1)
-        assert.deepStrictEqual(vec, s2)
-
-        const m1 = t1.getMeta()
-        const m2 = t2.getMeta()
-        assert(m1.colByName.id.object_id !== m2.colByName.id.object_id)
-        await c1.promises.query(`drop table ${tableName}`)
-        await c2.promises.query(`drop table ${tableName}`)
-        await c1.promises.close()
-        await c2.promises.close()
-      } catch (e) {
-        return e
+    const vec = getVec(20)
+    const keys = vec.map(o => {
+      return {
+        id: o.id
       }
-    }
+    })
 
-    try {
-      runner().then((e) => {
-        testDone(e)
-      })
-    } catch (e) {
-      assert(e)
-      testDone(e)
-    }
+    await t1.promises.insert(vec)
+    await t2.promises.insert(vec)
+
+    const s1 = await t1.promises.select(keys)
+    const s2 = await t2.promises.select(keys)
+
+    assert.deepStrictEqual(vec, s1)
+    assert.deepStrictEqual(vec, s2)
+
+    const m1 = t1.getMeta()
+    const m2 = t2.getMeta()
+    assert(m1.colByName.id.object_id !== m2.colByName.id.object_id)
+    await c1.promises.query(`drop table ${tableName}`)
+    await c2.promises.query(`drop table ${tableName}`)
+    await c1.promises.close()
+    await c2.promises.close()
   })
 
-  it('table with default values', async function handler () {
+  async function t0 (proxy) {
     const defS1 = 'def1'
     const defN1 = 2
     const bulkTableDef = {
@@ -141,7 +126,7 @@ describe('bulk', function () {
       ]
     }
 
-    const helper = env.bulkTableTest(bulkTableDef)
+    const helper = env.bulkTableTest(bulkTableDef, proxy)
     const expected = []
     const rows = 50
     for (let i = 0; i < rows; ++i) {
@@ -153,16 +138,20 @@ describe('bulk', function () {
     }
     env.theConnection.setUseUTC(true)
     const table = await helper.create()
-    try {
-      await table.promises.insert(expected)
-      const res = await table.promises.select(expected)
-      assert.deepStrictEqual(res, expected)
-    } catch (e) {
-      assert.ifError(e)
-    }
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
+    assert.deepStrictEqual(res, expected)
+  }
+
+  it('connection: table with default values', async function handler () {
+    await t0(env.theConnection)
   })
 
-  it('load large number rows', async function handler () {
+  it('pool: table with default values', async function handler () {
+    await asPool(t0)
+  })
+
+  async function t2 (proxy) {
     const bulkTableDef = {
       tableName: 'test_table_bulk',
       columns: [
@@ -193,7 +182,7 @@ describe('bulk', function () {
       ]
     }
 
-    const helper = env.bulkTableTest(bulkTableDef)
+    const helper = env.bulkTableTest(bulkTableDef, proxy)
     const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
     const expected = []
     const rows = 500
@@ -216,18 +205,29 @@ describe('bulk', function () {
       delete a.d1.nanosecondsDelta
     })
     assert.deepStrictEqual(res, expected)
-  })
-
-  function repeat (c, num) {
-    return new Array(num + 1).join(c)
   }
 
-  it('use tableMgr bulk insert single non UTC based time with time col', async function handler () {
+  it('connection: load large number rows', async function handler () {
+    await t2(env.theConnection)
+  })
+
+  async function asPool (fn) {
+    const pool = env.pool(4)
+    await pool.open()
+    await fn(pool)
+    await pool.close()
+  }
+
+  it('pool: load large number rows', async function handler () {
+    await asPool(t2)
+  })
+
+  async function t3 (proxy) {
     const timeHelper = env.timeHelper
-    const helper = env.typeTableHelper('time')
+    const helper = env.typeTableHelper('time', proxy)
     const testDate = timeHelper.parseTime('16:47:04')
     const expected = helper.getVec(1, () => testDate)
-    env.theConnection.setUseUTC(true)
+    proxy.setUseUTC(true)
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
@@ -235,12 +235,10 @@ describe('bulk', function () {
     await promisedInsert(expected)
     const res = await promisedSelect(expected)
     res.forEach(a => {
-      const today = timeHelper.getUTCTime(a.col_a)
-      a.col_a = today
+      a.col_a = timeHelper.getUTCTime(a.col_a)
     })
     expected.forEach(a => {
-      const today = timeHelper.getUTCTime(a.col_a)
-      a.col_a = today
+      a.col_a = timeHelper.getUTCTime(a.col_a)
       return a
     })
     // console.log('res')
@@ -248,6 +246,14 @@ describe('bulk', function () {
     // console.log('expected')
     // console.log(JSON.stringify(expected, null, 4))
     assert.deepStrictEqual(res, expected)
+  }
+
+  it('connection: use tableMgr bulk insert single non UTC based time with time col', async function handler () {
+    await t3(env.theConnection)
+  })
+
+  it('pool: use tableMgr bulk insert single non UTC based time with time col', async function handler () {
+    await asPool(t3)
   })
 
   it('use tableMgr bulk insert single non UTC based date with datetime col', async function handler () {
@@ -285,7 +291,7 @@ describe('bulk', function () {
   })
 
   it('use tableMgr bulk insert varchar vector - exactly 4001 chars', async function handler () {
-    const b = repeat('z', 4000)
+    const b = env.repeat('z', 4001)
     const helper = env.typeTableHelper('NVARCHAR(MAX)')
     const expected = helper.getVec(10, i => b)
     const table = await helper.create()
@@ -298,7 +304,7 @@ describe('bulk', function () {
   })
 
   it('use tableMgr bulk insert varchar vector - exactly 4000 chars', async function handler () {
-    const b = repeat('z', 4000)
+    const b = env.repeat('z', 4000)
     const helper = env.typeTableHelper('NVARCHAR(MAX)')
     const expected = helper.getVec(10, i => b)
     const table = await helper.create()
@@ -311,7 +317,7 @@ describe('bulk', function () {
   })
 
   it('use tableMgr bulk insert varchar vector - exactly 3999 chars', async function handler () {
-    const b = repeat('z', 4000)
+    const b = env.repeat('z', 3999)
     const helper = env.typeTableHelper('NVARCHAR(MAX)')
     const expected = helper.getVec(10, i => b)
     const table = await helper.create()
@@ -489,138 +495,97 @@ describe('bulk', function () {
     assert.deepStrictEqual(expected, res)
   })
 
-  it('use tableMgr get Table and update 2 columns', testDone => {
-    const helper = env.tableHelper()
+  async function t1 (proxy) {
+    const helper = env.tableHelper(proxy)
     const expected = helper.getVec(10)
-    let table
-    const fns = [
+    const table = await helper.create()
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
+    assert.deepStrictEqual(expected, res)
 
-      async asyncDone => {
-        table = await helper.create()
-        asyncDone()
-      },
-
-      asyncDone => {
-        table.insertRows(expected, (e) => {
-          assert.ifError(e)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        table.selectRows(expected, (e, res) => {
-          assert.ifError(e)
-          assert.deepStrictEqual(expected, res)
-          asyncDone()
-        })
-      },
-
-      async asyncDone => {
-        const meta = table.getMeta()
-        const updateColumns = meta.getUpdateColumns()
-        assert(Array.isArray(updateColumns))
-        assert(updateColumns.length > 0)
-        const cols = updateColumns.slice(0, 2)
-        table.setUpdateCols(cols)
-        const updateSql = meta.getUpdateSignature()
-        assert(updateSql.includes('set [col_a] = ?, [col_b] = ?'))
-        const deleteSql = meta.getDeleteSignature()
-        assert(deleteSql.includes('where ( [id] = ? )'))
-        const selectSql = meta.getSelectSignature()
-        assert(selectSql.includes('select [id], [col_a], [col_b], [col_c], [col_d], [col_e], [col_f] from'))
-        const updated = expected.map(e => {
-          return {
-            id: e.id,
-            col_a: e.col_a * 2,
-            col_b: e.col_b * 2,
-            col_c: e.col_c,
-            col_d: e.col_d,
-            col_e: e.col_e,
-            col_f: e.col_f
-          }
-        })
-        const promisedUpdate = table.promises.update
-        const promisedSelect = table.promises.select
-        try {
-          await promisedUpdate(updated)
-          const res = await promisedSelect(updated)
-          assert.deepStrictEqual(updated, res)
-          asyncDone()
-        } catch (e) {
-          assert.ifError(e)
-        }
+    const meta = table.getMeta()
+    const updateColumns = meta.getUpdateColumns()
+    assert(Array.isArray(updateColumns))
+    assert(updateColumns.length > 0)
+    const cols = updateColumns.slice(0, 2)
+    table.setUpdateCols(cols)
+    const updateSql = meta.getUpdateSignature()
+    assert(updateSql.includes('set [col_a] = ?, [col_b] = ?'))
+    const deleteSql = meta.getDeleteSignature()
+    assert(deleteSql.includes('where ( [id] = ? )'))
+    const selectSql = meta.getSelectSignature()
+    assert(selectSql.includes('select [id], [col_a], [col_b], [col_c], [col_d], [col_e], [col_f] from'))
+    const updated = expected.map(e => {
+      return {
+        id: e.id,
+        col_a: e.col_a * 2,
+        col_b: e.col_b * 2,
+        col_c: e.col_c,
+        col_d: e.col_d,
+        col_e: e.col_e,
+        col_f: e.col_f
       }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
     })
+
+    const promisedUpdate = table.promises.update
+    const promisedSelect = table.promises.select
+
+    await promisedUpdate(updated)
+    const res2 = await promisedSelect(updated)
+    assert.deepStrictEqual(updated, res2)
+  }
+
+  it('connection: use tableMgr get Table and update 2 columns', async function handler () {
+    await t1(env.theConnection)
   })
 
-  it('employee table complex json object test api', testDone => {
+  it('pool: use tableMgr get Table and update 2 columns', async function handler () {
+    const pool = env.pool(4)
+    await pool.open()
+    await t1(pool)
+    await pool.close()
+  })
+
+  it('employee table complex json object test api', async function handler () {
     const tableName = 'employee'
-
-    const fns = [
-
-      asyncDone => {
-        env.helper.dropCreateTable({
-          tableName,
-          theConnection: env.theConnection
-        }, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        bindInsert(tableName, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const tm = env.theConnection.tableMgr()
-        tm.bind(tableName, t => {
-          const meta = t.getMeta()
-
-          const select = meta.getSelectSignature()
-          assert(select.indexOf('select') >= 0)
-
-          const insert = meta.getInsertSignature()
-          assert(insert.indexOf('insert') >= 0)
-
-          const del = meta.getDeleteSignature()
-          assert(del.indexOf('delete') >= 0)
-
-          const update = meta.getUpdateSignature()
-          assert(update.indexOf('update') >= 0)
-
-          const assignable = meta.getAssignableColumns()
-          assert(Array.isArray(assignable))
-          assert(assignable.length > 0)
-
-          const updateColumns = meta.getUpdateColumns()
-          assert(Array.isArray(updateColumns))
-          assert(updateColumns.length > 0)
-
-          const primaryColumns = meta.getPrimaryColumns()
-          assert(Array.isArray(primaryColumns))
-          assert(primaryColumns.length > 0)
-
-          const whereColumns = meta.getWhereColumns()
-          assert(Array.isArray(whereColumns))
-          assert(whereColumns.length > 0)
-
-          const byName = meta.getColumnsByName()
-          assert(byName !== null)
-
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
+    await env.promisedDropCreateTable({
+      tableName,
+      theConnection: env.theConnection
     })
+    await bindInsert(tableName)
+    const t = await env.theConnection.promises.getTable(tableName)
+    const meta = t.getMeta()
+
+    const select = meta.getSelectSignature()
+    assert(select.indexOf('select') >= 0)
+
+    const insert = meta.getInsertSignature()
+    assert(insert.indexOf('insert') >= 0)
+
+    const del = meta.getDeleteSignature()
+    assert(del.indexOf('delete') >= 0)
+
+    const update = meta.getUpdateSignature()
+    assert(update.indexOf('update') >= 0)
+
+    const assignable = meta.getAssignableColumns()
+    assert(Array.isArray(assignable))
+    assert(assignable.length > 0)
+
+    const updateColumns = meta.getUpdateColumns()
+    assert(Array.isArray(updateColumns))
+    assert(updateColumns.length > 0)
+
+    const primaryColumns = meta.getPrimaryColumns()
+    assert(Array.isArray(primaryColumns))
+    assert(primaryColumns.length > 0)
+
+    const whereColumns = meta.getWhereColumns()
+    assert(Array.isArray(whereColumns))
+    assert(whereColumns.length > 0)
+
+    const byName = meta.getColumnsByName()
+    assert(byName !== null)
   })
 
   it('test tm with large insert vector - should block for few secs', testDone => {
@@ -1074,10 +1039,9 @@ describe('bulk', function () {
         })
       },
 
-      asyncDone => {
-        bindInsert(tableName, () => {
-          asyncDone()
-        })
+      async asyncDone => {
+        await bindInsert(tableName)
+        asyncDone()
       }
     ]
 
@@ -1123,10 +1087,9 @@ describe('bulk', function () {
         })
       },
 
-      asyncDone => {
-        bindInsert(tableName, () => {
-          asyncDone()
-        })
+      async asyncDone => {
+        await bindInsert(tableName)
+        asyncDone()
       }
     ]
 
@@ -1135,31 +1098,18 @@ describe('bulk', function () {
     })
   })
 
-  function bindInsert (tableName, done) {
-    let bulkMgr
+  async function bindInsert (tableName) {
     const parsedJSON = env.helper.getJSON()
     const keys = env.helper.extractKey(parsedJSON, 'BusinessEntityID')
-    let selected
-
-    const fns = [
-      async asyncDone => {
-        try {
-          bulkMgr = await env.theConnection.promises.getTable(tableName)
-          await bulkMgr.promises.insert(parsedJSON)
-          const results = await bulkMgr.promises.select(keys)
-          assert(results.length === parsedJSON.length)
-          assert.deepStrictEqual(results, parsedJSON, 'results didn\'t match')
-          selected = results
-          asyncDone()
-        } catch (err) {
-          asyncDone(err)
-        }
-      }
-    ]
-
-    env.async.series(fns, function () {
-      done(bulkMgr, selected)
-    })
+    const bulkMgr = await env.theConnection.promises.getTable(tableName)
+    await bulkMgr.promises.insert(parsedJSON)
+    const results = await bulkMgr.promises.select(keys)
+    assert(results.length === parsedJSON.length)
+    assert.deepStrictEqual(results, parsedJSON, 'results didn\'t match')
+    return {
+      bulkMgr,
+      parsedJSON
+    }
   }
 
   it('employee insert/select with non primary key', testDone => {
@@ -1182,12 +1132,11 @@ describe('bulk', function () {
         })
       },
 
-      asyncDone => {
-        bindInsert(tableName, (bm, selected) => {
-          bulkMgr = bm
-          parsedJSON = selected
-          asyncDone()
-        })
+      async asyncDone => {
+        const r = await bindInsert(tableName)
+        bulkMgr = r.bulkMgr
+        parsedJSON = r.parsedJSON
+        asyncDone()
       },
 
       asyncDone => {
@@ -1229,12 +1178,11 @@ describe('bulk', function () {
         })
       },
 
-      asyncDone => {
-        bindInsert(tableName, (bm, selected) => {
-          bulkMgr = bm
-          parsedJSON = selected
-          asyncDone()
-        })
+      async asyncDone => {
+        const r = await bindInsert(tableName)
+        bulkMgr = r.bulkMgr
+        parsedJSON = r.parsedJSON
+        asyncDone()
       },
 
       asyncDone => {
@@ -1816,7 +1764,6 @@ describe('bulk', function () {
 )`
 
     const fns = [
-
       asyncDone => {
         conn.query(dropTableSql, err => {
           assert.ifError(err)

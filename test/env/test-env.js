@@ -52,17 +52,20 @@ class TestEnv {
     }
   }
 
-  bulkTableTest (def) {
-    return new BulkTableTest(this.theConnection, def)
+  userConnection (givenConnection) {
+    return givenConnection || this.theConnection
   }
 
-  tableHelper () {
-    return new TableHelper(this.theConnection)
+  bulkTableTest (def, connection) {
+    return new BulkTableTest(this.userConnection(connection), def)
+  }
+
+  tableHelper (connection) {
+    return new TableHelper(this.userConnection(connection))
   }
 
   typeTableHelper (sqlType, connection) {
-    const connectionProxy = connection || this.theConnection
-    return new TypeTableHelper(connectionProxy, sqlType)
+    return new TypeTableHelper(this.userConnection(connection), sqlType)
   }
 
   procTest (def) {
@@ -136,6 +139,7 @@ class TestEnv {
     this.helper.setVerbose(false)
     this.procedureHelper = new ds.ProcedureHelper(this.connectionString)
     this.promisedCreate = util.promisify(this.procedureHelper.createProcedure)
+    this.promisedDropCreateTable = util.promisify(this.helper.dropCreateTable)
     this.procedureHelper.setVerbose(false)
     this.async = new ds.Async()
     this.timeHelper = new TimeHelper()
