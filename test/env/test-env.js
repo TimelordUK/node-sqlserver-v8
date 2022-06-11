@@ -60,8 +60,9 @@ class TestEnv {
     return new TableHelper(this.theConnection)
   }
 
-  typeTableHelper (sqlType) {
-    return new TypeTableHelper(this.theConnection, sqlType)
+  typeTableHelper (sqlType, connection) {
+    const connectionProxy = connection || this.theConnection
+    return new TypeTableHelper(connectionProxy, sqlType)
   }
 
   procTest (def) {

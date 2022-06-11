@@ -16,6 +16,22 @@ describe('connection-pool', function () {
     env.close().then(() => done())
   })
 
+  it('use tableMgr on pool bulk insert varchar vector - exactly 4000 chars', async function handler () {
+    const pool = env.pool(4)
+    await pool.promises.open()
+    const b = env.repeat('z', 4000)
+    const helper = env.typeTableHelper('NVARCHAR(MAX)', pool)
+    const expected = helper.getVec(10, i => b)
+    const table = await helper.create()
+    const promisedInsert = table.promises.insert
+    const promisedSelect = table.promises.select
+
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    assert.deepStrictEqual(res, expected)
+    await pool.close()
+  })
+
   it('use pool for tvp insert', async function handler () {
     const pool = env.pool(4)
     await pool.promises.open()

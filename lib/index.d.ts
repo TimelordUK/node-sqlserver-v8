@@ -111,6 +111,7 @@ export interface PoolPromises extends AggregatorPromises {
 
 export interface Pool  {
     promises: PoolPromises
+    getUseUTC():boolean
     open(cb?: PoolOpenCb): void
     close(cb: StatusCb): void
     query(sql: string, cb?: QueryCb): Query
