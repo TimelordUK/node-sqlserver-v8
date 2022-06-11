@@ -128,6 +128,13 @@ class TestEnv {
     return new Array(num + 1).join(c)
   }
 
+  async asPool (fn) {
+    const pool = this.pool(4)
+    await pool.open()
+    await fn(pool)
+    await pool.close()
+  }
+
   constructor (key) {
     this.theConnection = null
     this.employee = null

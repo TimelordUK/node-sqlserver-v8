@@ -148,7 +148,7 @@ describe('bulk', function () {
   })
 
   it('pool: table with default values', async function handler () {
-    await asPool(t0)
+    await env.asPool(t0)
   })
 
   async function t2 (proxy) {
@@ -211,15 +211,8 @@ describe('bulk', function () {
     await t2(env.theConnection)
   })
 
-  async function asPool (fn) {
-    const pool = env.pool(4)
-    await pool.open()
-    await fn(pool)
-    await pool.close()
-  }
-
   it('pool: load large number rows', async function handler () {
-    await asPool(t2)
+    await env.asPool(t2)
   })
 
   async function t3 (proxy) {
@@ -253,14 +246,14 @@ describe('bulk', function () {
   })
 
   it('pool: use tableMgr bulk insert single non UTC based time with time col', async function handler () {
-    await asPool(t3)
+    await env.asPool(t3)
   })
 
-  it('use tableMgr bulk insert single non UTC based date with datetime col', async function handler () {
-    const helper = env.typeTableHelper('datetime')
+  async function t4 (proxy) {
+    const helper = env.typeTableHelper('datetime', proxy)
     const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
     const expected = helper.getVec(1, () => testDate)
-    env.theConnection.setUseUTC(true)
+    proxy.setUseUTC(true)
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
@@ -271,13 +264,21 @@ describe('bulk', function () {
       delete a.col_a.nanosecondsDelta
     })
     assert.deepStrictEqual(res, expected)
+  }
+
+  it('connection: use tableMgr bulk insert single non UTC based date with datetime col', async function handler () {
+    await t4(env.theConnection)
   })
 
-  it('use tableMgr bulk insert single non UTC based date with DATETIMEOFFSET col', async function handler () {
-    const helper = env.typeTableHelper('DATETIMEOFFSET')
+  it('pool: use tableMgr bulk insert single non UTC based date with datetime col', async function handler () {
+    await env.asPool(t4)
+  })
+
+  async function t5 (proxy) {
+    const helper = env.typeTableHelper('DATETIMEOFFSET', proxy)
     const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
     const expected = helper.getVec(1, () => testDate)
-    env.theConnection.setUseUTC(true)
+    proxy.setUseUTC(true)
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
@@ -288,11 +289,19 @@ describe('bulk', function () {
       delete a.col_a.nanosecondsDelta
     })
     assert.deepStrictEqual(res, expected)
+  }
+
+  it('connection: use tableMgr bulk insert single non UTC based date with DATETIMEOFFSET col', async function handler () {
+    await t5(env.theConnection)
   })
 
-  it('use tableMgr bulk insert varchar vector - exactly 4001 chars', async function handler () {
-    const b = env.repeat('z', 4001)
-    const helper = env.typeTableHelper('NVARCHAR(MAX)')
+  it('pool: use tableMgr bulk insert single non UTC based date with DATETIMEOFFSET col', async function handler () {
+    await env.asPool(t5)
+  })
+
+  async function runVarCharMaxWithChars (n, proxy) {
+    const b = env.repeat('z', n)
+    const helper = env.typeTableHelper('NVARCHAR(MAX)', proxy)
     const expected = helper.getVec(10, i => b)
     const table = await helper.create()
     const promisedInsert = table.promises.insert
@@ -301,36 +310,23 @@ describe('bulk', function () {
     await promisedInsert(expected)
     const res = await promisedSelect(expected)
     assert.deepStrictEqual(res, expected)
+  }
+
+  it('connection: use tableMgr bulk insert varchar vector - exactly 4001 chars', async function handler () {
+    await runVarCharMaxWithChars(4001, env.theConnection)
   })
 
-  it('use tableMgr bulk insert varchar vector - exactly 4000 chars', async function handler () {
-    const b = env.repeat('z', 4000)
-    const helper = env.typeTableHelper('NVARCHAR(MAX)')
-    const expected = helper.getVec(10, i => b)
-    const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
-    assert.deepStrictEqual(res, expected)
+  it('connection: use tableMgr bulk insert varchar vector - exactly 4000 chars', async function handler () {
+    await runVarCharMaxWithChars(4000, env.theConnection)
   })
 
-  it('use tableMgr bulk insert varchar vector - exactly 3999 chars', async function handler () {
-    const b = env.repeat('z', 3999)
-    const helper = env.typeTableHelper('NVARCHAR(MAX)')
-    const expected = helper.getVec(10, i => b)
-    const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
-    assert.deepStrictEqual(res, expected)
+  it('connection: use tableMgr bulk insert varchar vector - exactly 3999 chars', async function handler () {
+    await runVarCharMaxWithChars(3999, env.theConnection)
   })
 
-  it('use tableMgr bulk insert varbinary vector - with null', async function handler () {
+  async function t6 (proxy) {
     const b = Buffer.from('0102030405060708090a', 'hex')
-    const helper = env.typeTableHelper('varbinary(10)')
+    const helper = env.typeTableHelper('varbinary(10)', proxy)
     const expected = helper.getVec(10, i => i % 2 === 0 ? null : b)
     const table = await helper.create()
     const promisedInsert = table.promises.insert
@@ -339,12 +335,20 @@ describe('bulk', function () {
     await promisedInsert(expected)
     const res = await promisedSelect(expected)
     assert.deepStrictEqual(res, expected)
+  }
+
+  it('connection: use tableMgr bulk insert varbinary vector - with null', async function handler () {
+    await t6(env.theConnection)
   })
 
-  it('use tableMgr bulk insert varbinary vector - with empty', async function handler () {
+  it('pool: use tableMgr bulk insert varbinary vector - with null', async function handler () {
+    await env.asPool(t6)
+  })
+
+  async function t7 (proxy) {
     const b = Buffer.from('0102030405060708090a', 'hex')
     const emptyBuffer = Buffer.alloc(0)
-    const helper = env.typeTableHelper('varbinary(10)')
+    const helper = env.typeTableHelper('varbinary(10)', proxy)
     const expected = helper.getVec(10, i => i % 2 === 0 ? emptyBuffer : b)
     const table = await helper.create()
     const promisedInsert = table.promises.insert
@@ -353,11 +357,19 @@ describe('bulk', function () {
     await promisedInsert(expected)
     const res = await promisedSelect(expected)
     assert.deepStrictEqual(res, expected)
+  }
+
+  it('connection: use tableMgr bulk insert varbinary vector - with empty', async function handler () {
+    await t7(env.theConnection)
   })
 
-  it('use tableMgr bulk insert varbinary vector - no nulls', async function handler () {
+  it('pool: use tableMgr bulk insert varbinary vector - with empty', async function handler () {
+    await env.asPool(t7)
+  })
+
+  async function t8 (proxy) {
     const b = Buffer.from('0102030405060708090a', 'hex')
-    const helper = env.typeTableHelper('varbinary(20)')
+    const helper = env.typeTableHelper('varbinary(20)', proxy)
     const expected = helper.getVec(10, _ => b)
     const table = await helper.create()
     const promisedInsert = table.promises.insert
@@ -366,11 +378,19 @@ describe('bulk', function () {
     await promisedInsert(expected)
     const res = await promisedSelect(expected)
     assert.deepStrictEqual(res, expected)
+  }
+
+  it('connection: use tableMgr bulk insert varbinary vector - no nulls', async function handler () {
+    await t8(env.theConnection)
   })
 
-  it('use tableMgr bulk insert datetime vector - no nulls', async function handler () {
+  it('pool: use tableMgr bulk insert varbinary vector - no nulls', async function handler () {
+    await env.asPool(t8)
+  })
+
+  async function t9 (proxy) {
     const timeHelper = env.timeHelper
-    const helper = env.typeTableHelper('datetime')
+    const helper = env.typeTableHelper('datetime', proxy)
     const expected = helper.getVec(10, i => timeHelper.addDays(i))
     const table = await helper.create()
     const promisedInsert = table.promises.insert
@@ -382,11 +402,19 @@ describe('bulk', function () {
       delete a.col_a.nanosecondsDelta
     })
     assert.deepStrictEqual(res, expected)
+  }
+
+  it('connection: use tableMgr bulk insert datetime vector - no nulls', async function handler () {
+    await t9(env.theConnection)
   })
 
-  it('use tableMgr bulk insert datetime vector - with nulls', async function handler () {
+  it('pool: use tableMgr bulk insert datetime vector - no nulls', async function handler () {
+    await env.asPool(t9)
+  })
+
+  async function t10 (proxy) {
     const timeHelper = env.timeHelper
-    const helper = env.typeTableHelper('datetime')
+    const helper = env.typeTableHelper('datetime', proxy)
     const expected = helper.getVec(10, i => i % 2 === 0 ? null : timeHelper.addDays(i))
     const table = await helper.create()
     const promisedInsert = table.promises.insert
@@ -399,10 +427,18 @@ describe('bulk', function () {
       }
     })
     assert.deepStrictEqual(res, expected)
+  }
+
+  it('connection: use tableMgr bulk insert datetime vector - with nulls', async function handler () {
+    await t10(env.theConnection)
   })
 
-  it('use tableMgr bulk insert decimal vector - no nulls', async function handler () {
-    const helper = env.typeTableHelper('decimal(20,18)')
+  it('pool: use tableMgr bulk insert datetime vector - with nulls', async function handler () {
+    await env.asPool(t10)
+  })
+
+  async function t11 (proxy) {
+    const helper = env.typeTableHelper('decimal(20,18)', proxy)
     const expected = helper.getVec(10, i => 1 / (i + 2.5))
     const table = await helper.create()
     const promisedInsert = table.promises.insert
@@ -411,10 +447,18 @@ describe('bulk', function () {
     await promisedInsert(expected)
     const res = await promisedSelect(expected)
     assert.deepStrictEqual(expected, res)
+  }
+
+  it('connection: use tableMgr bulk insert decimal vector - no nulls', async function handler () {
+    await t11(env.theConnection)
   })
 
-  it('use tableMgr bulk insert decimal vector - with nulls', async function handler () {
-    const helper = env.typeTableHelper('decimal(20,18)')
+  it('pool: use tableMgr bulk insert decimal vector - no nulls', async function handler () {
+    await env.asPool(t1)
+  })
+
+  async function t12 (proxy) {
+    const helper = env.typeTableHelper('decimal(20,18)', proxy)
     const expected = helper.getVec(10, i => i % 2 === 0 ? null : 1 / (i + 2.5))
     const table = await helper.create()
     const promisedInsert = table.promises.insert
@@ -423,10 +467,18 @@ describe('bulk', function () {
     await promisedInsert(expected)
     const res = await promisedSelect(expected)
     assert.deepStrictEqual(expected, res)
+  }
+
+  it('connection: use tableMgr bulk insert decimal vector - with nulls', async function handler () {
+    await t12(env.theConnection)
   })
 
-  it('use tableMgr bulk insert bit vector - with nulls', async function handler () {
-    const helper = env.typeTableHelper('bit')
+  it('pool: use tableMgr bulk insert decimal vector - with nulls', async function handler () {
+    await env.asPool(t12)
+  })
+
+  async function t13 (proxy) {
+    const helper = env.typeTableHelper('bit', proxy)
     const expected = helper.getVec(10, i => i % 2 === 0 ? null : i % 2 === 0)
     const table = await helper.create()
     const promisedInsert = table.promises.insert
@@ -435,10 +487,18 @@ describe('bulk', function () {
     await promisedInsert(expected)
     const res = await promisedSelect(expected)
     assert.deepStrictEqual(expected, res)
+  }
+
+  it('connection: use tableMgr bulk insert bit vector - with nulls', async function handler () {
+    await t13(env.theConnection)
   })
 
-  it('use tableMgr bulk insert bit vector - no nulls', async function handler () {
-    const helper = env.typeTableHelper('bit')
+  it('pool: use tableMgr bulk insert bit vector - with nulls', async function handler () {
+    await env.asPool(t13)
+  })
+
+  async function t14 (proxy) {
+    const helper = env.typeTableHelper('bit', proxy)
     const expected = helper.getVec(10, i => i % 2 === 0)
     const table = await helper.create()
     const promisedInsert = table.promises.insert
@@ -447,10 +507,18 @@ describe('bulk', function () {
     await promisedInsert(expected)
     const res = await promisedSelect(expected)
     assert.deepStrictEqual(expected, res)
+  }
+
+  it('connection: use tableMgr bulk insert bit vector - no nulls', async function handler () {
+    await t14(env.theConnection)
   })
 
-  it('use tableMgr bulk insert int vector - with nulls', async function handler () {
-    const helper = env.typeTableHelper('int')
+  it('pool: use tableMgr bulk insert bit vector - no nulls', async function handler () {
+    await env.asPool(t14)
+  })
+
+  async function t15 (proxy) {
+    const helper = env.typeTableHelper('int', proxy)
     const expected = helper.getVec(10, i => i % 2 === 0 ? null : i * 10)
     const table = await helper.create()
     const promisedInsert = table.promises.insert
@@ -458,10 +526,18 @@ describe('bulk', function () {
     await promisedInsert(expected)
     const res = await promisedSelect(expected)
     assert.deepStrictEqual(expected, res)
+  }
+
+  it('connection: use tableMgr bulk insert int vector - with nulls', async function handler () {
+    await t15(env.theConnection)
   })
 
-  it('use tableMgr bulk insert int vector - no nulls', async function handler () {
-    const helper = env.typeTableHelper('int')
+  it('pool: use tableMgr bulk insert int vector - with nulls', async function handler () {
+    await env.asPool(t15)
+  })
+
+  async function t16 (proxy) {
+    const helper = env.typeTableHelper('int', proxy)
     const expected = helper.getVec(10, i => i * 10)
     const table = await helper.create()
     const promisedInsert = table.promises.insert
@@ -470,10 +546,18 @@ describe('bulk', function () {
     await promisedInsert(expected)
     const res = await promisedSelect(expected)
     assert.deepStrictEqual(expected, res)
+  }
+
+  it('connection: use tableMgr bulk insert int vector - no nulls', async function handler () {
+    await t16(env.theConnection)
   })
 
-  it('use tableMgr bulk insert varchar vector - with nulls', async function handler () {
-    const helper = env.typeTableHelper('varchar(100)')
+  it('pool: use tableMgr bulk insert int vector - no nulls', async function handler () {
+    await env.asPool(t16)
+  })
+
+  async function t17 (proxy) {
+    const helper = env.typeTableHelper('varchar(100)', proxy)
     const expected = helper.getVec(10, i => i % 2 === 0 ? null : `string ${i}`)
     const table = await helper.create()
     const promisedInsert = table.promises.insert
@@ -482,10 +566,18 @@ describe('bulk', function () {
     await promisedInsert(expected)
     const res = await promisedSelect(expected)
     assert.deepStrictEqual(expected, res)
+  }
+
+  it('connection: use tableMgr bulk insert varchar vector - with nulls', async function handler () {
+    await t17(env.theConnection)
   })
 
-  it('use tableMgr bulk insert var char vector - no nulls', async function handler () {
-    const helper = env.typeTableHelper('varchar(100)')
+  it('pool: use tableMgr bulk insert varchar vector - with nulls', async function handler () {
+    await env.asPool(t17)
+  })
+
+  async function t18 (proxy) {
+    const helper = env.typeTableHelper('varchar(100)', proxy)
     const expected = helper.getVec(10, i => `string ${i}`)
     const table = await helper.create()
     const promisedInsert = table.promises.insert
@@ -493,6 +585,14 @@ describe('bulk', function () {
     await promisedInsert(expected)
     const res = await promisedSelect(expected)
     assert.deepStrictEqual(expected, res)
+  }
+
+  it('connection: use tableMgr bulk insert var char vector - no nulls', async function handler () {
+    await t18(env.theConnection)
+  })
+
+  it('pool: use tableMgr bulk insert var char vector - no nulls', async function handler () {
+    await env.asPool(t18)
   })
 
   async function t1 (proxy) {
@@ -540,22 +640,10 @@ describe('bulk', function () {
   })
 
   it('pool: use tableMgr get Table and update 2 columns', async function handler () {
-    const pool = env.pool(4)
-    await pool.open()
-    await t1(pool)
-    await pool.close()
+    await env.asPool(t1)
   })
 
-  it('employee table complex json object test api', async function handler () {
-    const tableName = 'employee'
-    await env.promisedDropCreateTable({
-      tableName,
-      theConnection: env.theConnection
-    })
-    await bindInsert(tableName)
-    const t = await env.theConnection.promises.getTable(tableName)
-    const meta = t.getMeta()
-
+  function checkMeta (meta) {
     const select = meta.getSelectSignature()
     assert(select.indexOf('select') >= 0)
 
@@ -586,70 +674,54 @@ describe('bulk', function () {
 
     const byName = meta.getColumnsByName()
     assert(byName !== null)
+  }
+
+  async function t19 (proxy) {
+    const tableName = 'employee'
+    await env.promisedDropCreateTable({
+      tableName,
+      theConnection: proxy
+    })
+    await bindInsert(tableName)
+    const t = await proxy.promises.getTable(tableName)
+    const meta = t.getMeta()
+    checkMeta(meta)
+  }
+
+  it('connection: employee table complex json object test api', async function handler () {
+    await t19(env.theConnection)
   })
 
-  it('test tm with large insert vector - should block for few secs', testDone => {
-    const tableName = 'LargeInsert'
-    const fns = [
-      asyncDone => {
-        env.theConnection.queryRaw(`DROP TABLE ${tableName}`, () => {
-          asyncDone()
-        })
-      },
+  it('proxy: employee table complex json object test api', async function handler () {
+    await env.asPool(t19)
+  })
 
-      asyncDone => {
-        env.theConnection.queryRaw(`CREATE TABLE ${tableName} (
+  async function t20 (proxy) {
+    const tableName = 'LargeInsert'
+    const rows = 5000
+    await proxy.promises.query(`DROP TABLE ${tableName}`)
+    await proxy.promises.query(`CREATE TABLE ${tableName} (
           [BusinessEntityID] [int] NOT NULL,
           [NationalIDNumber] [nvarchar](15) NOT NULL,
           [LoginID] [nvarchar](256) NOT NULL,
           [Salary] int NOT NULL
-          )`,
-        e => {
-          assert.ifError(e)
-          asyncDone()
-        })
-      },
+          PRIMARY KEY (BusinessEntityID)
+          )`)
+    const t = await proxy.promises.getTable(tableName)
+    const meta = t.getMeta()
+    checkMeta(meta)
+    const testVec = getInsertVector(rows)
+    await t.promises.insert(testVec)
+    const res = await proxy.promises.query(`select count(*) as cnt from ${tableName}`)
+    assert.deepStrictEqual(rows, res.first[0].cnt)
+  }
 
-      asyncDone => {
-        const tm = env.theConnection.tableMgr()
-        tm.bind(tableName, t => {
-          const meta = t.getMeta()
+  it('connection: test tm with large insert vector - should block for few secs', async function handler () {
+    await t20(env.theConnection)
+  })
 
-          const select = meta.getSelectSignature()
-          assert(select.indexOf('select') >= 0)
-
-          const insert = meta.getInsertSignature()
-          assert(insert.indexOf('insert') >= 0)
-
-          const del = meta.getDeleteSignature()
-          assert(del.indexOf('delete') >= 0)
-
-          const update = meta.getUpdateSignature()
-          assert(update.indexOf('update') >= 0)
-
-          const assignable = meta.getAssignableColumns()
-          assert(Array.isArray(assignable))
-          assert(assignable.length > 0)
-
-          const updateColumns = meta.getUpdateColumns()
-          assert(Array.isArray(updateColumns))
-          assert(updateColumns.length > 0)
-
-          const byName = meta.getColumnsByName()
-          assert(byName !== null)
-
-          const testVec = getInsertVector(5000)
-          t.insertRows(testVec, (e, res) => {
-            assert.ifError(e)
-            asyncDone()
-          })
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+  it('pool: test tm with large insert vector - should block for few secs', async function handler () {
+    await env.asPool(t20)
   })
 
   it(`bulk insert/select int column of huge unsigned batchSize ${test2BatchSize}`, testDone => {
