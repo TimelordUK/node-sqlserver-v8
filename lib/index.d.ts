@@ -105,6 +105,8 @@ export interface PoolPromises extends AggregatorPromises {
     open(): Promise<Pool>
     close(): Promise<any>
     getUserTypeTable(name: string): Promise<Table>
+    getTable(name: string): Promise<BulkTableMgr>
+    getProc(name: string): Promise<ProcedureDefinition>
 }
 
 export interface Pool  {
@@ -535,10 +537,16 @@ export interface TableBuilder {
     insertParamsSql: string
   }
 
+export interface TableManagerPromises {
+    getTable(name: string) : Promise<BulkTableMgr>
+    getUserTypeTable(name: string): Promise<Table>
+}
+
 export interface TableManager {
     /**
      * @deprecated Please use `getTable`
      */
+    promises: TableManagerPromises
     bind(tableName: string, cb: BindCb): void // cannot promisify (table)
     getTable(tableName: string, cb: GetTableCb): void // promise friendly (err, table)
     // manually register a table
