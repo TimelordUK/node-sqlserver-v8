@@ -77,3 +77,4 @@ runtest-linux
 .gitignore
 runtest-win.exe
 runtest-macos
+/.idea/dictionaries/Stephen.xml
