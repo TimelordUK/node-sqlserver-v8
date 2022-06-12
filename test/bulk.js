@@ -697,7 +697,7 @@ describe('bulk', function () {
   async function t20 (proxy) {
     const tableName = 'LargeInsert'
     const rows = 5000
-    await proxy.promises.query(`DROP TABLE ${tableName}`)
+    await proxy.promises.query(env.dropTableSql(tableName))
     await proxy.promises.query(`CREATE TABLE ${tableName} (
           [BusinessEntityID] [int] NOT NULL,
           [NationalIDNumber] [nvarchar](15) NOT NULL,
@@ -775,7 +775,7 @@ describe('bulk', function () {
 
   it('bulk insert condition failure', async function handler () {
     const createTableSql = 'CREATE TABLE Persons (Name varchar(255) NOT NULL)'
-    await env.theConnection.promises.query('DROP TABLE Persons')
+    await env.theConnection.promises.query(env.dropTableSql('Persons'))
     await env.theConnection.promises.query(createTableSql)
 
     const johnNullSql = 'INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (N\'John\'), (null)'

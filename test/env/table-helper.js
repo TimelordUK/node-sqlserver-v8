@@ -34,8 +34,7 @@ class TableHelper {
       const promises = theConnection.promises
       await promises.query(dropTableSql)
       await promises.query(createTableSql)
-      const table = await theConnection.promises.getTable(tableName)
-      return table
+      return await theConnection.promises.getTable(tableName)
     }
 
     this.create = create
