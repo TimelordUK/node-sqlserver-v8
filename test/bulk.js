@@ -773,79 +773,22 @@ describe('bulk', function () {
     assert(table !== null)
   })
 
-  it('bulk insert condition failure', testDone => {
+  it('bulk insert condition failure', async function handler () {
     const createTableSql = 'CREATE TABLE Persons (Name varchar(255) NOT NULL)'
-    const runQuery = query => {
-      return new Promise((resolve, reject) => {
-        env.theConnection.query(query, (err, rows) => {
-          if (err) reject(err)
-          resolve(rows)
-        })
-      })
-    }
-    const fns = [
-      asyncDone => {
-        env.theConnection.query('DROP TABLE Persons', () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.theConnection.query(createTableSql, e => {
-          assert.ifError(e)
-          asyncDone()
-        })
-      },
-      // normal insert, runs fine
-      asyncDone => {
-        runQuery('INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (N\'John\')').then(() => {
-          asyncDone()
-        }).catch((e) => {
-          assert.ifError(e)
-        })
-      },
-      // Problematic statement:
-      // bulk insert with proper element first, does NOT throw an error
-      asyncDone => {
-        runQuery('INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (N\'John\'), (null)').then(() => {
-          assert(false)
-          asyncDone()
-        }).catch((e) => {
-          assert(e.message.includes('Cannot insert the value NULL into column'), 'Bulk insert should throw an error')
-          asyncDone()
-        })
-      },
+    await env.theConnection.promises.query('DROP TABLE Persons')
+    await env.theConnection.promises.query(createTableSql)
 
-      // failing insert, throws proper error
-      asyncDone => {
-        runQuery('INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (null)').then(() => {
-          assert(false)
-        }).catch((e) => {
-          assert(e.message.includes('Cannot insert the value NULL into column'))
-          asyncDone()
-        })
-      },
-      // bulk insert, throws proper error
-      asyncDone => {
-        runQuery('INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (null), (N\'John\')').then(() => {
-          assert(false)
-        }).catch((e) => {
-          assert(e.message.includes('Cannot insert the value NULL into column'))
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        runQuery('INSERT INTO [Persons] ([Name]) VALUES (N\'John\'), (null)').then(() => {
-          assert(false)
-        }).catch((e) => {
-          assert(e.message.includes('Cannot insert the value NULL into column'))
-          asyncDone()
-        })
-      }
-    ]
+    const johnNullSql = 'INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (N\'John\'), (null)'
+    const nullSql = 'INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (null)'
+    const nullJohn = 'INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (null), (N\'John\')'
+    const error = 'Cannot insert the value NULL into column'
 
-    env.async.series(fns, () => {
-      testDone()
-    })
+    const b1 = await env.doesThrow(johnNullSql, error)
+    assert(b1)
+    const b2 = await env.doesThrow(nullSql, error)
+    assert(b2)
+    const b3 = await env.doesThrow(nullJohn, error)
+    assert(b3)
   })
 
   it('non null varchar write empty string', async function handler () {

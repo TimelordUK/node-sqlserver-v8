@@ -15,6 +15,7 @@ const { BcpEntry } = require('./bcp-entry')
 const { BuilderChecker } = require('./builder-checker')
 const { TvpHelper } = require('./tvp-helper')
 const util = require('util')
+const assert = require('assert')
 
 class TestEnv {
   readJson (path) {
@@ -137,6 +138,16 @@ class TestEnv {
     await pool.open()
     await fn(pool)
     await pool.close()
+  }
+
+  async doesThrow (sql, message, connection) {
+    const proxy = connection || this.theConnection
+    try {
+      await proxy.promises.query(sql)
+      return false
+    } catch (e) {
+      return (e.message.includes(message))
+    }
   }
 
   constructor (key) {
