@@ -89,8 +89,7 @@ class TestEnv {
     tableName = tableName || 'employeeJson'
     procName = procName || 'AddUpdateEmployeeJsonRecord'
     procNameJson = procNameJson || 'ParseJsonArray'
-    const jsonHelper = new JsonHelper(this.theConnection, tableName, procName, procNameJson)
-    return jsonHelper
+    return new JsonHelper(this.theConnection, tableName, procName, procNameJson)
   }
 
   async open () {
@@ -110,22 +109,27 @@ class TestEnv {
 
   pool (size) {
     size = size || 4
-    const pool = new this.sql.Pool({
+    return new this.sql.Pool({
       connectionString: this.connectionString,
       ceiling: size
     })
-    return pool
   }
 
   decodeDriver () {
-    const myRegexp = /Driver=\{(.*?)\}.*$/g
+    const myRegexp = /Driver=\{(.*?)}.*$/g
     const match = myRegexp.exec(this.connectionString)
-    const driver = match[1]
-    return driver
+    return match[1]
   }
 
   repeat (c, num) {
     return new Array(num + 1).join(c)
+  }
+
+  async getTableCount (tableName, connection) {
+    const proxy = connection || this.theConnection
+    const countSql = `select count(*) as count from ${tableName}`
+    const results = await proxy.promises.query(countSql)
+    return results.first[0].count
   }
 
   async asPool (fn) {

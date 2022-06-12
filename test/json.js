@@ -25,7 +25,7 @@ describe('json', function () {
       p.call({
         ID: id++,
         json: txt
-      }, (err, res) => {
+      }, (err) => {
         if (err) {
           reject(err)
         } else {

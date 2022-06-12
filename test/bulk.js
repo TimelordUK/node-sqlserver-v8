@@ -724,31 +724,23 @@ describe('bulk', function () {
     await env.asPool(t20)
   })
 
-  it(`bulk insert/select int column of huge unsigned batchSize ${test2BatchSize}`, testDone => {
-    hugeUnsignedTest(test2BatchSize, true, false, () => {
-      testDone()
-    })
+  it(`bulk insert/select int column of huge unsigned batchSize ${test2BatchSize}`, async function handler () {
+    await hugeUnsignedTest(test2BatchSize, true, false)
   })
 
-  it(`bulk insert/select int column of huge unsigned and some 0 values batchSize ${test2BatchSize}`, testDone => {
-    hugeUnsignedPlusZeroMixedTest(test2BatchSize, true, false, () => {
-      testDone()
-    })
+  it(`bulk insert/select int column of huge unsigned and some 0 values batchSize ${test2BatchSize}`, async function handler () {
+    await hugeUnsignedPlusZeroMixedTest(test2BatchSize, true, false)
   })
 
-  it(`bulk insert/select datetime column batchSize ${test1BatchSize}`, testDone => {
-    dateTest(test1BatchSize, true, function () {
-      testDone()
-    })
+  it(`bulk insert/select datetime column batchSize ${test1BatchSize}`, async function handler () {
+    await dateTest(test1BatchSize, true)
   })
 
-  it(`bulk insert/update/select int column of signed batchSize ${test2BatchSize}`, testDone => {
-    signedTest(test2BatchSize, true, true, () => {
-      testDone()
-    })
+  it(`bulk insert/update/select int column of signed batchSize ${test2BatchSize}`, async function handler () {
+    await signedTest(test2BatchSize, true, true)
   })
 
-  function hugeUnsignedTest (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
+  async function hugeUnsignedTest (batchSize, selectAfterInsert, runUpdateFunction) {
     const params = {
       columnType: 'Numeric(18,0)',
       buildFunction: i => i <= 2 ? 2829365649 + i * 2 : i * 2,
@@ -758,12 +750,10 @@ describe('bulk', function () {
       batchSize
     }
 
-    simpleColumnBulkTest(params, () => {
-      testDone()
-    })
+    await simpleColumnBulkTest(params)
   }
 
-  function hugeUnsignedPlusZeroMixedTest (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
+  async function hugeUnsignedPlusZeroMixedTest (batchSize, selectAfterInsert, runUpdateFunction) {
     const params = {
       columnType: 'Numeric(18,0)',
       buildFunction: i => i % 2 === 0 ? 2829365649 : 0,
@@ -773,9 +763,7 @@ describe('bulk', function () {
       batchSize
     }
 
-    simpleColumnBulkTest(params, () => {
-      testDone()
-    })
+    await simpleColumnBulkTest(params)
   }
 
   it('bind to db with space', testDone => {
@@ -1122,28 +1110,20 @@ describe('bulk', function () {
     })
   })
 
-  it(`bulk insert/select varbinary column batchSize ${test1BatchSize}`, testDone => {
-    varbinaryTest(test1BatchSize, true, () => {
-      testDone()
-    })
+  it(`bulk insert/select varbinary column batchSize ${test1BatchSize}`, async function handler () {
+    await varbinaryTest(test1BatchSize, true)
   })
 
-  it(`bulk insert/select varbinary column batchSize ${test2BatchSize}`, testDone => {
-    varbinaryTest(test2BatchSize, true, () => {
-      testDone()
-    })
+  it(`bulk insert/select varbinary column batchSize ${test2BatchSize}`, async function handler () {
+    await varbinaryTest(test2BatchSize, true)
   })
 
-  it(`bulk insert/select null column of datetime batchSize ${test2BatchSize}`, testDone => {
-    nullTest(test2BatchSize, false, () => {
-      testDone()
-    })
+  it(`bulk insert/select null column of datetime batchSize ${test2BatchSize}`, async function handler () {
+    await nullTest(test2BatchSize, false)
   })
 
-  it(`bulk insert/select null column of datetime batchSize ${test1BatchSize}`, testDone => {
-    nullTest(test1BatchSize, false, () => {
-      testDone()
-    })
+  it(`bulk insert/select null column of datetime batchSize ${test1BatchSize}`, async function handler () {
+    await nullTest(test1BatchSize, false)
   })
 
   it('employee complex json object array bulk operations', testDone => {
@@ -1287,7 +1267,7 @@ describe('bulk', function () {
     })
   })
 
-  function bitTestStrictColumn (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
+  async function bitTestStrictColumn (batchSize, selectAfterInsert, runUpdateFunction) {
     const params = {
       columnType: 'bit',
       columnName: 'Key',
@@ -1298,30 +1278,22 @@ describe('bulk', function () {
       batchSize
     }
 
-    simpleColumnBulkTest(params, () => {
-      testDone()
-    })
+    await simpleColumnBulkTest(params)
   }
 
-  it('bulk insert/update/select bit strict column ' + test2BatchSize, testDone => {
-    bitTestStrictColumn(test2BatchSize, true, true, () => {
-      testDone()
-    })
+  it('bulk insert/update/select bit strict column ' + test2BatchSize, async function handler () {
+    await bitTestStrictColumn(test2BatchSize, true, true)
   })
 
-  it('bulk insert/select bit strict column batchSize ' + test1BatchSize, function (testDone) {
-    bitTestStrictColumn(test1BatchSize, true, false, () => {
-      testDone()
-    })
+  it('bulk insert/select bit strict column batchSize ' + test1BatchSize, async function handler () {
+    await bitTestStrictColumn(test1BatchSize, true, false)
   })
 
-  it('bulk insert/select bit strict column ' + test2BatchSize, function (testDone) {
-    bitTestStrictColumn(test2BatchSize, true, false, () => {
-      testDone()
-    })
+  it('bulk insert/select bit strict column ' + test2BatchSize, async function handler () {
+    await bitTestStrictColumn(test2BatchSize, true, false)
   })
 
-  function nullTest (batchSize, selectAfterInsert, testDone) {
+  async function nullTest (batchSize, selectAfterInsert) {
     const params = {
       columnType: 'datetime',
       buildFunction: () => null,
@@ -1331,12 +1303,10 @@ describe('bulk', function () {
       batchSize
     }
 
-    simpleColumnBulkTest(params, () => {
-      testDone()
-    })
+    await simpleColumnBulkTest(params)
   }
 
-  function dateTest (batchSize, selectAfterInsert, testDone) {
+  async function dateTest (batchSize, selectAfterInsert) {
     const dt = new Date('2002-02-06T00:00:00.000Z')
 
     const params = {
@@ -1354,16 +1324,14 @@ describe('bulk', function () {
       batchSize
     }
 
-    simpleColumnBulkTest(params, testDone)
+    await simpleColumnBulkTest(params)
   }
 
-  it(`bulk insert/select datetime column batchSize ${test2BatchSize}`, testDone => {
-    dateTest(test2BatchSize, true, function () {
-      testDone()
-    })
+  it(`bulk insert/select datetime column batchSize ${test2BatchSize}`, async function handler () {
+    await dateTest(test2BatchSize, true)
   })
 
-  function signedTest (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
+  async function signedTest (batchSize, selectAfterInsert, runUpdateFunction) {
     const params = {
       columnType: 'int',
       buildFunction: i => i % 2 === 0 && i > 0 ? -i : i,
@@ -1373,12 +1341,10 @@ describe('bulk', function () {
       batchSize
     }
 
-    simpleColumnBulkTest(params, () => {
-      testDone()
-    })
+    await simpleColumnBulkTest(params)
   }
 
-  function bigIntTest (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
+  async function bigIntTest (batchSize, selectAfterInsert, runUpdateFunction) {
     const params = {
       columnType: 'bigint',
       buildFunction: i => i % 2 === 0 && i > 0 ? -i : i,
@@ -1388,12 +1354,10 @@ describe('bulk', function () {
       batchSize
     }
 
-    simpleColumnBulkTest(params, () => {
-      testDone()
-    })
+    await simpleColumnBulkTest(params)
   }
 
-  function smallIntTest (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
+  async function smallIntTest (batchSize, selectAfterInsert, runUpdateFunction) {
     const params = {
       columnType: 'smallint',
       buildFunction: i => i % 2 === 0 && i > 0 ? -i : i,
@@ -1402,12 +1366,10 @@ describe('bulk', function () {
       deleteAfterTest: false,
       batchSize
     }
-    simpleColumnBulkTest(params, () => {
-      testDone()
-    })
+    await simpleColumnBulkTest(params)
   }
 
-  function tinyIntTest (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
+  async function tinyIntTest (batchSize, selectAfterInsert, runUpdateFunction) {
     const params = {
       columnType: 'tinyint',
       buildFunction: i => i % 50,
@@ -1416,42 +1378,30 @@ describe('bulk', function () {
       deleteAfterTest: false,
       batchSize
     }
-    simpleColumnBulkTest(params, () => {
-      testDone()
-    })
+    await simpleColumnBulkTest(params)
   }
 
-  it(`bulk insert/select tinyint column of signed batchSize ${test1BatchSize}`, testDone => {
-    tinyIntTest(test1BatchSize, true, false, () => {
-      testDone()
-    })
+  it(`bulk insert/select tinyint column of signed batchSize ${test1BatchSize}`, async function handler () {
+    await tinyIntTest(test1BatchSize, true, false)
   })
 
-  it(`bulk insert/select smallint column of signed batchSize ${test1BatchSize}`, testDone => {
-    smallIntTest(test1BatchSize, true, false, () => {
-      testDone()
-    })
+  it(`bulk insert/select smallint column of signed batchSize ${test1BatchSize}`, async function handler () {
+    await smallIntTest(test1BatchSize, true, false)
   })
 
-  it(`bulk insert/select bigint column of signed batchSize ${test1BatchSize}`, testDone => {
-    bigIntTest(test1BatchSize, true, false, () => {
-      testDone()
-    })
+  it(`bulk insert/select bigint column of signed batchSize ${test1BatchSize}`, async function handler () {
+    await bigIntTest(test1BatchSize, true, false)
   })
 
-  it(`bulk insert/select int column of signed batchSize ${test1BatchSize}`, testDone => {
-    signedTest(test1BatchSize, true, false, () => {
-      testDone()
-    })
+  it(`bulk insert/select int column of signed batchSize ${test1BatchSize}`, async function handler () {
+    await signedTest(test1BatchSize, true, false)
   })
 
-  it(`bulk insert/select int column of signed batchSize ${test2BatchSize}`, testDone => {
-    signedTest(test2BatchSize, true, false, () => {
-      testDone()
-    })
+  it(`bulk insert/select int column of signed batchSize ${test2BatchSize}`, async function handler () {
+    await signedTest(test2BatchSize, true, false)
   })
 
-  function unsignedTest (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
+  async function unsignedTest (batchSize, selectAfterInsert, runUpdateFunction) {
     const params = {
       columnType: 'int',
       buildFunction: i => i * 2,
@@ -1461,30 +1411,22 @@ describe('bulk', function () {
       batchSize
     }
 
-    simpleColumnBulkTest(params, () => {
-      testDone()
-    })
+    await simpleColumnBulkTest(params)
   }
 
-  it(`bulk insert/select int column of unsigned batchSize ${test1BatchSize}`, testDone => {
-    unsignedTest(test1BatchSize, true, false, () => {
-      testDone()
-    })
+  it(`bulk insert/select int column of unsigned batchSize ${test1BatchSize}`, async function handler () {
+    await unsignedTest(test1BatchSize, true, false)
   })
 
-  it(`bulk insert/select int column of unsigned batchSize ${test2BatchSize}`, testDone => {
-    unsignedTest(test2BatchSize, true, false, () => {
-      testDone()
-    })
+  it(`bulk insert/select int column of unsigned batchSize ${test2BatchSize}`, async function handler () {
+    await unsignedTest(test2BatchSize, true, false)
   })
 
-  it(`bulk insert/select/update int column of unsigned batchSize ${test2BatchSize}`, testDone => {
-    unsignedTest(test2BatchSize, true, true, () => {
-      testDone()
-    })
+  it(`bulk insert/select/update int column of unsigned batchSize ${test2BatchSize}`, async function handler () {
+    await unsignedTest(test2BatchSize, true, true)
   })
 
-  function bitTest (batchSize, selectAfterInsert, runUpdateFunction, testDone) {
+  async function bitTest (batchSize, selectAfterInsert, runUpdateFunction) {
     const params = {
       columnType: 'bit',
       buildFunction: i => i % 2 === 0,
@@ -1494,30 +1436,22 @@ describe('bulk', function () {
       batchSize
     }
 
-    simpleColumnBulkTest(params, () => {
-      testDone()
-    })
+    await simpleColumnBulkTest(params)
   }
 
-  it(`bulk insert/select bit column batchSize ${test1BatchSize}`, testDone => {
-    bitTest(test1BatchSize, true, false, () => {
-      testDone()
-    })
+  it(`bulk insert/select bit column batchSize ${test1BatchSize}`, async function handler () {
+    await bitTest(test1BatchSize, true, false)
   })
 
-  it(`bulk insert/select bit column ${test2BatchSize}`, testDone => {
-    bitTest(test2BatchSize, true, false, () => {
-      testDone()
-    })
+  it(`bulk insert/select bit column ${test2BatchSize}`, async function handler () {
+    await bitTest(test2BatchSize, true, false)
   })
 
-  it(`bulk insert/update/select bit column ${test2BatchSize}`, testDone => {
-    bitTest(test2BatchSize, true, true, () => {
-      testDone()
-    })
+  it(`bulk insert/update/select bit column ${test2BatchSize}`, async function handler () {
+    await bitTest(test2BatchSize, true, true)
   })
 
-  function decimalTest (batchSize, selectAfterInsert, deleteAfterTest, runUpdateFunction, testDone) {
+  async function decimalTest (batchSize, selectAfterInsert, deleteAfterTest, runUpdateFunction) {
     const params = {
       columnType: 'decimal(18,4)',
       buildFunction: i => (i * 10) + (i * 0.1),
@@ -1527,26 +1461,26 @@ describe('bulk', function () {
       batchSize
     }
 
-    simpleColumnBulkTest(params, testDone)
+    await simpleColumnBulkTest(params)
   }
 
-  it(`bulk insert/select decimal column batchSize ${test1BatchSize}`, testDone => {
-    decimalTest(test1BatchSize, true, false, false, testDone)
+  it(`bulk insert/select decimal column batchSize ${test1BatchSize}`, async function handler () {
+    await decimalTest(test1BatchSize, true, false, false)
   })
 
-  it(`bulk insert/select decimal column batchSize ${test2BatchSize}`, testDone => {
-    decimalTest(test2BatchSize, true, false, false, testDone)
+  it(`bulk insert/select decimal column batchSize ${test2BatchSize}`, async function handler () {
+    await decimalTest(test2BatchSize, true, false, false)
   })
 
-  it(`bulk insert/select/delete decimal column batchSize ${test2BatchSize}`, testDone => {
-    decimalTest(test2BatchSize, true, true, false, testDone)
+  it(`bulk insert/select/delete decimal column batchSize ${test2BatchSize}`, async function handler () {
+    await decimalTest(test2BatchSize, true, true, false)
   })
 
-  it(`bulk insert/update/select decimal column batchSize ${test2BatchSize}`, testDone => {
-    decimalTest(test2BatchSize, true, false, true, testDone)
+  it(`bulk insert/update/select decimal column batchSize ${test2BatchSize}`, async function handler () {
+    await decimalTest(test2BatchSize, true, false, true)
   })
 
-  function varcharTest (batchSize, selectAfterInsert, deleteAfterTest, runUpdateFunction, testDone) {
+  async function varcharTest (batchSize, selectAfterInsert, deleteAfterTest, runUpdateFunction) {
     const arr = []
     let str = ''
     for (let i = 0; i < 10; ++i) {
@@ -1571,27 +1505,27 @@ describe('bulk', function () {
       batchSize
     }
 
-    simpleColumnBulkTest(params, testDone)
+    await simpleColumnBulkTest(params)
   }
 
-  it(`bulk insert/select varchar column batchSize ${test1BatchSize}`, testDone => {
-    varcharTest(test1BatchSize, true, false, false, testDone)
+  it(`bulk insert/select varchar column batchSize ${test1BatchSize}`, async function handler () {
+    await varcharTest(test1BatchSize, true, false, false)
   })
 
-  it(`bulk insert/select varchar column batchSize ${test2BatchSize}`, testDone => {
-    varcharTest(test2BatchSize, true, false, false, testDone)
+  it(`bulk insert/select varchar column batchSize ${test2BatchSize}`, async function handler () {
+    await varcharTest(test2BatchSize, true, false, false)
   })
 
-  it(`bulk insert/select/delete varchar column batchSize ${test2BatchSize}`, testDone => {
-    varcharTest(test2BatchSize, true, true, false, testDone)
+  it(`bulk insert/select/delete varchar column batchSize ${test2BatchSize}`, async function handler () {
+    await varcharTest(test2BatchSize, true, true, false)
   })
 
-  it(`bulk insert/update/select varchar column batchSize ${test2BatchSize}`, testDone => {
-    varcharTest(test2BatchSize, true, false, true, testDone)
+  it(`bulk insert/update/select varchar column batchSize ${test2BatchSize}`, async function handler () {
+    await varcharTest(test2BatchSize, true, false, true)
   })
 
-  it(`bulk insert/update/select/delete varchar column batchSize ${test2BatchSize}`, testDone => {
-    varcharTest(test2BatchSize, true, true, true, testDone)
+  it(`bulk insert/update/select/delete varchar column batchSize ${test2BatchSize}`, async function handler () {
+    await varcharTest(test2BatchSize, true, true, true)
   })
 
   it(`bulk insert simple multi-column object in batches ${test2BatchSize}`, testDone => {
@@ -1645,7 +1579,20 @@ describe('bulk', function () {
     }
   })
 
-  function simpleColumnBulkTest (params, completeFn) {
+  function buildTestObjects (columnName, batch, functionToRun) {
+    const arr = []
+
+    for (let i = 0; i < batch; ++i) {
+      const o = {
+        pkid: i
+      }
+      o[columnName] = functionToRun(i)
+      arr.push(o)
+    }
+    return arr
+  }
+
+  async function simpleColumnBulkTest (params) {
     const type = params.columnType
     const buildFunction = params.buildFunction
     const updateFunction = params.updateFunction
@@ -1654,144 +1601,48 @@ describe('bulk', function () {
     const deleteAfterTest = params.deleteAfterTest
     const tableName = 'bulkColumn'
     const columnName = params.columnName || 'col1'
-
-    function buildTestObjects (batch, functionToRun) {
-      const arr = []
-
-      for (let i = 0; i < batch; ++i) {
-        const o = {
-          pkid: i
-        }
-        o[columnName] = functionToRun(i)
-        arr.push(o)
-      }
-      return arr
-    }
+    const proxy = params.proxy || env.theConnection
 
     const batch = totalObjectsForInsert
-    let toUpdate
-    const toInsert = buildTestObjects(batch, buildFunction)
-    if (updateFunction) toUpdate = buildTestObjects(batch, updateFunction)
-    let skip = false
-    let bulkMgr
+    const toInsert = buildTestObjects(columnName, batch, buildFunction)
+    const toUpdate = updateFunction ? buildTestObjects(columnName, batch, updateFunction) : null
 
-    const fns = [
-
-      asyncDone => {
-        env.helper.dropCreateTable({
-          tableName,
-          columnName,
-          type
-        }, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        tm = env.theConnection.tableMgr()
-        tm.bind(tableName, bm => {
-          bulkMgr = bm
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        bulkMgr.setBatchSize(batchSize)
-        bulkMgr.insertRows(toInsert, err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const s = `select count(*) as count from ${tableName}`
-        env.theConnection.query(s, (err, results) => {
-          const expected = [{
-            count: batch
-          }]
-          assert.ifError(err)
-          assert.deepStrictEqual(results, expected, 'results didn\'t match')
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        if (!updateFunction) {
-          asyncDone()
-        } else {
-          bulkMgr.updateRows(toUpdate, (err, res) => {
-            assert.ifError(err)
-            // assert(res.length === 0)
-            asyncDone()
-          })
-        }
-      },
-
-      asyncDone => {
-        if (skip) {
-          asyncDone()
-          return
-        }
-        if (!check) {
-          asyncDone()
-          return
-        }
-        const fetch = []
-        for (let i = 0; i < toInsert.length; ++i) {
-          fetch.push({
-            pkid: i
-          })
-        }
-        const expected = updateFunction ? toUpdate : toInsert
-        bulkMgr.selectRows(fetch, (err, results) => {
-          assert.ifError(err)
-          assert.deepStrictEqual(results, expected, 'results didn\'t match')
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        if (skip) {
-          asyncDone()
-          return
-        }
-        if (!deleteAfterTest) {
-          skip = true
-          asyncDone()
-          return
-        }
-        bulkMgr.deleteRows(toInsert, (err, res) => {
-          assert.ifError(err)
-          assert(res.length <= 1)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        if (skip) {
-          asyncDone()
-          return
-        }
-        const s = `select count(*) as count from ${tableName}`
-        env.theConnection.query(s, (err, results) => {
-          const expected = [{
-            count: 0
-          }]
-          assert.ifError(err)
-          assert.deepStrictEqual(results, expected, 'results didn\'t match')
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      completeFn()
+    await env.promisedDropCreateTable({
+      tableName,
+      columnName,
+      type
     })
+
+    const bulkMgr = await proxy.promises.getTable(tableName)
+    bulkMgr.setBatchSize(batchSize)
+    await bulkMgr.promises.insert(toInsert)
+    const insertCount = await env.getTableCount(tableName, proxy)
+    assert.deepStrictEqual(insertCount, totalObjectsForInsert)
+
+    const fetch = toInsert.map(o => {
+      return {
+        pkid: o.pkid
+      }
+    })
+    if (check) {
+      const selected = await bulkMgr.promises.select(fetch)
+      assert.deepStrictEqual(selected, toInsert)
+    }
+    if (updateFunction) {
+      await bulkMgr.promises.update(toUpdate)
+      const selected = await bulkMgr.promises.select(fetch)
+      assert.deepStrictEqual(selected, toUpdate)
+    }
+    if (deleteAfterTest) {
+      await bulkMgr.promises.delete(toInsert)
+      const newCount = await env.getTableCount(tableName, proxy)
+      assert.deepStrictEqual(newCount, 0)
+    }
   }
 
   const arr = []
 
-  function varbinaryTest (batchSize, selectAfterInsert, testDone) {
+  async function varbinaryTest (batchSize, selectAfterInsert) {
     const strings = [
       'one',
       'two',
@@ -1821,7 +1672,7 @@ describe('bulk', function () {
       batchSize
     }
 
-    simpleColumnBulkTest(params, testDone)
+    await simpleColumnBulkTest(params)
   }
 
   function setupSimpleType (conn, tableName, done) {

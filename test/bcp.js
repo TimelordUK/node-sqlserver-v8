@@ -463,12 +463,10 @@ describe('bcp', function () {
     }, (actual, expected) => {
       assert.deepStrictEqual(actual.length, expected.length)
       actual.forEach(a => {
-        const today = timeHelper.getUTCTime(a.t1)
-        a.t1 = today
+        a.t1 = timeHelper.getUTCTime(a.t1)
       })
       expected.forEach(a => {
-        const today = timeHelper.getUTCTime(a.t1)
-        a.t1 = today
+        a.t1 = timeHelper.getUTCTime(a.t1)
         return a
       })
       assert.deepStrictEqual(actual, expected)
