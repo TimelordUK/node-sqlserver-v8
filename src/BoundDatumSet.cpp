@@ -26,8 +26,12 @@ namespace mssql
 		for (uint32_t i = 0; i < set->get_column_count(); ++i) {
 			const auto binding = make_shared<BoundDatum>(_params);
 			auto& def = set->get_meta_data(i);
-			auto size = static_cast<size_t>(def.columnSize);
-			binding->reserve_column_type(def.dataType, size, row_count);
+			size_t size = def.columnSize;
+			size_t newSize = size;
+			binding->reserve_column_type(def.dataType, newSize, row_count);
+			if (size != newSize) {
+				def.columnSize = newSize;
+			}
 			_bindings->push_back(binding);
 		}
 		return true;
