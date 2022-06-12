@@ -5,8 +5,6 @@ const assert = require('assert')
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 const sql = require('msnodesqlv8')
-
-let tm
 const totalObjectsForInsert = 10
 const test1BatchSize = 1
 const test2BatchSize = 10
@@ -766,40 +764,13 @@ describe('bulk', function () {
     await simpleColumnBulkTest(params)
   }
 
-  it('bind to db with space', testDone => {
-    let conn = null
-    let bulkMgr = null
+  it('bind to db with space', async function handler () {
     const tableName = 'bindTest'
-    const fns = [
-
-      asyncDone => {
-        // const connectionString = 'Driver={SQL Server Native Client 11.0}; Server=(localdb)\\node; Database={scratch 2}; Trusted_Connection=Yes;'
-        sql.open(env.connectionString, function (err, c) {
-          assert(err === null || err === false)
-          conn = c
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        setupSimpleType(conn, tableName, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        tm = conn.tableMgr()
-        tm.bind(tableName, bm => {
-          bulkMgr = bm
-          assert(bulkMgr !== null)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+    // const connectionString = 'Driver={SQL Server Native Client 11.0}; Server=(localdb)\\node; Database={scratch 2}; Trusted_Connection=Yes;'
+    const conn = await sql.promises.open(env.connectionString)
+    await setupSimpleType(conn, tableName)
+    const table = conn.promises.getTable(tableName)
+    assert(table !== null)
   })
 
   it('bulk insert condition failure', testDone => {
@@ -877,106 +848,44 @@ describe('bulk', function () {
     })
   })
 
-  it('non null varchar write empty string', testDone => {
+  it('non null varchar write empty string', async function handler () {
     const tableName = 'emptyString'
-    let boundTable = null
-    const fns = [
-
-      asyncDone => {
-        env.helper.dropCreateTable({
-          tableName,
-          theConnection: env.theConnection,
-          columnName: 'test_field',
-          type: 'nvarchar(12)'
-        }, () => {
-          asyncDone()
-        })
+    await env.promisedDropCreateTable({
+      tableName,
+      theConnection: env.theConnection,
+      columnName: 'test_field',
+      type: 'nvarchar(12)'
+    })
+    const boundTable = await env.theConnection.promises.getTable(tableName)
+    const meta = boundTable.getMeta()
+    checkMeta(meta)
+    const vec = [
+      {
+        pkid: 1,
+        test_field: ''
       },
-
-      asyncDone => {
-        const tm = env.theConnection.tableMgr()
-        tm.bind(tableName, t => {
-          const meta = t.getMeta()
-          boundTable = t
-          assert(boundTable !== null)
-          const select = meta.getSelectSignature()
-          assert(select.indexOf('select') >= 0)
-
-          const insert = meta.getInsertSignature()
-          assert(insert.indexOf('insert') >= 0)
-
-          const del = meta.getDeleteSignature()
-          assert(del.indexOf('delete') >= 0)
-
-          const update = meta.getUpdateSignature()
-          assert(update.indexOf('update') >= 0)
-
-          const assignable = meta.getAssignableColumns()
-          assert(Array.isArray(assignable))
-          assert(assignable.length > 0)
-
-          const updateColumns = meta.getUpdateColumns()
-          assert(Array.isArray(updateColumns))
-          assert(updateColumns.length > 0)
-
-          const primaryColumns = meta.getPrimaryColumns()
-          assert(Array.isArray(primaryColumns))
-          assert(primaryColumns.length > 0)
-
-          const whereColumns = meta.getWhereColumns()
-          assert(Array.isArray(whereColumns))
-          assert(whereColumns.length > 0)
-
-          const byName = meta.getColumnsByName()
-          assert(byName !== null)
-
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const vec = [
-          {
-            pkid: 1,
-            test_field: ''
-          },
-          {
-            pkid: 2,
-            test_field: ''
-          }
-        ]
-        boundTable.insertRows(vec, (err, res) => {
-          assert(err === null || err === false)
-          assert(res.length <= 1)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        env.theConnection.query(`select len(test_field) as len  from [dbo].${tableName}`, (err, res) => {
-          assert(err == null)
-          assert(Array.isArray(res))
-          assert(res.length === 2)
-          const expected = [
-            {
-              len: 0
-            },
-            {
-              len: 0
-            }
-          ]
-          assert.deepStrictEqual(expected, res)
-          asyncDone()
-        })
+      {
+        pkid: 2,
+        test_field: ''
       }
     ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+    await boundTable.promises.insert(vec)
+    const results = await env.theConnection.promises.query(`select len(test_field) as len  from [dbo].${tableName}`)
+    const res = results.first
+    assert(Array.isArray(res))
+    assert(res.length === 2)
+    const expected = [
+      {
+        len: 0
+      },
+      {
+        len: 0
+      }
+    ]
+    assert.deepStrictEqual(expected, res)
   })
 
-  it(`bulk insert simple multi-column object - default a nullable column ${test2BatchSize}`, testDone => {
+  it(`bulk insert simple multi-column object - default a nullable column ${test2BatchSize}`, async function handler () {
     function buildTest (count) {
       const arr = []
       let str = '-'
@@ -996,39 +905,13 @@ describe('bulk', function () {
     }
 
     const tableName = 'bulkTest'
-    let bulkMgr
     const vec = buildTest(totalObjectsForInsert)
-
-    const fns = [
-      asyncDone => {
-        env.helper.dropCreateTable({
-          tableName
-        }, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const tm = env.theConnection.tableMgr()
-        tm.bind(tableName, bm => {
-          bulkMgr = bm
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        bulkMgr.setBatchSize(totalObjectsForInsert)
-        bulkMgr.insertRows(vec, (err, res) => {
-          assert(err === null || err === false)
-          assert(res.length <= 1)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
+    await env.promisedDropCreateTable({
+      tableName
     })
+    const bulkMgr = await env.theConnection.promises.getTable(tableName)
+    bulkMgr.setBatchSize(totalObjectsForInsert)
+    await bulkMgr.promises.insert(vec)
   })
 
   /*
@@ -1085,29 +968,13 @@ describe('bulk', function () {
   })
 */
 
-  it('employee tmp table complex json object array bulk operations', testDone => {
+  it('employee tmp table complex json object array bulk operations', async function handler () {
     const tableName = '#employee'
-
-    const fns = [
-
-      asyncDone => {
-        env.helper.dropCreateTable({
-          tableName,
-          theConnection: env.theConnection
-        }, () => {
-          asyncDone()
-        })
-      },
-
-      async asyncDone => {
-        await bindInsert(tableName)
-        asyncDone()
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
+    await env.promisedDropCreateTable({
+      tableName,
+      theConnection: env.theConnection
     })
+    await bindInsert(tableName)
   })
 
   it(`bulk insert/select varbinary column batchSize ${test1BatchSize}`, async function handler () {
@@ -1164,53 +1031,30 @@ describe('bulk', function () {
     }
   }
 
-  it('employee insert/select with non primary key', testDone => {
+  it('employee insert/select with non primary key', async function handler () {
     const tableName = 'employee'
-    let parsedJSON
+
     const whereCols = [
       {
         name: 'LoginID'
       }
     ]
 
-    let bulkMgr
-    const fns = [
-
-      asyncDone => {
-        env.helper.dropCreateTable({
-          tableName
-        }, () => {
-          asyncDone()
-        })
-      },
-
-      async asyncDone => {
-        const r = await bindInsert(tableName)
-        bulkMgr = r.bulkMgr
-        parsedJSON = r.parsedJSON
-        asyncDone()
-      },
-
-      asyncDone => {
-        const keys = env.helper.extractKey(parsedJSON, 'LoginID')
-        bulkMgr.setWhereCols(whereCols)
-        bulkMgr.selectRows(keys, (err, results) => {
-          assert(err === null || err === false)
-          assert(results.length === parsedJSON.length)
-          assert.deepStrictEqual(results, parsedJSON, 'results didn\'t match')
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
+    await env.promisedDropCreateTable({
+      tableName
     })
+    const r = await bindInsert(tableName)
+    const bulkMgr = r.bulkMgr
+    const parsedJSON = r.parsedJSON
+    const keys = env.helper.extractKey(parsedJSON, 'LoginID')
+    bulkMgr.setWhereCols(whereCols)
+    const results = await bulkMgr.promises.select(keys)
+    assert(results.length === parsedJSON.length)
+    assert.deepStrictEqual(results, parsedJSON)
   })
 
-  it('employee insert - update a single column', testDone => {
+  it('employee insert - update a single column', async function handler () {
     const tableName = 'employee'
-    let parsedJSON
     const updateCols = []
 
     updateCols.push({
@@ -1219,52 +1063,25 @@ describe('bulk', function () {
     const newDate = new Date('2015-01-01T00:00:00.000Z')
     const modifications = []
 
-    let bulkMgr
-    const fns = [
-
-      asyncDone => {
-        env.helper.dropCreateTable({
-          tableName
-        }, () => {
-          asyncDone()
-        })
-      },
-
-      async asyncDone => {
-        const r = await bindInsert(tableName)
-        bulkMgr = r.bulkMgr
-        parsedJSON = r.parsedJSON
-        asyncDone()
-      },
-
-      asyncDone => {
-        parsedJSON.forEach(emp => {
-          emp.ModifiedDate = newDate
-          modifications.push({
-            BusinessEntityID: emp.BusinessEntityID,
-            ModifiedDate: newDate
-          })
-        })
-        bulkMgr.setUpdateCols(updateCols)
-        bulkMgr.updateRows(modifications, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const keys = env.helper.extractKey(parsedJSON, 'BusinessEntityID')
-        bulkMgr.selectRows(keys, (err, results) => {
-          assert(err === null || err === false)
-          assert(results.length === parsedJSON.length)
-          env.helper.compareEmployee(results, parsedJSON)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
+    await env.promisedDropCreateTable({
+      tableName
     })
+    const r = await bindInsert(tableName)
+    const bulkMgr = r.bulkMgr
+    const parsedJSON = r.parsedJSON
+    parsedJSON.forEach(emp => {
+      emp.ModifiedDate = newDate
+      modifications.push({
+        BusinessEntityID: emp.BusinessEntityID,
+        ModifiedDate: newDate
+      })
+    })
+    bulkMgr.setUpdateCols(updateCols)
+    await bulkMgr.promises.update(modifications)
+    const keys = env.helper.extractKey(parsedJSON, 'BusinessEntityID')
+    const results = await bulkMgr.promises.select(keys)
+    assert(results.length === parsedJSON.length)
+    env.helper.compareEmployee(results, parsedJSON)
   })
 
   async function bitTestStrictColumn (batchSize, selectAfterInsert, runUpdateFunction) {
@@ -1528,7 +1345,7 @@ describe('bulk', function () {
     await varcharTest(test2BatchSize, true, true, true)
   })
 
-  it(`bulk insert simple multi-column object in batches ${test2BatchSize}`, testDone => {
+  it(`bulk insert simple multi-column object in batches ${test2BatchSize}`, async function handler () {
     function buildTest (count) {
       const arr = []
       let str = '-'
@@ -1549,34 +1366,16 @@ describe('bulk', function () {
 
     const tableName = 'bulkTest'
 
-    env.helper.dropCreateTable({
+    await env.promisedDropCreateTable({
       tableName
-    }, go)
+    })
 
-    function go () {
-      const tm = env.theConnection.tableMgr()
-      tm.bind(tableName, test)
-    }
-
-    function test (bulkMgr) {
-      const batch = totalObjectsForInsert
-      const vec = buildTest(batch)
-      bulkMgr.insertRows(vec, insertDone)
-
-      function insertDone (err, res) {
-        assert.ifError(err)
-        assert(res.length <= 1)
-        const s = 'select count(*) as count from ' + tableName
-        env.theConnection.query(s, (err, results) => {
-          const expected = [{
-            count: batch
-          }]
-          assert.ifError(err)
-          assert.deepStrictEqual(results, expected, 'results didn\'t match')
-          testDone()
-        })
-      }
-    }
+    const bulkMgr = await env.theConnection.promises.getTable(tableName)
+    const batch = totalObjectsForInsert
+    const vec = buildTest(batch)
+    await bulkMgr.promises.insert(vec)
+    const count = await env.getTableCount(tableName)
+    assert.deepStrictEqual(count, batch)
   })
 
   function buildTestObjects (columnName, batch, functionToRun) {
@@ -1675,7 +1474,7 @@ describe('bulk', function () {
     await simpleColumnBulkTest(params)
   }
 
-  function setupSimpleType (conn, tableName, done) {
+  async function setupSimpleType (conn, tableName) {
     const dropTableSql = `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL 
   DROP TABLE ${tableName};`
 
@@ -1685,25 +1484,7 @@ describe('bulk', function () {
 \tage int, 
 \tsalary real
 )`
-
-    const fns = [
-      asyncDone => {
-        conn.query(dropTableSql, err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        conn.query(createTableSql, err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      done()
-    })
+    await conn.promises.query(dropTableSql)
+    await conn.promises.query(createTableSql)
   }
 })
