@@ -34,50 +34,26 @@ describe('prepared', function () {
 
   this.timeout(100 * 1000)
 
-  const actions = [
-    // open a connection.
-    async asyncDone => {
-      theConnection = env.theConnection
-      asyncDone()
-    },
-
-    // drop / create an Employee table.
-    asyncDone => {
-      env.helper.dropCreateTable({
-        tableName
-      }, () => {
-        asyncDone()
-      })
-    },
-
-    // insert test set using bulk insert
-    async asyncDone => {
-      const bulkMgr = await theConnection.promises.getTable(tableName)
-      await bulkMgr.promises.insert(parsedJSON)
-      asyncDone()
-    },
-
-    // prepare a select statement.
-    async asyncDone => {
-      prepared = await env.employee.prepare()
-      asyncDone()
-    }
-  ]
-
-  this.beforeEach(done => {
-    env.open().then(() => {
-      prepared = {
-        update: null,
-        select: null,
-        delete: null,
-        scan: null
-      }
-      parsedJSON = env.helper.getJSON()
-      env.async.series(actions,
-        () => {
-          done()
-        })
+  async function bootup () {
+    parsedJSON = env.helper.getJSON()
+    theConnection = env.theConnection
+    await env.promisedDropCreateTable({
+      tableName
     })
+    const bulkMgr = await theConnection.promises.getTable(tableName)
+    await bulkMgr.promises.insert(parsedJSON)
+    prepared = await env.employee.prepare()
+  }
+
+  this.beforeEach(async function handler () {
+    await env.open()
+    prepared = {
+      update: null,
+      select: null,
+      delete: null,
+      scan: null
+    }
+    await bootup()
   })
 
   this.afterEach(done => {

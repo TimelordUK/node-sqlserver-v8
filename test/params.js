@@ -38,6 +38,25 @@ describe('params', function () {
     env.close().then(() => done())
   })
 
+  async function testBoilerPlateAsync (tableName, tableFields, insertFunction, verifyFunction) {
+    let tableFieldsSql = ' (id int identity, '
+
+    for (const field in tableFields) {
+      if (Object.prototype.hasOwnProperty.call(tableFields, field)) {
+        tableFieldsSql += field + ' ' + tableFields[field] + ','
+      }
+    }
+    tableFieldsSql = tableFieldsSql.substr(0, tableFieldsSql.length - 1)
+    tableFieldsSql += ')'
+    await env.theConnection.promises.query(env.dropTableSql(tableName))
+    const createQuery = `CREATE TABLE ${tableName}${tableFieldsSql}`
+    await env.theConnection.promises.query(createQuery)
+    const clusteredIndexSql = ['CREATE CLUSTERED INDEX IX_', tableName, ' ON ', tableName, ' (id)'].join('')
+    await env.theConnection.promises.query(clusteredIndexSql)
+    await insertFunction()
+    await verifyFunction()
+  }
+
   function testBoilerPlate (tableName, tableFields, insertFunction, verifyFunction, doneFunction) {
     let tableFieldsSql = ' (id int identity, '
 
@@ -92,108 +111,55 @@ describe('params', function () {
       })
   }
 
-  it('query a numeric - configure connection to return as string', testDone => {
-    async function runner () {
-      const num = '12345678.876'
-      env.theConnection.setUseNumericString(true)
-      const q = `SELECT CAST(${num} AS numeric(11, 3)) as number`
-      const res = await env.theConnection.promises.query(q)
-      try {
-        assert.deepStrictEqual(res.first[0].number, num)
-      } catch (e) {
-        assert.ifError(e)
-      }
-    }
-    runner().then(() => {
-      testDone()
-    })
+  it('query a numeric - configure connection to return as string', async function handler () {
+    const num = '12345678.876'
+    env.theConnection.setUseNumericString(true)
+    const q = `SELECT CAST(${num} AS numeric(11, 3)) as number`
+    const res = await env.theConnection.promises.query(q)
+    assert.deepStrictEqual(res.first[0].number, num)
   })
 
-  it('insert min and max number values', testDone => {
-    testBoilerPlate(
+  it('insert min and max number values', async function handler () {
+    await testBoilerPlateAsync(
       'minmax_test',
       { f: 'float' },
 
-      done => {
-        const fns =
-          [
-            asyncDone => {
-              env.theConnection.queryRaw('INSERT INTO minmax_test (f) VALUES (?)', [Number.MAX_VALUE],
-                e => {
-                  assert.ifError(e)
-                  asyncDone()
-                })
-            },
-
-            asyncDone => {
-              env.theConnection.queryRaw('INSERT INTO minmax_test (f) VALUES (?)', [-Number.MAX_VALUE],
-                e => {
-                  assert.ifError(e)
-                  asyncDone()
-                })
-            }
-          ]
-
-        env.async.series(fns, () => {
-          done()
-        })
+      async function handler () {
+        const promises = env.theConnection.promises
+        await promises.query('INSERT INTO minmax_test (f) VALUES (?)', [Number.MAX_VALUE])
+        await promises.query('INSERT INTO minmax_test (f) VALUES (?)', [-Number.MAX_VALUE])
       },
 
-      done => {
-        env.theConnection.queryRaw('SELECT f FROM minmax_test order by id', (e, r) => {
-          assert.ifError(e)
-          const expected = {
-            meta: [
-              { name: 'f', size: 53, nullable: true, type: 'number', sqlType: 'float' }],
-            rows: [
-              [1.7976931348623157e+308],
-              [-1.7976931348623157e+308]]
-          }
-          assert.deepStrictEqual(r, expected, 'minmax results don\'t match')
-          done()
-        })
-      },
-      () => {
-        testDone()
+      async function handler () {
+        const r = await env.theConnection.promises.query('SELECT f FROM minmax_test order by id', [], { raw: true })
+        const expectedMeta = [{ name: 'f', size: 53, nullable: true, type: 'number', sqlType: 'float' }]
+        const expected = [
+          [1.7976931348623157e+308],
+          [-1.7976931348623157e+308]
+        ]
+        assert.deepStrictEqual(expected, r.first)
+        assert.deepStrictEqual(expectedMeta, r.meta[0])
       })
   })
 
-  it('query a -ve numeric - configure query to return as string', testDone => {
-    async function runner () {
-      const num = '-12345678'
-      const q = `select ${num} as number`
-      const res = await env.theConnection.promises.query({
-        query_str: q,
-        numeric_string: true
-      })
-      try {
-        assert.deepStrictEqual(res.first[0].number, num)
-      } catch (e) {
-        assert.ifError(e)
-      }
-    }
-    runner().then(() => {
-      testDone()
+  it('query a -ve numeric - configure query to return as string', async function handler () {
+    const num = '-12345678'
+    const q = `select ${num} as number`
+    const res = await env.theConnection.promises.query({
+      query_str: q,
+      numeric_string: true
     })
+    assert.deepStrictEqual(res.first[0].number, num)
   })
 
-  it('query as numeric - configure query to return as string', testDone => {
-    async function runner () {
-      const num = '1234567891'
-      const q = `SELECT CAST(${num} AS numeric(10, 0)) as number`
-      const res = await env.theConnection.promises.query({
-        query_str: q,
-        numeric_string: true
-      })
-      try {
-        assert.deepStrictEqual(res.first[0].number, num)
-      } catch (e) {
-        assert.ifError(e)
-      }
-    }
-    runner().then(() => {
-      testDone()
+  it('query as numeric - configure query to return as string', async function handler () {
+    const num = '1234567891'
+    const q = `SELECT CAST(${num} AS numeric(10, 0)) as number`
+    const res = await env.theConnection.promises.query({
+      query_str: q,
+      numeric_string: true
     })
+    assert.deepStrictEqual(res.first[0].number, num)
   })
 
   it('insert bigint as parameter', testDone => {
@@ -244,42 +210,24 @@ describe('params', function () {
       })
   }
 
-  it('query a bigint implicit - configure query to return as string', testDone => {
-    async function runner () {
-      const num = '9223372036854775807'
-      const q = `SELECT ${num} as number`
-      const res = await env.theConnection.promises.query({
-        query_str: q,
-        numeric_string: true
-      })
-      try {
-        assert.deepStrictEqual(res.first[0].number, num)
-      } catch (e) {
-        assert.ifError(e)
-      }
-    }
-    runner().then(() => {
-      testDone()
+  it('query a bigint implicit - configure query to return as string', async function handler () {
+    const num = '9223372036854775807'
+    const q = `SELECT ${num} as number`
+    const res = await env.theConnection.promises.query({
+      query_str: q,
+      numeric_string: true
     })
+    assert.deepStrictEqual(res.first[0].number, num)
   })
 
-  it('query a bigint with cast - configure query to return as string', testDone => {
-    async function runner () {
-      const num = '9223372036854775807'
-      const q = `SELECT CAST(${num} AS bigint) as number`
-      const res = await env.theConnection.promises.query({
-        query_str: q,
-        numeric_string: true
-      })
-      try {
-        assert.deepStrictEqual(res.first[0].number, num)
-      } catch (e) {
-        assert.ifError(e)
-      }
-    }
-    runner().then(() => {
-      testDone()
+  it('query a bigint with cast - configure query to return as string', async function handler () {
+    const num = '9223372036854775807'
+    const q = `SELECT CAST(${num} AS bigint) as number`
+    const res = await env.theConnection.promises.query({
+      query_str: q,
+      numeric_string: true
     })
+    assert.deepStrictEqual(res.first[0].number, num)
   })
 
   it('bind via a declare and insert', testDone => {
@@ -323,43 +271,25 @@ describe('params', function () {
       })
   })
 
-  it('query containing Swedish "åäö" as sql query literal no params', testDone => {
+  it('query containing Swedish "åäö" as sql query literal no params', async function handler () {
     const STR_LEN = 10
     const str = 'åäö'.repeat(STR_LEN)
-    env.theConnection.query(`select '${str}' as data`, (err, res) => {
-      assert.ifError(err)
-      const expected = [{
-        data: str
-      }]
-      assert.deepStrictEqual(expected, res)
-      testDone()
-    })
+    const res = await env.theConnection.promises.query(`select '${str}' as data`)
+    assert.deepStrictEqual(res.first[0].data, str)
   })
 
-  it('query containing ascii chars as sql query literal no params', testDone => {
+  it('query containing ascii chars as sql query literal no params', async function handler () {
     const STR_LEN = 10
     const str = 'a'.repeat(STR_LEN)
-    env.theConnection.query(`select '${str}' as data`, (err, res) => {
-      assert.ifError(err)
-      const expected = [{
-        data: str
-      }]
-      assert.deepStrictEqual(expected, res)
-      testDone()
-    })
+    const res = await env.theConnection.promises.query(`select '${str}' as data`)
+    assert.deepStrictEqual(res.first[0].data, str)
   })
 
-  it('query containing Swedish "åäö" as param', testDone => {
+  it('query containing Swedish "åäö" as param', async function handler () {
     const STR_LEN = 10
     const str = 'åäö'.repeat(STR_LEN)
-    env.theConnection.query('declare @str nvarchar (MAX);set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @str AS data', [str], (err, res) => {
-      assert.ifError(err)
-      const expected = [{
-        data: str
-      }]
-      assert.deepStrictEqual(expected, res)
-      testDone()
-    })
+    const res = await env.theConnection.promises.query('declare @str nvarchar (MAX);set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @str AS data', [str])
+    assert.deepStrictEqual(res.first[0].data, str)
   })
 
   it('insert/query containing Swedish "åäö" as param', testDone => {
