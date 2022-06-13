@@ -157,8 +157,8 @@ describe('geography', function () {
     const preparedPoint = await env.theConnection.promises.prepare(geographyHelper.insertPointsSql)
     const points = env.geographyHelper.points
     const expected = env.geographyHelper.expectedPoints
-    await preparedPoint.promises.query([points[0]])
-    await preparedPoint.promises.query([points[1]])
+    const promises = points.map(p => preparedPoint.promises.query([p]))
+    await Promise.all(promises)
     const res = await env.theConnection.promises.query(geographyHelper.selectSql)
     assert.deepStrictEqual(res.first.length, points.length)
     assert.deepStrictEqual(res.first, expected)
