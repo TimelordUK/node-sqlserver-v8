@@ -179,6 +179,19 @@ describe('params', function () {
     assert.deepStrictEqual(res.first[0].number, num)
   })
 
+  async function runTestAsync (columnDef, len) {
+    await testBoilerPlateAsync('test_large_insert', { large_insert: columnDef },
+      () => async function handler () {
+        const largeText = repeat('A', len)
+        await env.theConnection.promises.query('INSERT INTO test_large_insert (large_insert) VALUES (?)',
+          [largeText])
+      },
+      () => async function handler () {
+        const r = await env.theConnection.promises.query('SELECT large_insert FROM test_large_insert')
+        assert.deepStrictEqual(r.first[0].large_insert.length, len)
+      })
+  }
+
   function runTest (columnDef, len, testDone) {
     testBoilerPlate('test_large_insert', { large_insert: columnDef },
       done => {
@@ -221,45 +234,19 @@ describe('params', function () {
     assert.deepStrictEqual(res.first[0].number, num)
   })
 
-  it('bind via a declare and insert', testDone => {
+  it('bind via a declare and insert', async function handler () {
     const tableName = 'tmp_int'
     const tableFieldsSql = `(
      n1 int,
      n2 int
     )`
-
-    const sequence = [
-
-      asyncDone => {
-        const dropQuery = `DROP TABLE ${tableName}`
-        env.theConnection.query(dropQuery, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const createQuery = `CREATE TABLE ${tableName}${tableFieldsSql}`
-        env.theConnection.query(createQuery,
-          e => {
-            assert.ifError(e, 'Error creating table')
-            asyncDone()
-          })
-      },
-
-      asyncDone => {
-        env.theConnection.query('declare @_p0 int = ?, @_p1 int = ?; insert into [tmp_int] ([n1],[n2]) values (@_p0,@_p1)',
-          [10, 20],
-          e => {
-            assert.ifError(e, 'Error inserting')
-            asyncDone()
-          })
-      }
-    ]
-
-    env.async.series(sequence,
-      () => {
-        testDone()
-      })
+    const params = [10, 20]
+    await env.theConnection.promises.query(env.dropTableSql(tableName))
+    await env.theConnection.promises.query(`CREATE TABLE ${tableName}${tableFieldsSql}`)
+    env.theConnection.query('declare @_p0 int = ?, @_p1 int = ?; insert into [tmp_int] ([n1],[n2]) values (@_p0,@_p1)',
+      params)
+    const res = await env.getTableCount(tableName)
+    assert.deepStrictEqual(res, 1)
   })
 
   it('query containing Swedish "åäö" as sql query literal no params', async function handler () {
@@ -306,11 +293,7 @@ describe('params', function () {
   })
 
   it('select a long string using streaming - ensure no fragmentation', testDone => {
-    function repeat (a, num) {
-      return new Array(num + 1).join(a)
-    }
-
-    const longString = repeat('a', 40 * 1024)
+    const longString = env.repeat('a', 40 * 1024)
     const expected = [
       {
         long_string: longString
@@ -350,70 +333,48 @@ describe('params', function () {
 
   // declare @str nvarchar (MAX);set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @s AS s;
 
-  it('insert string 100 in nchar.100', testDone => {
-    runTest('nchar(100)', 100, () => {
-      testDone()
-    })
+  it('insert string 100 in nchar.100', async function handler () {
+    await runTestAsync('nchar(100)', 100)
   })
 
-  it('insert string 500 in nvarchar.1000', testDone => {
-    runTest('nvarchar(1000)', 500, () => {
-      testDone()
-    })
+  it('insert string 500 in nvarchar.1000', async function handler () {
+    await runTestAsync('nvarchar(1000)')
   })
 
-  it('insert string 1 x 1000 in varchar.max', testDone => {
-    runTest('varchar(max)', 1 * 1000, () => {
-      testDone()
-    })
+  it('insert string 1 x 1000 in varchar.max', async function handler () {
+    await runTestAsync('varchar(max)', 1000)
   })
 
-  it('insert string 4 x 1000 in varchar(max)', testDone => {
-    runTest('varchar(max)', 4 * 1000, () => {
-      testDone()
-    })
+  it('insert string 4 x 1000 in varchar(max)', async function handler () {
+    await runTestAsync('varchar(max)', 4 * 1000)
   })
 
-  it('insert string 3999 in varchar(max)', testDone => {
-    runTest('varchar(max)', 3999, () => {
-      testDone()
-    })
+  it('insert string 3999 in varchar(max)', async function handler () {
+    await runTestAsync('varchar(max)', 3999)
   })
 
-  it('insert string 4001 in varchar(max)', testDone => {
-    runTest('varchar(max)', 4001, () => {
-      testDone()
-    })
+  it('insert string 4001 in varchar(max)', async function handler () {
+    await runTestAsync('varchar(max)', 4001)
   })
 
-  it('insert string 4 x 1024 in varchar(8000)', testDone => {
-    runTest('varchar(8000)', 4 * 1024, () => {
-      testDone()
-    })
+  it('insert string 4 x 1024 in varchar(8000)', async function handler () {
+    await runTestAsync('varchar(8000)', 4 * 1024)
   })
 
-  it('insert string 6 x 1024 in varchar(8000)', testDone => {
-    runTest('varchar(8000)', 6 * 1024, () => {
-      testDone()
-    })
+  it('insert string 6 x 1024 in varchar(8000)', async function handler () {
+    await runTestAsync('varchar(8000)', 6 * 1024)
   })
 
-  it('insert string 30 x 1024 in varchar(max)', testDone => {
-    runTest('varchar(max)', 30 * 1024, () => {
-      testDone()
-    })
+  it('insert string 30 x 1024 in varchar(max)', async function handler () {
+    await runTestAsync('varchar(max)', 30 * 1024)
   })
 
-  it('insert string 2 x 1024 * 1024 in varchar(max)', testDone => {
-    runTest('varchar(max)', 2 * 1024 * 1024, () => {
-      testDone()
-    })
+  it('insert string 2 x 1024 * 1024 in varchar(max)', async function handler () {
+    await runTestAsync('varchar(max)', 2 * 1024 * 1024)
   })
 
-  it('insert string 60 x 1024 in varchar(max)', testDone => {
-    runTest('varchar(max)', 60 * 1024, () => {
-      testDone()
-    })
+  it('insert string 60 x 1024 in varchar(max)', async function handler () {
+    await runTestAsync('varchar(max)', 60 * 1024)
   })
 
   it('verify empty string is sent as empty string, not null', async function handler () {
