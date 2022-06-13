@@ -444,13 +444,7 @@ describe('bulk', function () {
 
     await promisedInsert(expected)
     const res = await promisedSelect(expected)
-    assert(expected.length, res.length)
-    for (let i = 0; i < expected.length; ++i) {
-      const lhs = expected[i]
-      const rhs = res[i]
-      assert.deepStrictEqual(lhs.id, rhs.id)
-      assert(env.fractionalEqual(lhs.col_a, rhs.col_a))
-    }
+    checkDecimalVectors(expected, res)
   }
 
   it('connection: use tableMgr bulk insert decimal vector - no nulls', async function handler () {
@@ -461,6 +455,16 @@ describe('bulk', function () {
     await env.asPool(t1)
   })
 
+  function checkDecimalVectors(expected, res) {
+    assert(expected.length, res.length)
+    for (let i = 0; i < expected.length; ++i) {
+      const lhs = expected[i]
+      const rhs = res[i]
+      assert.deepStrictEqual(lhs.id, rhs.id)
+      assert(env.fractionalEqual(lhs.col_a, rhs.col_a))
+    }
+  }
+
   async function t12 (proxy) {
     const helper = env.typeTableHelper('decimal(20,18)', proxy)
     const expected = helper.getVec(10, i => i % 2 === 0 ? null : 1 / (i + 2.5))
@@ -470,7 +474,7 @@ describe('bulk', function () {
 
     await promisedInsert(expected)
     const res = await promisedSelect(expected)
-    assert.deepStrictEqual(expected, res)
+    checkDecimalVectors(expected, res)
   }
 
   it('connection: use tableMgr bulk insert decimal vector - with nulls', async function handler () {
