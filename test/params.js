@@ -143,8 +143,9 @@ describe('params', function () {
 
       async function handler () {
         const promises = env.theConnection.promises
-        await promises.query('INSERT INTO minmax_test (f) VALUES (?)', [Number.MAX_VALUE])
-        await promises.query('INSERT INTO minmax_test (f) VALUES (?)', [-Number.MAX_VALUE])
+        const sql = 'INSERT INTO minmax_test (f) VALUES (?)'
+        await promises.query(sql, [Number.MAX_VALUE])
+        await promises.query(sql, [-Number.MAX_VALUE])
       },
 
       async function handler () {
@@ -402,23 +403,11 @@ describe('params', function () {
     assert.deepStrictEqual(res.first[0].long_string, longString)
   })
 
-  it('select a long buffer using callback', testDone => {
-    function repeat (a, num) {
-      return new Array(num + 1).join(a)
-    }
-
-    const longString = repeat('a', 50000)
+  it('select a long buffer using callback', async function handler () {
+    const longString = env.repeat('a', 50000)
     const longBuffer = Buffer.from(longString)
-    const expected = [
-      {
-        long_binary: longBuffer
-      }
-    ]
-    env.theConnection.query('select ? as long_binary', [longBuffer], (err, res) => {
-      assert.ifError(err)
-      assert.deepStrictEqual(res, expected)
-      testDone()
-    })
+    const res = await env.theConnection.promises.query('select ? as long_binary', [longBuffer])
+    assert.deepStrictEqual(res.first[0].long_binary, longBuffer)
   })
 
   it('verify buffer longer than column causes error', async function handler () {
@@ -499,98 +488,80 @@ describe('params', function () {
     assert(date instanceof Date)
   })
 
-  it('insert null as parameter', testDone => {
-    testBoilerPlate(
+  it('insert null as parameter', async function handler () {
+    await testBoilerPlateAsync(
       'null_param_test',
       { null_test: 'varchar(1)' },
-      done => {
-        env.theConnection.queryRaw('INSERT INTO null_param_test (null_test) VALUES (?)', [null], e => {
-          assert.ifError(e)
-          done()
-        })
+      async function handler () {
+        await env.theConnection.promises.query('INSERT INTO null_param_test (null_test) VALUES (?)', [null])
       },
 
-      done => {
-        env.theConnection.queryRaw('SELECT null_test FROM null_param_test', (e, r) => {
-          assert.ifError(e)
-          const expected = {
-            meta: [{ name: 'null_test', size: 1, nullable: true, type: 'text', sqlType: 'varchar' }],
-            rows: [[null]]
-          }
-          assert.deepStrictEqual(expected, r)
-          done()
-        })
-      },
-      () => {
-        testDone()
+      async function handler () {
+        const r = await env.theConnection.promises.query('SELECT null_test FROM null_param_test', [],
+          { raw: true })
+        const expectedMeta = [{ name: 'null_test', size: 1, nullable: true, type: 'text', sqlType: 'varchar' }]
+        const expected = [
+          [null]
+        ]
+        assert.deepStrictEqual(expected, r.first)
+        assert.deepStrictEqual(expectedMeta, r.meta[0])
       })
   })
 
-  it('invalid numbers cause errors', testDone => {
-    const sequence = [
-      asyncDone => {
-        env.theConnection.queryRaw('INSERT INTO invalid_numbers_test (f) VALUES (?)', [Number.POSITIVE_INFINITY], e => {
-          const expectedError = new Error('IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
-          expectedError.code = -1
-          expectedError.sqlstate = 'IMNOD'
-          assert.deepStrictEqual(e, expectedError)
-          asyncDone()
-        })
-      },
+  it('invalid numbers cause errors', async function handler () {
+    try {
+      await env.theConnection.promises.query('INSERT INTO invalid_numbers_test (f) VALUES (?)',
+        [Number.POSITIVE_INFINITY])
+      assert.deepStrictEqual(1, 0)
+    } catch (e) {
+      delete e._results
+      const expectedError = new Error('IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
+      expectedError.code = -1
+      expectedError.sqlstate = 'IMNOD'
+      assert.deepStrictEqual(e, expectedError)
+    }
 
-      asyncDone => {
-        env.theConnection.queryRaw('INSERT INTO invalid_numbers_test (f) VALUES (?)', [Number.NEGATIVE_INFINITY], e => {
-          const expectedError = new Error('IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
-          expectedError.code = -1
-          expectedError.sqlstate = 'IMNOD'
-
-          assert.deepStrictEqual(e, expectedError)
-          asyncDone()
-        })
-      }
-    ]
-
-    testBoilerPlate(
-      'invalid_numbers_test',
-      { f: 'float' },
-      done => {
-        env.async.series(sequence, () => {
-          done()
-        })
-      },
-      done => {
-        done()
-      },
-      () => {
-        testDone()
-      }
-    )
+    try {
+      await env.theConnection.promises.query('INSERT INTO invalid_numbers_test (f) VALUES (?)',
+        [Number.NEGATIVE_INFINITY])
+      assert.deepStrictEqual(1, 0)
+    } catch (e) {
+      delete e._results
+      const expectedError = new Error('IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
+      expectedError.code = -1
+      expectedError.sqlstate = 'IMNOD'
+      assert.deepStrictEqual(e, expectedError)
+    }
   })
 
-  it('insert string as parameter', testDone => {
-    testBoilerPlate(
+  it('insert string as parameter', async function handler () {
+    const txt = 'This is a test'
+    await testBoilerPlateAsync(
       'string_param_test',
       { string_test: 'nvarchar(100)' },
-      done => {
-        env.theConnection.queryRaw('INSERT INTO string_param_test (string_test) VALUES (?)', ['This is a test'], e => {
-          assert.ifError(e)
-          done()
-        })
+
+      async function handler () {
+        await env.theConnection.promises.query('INSERT INTO string_param_test (string_test) VALUES (?)',
+          [txt])
       },
 
-      done => {
-        env.theConnection.queryRaw('SELECT string_test FROM string_param_test', (e, r) => {
-          assert.ifError(e)
-          const expected = {
-            meta: [{ name: 'string_test', size: 100, nullable: true, type: 'text', sqlType: 'nvarchar' }],
-            rows: [['This is a test']]
+      async function handler () {
+        const r = await env.theConnection.promises.query('SELECT string_test FROM string_param_test', [],
+          { raw: true })
+        const expectedMeta = [
+          {
+            name: 'string_test',
+            size: 100,
+            nullable: true,
+            type: 'text',
+            sqlType: 'nvarchar'
           }
-          assert.deepStrictEqual(expected, r)
-          done()
-        })
-      },
-      () => {
-        testDone()
+        ]
+        const expected = [
+          [txt]
+        ]
+        assert.deepStrictEqual(expected, r.first)
+        assert.deepStrictEqual(expectedMeta, r.meta[0])
       })
   })
 
