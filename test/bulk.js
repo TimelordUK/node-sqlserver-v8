@@ -455,7 +455,7 @@ describe('bulk', function () {
     await env.asPool(t1)
   })
 
-  function checkDecimalVectors(expected, res) {
+  function checkDecimalVectors (expected, res) {
     assert(expected.length, res.length)
     for (let i = 0; i < expected.length; ++i) {
       const lhs = expected[i]
