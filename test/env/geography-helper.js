@@ -61,8 +61,7 @@ END
       await exec(createType)
       await exec(createProcedureSql)
       const promisedUserType = theConnection.promises.getUserTypeTable
-      const table = await promisedUserType(tableTypeName)
-      return table
+      return await promisedUserType(tableTypeName)
     }
 
     const expectedPoints = [
