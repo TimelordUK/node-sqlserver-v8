@@ -162,29 +162,19 @@ describe('params', function () {
     assert.deepStrictEqual(res.first[0].number, num)
   })
 
-  it('insert bigint as parameter', testDone => {
-    testBoilerPlate('bigint_param_test', { bigint_test: 'bigint' },
-      done => {
-        env.theConnection.queryRaw('INSERT INTO bigint_param_test (bigint_test) VALUES (?)', [0x80000000], e => {
-          assert.ifError(e)
-          done()
-        })
+  it('insert bigint as parameter', async function handler () {
+    testBoilerPlateAsync('bigint_param_test', { bigint_test: 'bigint' },
+      async function () {
+        await env.theConnection.promises.query('INSERT INTO bigint_param_test (bigint_test) VALUES (?)', [0x80000000])
       },
-
-      done => {
-        env.theConnection.queryRaw('SELECT bigint_test FROM bigint_param_test', (e, r) => {
-          assert.ifError(e)
-          const expected = {
-            meta: [{ name: 'bigint_test', size: 19, nullable: true, type: 'number', sqlType: 'bigint' }],
-            rows: [[0x80000000]]
-          }
-          assert.deepStrictEqual(expected, r)
-          done()
-        })
-      },
-
-      () => {
-        testDone()
+      async function handler () {
+        const r = await env.theConnection.promises.query('SELECT bigint_test FROM bigint_param_test', [], { raw: true })
+        const expectedMeta = [{ name: 'bigint_test', size: 19, nullable: true, type: 'number', sqlType: 'bigint' }]
+        const expected = [
+          [[0x80000000]]
+        ]
+        assert.deepStrictEqual(expected, r.first)
+        assert.deepStrictEqual(expectedMeta, r.meta[0])
       })
   })
 
@@ -292,39 +282,26 @@ describe('params', function () {
     assert.deepStrictEqual(res.first[0].data, str)
   })
 
-  it('insert/query containing Swedish "åäö" as param', testDone => {
+  it('insert/query containing Swedish "åäö" as param', async function handler () {
     const STR_LEN = 5
     const str = 'åäö'.repeat(STR_LEN)
     const name = 'test_swedish_insert'
-    testBoilerPlate(name, { text_col: 'nvarchar(50)' },
-      done => {
-        env.theConnection.query(`INSERT INTO ${name} (text_col) VALUES (?)`, [str], e => {
-          assert.ifError(e, 'Error inserting large string')
-          done()
-        })
+    testBoilerPlateAsync(name, { text_col: 'nvarchar(50)' },
+      async function () {
+        await env.theConnection.promises.query(`INSERT INTO ${name} (text_col) VALUES (?)`)
       },
-
-      done => {
-        env.theConnection.query(`SELECT text_col FROM ${name}`, (e, r) => {
-          assert.ifError(e)
-          assert(r[0].text_col === str, 'bad insert')
-          done()
-        })
-      },
-      () => {
-        testDone()
+      async function () {
+        const res = await env.theConnection.promises.query(`SELECT text_col FROM ${name}`)
+        assert.deepStrictEqual(res.first[0].text_col, str)
       })
   })
 
-  it('bind a null to binary using sqlTypes.asVarBinary(null)', testDone => {
-    env.theConnection.query('declare @bin binary(4) = ?; select @bin as bin', [env.sql.VarBinary(null)], (err, res) => {
-      assert.ifError(err)
-      const expected = [{
-        bin: null
-      }]
-      assert.deepStrictEqual(expected, res)
-      testDone()
-    })
+  it('bind a null to binary using sqlTypes.asVarBinary(null)', async function handler () {
+    const res = await env.theConnection.promises.query('declare @bin binary(4) = ?; select @bin as bin', [env.sql.VarBinary(null)])
+    const expected = [{
+      bin: null
+    }]
+    assert.deepStrictEqual(res.first, expected)
   })
 
   it('select a long string using streaming - ensure no fragmentation', testDone => {
@@ -359,18 +336,15 @@ describe('params', function () {
     })
   })
 
-  it('mssql set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @s AS s', testDone => {
+  it('mssql set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @s AS s', async function handler () {
     const STR_LEN = 2001
     const str = '1'.repeat(STR_LEN)
     //  [sql.WLongVarChar(str)]
-    env.theConnection.query('declare @str nvarchar (MAX);set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @str AS data', [str], (err, res) => {
-      assert.ifError(err)
-      const expected = [{
-        data: str
-      }]
-      assert.deepStrictEqual(expected, res)
-      testDone()
-    })
+    const res = await env.theConnection.promises.query('declare @str nvarchar (MAX);set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @str AS data', [str])
+    const expected = [{
+      data: str
+    }]
+    assert.deepStrictEqual(res.first, expected)
   })
 
   // declare @str nvarchar (MAX);set @str=?;DECLARE @sql NVARCHAR(MAX) = @str; SELECT @s AS s;
