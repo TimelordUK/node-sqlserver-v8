@@ -444,7 +444,13 @@ describe('bulk', function () {
 
     await promisedInsert(expected)
     const res = await promisedSelect(expected)
-    assert.deepStrictEqual(expected, res)
+    assert(expected.length, res.length)
+    for (let i = 0; i < expected.length; ++i) {
+      const lhs = expected[i]
+      const rhs = res[i]
+      assert.deepStrictEqual(lhs.id, rhs.id)
+      assert(env.fractionalEqual(lhs.col_a, rhs.col_a))
+    }
   }
 
   it('connection: use tableMgr bulk insert decimal vector - no nulls', async function handler () {

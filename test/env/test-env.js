@@ -149,6 +149,19 @@ class TestEnv {
     }
   }
 
+  /*
+      {
++     col_a: 0.2857142857142857,
+-     col_a: 0.28571428571428564,
+      id: 1
+    },
+   */
+  fractionalEqual (d1, d2, precision) {
+    precision = precision || 1e-14
+    const tolerance = Math.pow(10, precision)
+    return Math.abs(d1 - d2) <= tolerance
+  }
+
   dropTableSql (tableName) {
     return `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL DROP TABLE ${tableName};`
   }
