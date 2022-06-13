@@ -181,36 +181,14 @@ describe('params', function () {
 
   async function runTestAsync (columnDef, len) {
     await testBoilerPlateAsync('test_large_insert', { large_insert: columnDef },
-      () => async function handler () {
-        const largeText = repeat('A', len)
+      async function handler () {
+        const largeText = env.repeat('A', len)
         await env.theConnection.promises.query('INSERT INTO test_large_insert (large_insert) VALUES (?)',
           [largeText])
       },
-      () => async function handler () {
+      async function handler () {
         const r = await env.theConnection.promises.query('SELECT large_insert FROM test_large_insert')
         assert.deepStrictEqual(r.first[0].large_insert.length, len)
-      })
-  }
-
-  function runTest (columnDef, len, testDone) {
-    testBoilerPlate('test_large_insert', { large_insert: columnDef },
-      done => {
-        const largeText = repeat('A', len)
-        env.theConnection.query('INSERT INTO test_large_insert (large_insert) VALUES (?)', [largeText], e => {
-          assert.ifError(e, 'Error inserting large string')
-          done()
-        })
-      },
-
-      done => {
-        env.theConnection.query('SELECT large_insert FROM test_large_insert', (e, r) => {
-          assert.ifError(e)
-          assert(r[0].large_insert.length === len, 'Incorrect length for large insert')
-          done()
-        })
-      },
-      () => {
-        testDone()
       })
   }
 
@@ -338,7 +316,7 @@ describe('params', function () {
   })
 
   it('insert string 500 in nvarchar.1000', async function handler () {
-    await runTestAsync('nvarchar(1000)')
+    await runTestAsync('nvarchar(1000)', 500)
   })
 
   it('insert string 1 x 1000 in varchar.max', async function handler () {
@@ -399,48 +377,29 @@ describe('params', function () {
       })
   })
 
-  it('verify Buffer objects as input parameters', testDone => {
+  it('verify Buffer objects as input parameters', async function handler () {
     const b = Buffer.from('0102030405060708090a', 'hex')
-    testBoilerPlate(
+    await testBoilerPlateAsync(
       'buffer_param_test',
       { buffer_param: 'varbinary(100)' },
 
-      done => {
-        env.theConnection.queryRaw('INSERT INTO buffer_param_test (buffer_param) VALUES (?)', [b], e => {
-          assert.ifError(e)
-          done()
-        })
+      async function handler () {
+        await env.theConnection.promises.query('INSERT INTO buffer_param_test (buffer_param) VALUES (?)',
+          [b])
       },
 
-      done => {
-        env.theConnection.queryRaw('SELECT buffer_param FROM buffer_param_test WHERE buffer_param = ?', [b], (e, r) => {
-          assert.ifError(e)
-          assert(r.rows.length = 1)
-          assert.deepStrictEqual(r.rows[0][0], b)
-          done()
-        })
-      },
-      () => {
-        testDone()
+      async function handler () {
+        const r = await env.theConnection.promises.query('SELECT buffer_param FROM buffer_param_test WHERE buffer_param = ?',
+          [b])
+        assert.deepStrictEqual(r.first.length, 1)
+        assert.deepStrictEqual(r.first[0].buffer_param, b)
       })
   })
 
-  it('select a long string using callback', testDone => {
-    function repeat (a, num) {
-      return new Array(num + 1).join(a)
-    }
-
-    const longString = repeat('a', 50000)
-    const expected = [
-      {
-        long_string: longString
-      }
-    ]
-    env.theConnection.query('select ? as long_string', [longString], (err, res) => {
-      assert.ifError(err)
-      assert.deepStrictEqual(res, expected)
-      testDone()
-    })
+  it('select a long string using promise', async function handler () {
+    const longString = env.repeat('a', 50000)
+    const res = await env.theConnection.promises.query('select ? as long_string', [longString])
+    assert.deepStrictEqual(res.first[0].long_string, longString)
   })
 
   it('select a long buffer using callback', testDone => {
@@ -462,128 +421,82 @@ describe('params', function () {
     })
   })
 
-  it('verify buffer longer than column causes error', testDone => {
+  it('verify buffer longer than column causes error', async function handler () {
     const b = Buffer.from('0102030405060708090a', 'hex')
-    testBoilerPlate('buffer_param_test', { buffer_param: 'varbinary(5)' },
-      done => {
-        env.theConnection.queryRaw('INSERT INTO buffer_param_test (buffer_param) VALUES (?)', [b], e => {
+    await testBoilerPlateAsync('buffer_param_test',
+      { buffer_param: 'varbinary(5)' },
+      async function handler () {
+        try {
+          const res = await env.theConnection.promises.query('INSERT INTO buffer_param_test (buffer_param) VALUES (?)', [b])
+          assert(res)
+        } catch (e) {
           const expectedError = new Error('[Microsoft][SQL Server Native Client 11.0][SQL Server]String or binary data would be truncated.')
           expectedError.sqlstate = '22001'
           expectedError.code = 8152
           assert(e.message.indexOf('String or binary data would be truncated') >= 0)
-          done()
-        })
-      },
-      done => {
-        done()
-      },
-      () => {
-        testDone()
+        }
       })
   })
 
-  function repeat (a, num) {
-    return new Array(num + 1).join(a)
-  }
-
-  it('verify null string is sent as null, not empty string', testDone => {
-    env.theConnection.query('declare @s NVARCHAR(MAX) = ?; select @s as data', [null], (err, res) => {
-      assert.ifError(err)
-      const expected = [{
-        data: null
-      }]
-      assert.deepStrictEqual(expected, res)
-      testDone()
-    })
+  it('verify null string is sent as null, not empty string', async function handler () {
+    const res = await env.theConnection.promises.query('declare @s NVARCHAR(MAX) = ?; select @s as data', [null])
+    const expected = null
+    assert.deepStrictEqual(expected, res.first[0].data)
   })
 
-  it('verify single char string param', testDone => {
-    env.theConnection.query('declare @s NVARCHAR(MAX) = ?; select @s as data', ['p'], (err, res) => {
-      assert.ifError(err)
-      const expected = [{
-        data: 'p'
-      }]
-      assert.deepStrictEqual(expected, res)
-      testDone()
-    })
+  it('verify single char string param', async function handler () {
+    const char = 'p'
+    const res = await env.theConnection.promises.query('declare @s NVARCHAR(MAX) = ?; select @s as data',
+      [char])
+    assert.deepStrictEqual(res.first[0].data, char)
   })
 
-  it('verify bool (true) to sql_variant', testDone => {
-    env.theConnection.query('select cast(CAST(\'TRUE\' as bit) as sql_variant) as data;', (err, res) => {
-      assert.ifError(err)
-      const expected = [{
-        data: true
-      }]
-      assert.deepStrictEqual(expected, res)
-      testDone()
-    })
+  it('verify bool (true) to sql_variant', async function handler () {
+    const v = 'true'
+    const res = await env.theConnection.promises.query(`select cast(CAST('${v}' as bit) as sql_variant) as data;`)
+    assert.deepStrictEqual(res.first[0].data, true)
   })
 
-  it('verify bool (false) to sql_variant', testDone => {
-    env.theConnection.query('select cast(CAST(\'FALSE\' as bit) as sql_variant) as data;', (err, res) => {
-      assert.ifError(err)
-      const expected = [{
-        data: false
-      }]
-      assert.deepStrictEqual(expected, res)
-      testDone()
-    })
+  it('verify bool (false) to sql_variant', async function handler () {
+    const v = 'false'
+    const res = await env.theConnection.promises.query(`select cast(CAST('${v}' as bit) as sql_variant) as data;`)
+    assert.deepStrictEqual(res.first[0].data, false)
   })
 
-  it('verify varchar to sql_variant', testDone => {
-    env.theConnection.query('select cast(\'hello\' as sql_variant) as data;', (err, res) => {
-      assert.ifError(err)
-      const expected = [{
-        data: 'hello'
-      }]
-      assert.deepStrictEqual(expected, res)
-      testDone()
-    })
+  it('verify varchar to sql_variant', async function handler () {
+    const v = 'hello'
+    const res = await env.theConnection.promises.query(`select cast('${v}' as sql_variant) as data;`)
+    assert.deepStrictEqual(res.first[0].data, v)
   })
 
-  it('verify numeric decimal to sql_variant', testDone => {
-    env.theConnection.query('select cast(11.77 as sql_variant) as data;', (err, res) => {
-      assert.ifError(err)
-      const expected = [{
-        data: 11.77
-      }]
-      assert.deepStrictEqual(expected, res)
-      testDone()
-    })
+  it('verify numeric decimal to sql_variant', async function handler () {
+    const v = 11.77
+    const res = await env.theConnection.promises.query(`select cast(${v} as sql_variant) as data;`)
+    assert.deepStrictEqual(res.first[0].data, v)
   })
 
-  it('verify int to sql_variant', testDone => {
-    env.theConnection.query('select cast(10000 as sql_variant) as data;', (err, res) => {
-      assert.ifError(err)
-      const expected = [{
-        data: 10000
-      }]
-      assert.deepStrictEqual(expected, res)
-      testDone()
-    })
+  it('verify int to sql_variant', async function handler () {
+    const v = 10000
+    const res = await env.theConnection.promises.query(`select cast(${v} as sql_variant) as data;`)
+    assert.deepStrictEqual(res.first[0].data, v)
   })
 
-  it('verify getdate (datetime) to sql_variant', testDone => {
-    const smalldt = env.timeHelper.getUTCDateHH(new Date())
-    env.theConnection.query('select cast(convert(datetime, ?) as sql_variant) as data', [smalldt], (err, res) => {
-      assert.ifError(err)
-      let date = res[0].data
+  it('verify getdate (datetime) to sql_variant',
+    async function handler () {
+      const smalldt = env.timeHelper.getUTCDateHH(new Date())
+      const res = await env.theConnection.promises.query('select cast(convert(datetime, ?) as sql_variant) as data', [smalldt])
+      let date = res.first[0].data
       assert(date instanceof Date)
       date = env.timeHelper.getUTCDateHH(date)
       assert(smalldt.getYear() === date.getYear())
       assert(smalldt.getMonth() === date.getMonth())
       assert(smalldt.getDay() === date.getDay())
-      testDone()
     })
-  })
 
-  it('verify getdate to sql_variant', testDone => {
-    env.theConnection.query('select cast(getdate() as sql_variant) as data;', (err, res) => {
-      assert.ifError(err)
-      const date = res[0].data
-      assert(date instanceof Date)
-      testDone()
-    })
+  it('verify getdate to sql_variant', async function handler () {
+    const res = await env.theConnection.promises.query('select cast(getdate() as sql_variant) as data;')
+    const date = res.first[0].data
+    assert(date instanceof Date)
   })
 
   it('insert null as parameter', testDone => {
@@ -927,7 +840,7 @@ describe('params', function () {
   it('insert large string into max column', testDone => {
     testBoilerPlate('test_large_insert', { large_insert: 'nvarchar(max) ' },
       done => {
-        const largeText = repeat('A', 10000)
+        const largeText = env.repeat('A', 10000)
         env.theConnection.query('INSERT INTO test_large_insert (large_insert) VALUES (?)', [largeText], e => {
           assert.ifError(e, 'Error inserting large string')
           done()
