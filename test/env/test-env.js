@@ -163,7 +163,7 @@ class TestEnv {
   }
 
   dropTableSql (tableName) {
-    return `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL DROP TABLE ${tableName};`
+    return `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL DROP TABLE ${tableName}`
   }
 
   constructor (key) {

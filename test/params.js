@@ -28,7 +28,7 @@ const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 
 describe('params', function () {
-  this.timeout(30000)
+  this.timeout(60000)
 
   this.beforeEach(done => {
     env.open().then(() => done())
@@ -40,7 +40,6 @@ describe('params', function () {
 
   async function testBoilerPlateAsync (tableName, tableFields, insertFunction, verifyFunction) {
     let tableFieldsSql = ' (id int identity, '
-
     for (const field in tableFields) {
       if (Object.prototype.hasOwnProperty.call(tableFields, field)) {
         tableFieldsSql += field + ' ' + tableFields[field] + ','
@@ -48,13 +47,14 @@ describe('params', function () {
     }
     tableFieldsSql = tableFieldsSql.substr(0, tableFieldsSql.length - 1)
     tableFieldsSql += ')'
-    await env.theConnection.promises.query(env.dropTableSql(tableName))
+    const todrop = env.dropTableSql(tableName)
+    await env.theConnection.promises.query(todrop)
     const createQuery = `CREATE TABLE ${tableName}${tableFieldsSql}`
     await env.theConnection.promises.query(createQuery)
     const clusteredIndexSql = ['CREATE CLUSTERED INDEX IX_', tableName, ' ON ', tableName, ' (id)'].join('')
     await env.theConnection.promises.query(clusteredIndexSql)
-    await insertFunction()
-    await verifyFunction()
+    if (insertFunction) await insertFunction()
+    if (verifyFunction) await verifyFunction()
   }
 
   function testBoilerPlate (tableName, tableFields, insertFunction, verifyFunction, doneFunction) {
@@ -111,6 +111,23 @@ describe('params', function () {
       })
   }
 
+  it('insert bigint as parameter', async function handler () {
+    const tableName = 'test_bigint'
+    await testBoilerPlateAsync(tableName, { bigint_test: 'bigint' },
+      async function () {
+        await env.theConnection.promises.query(`INSERT INTO ${tableName} VALUES (?)`, [0x80000000])
+      },
+      async function handler () {
+        const r = await env.theConnection.promises.query(`SELECT bigint_test FROM ${tableName}`, [], { raw: true })
+        const expectedMeta = [{ name: 'bigint_test', size: 19, nullable: true, type: 'number', sqlType: 'bigint' }]
+        const expected = [
+          [0x80000000]
+        ]
+        assert.deepStrictEqual(expected, r.first)
+        assert.deepStrictEqual(expectedMeta, r.meta[0])
+      })
+  })
+
   it('query a numeric - configure connection to return as string', async function handler () {
     const num = '12345678.876'
     env.theConnection.setUseNumericString(true)
@@ -160,22 +177,6 @@ describe('params', function () {
       numeric_string: true
     })
     assert.deepStrictEqual(res.first[0].number, num)
-  })
-
-  it('insert bigint as parameter', async function handler () {
-    testBoilerPlateAsync('bigint_param_test', { bigint_test: 'bigint' },
-      async function () {
-        await env.theConnection.promises.query('INSERT INTO bigint_param_test (bigint_test) VALUES (?)', [0x80000000])
-      },
-      async function handler () {
-        const r = await env.theConnection.promises.query('SELECT bigint_test FROM bigint_param_test', [], { raw: true })
-        const expectedMeta = [{ name: 'bigint_test', size: 19, nullable: true, type: 'number', sqlType: 'bigint' }]
-        const expected = [
-          [[0x80000000]]
-        ]
-        assert.deepStrictEqual(expected, r.first)
-        assert.deepStrictEqual(expectedMeta, r.meta[0])
-      })
   })
 
   function runTest (columnDef, len, testDone) {
@@ -286,9 +287,9 @@ describe('params', function () {
     const STR_LEN = 5
     const str = 'åäö'.repeat(STR_LEN)
     const name = 'test_swedish_insert'
-    testBoilerPlateAsync(name, { text_col: 'nvarchar(50)' },
+    await testBoilerPlateAsync(name, { text_col: 'nvarchar(50)' },
       async function () {
-        await env.theConnection.promises.query(`INSERT INTO ${name} (text_col) VALUES (?)`)
+        await env.theConnection.promises.query(`INSERT INTO ${name} (text_col) VALUES (?)`, [str])
       },
       async function () {
         const res = await env.theConnection.promises.query(`SELECT text_col FROM ${name}`)
@@ -415,35 +416,25 @@ describe('params', function () {
     })
   })
 
-  it('verify empty string is sent as empty string, not null', testDone => {
-    env.theConnection.query('declare @s NVARCHAR(MAX) = ?; select @s as data', [''], (err, res) => {
-      assert.ifError(err)
-      const expected = [{
-        data: ''
-      }]
-      assert.deepStrictEqual(expected, res)
-      testDone()
-    })
+  it('verify empty string is sent as empty string, not null', async function handler () {
+    const res = await env.theConnection.promises.query('declare @s NVARCHAR(MAX) = ?; select @s as data', [''])
+    const expected = [{
+      data: ''
+    }]
+    assert.deepStrictEqual(res.first, expected)
   })
 
-  it('verify that non-Buffer object parameter returns an error', testDone => {
+  it('verify that non-Buffer object parameter returns an error', async function handler () {
     const o = { field1: 'value1', field2: -1 }
-    testBoilerPlate('non_buffer_object',
+    await testBoilerPlateAsync('non_buffer_object',
       { object_col: 'varbinary(100)' },
-      asyncDone => {
-        env.theConnection.queryRaw('INSERT INTO non_buffer_object (object_col) VALUES (?)', [o], e => {
-          const expectedError = new Error('IMNOD: [msnodesql] Parameter 1: Invalid parameter type')
-          expectedError.code = -1
-          expectedError.sqlstate = 'IMNOD'
-          assert.deepStrictEqual(e, expectedError)
-          asyncDone()
-        })
-      },
-      done => {
-        done()
-      },
-      () => {
-        testDone()
+      async function () {
+        try {
+          await env.theConnection.promises.query('INSERT INTO non_buffer_object (object_col) VALUES (?)', [o.field1, o.field2])
+          assert.deepStrictEqual(1, 0)
+        } catch (e) {
+          assert(e)
+        }
       })
   })
 
