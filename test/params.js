@@ -565,56 +565,36 @@ describe('params', function () {
       })
   })
 
-  it('insert a bool as a parameter', testDone => {
-    testBoilerPlate('bool_param_test',
+  it('insert a bool as a parameter', async function handler () {
+    await testBoilerPlateAsync('bool_param_test',
       { bool_test: 'bit' },
 
-      done => {
-        env.theConnection.queryRaw('INSERT INTO bool_param_test (bool_test) VALUES (?)', [true], e => {
-          assert.ifError(e)
-          done()
-        })
+      async function handler () {
+        await env.theConnection.promises.query('INSERT INTO bool_param_test (bool_test) VALUES (?)', [true])
       },
 
-      done => {
-        env.theConnection.queryRaw('SELECT bool_test FROM bool_param_test', (e, r) => {
-          assert.ifError(e)
-          const expected = {
-            meta: [{ name: 'bool_test', size: 1, nullable: true, type: 'boolean', sqlType: 'bit' }],
-            rows: [[true]]
-          }
-          assert.deepStrictEqual(expected, r)
-          done()
-        })
-      },
-
-      () => {
-        testDone()
+      async function handler () {
+        const r = await env.theConnection.promises.query('SELECT bool_test FROM bool_param_test', [],
+          { raw: true })
+        const expectedMeta = [{ name: 'bool_test', size: 1, nullable: true, type: 'boolean', sqlType: 'bit' }]
+        const expected = [[true]]
+        assert.deepStrictEqual(expected, r.first)
+        assert.deepStrictEqual(expectedMeta, r.meta[0])
       })
   })
 
-  it('insert largest positive int as parameter', testDone => {
-    testBoilerPlate('int_param_test', { int_test: 'int' },
-      done => {
-        env.theConnection.queryRaw('INSERT INTO int_param_test (int_test) VALUES (?)', [0x7fffffff], e => {
-          assert.ifError(e)
-          done()
-        })
+  it('insert largest positive int as parameter', async function handler () {
+    await testBoilerPlateAsync('int_param_test',
+      { int_test: 'int' },
+      async function handler () {
+        await env.theConnection.promises.query('INSERT INTO int_param_test (int_test) VALUES (?)', [0x7fffffff])
       },
-
-      done => {
-        env.theConnection.queryRaw('SELECT int_test FROM int_param_test', (e, r) => {
-          assert.ifError(e)
-          const expected = {
-            meta: [{ name: 'int_test', size: 10, nullable: true, type: 'number', sqlType: 'int' }],
-            rows: [[2147483647]]
-          }
-          assert.deepStrictEqual(expected, r)
-          done()
-        })
-      },
-      () => {
-        testDone()
+      async function handler () {
+        const r = await env.theConnection.promises.query('SELECT int_test FROM int_param_test', [], {raw:true})
+        const expectedMeta = [{ name: 'int_test', size: 10, nullable: true, type: 'number', sqlType: 'int' }]
+        const expected = [[2147483647]]
+        assert.deepStrictEqual(r.first, expected)
+        assert.deepStrictEqual(r.meta[0], expectedMeta)
       })
   })
 
