@@ -12,38 +12,35 @@ class TimeHelper {
 
   getUTCDate (date) {
     const localDate = date || new Date()
-    const smalldt = new Date(Date.UTC(localDate.getUTCFullYear(),
+    return new Date(Date.UTC(localDate.getUTCFullYear(),
       localDate.getUTCMonth(),
       localDate.getUTCDate(),
       0,
       0,
       0,
       0))
-    return smalldt
   }
 
   getUTCDateHH (date) {
     const localDate = date || new Date()
-    const smalldt = new Date(Date.UTC(localDate.getUTCFullYear(),
+    return new Date(Date.UTC(localDate.getUTCFullYear(),
       localDate.getUTCMonth(),
       localDate.getUTCDate(),
       localDate.getUTCHours(),
       0,
       0,
       0))
-    return smalldt
   }
 
   getUTCDateHHMM (date) {
     const localDate = date || new Date()
-    const smalldt = new Date(Date.UTC(localDate.getUTCFullYear(),
+    return new Date(Date.UTC(localDate.getUTCFullYear(),
       localDate.getUTCMonth(),
       localDate.getUTCDate(),
       localDate.getUTCHours(),
       localDate.getUTCMinutes(),
       0,
       0))
-    return smalldt
   }
 
   makeUTCJan1900HH (expectedHour) {
@@ -118,6 +115,19 @@ class TimeHelper {
     const result = new Date(utcDate)
     result.setDate(result.getDate() + days)
     return result
+  }
+
+  ancientUTCDateHHMMSSMS () {
+    const ancientDate = new Date(1492, 10, 11, 6, 32, 46, 578)
+    return this.getUTCDateTime(ancientDate)
+  }
+
+  midnightDate () {
+    return new Date(Date.parse('2030-08-13T00:00:00.000Z'))
+  }
+
+  newYearDateEve () {
+    return new Date(Date.parse('1960-12-31T11:12:13.000Z'))
   }
 }
 

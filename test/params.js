@@ -342,10 +342,6 @@ describe('params', function () {
     await runTestAsync('varchar(max)', 30 * 1024)
   })
 
-  it('insert string 2 x 1024 * 1024 in varchar(max)', async function handler () {
-    await runTestAsync('varchar(max)', 2 * 1024 * 1024)
-  })
-
   it('insert string 60 x 1024 in varchar(max)', async function handler () {
     await runTestAsync('varchar(max)', 60 * 1024)
   })
@@ -464,6 +460,10 @@ describe('params', function () {
     assert.deepStrictEqual(res.first[0].data, v)
   })
 
+  it('insert string as parameter', async function handler () {
+    await insertSelectType('This is a test', 'nvarchar(100)', MetaTypes.nvarchar)
+  })
+
   it('verify getdate (datetime) to sql_variant',
     async function handler () {
       const smalldt = env.timeHelper.getUTCDateHH(new Date())
@@ -480,26 +480,6 @@ describe('params', function () {
     const res = await env.theConnection.promises.query('select cast(getdate() as sql_variant) as data;')
     const date = res.first[0].data
     assert(date instanceof Date)
-  })
-
-  it('insert null as parameter', async function handler () {
-    await testBoilerPlateAsync(
-      'null_param_test',
-      { null_test: 'varchar(1)' },
-      async function handler () {
-        await env.theConnection.promises.query('INSERT INTO null_param_test (null_test) VALUES (?)', [null])
-      },
-
-      async function handler () {
-        const r = await env.theConnection.promises.query('SELECT null_test FROM null_param_test', [],
-          { raw: true })
-        const expectedMeta = [{ name: 'null_test', size: 1, nullable: true, type: 'text', sqlType: 'varchar' }]
-        const expected = [
-          [null]
-        ]
-        assert.deepStrictEqual(expected, r.first)
-        assert.deepStrictEqual(expectedMeta, r.meta[0])
-      })
   })
 
   it('invalid numbers cause errors', async function handler () {
@@ -526,55 +506,6 @@ describe('params', function () {
       expectedError.sqlstate = 'IMNOD'
       assert.deepStrictEqual(e, expectedError)
     }
-  })
-
-  it('insert string as parameter', async function handler () {
-    const txt = 'This is a test'
-    await testBoilerPlateAsync(
-      'string_param_test',
-      { string_test: 'nvarchar(100)' },
-
-      async function handler () {
-        await env.theConnection.promises.query('INSERT INTO string_param_test (string_test) VALUES (?)',
-          [txt])
-      },
-
-      async function handler () {
-        const r = await env.theConnection.promises.query('SELECT string_test FROM string_param_test', [],
-          { raw: true })
-        const expectedMeta = [
-          {
-            name: 'string_test',
-            size: 100,
-            nullable: true,
-            type: 'text',
-            sqlType: 'nvarchar'
-          }
-        ]
-        const expected = [
-          [txt]
-        ]
-        assert.deepStrictEqual(expected, r.first)
-        assert.deepStrictEqual(expectedMeta, r.meta[0])
-      })
-  })
-
-  it('insert a bool as a parameter', async function handler () {
-    await testBoilerPlateAsync('bool_param_test',
-      { bool_test: 'bit' },
-
-      async function handler () {
-        await env.theConnection.promises.query('INSERT INTO bool_param_test (bool_test) VALUES (?)', [true])
-      },
-
-      async function handler () {
-        const r = await env.theConnection.promises.query('SELECT bool_test FROM bool_param_test', [],
-          { raw: true })
-        const expectedMeta = [{ name: 'bool_test', size: 1, nullable: true, type: 'boolean', sqlType: 'bit' }]
-        const expected = [[true]]
-        assert.deepStrictEqual(expected, r.first)
-        assert.deepStrictEqual(expectedMeta, r.meta[0])
-      })
   })
 
   async function insertSelectType (v, type, expectedMeta) {
@@ -651,7 +582,55 @@ describe('params', function () {
         sqlType: 'bigint'
       }
     ]
+
+    static datetimeOffset = [
+      {
+        name: 'datetimeoffset_test',
+        size: 30,
+        nullable: true,
+        type: 'date',
+        sqlType: 'datetimeoffset'
+      }
+    ]
+
+    static bool = [
+      {
+        name: 'bit_test',
+        size: 1,
+        nullable: true,
+        type: 'boolean',
+        sqlType: 'bit'
+      }
+    ]
+
+    static nvarchar = [
+      {
+        name: 'nvarchar_test',
+        size: 100,
+        nullable: true,
+        type: 'text',
+        sqlType: 'nvarchar'
+      }
+    ]
+
+    static varchar = [
+      {
+        name: 'varchar_test',
+        size: 1,
+        nullable: true,
+        type: 'text',
+        sqlType: 'varchar'
+      }
+    ]
   }
+
+  it('insert a bool (true) as a parameter', async function handler () {
+    await insertSelectType(true, 'bit', MetaTypes.bool)
+  })
+
+  it('insert a bool (false) as a parameter', async function handler () {
+    await insertSelectType(false, 'bit', MetaTypes.bool)
+  })
 
   it('insert largest positive int as parameter', async function handler () {
     await insertSelectType(0x7fffffff, 'int', MetaTypes.int)
@@ -676,10 +655,47 @@ describe('params', function () {
     await insertSelectType(123456789.0, 'bigint', MetaTypes.number)
   })
 
-  it('verify js date inserted into datetime field', async function handler () {
+  it('insert null string as varchar 2', async function handler () {
+    await insertSelectType(null, 'varchar(1)', MetaTypes.varchar)
+  })
+
+  it('verify js date inserted into date field', async function handler () {
+    const utcDate = env.timeHelper.getUTCDate()
+    // eslint-disable-next-line no-loss-of-precision
+    await insertSelectType(utcDate, 'date')
+  })
+
+  it('verify js date/time inserted into datetime field', async function handler () {
     const utcDate = env.timeHelper.getUTCDateHHMMSS()
     // eslint-disable-next-line no-loss-of-precision
     await insertSelectType(utcDate, 'datetime')
+  })
+
+  it('verify js ancient pre 1970 date/time inserted into datetimeoffset(3) field', async function handler () {
+    const utcDate = env.timeHelper.ancientUTCDateHHMMSSMS()
+    // eslint-disable-next-line no-loss-of-precision
+    await insertSelectType(utcDate, 'datetimeoffset(3)', MetaTypes.datetimeOffset)
+  })
+
+  it('verify js midnight date inserted into datetimeoffset(3) field', async function handler () {
+    const mid = env.timeHelper.midnightDate()
+    // eslint-disable-next-line no-loss-of-precision
+    await insertSelectType(mid, 'datetimeoffset(3)', MetaTypes.datetimeOffset)
+  })
+
+  it('verify js current UTC date inserted into datetimeoffset(3) field', async function handler () {
+    const utcDate = env.timeHelper.getUTCDateTime()
+    // eslint-disable-next-line no-loss-of-precision
+    await insertSelectType(utcDate, 'datetimeoffset(3)', MetaTypes.datetimeOffset)
+  })
+
+  // verify fix for a bug that would return the wrong day when a datetimeoffset was inserted where the date
+  // was before 1/1/1970 and the time was midnight.
+
+  it('verify js new year eve date inserted into datetimeoffset(3) field', async function handler () {
+    const nye = env.timeHelper.newYearDateEve()
+    // eslint-disable-next-line no-loss-of-precision
+    await insertSelectType(nye, 'datetimeoffset(3)', MetaTypes.datetimeOffset)
   })
 
   it('verify empty string inserted into nvarchar field', async function handler () {
@@ -748,117 +764,7 @@ describe('params', function () {
       })
   })
 
-  it('verify js date before 1970 inserted into datetime field', testDone => {
-    const ancientDate = new Date(1492, 10, 11, 6, 32, 46, 578)
-    const utcDate = env.timeHelper.getUTCDateTime(ancientDate)
-
-    testBoilerPlate('datetime_test', { datetime_test: 'datetimeoffset(3)' },
-
-      done => {
-        env.theConnection.queryRaw('INSERT INTO datetime_test (datetime_test) VALUES (?)', [utcDate], (e, r) => {
-          assert.ifError(e)
-          assert(r.rowcount === 1)
-          done()
-        })
-      },
-
-      done => {
-        env.theConnection.queryRaw('SELECT datetime_test FROM datetime_test', (e, r) => {
-          assert.ifError(e)
-          assert.strictEqual(r.rows[0][0].valueOf(), utcDate.valueOf())
-          done()
-        })
-      },
-      () => {
-        testDone()
-      })
-  })
-
-  // verify fix for a bug that would return the wrong day when a datetimeoffset was inserted where the date
-  // was before 1/1/1970 and the time was midnight.
-  it('verify dates with midnight time', testDone => {
-    const midnightDate = new Date(Date.parse('2030-08-13T00:00:00.000Z'))
-    midnightDate.nanosecondsDelta = 0
-
-    testBoilerPlate('midnight_date_test', { midnight_date_test: 'datetimeoffset(3)' },
-      done => {
-        const insertQuery = 'INSERT INTO midnight_date_test (midnight_date_test) VALUES (?);'
-        env.theConnection.queryRaw(insertQuery, [midnightDate], e => {
-          assert.ifError(e)
-          done()
-        })
-      },
-      // test valid dates
-      done => {
-        env.theConnection.queryRaw('SELECT midnight_date_test FROM midnight_date_test', (e, r) => {
-          assert.ifError(e)
-          const expectedDates = []
-          expectedDates.push([midnightDate])
-          const expectedResults = {
-            meta: [{
-              name: 'midnight_date_test',
-              size: 30,
-              nullable: true,
-              type: 'date',
-              sqlType: 'datetimeoffset'
-            }],
-            rows: expectedDates
-          }
-          assert.deepStrictEqual(expectedResults.meta, r.meta)
-          assert(r.rows.length === 1)
-          for (const row in r.rows) {
-            for (const d in row) {
-              assert.deepStrictEqual(expectedResults.rows[row][d], r.rows[row][d])
-            }
-          }
-          done()
-        })
-      },
-      () => {
-        testDone()
-      })
-  })
-
-  it('verify bug fix for last day of the year error', testDone => {
-    const eoyDate = new Date(Date.parse('1960-12-31T11:12:13.000Z'))
-    eoyDate.nanosecondsDelta = 0
-    testBoilerPlate('eoy_date_test', { eoy_date_test: 'datetimeoffset(3)' },
-      done => {
-        const insertQuery = 'INSERT INTO eoy_date_test (eoy_date_test) VALUES (?);'
-        env.theConnection.queryRaw(insertQuery, [eoyDate], e => {
-          assert.ifError(e)
-          done()
-        })
-      },
-
-      // test valid dates
-      done => {
-        env.theConnection.queryRaw('SELECT eoy_date_test FROM eoy_date_test', (e, r) => {
-          assert.ifError(e)
-          const expectedDates = []
-          expectedDates.push([eoyDate])
-          const expectedResults = {
-            meta: [{
-              name: 'eoy_date_test',
-              size: 30,
-              nullable: true,
-              type: 'date',
-              sqlType: 'datetimeoffset'
-            }],
-            rows: expectedDates
-          }
-          assert.deepStrictEqual(expectedResults.meta, r.meta)
-          assert(r.rows.length === 1)
-          for (const row in r.rows) {
-            for (const d in row) {
-              assert.deepStrictEqual(expectedResults.rows[row][d], r.rows[row][d])
-            }
-          }
-          done()
-        })
-      },
-      () => {
-        testDone()
-      })
+  it('insert string 2 x 1024 * 1024 in varchar(max)', async function handler () {
+    await runTestAsync('varchar(max)', 2 * 1024 * 1024)
   })
 })
