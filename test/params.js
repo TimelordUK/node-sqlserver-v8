@@ -39,14 +39,8 @@ describe('params', function () {
   })
 
   async function testBoilerPlateAsync (tableName, tableFields, insertFunction, verifyFunction) {
-    let tableFieldsSql = ' (id int identity, '
-    for (const field in tableFields) {
-      if (Object.prototype.hasOwnProperty.call(tableFields, field)) {
-        tableFieldsSql += field + ' ' + tableFields[field] + ','
-      }
-    }
-    tableFieldsSql = tableFieldsSql.substr(0, tableFieldsSql.length - 1)
-    tableFieldsSql += ')'
+    const fieldsSql = Object.keys(tableFields).map(field => `${field} ${tableFields[field]}`)
+    const tableFieldsSql = `(id int identity, ${fieldsSql.join(', ')})`
     const todrop = env.dropTableSql(tableName)
     await env.theConnection.promises.query(todrop)
     const createQuery = `CREATE TABLE ${tableName}${tableFieldsSql}`
@@ -583,71 +577,40 @@ describe('params', function () {
       })
   })
 
-  it('insert largest positive int as parameter', async function handler () {
-    await testBoilerPlateAsync('int_param_test',
-      { int_test: 'int' },
+  async function insertSelectType (v, type, expectedMeta) {
+    const tableName = `${type}_param_test`
+    const columnName = `${type}_test`
+    const tableFields = {}
+    tableFields[columnName] = type
+    await testBoilerPlateAsync(tableName,
+      tableFields,
       async function handler () {
-        await env.theConnection.promises.query('INSERT INTO int_param_test (int_test) VALUES (?)', [0x7fffffff])
+        await env.theConnection.promises.query(`INSERT INTO ${tableName} (${columnName}) VALUES (?)`,
+          [v])
       },
+
       async function handler () {
-        const r = await env.theConnection.promises.query('SELECT int_test FROM int_param_test', [], {raw:true})
-        const expectedMeta = [{ name: 'int_test', size: 10, nullable: true, type: 'number', sqlType: 'int' }]
-        const expected = [[2147483647]]
+        const r = await env.theConnection.promises.query(`SELECT ${columnName} FROM ${tableName}`,
+          [],
+          { raw: true })
+        const expected = [[v]]
         assert.deepStrictEqual(r.first, expected)
         assert.deepStrictEqual(r.meta[0], expectedMeta)
       })
+  }
+  const intMeta = [{ name: 'int_test', size: 10, nullable: true, type: 'number', sqlType: 'int' }]
+  const bigintMeta = [{ name: 'bigint_test', size: 19, nullable: true, type: 'number', sqlType: 'bigint' }]
+
+  it('insert largest positive int as parameter', async function handler () {
+    await insertSelectType(0x7fffffff, 'int', intMeta)
   })
 
-  it('insert largest negative int as parameter', testDone => {
-    testBoilerPlate('int_param_test', { int_test: 'int' },
-
-      done => {
-        env.theConnection.queryRaw('INSERT INTO int_param_test (int_test) VALUES (?)', [-0x80000000], e => {
-          assert.ifError(e)
-          done()
-        })
-      },
-
-      done => {
-        env.theConnection.queryRaw('SELECT int_test FROM int_param_test', (e, r) => {
-          assert.ifError(e)
-          const expected = {
-            meta: [{ name: 'int_test', size: 10, nullable: true, type: 'number', sqlType: 'int' }],
-            rows: [[-2147483648]]
-          }
-          assert.deepStrictEqual(expected, r)
-          done()
-        })
-      },
-      () => {
-        testDone()
-      })
+  it('insert largest negative int as parameter', async function handler () {
+    await insertSelectType(-0x80000000, 'int', intMeta)
   })
 
-  it('insert largest bigint as parameter', testDone => {
-    testBoilerPlate('bigint_param_test', { bigint_test: 'bigint' },
-      done => {
-        env.theConnection.queryRaw('INSERT INTO bigint_param_test (bigint_test) VALUES (?)', [0x4fffffffffffffff], e => {
-          assert.ifError(e)
-          done()
-        })
-      },
-
-      done => {
-        env.theConnection.queryRaw('SELECT bigint_test FROM bigint_param_test', (e, r) => {
-          assert.ifError(e)
-          const expected = {
-            meta: [{ name: 'bigint_test', size: 19, nullable: true, type: 'number', sqlType: 'bigint' }],
-            rows: [[0x4fffffffffffffff]]
-          }
-          assert.deepStrictEqual(expected, r)
-          done()
-        })
-      },
-
-      () => {
-        testDone()
-      })
+  it('insert largest bigint as parameter', async function handler () {
+    await insertSelectType(0x4fffffffffffffff, 'bigint', bigintMeta)
   })
 
   it('insert decimal as parameter', testDone => {
