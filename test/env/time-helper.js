@@ -68,19 +68,29 @@ class TimeHelper {
 
   getUTCDateTime (date) {
     const localDate = date || new Date()
-    const utcDate = new Date(Date.UTC(localDate.getUTCFullYear(),
+    return new Date(Date.UTC(localDate.getUTCFullYear(),
       localDate.getUTCMonth(),
       localDate.getUTCDate(),
       localDate.getUTCHours(),
       localDate.getUTCMinutes(),
       localDate.getUTCSeconds(),
       localDate.getUTCMilliseconds()))
-    return utcDate
+  }
+
+  getUTCDateHHMMSS (date) {
+    const localDate = date || new Date()
+    return new Date(Date.UTC(localDate.getUTCFullYear(),
+      localDate.getUTCMonth(),
+      localDate.getUTCDate(),
+      localDate.getUTCHours(),
+      localDate.getUTCMinutes(),
+      localDate.getUTCSeconds(),
+      0))
   }
 
   getUTCTime (a) {
     const localDate = new Date()
-    const today = Date.UTC(
+    return Date.UTC(
       localDate.getUTCFullYear(),
       localDate.getUTCMonth(),
       localDate.getUTCDate(),
@@ -88,7 +98,6 @@ class TimeHelper {
       a.getMinutes(),
       a.getSeconds(),
       0)
-    return today
   }
 
   toUTCDate (localDate) {

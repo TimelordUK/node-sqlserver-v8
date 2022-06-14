@@ -598,121 +598,108 @@ describe('params', function () {
         const r = await env.theConnection.promises.query(`SELECT ${columnName} FROM ${tableName}`,
           [],
           { raw: true })
+        const rows = r.first
         const expected = [[v]]
-        assert.deepStrictEqual(r.first, expected)
-        assert.deepStrictEqual(r.meta[0], expectedMeta)
+        const metaType = r.meta[0][0].type
+        if (metaType === 'date' || metaType === 'datetime') {
+          delete rows[0][0].nanosecondsDelta
+        }
+        // console.log(JSON.stringify(rows))
+        // console.log(JSON.stringify(expected))
+        assert.deepStrictEqual(rows, expected)
+        if (expectedMeta) assert.deepStrictEqual(r.meta[0], expectedMeta)
       })
   }
 
-  const intMeta = [
-    {
-      name: 'int_test',
-      size: 10,
-      nullable: true,
-      type: 'number',
-      sqlType: 'int'
-    }
-  ]
+  class MetaTypes {
+    static int = [
+      {
+        name: 'int_test',
+        size: 10,
+        nullable: true,
+        type: 'number',
+        sqlType: 'int'
+      }
+    ]
 
-  const bigintMeta = [
-    {
-      name: 'bigint_test',
-      size: 19,
-      nullable: true,
-      type: 'number',
-      sqlType: 'bigint'
-    }
-  ]
+    static bigint = [
+      {
+        name: 'bigint_test',
+        size: 19,
+        nullable: true,
+        type: 'number',
+        sqlType: 'bigint'
+      }
+    ]
 
-  const decimalMeta = [
-    {
-      name: 'decimal_test',
-      size: 18,
-      nullable: true,
-      type: 'number',
-      sqlType: 'decimal'
-    }
-  ]
+    static decimal = [
+      {
+        name: 'decimal_test',
+        size: 18,
+        nullable: true,
+        type: 'number',
+        sqlType: 'decimal'
+      }
+    ]
 
-  const numberMeta = [
-    {
-      name: 'bigint_test',
-      size: 19,
-      nullable: true,
-      type: 'number',
-      sqlType: 'bigint'
-    }
-  ]
+    static number = [
+      {
+        name: 'bigint_test',
+        size: 19,
+        nullable: true,
+        type: 'number',
+        sqlType: 'bigint'
+      }
+    ]
+  }
 
   it('insert largest positive int as parameter', async function handler () {
-    await insertSelectType(0x7fffffff, 'int', intMeta)
+    await insertSelectType(0x7fffffff, 'int', MetaTypes.int)
   })
 
   it('insert largest negative int as parameter', async function handler () {
-    await insertSelectType(-0x80000000, 'int', intMeta)
+    await insertSelectType(-0x80000000, 'int', MetaTypes.int)
   })
 
   it('insert largest bigint as parameter', async function handler () {
     // eslint-disable-next-line no-loss-of-precision
-    await insertSelectType(0x4fffffffffffffff, 'bigint', bigintMeta)
+    await insertSelectType(0x4fffffffffffffff, 'bigint', MetaTypes.bigint)
   })
 
   it('insert decimal as parameter', async function handler () {
     // eslint-disable-next-line no-loss-of-precision
-    await insertSelectType(3.141593, 'decimal(18,7)', decimalMeta)
+    await insertSelectType(3.141593, 'decimal(18,7)', MetaTypes.decimal)
   })
 
   it('insert decimal as bigint parameter 2', async function handler () {
     // eslint-disable-next-line no-loss-of-precision
-    await insertSelectType(123456789.0, 'bigint', numberMeta)
+    await insertSelectType(123456789.0, 'bigint', MetaTypes.number)
   })
 
-  it('insert date as parameter', testDone => {
-    const utcDate = env.timeHelper.getUTCDateTime()
-    testBoilerPlate('date_param_test', { date_test: 'datetimeoffset' },
-
-      done => {
-        env.theConnection.queryRaw('INSERT INTO date_param_test (date_test) VALUES (?)', [utcDate],
-          e => {
-            assert.ifError(e)
-            done()
-          })
-      },
-
-      done => {
-        env.theConnection.queryRaw('SELECT date_test FROM date_param_test', (e, r) => {
-          assert.ifError(e)
-          assert.strictEqual(utcDate.toISOString(), r.rows[0][0].toISOString(), 'dates are not equal')
-          assert.strictEqual(r.rows[0][0].nanosecondsDelta, 0, 'nanoseconds not 0')
-          done()
-        })
-      },
-      () => {
-        testDone()
-      })
+  it('verify js date inserted into datetime field', async function handler () {
+    const utcDate = env.timeHelper.getUTCDateHHMMSS()
+    // eslint-disable-next-line no-loss-of-precision
+    await insertSelectType(utcDate, 'datetime')
   })
 
-  it('verify js date inserted into datetime field', testDone => {
-    const utcDate = env.timeHelper.getUTCDateTime()
+  it('insert date as parameter', async function handler () {
+    const utcDate = env.timeHelper.getUTCDateHHMMSS()
+    await testBoilerPlateAsync(
+      'date_param_test',
+      { date_test: 'datetimeoffset' },
 
-    testBoilerPlate('datetime_test', { datetime_test: 'datetime' },
-      done => {
-        env.theConnection.queryRaw('INSERT INTO datetime_test (datetime_test) VALUES (?)', [utcDate], (e, r) => {
-          assert.ifError(e)
-          assert(r.rowcount === 1)
-          done()
-        })
+      async function handler () {
+        await env.theConnection.promises.query('INSERT INTO date_param_test (date_test) VALUES (?)',
+          [utcDate])
       },
 
-      done => {
-        env.theConnection.queryRaw('SELECT * FROM datetime_test', (e, r) => {
-          assert.ifError(e)
-          assert(r.rows[0][0], utcDate)
-          done()
-        })
-      },
-      () => {
-        testDone()
+      async function handler () {
+        const r = await env.theConnection.promises.query('SELECT date_test FROM date_param_test', [], { raw: true })
+        const lhs = utcDate.toISOString()
+        const r1c1 = r.first[0][0]
+        const rhs = r1c1.toISOString()
+        assert.strictEqual(lhs, rhs)
+        assert.strictEqual(r1c1.nanosecondsDelta, 0)
       })
   })
 
