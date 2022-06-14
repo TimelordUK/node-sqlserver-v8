@@ -634,6 +634,16 @@ describe('params', function () {
     }
   ]
 
+  const numberMeta = [
+    {
+      name: 'bigint_test',
+      size: 19,
+      nullable: true,
+      type: 'number',
+      sqlType: 'bigint'
+    }
+  ]
+
   it('insert largest positive int as parameter', async function handler () {
     await insertSelectType(0x7fffffff, 'int', intMeta)
   })
@@ -652,37 +662,9 @@ describe('params', function () {
     await insertSelectType(3.141593, 'decimal(18,7)', decimalMeta)
   })
 
-  it('insert decimal as bigint parameter', testDone => {
-    testBoilerPlate('decimal_as_bigint_param_test', { decimal_bigint: 'bigint' },
-      done => {
-        env.theConnection.queryRaw('INSERT INTO decimal_as_bigint_param_test (decimal_bigint) VALUES (?)', [123456789.0],
-          e => {
-            assert.ifError(e)
-            done()
-          })
-      },
-
-      done => {
-        env.theConnection.queryRaw('SELECT decimal_bigint FROM decimal_as_bigint_param_test', (e, r) => {
-          assert.ifError(e)
-          const expected = {
-            meta: [{
-              name: 'decimal_bigint',
-              size: 19,
-              nullable: true,
-              type: 'number',
-              sqlType: 'bigint'
-            }],
-            rows: [[123456789]]
-          }
-          assert.deepStrictEqual(expected, r)
-          done()
-        })
-      },
-
-      () => {
-        testDone()
-      })
+  it('insert decimal as bigint parameter 2', async function handler () {
+    // eslint-disable-next-line no-loss-of-precision
+    await insertSelectType(123456789.0, 'bigint', numberMeta)
   })
 
   it('insert date as parameter', testDone => {
