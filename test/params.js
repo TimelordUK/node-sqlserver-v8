@@ -682,6 +682,26 @@ describe('params', function () {
     await insertSelectType(utcDate, 'datetime')
   })
 
+  it('verify empty string inserted into nvarchar field', async function handler () {
+    // eslint-disable-next-line no-loss-of-precision
+    await insertSelectType('', 'nvarchar(1)')
+  })
+
+  it('large string into nvarchar(max)', async function handler () {
+    // eslint-disable-next-line no-loss-of-precision
+    await insertSelectType(env.repeat('A', 10000), 'nvarchar(max)')
+  })
+
+  it('bind a Buffer([0,1,2,3])] to binary', async function handler () {
+    const buff = Buffer.from([0, 1, 2, 3])
+    const r = await env.theConnection.promises.query('declare @bin binary(4) = ?; select @bin as bin',
+      [buff])
+    const expected = [{
+      bin: buff
+    }]
+    assert.deepStrictEqual(r.first, expected)
+  })
+
   it('insert date as parameter', async function handler () {
     const utcDate = env.timeHelper.getUTCDateHHMMSS()
     await testBoilerPlateAsync(
@@ -700,52 +720,6 @@ describe('params', function () {
         const rhs = r1c1.toISOString()
         assert.strictEqual(lhs, rhs)
         assert.strictEqual(r1c1.nanosecondsDelta, 0)
-      })
-  })
-
-  it('verify empty string inserted into nvarchar field', testDone => {
-    testBoilerPlate('emptystring_test', { emptystring_test: 'nvarchar(1)' },
-      done => {
-        env.theConnection.queryRaw('INSERT INTO emptystring_test (emptystring_test) VALUES (?)', [''], (e, r) => {
-          assert.ifError(e)
-          assert(r.rowcount === 1)
-          done()
-        })
-      },
-
-      done => {
-        env.theConnection.queryRaw('SELECT * FROM emptystring_test', (e, r) => {
-          assert.ifError(e)
-          assert(r.rows[0][0], '')
-          done()
-        })
-      },
-
-      () => {
-        testDone()
-      })
-  })
-
-  it('insert large string into max column', testDone => {
-    testBoilerPlate('test_large_insert', { large_insert: 'nvarchar(max) ' },
-      done => {
-        const largeText = env.repeat('A', 10000)
-        env.theConnection.query('INSERT INTO test_large_insert (large_insert) VALUES (?)', [largeText], e => {
-          assert.ifError(e, 'Error inserting large string')
-          done()
-        })
-      },
-
-      done => {
-        env.theConnection.query('SELECT large_insert FROM test_large_insert', (e, r) => {
-          assert.ifError(e)
-          assert(r[0].large_insert.length === 10000, 'Incorrect length for large insert')
-          done()
-        })
-      },
-
-      () => {
-        testDone()
       })
   })
 
@@ -886,16 +860,5 @@ describe('params', function () {
       () => {
         testDone()
       })
-  })
-
-  it('bind a Buffer([0,1,2,3])] to binary', testDone => {
-    env.theConnection.query('declare @bin binary(4) = ?; select @bin as bin', [Buffer.from([0, 1, 2, 3])], (err, res) => {
-      assert.ifError(err)
-      const expected = [{
-        bin: Buffer.from([0, 1, 2, 3])
-      }]
-      assert.deepStrictEqual(expected, res)
-      testDone()
-    })
   })
 })
