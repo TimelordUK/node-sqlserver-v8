@@ -10,6 +10,7 @@ WITH t_name_cte(id, full_name, table_name) AS
   	WHERE object_id = OBJECT_ID('<table_catalog>.<table_schema>.<table_name>')
 )
 SELECT
+  distinct
   sc.ordinal_position,
   sc.table_catalog,
 	sc.table_schema,
