@@ -153,9 +153,7 @@ describe('prepared', function () {
     const id1 = -1
 
     assert(meta.length === 0)
-    const res = await update.promises.query(['login1', id1])
-    assert(res != null)
-    assert.deepStrictEqual(res.first.length, 0)
+    await update.promises.query(['login1', id1])
   })
 
   it('use prepared statement twice with no parameters.', testDone => {
