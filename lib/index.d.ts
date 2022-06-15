@@ -123,7 +123,7 @@ export interface Pool  {
     queryRaw(description: QueryDescription, params?: any[], cb?: QueryRawCb): Query
     queryRaw(sql: string, params?: any[], cb?: QueryRawCb): Query
     queryRaw(sql: string, cb: QueryRawCb): Query
-    isKilled(): boolean
+    isClosed(): boolean
     // pool.on('debug', msg => { console.log(msg) })
     on(debug: string, cb?: MessageCb): void 
     // pool.on('open', options = {} )
@@ -236,7 +236,7 @@ export interface Connection {
     setFilterNonCriticalErrors(flag:boolean):void
     callproc(name: string, params?: any[], cb?: CallProcedureCb): Query
     callprocAggregator(name: string, params?: any, optons?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
-    isKilled(): boolean
+    isClosed(): boolean
 }
 
 export interface Query {
