@@ -224,4 +224,27 @@ describe('promises', function () {
       return null
     }
   })
+
+  it('query aggregator: query dead connection - expect error', async function handler () {
+    try {
+      const proxy = await env.connection()
+      await proxy.promises.close()
+      await proxy.query('select @@SPID as spid')
+      assert.deepStrictEqual(1, 0)
+    } catch (e) {
+      assert(e.message.indexOf('closed') > 0)
+    }
+  })
+
+  it('query aggregator: query dead pool - expect error', async function handler () {
+    try {
+      const proxy = await env.pool()
+      await proxy.promises.open()
+      await proxy.promises.close()
+      await proxy.promises.query('select @@SPID as spid')
+      assert.deepStrictEqual(1, 0)
+    } catch (e) {
+      assert(e.message.indexOf('closed') > 0)
+    }
+  })
 })

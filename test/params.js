@@ -38,6 +38,88 @@ describe('params', function () {
     env.close().then(() => done())
   })
 
+  class MetaTypes {
+    static int = [
+      {
+        name: 'int_test',
+        size: 10,
+        nullable: true,
+        type: 'number',
+        sqlType: 'int'
+      }
+    ]
+
+    static bigint = [
+      {
+        name: 'bigint_test',
+        size: 19,
+        nullable: true,
+        type: 'number',
+        sqlType: 'bigint'
+      }
+    ]
+
+    static decimal = [
+      {
+        name: 'decimal_test',
+        size: 18,
+        nullable: true,
+        type: 'number',
+        sqlType: 'decimal'
+      }
+    ]
+
+    static number = [
+      {
+        name: 'bigint_test',
+        size: 19,
+        nullable: true,
+        type: 'number',
+        sqlType: 'bigint'
+      }
+    ]
+
+    static datetimeOffset = [
+      {
+        name: 'datetimeoffset_test',
+        size: 30,
+        nullable: true,
+        type: 'date',
+        sqlType: 'datetimeoffset'
+      }
+    ]
+
+    static bool = [
+      {
+        name: 'bit_test',
+        size: 1,
+        nullable: true,
+        type: 'boolean',
+        sqlType: 'bit'
+      }
+    ]
+
+    static nvarchar = [
+      {
+        name: 'nvarchar_test',
+        size: 100,
+        nullable: true,
+        type: 'text',
+        sqlType: 'nvarchar'
+      }
+    ]
+
+    static varchar = [
+      {
+        name: 'varchar_test',
+        size: 1,
+        nullable: true,
+        type: 'text',
+        sqlType: 'varchar'
+      }
+    ]
+  }
+
   async function testBoilerPlateAsync (tableName, tableFields, insertFunction, verifyFunction) {
     const fieldsSql = Object.keys(tableFields).map(field => `${field} ${tableFields[field]}`)
     const tableFieldsSql = `(id int identity, ${fieldsSql.join(', ')})`
@@ -51,57 +133,50 @@ describe('params', function () {
     if (verifyFunction) await verifyFunction()
   }
 
-  function testBoilerPlate (tableName, tableFields, insertFunction, verifyFunction, doneFunction) {
-    let tableFieldsSql = ' (id int identity, '
+  async function runTestAsync (columnDef, len) {
+    await testBoilerPlateAsync('test_large_insert', { large_insert: columnDef },
+      async function handler () {
+        const largeText = env.repeat('A', len)
+        await env.theConnection.promises.query('INSERT INTO test_large_insert (large_insert) VALUES (?)',
+          [largeText])
+      },
+      async function handler () {
+        const r = await env.theConnection.promises.query('SELECT large_insert FROM test_large_insert')
+        assert.deepStrictEqual(r.first[0].large_insert.length, len)
+      })
+  }
 
-    for (const field in tableFields) {
-      if (Object.prototype.hasOwnProperty.call(tableFields, field)) {
-        tableFieldsSql += field + ' ' + tableFields[field] + ','
-      }
+  async function insertSelectType (v, type, expectedMeta) {
+    const idx = type.indexOf('(')
+    let name = type
+    if (idx > 0) {
+      name = type.substring(0, idx)
     }
-    tableFieldsSql = tableFieldsSql.substr(0, tableFieldsSql.length - 1)
-    tableFieldsSql += ')'
-
-    const sequence = [
-
-      asyncDone => {
-        const dropQuery = `DROP TABLE ${tableName}`
-        env.theConnection.query(dropQuery, () => {
-          asyncDone()
-        })
+    const tableName = `${name}_param_test`
+    const columnName = `${name}_test`
+    const tableFields = {}
+    tableFields[columnName] = type
+    await testBoilerPlateAsync(tableName,
+      tableFields,
+      async function handler () {
+        await env.theConnection.promises.query(`INSERT INTO ${tableName} (${columnName}) VALUES (?)`,
+          [v])
       },
 
-      asyncDone => {
-        const createQuery = `CREATE TABLE ${tableName}${tableFieldsSql}`
-        env.theConnection.query(createQuery,
-          e => {
-            assert.ifError(e, 'Error creating table')
-            asyncDone()
-          })
-      },
-
-      asyncDone => {
-        const clusteredIndexSql = ['CREATE CLUSTERED INDEX IX_', tableName, ' ON ', tableName, ' (id)'].join('')
-        env.theConnection.query(clusteredIndexSql,
-          e => {
-            assert.ifError(e, 'Error creating index')
-            asyncDone()
-          })
-      },
-
-      asyncDone => {
-        insertFunction(asyncDone)
-      },
-
-      asyncDone => {
-        verifyFunction(() => {
-          asyncDone()
-        })
-      }]
-
-    env.async.series(sequence,
-      () => {
-        doneFunction()
+      async function handler () {
+        const r = await env.theConnection.promises.query(`SELECT ${columnName} FROM ${tableName}`,
+          [],
+          { raw: true })
+        const rows = r.first
+        const expected = [[v]]
+        const metaType = r.meta[0][0].type
+        if (metaType === 'date' || metaType === 'datetime') {
+          delete rows[0][0].nanosecondsDelta
+        }
+        // console.log(JSON.stringify(rows))
+        // console.log(JSON.stringify(expected))
+        assert.deepStrictEqual(rows, expected)
+        if (expectedMeta) assert.deepStrictEqual(r.meta[0], expectedMeta)
       })
   }
 
@@ -173,19 +248,6 @@ describe('params', function () {
     })
     assert.deepStrictEqual(res.first[0].number, num)
   })
-
-  async function runTestAsync (columnDef, len) {
-    await testBoilerPlateAsync('test_large_insert', { large_insert: columnDef },
-      async function handler () {
-        const largeText = env.repeat('A', len)
-        await env.theConnection.promises.query('INSERT INTO test_large_insert (large_insert) VALUES (?)',
-          [largeText])
-      },
-      async function handler () {
-        const r = await env.theConnection.promises.query('SELECT large_insert FROM test_large_insert')
-        assert.deepStrictEqual(r.first[0].large_insert.length, len)
-      })
-  }
 
   it('query a bigint implicit - configure query to return as string', async function handler () {
     const num = '9223372036854775807'
@@ -508,122 +570,6 @@ describe('params', function () {
     }
   })
 
-  async function insertSelectType (v, type, expectedMeta) {
-    const idx = type.indexOf('(')
-    let name = type
-    if (idx > 0) {
-      name = type.substring(0, idx)
-    }
-    const tableName = `${name}_param_test`
-    const columnName = `${name}_test`
-    const tableFields = {}
-    tableFields[columnName] = type
-    await testBoilerPlateAsync(tableName,
-      tableFields,
-      async function handler () {
-        await env.theConnection.promises.query(`INSERT INTO ${tableName} (${columnName}) VALUES (?)`,
-          [v])
-      },
-
-      async function handler () {
-        const r = await env.theConnection.promises.query(`SELECT ${columnName} FROM ${tableName}`,
-          [],
-          { raw: true })
-        const rows = r.first
-        const expected = [[v]]
-        const metaType = r.meta[0][0].type
-        if (metaType === 'date' || metaType === 'datetime') {
-          delete rows[0][0].nanosecondsDelta
-        }
-        // console.log(JSON.stringify(rows))
-        // console.log(JSON.stringify(expected))
-        assert.deepStrictEqual(rows, expected)
-        if (expectedMeta) assert.deepStrictEqual(r.meta[0], expectedMeta)
-      })
-  }
-
-  class MetaTypes {
-    static int = [
-      {
-        name: 'int_test',
-        size: 10,
-        nullable: true,
-        type: 'number',
-        sqlType: 'int'
-      }
-    ]
-
-    static bigint = [
-      {
-        name: 'bigint_test',
-        size: 19,
-        nullable: true,
-        type: 'number',
-        sqlType: 'bigint'
-      }
-    ]
-
-    static decimal = [
-      {
-        name: 'decimal_test',
-        size: 18,
-        nullable: true,
-        type: 'number',
-        sqlType: 'decimal'
-      }
-    ]
-
-    static number = [
-      {
-        name: 'bigint_test',
-        size: 19,
-        nullable: true,
-        type: 'number',
-        sqlType: 'bigint'
-      }
-    ]
-
-    static datetimeOffset = [
-      {
-        name: 'datetimeoffset_test',
-        size: 30,
-        nullable: true,
-        type: 'date',
-        sqlType: 'datetimeoffset'
-      }
-    ]
-
-    static bool = [
-      {
-        name: 'bit_test',
-        size: 1,
-        nullable: true,
-        type: 'boolean',
-        sqlType: 'bit'
-      }
-    ]
-
-    static nvarchar = [
-      {
-        name: 'nvarchar_test',
-        size: 100,
-        nullable: true,
-        type: 'text',
-        sqlType: 'nvarchar'
-      }
-    ]
-
-    static varchar = [
-      {
-        name: 'varchar_test',
-        size: 1,
-        nullable: true,
-        type: 'text',
-        sqlType: 'varchar'
-      }
-    ]
-  }
-
   it('insert a bool (true) as a parameter', async function handler () {
     await insertSelectType(true, 'bit', MetaTypes.bool)
   })
@@ -689,6 +635,12 @@ describe('params', function () {
     await insertSelectType(utcDate, 'datetimeoffset(3)', MetaTypes.datetimeOffset)
   })
 
+  it('verify js current UTC date inserted into datetime field', async function handler () {
+    const utcDate = env.timeHelper.getUTCDateHHMMSS()
+    // eslint-disable-next-line no-loss-of-precision
+    await insertSelectType(utcDate, 'datetime')
+  })
+
   // verify fix for a bug that would return the wrong day when a datetimeoffset was inserted where the date
   // was before 1/1/1970 and the time was midnight.
 
@@ -736,31 +688,6 @@ describe('params', function () {
         const rhs = r1c1.toISOString()
         assert.strictEqual(lhs, rhs)
         assert.strictEqual(r1c1.nanosecondsDelta, 0)
-      })
-  })
-
-  it('verify js date inserted into datetime field', testDone => {
-    const utcDate = env.timeHelper.getUTCDateTime()
-
-    testBoilerPlate('datetime_test', { datetime_test: 'datetime' },
-
-      done => {
-        env.theConnection.queryRaw('INSERT INTO datetime_test (datetime_test) VALUES (?)', [utcDate], (e, r) => {
-          assert.ifError(e)
-          assert(r.rowcount === 1)
-          done()
-        })
-      },
-
-      done => {
-        env.theConnection.queryRaw('SELECT * FROM datetime_test', (e, r) => {
-          assert.ifError(e)
-          assert(r.rows[0][0], utcDate)
-          done()
-        })
-      },
-      () => {
-        testDone()
       })
   })
 

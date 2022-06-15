@@ -107,6 +107,10 @@ class TestEnv {
     }
   }
 
+  async connection () {
+    return await this.sql.promises.open(this.connectionString)
+  }
+
   pool (size) {
     size = size || 4
     return new this.sql.Pool({

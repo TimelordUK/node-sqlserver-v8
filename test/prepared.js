@@ -136,32 +136,26 @@ describe('prepared', function () {
       })
   })
 
-  it('use prepared statement with params returning 0 rows. - expect no error', testDone => {
+  it('use prepared statement with params returning 0 rows. - expect no error', async function handler () {
     const select = prepared.select
     const meta = select.getMeta()
     const id1 = -1
 
     assert(meta.length > 0)
-    select.preparedQuery([id1], (err, res) => {
-      assert(res != null)
-      assert(res.length === 0)
-      assert.ifError(err)
-      testDone()
-    })
+    const res = await select.promises.query([id1])
+    assert(res != null)
+    assert.deepStrictEqual(res.first.length, 0)
   })
 
-  it('use prepared statement with params updating 0 rows - expect no error', testDone => {
+  it('use prepared statement with params updating 0 rows - expect no error', async function handler () {
     const update = prepared.update
     const meta = update.getMeta()
     const id1 = -1
 
     assert(meta.length === 0)
-    update.preparedQuery(['login1', id1], (err, res) => {
-      assert.ifError(err)
-      assert(res != null)
-      assert(res.length === 0)
-      testDone()
-    })
+    const res = await update.promises.query(['login1', id1])
+    assert(res != null)
+    assert.deepStrictEqual(res.first.length, 0)
   })
 
   it('use prepared statement twice with no parameters.', testDone => {

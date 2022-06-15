@@ -16,6 +16,86 @@ describe('connection-pool', function () {
     env.close().then(() => done())
   })
 
+  it('open close pool with promises', async function handler () {
+    const pool = env.pool()
+    await pool.promises.open()
+    await pool.promises.close()
+  })
+
+  it('submit query to closed pool - expect reject via notifier', async function handler () {
+    const pool = env.pool()
+    await pool.promises.open()
+    await pool.promises.close()
+
+    function tester () {
+      return new Promise((resolve, reject) => {
+        let error = null
+        const q = pool.query('select @@SPID as spid')
+        q.on('error', e => {
+          error = e
+        })
+
+        q.on('done', () => {
+          if (!error) reject(new Error('no error down listener'))
+          if (!error.message.includes('closed')) reject(new Error('no error down listener'))
+          resolve()
+        })
+      })
+    }
+
+    await tester()
+  })
+
+  it('submit promised query to closed pool - expect reject', async function handler () {
+    const pool = env.pool()
+    await pool.promises.open()
+    await pool.promises.close()
+
+    try {
+      await pool.promises.query('select @@SPID as spid')
+      assert.deepStrictEqual(1, 0)
+    } catch (e) {
+      assert(e !== null)
+      assert(e.message.includes('closed'))
+    }
+  })
+
+  it('submit query to closed pool with callback - expect error on cb', async function handler () {
+    const pool = env.pool()
+    await pool.promises.open()
+    await pool.promises.close()
+    pool.query('select @@SPID as spid', async function handler (e, r) {
+      assert(e !== null)
+      assert(e.message.includes('closed'))
+    })
+  })
+
+  it('submit query to pool with callback', async function handler () {
+    const pool = env.pool()
+    await pool.promises.open()
+    let cb = false
+    const n = pool.query('select @@SPID as spid', async function handler (e, r) {
+      assert.ifError(e)
+      assert(r !== null)
+      assert(r[0].spid !== null)
+      cb = true
+    })
+    n.on('done', async function handler () {
+      assert(cb)
+      await pool.promises.close()
+    })
+  })
+
+  it('submit bad query to pool with callback - expect error on cb', async function handler () {
+    const pool = env.pool()
+    await pool.open()
+    pool.query('select a from b', async function handler (e, r) {
+      assert(e !== null)
+      assert(e.message.includes('Invalid object'))
+      await pool.close()
+    })
+  })
+
   it('use tableMgr on pool bulk insert varchar vector - exactly 4000 chars', async function handler () {
     const pool = env.pool(4)
     await pool.promises.open()
@@ -94,10 +174,8 @@ describe('connection-pool', function () {
   it('submit error queries with callback for results', testDone => {
     const size = 4
     const iterations = 8
-    const pool = new env.sql.Pool({
-      connectionString: env.connectionString,
-      ceiling: size
-    })
+    const pool = env.pool(size)
+
     pool.on('error', e => {
       assert.ifError(e)
       errors.push(e)
@@ -151,10 +229,7 @@ describe('connection-pool', function () {
   it('submit queries with callback for results', testDone => {
     const size = 4
     const iterations = 8
-    const pool = new env.sql.Pool({
-      connectionString: env.connectionString,
-      ceiling: size
-    })
+    const pool = env.pool(size)
     pool.on('error', e => {
       assert.ifError(e)
     })
@@ -328,10 +403,7 @@ describe('connection-pool', function () {
   })
 
   function pauseCancelTester (iterations, size, cancelled, strategy, expectedTimeToComplete, testDone) {
-    const pool = new env.sql.Pool({
-      connectionString: env.connectionString,
-      ceiling: size
-    })
+    const pool = env.pool(size)
     pool.on('error', e => {
       assert.ifError(e)
     })
@@ -438,10 +510,8 @@ describe('connection-pool', function () {
   })
 
   function tester (iterations, size, renderSql, expectedTimeToComplete, expectErrors, testDone) {
-    const pool = new env.sql.Pool({
-      connectionString: env.connectionString,
-      ceiling: size
-    })
+    const pool = env.pool(size)
+
     pool.on('error', e => {
       if (!expectErrors) {
         assert.ifError(e)
@@ -515,10 +585,7 @@ describe('connection-pool', function () {
 
   it('open and close a pool with 2 connections without error', testDone => {
     const size = 2
-    const pool = new env.sql.Pool({
-      connectionString: env.connectionString,
-      ceiling: size
-    })
+    const pool = env.pool(size)
 
     pool.on('error', e => {
       assert.ifError(e)
