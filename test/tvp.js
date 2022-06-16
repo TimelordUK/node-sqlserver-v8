@@ -1,5 +1,4 @@
 'use strict'
-
 /* globals describe it */
 
 const assert = require('assert')
@@ -17,81 +16,35 @@ describe('tvp', function () {
     env.close().then(() => done())
   })
 
-  it('use tvp simple test type insert test extended ascii', testDone => {
+  it('use tvp simple test type insert test extended ascii', async function handler () {
     const tableName = 'TestTvp'
-    let table
     const helper = env.tvpHelper(tableName)
     const vec = helper.getExtendedVec(8 * 1024)
-    const fns = [
-
-      async asyncDone => {
-        table = await helper.create(tableName)
-        table.addRowsFromObjects(vec)
-        asyncDone()
-      },
-
-      asyncDone => {
-        const tp = env.sql.TvpFromTable(table)
-        table.rows = []
-        env.theConnection.query('exec insertTestTvp @tvp = ?;', [tp], err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        env.theConnection.query(`select * from ${tableName}`, (err, res) => {
-          assert.ifError(err)
-          assert.deepStrictEqual(res, vec)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+    const table = await helper.create(tableName)
+    table.addRowsFromObjects(vec)
+    const tp = env.sql.TvpFromTable(table)
+    table.rows = []
+    await env.theConnection.promises.query('exec insertTestTvp @tvp = ?;', [tp])
+    const res = await env.theConnection.promises.query(`select * from ${tableName}`)
+    assert.deepStrictEqual(res.first, vec)
   })
 
-  it('use tvp simple test type insert test long string 8 * 1024', testDone => {
+  it('use tvp simple test type insert test long string 8 * 1024', async function handler () {
     const tableName = 'TestTvp'
-    let table
     const helper = env.tvpHelper(tableName)
     const vec = helper.getVec(8 * 1024)
-    const fns = [
-
-      async asyncDone => {
-        table = await helper.create(tableName)
-        table.addRowsFromObjects(vec)
-        asyncDone()
-      },
-
-      asyncDone => {
-        const tp = env.sql.TvpFromTable(table)
-        table.rows = []
-        env.theConnection.query('exec insertTestTvp @tvp = ?;', [tp], err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        env.theConnection.query(`select * from ${tableName}`, (err, res) => {
-          assert.ifError(err)
-          assert.deepStrictEqual(res, vec)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+    const table = await helper.create(tableName)
+    table.addRowsFromObjects(vec)
+    const tp = env.sql.TvpFromTable(table)
+    table.rows = []
+    await env.theConnection.promises.query('exec insertTestTvp @tvp = ?;', [tp])
+    const res = await env.theConnection.promises.query(`select * from ${tableName}`)
+    assert.deepStrictEqual(res.first, vec)
   })
 
-  it('call tvp proc with local table', testDone => {
+  it('call tvp proc with local table', async function handler () {
     const tableName = 'TestTvp'
-    const all = []
+
     const expected = [
       [
         {
@@ -114,45 +67,19 @@ describe('tvp', function () {
         }
       ]
     ]
-    let procedure
+
     expected[1][0].start_date.nanosecondsDelta = 0
     const helper = env.tvpHelper(tableName)
-    const fns = [
-
-      async asyncDone => {
-        await helper.create(tableName)
-        asyncDone()
-      },
-
-      asyncDone => {
-        const pm = env.theConnection.procedureMgr()
-        pm.get('localTableProcedure', p => {
-          assert(p)
-          procedure = p
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        procedure.call(['a user', 'newuser1', 55, 99000, 98765432109876, new Date(2010, 1, 10)], (err, res, output, more) => {
-          assert.ifError(err)
-          all.push(res)
-          if (!output) return
-          assert.strictEqual(1, res.length)
-          assert.deepStrictEqual(expected, all)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+    await helper.create(tableName)
+    const res = await env.theConnection.promises.callProc('localTableProcedure',
+      ['a user', 'newuser1', 55, 99000, 98765432109876, new Date(2010, 1, 10)], {
+        replaceEmptyColumnNames: true
+      })
+    assert.deepStrictEqual(res.results, expected)
   })
 
-  it('call tvp proc from proc', testDone => {
+  it('call tvp proc from proc', async function handler () {
     const tableName = 'TestTvp'
-    const all = []
     const expected = [
       [
         {
@@ -183,296 +110,107 @@ describe('tvp', function () {
         }
       ]
     ]
-    let procedure
+
     expected[2][0].start_date.nanosecondsDelta = 0
     expected[2][1].start_date.nanosecondsDelta = 0
+
     const helper = env.tvpHelper(tableName)
-    const fns = [
-
-      async asyncDone => {
-        await helper.create(tableName)
-        asyncDone()
-      },
-
-      asyncDone => {
-        const pm = env.theConnection.procedureMgr()
-        pm.get('callProcedureFromProcedure', p => {
-          assert(p)
-          procedure = p
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        procedure.call(['a user', 'newuser1', 55, 99000, 98765432109876, new Date(2010, 1, 10)], (err, res, output, more) => {
-          assert.ifError(err)
-          all.push(res)
-          if (!output) return
-          assert.strictEqual(2, res.length)
-          assert.deepStrictEqual(expected, all)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
+    await helper.create(tableName)
+    const params = ['a user', 'newuser1', 55, 99000, 98765432109876, new Date(2010, 1, 10)]
+    const res = await env.theConnection.promises.callProc('callProcedureFromProcedure', params, {
+      replaceEmptyColumnNames: true
     })
+    assert.deepStrictEqual(res.results, expected)
   })
 
-  it('use tvp to select from table type complex object Employee type', testDone => {
+  it('use tvp to select from table type complex object Employee type', async function handler () {
     const tableName = 'employee'
-    let bulkMgr
 
-    const fns = [
-
-      asyncDone => {
-        env.helper.dropCreateTable({
-          tableName
-        }, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const tm = env.theConnection.tableMgr()
-        tm.bind(tableName, bulk => {
-          bulkMgr = bulk
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        let sql = 'IF TYPE_ID(N\'EmployeeType\') IS not NULL'
-        sql += ' drop type EmployeeType'
-        env.theConnection.query(sql, err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const sql = bulkMgr.asUserType()
-        env.theConnection.query(sql, err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const parsedJSON = env.helper.getJSON()
-        // construct a table type based on a table definition.
-        const table = bulkMgr.asTableType()
-        // convert a set of objects to rows
-        table.addRowsFromObjects(parsedJSON)
-        // use a type the native driver can understand, using column based bulk binding.
-        const tp = env.sql.TvpFromTable(table)
-        env.theConnection.query('select * from ?;', [tp], (err, res) => {
-          assert.ifError(err)
-          env.helper.compareEmployee(res, parsedJSON)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
+    await env.promisedDropCreateTable({
+      tableName
     })
+    const bulkMgr = await env.theConnection.promises.getTable(tableName)
+    let sql = 'IF TYPE_ID(N\'EmployeeType\') IS not NULL'
+    sql += ' drop type EmployeeType'
+    await env.theConnection.promises.query(sql)
+    sql = bulkMgr.asUserType()
+    await env.theConnection.promises.query(sql)
+    const parsedJSON = env.helper.getJSON()
+    // construct a table type based on a table definition.
+    const table = bulkMgr.asTableType()
+    // convert a set of objects to rows
+    table.addRowsFromObjects(parsedJSON)
+    // use a type the native driver can understand, using column based bulk binding.
+    const tp = env.sql.TvpFromTable(table)
+    const res = await env.theConnection.promises.query('select * from ?;', [tp])
+    env.helper.compareEmployee(res.first, parsedJSON)
   })
 
-  it('employee use tm to get a table value type representing table and create that user table type', testDone => {
+  it('employee use tm to get a table value type representing table and create that user table type', async function handler () {
     const tableName = 'employee'
-    let bulkMgr
-
-    const fns = [
-
-      asyncDone => {
-        env.helper.dropCreateTable({
-          tableName
-        }, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const tm = env.theConnection.tableMgr()
-        tm.bind(tableName, bulk => {
-          bulkMgr = bulk
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        let sql = 'IF TYPE_ID(N\'EmployeeType\') IS not NULL'
-        sql += ' drop type EmployeeType'
-        env.theConnection.query(sql, err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const sql = bulkMgr.asUserType()
-        env.theConnection.query(sql, err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        env.theConnection.getUserTypeTable('EmployeeType', (err, def) => {
-          assert.ifError(err)
-          const summary = bulkMgr.getSummary()
-          assert(def.columns.length = summary.columns.length)
-          const t = bulkMgr.asTableType()
-          assert(t.columns.length === summary.columns.length)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
+    await env.promisedDropCreateTable({
+      tableName
     })
+    const bulkMgr = await env.theConnection.promises.getTable(tableName)
+    let sql = 'IF TYPE_ID(N\'EmployeeType\') IS not NULL'
+    sql += ' drop type EmployeeType'
+    await env.theConnection.promises.query(sql)
+    sql = bulkMgr.asUserType()
+    await env.theConnection.promises.query(sql)
+    const def = await env.theConnection.promises.getUserTypeTable('EmployeeType')
+    const summary = bulkMgr.getSummary()
+    assert.deepStrictEqual(def.columns.length, summary.columns.length)
+    const t = bulkMgr.asTableType()
+    assert.deepStrictEqual(t.columns.length, summary.columns.length)
   })
 
-  it('use tvp simple test type insert test using pm', testDone => {
+  it('use tvp simple test type insert test using pm', async function handler () {
     const tableName = 'TestTvp'
-    let table
-    let procedure
     const helper = env.tvpHelper(tableName)
     const vec = helper.getVec(100)
-    const fns = [
-
-      async asyncDone => {
-        table = await helper.create(tableName)
-        table.addRowsFromObjects(vec)
-        asyncDone()
-      },
-
-      asyncDone => {
-        const pm = env.theConnection.procedureMgr()
-        pm.get('insertTestTvp', p => {
-          assert(p)
-          procedure = p
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const tp = env.sql.TvpFromTable(table)
-        table.rows = []
-        procedure.call([tp], err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        env.theConnection.query(`select * from ${tableName}`, (err, res) => {
-          assert.ifError(err)
-          assert.deepStrictEqual(vec, res)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+    const table = await helper.create(tableName)
+    table.addRowsFromObjects(vec)
+    const tp = env.sql.TvpFromTable(table)
+    table.rows = []
+    await env.theConnection.promises.callProc('insertTestTvp', [tp])
+    const res = await env.theConnection.promises.query(`select * from ${tableName}`)
+    assert.deepStrictEqual(res.first, vec)
   })
 
-  it('non dbo schema use tvp simple test type select test', testDone => {
+  it('non dbo schema use tvp simple test type select test', async function handler () {
     const tableName = 'TestSchema.TestTvp'
-    let table
     const helper = env.tvpHelper(tableName)
     const vec = helper.getVec(100)
-    const fns = [
-
-      async asyncDone => {
-        table = await helper.create(tableName)
-        table.addRowsFromObjects(vec)
-        asyncDone()
-      },
-
-      asyncDone => {
-        const tp = env.sql.TvpFromTable(table)
-        table.rows = []
-        env.theConnection.query('select * from ?;', [tp], (err, res) => {
-          assert.ifError(err)
-          assert.deepStrictEqual(res, vec)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+    const table = await helper.create(tableName)
+    table.addRowsFromObjects(vec)
+    const tp = env.sql.TvpFromTable(table)
+    table.rows = []
+    const res = await env.theConnection.promises.query('select * from ?;', [tp])
+    assert.deepStrictEqual(res.first, vec)
   })
 
-  it('use tvp simple test type select test', testDone => {
+  it('dbo schema use tvp simple test type select test', async function handler () {
     const tableName = 'TestTvp'
-    let table
     const helper = env.tvpHelper(tableName)
     const vec = helper.getVec(100)
-    const fns = [
-
-      async asyncDone => {
-        table = await helper.create(tableName)
-        table.addRowsFromObjects(vec)
-        asyncDone()
-      },
-
-      asyncDone => {
-        const tp = env.sql.TvpFromTable(table)
-        table.rows = []
-        env.theConnection.query('select * from ?;', [tp], (err, res) => {
-          assert.ifError(err)
-          assert.deepStrictEqual(res, vec)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+    const table = await helper.create(tableName)
+    table.addRowsFromObjects(vec)
+    const tp = env.sql.TvpFromTable(table)
+    table.rows = []
+    const res = await env.theConnection.promises.query('select * from ?;', [tp])
+    assert.deepStrictEqual(res.first, vec)
   })
 
-  it('use tvp simple test type insert test', testDone => {
+  it('use tvp simple test type insert test', async function handler () {
     const tableName = 'TestTvp'
-    let table
     const helper = env.tvpHelper(tableName)
     const vec = helper.getVec(100)
-    const fns = [
-
-      async asyncDone => {
-        table = await helper.create(tableName)
-        table.addRowsFromObjects(vec)
-        asyncDone()
-      },
-
-      asyncDone => {
-        const tp = env.sql.TvpFromTable(table)
-        table.rows = []
-        env.theConnection.query('exec insertTestTvp @tvp = ?;', [tp], err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        env.theConnection.query(`select * from ${tableName}`, (err, res) => {
-          assert.ifError(err)
-          assert.deepStrictEqual(vec, res)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+    const table = await helper.create(tableName)
+    table.addRowsFromObjects(vec)
+    const tp = env.sql.TvpFromTable(table)
+    table.rows = []
+    await env.theConnection.promises.query('exec insertTestTvp @tvp = ?;', [tp])
+    const res = await env.theConnection.promises.query(`select * from ${tableName}`)
+    assert.deepStrictEqual(res.first, vec)
   })
 })

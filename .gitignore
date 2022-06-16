@@ -78,3 +78,4 @@ runtest-linux
 runtest-win.exe
 runtest-macos
 /.idea/dictionaries/Stephen.xml
+/mochawesome-report/

@@ -99,6 +99,7 @@ export interface QueryAggregatorResults {
 export interface QueryAggregatorOptions {
     timeoutMs?: number // default 0 i.e. no timeout
     raw?: boolean // results as arrays or objects with column names
+    replaceEmptyColumnNames?: boolean // replace meta empty col name with Column0, Column1
 }
 
 export interface PoolPromises extends AggregatorPromises {
