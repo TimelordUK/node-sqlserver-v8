@@ -156,7 +156,7 @@ describe('sproc', function () {
     await t2(env.theConnection, 1)
   })
 
-  async function t3 (connectionProxy, iterations, testDone) {
+  async function t3 (connectionProxy, iterations) {
     const spName = 'test_sp_get_optional_p'
     const a = 20
     const override = 30
@@ -190,18 +190,17 @@ describe('sproc', function () {
       }
     }
     assert.deepStrictEqual(iterations, errors.length)
-    testDone()
   }
 
-  it('pool: two parameters 1 optional set output to sum - omit required expect error', testDone => {
-    usePoolCallProc(t3, 5, testDone)
+  it('pool: two parameters 1 optional set output to sum - omit required expect error', async function handler () {
+    await usePoolCallProcAsync(t3, 5)
   })
 
-  it('connection: two parameters 1 optional set output to sum - omit required expect error', testDone => {
-    t3(env.theConnection, 1, testDone)
+  it('connection: two parameters 1 optional set output to sum - omit required expect error', async function handler () {
+    await t3(env.theConnection, 1)
   })
 
-  async function t4 (connectionProxy, iterations, testDone) {
+  async function t4 (connectionProxy, iterations) {
     const spName = 'test_sp_get_optional_p'
     const a = 10
     const b = 20
@@ -218,36 +217,32 @@ describe('sproc', function () {
       set @plus = @a + @b;
     end;
 `
-    try {
-      await env.promisedCreate(spName, def)
-      const expected = [
-        0,
-        anew + bnew
-      ]
-      const o = {
-        a: anew,
-        b: bnew
+
+    await env.promisedCreate(spName, def)
+    const expected = [
+      0,
+      anew + bnew
+    ]
+    const o = {
+      a: anew,
+      b: bnew
+    }
+    for (let i = 0; i < iterations; ++i) {
+      const res = await promisedCallProc(connectionProxy, spName, o)
+      const output = res.output
+      if (output) {
+        assert(Array.isArray(output))
+        assert.deepStrictEqual(expected, output)
       }
-      for (let i = 0; i < iterations; ++i) {
-        const res = await promisedCallProc(connectionProxy, spName, o)
-        const output = res.output
-        if (output) {
-          assert(Array.isArray(output))
-          assert.deepStrictEqual(expected, output)
-        }
-      }
-      testDone()
-    } catch (e) {
-      assert.ifError(e)
     }
   }
 
-  it('pool: two optional parameters override both set output to sum', testDone => {
-    usePoolCallProc(t4, 5, testDone)
+  it('pool: two optional parameters override both set output to sum', async function handler () {
+    await usePoolCallProcAsync(t4, 5)
   })
 
-  it('connection: two optional parameters override both set output to sum', testDone => {
-    t4(env.theConnection, 1, testDone)
+  it('connection: two optional parameters override both set output to sum', async function handler () {
+    await t4(env.theConnection, 1)
   })
 
   /*
@@ -305,7 +300,7 @@ describe('sproc', function () {
     t5(env.theConnection, 1, testDone)
   }) */
 
-  async function t6 (connectionProxy, iterations, testDone) {
+  async function t6 (connectionProxy, iterations) {
     const spName = 'test_sp_get_optional_p'
     const a = 10
     const b = 20
@@ -320,37 +315,31 @@ describe('sproc', function () {
       set @plus = @a + @b;
     end;
 `
-    try {
-      await env.promisedCreate(spName, def)
-      const expected = [
-        0,
-        a + b
-      ]
-      const o = {
+    await env.promisedCreate(spName, def)
+    const expected = [
+      0,
+      a + b
+    ]
+    const o = {}
+    for (let i = 0; i < iterations; ++i) {
+      const res = await promisedCallProc(connectionProxy, spName, o)
+      const output = res.output
+      if (output) {
+        assert(Array.isArray(output))
+        assert.deepStrictEqual(expected, output)
       }
-      for (let i = 0; i < iterations; ++i) {
-        const res = await promisedCallProc(connectionProxy, spName, o)
-        const output = res.output
-        if (output) {
-          assert(Array.isArray(output))
-          assert.deepStrictEqual(expected, output)
-        }
-      }
-      testDone()
-    } catch (e) {
-      assert.ifError(e)
     }
   }
 
-  it('pool: two optional parameters set output to sum no input params', testDone => {
-    usePoolCallProc(t6, 5, testDone)
+  it('pool: two optional parameters set output to sum no input params', async function handler () {
+    await usePoolCallProcAsync(t6, 5)
   })
 
-  it('connection: two optional parameters set output to sum no input params', testDone => {
-    t6(env.theConnection, 1, testDone)
+  it('connection: two optional parameters set output to sum no input params', async function handler () {
+    await t6(env.theConnection, 1)
   })
 
-  async function t7 (connectionProxy, iterations, testDone) {
+  async function t7 (connectionProxy, iterations) {
     const spName = 'test_sp_get_optional_p'
     const a = 10
     const b = 20
@@ -366,38 +355,33 @@ describe('sproc', function () {
       set @plus = @a + @b;
     end;
 `
-    try {
-      await env.promisedCreate(spName, def)
-      const o = {
-        a: override
+    await env.promisedCreate(spName, def)
+    const o = {
+      a: override
+    }
+    const expected = [
+      0,
+      override + b
+    ]
+    for (let i = 0; i < iterations; ++i) {
+      const res = await promisedCallProc(connectionProxy, spName, o)
+      const output = res.output
+      if (output) {
+        assert(Array.isArray(output))
+        assert.deepStrictEqual(expected, output)
       }
-      const expected = [
-        0,
-        override + b
-      ]
-      for (let i = 0; i < iterations; ++i) {
-        const res = await promisedCallProc(connectionProxy, spName, o)
-        const output = res.output
-        if (output) {
-          assert(Array.isArray(output))
-          assert.deepStrictEqual(expected, output)
-        }
-      }
-      testDone()
-    } catch (e) {
-      assert.ifError(e)
     }
   }
 
-  it('pool: two optional parameters override first set output to sum', testDone => {
-    usePoolCallProc(t7, 5, testDone)
+  it('pool: two optional parameters override first set output to sum', async function handler () {
+    await usePoolCallProcAsync(t7, 5)
   })
 
-  it('connection: two optional parameters override first set output to sum', testDone => {
-    t7(env.theConnection, 1, testDone)
+  it('connection: two optional parameters override first set output to sum', async function handler () {
+    t7(env.theConnection, 1)
   })
 
-  async function t8 (connectionProxy, iterations, testDone) {
+  async function t8 (connectionProxy, iterations) {
     const spName = 'test_sp_get_optional_p'
 
     const def = `alter PROCEDURE <name> (
@@ -412,40 +396,35 @@ describe('sproc', function () {
       set @plus = @a + @b + @c;
     end;
 `
-    try {
-      await env.promisedCreate(spName, def)
-      const o = {
-        a: 2,
-        b: 3,
-        c: 4
+    await env.promisedCreate(spName, def)
+    const o = {
+      a: 2,
+      b: 3,
+      c: 4
+    }
+    const expected = [
+      0,
+      o.a + o.b + o.c
+    ]
+    for (let i = 0; i < iterations; ++i) {
+      const res = await promisedCallProc(connectionProxy, spName, o)
+      const output = res.output
+      if (output) {
+        assert(Array.isArray(output))
+        assert.deepStrictEqual(expected, output)
       }
-      const expected = [
-        0,
-        o.a + o.b + o.c
-      ]
-      for (let i = 0; i < iterations; ++i) {
-        const res = await promisedCallProc(connectionProxy, spName, o)
-        const output = res.output
-        if (output) {
-          assert(Array.isArray(output))
-          assert.deepStrictEqual(expected, output)
-        }
-      }
-      testDone()
-    } catch (e) {
-      assert.ifError(e)
     }
   }
 
-  it('pool: 2 input, 1 optional parameter override set output to sum of 3', testDone => {
-    usePoolCallProc(t8, 5, testDone)
+  it('pool: 2 input, 1 optional parameter override set output to sum of 3', async function handler () {
+    await usePoolCallProcAsync(t8, 5)
   })
 
-  it('connection: 2 input, 1 optional parameter override set output to sum of 3', testDone => {
-    t8(env.theConnection, 1, testDone)
+  it('connection: 2 input, 1 optional parameter override set output to sum of 3', async function handler () {
+    await t8(env.theConnection, 1)
   })
 
-  async function t9 (connectionProxy, iterations, testDone) {
+  async function t9 (connectionProxy, iterations) {
     const spName = 'test_sp_get_optional_p'
 
     const def = `alter PROCEDURE <name> (
@@ -460,39 +439,34 @@ describe('sproc', function () {
       set @plus = @a + @b + @c;
     end;
 `
-    try {
-      await env.promisedCreate(spName, def)
-      const o = {
-        a: 2,
-        b: 3
+    await env.promisedCreate(spName, def)
+    const o = {
+      a: 2,
+      b: 3
+    }
+    const expected = [
+      0,
+      o.a + o.b
+    ]
+    for (let i = 0; i < iterations; ++i) {
+      const res = await promisedCallProc(connectionProxy, spName, o)
+      const output = res.output
+      if (output) {
+        assert(Array.isArray(output))
+        assert.deepStrictEqual(expected, output)
       }
-      const expected = [
-        0,
-        o.a + o.b
-      ]
-      for (let i = 0; i < iterations; ++i) {
-        const res = await promisedCallProc(connectionProxy, spName, o)
-        const output = res.output
-        if (output) {
-          assert(Array.isArray(output))
-          assert.deepStrictEqual(expected, output)
-        }
-      }
-      testDone()
-    } catch (e) {
-      assert.ifError(e)
     }
   }
 
-  it('pool: 2 input, 1 optional default parameters set output to sum of 3', testDone => {
-    usePoolCallProc(t9, 5, testDone)
+  it('pool: 2 input, 1 optional default parameters set output to sum of 3', async function handler () {
+    await usePoolCallProcAsync(t9, 5)
   })
 
-  it('connection: 2 input, 1 optional default parameters set output to sum of 3', testDone => {
-    t9(env.theConnection, 1, testDone)
+  it('connection: 2 input, 1 optional default parameters set output to sum of 3', async function handler () {
+    await t9(env.theConnection, 1)
   })
 
-  async function t10 (connectionProxy, iterations, testDone) {
+  async function t10 (connectionProxy, iterations) {
     const spName = 'test_sp_get_in_out_p'
 
     const def = `alter PROCEDURE <name> (
@@ -523,18 +497,17 @@ describe('sproc', function () {
       }
     }
     assert.deepStrictEqual(iterations, errors.length)
-    testDone()
   }
 
-  it('pool: omit required parameter expect error', testDone => {
-    usePoolCallProc(t10, 5, testDone)
+  it('pool: omit required parameter expect error', async function handler () {
+    await usePoolCallProcAsync(t10, 5)
   })
 
-  it('connection: omit required parameter expect error', testDone => {
-    t10(env.theConnection, 1, testDone)
+  it('connection: omit required parameter expect error', async function handler () {
+    await t10(env.theConnection, 1)
   })
 
-  async function t11 (connectionProxy, iterations, testDone) {
+  async function t11 (connectionProxy, iterations) {
     const spName = 'test_sp_get_in_out_p'
 
     const def = `alter PROCEDURE <name> (
@@ -567,18 +540,17 @@ describe('sproc', function () {
       }
     }
     assert.deepStrictEqual(iterations, errors.length)
-    testDone()
   }
 
-  it('pool: add illegal parameter expect error', testDone => {
-    usePoolCallProc(t11, 5, testDone)
+  it('pool: add illegal parameter expect error', async function handler () {
+    await usePoolCallProcAsync(t11, 5)
   })
 
-  it('connection: add illegal parameter expect error', testDone => {
-    t11(env.theConnection, 1, testDone)
+  it('connection: add illegal parameter expect error', async function handler () {
+    await t11(env.theConnection, 1)
   })
 
-  async function t12 (connectionProxy, iterations, testDone) {
+  async function t12 (connectionProxy, iterations) {
     const spName = 'test_sp_get_in_out_p'
 
     const def = `alter PROCEDURE <name> (
@@ -591,39 +563,34 @@ describe('sproc', function () {
       set @plus = @a + @plus;
     end;
 `
-    try {
-      await env.promisedCreate(spName, def)
-      const o = {
-        a: 2,
-        plus: 3
+    await env.promisedCreate(spName, def)
+    const o = {
+      a: 2,
+      plus: 3
+    }
+    const expected = [
+      0,
+      o.a + o.plus
+    ]
+    for (let i = 0; i < iterations; ++i) {
+      const res = await promisedCallProc(connectionProxy, spName, o)
+      const output = res.output
+      if (output) {
+        assert(Array.isArray(output))
+        assert.deepStrictEqual(expected, output)
       }
-      const expected = [
-        0,
-        o.a + o.plus
-      ]
-      for (let i = 0; i < iterations; ++i) {
-        const res = await promisedCallProc(connectionProxy, spName, o)
-        const output = res.output
-        if (output) {
-          assert(Array.isArray(output))
-          assert.deepStrictEqual(expected, output)
-        }
-      }
-      testDone()
-    } catch (e) {
-      assert.ifError(e)
     }
   }
 
-  it('pool: use input output parameters i.e. use a param as both input and output', testDone => {
-    usePoolCallProc(t12, 5, testDone)
+  it('pool: use input output parameters i.e. use a param as both input and output', async function handler () {
+    await usePoolCallProcAsync(t12, 5)
   })
 
-  it('connection: use input output parameters i.e. use a param as both input and output', testDone => {
-    t12(env.theConnection, 1, testDone)
+  it('connection: use input output parameters i.e. use a param as both input and output', async function handler () {
+    await t12(env.theConnection, 1)
   })
 
-  async function t13 (connectionProxy, iterations, testDone) {
+  async function t13 (connectionProxy, iterations) {
     const spName = 'test_sp_get_in_out_p'
 
     const def = `alter PROCEDURE <name> (
@@ -637,40 +604,35 @@ describe('sproc', function () {
       set @plus_out = @a + @plus_in;
     end;
   `
-    try {
-      await env.promisedCreate(spName, def)
-      const o = {
-        a: 2,
-        plus_in: 3
+    await env.promisedCreate(spName, def)
+    const o = {
+      a: 2,
+      plus_in: 3
+    }
+    const expected = [
+      0,
+      o.plus_in,
+      o.a + o.plus_in
+    ]
+    for (let i = 0; i < iterations; ++i) {
+      const res = await promisedCallProc(connectionProxy, spName, o)
+      const output = res.output
+      if (output) {
+        assert(Array.isArray(output))
+        assert.deepStrictEqual(expected, output)
       }
-      const expected = [
-        0,
-        o.plus_in,
-        o.a + o.plus_in
-      ]
-      for (let i = 0; i < iterations; ++i) {
-        const res = await promisedCallProc(connectionProxy, spName, o)
-        const output = res.output
-        if (output) {
-          assert(Array.isArray(output))
-          assert.deepStrictEqual(expected, output)
-        }
-      }
-      testDone()
-    } catch (e) {
-      assert.ifError(e)
     }
   }
 
-  it('pool: two in out params use first as input only second output only', testDone => {
-    usePoolCallProc(t13, 5, testDone)
+  it('pool: two in out params use first as input only second output only', async function handler () {
+    await usePoolCallProcAsync(t13, 5)
   })
 
-  it('connection: two in out params use first as input only second output only', testDone => {
-    t13(env.theConnection, 1, testDone)
+  it('connection: two in out params use first as input only second output only', async function handler () {
+    await t13(env.theConnection, 1)
   })
 
-  async function t14 (connectionProxy, iterations, testDone) {
+  async function t14 (connectionProxy, iterations) {
     const spName = 'test_sp_i_do_not_exist'
 
     const errors = []
@@ -684,18 +646,17 @@ describe('sproc', function () {
       }
     }
     assert.deepStrictEqual(iterations, errors.length)
-    testDone()
   }
 
-  it('pool: test non existant sproc', testDone => {
-    usePoolCallProc(t14, 5, testDone)
+  it('pool: test non existant sproc', async function handler () {
+    await usePoolCallProcAsync(t14, 5)
   })
 
-  it('connection: test non existant sproc', testDone => {
-    t14(env.theConnection, 1, testDone)
+  it('connection: test non existant sproc', async function handler () {
+    await t14(env.theConnection, 1)
   })
 
-  async function t15 (connectionProxy, iterations, testDone) {
+  async function t15 (connectionProxy, iterations) {
     const spName = 'test_sp_get_int_int'
 
     const def = `alter PROCEDURE <name> (
@@ -709,42 +670,38 @@ BEGIN
    RETURN 99;
 END
 `
-    try {
-      await env.promisedCreate(spName, def)
+    await env.promisedCreate(spName, def)
 
-      function check (received) {
-        for (let i = 0; i < iterations; ++i) {
-          const expected = [99, i * 2]
-          assert.deepStrictEqual(received[i], expected, 'results didn\'t match')
-        }
-      }
-      const promises = []
+    function check (received) {
       for (let i = 0; i < iterations; ++i) {
-        const o = {
-          num1: i,
-          num2: i
-        }
-        promises.push(promisedCallProc(connectionProxy, spName, o))
+        const expected = [99, i * 2]
+        assert.deepStrictEqual(received[i], expected, 'results didn\'t match')
       }
-      Promise.all(promises).then(received => {
-        check(received.map(v => v.output))
-        testDone()
-      })
-    } catch (e) {
-      assert.ifError(e)
     }
+
+    const promises = []
+    for (let i = 0; i < iterations; ++i) {
+      const o = {
+        num1: i,
+        num2: i
+      }
+      promises.push(promisedCallProc(connectionProxy, spName, o))
+    }
+    Promise.all(promises).then(received => {
+      check(received.map(v => v.output))
+    })
   }
 
-  it('pool: get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
-    usePoolCallProc(t15, 150, testDone)
+  it('pool: get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', async function handler () {
+    await usePoolCallProcAsync(t15, 150)
   })
 
-  it('connection: get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', testDone => {
-    t15(env.theConnection, 100, testDone)
+  it('connection: get proc and call multiple times asynchronously with changing params i.e. prove each call is independent', async function handler () {
+    await t15(env.theConnection, 100)
   })
 
-  async function t16 (connectionProxy, iterations, testDone) {
-    const promisedQueryRaw = util.promisify(connectionProxy.queryRaw)
+  async function t16 (connectionProxy, iterations) {
+    const promisedQueryRaw = connectionProxy.promises.query
 
     const spName = 'test_sp_multi_statement'
 
@@ -762,46 +719,41 @@ BEGIN
     delete from TestMultiStatement where BusinessEntityID = 100 
 END
 `
-    try {
-      const tname = 'TestMultiStatement'
-      const dropTableSql = `IF OBJECT_ID(N'dbo.${tname}', N'U') IS NOT NULL
+    const tname = 'TestMultiStatement'
+    const dropTableSql = `IF OBJECT_ID(N'dbo.${tname}', N'U') IS NOT NULL
       BEGIN
         DROP TABLE ${tname}
       END`
-      const createTable = `CREATE TABLE ${tname} (
+    const createTable = `CREATE TABLE ${tname} (
         [BusinessEntityID] [int] NOT NULL,
         [NationalIDNumber] [nvarchar](15) NOT NULL,
         [LoginID] [nvarchar](256) NOT NULL
         )`
-      await promisedQueryRaw(dropTableSql)
-      await promisedQueryRaw(createTable)
-      await env.promisedCreate(spName, def)
+    await promisedQueryRaw(dropTableSql)
+    await promisedQueryRaw(createTable)
+    await env.promisedCreate(spName, def)
 
-      const o = {
-        p1: 1,
-        p2: 'NI123456',
-        p3: 'Programmer01'
-      }
+    const o = {
+      p1: 1,
+      p2: 'NI123456',
+      p3: 'Programmer01'
+    }
 
-      for (let i = 0; i < iterations; ++i) {
-        const res = await promisedCallProc(connectionProxy, spName, o)
-        assert(res)
-      }
-      testDone()
-    } catch (e) {
-      assert.ifError(e)
+    for (let i = 0; i < iterations; ++i) {
+      const res = await promisedCallProc(connectionProxy, spName, o)
+      assert(res)
     }
   }
 
-  it('pool: insert/update/delete synchronously ', testDone => {
-    usePoolCallProc(t16, 5, testDone)
+  it('pool: insert/update/delete synchronously ', async function handler () {
+    await usePoolCallProcAsync(t16, 5)
   })
 
-  it('connection: insert/update/delete synchronously ', testDone => {
-    t16(env.theConnection, 1, testDone)
+  it('connection: insert/update/delete synchronously ', async function handler () {
+    await t16(env.theConnection, 1)
   })
 
-  async function t17 (connectionProxy, iterations, testDone) {
+  async function t17 (connectionProxy, iterations) {
     const spName = 'test_sp_get_int_int'
 
     const def = `alter PROCEDURE <name> (
@@ -815,40 +767,36 @@ BEGIN
    RETURN 99;
 END
 `
-    try {
-      await env.promisedCreate(spName, def)
+    await env.promisedCreate(spName, def)
 
-      function check (received) {
-        for (let i = 0; i < iterations; ++i) {
-          const expected = [99, i * 2]
-          assert.deepStrictEqual(received[i], expected, 'results didn\'t match')
-        }
-      }
-      const received = []
+    function check (received) {
       for (let i = 0; i < iterations; ++i) {
-        const o = {
-          num1: i,
-          num2: i
-        }
-        received.push(await promisedCallProc(connectionProxy, spName, o))
+        const expected = [99, i * 2]
+        assert.deepStrictEqual(received[i], expected, 'results didn\'t match')
       }
-      check(received.map(v => v.output))
-      testDone()
-    } catch (e) {
-      assert.ifError(e)
     }
+
+    const received = []
+    for (let i = 0; i < iterations; ++i) {
+      const o = {
+        num1: i,
+        num2: i
+      }
+      received.push(await promisedCallProc(connectionProxy, spName, o))
+    }
+    check(received.map(v => v.output))
   }
 
-  it('pool: get proc and call multiple times synchronously with changing params i.e. prove each call is independent', testDone => {
-    usePoolCallProc(t17, 5, testDone)
+  it('pool: get proc and call multiple times synchronously with changing params i.e. prove each call is independent', async function handler () {
+    await usePoolCallProcAsync(t17, 5)
   })
 
-  it('connection: get proc and call multiple times synchronously with changing params i.e. prove each call is independent', testDone => {
-    t17(env.theConnection, 1, testDone)
+  it('connection: get proc and call multiple times synchronously with changing params i.e. prove each call is independent', async function handler () {
+    await t17(env.theConnection, 1)
   })
 
-  async function t18 (connectionProxy, iterations, testDone) {
-    const promisedQueryRaw = util.promisify(connectionProxy.queryRaw)
+  async function t18 (connectionProxy, iterations) {
+    const promisedQueryRaw = connectionProxy.promises.query
     const newBusinessId = 100
     const NationalIDNumber = 'NI123456'
     const loginId = 'Programmer01'
@@ -872,62 +820,56 @@ BEGIN
     delete from TestMultiStatement where BusinessEntityID = ${newBusinessId}
 END
 `
-    try {
-      const tname = 'TestMultiStatement'
-      const dropTableSql = `IF OBJECT_ID(N'dbo.${tname}', N'U') IS NOT NULL
+    const tname = 'TestMultiStatement'
+    const dropTableSql = `IF OBJECT_ID(N'dbo.${tname}', N'U') IS NOT NULL
       BEGIN
         DROP TABLE ${tname}
       END`
-      const createTable = `CREATE TABLE ${tname} (
+    const createTable = `CREATE TABLE ${tname} (
         [BusinessEntityID] [int] NOT NULL,
         [NationalIDNumber] [nvarchar](15) NOT NULL,
         [LoginID] [nvarchar](256) NOT NULL
         )`
-      await promisedQueryRaw(dropTableSql)
-      await promisedQueryRaw(createTable)
-      await env.promisedCreate(spName, def)
+    await promisedQueryRaw(dropTableSql)
+    await promisedQueryRaw(createTable)
+    await env.promisedCreate(spName, def)
 
-      const o = {
-        p1: 1,
-        p2: NationalIDNumber,
-        p3: loginId
+    const o = {
+      p1: 1,
+      p2: NationalIDNumber,
+      p3: loginId
+    }
+
+    const expected = [
+      {
+        BusinessEntityID: 1,
+        NationalIDNumber,
+        LoginID: loginId
+      },
+      {
+        BusinessEntityID: newBusinessId,
+        NationalIDNumber,
+        LoginID: loginId
       }
+    ]
 
-      const expected = [
-        {
-          BusinessEntityID: 1,
-          NationalIDNumber,
-          LoginID: loginId
-        },
-        {
-          BusinessEntityID: newBusinessId,
-          NationalIDNumber,
-          LoginID: loginId
-        }
-      ]
-
-      for (let i = 0; i < iterations; ++i) {
-        const res = await promisedCallProc(connectionProxy, spName, o)
-        assert(res)
-        assert.deepStrictEqual(2, res.results.length)
-        assert.deepStrictEqual(res.results, expected)
-      }
-
-      testDone()
-    } catch (e) {
-      assert.ifError(e)
+    for (let i = 0; i < iterations; ++i) {
+      const res = await promisedCallProc(connectionProxy, spName, o)
+      assert(res)
+      assert.deepStrictEqual(2, res.results.length)
+      assert.deepStrictEqual(res.results, expected)
     }
   }
 
-  it('pool: async call proc with changing params - include multiple select in sproc', testDone => {
-    usePoolCallProc(t18, 5, testDone)
+  it('pool: async call proc with changing params - include multiple select in sproc', async function handler () {
+    await usePoolCallProcAsync(t18, 5)
   })
 
-  it('connection: async call proc with changing params - include multiple select in sproc', testDone => {
-    t18(env.theConnection, 1, testDone)
+  it('connection: async call proc with changing params - include multiple select in sproc', async function handler () {
+    await t18(env.theConnection, 1)
   })
 
-  async function t19 (connectionProxy, iterations, testDone) {
+  async function t19 (connectionProxy, iterations) {
     const spName = 'test_sp_select_select'
 
     const def = `alter PROCEDURE <name>
@@ -937,30 +879,24 @@ BEGIN
     select top 5 'sysobjects' as table_name, name, id, xtype, category from sysobjects
 END
 `
-    try {
-      await env.promisedCreate(spName, def)
+    await env.promisedCreate(spName, def)
 
-      for (let i = 0; i < iterations; ++i) {
-        const res = await promisedCallProc(connectionProxy, spName, [])
-        assert(res)
-        assert.deepStrictEqual(2, res.results.length)
-      }
-
-      testDone()
-    } catch (e) {
-      assert.ifError(e)
+    for (let i = 0; i < iterations; ++i) {
+      const res = await promisedCallProc(connectionProxy, spName, [])
+      assert(res)
+      assert.deepStrictEqual(2, res.results.length)
     }
   }
 
-  it('pool: proc with multiple select  - should callback with each', testDone => {
-    usePoolCallProc(t19, 5, testDone)
+  it('pool: proc with multiple select  - should callback with each', async function handler () {
+    await usePoolCallProcAsync(t19, 5)
   })
 
-  it('connection: proc with multiple select  - should callback with each', testDone => {
-    t19(env.theConnection, 1, testDone)
+  it('connection: proc with multiple select  - should callback with each', async function handler () {
+    await t19(env.theConnection, 1)
   })
 
-  it('proc with multiple select  - should callback with each', testDone => {
+  it('proc with multiple select  - should callback with each', async function handler () {
     const spName = 'test_sp_select_select'
 
     const def = `alter PROCEDURE <name>(
@@ -976,51 +912,45 @@ BEGIN
 END
 END
 `
+    await env.promisedCreate(spName, def)
+    const pm = env.theConnection.procedureMgr()
+    const proc = await env.theConnection.promises.getProc(spName)
 
-    const fns = [
-      asyncDone => {
-        env.procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
+    const count = pm.getCount()
+    assert.strictEqual(count, 1)
+    const aggregate = []
+    const reducer = (arr) => {
+      return arr.reduce((t, latest) => {
+        t.push(latest.table_name)
+        return t
+      }, [])
+    }
 
-      asyncDone => {
-        const pm = env.theConnection.procedureMgr()
-        pm.get(spName, proc => {
-          const count = pm.getCount()
-          assert.strictEqual(count, 1)
-          const aggregate = []
-          const reducer = (arr) => {
-            return arr.reduce((t, latest) => {
-              t.push(latest.table_name)
-              return t
-            }, [])
+    function runner () {
+      return new Promise((resolve, reject) => {
+        proc.call([], (err, results, output) => {
+          if (err) {
+            reject(err)
           }
-          proc.call([], (err, results, output) => {
-            assert.ifError(err)
-            aggregate.push(results)
-            if (output) {
-              assert.strictEqual(2, aggregate.length, 'results didn\'t match')
-              assert.strictEqual(true, Array.isArray(aggregate[0]))
-              assert.strictEqual(true, Array.isArray(aggregate[1]))
-              const tableNames0 = reducer(aggregate[0])
-              tableNames0.forEach(s => {
-                assert.strictEqual('syscolumns', s)
-              })
-              const tableNames1 = reducer(aggregate[1])
-              tableNames1.forEach(s => {
-                assert.strictEqual('sysobjects', s)
-              })
-              asyncDone()
-            }
-          })
+          aggregate.push(results)
+          if (output) {
+            assert.strictEqual(2, aggregate.length, 'results didn\'t match')
+            assert.strictEqual(true, Array.isArray(aggregate[0]))
+            assert.strictEqual(true, Array.isArray(aggregate[1]))
+            const tableNames0 = reducer(aggregate[0])
+            tableNames0.forEach(s => {
+              assert.strictEqual('syscolumns', s)
+            })
+            const tableNames1 = reducer(aggregate[1])
+            tableNames1.forEach(s => {
+              assert.strictEqual('sysobjects', s)
+            })
+            resolve(null)
+          }
         })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+      })
+    }
+    await runner()
   })
 
   it('check proc called as object paramater where converting via utility method', testDone => {
