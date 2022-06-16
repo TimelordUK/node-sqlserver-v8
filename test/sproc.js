@@ -362,7 +362,7 @@ describe('sproc', function () {
   })
 
   it('connection: two optional parameters override first set output to sum', async function handler () {
-    t7(env.theConnection, 1)
+    await t7(env.theConnection, 1)
   })
 
   async function t8 (connectionProxy, iterations) {
@@ -1197,11 +1197,11 @@ END
   }
 
   it('pool: stream call proc no callback', async function handler () {
-    usePoolCallProcAsync(t24, 5)
+    await usePoolCallProcAsync(t24, 5)
   })
 
   it('connection: stream call proc no callback', async function handler () {
-    t24(env.theConnection, 1)
+    await t24(env.theConnection, 1)
   })
 
   const waitProcDef = `alter PROCEDURE <name>(
