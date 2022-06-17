@@ -65,246 +65,110 @@ describe('txn', function () {
     ]
   }
 
-  it('setup for tests', testDone => {
+  it('setup for tests', async function handler () {
     // single setup necessary for the test
     const tester = env.bulkTableTest(txnTableDef)
-    const fns = [
-      async asyncDone => {
-        try {
-          await tester.create()
-          asyncDone()
-        } catch (e) {
-          assert(e)
-          asyncDone() // skip any errors because the table might not exist
+    await tester.create()
+  })
+
+  function insertViolationRunner (helper) {
+    return new Promise((resolve, reject) => {
+      const q = env.theConnection.query(helper.insertParamsSql, [1, 'sprinting'])
+      const errors = []
+      q.on('error', (err, more) => {
+        errors.push(err)
+        if (more) return
+        const msgs = errors.map(e => e.message)
+        if (msgs.length !== 1) {
+          reject(new Error('bad error count'))
         }
-      }
-    ]
+        if (!msgs[0].includes('Violation of PRIMARY KEY')) {
+          reject(new Error(err))
+        }
+      })
 
-    env.async.series(fns, () => {
-      testDone()
+      q.on('info', i => {
+        const msg = i.message
+        assert(msg.includes('statement has been terminated'))
+      })
+
+      q.on('free', async function handler () {
+        env.theConnection.rollback(err => {
+          if (err) {
+            reject(err)
+          } else {
+            resolve(null)
+          }
+        })
+      })
     })
-  })
+  }
 
-  it('begin a transaction and use streaming with error on constraint to trigger rollback detection', done => {
+  async function t0 () {
     const helper = env.bulkTableTest(activityTableDef)
-    const fns = [
+    await helper.create()
+    const promises = env.theConnection.promises
+    await promises.beginTransaction()
+    await promises.query(helper.insertParamsSql, [1, 'jogging'])
+    await insertViolationRunner(helper)
+    const res = await promises.query(helper.selectSql)
+    assert.deepStrictEqual(res.first, [])
+    return helper
+  }
 
-      async asyncDone => {
-        await helper.create()
-        asyncDone()
-      },
+  async function insertThreeActivity (helper) {
+    const promises = env.theConnection.promises
+    await promises.query(helper.insertParamsSql, [1, 'jogging'])
+    await promises.query(helper.insertParamsSql, [2, 'sprinting'])
+    await promises.query(helper.insertParamsSql, [3, 'walking'])
+  }
 
-      asyncDone => {
-        env.theConnection.beginTransaction(err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        env.theConnection.query(helper.insertParamsSql, [1, 'jogging'], (err) => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const q = env.theConnection.query(helper.insertParamsSql, [1, 'sprinting'])
-        const errors = []
-        q.on('error', (err, more) => {
-          errors.push(err)
-          if (more) return
-          const msgs = errors.map(e => e.message)
-          assert.deepStrictEqual(1, msgs.length)
-          assert(msgs[0].includes('Violation of PRIMARY KEY'))
-        })
-
-        q.on('info', i => {
-          const msg = i.message
-          assert(msg.includes('statement has been terminated'))
-        })
-
-        q.on('free', () => {
-          env.theConnection.rollback(err => {
-            assert.ifError(err)
-            asyncDone()
-          })
-        })
-      },
-
-      asyncDone => {
-        env.theConnection.queryRaw(helper.selectSql, (err, results) => {
-          assert.ifError(err)
-          assert.deepStrictEqual(results.rows, [])
-          asyncDone()
-        })
-      }
-    ]
-    env.async.series(fns, () => {
-      done()
-    })
+  it('begin a transaction and use streaming with error on constraint to trigger rollback detection', async function handler () {
+    await t0()
   })
 
-  it('begin a transaction and rollback on violation and insert valid', done => {
+  const expectedThreeActivity = [
+    {
+      activity_id: 1,
+      activity_name: 'jogging'
+    },
+    {
+      activity_id: 2,
+      activity_name: 'sprinting'
+    },
+    {
+      activity_id: 3,
+      activity_name: 'walking'
+    }
+  ]
+
+  it('begin a transaction and rollback on violation and insert valid', async function handler () {
+    const helper = await t0()
+
+    // rolled back earlier to 0 rows
+    await insertThreeActivity(helper)
+
+    const results = await env.theConnection.promises.query(helper.selectSql)
+    assert.deepStrictEqual(results.first, expectedThreeActivity)
+  })
+
+  it('begin a transaction and add two rows no constraint violation, commit and check', async function handler () {
     const helper = env.bulkTableTest(activityTableDef)
-    const fns = [
-
-      async asyncDone => {
-        await helper.create()
-        asyncDone()
-      },
-
-      asyncDone => {
-        env.theConnection.beginTransaction(err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        env.theConnection.query(helper.insertParamsSql, [1, 'jogging'], (err) => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const q = env.theConnection.query(helper.insertParamsSql, [1, 'sprinting'])
-        const errors = []
-        q.on('error', (err, more) => {
-          errors.push(err)
-          if (more) return
-          const msgs = errors.map(e => e.message)
-          assert.deepStrictEqual(1, msgs.length)
-          assert(msgs[0].includes('Violation of PRIMARY KEY'))
-        })
-
-        q.on('info', i => {
-          const msg = i.message
-          assert(msg.includes('statement has been terminated'))
-        })
-
-        q.on('free', () => {
-          env.theConnection.rollback(err => {
-            assert.ifError(err)
-            asyncDone()
-          })
-        })
-      },
-
-      // at this stage rolled back and expect no rows
-
-      asyncDone => {
-        env.theConnection.queryRaw(helper.selectSql, (err, results) => {
-          assert.ifError(err)
-          assert.deepStrictEqual(results.rows, [])
-          asyncDone()
-        })
-      },
-
-      // add 2 more valid rows with no transaction
-
-      asyncDone => {
-        env.theConnection.query(helper.insertParamsSql, [1, 'jogging'], (err) => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        env.theConnection.query(helper.insertParamsSql, [2, 'sprinting'], (err) => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      // now expect 2 rows to be present
-
-      asyncDone => {
-        env.theConnection.query(helper.selectSql, (err, results) => {
-          assert.ifError(err)
-          assert.deepStrictEqual(results, [{
-            activity_id: 1,
-            activity_name: 'jogging'
-          },
-          {
-            activity_id: 2,
-            activity_name: 'sprinting'
-          }])
-          asyncDone()
-        })
-      }
-    ]
-    env.async.series(fns, () => {
-      done()
-    })
+    await helper.create()
+    const promises = env.theConnection.promises
+    await promises.beginTransaction()
+    await insertThreeActivity(helper)
+    await promises.commit()
+    const results = await promises.query(helper.selectSql)
+    assert.deepStrictEqual(results.first, expectedThreeActivity)
   })
 
-  it('begin a transaction and add two rows no constraint violation, commit and check', done => {
+  it('begin a transaction and rollback with no query', async function handler () {
     const helper = env.bulkTableTest(activityTableDef)
-    const fns = [
-
-      async asyncDone => {
-        await helper.create()
-        asyncDone()
-      },
-
-      asyncDone => {
-        env.theConnection.beginTransaction(err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        env.theConnection.query(helper.insertParamsSql, [1, 'jogging'], (err) => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        env.theConnection.query(helper.insertParamsSql, [2, 'sprinting'], (err) => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        env.theConnection.commit(err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        env.theConnection.query(helper.selectSql, (err, results) => {
-          assert.ifError(err)
-          assert.deepStrictEqual(results, [{
-            activity_id: 1,
-            activity_name: 'jogging'
-          },
-          {
-            activity_id: 2,
-            activity_name: 'sprinting'
-          }])
-          asyncDone()
-        })
-      }
-    ]
-    env.async.series(fns, () => {
-      done()
-    })
-  })
-
-  it('begin a transaction and rollback with no query', done => {
-    env.theConnection.beginTransaction(err => {
-      assert.ifError(err)
-    })
-    env.theConnection.rollback(err => {
-      assert.ifError(err)
-      done()
-    })
+    const promises = env.theConnection.promises
+    await helper.create()
+    await promises.beginTransaction()
+    await promises.rollback()
   })
 
   it('begin a transaction and rollback with no query and no callback', done => {
@@ -319,119 +183,61 @@ describe('txn', function () {
     }
   })
 
-  it('begin a transaction and commit', testDone => {
+  async function t1 () {
     const tester = env.bulkTableTest(txnTableDef)
-    const fns = [
+    await tester.drop()
+    await tester.create()
+    const promises = env.theConnection.promises
+    await promises.beginTransaction()
+    await promises.query(`${tester.insertSql} ('Anne')`)
+    await promises.query(`${tester.insertSql} ('Bob')`)
+    await promises.commit()
+    return tester
+  }
 
-      asyncDone => {
-        env.theConnection.beginTransaction(err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.theConnection.queryRaw(`${tester.insertSql} ('Anne')`, (err, results) => {
-          assert.ifError(err)
-          assert.deepStrictEqual(results, { meta: null, rowcount: 1 }, 'Insert results don\'t match')
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.theConnection.queryRaw(`${tester.insertSql} ('Bob')`, (err, results) => {
-          assert.ifError(err)
-          assert.deepStrictEqual(results, { meta: null, rowcount: 1 }, 'Insert results don\'t match')
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.theConnection.commit(err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.theConnection.queryRaw(tester.selectSql, (err, results) => {
-          assert.ifError(err)
+  const expectedMeta = [
+    {
+      name: 'id',
+      size: 10,
+      nullable: false,
+      type: 'number',
+      sqlType: 'int identity'
+    },
+    {
+      name: 'name',
+      size: 100,
+      nullable: true,
+      type: 'text',
+      sqlType: 'varchar'
+    }
+  ]
 
-          // verify results
-          const expected = {
-            meta: [{
-              name: 'id',
-              size: 10,
-              nullable: false,
-              type: 'number',
-              sqlType: 'int identity'
-            },
-            { name: 'name', size: 100, nullable: true, type: 'text', sqlType: 'varchar' }],
-            rows: [[1, 'Anne'], [2, 'Bob']]
-          }
-
-          assert.deepStrictEqual(results, expected, 'Transaction not committed properly')
-          asyncDone()
-        })
-      }
+  const expected =
+    [
+      [1, 'Anne'],
+      [2, 'Bob']
     ]
-    env.async.series(fns, () => {
-      testDone()
-    })
+
+  it('begin a transaction and commit', async function handler () {
+    const tester = await t1()
+    const promises = env.theConnection.promises
+    const res = await promises.query(tester.selectSql, [], { raw: true })
+
+    assert.deepStrictEqual(res.meta[0], expectedMeta)
+    assert.deepStrictEqual(res.first, expected)
   })
 
-  it('begin a transaction and rollback', testDone => {
-    const tester = env.bulkTableTest(txnTableDef)
-    const fns = [
+  it('begin a transaction and rollback', async function handler () {
+    const tester = await t1()
+    const promises = env.theConnection.promises
+    await promises.beginTransaction()
+    await promises.query(`${tester.insertSql} ('Carl')`)
+    await promises.query(`${tester.insertSql} ('Dana')`)
+    await promises.rollback()
+    const res = await promises.query(tester.selectSql, [], { raw: true })
 
-      asyncDone => {
-        env.theConnection.beginTransaction(err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.theConnection.queryRaw(`${tester.insertSql} ('Carl')`, (err, results) => {
-          assert.ifError(err)
-          assert.deepStrictEqual(results, { meta: null, rowcount: 1 }, 'Insert results don\'t match')
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.theConnection.queryRaw(`${tester.insertSql} ('Dana')`, (err, results) => {
-          assert.ifError(err)
-          assert.deepStrictEqual(results, { meta: null, rowcount: 1 }, 'Insert results don\'t match')
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.theConnection.rollback(err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.theConnection.queryRaw(tester.selectSql, (err, results) => {
-          assert.ifError(err)
-
-          // verify results
-          const expected = {
-            meta: [{
-              name: 'id',
-              size: 10,
-              nullable: false,
-              type: 'number',
-              sqlType: 'int identity'
-            },
-            { name: 'name', size: 100, nullable: true, type: 'text', sqlType: 'varchar' }],
-            rows: [[1, 'Anne'], [2, 'Bob']]
-          }
-
-          assert.deepStrictEqual(results, expected, 'Transaction not rolled back properly')
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+    assert.deepStrictEqual(res.meta[0], expectedMeta)
+    assert.deepStrictEqual(res.first, expected)
   })
 
   it('begin a transaction and then query with an error', testDone => {

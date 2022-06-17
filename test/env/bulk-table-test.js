@@ -11,8 +11,7 @@ class BulkTableTest {
     const tableName = def.tableName
     const columns = def.columns.map(e => `${e.name} ${e.type}`).join(', ')
     const insertColumnNames = where(def.columns, c => {
-      const res = !c.type.includes('identity')
-      return res
+      return !c.type.includes('identity')
     }).map(e => `${e.name}`).join(', ')
     const columnNames = def.columns.map(e => `${e.name}`).join(', ')
     const dropTableSql = `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL DROP TABLE ${tableName};`
@@ -44,8 +43,7 @@ class BulkTableTest {
     const promises = this.theConnection.promises
     await promises.query(this.dropTableSql)
     await promises.query(this.createTableSql)
-    const table = await promises.getTable(this.tableName)
-    return table
+    return await promises.getTable(this.tableName)
   }
 }
 
