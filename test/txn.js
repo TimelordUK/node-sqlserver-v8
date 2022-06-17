@@ -240,102 +240,21 @@ describe('txn', function () {
     assert.deepStrictEqual(res.first, expected)
   })
 
-  it('begin a transaction and then query with an error', testDone => {
-    const tester = env.bulkTableTest(txnTableDef)
-    const fns = [
-      asyncDone => {
-        env.theConnection.beginTransaction(err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
+  it('begin a transaction and then query with an error', async function handler () {
+    const tester = await t1()
+    const promises = env.theConnection.promises
+    await promises.beginTransaction()
 
-      asyncDone => {
-        const q = env.theConnection.queryRaw('INSERT INTO test_txn (name) VALUES (\'Carl\')\'m with STUPID')
-        // events are emitted before callbacks are called currently
-        q.on('error', err => {
-          const expected = new Error(`[Microsoft][${env.driver}][SQL Server]Unclosed quotation mark after the character string 'm with STUPID'.`)
-          expected.sqlstate = '42000'
-          expected.code = 105
-          expected.severity = 15
-          expected.procName = ''
-          expected.lineNumber = 1
+    try {
+      await promises.query('INSERT INTO test_txn (name) VALUES (\'Carl\')\'m with STUPID')
+    } catch (err) {
+      assert(err.message.includes('Unclosed quotation mark after the character string'))
+    } finally {
+      await promises.rollback()
+    }
 
-          assert(err instanceof Error)
-          assert(err.serverName.length > 0)
-          delete err.serverName
-          assert.deepStrictEqual(err, expected, 'Transaction should have caused an error')
-
-          env.theConnection.rollback(err => {
-            assert.ifError(err)
-            asyncDone()
-          })
-        })
-      },
-
-      asyncDone => {
-        env.theConnection.queryRaw(tester.selectSql, (err, results) => {
-          assert.ifError(err)
-
-          // verify results
-          const expected = {
-            meta: [{
-              name: 'id',
-              size: 10,
-              nullable: false,
-              type: 'number',
-              sqlType: 'int identity'
-            },
-            { name: 'name', size: 100, nullable: true, type: 'text', sqlType: 'varchar' }],
-            rows: [[1, 'Anne'], [2, 'Bob']]
-          }
-
-          assert.deepStrictEqual(results, expected, 'Transaction not rolled back properly')
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
-  })
-
-  it('begin a transaction and commit (with no async support)', testDone => {
-    const tester = env.bulkTableTest(txnTableDef)
-    env.theConnection.beginTransaction(err => {
-      assert.ifError(err)
-    })
-
-    env.theConnection.queryRaw(`${tester.insertSql} ('Anne')`, (err) => {
-      assert.ifError(err)
-    })
-
-    env.theConnection.queryRaw(`${tester.insertSql} ('Bob')`, (err) => {
-      assert.ifError(err)
-    })
-
-    env.theConnection.commit(err => {
-      assert.ifError(err)
-    })
-
-    env.theConnection.queryRaw(tester.selectSql, (err, results) => {
-      assert.ifError(err)
-
-      // verify results
-      const expected = {
-        meta: [
-          { name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-          { name: 'name', size: 100, nullable: true, type: 'text', sqlType: 'varchar' }
-        ],
-        rows: [
-          [1, 'Anne'], [2, 'Bob'], [5, 'Anne'], [6, 'Bob']
-        ]
-      }
-
-      assert.deepStrictEqual(results, expected, 'Transaction not committed properly')
-
-      testDone()
-    })
+    const res = await promises.query(tester.selectSql, [], { raw: true })
+    assert.deepStrictEqual(res.meta[0], expectedMeta)
+    assert.deepStrictEqual(res.first, expected)
   })
 })
