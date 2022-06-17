@@ -2,13 +2,14 @@
 
 /* globals describe it */
 
-const assert = require('assert')
+const assert = require('chai').assert
+const expect = require('chai').expect
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 const sql = require('msnodesqlv8')
 const connectionString = env.connectionString
 
-describe('connection tests', function () {
+describe('connection', function () {
   this.timeout(10000)
 
   this.beforeEach(done => {
@@ -28,7 +29,7 @@ describe('connection tests', function () {
         assert(err === null || err === false)
         conn.query('SELECT 1 as n', (err, results) => {
           assert.ifError(err)
-          assert.deepStrictEqual(results, expected)
+          expect(results).to.deep.equal(expected)
           conn.close(() => {
             done()
           })
@@ -40,16 +41,11 @@ describe('connection tests', function () {
     sql.open(connectionString, (err, conn) => {
       assert(err === null || err === false)
       conn.close(() => {
-        let thrown = false
-        try {
+        expect(() => {
           conn.query('SELECT 1', err => {
             assert.ifError(err)
           })
-        } catch (e) {
-          assert.deepStrictEqual(e, new Error('[msnodesql] Connection is closed.'))
-          thrown = true
-        }
-        assert(thrown)
+        }).throws('[msnodesql] Connection is closed.')
         done()
       })
     })
@@ -79,17 +75,13 @@ describe('connection tests', function () {
   it('verify that close immediately flag only accepts booleans', done => {
     sql.open(connectionString, (err, conn) => {
       assert(err === null || err === false)
-      let thrown = false
-      try {
+      expect(() => {
         conn.close('SELECT 1', err => {
           assert(err === null || err === false)
         })
-      } catch (e) {
-        assert.deepStrictEqual(e, new Error('[msnodesql] Invalid parameters passed to close.'))
-        thrown = true
-      }
+      }).throws('[msnodesql] Invalid parameters passed to close.')
+
       conn.close(() => {
-        assert(thrown)
         done()
       })
     })

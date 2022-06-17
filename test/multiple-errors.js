@@ -19,7 +19,7 @@
 
 'use strict'
 
-const assert = require('assert')
+const assert = require('chai').assert
 
 /* globals describe it */
 

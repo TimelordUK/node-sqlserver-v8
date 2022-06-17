@@ -22,9 +22,10 @@
 
 /* globals describe it */
 
-const assert = require('assert')
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
+const assert = require('chai').assert
+const expect = require('chai').expect
 
 describe('txn', function () {
   this.timeout(30000)
@@ -89,7 +90,7 @@ describe('txn', function () {
 
       q.on('info', i => {
         const msg = i.message
-        assert(msg.includes('statement has been terminated'))
+        expect(msg).to.include('statement has been terminated')
       })
 
       q.on('free', async function handler () {
@@ -112,7 +113,7 @@ describe('txn', function () {
     await promises.query(helper.insertParamsSql, [1, 'jogging'])
     await insertViolationRunner(helper)
     const res = await promises.query(helper.selectSql)
-    assert.deepStrictEqual(res.first, [])
+    expect(res.first).to.deep.equal([])
     return helper
   }
 
@@ -149,7 +150,7 @@ describe('txn', function () {
     await insertThreeActivity(helper)
 
     const results = await env.theConnection.promises.query(helper.selectSql)
-    assert.deepStrictEqual(results.first, expectedThreeActivity)
+    expect(results.first).to.deep.equal(expectedThreeActivity)
   })
 
   it('begin a transaction and add two rows no constraint violation, commit and check', async function handler () {
@@ -160,7 +161,7 @@ describe('txn', function () {
     await insertThreeActivity(helper)
     await promises.commit()
     const results = await promises.query(helper.selectSql)
-    assert.deepStrictEqual(results.first, expectedThreeActivity)
+    expect(results.first).to.deep.equal(expectedThreeActivity)
   })
 
   it('begin a transaction and rollback with no query', async function handler () {
@@ -223,8 +224,8 @@ describe('txn', function () {
     const promises = env.theConnection.promises
     const res = await promises.query(tester.selectSql, [], { raw: true })
 
-    assert.deepStrictEqual(res.meta[0], expectedMeta)
-    assert.deepStrictEqual(res.first, expected)
+    expect(res.meta[0]).to.deep.equal(expectedMeta)
+    expect(res.first).to.deep.equal(expected)
   })
 
   it('begin a transaction and rollback', async function handler () {
@@ -236,8 +237,8 @@ describe('txn', function () {
     await promises.rollback()
     const res = await promises.query(tester.selectSql, [], { raw: true })
 
-    assert.deepStrictEqual(res.meta[0], expectedMeta)
-    assert.deepStrictEqual(res.first, expected)
+    expect(res.meta[0]).to.deep.equal(expectedMeta)
+    expect(res.first).to.deep.equal(expected)
   })
 
   it('begin a transaction and then query with an error', async function handler () {
@@ -254,7 +255,7 @@ describe('txn', function () {
     }
 
     const res = await promises.query(tester.selectSql, [], { raw: true })
-    assert.deepStrictEqual(res.meta[0], expectedMeta)
-    assert.deepStrictEqual(res.first, expected)
+    expect(res.meta[0]).to.deep.equal(expectedMeta)
+    expect(res.first).to.deep.equal(expected)
   })
 })

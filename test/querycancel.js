@@ -3,7 +3,7 @@
 
 /* globals describe it */
 
-const assert = require('assert')
+const assert = require('chai').assert
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 

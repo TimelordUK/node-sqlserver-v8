@@ -20,7 +20,10 @@
 
 'use strict'
 
-const assert = require('assert')
+const chai = require('chai')
+const assert = chai.assert
+const expect = chai.expect
+chai.use(require('chai-as-promised'))
 
 /* globals describe it */
 
@@ -30,12 +33,12 @@ const env = new TestEnv()
 describe('params', function () {
   this.timeout(60000)
 
-  this.beforeEach(done => {
-    env.open().then(() => done())
+  this.beforeEach(async function handler () {
+    await env.open()
   })
 
-  this.afterEach(done => {
-    env.close().then(() => done())
+  this.afterEach(async function handler () {
+    await env.close()
   })
 
   class MetaTypes {
@@ -545,29 +548,20 @@ describe('params', function () {
   })
 
   it('invalid numbers cause errors', async function handler () {
-    try {
+    async function f0 () {
       await env.theConnection.promises.query('INSERT INTO invalid_numbers_test (f) VALUES (?)',
         [Number.POSITIVE_INFINITY])
       assert.deepStrictEqual(1, 0)
-    } catch (e) {
-      delete e._results
-      const expectedError = new Error('IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
-      expectedError.code = -1
-      expectedError.sqlstate = 'IMNOD'
-      assert.deepStrictEqual(e, expectedError)
     }
 
-    try {
+    async function f1 () {
       await env.theConnection.promises.query('INSERT INTO invalid_numbers_test (f) VALUES (?)',
         [Number.NEGATIVE_INFINITY])
       assert.deepStrictEqual(1, 0)
-    } catch (e) {
-      delete e._results
-      const expectedError = new Error('IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
-      expectedError.code = -1
-      expectedError.sqlstate = 'IMNOD'
-      assert.deepStrictEqual(e, expectedError)
     }
+
+    await expect(f0()).to.be.rejectedWith('IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
+    await expect(f1()).to.be.rejectedWith('IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
   })
 
   it('insert a bool (true) as a parameter', async function handler () {
