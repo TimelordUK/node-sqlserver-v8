@@ -2,7 +2,10 @@
 
 /* globals describe it */
 
-const assert = require('chai').assert
+const chai = require('chai')
+const assert = chai.assert
+const expect = chai.expect
+chai.use(require('chai-as-promised'))
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 const util = require('util')
@@ -71,7 +74,7 @@ describe('sproc', function () {
       const output = res.output
       if (output) {
         assert(Array.isArray(output))
-        assert.deepStrictEqual(expected, output)
+        expect(output).is.deep.equal(expected)
       }
     }
   }
@@ -127,7 +130,7 @@ describe('sproc', function () {
       const output = res.output
       if (output) {
         assert(Array.isArray(output))
-        assert.deepStrictEqual(expected, output)
+        expect(output).is.deep.equal(expected)
       }
     }
   }
@@ -173,7 +176,7 @@ describe('sproc', function () {
         errors.push(e)
       }
     }
-    assert.deepStrictEqual(iterations, errors.length)
+    expect(errors.length).is.deep.equal(iterations)
   }
 
   it('pool: two parameters 1 optional set output to sum - omit required expect error', async function handler () {
@@ -216,7 +219,7 @@ describe('sproc', function () {
       const output = res.output
       if (output) {
         assert(Array.isArray(output))
-        assert.deepStrictEqual(expected, output)
+        expect(output).is.deep.equal(expected)
       }
     }
   }
@@ -310,7 +313,7 @@ describe('sproc', function () {
       const output = res.output
       if (output) {
         assert(Array.isArray(output))
-        assert.deepStrictEqual(expected, output)
+        expect(output).is.deep.equal(expected)
       }
     }
   }
@@ -352,7 +355,7 @@ describe('sproc', function () {
       const output = res.output
       if (output) {
         assert(Array.isArray(output))
-        assert.deepStrictEqual(expected, output)
+        expect(output).is.deep.equal(expected)
       }
     }
   }
@@ -395,7 +398,7 @@ describe('sproc', function () {
       const output = res.output
       if (output) {
         assert(Array.isArray(output))
-        assert.deepStrictEqual(expected, output)
+        expect(output).is.deep.equal(expected)
       }
     }
   }
@@ -437,7 +440,7 @@ describe('sproc', function () {
       const output = res.output
       if (output) {
         assert(Array.isArray(output))
-        assert.deepStrictEqual(expected, output)
+        expect(output).is.deep.equal(expected)
       }
     }
   }
@@ -522,7 +525,7 @@ describe('sproc', function () {
         errors.push(e)
       }
     }
-    assert.deepStrictEqual(iterations, errors.length)
+    expect(errors.length).is.deep.equal(iterations)
   }
 
   it('pool: add illegal parameter expect error', async function handler () {
@@ -560,7 +563,7 @@ describe('sproc', function () {
       const output = res.output
       if (output) {
         assert(Array.isArray(output))
-        assert.deepStrictEqual(expected, output)
+        expect(output).is.deep.equal(expected)
       }
     }
   }
@@ -602,7 +605,7 @@ describe('sproc', function () {
       const output = res.output
       if (output) {
         assert(Array.isArray(output))
-        assert.deepStrictEqual(expected, output)
+        expect(output).is.deep.equal(expected)
       }
     }
   }
@@ -970,7 +973,7 @@ END
         99,
         o.num1 + o.num2
       ]
-      assert.deepStrictEqual(expected, output)
+      expect(output).is.deep.equal(expected)
     }
   })
 
@@ -1215,13 +1218,8 @@ waitfor delay @timeout;END
     await env.promisedCreate(spName, waitProcDef)
     const pm = env.theConnection.procedureMgr()
     pm.setTimeout(2)
-    try {
-      await promisedCallProc(env.theConnection, spName, ['0:0:5'])
-      assert.deepStrictEqual(1, 0)
-    } catch (err) {
-      assert(err)
-      assert(err.message.includes('Query timeout expired'))
-    }
+    await expect(promisedCallProc(env.theConnection, spName, ['0:0:5']))
+      .to.be.rejectedWith('Query timeout expired')
   })
 
   it('call proc error with timeout then query on same connection', async function handler () {

@@ -61,8 +61,7 @@ describe('table-builder', function () {
     }
 
     function checkOne (lhs, rhs) {
-      const today = th.getUTCTime(rhs.col_a)
-      rhs.col_a = today
+      rhs.col_a = th.getUTCTime(rhs.col_a)
       assert.deepStrictEqual(lhs.id, rhs.id)
       assert(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)
     }
@@ -128,7 +127,7 @@ describe('table-builder', function () {
     function makeOne (i) {
       return {
         id: i,
-        col_a: i * 1.0 / ((i * i) + (1 * 1.0))
+        col_a: i * 1.0 / ((i * i) + (1.0))
       }
     }
 
@@ -150,7 +149,7 @@ describe('table-builder', function () {
     function makeOne (i) {
       return {
         id: i,
-        col_a: i * 1.0 / ((i * i) + (1 * 1.0))
+        col_a: i * 1.0 / ((i * i) + (1.0))
       }
     }
 
@@ -172,7 +171,7 @@ describe('table-builder', function () {
     function makeOne (i) {
       return {
         id: i,
-        col_a: i * 1.0 / ((i * i) + (1 * 1.0))
+        col_a: i * 1.0 / ((i * i) + (1.0))
       }
     }
 
