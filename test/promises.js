@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 'use strict'
 
 /* globals describe it */
@@ -23,7 +24,7 @@ describe('promises', function () {
   it('select promise query with no column name', async function handler () {
     const r1 = await env.theConnection.promises.query('select 1,2 union select 3,4', [],
       { replaceEmptyColumnNames: true })
-    console.log(JSON.stringify(r1.first, null, 0))
+    // console.log(JSON.stringify(r1.first, null, 0))
     expect(r1.first[0].Column0).is.equal(1)
     expect(r1.first[0].Column1).is.equal(2)
     expect(r1.first[1].Column0).is.equal(3)
@@ -105,7 +106,7 @@ describe('promises', function () {
     res.forEach(a => {
       delete a.d1.nanosecondsDelta
     })
-    assert.deepStrictEqual(res, expected)
+    expect(res).to.deep.equal(expected)
   })
 
   it('using promises to open, query, close pool', async function handler () {
@@ -120,7 +121,7 @@ describe('promises', function () {
     const res = promised.map(r => r.first[0].spid)
     assert(res !== null)
     const set = new Set(res)
-    assert.strictEqual(set.size, size)
+    expect(set.size).to.equal(size)
     await pool.promises.close()
   })
 
@@ -128,7 +129,7 @@ describe('promises', function () {
     const res = await env.sql.promises.query(env.connectionString, 'select @@SPID as spid')
     assert(res !== null)
     assert(res.first !== null)
-    assert(Object.prototype.hasOwnProperty.call(res.first[0], 'spid'))
+    expect(res.first[0]).has.property('spid')
   })
 
   it('query aggregator: insert 1 valid 1, ivalid table', async function handler () {
@@ -153,9 +154,11 @@ describe('promises', function () {
       const res = e._results
       assert(res !== null)
       assert(res.meta !== null)
-      assert.deepStrictEqual(res.errors.length, 1)
-      assert.deepStrictEqual(res.meta, [])
-      assert.deepStrictEqual(res.results, [])
+      expect(res.errors.length).to.equal(1)
+
+      expect(res.meta).to.be.an('array').that.is.empty
+      expect(res.results).to.be.an('array').that.is.empty
+
       // assert.deepStrictEqual(res.counts, expectedCounts)
       return null
     }
@@ -225,39 +228,30 @@ describe('promises', function () {
   })
 
   it('query aggregator: insert into invalid table', async function handler () {
-    try {
+    async function f0 () {
       const tableName = 'invalidTable'
-      const sql = `
-        insert into ${tableName} values (1, 5);`
-
+      const sql = `insert into ${tableName} values (1, 5);`
       await env.theConnection.promises.query(sql)
-      return new Error('expecting error')
-    } catch (e) {
-      assert(e.message.indexOf('Invalid object name \'invalidTable\'') > 0)
-      return null
     }
+    await expect(f0()).to.be.rejectedWith('Invalid object name \'invalidTable\'')
   })
 
   it('query aggregator: query dead connection - expect error', async function handler () {
-    try {
+    async function f0 () {
       const proxy = await env.connection()
       await proxy.promises.close()
       await proxy.query('select @@SPID as spid')
-      assert.deepStrictEqual(1, 0)
-    } catch (e) {
-      assert(e.message.indexOf('closed') > 0)
     }
+    await expect(f0()).to.be.rejectedWith('closed')
   })
 
   it('query aggregator: query dead pool - expect error', async function handler () {
-    try {
+    async function f0 () {
       const proxy = await env.pool()
       await proxy.promises.open()
       await proxy.promises.close()
       await proxy.promises.query('select @@SPID as spid')
-      assert.deepStrictEqual(1, 0)
-    } catch (e) {
-      assert(e.message.indexOf('closed') > 0)
     }
+    await expect(f0()).to.be.rejectedWith('closed')
   })
 })
