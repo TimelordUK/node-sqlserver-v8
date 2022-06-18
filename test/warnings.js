@@ -2,7 +2,10 @@
 
 /* globals describe it */
 
-const assert = require('chai').assert
+const chai = require('chai')
+const assert = chai.assert
+const expect = chai.expect
+chai.use(require('chai-as-promised'))
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 
@@ -39,47 +42,10 @@ describe('warning', function () {
     ' ) as tmp ' +
     ' OPTION (RECOMPILE);'
 
-  function testQry (qry, done) {
-    const errors = []
-    const warnings = []
-    let meta
-    const res = []
-    let obj
-    const stmt = env.theConnection.queryRaw(qry)
-    stmt.on('meta', m => {
-      meta = m
-    })
-    stmt.on('error', err => {
-      errors.push(err)
-    })
-    stmt.on('info', err => {
-      warnings.push(err)
-    })
-    stmt.on('column', (c, d) => {
-      obj.push(d)
-    })
-    stmt.on('row', () => {
-      obj = []
-      res.push(obj)
-    })
-    stmt.on('done', () => {
-      done(warnings, errors, meta, res)
-    })
-  }
-
-  function testPrepared (qry, done) {
-    const errors = []
-    const warnings = []
-    env.theConnection.prepare(qry, (e, ps) => {
-      ps.preparedQuery([1], (err) => {
-        if (err) {
-          errors.push(err)
-        }
-        ps.free(() => {
-          done(warnings, errors)
-        })
-      })
-    })
+  async function testPreparedAsync (qry) {
+    const ps = await env.theConnection.promises.prepare(qry)
+    await ps.promises.query([1])
+    await ps.promises.free()
   }
 
   function testSP (done) {
@@ -102,22 +68,11 @@ describe('warning', function () {
     testSP(connStr, 'TEST FIVE - Stord Proc - JOIN HINT WARNING')
     */
 
-  it('TEST THREE - Prepared Query - JOIN HINT WARNING', testDone => {
-    const fns = [
-      asyncDone => {
-        testPrepared(joinFailTestQry, (warnings, errors) => {
-          assert(errors.length === 0)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+  it('TEST THREE - Prepared Query - JOIN HINT WARNING', async function hander () {
+    await testPreparedAsync(joinFailTestQry)
   })
 
-  it('TEST ONE - Query - JOIN HINT WARNING', testDone => {
+  it('TEST ONE - Query - JOIN HINT WARNING', async function hander () {
     const expected = [
       [
         1,
@@ -128,46 +83,22 @@ describe('warning', function () {
         'test2'
       ]
     ]
-    const fns = [
-      asyncDone => {
-        testQry(joinFailTestQry, (warnings, errors, meta, res) => {
-          assert(meta)
-          assert(meta.length === 2)
-          assert(warnings.length === 1)
-          assert(errors.length === 0)
-          assert.deepStrictEqual(expected, res)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+    const res = await env.theConnection.promises.query(joinFailTestQry, [], { raw: true })
+    expect(res.first).is.deep.equal(expected)
+    expect(res.meta[0].length).is.equal(2)
+    expect(res.info.length).is.equal(1)
   })
 
-  it('TEST TWO - Query - NULL ELIMNATED WARNING', testDone => {
+  it('TEST TWO - Query - NULL ELIMNATED WARNING', async function handler () {
     const expected = [
       [
         8
       ]
     ]
-    const fns = [
-      asyncDone => {
-        testQry(nullEliminatedTestQry, (warnings, errors, meta, res) => {
-          assert(warnings.length === 0)
-          assert(errors.length === 0)
-          assert(meta)
-          assert.deepStrictEqual(res, expected)
-          assert(meta.length === 1)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+    const res = await env.theConnection.promises.query(nullEliminatedTestQry, [], { raw: true })
+    expect(res.first).is.deep.equal(expected)
+    expect(res.meta.length).is.equal(1)
+    expect(res.info).is.equal(null)
   })
 
   it('TEST FIVE - Stord Proc - JOIN HINT WARNING', testDone => {
@@ -205,7 +136,7 @@ describe('warning', function () {
             warnings.forEach(w => {
               assert(w.message.includes(msg))
             })
-            assert.deepStrictEqual(res, expectedResults)
+            expect(res).to.deep.equal(expectedResults)
           }
         })
         q.on('error', err => {
@@ -225,18 +156,7 @@ describe('warning', function () {
     })
   })
 
-  it('TEST FOUR - Prepared Query - NULL ELIMNATED WARNING', testDone => {
-    const fns = [
-      asyncDone => {
-        testPrepared(nullEliminatedTestQry, (warnings, errors) => {
-          assert(errors.length === 0)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+  it('TEST FOUR - Prepared Query - NULL ELIMNATED WARNING', async function handler () {
+    await testPreparedAsync(nullEliminatedTestQry)
   })
 })
