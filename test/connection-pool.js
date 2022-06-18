@@ -1,7 +1,10 @@
 
 /* globals describe it */
 
-const assert = require('chai').assert
+const chai = require('chai')
+const assert = chai.assert
+const expect = chai.expect
+chai.use(require('chai-as-promised'))
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 
@@ -50,14 +53,7 @@ describe('connection-pool', function () {
     const pool = env.pool()
     await pool.promises.open()
     await pool.promises.close()
-
-    try {
-      await pool.promises.query('select @@SPID as spid')
-      assert.deepStrictEqual(1, 0)
-    } catch (e) {
-      assert(e !== null)
-      assert(e.message.includes('closed'))
-    }
+    await expect(pool.promises.query('select @@SPID as spid')).to.be.rejectedWith('closed')
   })
 
   it('submit query to closed pool with callback - expect error on cb', async function handler () {
@@ -96,6 +92,34 @@ describe('connection-pool', function () {
     })
   })
 
+  it('use pool to call proc', async function handler () {
+    const pool = env.pool()
+    await pool.open()
+    const spName = 'test_sp_get_optional_p'
+    const a = 10
+    const b = 20
+    const def = `alter PROCEDURE <name> (
+      @a INT = ${a},
+      @b INT = ${b},
+      @plus INT out
+      )
+    AS begin
+      -- SET XACT_ABORT ON;
+      SET NOCOUNT ON;
+      set @plus = @a + @b;
+    end;
+`
+    await env.promisedCreate(spName, def)
+    const expected = [
+      0,
+      a + b
+    ]
+    const o = {}
+    const res = await pool.promises.callProc(spName, o)
+    expect(res.output).to.be.deep.equal(expected)
+    await pool.close()
+  })
+
   it('use tableMgr on pool bulk insert varchar vector - exactly 4000 chars', async function handler () {
     const pool = env.pool(4)
     await pool.promises.open()
@@ -108,7 +132,7 @@ describe('connection-pool', function () {
 
     await promisedInsert(expected)
     const res = await promisedSelect(expected)
-    assert.deepStrictEqual(res, expected)
+    expect(res).to.be.deep.equals(expected)
     await pool.close()
   })
 
@@ -126,7 +150,7 @@ describe('connection-pool', function () {
     await env.theConnection.promises.query(insertSql, [tp])
     // use a connection having inserted with pool
     const res = await env.theConnection.promises.query(`select * from ${tableName}`)
-    assert.deepStrictEqual(res.first, vec)
+    expect(res.first).to.be.deep.equal(vec)
     await pool.close()
   })
 
@@ -154,7 +178,7 @@ describe('connection-pool', function () {
     const res = promised.map(r => r.first[0].spid)
     assert(res !== null)
     const set = new Set(res)
-    assert.strictEqual(set.size, size)
+    expect(set.size).to.be.equal(size)
     await pool.promises.close()
     return null
   })
@@ -209,9 +233,9 @@ describe('connection-pool', function () {
         q.on('free', () => {
           ++free
           if (free === iterations) {
-            assert(errors.length === iterations)
-            assert(checkin.length === iterations)
-            assert(checkout.length === iterations)
+            expect(errors.length).to.equal(iterations)
+            expect(checkin.length).to.equal(iterations)
+            expect(checkout.length).to.equal(iterations)
             pool.close(() => {
               testDone()
             })
@@ -263,9 +287,9 @@ describe('connection-pool', function () {
         q.on('free', () => {
           ++free
           if (free === iterations) {
-            assert(results.length === iterations)
-            assert(checkin.length === iterations)
-            assert(checkout.length === iterations)
+            expect(results.length).to.equal(iterations)
+            expect(checkin.length).to.equal(iterations)
+            expect(checkout.length).to.equal(iterations)
             pool.close(() => {
               testDone()
             })
@@ -343,10 +367,10 @@ describe('connection-pool', function () {
     })
 
     pool.on('close', () => {
-      assert.strictEqual(size, parked[size - 1].parked)
-      assert.strictEqual(0, parked[size - 1].idle)
-      assert.strictEqual(true, opened)
-      assert.strictEqual(size * 5, checkin.length) // 3 x 4 heartbeats + 1 x 4 'grow' + 1 x 4 queries
+      expect(parked[size - 1].parked).to.equal(size)
+      expect(parked[size - 1].idle).to.equal(0)
+      expect(opened).to.be.equal(true)
+      expect(checkin.length).to.be.equal(size * 5) // 3 x 4 heartbeats + 1 x 4 'grow' + 1 x 4 queries
       // assert.strictEqual(size * 4, checkout.length)
       testDone()
     })
