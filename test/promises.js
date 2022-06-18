@@ -2,9 +2,12 @@
 
 /* globals describe it */
 
-const assert = require('chai').assert
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
+const chai = require('chai')
+const assert = chai.assert
+const expect = chai.expect
+chai.use(require('chai-as-promised'))
 
 describe('promises', function () {
   this.timeout(30000)
@@ -15,6 +18,16 @@ describe('promises', function () {
 
   this.afterEach(done => {
     env.close().then(() => done())
+  })
+
+  it('select promise query with no column name', async function handler () {
+    const r1 = await env.theConnection.promises.query('select 1,2 union select 3,4', [],
+      { replaceEmptyColumnNames: true })
+    console.log(JSON.stringify(r1.first, null, 0))
+    expect(r1.first[0].Column0).is.equal(1)
+    expect(r1.first[0].Column1).is.equal(2)
+    expect(r1.first[1].Column0).is.equal(3)
+    expect(r1.first[1].Column1).is.equal(4)
   })
 
   it('adhoc proc promise: open call close', async function handler () {
