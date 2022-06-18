@@ -2,9 +2,10 @@
 
 /* globals describe it */
 
-const assert = require('chai').assert
-const expect = require('chai').expect
 const { TestEnv } = require('./env/test-env')
+const chai = require('chai')
+const expect = chai.expect
+chai.use(require('chai-as-promised'))
 const env = new TestEnv()
 
 describe('userbind', function () {
@@ -18,71 +19,16 @@ describe('userbind', function () {
     env.close().then(() => done())
   })
 
-  function testUserBind (params, cb) {
-    const allres = []
-    let skip = false
-    let error = null
-
-    const sequence = [
-
-      asyncDone => {
-        env.theConnection.query(params.query, [params.setter(params.min)], (err, res) => {
-          error = err
-          if (err) {
-            skip = true
-            asyncDone()
-          } else {
-            allres.push(res[0])
-            asyncDone()
-          }
-        })
-      },
-
-      asyncDone => {
-        if (skip) {
-          asyncDone()
-          return
-        }
-        env.theConnection.query(params.query, [params.setter(params.max)], (err, res) => {
-          error = err
-          if (err) {
-            skip = true
-            asyncDone()
-          } else {
-            allres.push(res[0])
-            asyncDone()
-          }
-        })
-      },
-
-      asyncDone => {
-        if (skip) {
-          asyncDone()
-          return
-        }
-        if (Object.prototype.hasOwnProperty.call(params, 'test_null')) {
-          if (!params.test_null) {
-            asyncDone()
-          }
-        } else {
-          env.theConnection.query(params.query, [params.setter(null)], (err, res) => {
-            error = err
-            if (err) {
-              error = err
-              asyncDone()
-            } else {
-              allres.push(res[0])
-              asyncDone()
-            }
-          })
-        }
-      }
-    ]
-
-    env.async.series(sequence,
-      () => {
-        cb(error, allres)
-      })
+  async function testUserBindAsync (params) {
+    const promises = env.theConnection.promises
+    const r1 = await promises.query(params.query, [params.setter(params.min)])
+    const r2 = await promises.query(params.query, [params.setter(params.max)])
+    const allres = [r1.first[0], r2.first[0]]
+    if (params.test_null) {
+      const r3 = promises.query(params.query, [params.setter(null)])
+      allres.push(r3)
+    }
+    return allres
   }
 
   function compare (params, res) {
@@ -93,34 +39,22 @@ describe('userbind', function () {
       { v: max }
     ]
 
-    let testNull = true
-    if (Object.prototype.hasOwnProperty.call(params, 'test_null')) {
-      testNull = params.test_null
-    }
-
-    if (testNull) {
+    if (res.length === 3) {
       expected.push({
         v: null
       })
     }
 
-    assert.deepStrictEqual(res, expected)
+    expect(res).to.deep.equal(expected)
   }
 
-  it('user bind DateTimeOffset to sql type DateTimeOffset - provide offset of 60 minutes', testDone => {
+  it('user bind DateTimeOffset to sql type DateTimeOffset - provide offset of 60 minutes', async function handler () {
     const offset = 60
     const scale = 7
-    const now = new Date()
-    const smalldt = new Date(Date.UTC(now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate(),
-      14,
-      0,
-      0,
-      0))
-
+    const smalldt = env.timeHelper.getUTCTodayHHMSS(14, 0, 0)
     const expected = new Date(smalldt.getTime() - offset * 60000)
     expected.nanosecondsDelta = 0
+
     const params = {
       query: 'declare @v DateTimeOffset = ?; select @v as v',
       min: smalldt,
@@ -133,14 +67,11 @@ describe('userbind', function () {
         return env.sql.DateTimeOffset(v, scale, offset)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind DateTime2 to sql type datetime2(7) - with scale set to illegal value, should error', testDone => {
+  it('user bind DateTime2 to sql type datetime2(7) - with scale set to illegal value, should error', async function handler () {
     const now = new Date()
     const params = {
       query: 'declare @v DATETIME2(7) = ?; select @v as v',
@@ -150,13 +81,10 @@ describe('userbind', function () {
         return env.sql.DateTime2(v, 8) // set scale illegal
       }
     }
-    testUserBind(params, err => {
-      assert(err)
-      testDone()
-    })
+    await expect(testUserBindAsync(params)).to.be.rejectedWith('Invalid precision value')
   })
 
-  it('user bind DateTime2 to sql type datetime2(7) - with scale set too low, should error', testDone => {
+  it('user bind DateTime2 to sql type datetime2(7) - with scale set too low, should error', async function handler () {
     const jsonDate = '2011-05-26T07:56:00.123Z'
     const then = new Date(jsonDate)
     const params = {
@@ -167,17 +95,14 @@ describe('userbind', function () {
         return env.sql.DateTime2(v, 1) // set scale too low
       }
     }
-    testUserBind(params, err => {
-      assert.ok(err.message.indexOf('Fractional second precision exceeds the scale specified') > 0)
-      testDone()
-    })
+    await expect(testUserBindAsync(params)).to.be.rejectedWith('Fractional second precision exceeds the scale specified')
   })
 
   function repeat (a, num) {
     return new Array(num + 1).join(a)
   }
 
-  it('user bind WLongVarChar to NVARCHAR(MAX)', testDone => {
+  it('user bind WLongVarChar to NVARCHAR(MAX)', async function handler () {
     const smallLen = 2200
     const largeLen = 8200
     const params = {
@@ -189,14 +114,11 @@ describe('userbind', function () {
         return env.sql.WLongVarChar(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind DateTimeOffset to sql type DateTimeOffset - no offset ', testDone => {
+  it('user bind DateTimeOffset to sql type DateTimeOffset - no offset ', async function handler () {
     const now = new Date()
     const smalldt = new Date(Date.UTC(now.getUTCFullYear(),
       now.getUTCMonth(),
@@ -214,14 +136,11 @@ describe('userbind', function () {
         return env.sql.DateTimeOffset(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind SmallDateTime to sql type smalldatetime', testDone => {
+  it('user bind SmallDateTime to sql type smalldatetime', async function handler () {
     const now = new Date()
     const smalldt = env.timeHelper.getUTCDateHHMM(now)
     smalldt.nanosecondsDelta = 0
@@ -233,14 +152,11 @@ describe('userbind', function () {
         return env.sql.SmallDateTime(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind DateTime2 to sql type datetime2(7) default scale', testDone => {
+  it('user bind DateTime2 to sql type datetime2(7) default scale', async function handler () {
     const now = new Date()
     now.nanosecondsDelta = 0
     const params = {
@@ -251,14 +167,11 @@ describe('userbind', function () {
         return env.sql.DateTime2(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind DateTime2 to sql type datetime2(7) - with scale set correctly, should pass', testDone => {
+  it('user bind DateTime2 to sql type datetime2(7) - with scale set correctly, should pass', async function handler () {
     const now = new Date()
     now.nanosecondsDelta = 0
     const params = {
@@ -269,14 +182,11 @@ describe('userbind', function () {
         return env.sql.DateTime2(v, 3) // set scale just right for ms
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind DateTime to sql type datetime2(7)', testDone => {
+  it('user bind DateTime to sql type datetime2(7)', async function handler () {
     const now = new Date()
     now.nanosecondsDelta = 0
     const params = {
@@ -287,14 +197,11 @@ describe('userbind', function () {
         return env.sql.DateTime(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind DateTime to sql type datetime - driver currently only supports 10ms accuracy with datetime', testDone => {
+  it('user bind DateTime to sql type datetime - driver currently only supports 10ms accuracy with datetime', async function handler () {
     const now = env.sql.DateRound()
     now.nanosecondsDelta = 0
     const params = {
@@ -305,14 +212,11 @@ describe('userbind', function () {
         return env.sql.DateTime(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind UniqueIdentifier', (testDone) => {
+  it('user bind UniqueIdentifier', async function handler () {
     const params = {
       query: 'declare @v uniqueidentifier = ?; select @v as v',
       min: 'F01251E5-96A3-448D-981E-0F99D789110D',
@@ -321,14 +225,11 @@ describe('userbind', function () {
         return env.sql.UniqueIdentifier(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind Time', (testDone) => {
+  it('user bind Time', async function handler () {
     const today = new Date()
     const timeOnly = new Date(Date.UTC(1900,
       0,
@@ -351,14 +252,11 @@ describe('userbind', function () {
         return env.sql.Time(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind Date', testDone => {
+  it('user bind Date', async function handler () {
     const today = new Date()
     const dateOnly = env.timeHelper.getUTCDate()
     dateOnly.nanosecondsDelta = 0
@@ -374,14 +272,11 @@ describe('userbind', function () {
         return env.sql.Date(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind Xml - well formatted.', testDone => {
+  it('user bind Xml - well formatted.', async function handler () {
     const params = {
       query: 'declare @v xml = ?; select @v as v',
       min: '<Cars><Car id="1234"><Make>Volkswagen</Make><Model>Eurovan</Model><Year>2003</Year><Color>White</Color></Car></Cars>',
@@ -390,14 +285,11 @@ describe('userbind', function () {
         return env.sql.Xml(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind Xml - bad xml should give error', (testDone) => {
+  it('user bind Xml - bad xml should give error', async function handler () {
     const params = {
       query: 'declare @v xml = ?; select @v as v',
       min: '',
@@ -406,13 +298,10 @@ describe('userbind', function () {
         return env.sql.Xml(v)
       }
     }
-    testUserBind(params, err => {
-      assert.ok(err.message.indexOf('end tag does not match start tag') > 0)
-      testDone()
-    })
+    await expect(testUserBindAsync(params)).to.be.rejectedWith('end tag does not match start tag')
   })
 
-  it('user bind nchar - check truncated user strings (1)', testDone => {
+  it('user bind nchar - check truncated user strings (1)', async function handler () {
     const params = {
       query: 'declare @v nchar(5) = ?; select @v as v',
       min: 'five',
@@ -426,14 +315,11 @@ describe('userbind', function () {
         return env.sql.NChar(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind Char - check truncated user strings (1)', testDone => {
+  it('user bind Char - check truncated user strings (1)', async function handler () {
     const params = {
       query: 'declare @v char(5) = ?; select @v as v',
       min: 'five',
@@ -446,14 +332,11 @@ describe('userbind', function () {
         return env.sql.Char(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind Char - returned string will be padded (2)', testDone => {
+  it('user bind Char - returned string will be padded (2)', async function handler () {
     const params = {
       query: 'declare @v char(5) = ?; select @v as v',
       min: 'h',
@@ -466,14 +349,11 @@ describe('userbind', function () {
         return env.sql.Char(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind Char - use precision to clip user string (3)', testDone => {
+  it('user bind Char - use precision to clip user string (3)', async function handler () {
     const params = {
       query: 'declare @v char(11) = ?; select @v as v',
       min: 'h',
@@ -486,14 +366,11 @@ describe('userbind', function () {
         return env.sql.Char(v, 2)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind NVarChar /16 bit encoded', testDone => {
+  it('user bind NVarChar /16 bit encoded', async function handler () {
     const params = {
       query: 'declare @v varchar(100) = ?; select @v as v',
       min: 'hello',
@@ -506,46 +383,41 @@ describe('userbind', function () {
         return env.sql.NVarChar(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind Float, maps to numeric data structure.', (testDone) => {
+  it('user bind Float, maps to numeric data structure.', async function handler () {
     const params = {
       query: 'declare @v float = ?; select @v as v',
+      // eslint-disable-next-line no-loss-of-precision
       min: -1.7976931348623158E+308,
+      // eslint-disable-next-line no-loss-of-precision
       max: 1.7976931348623158E+308,
       setter: v => {
         return env.sql.Float(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind Double, maps to numeric data structure.', testDone => {
+  it('user bind Double, maps to numeric data structure.', async function handler () {
     const params = {
       query: 'declare @v float = ?; select @v as v',
+      // eslint-disable-next-line no-loss-of-precision
       min: -1.7976931348623158E+308,
+      // eslint-disable-next-line no-loss-of-precision
       max: 1.7976931348623158E+308,
       setter: v => {
         return env.sql.Float(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind Bit', testDone => {
+  it('user bind Bit', async function handler () {
     const params = {
       query: 'declare @v bit = ?; select @v as v',
       min: false,
@@ -554,14 +426,11 @@ describe('userbind', function () {
         return env.sql.Bit(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind BigInt', testDone => {
+  it('user bind BigInt', async function handler () {
     const params = {
       query: 'declare @v bigint = ?; select @v as v',
       min: -9007199254740991,
@@ -570,14 +439,11 @@ describe('userbind', function () {
         return env.sql.BigInt(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind Int', (testDone) => {
+  it('user bind Int', async function handler () {
     const params = {
       query: 'declare @v int = ?; select @v as v',
       min: -2147483648,
@@ -586,14 +452,11 @@ describe('userbind', function () {
         return env.sql.Int(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind TinyInt', testDone => {
+  it('user bind TinyInt', async function handler () {
     const params = {
       query: 'declare @v tinyint = ?; select @v as v',
       min: 0,
@@ -602,14 +465,11 @@ describe('userbind', function () {
         return env.sql.TinyInt(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 
-  it('user bind SmallInt', testDone => {
+  it('user bind SmallInt', async function handler () {
     const params = {
       query: 'declare @v smallint = ?; select @v as v',
       min: -32768,
@@ -618,10 +478,7 @@ describe('userbind', function () {
         return env.sql.SmallInt(v)
       }
     }
-    testUserBind(params, (err, res) => {
-      assert.ifError(err)
-      compare(params, res)
-      testDone()
-    })
+    const res = await testUserBindAsync(params)
+    compare(params, res)
   })
 })

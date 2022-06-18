@@ -43,6 +43,18 @@ class TimeHelper {
       0))
   }
 
+  getUTCTodayHHMSS (hrs, mins, secs) {
+    const now = new Date()
+    return new Date(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      hrs,
+      mins,
+      secs,
+      0))
+  }
+
   makeUTCJan1900HH (expectedHour) {
     return new Date(Date.UTC(1900, 0, 1, expectedHour, 0, 0, 0))
   }

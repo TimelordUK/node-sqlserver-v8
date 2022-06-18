@@ -178,8 +178,8 @@ describe('params', function () {
         }
         // console.log(JSON.stringify(rows))
         // console.log(JSON.stringify(expected))
-        assert.deepStrictEqual(rows, expected)
-        if (expectedMeta) assert.deepStrictEqual(r.meta[0], expectedMeta)
+        expect(rows).to.deep.equal(expected)
+        if (expectedMeta) expect(r.meta[0]).to.deep.equal(expectedMeta)
       })
   }
 
