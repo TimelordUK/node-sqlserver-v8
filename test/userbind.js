@@ -81,7 +81,8 @@ describe('userbind', function () {
         return env.sql.DateTime2(v, 8) // set scale illegal
       }
     }
-    await expect(testUserBindAsync(params)).to.be.rejectedWith('Invalid precision value')
+    await expect(testUserBindAsync(params))
+      .to.be.rejectedWith('Invalid precision value')
   })
 
   it('user bind DateTime2 to sql type datetime2(7) - with scale set too low, should error', async function handler () {
@@ -95,7 +96,8 @@ describe('userbind', function () {
         return env.sql.DateTime2(v, 1) // set scale too low
       }
     }
-    await expect(testUserBindAsync(params)).to.be.rejectedWith('Fractional second precision exceeds the scale specified')
+    await expect(testUserBindAsync(params))
+      .to.be.rejectedWith('Fractional second precision exceeds the scale specified')
   })
 
   function repeat (a, num) {
