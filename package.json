@@ -100,7 +100,7 @@
     "prebuild-node-ia32": "prebuild -t 10.16.0 -t 11.15.0 -t 12.18.3 -t 13.14.0 -t 14.14.0 -t 15.11.0 -t 16.13.0 -t 17.0.1 -a ia32 --strip",
     "prebuild-electron": "prebuild -t 6.1.9 -t 7.2.1 -t 8.2.3 -t 9.0.5 -t 10.1.4 -t 11.3.0 -t 12.0.0 -t 13.0.0 -t 14.0.0 -t 14.2.5 -t 15.0.0 -t 16.0.1 -t 17.0.0 -t 18.1.0 -r electron --strip",
     "prebuild-electron-ia32": "prebuild -t 6.1.9 -t 7.2.1 -t 8.2.3 -t 9.0.5 -t 10.1.4 -t 11.3.0 -t 12.0.0 -t 13.0.0 -t 14.0.0 -t 14.2.5 -t 15.0.0 -t 16.0.1 -t 17.0.0 -t 18.1.0 -r electron -a ia32 --strip",
-    "test": "mocha --reporter mochawesome --require mochawesome/register",
+    "test": "nyc mocha --reporter mochawesome --require mochawesome/register",
     "bench-comments": "node dist/test/env/cmd-test.js -t benchmark --repeats=5 --delay=4500 2>&1",
     "bench-columns": "node dist/test/env/cmd-test.js -t benchmark --table=syscolumns --repeats=5 --delay=5000 2>&1",
     "bench-objects": "node dist/test/env/cmd-test.js -t benchmark --table=sysobjects --delay=250 --repeats=20 2>&1",
