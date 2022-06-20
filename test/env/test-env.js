@@ -166,6 +166,19 @@ class TestEnv {
     return Math.abs(d1 - d2) <= tolerance
   }
 
+  dropIndexSql (tableName, indexName) {
+    indexName = indexName || `ix_${tableName}`
+    return `IF EXISTS(
+    SELECT * 
+    FROM sys.indexes 
+    WHERE name='${indexName}' AND OBJECT_ID = OBJECT_ID('${tableName}')
+)
+BEGIN
+    DROP INDEX ${indexName} ON [${tableName}]
+END`
+  }
+
+
   dropTableSql (tableName) {
     return `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL DROP TABLE ${tableName}`
   }

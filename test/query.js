@@ -21,7 +21,10 @@
 
 /* globals describe it */
 
-const assert = require('chai').assert
+const chai = require('chai')
+const assert = chai.assert
+const expect = chai.expect
+chai.use(require('chai-as-promised'))
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 
@@ -36,110 +39,43 @@ describe('query', function () {
     env.close().then(() => done())
   })
 
-  it('simple query with a promise open-query-close-resolve var%', done => {
-    async function exec () {
-      try {
-        const like = 'var%'
-        const results = await env.sql.promises.query(env.connectionString, 'SELECT name FROM sys.types WHERE name LIKE ?', [like])
-        for (let row = 0; row < results.first.length; ++row) {
-          assert(results.first[row].name.substr(0, 3) === 'var')
-        }
-        return null
-      } catch (err) {
-        return err
-      }
+  it('simple query with a promise open-query-close-resolve var%', async function handler () {
+    const like = 'var%'
+    const results = await env.sql.promises.query(env.connectionString, 'SELECT name FROM sys.types WHERE name LIKE ?', [like])
+    for (let row = 0; row < results.first.length; ++row) {
+      assert(results.first[row].name.substring(0, 3) === 'var')
     }
-    exec().then(res => {
-      done(res)
-    })
+    return null
   })
 
-  it('test retrieving a string with null embedded', testDone => {
+  it('test retrieving a string with null embedded', async function handler () {
     const embeddedNull = String.fromCharCode(65, 66, 67, 68, 0, 69, 70)
-
-    const fns = [
-      asyncDone => {
-        env.theConnection.queryRaw('DROP TABLE null_in_string_test', () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        env.theConnection.queryRaw('CREATE TABLE null_in_string_test (id int IDENTITY, null_in_string varchar(100) NOT NULL)',
-          e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-      },
-      asyncDone => {
-        env.theConnection.queryRaw('CREATE CLUSTERED INDEX ix_null_in_string_test ON null_in_string_Test (id)', err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.theConnection.queryRaw('INSERT INTO null_in_string_test (null_in_string) VALUES (?)', [embeddedNull],
-          e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-      },
-
-      asyncDone => {
-        env.theConnection.queryRaw('SELECT null_in_string FROM null_in_string_test', (e, r) => {
-          assert.ifError(e)
-          assert(r.rows[0][0] === embeddedNull)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+    const tableName = 'null_in_string_test'
+    const promises = env.theConnection.promises
+    await promises.query(env.dropTableSql(tableName))
+    await promises.query(`CREATE TABLE ${tableName} (id int IDENTITY, null_in_string varchar(100) NOT NULL)`)
+    await promises.query(env.dropIndexSql(tableName))
+    await promises.query(`CREATE CLUSTERED INDEX ix_${tableName} ON ${tableName} (id)`)
+    await promises.query(`INSERT INTO ${tableName} (null_in_string) VALUES (?)`, [embeddedNull])
+    const res = await promises.query(`SELECT null_in_string FROM ${tableName}`, [], { raw: true })
+    expect(res.first[0][0]).is.equal(embeddedNull)
   })
 
-  it('test retrieving a large decimal as a string', testDone => {
+  it('test retrieving a large decimal as a string 2', async function handler () {
     const precision = 21
     const scale = 7
     const numString = '1234567891011.1213141'
-    const fns = [
-      asyncDone => {
-        env.theConnection.queryRaw('DROP TABLE TestLargeDecimal', () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.theConnection.queryRaw(`CREATE TABLE TestLargeDecimal (
+    const tableName = 'TestLargeDecimal'
+    const promises = env.theConnection.promises
+    await promises.query(env.dropTableSql(tableName))
+    await promises.query(`CREATE TABLE ${tableName} (
           id VARCHAR(12) NOT NULL,
           testfield DECIMAL(${precision},${scale}) NOT NULL,
           PRIMARY KEY (id)
-          )`,
-        e => {
-          assert.ifError(e)
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.theConnection.query(`INSERT INTO [dbo].[TestLargeDecimal] (id, testfield) VALUES (1, ${numString})`,
-          e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-      },
-
-      asyncDone => {
-        env.theConnection.query(`select id, cast(testfield as varchar(${numString.length})) as big_d_as_s from TestLargeDecimal`, (e, r) => {
-          assert.ifError(e)
-          assert.strictEqual(numString, r[0].big_d_as_s)
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+          )`)
+    await promises.query(`INSERT INTO [dbo].[${tableName}] (id, testfield) VALUES (1, ${numString})`)
+    const res = await promises.query(`select id, cast(testfield as varchar(${numString.length})) as big_d_as_s from ${tableName}`, [], { raw: true })
+    expect(res.first[0][1]).is.equal(numString)
   })
 
   it('multiple results from query in callback', done => {
@@ -183,48 +119,26 @@ describe('query', function () {
       })
   })
 
-  it('verify empty results retrieved properly', testDone => {
-    const fns = [
-      asyncDone => {
-        env.theConnection.queryRaw('drop table test_sql_no_data', () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.theConnection.queryRaw('create table test_sql_no_data (id int identity, name varchar(20))', err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.theConnection.queryRaw('create clustered index index_nodata on test_sql_no_data (id)', err => {
-          assert.ifError(err)
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.theConnection.queryRaw('delete from test_sql_no_data where 1=0', (err, results) => {
-          assert.ifError(err)
-          const expectedResults = { meta: null, rowcount: 0 }
-          assert.deepStrictEqual(results, expectedResults)
-          asyncDone()
-        })
-      }
-    ]
-    env.async.series(fns, () => {
-      testDone()
-    })
+  it('verify empty results retrieved properly 2', async function handler () {
+    const tableName = 'test_sql_no_data'
+    const promises = env.theConnection.promises
+    await promises.query(env.dropTableSql(tableName))
+    await promises.query(`create table ${tableName} (id int identity, name varchar(20))`)
+    await promises.query(env.dropIndexSql(tableName))
+    await promises.query(`CREATE CLUSTERED INDEX ix_${tableName} ON ${tableName} (id)`)
+    const res = await promises.query(`delete from ${tableName} where 1=0`, [], { raw: true })
+    expect(res.meta.length).is.equals(0)
+    expect(res.counts.length).is.equals(1)
+    expect(res.counts[0]).is.equals(0)
   })
 
-  it('object_name query ', done => {
-    env.theConnection.query('select object_name(c.object_id), (select dc.definition from sys.default_constraints as dc where dc.object_id = c.default_object_id) as DefaultValueExpression from sys.columns as c', (err, results) => {
-      assert.ifError(err)
-      assert(results.length > 0)
-      done()
-    })
+  it('object_name query ', async function handler () {
+    const results = await env.theConnection.promises.query(
+      'select object_name(c.object_id), (select dc.definition from sys.default_constraints as dc where dc.object_id = c.default_object_id) as DefaultValueExpression from sys.columns as c')
+    expect(results.first.length).is.greaterThan(0)
   })
 
-  it('select nulls union all nulls', done => {
+  it('select nulls union all nulls', async function handler () {
     const nullObj = {
       testdate: null,
       testint: null,
@@ -235,16 +149,14 @@ describe('query', function () {
       testtime: null
     }
     const expected = [nullObj, nullObj, nullObj]
-    env.theConnection.query('select cast(null as datetime) as testdate, cast(null as int) as testint, cast(null as varchar(max)) as testchar, cast(null as bit) as testbit, cast(null as decimal) as testdecimal, cast(null as varbinary) as testbinary, cast(null as time) as testtime\n' +
+    const results = await env.theConnection.promises.query('select cast(null as datetime) as testdate, cast(null as int) as testint, cast(null as varchar(max)) as testchar, cast(null as bit) as testbit, cast(null as decimal) as testdecimal, cast(null as varbinary) as testbinary, cast(null as time) as testtime\n' +
       'union all\n' +
       'select cast(null as datetime) as testdate, cast(null as int) as testint, cast(null as varchar(max)) as testchar, cast(null as bit) as testbit, cast(null as decimal) as testdecimal, cast(null as varbinary) as testbinary, cast(null as time) as testtime\n' +
       'union all\n' +
-      'select cast(null as datetime) as testdate, cast(null as int) as testint, cast(null as varchar(max)) as testchar, cast(null as bit) as testbit, cast(null as decimal) as testdecimal, cast(null as varbinary) as testbinary, cast(null as time) as testtime', (err, results) => {
-      assert.ifError(err)
-      assert(results.length === 3)
-      assert.deepStrictEqual(results, expected)
-      done()
-    })
+      'select cast(null as datetime) as testdate, cast(null as int) as testint, cast(null as varchar(max)) as testchar, cast(null as bit) as testbit, cast(null as decimal) as testdecimal, cast(null as varbinary) as testbinary, cast(null as time) as testtime')
+
+    expect(results.first.length).is.equal(3)
+    expect(results.first).is.deep.equal(expected)
   })
 
   it('test function parameter validation', testDone => {
@@ -637,7 +549,7 @@ describe('query', function () {
       received.push({ row: idx })
     })
     r.on('column', (idx, data, more) => {
-      received.push({ column: idx, data: data, more: more })
+      received.push({ column: idx, data, more })
     })
     r.on('done', () => {
       assert.deepStrictEqual(received, expected)
