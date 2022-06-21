@@ -159,184 +159,62 @@ describe('query', function () {
     expect(results.first).is.deep.equal(expected)
   })
 
-  it('test function parameter validation', testDone => {
+  it('test function parameter validation', async function handler () {
     // test the module level open, query and queryRaw functions
-    let thrown
-    const fns =
-      [
-        asyncDone => {
-          thrown = false
-          try {
-            env.sql.query(env.connectionString, () => {
-              return 5
-            })
-          } catch (e) {
-            thrown = true
-            assert.strictEqual(e.toString(), 'Error: [msnodesql] Invalid query string passed to function query. Type should be string.', 'Improper error returned')
-          }
-          assert(thrown === true)
-          asyncDone()
-        },
 
-        asyncDone => {
-          thrown = false
-          try {
-            env.sql.queryRaw(env.connectionString, ['This', 'is', 'a', 'test'])
-          } catch (e) {
-            thrown = true
-            assert.strictEqual(e.toString(), 'Error: [msnodesql] Invalid query string passed to function queryRaw. Type should be string.', 'Improper error returned')
-          }
-          assert(thrown === true)
-          asyncDone()
-        },
+    function f0 () {
+      env.sql.query(env.connectionString, () => {
+        return 5
+      })
+    }
+    function f1 () {
+      env.sql.query(env.connectionString, ['This', 'is', 'a', 'test'])
+    }
+    function f2 () {
+      env.sql.queryRaw(['This', 'is', 'a', 'test'], 'SELECT 1')
+    }
+    function f3 () {
+      env.sql.open(env.connectionString, 5)
+    }
+    function f4 () {
+      env.sql.open(1, 'SELECT 1')
+    }
+    function f5 () {
+      env.sql.query(() => {
+        return 1
+      }, 'SELECT 1')
+    }
+    function f6 () {
+      env.sql.queryRaw(env.connectionString, 'SELECT 1', 1)
+    }
+    function f7 () {
+      env.sql.queryRaw(env.connectionString, 'SELECT 1', { a: 1, b: '2' }, () => {
+      })
+    }
+    function f8 () {
+      env.theConnection.query(1)
+    }
+    function f9 () {
+      env.theConnection.queryRaw(() => {
+        return 1
+      })
+    }
+    expect(f0).to.throw('[msnodesql] Invalid query string passed to function query. Type should be string.')
+    expect(f1).to.throw('[msnodesql] Invalid query string passed to function query. Type should be string.')
+    expect(f2).to.throw('[msnodesql] Invalid connection string passed to function queryRaw. Type should be string.')
+    expect(f3).to.throw('[msnodesql] Invalid callback passed to function open. Type should be function.')
+    expect(f4).to.throw('[msnodesql] Invalid connection string passed to function open. Type should be string.')
+    expect(f4).to.throw('[msnodesql] Invalid connection string passed to function open. Type should be string.')
+    expect(f5).to.throw('[msnodesql] Invalid connection string passed to function query. Type should be string.')
+    expect(f6).to.throw('[msnodesql] Invalid parameter(s) passed to function query or queryRaw.')
+    expect(f7).to.throw('[msnodesql] Invalid parameter(s) passed to function query or queryRaw.')
+    expect(f8).to.throw('[msnodesql] Invalid query string passed to function query. Type should be string.')
+    expect(f9).to.throw('[msnodesql] Invalid query string passed to function queryRaw. Type should be string.')
 
-        asyncDone => {
-          thrown = false
-          try {
-            env.sql.queryRaw(['This', 'is', 'a', 'test'], 'SELECT 1')
-          } catch (e) {
-            thrown = true
-            assert.strictEqual(e.toString(), 'Error: [msnodesql] Invalid connection string passed to function queryRaw. Type should be string.', 'Improper error returned')
-          }
-          assert(thrown === true)
-          asyncDone()
-        },
-
-        asyncDone => {
-          thrown = false
-          // test the module level open, query and queryRaw functions
-          try {
-            env.sql.open(env.connectionString, 5)
-          } catch (e) {
-            thrown = true
-            assert.strictEqual(e.toString(), 'Error: [msnodesql] Invalid callback passed to function open. Type should be function.', 'Improper error returned')
-          }
-          assert(thrown = true)
-          asyncDone()
-        },
-
-        asyncDone => {
-          let thrown = false
-          try {
-            env.sql.open(1, 'SELECT 1')
-          } catch (e) {
-            thrown = true
-            assert.strictEqual(e.toString(), 'Error: [msnodesql] Invalid connection string passed to function open. Type should be string.', 'Improper error returned')
-          }
-          assert(thrown === true)
-          asyncDone()
-        },
-
-        asyncDone => {
-          thrown = false
-          try {
-            env.sql.query(() => {
-              return 1
-            }, 'SELECT 1')
-          } catch (e) {
-            thrown = true
-            assert.strictEqual(e.toString(), 'Error: [msnodesql] Invalid connection string passed to function query. Type should be string.', 'Improper error returned')
-          }
-          assert(thrown = true)
-          asyncDone()
-        },
-
-        asyncDone => {
-          env.sql.queryRaw(env.connectionString, 'SELECT 1', e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-        },
-
-        asyncDone => {
-          env.sql.queryRaw(env.connectionString, 'SELECT 1', [], e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-        },
-
-        asyncDone => {
-          env.sql.queryRaw(env.connectionString, 'SELECT 1', null, e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-        },
-
-        asyncDone => {
-          const stmt = env.sql.queryRaw(env.connectionString, 'SELECT 1', [])
-          stmt.on('error', e => {
-            assert.ifError(e)
-          })
-          stmt.on('closed', () => {
-            asyncDone()
-          })
-        },
-
-        asyncDone => {
-          const stmt = env.sql.queryRaw(env.connectionString, 'SELECT 1', null)
-          stmt.on('error', e => {
-            assert.ifError(e)
-          })
-          stmt.on('closed', () => {
-            asyncDone()
-          })
-        },
-
-        asyncDone => {
-          let thrown = false
-          try {
-            env.sql.queryRaw(env.connectionString, 'SELECT 1', 1)
-          } catch (e) {
-            thrown = true
-            assert.strictEqual(e.toString(), 'Error: [msnodesql] Invalid parameter(s) passed to function query or queryRaw.', 'Improper error returned')
-          }
-          assert(thrown === true)
-          asyncDone()
-        },
-
-        asyncDone => {
-          let thrown = false
-          try {
-            env.sql.queryRaw(env.connectionString, 'SELECT 1', { a: 1, b: '2' }, () => {
-            })
-          } catch (e) {
-            thrown = true
-            assert.strictEqual(e.toString(), 'Error: [msnodesql] Invalid parameter(s) passed to function query or queryRaw.', 'Improper error returned')
-          }
-          assert(thrown === true)
-          asyncDone()
-        },
-
-        asyncDone => {
-          let thrown = false
-          try {
-            env.theConnection.query(1)
-          } catch (e) {
-            thrown = true
-            assert.strictEqual(e.toString(), 'Error: [msnodesql] Invalid query string passed to function query. Type should be string.', 'Improper error returned')
-          }
-          assert(thrown === true)
-          asyncDone()
-        },
-
-        asyncDone => {
-          let thrown = false
-          try {
-            env.theConnection.queryRaw(() => {
-              return 1
-            })
-          } catch (e) {
-            thrown = true
-            assert.strictEqual(e.toString(), 'Error: [msnodesql] Invalid query string passed to function queryRaw. Type should be string.', 'Improper error returned')
-          }
-          assert(thrown === true)
-          asyncDone()
-        }
-      ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+    await env.sql.promises.query(env.connectionString, 'SELECT 1')
+    await env.sql.promises.query(env.connectionString, 'SELECT 1', [])
+    await env.sql.promises.query(env.connectionString, 'SELECT 1', null)
+  // Error: [msnodesql] Invalid connection string passed to function query. Type should be string.
   })
 
   it('test retrieving a LOB string larger than max string size', testDone => {
@@ -396,124 +274,114 @@ describe('query', function () {
     })
   })
 
-  it('simple query', done => {
-    env.theConnection.query('SELECT 1 as X, \'ABC\', 0x0123456789abcdef ', (err, results) => {
-      assert.ifError(err)
-      const buffer = Buffer.from('0123456789abcdef', 'hex')
-      const expected = [{ X: 1, Column1: 'ABC', Column2: buffer }]
-      assert.deepStrictEqual(results, expected, 'Results don\'t match')
-      done()
-    })
+  it('simple query', async function handler () {
+    const results = await env.theConnection.promises.query('SELECT 1 as X, \'ABC\', 0x0123456789abcdef', [], { replaceEmptyColumnNames: true })
+    const buffer = Buffer.from('0123456789abcdef', 'hex')
+    const expected = [{ X: 1, Column1: 'ABC', Column2: buffer }]
+    expect(results.first).to.deep.equal(expected)
   })
 
-  it('simple rawFormat query', done => {
-    env.theConnection.queryRaw('SELECT 1 as X, \'ABC\', 0x0123456789abcdef ', (err, results) => {
-      assert.ifError(err)
-      const buffer = Buffer.from('0123456789abcdef', 'hex')
-      const expected = {
-        meta: [{ name: 'X', size: 10, nullable: false, type: 'number', sqlType: 'int' },
-          { name: '', size: 3, nullable: false, type: 'text', sqlType: 'varchar' },
-          { name: '', size: 8, nullable: false, type: 'binary', sqlType: 'varbinary' }],
-        rows: [[1, 'ABC', buffer]]
-      }
-      assert.deepStrictEqual(results, expected, 'rawFormat results didn\'t match')
-      done()
-    })
+  it('simple rawFormat query', async function handler () {
+    const results = await env.theConnection.promises.query('SELECT 1 as X, \'ABC\', 0x0123456789abcdef ', [], { raw: true })
+    const buffer = Buffer.from('0123456789abcdef', 'hex')
+    const expectedMeta = [{ name: 'X', size: 10, nullable: false, type: 'number', sqlType: 'int' },
+      { name: '', size: 3, nullable: false, type: 'text', sqlType: 'varchar' },
+      { name: '', size: 8, nullable: false, type: 'binary', sqlType: 'varbinary' }]
+    const expected = [[1, 'ABC', buffer]]
+    expect(results.meta[0]).to.deep.equal(expectedMeta)
+    expect(results.first).to.deep.equal(expected)
   })
 
-  it('simple query of types like var%', done => {
+  it('simple query of types like var%', async function handler () {
     const like = 'var%'
-    env.theConnection.query('SELECT name FROM sys.types WHERE name LIKE ?', [like], (err, results) => {
-      assert.ifError(err)
-      for (let row = 0; row < results.length; ++row) {
-        assert(results[row].name.substr(0, 3) === 'var')
-      }
-      done()
-    })
+    const results = await env.theConnection.promises.query('SELECT name FROM sys.types WHERE name LIKE ?', [like])
+    for (let row = 0; row < results.first.length; ++row) {
+      assert(results.first[row].name.substring(0, 3) === 'var')
+    }
   })
 
-  it('streaming test', done => {
-    const like = 'var%'
-    let currentRow = 0
-    const metaExpected = [{ name: 'name', size: 128, nullable: false, type: 'text', sqlType: 'nvarchar' }]
+  it('streaming test', async function handler () {
+    function f0 () {
+      return new Promise((resolve, reject) => {
+        const like = 'var%'
+        let currentRow = 0
+        const metaExpected = [{ name: 'name', size: 128, nullable: false, type: 'text', sqlType: 'nvarchar' }]
 
-    const stmt = env.theConnection.query('select name FROM sys.types WHERE name LIKE ?', [like])
+        const stmt = env.theConnection.query('select name FROM sys.types WHERE name LIKE ?', [like])
 
-    stmt.on('meta', meta => {
-      assert.deepStrictEqual(meta, metaExpected)
-    })
-    stmt.on('row', idx => {
-      assert(idx === currentRow)
-      ++currentRow
-    })
-    stmt.on('column', (idx, data) => {
-      assert(data.substr(0, 3) === 'var')
-    })
-    stmt.on('done', () => {
-      done()
-    })
-    stmt.on('error', err => {
-      assert.ifError(err)
-    })
+        stmt.on('meta', meta => {
+          assert.deepStrictEqual(meta, metaExpected)
+        })
+        stmt.on('row', idx => {
+          assert(idx === currentRow)
+          ++currentRow
+        })
+        stmt.on('column', (idx, data) => {
+          assert(data.substring(0, 3) === 'var')
+        })
+        stmt.on('done', () => {
+          resolve(true)
+        })
+        stmt.on('error', err => {
+          reject(err)
+        })
+      })
+    }
+
+    await f0()
   })
 
-  it('serialized queries', done => {
-    const expected = [
-      {
-        meta: [{ name: '', size: 10, nullable: false, type: 'number', sqlType: 'int' }],
-        rows: [[1]]
-      },
-      {
-        meta: [{ name: '', size: 10, nullable: false, type: 'number', sqlType: 'int' }],
-        rows: [[2]]
-      },
-      {
-        meta: [{ name: '', size: 10, nullable: false, type: 'number', sqlType: 'int' }],
-        rows: [[3]]
-      },
-      {
-        meta: [{ name: '', size: 10, nullable: false, type: 'number', sqlType: 'int' }],
-        rows: [[4]]
-      },
-      {
-        meta: [{ name: '', size: 10, nullable: false, type: 'number', sqlType: 'int' }],
-        rows: [[5]]
-      }
-    ]
+  it('serialized queries with callbacks', async function handler () {
+    const intMeta = { name: '', size: 10, nullable: false, type: 'number', sqlType: 'int' }
+    const expected = Array
+      .from(Array(5)
+        .keys())
+      .map(i => {
+        return {
+          meta: [intMeta],
+          rows: [[i + 1]]
+        }
+      })
 
-    const results = []
-
-    env.theConnection.queryRaw('SELECT 1', (e, r) => {
-      assert.ifError(e)
-      results.push(r)
-    })
-
-    env.theConnection.queryRaw('SELECT 2', (e, r) => {
-      assert.ifError(e)
-      results.push(r)
-    })
-
-    env.theConnection.queryRaw('SELECT 3', (e, r) => {
-      assert.ifError(e)
-      results.push(r)
-    })
-
-    env.theConnection.queryRaw('SELECT 4', (e, r) => {
-      assert.ifError(e)
-      results.push(r)
-    })
-
-    env.theConnection.queryRaw('SELECT 5', (e, r) => {
-      assert.ifError(e)
-      results.push(r)
-      assert.deepStrictEqual(expected, results)
-      done()
-    })
+    function f0 () {
+      return new Promise((resolve, reject) => {
+        const results = []
+        for (let i = 1; i <= 5; ++i) {
+          env.theConnection.queryRaw(`SELECT ${i}`, (e, r) => {
+            if (e) reject(e)
+            results.push(r)
+            if (results.length === 5) {
+              resolve(results)
+            }
+          })
+        }
+      })
+    }
+    const results = await f0()
+    expect(results).to.deep.equal(expected)
   })
 
-  it('multiple results from query in events', done => {
-    const r = env.theConnection.queryRaw('SELECT 1 as X, \'ABC\', 0x0123456789abcdef; SELECT 2 AS Y, \'DEF\', 0xfedcba9876543210')
+  it('serialized queries with promises', async function handler () {
+    const intMeta = { name: '', size: 10, nullable: false, type: 'number', sqlType: 'int' }
+    const range = Array
+      .from(Array(5)
+        .keys())
 
+    const expectedMeta = range
+      .map(() => [intMeta])
+
+    const expected = range
+      .map(i => [i])
+
+    const promises = range.map(i => env.theConnection.promises.query(`SELECT ${i}`, [], { raw: true }))
+    const results = await Promise.all(promises)
+    const meta = results.map(r => r.meta[0])
+    const rows = results.map(r => r.first[0])
+    expect(meta).to.deep.equal(expectedMeta)
+    expect(rows).to.deep.equal(expected)
+  })
+
+  it('multiple results from query in events', async function handler () {
     const expected = [
       [{ name: 'X', size: 10, nullable: false, type: 'number', sqlType: 'int' },
         { name: '', size: 3, nullable: false, type: 'text', sqlType: 'varchar' },
@@ -540,24 +408,34 @@ describe('query', function () {
         more: false
       }
     ]
-    const received = []
 
-    r.on('meta', m => {
-      received.push(m)
-    })
-    r.on('row', idx => {
-      received.push({ row: idx })
-    })
-    r.on('column', (idx, data, more) => {
-      received.push({ column: idx, data, more })
-    })
-    r.on('done', () => {
-      assert.deepStrictEqual(received, expected)
-      done()
-    })
-    r.on('error', e => {
-      assert.ifError(e)
-    })
+    function f0 () {
+      return new Promise((resolve, reject) => {
+        const r = env.theConnection.queryRaw('SELECT 1 as X, \'ABC\', 0x0123456789abcdef; ' +
+          'SELECT 2 AS Y, \'DEF\', 0xfedcba9876543210')
+
+        const received = []
+
+        r.on('meta', m => {
+          received.push(m)
+        })
+        r.on('row', idx => {
+          received.push({ row: idx })
+        })
+        r.on('column', (idx, data, more) => {
+          received.push({ column: idx, data, more })
+        })
+        r.on('done', () => {
+          resolve(received)
+        })
+        r.on('error', e => {
+          reject(e)
+        })
+      })
+    }
+
+    const results = await f0()
+    expect(results).to.deep.equal(expected)
   })
 
   it('boolean return value from query', done => {
@@ -574,24 +452,14 @@ describe('query', function () {
       })
   })
 
-  it('test retrieving a non-LOB string of max size', testDone => {
-    function repeat (c, num) {
-      return new Array(num + 1).join(c)
-    }
-
-    env.theConnection.query('SELECT REPLICATE(\'A\', 8000) AS \'NONLOB String\'', (e, r) => {
-      assert.ifError(e)
-      assert(r[0]['NONLOB String'] === repeat('A', 8000))
-      testDone()
-    })
+  it('test retrieving a non-LOB string of max size', async function handler () {
+    const res = await env.theConnection.promises.query('SELECT REPLICATE(\'A\', 8000) AS \'NONLOB String\'')
+    expect(res.first[0]['NONLOB String']).to.equal(env.repeat('A', 8000))
   })
 
-  it('test retrieving an empty string', testDone => {
-    env.theConnection.query('SELECT \'\' AS \'Empty String\'', (e, r) => {
-      assert.ifError(e)
-      assert(r[0]['Empty String'] === '')
-      testDone()
-    })
+  it('test retrieving an empty string', async function handler () {
+    const res = await env.theConnection.promises.query('SELECT \'\' AS \'Empty String\'')
+    expect(res.first[0]['Empty String']).to.equal('')
   })
 
   /*
