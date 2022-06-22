@@ -126,12 +126,13 @@ describe('params', function () {
   async function testBoilerPlateAsync (tableName, tableFields, insertFunction, verifyFunction) {
     const fieldsSql = Object.keys(tableFields).map(field => `${field} ${tableFields[field]}`)
     const tableFieldsSql = `(id int identity, ${fieldsSql.join(', ')})`
+    const promises = env.theConnection.promises
     const todrop = env.dropTableSql(tableName)
-    await env.theConnection.promises.query(todrop)
+    await promises.query(todrop)
     const createQuery = `CREATE TABLE ${tableName}${tableFieldsSql}`
-    await env.theConnection.promises.query(createQuery)
+    await promises.query(createQuery)
     const clusteredIndexSql = ['CREATE CLUSTERED INDEX IX_', tableName, ' ON ', tableName, ' (id)'].join('')
-    await env.theConnection.promises.query(clusteredIndexSql)
+    await promises.query(clusteredIndexSql)
     if (insertFunction) await insertFunction()
     if (verifyFunction) await verifyFunction()
   }
@@ -279,10 +280,10 @@ describe('params', function () {
      n2 int
     )`
     const params = [10, 20]
-    await env.theConnection.promises.query(env.dropTableSql(tableName))
-    await env.theConnection.promises.query(`CREATE TABLE ${tableName}${tableFieldsSql}`)
-    env.theConnection.query('declare @_p0 int = ?, @_p1 int = ?; insert into [tmp_int] ([n1],[n2]) values (@_p0,@_p1)',
-      params)
+    const promises = env.theConnection.promises
+    await promises.query(env.dropTableSql(tableName))
+    await promises.query(`CREATE TABLE ${tableName}${tableFieldsSql}`)
+    await promises.query('declare @_p0 int = ?, @_p1 int = ?; insert into [tmp_int] ([n1],[n2]) values (@_p0,@_p1)', params)
     const res = await env.getTableCount(tableName)
     assert.deepStrictEqual(res, 1)
   })
