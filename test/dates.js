@@ -118,13 +118,13 @@ describe('dates', function () {
     const ih = new InsertSqlHelper(tt)
 
     async function hours () {
-      const promisedRaw = util.promisify(env.theConnection.queryRaw)
-      await promisedRaw(ih.insertHoursQuery)
+      await promises.query(tt.truncateSql)
+      await promises.query(ih.insertHoursQuery)
       const expectedHour = 0
       const results = await promises.query(tt.selectSql, [], { raw: true })
       const expectedDate1 = env.timeHelper.makeUTCJan1900HH(expectedHour)
       expectedDate1.nanosecondsDelta = 0
-      assert.deepStrictEqual(results.first[0][0], expectedDate1)
+      expect(results.first[0][0]).to.deep.equal(expectedDate1)
     }
 
     async function minutes () {
@@ -135,10 +135,10 @@ describe('dates', function () {
       results.first.forEach(r => {
         const expectedDate = env.timeHelper.makeUTCJan1900HHMM(ih.randomHour, expectedMinute)
         expectedDate.nanosecondsDelta = 0
-        assert.deepStrictEqual(r[0], expectedDate)
+        expect(r[0]).to.deep.equal(expectedDate)
         ++expectedMinute
       })
-      assert.deepStrictEqual(expectedMinute, 60)
+      expect(expectedMinute).to.equal(60)
     }
 
     async function seconds () {
@@ -149,10 +149,10 @@ describe('dates', function () {
       results.first.forEach(r => {
         const expectedDate = env.timeHelper.makeUTCJan1900HHMMSS(ih.randomHour, ih.randomMinute, expectedSecond)
         expectedDate.nanosecondsDelta = 0
-        assert.deepStrictEqual(r[0], expectedDate)
+        expect(r[0]).to.deep.equal(expectedDate)
         ++expectedSecond
       })
-      assert.deepStrictEqual(expectedSecond, 60)
+      expect(expectedSecond).to.equal(60)
     }
 
     async function milliSeconds () {
@@ -163,10 +163,10 @@ describe('dates', function () {
       results.first.forEach(r => {
         const expectedDate = env.timeHelper.makeUTCJan1900HHMMSSMS(ih.randomHour, ih.randomMinute, ih.randomSecond, ih.randomMs[msCount])
         expectedDate.nanosecondsDelta = 0
-        assert.deepStrictEqual(r[0], expectedDate)
+        expect(r[0]).to.deep.equal(expectedDate)
         ++msCount
       })
-      assert(msCount === 51)
+      expect(msCount).to.equal(51)
     }
 
     async function nanoSeconds () {
@@ -177,7 +177,7 @@ describe('dates', function () {
       results.first.forEach(r => {
         const expectedDate = env.timeHelper.makeUTCJan1900HHMMSSMS(ih.randomHour, ih.randomMinute, ih.randomSecond, ih.nanoseconds[nsCount] * 1000)
         expectedDate.nanosecondsDelta = ih.nanosecondsDeltaExpected[nsCount]
-        assert.deepStrictEqual(r[0], expectedDate)
+        expect(r[0]).to.deep.equal(expectedDate)
         ++nsCount
       })
       assert(nsCount === 3)
