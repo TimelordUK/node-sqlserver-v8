@@ -19,7 +19,10 @@
 /* globals describe it */
 
 const util = require('util')
-const assert = require('chai').assert
+const chai = require('chai')
+const assert = chai.assert
+const expect = chai.expect
+chai.use(require('chai-as-promised'))
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 
@@ -98,6 +101,94 @@ describe('dates', function () {
       this.nanosecondsDeltaExpected = nanosecondsDeltaExpected
     }
   }
+
+  it('time to millisecond components 2', async function handler () {
+    const tableDef = {
+      tableName: 'time_test',
+      columns: [
+        {
+          name: 'test_time',
+          type: 'time'
+        }
+      ]
+    }
+    const promises = env.theConnection.promises
+    const tt = env.bulkTableTest(tableDef)
+    await tt.create()
+    const ih = new InsertSqlHelper(tt)
+
+    async function hours () {
+      const promisedRaw = util.promisify(env.theConnection.queryRaw)
+      await promisedRaw(ih.insertHoursQuery)
+      const expectedHour = 0
+      const results = await promises.query(tt.selectSql, [], { raw: true })
+      const expectedDate1 = env.timeHelper.makeUTCJan1900HH(expectedHour)
+      expectedDate1.nanosecondsDelta = 0
+      assert.deepStrictEqual(results.first[0][0], expectedDate1)
+    }
+
+    async function minutes () {
+      let expectedMinute = 0
+      await promises.query(tt.truncateSql)
+      await promises.query(ih.insertMinutesSql)
+      const results = await promises.query(tt.selectSql, [], { raw: true })
+      results.first.forEach(r => {
+        const expectedDate = env.timeHelper.makeUTCJan1900HHMM(ih.randomHour, expectedMinute)
+        expectedDate.nanosecondsDelta = 0
+        assert.deepStrictEqual(r[0], expectedDate)
+        ++expectedMinute
+      })
+      assert.deepStrictEqual(expectedMinute, 60)
+    }
+
+    async function seconds () {
+      let expectedSecond = 0
+      await promises.query(tt.truncateSql)
+      await promises.query(ih.insertSecondsSql)
+      const results = await promises.query(tt.selectSql, [], { raw: true })
+      results.first.forEach(r => {
+        const expectedDate = env.timeHelper.makeUTCJan1900HHMMSS(ih.randomHour, ih.randomMinute, expectedSecond)
+        expectedDate.nanosecondsDelta = 0
+        assert.deepStrictEqual(r[0], expectedDate)
+        ++expectedSecond
+      })
+      assert.deepStrictEqual(expectedSecond, 60)
+    }
+
+    async function milliSeconds () {
+      await promises.query(tt.truncateSql)
+      await promises.query(ih.insertMilliSecondsSql)
+      let msCount = 0
+      const results = await promises.query(tt.selectSql, [], { raw: true })
+      results.first.forEach(r => {
+        const expectedDate = env.timeHelper.makeUTCJan1900HHMMSSMS(ih.randomHour, ih.randomMinute, ih.randomSecond, ih.randomMs[msCount])
+        expectedDate.nanosecondsDelta = 0
+        assert.deepStrictEqual(r[0], expectedDate)
+        ++msCount
+      })
+      assert(msCount === 51)
+    }
+
+    async function nanoSeconds () {
+      await promises.query(tt.truncateSql)
+      await promises.query(ih.insertNanoSecondsSql)
+      let nsCount = 0
+      const results = await promises.query(tt.selectSql, [], { raw: true })
+      results.first.forEach(r => {
+        const expectedDate = env.timeHelper.makeUTCJan1900HHMMSSMS(ih.randomHour, ih.randomMinute, ih.randomSecond, ih.nanoseconds[nsCount] * 1000)
+        expectedDate.nanosecondsDelta = ih.nanosecondsDeltaExpected[nsCount]
+        assert.deepStrictEqual(r[0], expectedDate)
+        ++nsCount
+      })
+      assert(nsCount === 3)
+    }
+
+    await hours()
+    await minutes()
+    await seconds()
+    await milliSeconds()
+    await nanoSeconds()
+  })
 
   it('time to millisecond components', testDone => {
     const tableDef = {
@@ -350,15 +441,16 @@ describe('dates', function () {
     })
   })
 
-  it('test timezone offset correctly offsets js date type', testDone => {
-    env.theConnection.query('select convert(datetimeoffset(7), \'2014-02-14 22:59:59.9999999 +05:00\') as dto1, convert(datetimeoffset(7), \'2014-02-14 17:59:59.9999999 +00:00\') as dto2',
-      function (err, res) {
-        assert.ifError(err)
-        const dto1 = res.dto1
-        const dto2 = res.dto2
-        assert(dto1 === dto2)
-        testDone()
-      })
+  it('test timezone offset correctly offsets js date type', async function handler () {
+    const res = await env.theConnection.promises.query(`select 
+      convert(datetimeoffset(7),
+      '2014-02-14 22:59:59.9999999 +05:00') as dto1,
+      convert(datetimeoffset(7),
+      '2014-02-14 17:59:59.9999999 +00:00') as dto2`)
+    const col = res.first[0]
+    delete col.dto1.nanoseconds
+    delete col.dto2.nanoseconds
+    expect(col.dto1).to.deep.equal(col.dto2)
   })
 
   // this test simply verifies dates round trip.  It doesn't try to verify illegal dates vs. legal dates.
