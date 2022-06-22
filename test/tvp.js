@@ -1,7 +1,9 @@
 'use strict'
 /* globals describe it */
 
-const assert = require('chai').assert
+const chai = require('chai')
+const expect = chai.expect
+chai.use(require('chai-as-promised'))
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 
@@ -26,7 +28,7 @@ describe('tvp', function () {
     table.rows = []
     await env.theConnection.promises.query('exec insertTestTvp @tvp = ?;', [tp])
     const res = await env.theConnection.promises.query(`select * from ${tableName}`)
-    assert.deepStrictEqual(res.first, vec)
+    expect(res.first).to.deep.equal(vec)
   })
 
   it('use tvp simple test type insert test long string 8 * 1024', async function handler () {
@@ -39,7 +41,7 @@ describe('tvp', function () {
     table.rows = []
     await env.theConnection.promises.query('exec insertTestTvp @tvp = ?;', [tp])
     const res = await env.theConnection.promises.query(`select * from ${tableName}`)
-    assert.deepStrictEqual(res.first, vec)
+    expect(res.first).to.deep.equal(vec)
   })
 
   it('call tvp proc with local table', async function handler () {
@@ -75,7 +77,7 @@ describe('tvp', function () {
       ['a user', 'newuser1', 55, 99000, 98765432109876, new Date(2010, 1, 10)], {
         replaceEmptyColumnNames: true
       })
-    assert.deepStrictEqual(res.results, expected)
+    expect(res.results).to.deep.equal(expected)
   })
 
   it('call tvp proc from proc', async function handler () {
@@ -120,7 +122,7 @@ describe('tvp', function () {
     const res = await env.theConnection.promises.callProc('callProcedureFromProcedure', params, {
       replaceEmptyColumnNames: true
     })
-    assert.deepStrictEqual(res.results, expected)
+    expect(res.results).to.deep.equal(expected)
   })
 
   it('use tvp to select from table type complex object Employee type', async function handler () {
@@ -151,17 +153,18 @@ describe('tvp', function () {
     await env.promisedDropCreateTable({
       tableName
     })
-    const bulkMgr = await env.theConnection.promises.getTable(tableName)
+    const promises = env.theConnection.promises
+    const bulkMgr = await promises.getTable(tableName)
     let sql = 'IF TYPE_ID(N\'EmployeeType\') IS not NULL'
     sql += ' drop type EmployeeType'
-    await env.theConnection.promises.query(sql)
+    await promises.query(sql)
     sql = bulkMgr.asUserType()
-    await env.theConnection.promises.query(sql)
-    const def = await env.theConnection.promises.getUserTypeTable('EmployeeType')
+    await promises.query(sql)
+    const def = await promises.getUserTypeTable('EmployeeType')
     const summary = bulkMgr.getSummary()
-    assert.deepStrictEqual(def.columns.length, summary.columns.length)
+    expect(def.columns.length).to.equal(summary.columns.length)
     const t = bulkMgr.asTableType()
-    assert.deepStrictEqual(t.columns.length, summary.columns.length)
+    expect(t.columns.length).to.equal(summary.columns.length)
   })
 
   it('use tvp simple test type insert test using pm', async function handler () {
@@ -174,7 +177,7 @@ describe('tvp', function () {
     table.rows = []
     await env.theConnection.promises.callProc('insertTestTvp', [tp])
     const res = await env.theConnection.promises.query(`select * from ${tableName}`)
-    assert.deepStrictEqual(res.first, vec)
+    expect(res.first).to.deep.equal(vec)
   })
 
   it('non dbo schema use tvp simple test type select test', async function handler () {
@@ -186,7 +189,7 @@ describe('tvp', function () {
     const tp = env.sql.TvpFromTable(table)
     table.rows = []
     const res = await env.theConnection.promises.query('select * from ?;', [tp])
-    assert.deepStrictEqual(res.first, vec)
+    expect(res.first).to.deep.equal(vec)
   })
 
   it('dbo schema use tvp simple test type select test', async function handler () {
@@ -198,7 +201,7 @@ describe('tvp', function () {
     const tp = env.sql.TvpFromTable(table)
     table.rows = []
     const res = await env.theConnection.promises.query('select * from ?;', [tp])
-    assert.deepStrictEqual(res.first, vec)
+    expect(res.first).to.deep.equal(vec)
   })
 
   it('use tvp simple test type insert test', async function handler () {
@@ -211,6 +214,6 @@ describe('tvp', function () {
     table.rows = []
     await env.theConnection.promises.query('exec insertTestTvp @tvp = ?;', [tp])
     const res = await env.theConnection.promises.query(`select * from ${tableName}`)
-    assert.deepStrictEqual(res.first, vec)
+    expect(res.first).to.deep.equal(vec)
   })
 })
