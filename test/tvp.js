@@ -22,12 +22,13 @@ describe('tvp', function () {
     const tableName = 'TestTvp'
     const helper = env.tvpHelper(tableName)
     const vec = helper.getExtendedVec(8 * 1024)
+    const promises = env.theConnection.promises
     const table = await helper.create(tableName)
     table.addRowsFromObjects(vec)
     const tp = env.sql.TvpFromTable(table)
     table.rows = []
-    await env.theConnection.promises.query('exec insertTestTvp @tvp = ?;', [tp])
-    const res = await env.theConnection.promises.query(`select * from ${tableName}`)
+    await promises.query('exec insertTestTvp @tvp = ?;', [tp])
+    const res = await promises.query(`select * from ${tableName}`)
     expect(res.first).to.deep.equal(vec)
   })
 
@@ -35,12 +36,13 @@ describe('tvp', function () {
     const tableName = 'TestTvp'
     const helper = env.tvpHelper(tableName)
     const vec = helper.getVec(8 * 1024)
+    const promises = env.theConnection.promises
     const table = await helper.create(tableName)
     table.addRowsFromObjects(vec)
     const tp = env.sql.TvpFromTable(table)
     table.rows = []
-    await env.theConnection.promises.query('exec insertTestTvp @tvp = ?;', [tp])
-    const res = await env.theConnection.promises.query(`select * from ${tableName}`)
+    await promises.query('exec insertTestTvp @tvp = ?;', [tp])
+    const res = await promises.query(`select * from ${tableName}`)
     expect(res.first).to.deep.equal(vec)
   })
 
@@ -131,12 +133,13 @@ describe('tvp', function () {
     await env.promisedDropCreateTable({
       tableName
     })
-    const bulkMgr = await env.theConnection.promises.getTable(tableName)
+    const promises = env.theConnection.promises
+    const bulkMgr = await promises.getTable(tableName)
     let sql = 'IF TYPE_ID(N\'EmployeeType\') IS not NULL'
     sql += ' drop type EmployeeType'
-    await env.theConnection.promises.query(sql)
+    await promises.query(sql)
     sql = bulkMgr.asUserType()
-    await env.theConnection.promises.query(sql)
+    await promises.query(sql)
     const parsedJSON = env.helper.getJSON()
     // construct a table type based on a table definition.
     const table = bulkMgr.asTableType()
@@ -144,7 +147,7 @@ describe('tvp', function () {
     table.addRowsFromObjects(parsedJSON)
     // use a type the native driver can understand, using column based bulk binding.
     const tp = env.sql.TvpFromTable(table)
-    const res = await env.theConnection.promises.query('select * from ?;', [tp])
+    const res = await promises.query('select * from ?;', [tp])
     env.helper.compareEmployee(res.first, parsedJSON)
   })
 
@@ -175,8 +178,9 @@ describe('tvp', function () {
     table.addRowsFromObjects(vec)
     const tp = env.sql.TvpFromTable(table)
     table.rows = []
-    await env.theConnection.promises.callProc('insertTestTvp', [tp])
-    const res = await env.theConnection.promises.query(`select * from ${tableName}`)
+    const promises = env.theConnection.promises
+    await promises.callProc('insertTestTvp', [tp])
+    const res = await promises.query(`select * from ${tableName}`)
     expect(res.first).to.deep.equal(vec)
   })
 
@@ -212,8 +216,9 @@ describe('tvp', function () {
     table.addRowsFromObjects(vec)
     const tp = env.sql.TvpFromTable(table)
     table.rows = []
-    await env.theConnection.promises.query('exec insertTestTvp @tvp = ?;', [tp])
-    const res = await env.theConnection.promises.query(`select * from ${tableName}`)
+    const promises = env.theConnection.promises
+    await promises.query('exec insertTestTvp @tvp = ?;', [tp])
+    const res = await promises.query(`select * from ${tableName}`)
     expect(res.first).to.deep.equal(vec)
   })
 })
