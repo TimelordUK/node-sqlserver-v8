@@ -167,38 +167,48 @@ describe('query', function () {
         return 5
       })
     }
+
     function f1 () {
       env.sql.query(env.connectionString, ['This', 'is', 'a', 'test'])
     }
+
     function f2 () {
       env.sql.queryRaw(['This', 'is', 'a', 'test'], 'SELECT 1')
     }
+
     function f3 () {
       env.sql.open(env.connectionString, 5)
     }
+
     function f4 () {
       env.sql.open(1, 'SELECT 1')
     }
+
     function f5 () {
       env.sql.query(() => {
         return 1
       }, 'SELECT 1')
     }
+
     function f6 () {
       env.sql.queryRaw(env.connectionString, 'SELECT 1', 1)
     }
+
     function f7 () {
       env.sql.queryRaw(env.connectionString, 'SELECT 1', { a: 1, b: '2' }, () => {
       })
     }
+
     function f8 () {
       env.theConnection.query(1)
     }
+
     function f9 () {
       env.theConnection.queryRaw(() => {
         return 1
       })
     }
+
     expect(f0).to.throw('[msnodesql] Invalid query string passed to function query. Type should be string.')
     expect(f1).to.throw('[msnodesql] Invalid query string passed to function query. Type should be string.')
     expect(f2).to.throw('[msnodesql] Invalid connection string passed to function queryRaw. Type should be string.')
@@ -214,7 +224,7 @@ describe('query', function () {
     await env.sql.promises.query(env.connectionString, 'SELECT 1')
     await env.sql.promises.query(env.connectionString, 'SELECT 1', [])
     await env.sql.promises.query(env.connectionString, 'SELECT 1', null)
-  // Error: [msnodesql] Invalid connection string passed to function query. Type should be string.
+    // Error: [msnodesql] Invalid connection string passed to function query. Type should be string.
   })
 
   it('test retrieving a LOB string larger than max string size', testDone => {
@@ -357,6 +367,7 @@ describe('query', function () {
         }
       })
     }
+
     const results = await f0()
     expect(results).to.deep.equal(expected)
   })
@@ -666,56 +677,28 @@ describe('query', function () {
     })
   })
 
-  it('verify metadata is retrieved for udt/geography types', testDone => {
-    const fns = [
-
-      asyncDone => {
-        env.theConnection.query('DROP TABLE spatial_test', () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.theConnection.query('CREATE TABLE spatial_test ( id int IDENTITY (1,1), GeogCol1 geography, GeogCol2 AS GeogCol1.STAsText() )', e => {
-          assert.ifError(e)
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.theConnection.query('INSERT INTO spatial_test (GeogCol1) VALUES (geography::STGeomFromText(\'LINESTRING(-122.360 47.656, -122.343 47.656 )\', 4326))',
-          e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-      },
-      asyncDone => {
-        env.theConnection.query('INSERT INTO spatial_test (GeogCol1) VALUES (geography::STGeomFromText(\'POLYGON((-122.358 47.653 , -122.348 47.649, -122.348 47.658, -122.358 47.658, -122.358 47.653))\', 4326))', e => {
-          assert.ifError(e)
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.theConnection.queryRaw('SELECT GeogCol1 FROM spatial_test', (e, r) => {
-          assert.ifError(e)
-          const expectedResults = {
-            meta: [{
-              name: 'GeogCol1',
-              size: 0,
-              nullable: true,
-              type: 'binary',
-              sqlType: 'udt',
-              udtType: 'geography'
-            }],
-            rows: [[Buffer.from('e610000001148716d9cef7d34740d7a3703d0a975ec08716d9cef7d34740cba145b6f3955ec0', 'hex')],
-              [Buffer.from('e6100000010405000000dd24068195d34740f4fdd478e9965ec0508d976e12d3474083c0caa145965ec04e62105839d4474083c0caa145965ec04e62105839d44740f4fdd478e9965ec0dd24068195d34740f4fdd478e9965ec001000000020000000001000000ffffffff0000000003', 'hex')]
-            ]
-          }
-          assert.deepStrictEqual(r, expectedResults, 'udt results don\'t match')
-          asyncDone()
-        })
-      }
+  it('verify metadata is retrieved for udt/geography types', async function handler () {
+    const expectedMeta = [{
+      name: 'GeogCol1',
+      size: 0,
+      nullable: true,
+      type: 'binary',
+      sqlType: 'udt',
+      udtType: 'geography'
+    }]
+    const expectedData = [
+      [Buffer.from('e610000001148716d9cef7d34740d7a3703d0a975ec08716d9cef7d34740cba145b6f3955ec0', 'hex')],
+      [Buffer.from('e6100000010405000000dd24068195d34740f4fdd478e9965ec0508d976e12d3474083c0caa145965ec04e62105839d4474083c0caa145965ec04e62105839d44740f4fdd478e9965ec0dd24068195d34740f4fdd478e9965ec001000000020000000001000000ffffffff0000000003', 'hex')]
     ]
-    env.async.series(fns, () => {
-      testDone()
-    })
+
+    const tableName = 'spatial_test'
+    const promises = env.theConnection.promises
+    await promises.query(env.dropTableSql(tableName))
+    await promises.query(`CREATE TABLE ${tableName} ( id int IDENTITY (1,1), GeogCol1 geography, GeogCol2 AS GeogCol1.STAsText())`)
+    await promises.query(`INSERT INTO ${tableName}(GeogCol1) VALUES (geography::STGeomFromText('LINESTRING(-122.360 47.656, -122.343 47.656 )', 4326))`)
+    await promises.query(`INSERT INTO ${tableName} (GeogCol1) VALUES (geography::STGeomFromText('POLYGON((-122.358 47.653 , -122.348 47.649, -122.348 47.658, -122.358 47.658, -122.358 47.653))', 4326))`)
+    const res = await promises.query(`SELECT GeogCol1 FROM ${tableName}`, [], { raw: true })
+    expect(res.meta[0]).to.deep.equal(expectedMeta)
+    expect(res.first).to.deep.equal(expectedData)
   })
 })
