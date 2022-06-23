@@ -18,6 +18,38 @@ const util = require('util')
 const fs = require('fs')
 const path = require('path')
 
+class CommonTestFnPromises {
+  constructor () {
+    this.create = util.promisify(commonTestFns.createTable)
+    this.insert = util.promisify(commonTestFns.insertDataTSQL)
+    this.verifyData_Datetime = util.promisify(commonTestFns.verifyData_Datetime)
+    this.verifyData = util.promisify(commonTestFns.verifyData)
+  }
+}
+
+// await testPromises.create(env.theConnection, tablename, testcolumnname, testcolumntype)
+//
+class CommonTestFnProxy {
+  constructor (connectionProxy, tableName, testColumnName) {
+    this.connectionProxy = connectionProxy
+    this.tableName = tableName
+    this.testColumnName = testColumnName
+    this.promises = new CommonTestFnPromises()
+  }
+
+  create (testcolumntype) {
+    return this.promises.create(this.connectionProxy, this.tableName, this.testColumnName, testcolumntype)
+  }
+
+  insert (val) {
+    return this.promises.insert(this.connectionProxy, this.tableName, this.testColumnName, val)
+  }
+
+  verifyData_Datetime (rowWithNullData, jsDateExpected, testname) {
+    return this.promises.verifyData_Datetime(this.connectionProxy, this.tableName, this.testColumnName, rowWithNullData, jsDateExpected, testname)
+  }
+}
+
 class TestEnv {
   readJson (path) {
     const fs = require('fs')
@@ -207,6 +239,11 @@ END`
     })
   }
 
+  makeTestFnProxy (tableName, testColumnName, connectionProxy) {
+    connectionProxy = connectionProxy || this.theConnection
+    return new CommonTestFnProxy(connectionProxy, tableName, testColumnName)
+  }
+
   constructor (key) {
     this.theConnection = null
     this.employee = null
@@ -219,11 +256,11 @@ END`
     this.procedureHelper = new ds.ProcedureHelper(this.connectionString)
     this.promisedCreate = util.promisify(this.procedureHelper.createProcedure)
     this.promisedDropCreateTable = util.promisify(this.helper.dropCreateTable)
-    this.promisedTestFnCreateTable = util.promisify(commonTestFns.createTable)
     this.procedureHelper.setVerbose(false)
     this.async = new ds.Async()
     this.timeHelper = new TimeHelper()
     this.commonTestFns = commonTestFns
+    this.commonTestFnPromises = new CommonTestFnPromises()
     this.sql = sql
   }
 }

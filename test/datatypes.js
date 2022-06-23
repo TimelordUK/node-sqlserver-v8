@@ -50,7 +50,7 @@ describe('datatypes', function () {
     }
 
     const binaryBuffer = Buffer.from(buffer)
-    await env.promisedTestFnCreateTable(env.theConnection, tablename, testcolumnname, testcolumntype)
+    await env.commonTestFnPromises.create(env.theConnection, tablename, testcolumnname, testcolumntype)
     const promises = env.theConnection.promises
     const insertSql = `insert into ${tablename} (${testcolumnname} )  values ( ? )`
     await promises.query(insertSql, [binaryBuffer])
@@ -63,7 +63,7 @@ describe('datatypes', function () {
     const testcolumntype = ' Image'
     const testcolumnname = 'col1'
 
-    await env.promisedTestFnCreateTable(env.theConnection, tablename, testcolumnname, testcolumntype)
+    await env.commonTestFnPromises.create(env.theConnection, tablename, testcolumnname, testcolumntype)
     const binaryBuffer = await env.readAsBinary('SampleJPGImage_50kbmb.jpg')
     const insertSql = `insert into ${tablename} (${testcolumnname} )  values ( ? )`
     const promises = env.theConnection.promises
@@ -73,8 +73,32 @@ describe('datatypes', function () {
     expect(r.first[0].col1).to.deep.equal(binaryBuffer)
   })
 
-  testname = 'test 001 - verify functionality of data type \'smalldatetime\', fetch as date'
-  it(testname, done => {
+  it('test 001 2 - verify functionality of data type \'smalldatetime\', fetch as date', async function handler () {
+    //  var testcolumnsize = 16
+    const testcolumntype = ' smalldatetime'
+    //  var testcolumnclienttype = 'date'
+    const testcolumnname = 'col2'
+    const rowWithNullData = 1
+    // test date = 1955-12-13 12:43:00
+    const year = 1955
+    const month = 12
+    const day = 13
+    const hour = 12
+    const minute = 43
+    const second = 0
+    const nanosecond = 0
+    const testdata2Expected = `${year}-${month}-${day} ${hour}:${minute}:${second}`
+    const testdata2TsqlInsert = `'${testdata2Expected}'`
+    // Month in JS is 0-based, so expected will be month minus 1
+    const jsDateExpected = new Date(year, month - 1, day, hour - env.commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(null)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData_Datetime(rowWithNullData, jsDateExpected, testname)
+  })
+
+  it('test 001 - verify functionality of data type \'smalldatetime\', fetch as date', done => {
     //  var testcolumnsize = 16
     const testcolumntype = ' smalldatetime'
     //  var testcolumnclienttype = 'date'
