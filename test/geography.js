@@ -2,7 +2,10 @@
 
 /* globals describe it */
 
-const assert = require('chai').assert
+const chai = require('chai')
+const assert = chai.assert
+const expect = chai.expect
+chai.use(require('chai-as-promised'))
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 /*
@@ -54,9 +57,10 @@ describe('geography', function () {
     const table = await env.geographyHelper.createGeographyTable()
     const tp = getTVPTable(lines, table)
     table.rows = []
-    await env.theConnection.promises.callProc('InsertGeographyTvp', [tp])
-    const res = await env.theConnection.promises.query(env.geographyHelper.selectSql)
-    assert.deepStrictEqual(res.first, expected)
+    const promises = env.theConnection.promises
+    await promises.callProc('InsertGeographyTvp', [tp])
+    const res = await promises.query(env.geographyHelper.selectSql)
+    expect(res.first).is.deep.equal(expected)
   })
 
   it('show a geography .Net error is reported back from driver', async function handler () {
@@ -81,18 +85,21 @@ describe('geography', function () {
     const table = await geographyHelper.createGeographyTable()
     const tp = getTVPTable(allGeography, table)
     table.rows = []
-    await env.theConnection.promises.callProc('InsertGeographyTvp', [tp])
-    const res = await env.theConnection.promises.query(geographyHelper.selectSql)
-    assert.deepStrictEqual(res.first.length, allGeography.length)
-    assert.deepStrictEqual(res.first, expected)
+    const promises = env.theConnection.promises
+    await promises.callProc('InsertGeographyTvp', [tp])
+    const res = await promises.query(geographyHelper.selectSql)
+
+    expect(res.first.length).is.equal(allGeography.length)
+    expect(res.first).is.deep.equal(expected)
   })
 
   async function createCheck (sql, vec, expected) {
     await env.geographyHelper.createGeographyTable()
     await env.theConnection.promises.query(sql, [vec])
     const res = await env.theConnection.promises.query(env.geographyHelper.selectSql)
-    assert.deepStrictEqual(res.first.length, vec.length)
-    assert.deepStrictEqual(res.first, expected)
+
+    expect(res.first.length).is.equal(vec.length)
+    expect(res.first).is.deep.equal(expected)
   }
 
   it('insert lines from json coordinates', async function handler () {
@@ -123,10 +130,11 @@ describe('geography', function () {
     ]
 
     await env.geographyHelper.createGeographyTable()
-    await env.theConnection.promises.query(geographyHelper.insertPolySql, [poly])
-    const res = await env.theConnection.promises.query(geographyHelper.selectSql)
-    assert.deepStrictEqual(res.first.length, expectedPoly.length)
-    assert.deepStrictEqual(res.first, expectedPoly)
+    const promises = env.theConnection.promises
+    await promises.query(geographyHelper.insertPolySql, [poly])
+    const res = await promises.query(geographyHelper.selectSql)
+    expect(res.first.length).is.equal(expectedPoly.length)
+    expect(res.first).is.deep.equal(expectedPoly)
   })
 
   it('insert an array of geography lines', async function handler () {
@@ -134,10 +142,11 @@ describe('geography', function () {
     const lines = geographyHelper.lines
     const expected = geographyHelper.expectedLines
     await env.geographyHelper.createGeographyTable()
-    await env.theConnection.promises.query(geographyHelper.insertLinesSql, [lines])
-    const res = await env.theConnection.promises.query(geographyHelper.selectSql)
-    assert.deepStrictEqual(res.first.length, lines.length)
-    assert.deepStrictEqual(res.first, expected)
+    const promises = env.theConnection.promises
+    await promises.query(geographyHelper.insertLinesSql, [lines])
+    const res = await promises.query(geographyHelper.selectSql)
+    expect(res.first.length).is.equal(lines.length)
+    expect(res.first).is.deep.equal(expected)
   })
 
   it('insert an array of geography points', async function handler () {
@@ -150,14 +159,15 @@ describe('geography', function () {
   it('prepare a geography point statement for repeat invocations', async function handler () {
     const geographyHelper = env.geographyHelper
     await env.geographyHelper.createGeographyTable()
-    const preparedPoint = await env.theConnection.promises.prepare(geographyHelper.insertPointsSql)
+    const promises = env.theConnection.promises
+    const preparedPoint = await promises.prepare(geographyHelper.insertPointsSql)
     const points = env.geographyHelper.points
     const expected = env.geographyHelper.expectedPoints
-    const promises = points.map(p => preparedPoint.promises.query([p]))
-    await Promise.all(promises)
-    const res = await env.theConnection.promises.query(geographyHelper.selectSql)
-    assert.deepStrictEqual(res.first.length, points.length)
-    assert.deepStrictEqual(res.first, expected)
+    const promised = points.map(p => preparedPoint.promises.query([p]))
+    await Promise.all(promised)
+    const res = await promises.query(geographyHelper.selectSql)
+    expect(res.first.length).is.equal(points.length)
+    expect(res.first).is.deep.equal(expected)
     await preparedPoint.promises.free()
   })
 })
