@@ -15,6 +15,8 @@ const { BcpEntry } = require('./bcp-entry')
 const { BuilderChecker } = require('./builder-checker')
 const { TvpHelper } = require('./tvp-helper')
 const util = require('util')
+const fs = require('fs')
+const path = require('path')
 
 class TestEnv {
   readJson (path) {
@@ -178,9 +180,31 @@ BEGIN
 END`
   }
 
-
   dropTableSql (tableName) {
     return `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL DROP TABLE ${tableName}`
+  }
+
+  readFile (f) {
+    return new Promise((resolve, reject) => {
+      fs.readFile(f, 'utf8', (err, contents) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(contents)
+        }
+      })
+    })
+  }
+
+  readAsBinary (file) {
+    return new Promise((resolve, reject) => {
+      const p = path.join(__dirname, 'data', file)
+      this.readFile(p).then(d => {
+        resolve(Buffer.from(d))
+      }).catch(e => {
+        reject(e)
+      })
+    })
   }
 
   constructor (key) {
@@ -195,6 +219,7 @@ END`
     this.procedureHelper = new ds.ProcedureHelper(this.connectionString)
     this.promisedCreate = util.promisify(this.procedureHelper.createProcedure)
     this.promisedDropCreateTable = util.promisify(this.helper.dropCreateTable)
+    this.promisedTestFnCreateTable = util.promisify(commonTestFns.createTable)
     this.procedureHelper.setVerbose(false)
     this.async = new ds.Async()
     this.timeHelper = new TimeHelper()

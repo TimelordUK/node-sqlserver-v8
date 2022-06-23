@@ -19,12 +19,13 @@
 
 /* globals describe it */
 
-const assert = require('chai').assert
+const chai = require('chai')
+const expect = chai.expect
+chai.use(require('chai-as-promised'))
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 const tablename = 'types_table'
 let testname = 'not set yet'
-const fs = require('fs')
 const driver = 'SQL Server Native Client 11.0'
 
 describe('datatypes', function () {
@@ -38,8 +39,7 @@ describe('datatypes', function () {
     env.close().then(() => done())
   })
 
-  testname = 'test 023a - fetch large varbinary in chunks \'varbinary(max)\', fetch as binary'
-  it(testname, done => {
+  it('test 023a - fetch large varbinary in chunks \'varbinary(max)\', fetch as binary', async function handler () {
     const testcolumntype = ' varbinary(' + 'max' + ')'
     const testcolumnname = 'col1'
 
@@ -50,98 +50,27 @@ describe('datatypes', function () {
     }
 
     const binaryBuffer = Buffer.from(buffer)
-
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        const s = `insert into ${tablename} (${testcolumnname} )  values ( ? )`
-        env.theConnection.query(s, [binaryBuffer], (err, res) => {
-          assert.ifError(err)
-          assert(res)
-          assert(res.length === 0)
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        const s = `select ${testcolumnname} from ${tablename}`
-        env.theConnection.query(s, [binaryBuffer], (err, res) => {
-          assert.ifError(err)
-          const b = res[0].col1
-          assert.deepStrictEqual(b, binaryBuffer)
-          asyncDone()
-        })
-      },
-      function () {
-        done()
-      }
-    ]) // end of env.async.series()
-    // end of it():
+    await env.promisedTestFnCreateTable(env.theConnection, tablename, testcolumnname, testcolumntype)
+    const promises = env.theConnection.promises
+    const insertSql = `insert into ${tablename} (${testcolumnname} )  values ( ? )`
+    await promises.query(insertSql, [binaryBuffer])
+    const selectSql = `select ${testcolumnname} from ${tablename}`
+    const r = await promises.query(selectSql, [binaryBuffer])
+    expect(r.first[0].col1).to.deep.equal(binaryBuffer)
   })
 
-  it('write / read an image column', done => {
+  it('write / read an image column', async function handler () {
     const testcolumntype = ' Image'
     const testcolumnname = 'col1'
-    const path = require('path')
-    let binaryBuffer
 
-    function readFile (f) {
-      return new Promise((resolve, reject) => {
-        fs.readFile(f, 'utf8', (err, contents) => {
-          if (err) {
-            reject(err)
-          } else {
-            resolve(contents)
-          }
-        })
-      })
-    }
-
-    function readAsBinary (file) {
-      return new Promise((resolve, reject) => {
-        const p = path.join(__dirname, 'data', file)
-        readFile(p).then(d => {
-          resolve(Buffer.from(d))
-        }).catch(e => {
-          reject(e)
-        })
-      })
-    }
-
-    env.async.series([
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        readAsBinary('SampleJPGImage_50kbmb.jpg').then(x => {
-          binaryBuffer = x
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        const s = `insert into ${tablename} (${testcolumnname} )  values ( ? )`
-        env.theConnection.query(s, [env.sql.LongVarBinary(binaryBuffer)], (err, res) => {
-          assert.ifError(err)
-          assert(res)
-          assert(res.length === 0)
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        const s = `select ${testcolumnname} from ${tablename}`
-        env.theConnection.query(s, [], (err, res) => {
-          assert.ifError(err)
-          const b = res[0].col1
-          assert.deepStrictEqual(b, binaryBuffer)
-          asyncDone()
-        })
-      },
-      function () {
-        done()
-      }
-    ]) // end of env.async.series()
+    await env.promisedTestFnCreateTable(env.theConnection, tablename, testcolumnname, testcolumntype)
+    const binaryBuffer = await env.readAsBinary('SampleJPGImage_50kbmb.jpg')
+    const insertSql = `insert into ${tablename} (${testcolumnname} )  values ( ? )`
+    const promises = env.theConnection.promises
+    await promises.query(insertSql, [env.sql.LongVarBinary(binaryBuffer)])
+    const selectSql = `select ${testcolumnname} from ${tablename}`
+    const r = await promises.query(selectSql)
+    expect(r.first[0].col1).to.deep.equal(binaryBuffer)
   })
 
   testname = 'test 001 - verify functionality of data type \'smalldatetime\', fetch as date'
