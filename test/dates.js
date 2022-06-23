@@ -18,7 +18,6 @@
 
 /* globals describe it */
 
-const util = require('util')
 const chai = require('chai')
 const assert = chai.assert
 const expect = chai.expect
@@ -102,7 +101,7 @@ describe('dates', function () {
     }
   }
 
-  it('time to millisecond components 2', async function handler () {
+  it('time to millisecond components', async function handler () {
     const tableDef = {
       tableName: 'time_test',
       columns: [
@@ -190,198 +189,10 @@ describe('dates', function () {
     await nanoSeconds()
   })
 
-  it('time to millisecond components', testDone => {
-    const tableDef = {
-      tableName: 'time_test',
-      columns: [
-        {
-          name: 'test_time',
-          type: 'time'
-        }
-      ]
-    }
-    const promisedRaw = util.promisify(env.theConnection.queryRaw)
-    const tt = env.bulkTableTest(tableDef)
-    const ih = new InsertSqlHelper(tt)
-
-    const fns =
-      [
-        async asyncDone => {
-          try {
-            await tt.create()
-            await promisedRaw(ih.insertHoursQuery)
-            asyncDone()
-          } catch (e) {
-            assert(e)
-            testDone()
-          }
-        },
-        asyncDone => {
-          let expectedHour = -1
-          const stmt = env.theConnection.queryRaw(tt.selectSql)
-          stmt.on('error', e => {
-            assert.ifError(e)
-          })
-          stmt.on('column', (c, d, more) => {
-            ++expectedHour
-            assert(c === 0)
-            assert(!more)
-            const expectedDate = env.timeHelper.makeUTCJan1900HH(expectedHour)
-            expectedDate.nanosecondsDelta = 0
-            assert.deepStrictEqual(d, expectedDate)
-          })
-          stmt.on('done', () => {
-            assert(expectedHour === 23)
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          env.theConnection.queryRaw(tt.truncateSql, e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-        },
-        asyncDone => {
-        // insert all the mins and make sure they come back from time column
-          env.theConnection.queryRaw(ih.insertMinutesSql, e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          let expectedMinute = -1
-
-          const stmt = env.theConnection.queryRaw(tt.selectSql)
-
-          stmt.on('error', e => {
-            assert.ifError(e)
-          })
-          stmt.on('column', (c, d, more) => {
-            ++expectedMinute
-            assert(c === 0)
-            assert(!more)
-            const expectedDate = env.timeHelper.makeUTCJan1900HHMM(ih.randomHour, expectedMinute)
-            expectedDate.nanosecondsDelta = 0
-            assert.deepStrictEqual(d, expectedDate)
-          })
-          stmt.on('done', () => {
-            assert(expectedMinute === 59)
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          env.theConnection.queryRaw(tt.truncateSql, e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-        },
-        // insert all the seconds and make sure they come back from time column
-        asyncDone => {
-          env.theConnection.queryRaw(ih.insertSecondsSql, e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          let expectedSecond = -1
-          const stmt = env.theConnection.queryRaw(tt.selectSql)
-
-          stmt.on('error', e => {
-            assert.ifError(e)
-          })
-          stmt.on('column', (c, d, more) => {
-            ++expectedSecond
-            assert(c === 0)
-            assert(!more)
-            const expectedDate = env.timeHelper.makeUTCJan1900HHMMSS(ih.randomHour, ih.randomMinute, expectedSecond)
-            expectedDate.nanosecondsDelta = 0
-            assert.deepStrictEqual(d, expectedDate)
-          })
-          stmt.on('done', () => {
-            assert(expectedSecond === 59)
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          env.theConnection.queryRaw(tt.truncateSql, e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-        },
-        // insert a sampling of milliseconds and make sure they come back correctly
-        asyncDone => {
-          env.theConnection.queryRaw(ih.insertMilliSecondsSql, e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          let msCount = -1
-
-          const stmt = env.theConnection.queryRaw(tt.selectSql)
-
-          stmt.on('error', e => {
-            assert.ifError(e)
-          })
-
-          stmt.on('column', (c, d, more) => {
-            ++msCount
-            assert(c === 0)
-            assert(!more)
-            const expectedDate = env.timeHelper.makeUTCJan1900HHMMSSMS(ih.randomHour, ih.randomMinute, ih.randomSecond, ih.randomMs[msCount])
-            expectedDate.nanosecondsDelta = 0
-            assert.deepStrictEqual(d, expectedDate, 'Milliseconds didn\'t match')
-          })
-
-          stmt.on('done', () => {
-            assert(msCount === 50)
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          env.theConnection.queryRaw(tt.truncateSql, e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-        },
-        // insert a sampling of ns and make sure they come back correctly
-        asyncDone => {
-          env.theConnection.queryRaw(ih.insertNanoSecondsSql, e => {
-            assert.ifError(e)
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          let nsCount = -1
-          const stmt = env.theConnection.queryRaw(tt.selectSql)
-
-          stmt.on('error', e => {
-            assert.ifError(e)
-          })
-          stmt.on('column', (c, d, more) => {
-            ++nsCount
-            assert(c === 0)
-            assert(!more)
-            const expectedDate = env.timeHelper.makeUTCJan1900HHMMSSMS(ih.randomHour, ih.randomMinute, ih.randomSecond, ih.nanoseconds[nsCount] * 1000)
-            expectedDate.nanosecondsDelta = ih.nanosecondsDeltaExpected[nsCount]
-            assert.deepStrictEqual(d, expectedDate, 'Nanoseconds didn\'t match')
-          })
-          stmt.on('done', () => {
-            assert(nsCount === 2)
-            asyncDone()
-          })
-        }
-      ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
-  })
-
   // this test simply verifies dates round trip.  It doesn't try to verify illegal dates vs. legal dates.
   // SQL Server is assumed to be only returning valid times and dates.
 
-  it('date retrieval verification', testDone => {
+  it('date retrieval verification', async function handler () {
     const testDates = ['1-1-1970', '12-31-1969', '2-29-1904', '2-29-2000']
     const tableDef = {
       tableName: 'date_test',
@@ -392,7 +203,6 @@ describe('dates', function () {
         }
       ]
     }
-    const promisedRaw = util.promisify(env.theConnection.queryRaw)
     const tt = env.bulkTableTest(tableDef)
 
     // 'INSERT INTO date_test (test_date) VALUES ('1-1-1970'),('12-31-1969'),('2-29-1904'),('2-29-2000');
@@ -406,39 +216,13 @@ describe('dates', function () {
       rows: expectedDates
     }
 
-    const fns = [
-      async asyncDone => {
-        try {
-          await tt.create()
-          await promisedRaw(insertDatesQuery)
-          asyncDone()
-        } catch (e) {
-          assert(e)
-          testDone()
-        }
-      },
-      // test valid dates
-      async asyncDone => {
-        env.theConnection.setUseUTC(false)
-        try {
-          const r = await promisedRaw(tt.selectSql)
-          assert.deepStrictEqual(expectedResults.meta, r.meta)
-          for (const row in r.rows) {
-            for (const d in row) {
-              assert.deepStrictEqual(expectedResults.rows[row][d], r.rows[row][d])
-            }
-          }
-          asyncDone()
-        } catch (e) {
-          assert(e)
-          testDone()
-        }
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+    const promises = env.theConnection.promises
+    await tt.create()
+    await promises.query(insertDatesQuery)
+    env.theConnection.setUseUTC(false)
+    const r = await promises.query(tt.selectSql, [], { raw: true })
+    assert.deepStrictEqual(r.meta[0], expectedResults.meta)
+    assert.deepStrictEqual(r.first, expectedResults.rows)
   })
 
   it('test timezone offset correctly offsets js date type', async function handler () {
@@ -456,7 +240,7 @@ describe('dates', function () {
   // this test simply verifies dates round trip.  It doesn't try to verify illegal dates vs. legal dates.
   // SQL Server is assumed to be only returning valid times and dates.
 
-  it('date to millisecond verification', testDone => {
+  it('date to millisecond verification', async function handler () {
     const testDates = [{ date1: '1-1-1900', date2: '1-1-1901', milliseconds: 31536000000 },
       { date1: '2-28-1900', date2: '3-1-1900', milliseconds: 86400000 },
       { date1: '2-28-1904', date2: '3-1-1904', milliseconds: 172800000 },
@@ -481,42 +265,17 @@ describe('dates', function () {
 
     const tt = env.bulkTableTest(tableDef)
     const insertDatesQuery = `${tt.insertSql} ${testDates.map(d => `('${d.date1}', '${d.date2}')`)}`
-
-    const promisedRaw = util.promisify(env.theConnection.queryRaw)
-    const fns = [
-      async asyncDone => {
-        try {
-          await tt.create()
-          await promisedRaw(insertDatesQuery)
-          asyncDone()
-        } catch (e) {
-          assert(e)
-          testDone()
-        }
-      },
-
-      // test valid dates
-      async asyncDone => {
-        try {
-          const r = await promisedRaw(tt.selectSql)
-          for (const d in r.rows) {
-            const timeDiff = r.rows[d][1].getTime() - r.rows[d][0].getTime()
-            assert(timeDiff === testDates[d].milliseconds)
-          }
-          asyncDone()
-        } catch (e) {
-          assert(e)
-          testDone()
-        }
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
+    await tt.create()
+    const promises = env.theConnection.promises
+    await promises.query(insertDatesQuery, [], { raw: true })
+    const r = await promises.query(tt.selectSql, [], { raw: true })
+    for (const d in r.first) {
+      const timeDiff = r.first[d][1].getTime() - r.first[d][0].getTime()
+      expect(timeDiff).to.equal(testDates[d].milliseconds)
+    }
   })
 
-  it('test timezone components of datetimeoffset', testDone => {
+  it('test timezone components of datetimeoffset', async function handler () {
     const tzYear = 1970
     const tzMonth = 0
     const tzDay = 1
@@ -537,8 +296,6 @@ describe('dates', function () {
       ]
     }
 
-    const tt = env.bulkTableTest(tableDef)
-
     // there are some timezones not on hour boundaries, but we aren't testing those in these unit tests
     // INSERT INTO datetimeoffset_test (test_datetimeoffset) VALUES ('1970-1-1 0:0:0-12:00'),('1970-1-1 0:0:0-11:00'),
 
@@ -554,44 +311,20 @@ describe('dates', function () {
       return x
     }
 
+    const tt = env.bulkTableTest(tableDef)
     const insertDatesQuery = `${tt.insertSql} ${offsets.map(t => `('${get(t)}')`)}`
 
-    const promisedRaw = util.promisify(env.theConnection.queryRaw)
-    const fns = [
-      async asyncDone => {
-        try {
-          await tt.create()
-          await promisedRaw(insertDatesQuery)
-          asyncDone()
-        } catch (e) {
-          assert(e)
-          testDone()
-        }
-      },
-      asyncDone => {
-        const stmt = env.theConnection.queryRaw(tt.selectSql)
-        let tz = -13
+    await tt.create()
+    const promises = env.theConnection.promises
+    await promises.query(insertDatesQuery, [], { raw: true })
+    const r = await promises.query(tt.selectSql, [], { raw: true })
+    let tz = -13
 
-        stmt.on('error', e => {
-          assert.ifError(e)
-        })
-        stmt.on('column', function (c, d, m) {
-          assert(c === 0, 'c != 0')
-          assert(!m, 'm != false')
-          assert(d.nanosecondsDelta === 0, 'nanosecondsDelta != 0')
-          ++tz
-          const expectedDate = new Date(insertedDate.valueOf() - (msPerHour * tz))
-          assert(d.valueOf() === expectedDate.valueOf(), 'Dates don\'t match')
-        })
-        stmt.on('done', () => {
-          assert(tz === 12, 'Incorrect final timezone')
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
+    r.first.forEach(r => {
+      ++tz
+      const expectedDate = new Date(insertedDate.valueOf() - (msPerHour * tz))
+      expect(r[0].valueOf()).to.deep.equal(expectedDate.valueOf())
     })
+    expect(tz).to.equal(12)
   })
 })
