@@ -32,7 +32,7 @@ class ProcTest {
   }
 
   call (o, options) {
-    return this.theConnection.promises.callProc(this.procName, o, options)
+    return this.theConnection.promises.callProc(this.def.name, o, options)
   }
 }
 

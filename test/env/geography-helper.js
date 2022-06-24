@@ -112,8 +112,7 @@ END
       const lines = this.asLines(coordinates)
       const points = this.asPoints(coordinates)
       const polygon = this.asPoly(coordinates)
-      const allGeography = lines.concat(points).concat(polygon)
-      return allGeography
+      return lines.concat(points).concat(polygon)
     }
 
     function asLine (coords) {

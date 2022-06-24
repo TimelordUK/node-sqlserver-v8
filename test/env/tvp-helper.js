@@ -4,8 +4,8 @@ class TvpHelper {
     let unqualifiedTableName = tableName
     const schemaIndex = tableName.indexOf('.')
     if (schemaIndex > 0) {
-      schemaName = tableName.substr(0, schemaIndex)
-      unqualifiedTableName = tableName.substr(schemaIndex + 1)
+      schemaName = tableName.substring(0, schemaIndex)
+      unqualifiedTableName = tableName.substring(schemaIndex + 1)
     }
     const createSchemaSql = `IF NOT EXISTS (
 SELECT schema_name
@@ -192,8 +192,7 @@ END
       await exec(dropLocalTableProcedureSql)
       await exec(localTableProcNameSql)
 
-      const table = await theConnection.promises.getUserTypeTable(tableTypeName)
-      return table
+      return await theConnection.promises.getUserTypeTable(tableTypeName)
     }
     function repeat (a, num) {
       return new Array(num + 1).join(a)

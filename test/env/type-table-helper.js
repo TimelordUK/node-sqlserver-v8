@@ -24,8 +24,7 @@ class TypeTableHelper {
     async function create () {
       await theConnection.promises.query(dropTableSql)
       await theConnection.promises.query(createTableSql)
-      const table = await theConnection.promises.getTable(tableName)
-      return table
+      return await theConnection.promises.getTable(tableName)
     }
 
     this.create = create

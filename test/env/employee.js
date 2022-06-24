@@ -104,8 +104,7 @@ class Employee {
     const dropTableSql = `IF OBJECT_ID('${this.tableName}', 'U') IS NOT NULL DROP TABLE ${this.tableName};`
     await this.theConnection.promises.query(dropTableSql)
     await this.dropCreate(this.tableName)
-    const table = await this.theConnection.promises.getTable(this.tableName)
-    return table
+    return await this.theConnection.promises.getTable(this.tableName)
   }
 
   createEmployees (count) {
@@ -121,8 +120,7 @@ class Employee {
 
   make (n) {
     n = n || 200
-    const parsedJSON = this.createEmployees(n)
-    return parsedJSON
+    return this.createEmployees(n)
   }
 
   async insertSelect (table, parsedJSON) {
@@ -131,8 +129,7 @@ class Employee {
     await table.promises.insert(parsedJSON)
     console.log(`ms = ${new Date() - d}`)
     const keys = this.helper.extractKey(parsedJSON, 'BusinessEntityID')
-    const results = await table.promises.select(keys)
-    return results
+    return await table.promises.select(keys)
   }
 }
 
