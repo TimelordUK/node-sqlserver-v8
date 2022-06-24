@@ -24,6 +24,7 @@ class CommonTestFnPromises {
     this.insert = util.promisify(commonTestFns.insertDataTSQL)
     this.verifyData_Datetime = util.promisify(commonTestFns.verifyData_Datetime)
     this.verifyData = util.promisify(commonTestFns.verifyData)
+    this.invalidQueryTSQL = util.promisify(commonTestFns.invalidQueryTSQL)
   }
 }
 
@@ -67,6 +68,11 @@ class CommonTestFnProxy {
     return this.promises.verifyData(this.connectionProxy, this.params.tableName, this.params.testColumnName, expected, testname)
   }
 
+  invalidQuery (tsql, ExpectedError, testname) {
+    return this.promises.invalidQueryTSQL(this.connectionProxy, this.params.tableName, tsql, ExpectedError, testname)
+  }
+
+  // const invalidQueryTSQL = (Connection, tsql, ExpectedError, testname, done)
   //  env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
 
   async testerDatetime () {

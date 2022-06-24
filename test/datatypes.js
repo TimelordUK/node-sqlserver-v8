@@ -26,7 +26,7 @@ const env = new TestEnv()
 
 describe('datatypes', function () {
   const tablename = 'types_table'
-  let testname = 'not set yet'
+  const testname = 'not set yet'
   const driver = 'SQL Server Native Client 11.0'
 
   this.timeout(20000)
@@ -484,8 +484,7 @@ describe('datatypes', function () {
     // end of it():
   })
 
-  testname = 'test 010 - verify functionality of data type \'tinyint\', fetch as number'
-  it(testname, done => {
+  it('test 010 - verify functionality of data type \'tinyint\', fetch as number', async function handler () {
     const testcolumnsize = 3
     const testcolumntype = ' tinyint'
     const testcolumnclienttype = 'number'
@@ -507,26 +506,15 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 011 - verify functionality of data type \'smallint\', fetch as number'
-  it(testname, done => {
+  it('test 011 - verify functionality of data type \'smallint\', fetch as number', async function handler () {
     const testcolumnsize = 5
     const testcolumntype = ' smallint'
     const testcolumnclienttype = 'number'
@@ -548,26 +536,15 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 012 - verify functionality of data type \'int\', fetch as number'
-  it(testname, done => {
+  it('test 012 - verify functionality of data type \'int\', fetch as number', async function handler () {
     const testcolumnsize = 10
     const testcolumntype = ' int'
     const testcolumnclienttype = 'number'
@@ -589,26 +566,15 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 013 - verify functionality of data type \'bigint\', fetch as number'
-  it(testname, done => {
+  it('test 013 - verify functionality of data type \'bigint\', fetch as number', async function handler () {
     const testcolumnsize = 19
     const testcolumntype = ' bigint'
     const testcolumnclienttype = 'number'
@@ -630,30 +596,15 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    if (env.commonTestFns.SKIP_FAILING_HANGING_TEST_CASES === true) {
-      done()
-    } else {
-      env.async.series([
-
-        asyncDone => {
-          env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-        },
-        asyncDone => {
-          env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-        },
-        asyncDone => {
-          env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-        },
-        () => {
-          env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-        }
-      ]) // end of env.async.series()
-    }
-    // end of it():
+    if (env.commonTestFns.SKIP_FAILING_HANGING_TEST_CASES === true) return
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
   })
 
-  testname = 'test 014 - verify functionality of data type \'smallmoney\', fetch as number'
-  it(testname, done => {
+  it('test 014 - verify functionality of data type \'smallmoney\', fetch as number', async function handler () {
     const testcolumnsize = 10
     const testcolumntype = ' smallmoney'
     const testcolumnclienttype = 'number'
@@ -675,26 +626,16 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    env.async.series([
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
 
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
     // end of it():
   })
 
-  testname = 'test 015 - verify functionality of data type \'money\', fetch as number'
-  it(testname, done => {
+  it('test 015 - verify functionality of data type \'money\', fetch as number', async function handler () {
     //  var testcolumnsize = 19
     const testcolumntype = ' money'
     //  var testcolumnclienttype = 'number'
@@ -705,31 +646,18 @@ describe('datatypes', function () {
 
     const tsql = 'SELECT * FROM types_table ORDER BY id'
     const expectedError = `[Microsoft][${driver}][SQL Server]Arithmetic overflow`
+    if (env.commonTestFns.SKIP_FAILING_HANGING_TEST_CASES === true) return
 
-    if (env.commonTestFns.SKIP_FAILING_HANGING_TEST_CASES === true) {
-      done()
-    } else {
-      env.async.series([
-        asyncDone => {
-          env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-        },
-        asyncDone => {
-          env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-        },
-        asyncDone => {
-          env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-        },
-        () => {
-          env.commonTestFns.invalidQueryTSQL(env.theConnection, tsql, expectedError, testname, done)
-          //                env.commonTestFns.verifyData(c, tablename, testcolumnname, expected, testname, done);
-        }
-      ]) // end of env.async.series()
-    }
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.invalidQuery(tsql, expectedError)
+
     // end of it():
   })
 
-  testname = 'test 016 - verify functionality of data type \'numeric(7,3)\', fetch as number'
-  it(testname, done => {
+  it('test 016 - verify functionality of data type \'numeric(7,3)\', fetch as number', async function handler () {
     const testcolumnsize = 7
     const testcolumntype = ' numeric(7,3)'
     const testcolumnclienttype = 'number'
@@ -752,26 +680,15 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 017 - verify functionality of data type \'decimal(7,3)\', fetch as number'
-  it(testname, done => {
+  it('test 017 - verify functionality of data type \'decimal(7,3)\', fetch as number', async function handler () {
     const testcolumnsize = 7
     const testcolumntype = ' decimal(7,3)'
     const testcolumnclienttype = 'number'
@@ -794,26 +711,15 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 018 - verify functionality of data type \'bit\', fetch as number'
-  it(testname, done => {
+  it('test 018 - verify functionality of data type \'bit\', fetch as number', async function handler () {
     const testcolumnsize = 1
     const testcolumntype = ' bit'
     const testcolumnclienttype = 'boolean'
@@ -834,26 +740,15 @@ describe('datatypes', function () {
         [2, true]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 019 - verify functionality of data type \'float(53)\', fetch as number'
-  it(testname, done => {
+  it('test 019 - verify functionality of data type \'float(53)\', fetch as number', async function handler () {
     const testcolumnsize = 53
     const testcolumntype = ' float(53)'
     const testcolumnclienttype = 'number'
@@ -876,26 +771,15 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 020 - verify functionality of data type \'real\', fetch as number'
-  it(testname, done => {
+  it('test 020 - verify functionality of data type \'real\', fetch as number', async function handler () {
     const testcolumnsize = 24
     const testcolumntype = ' real'
     const testcolumnclienttype = 'number'
@@ -917,26 +801,15 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 021 - verify functionality of data type \'binary(n)\', fetch as binary'
-  it(testname, done => {
+  it('test 021 - verify functionality of data type \'binary(n)\', fetch as binary', async function handler () {
     const testcolumnsize = 10
     const testcolumntype = ` binary(${testcolumnsize})`
     const testcolumnclienttype = 'binary'
@@ -960,26 +833,15 @@ describe('datatypes', function () {
         [2, binaryBuffer]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 022 - verify functionality of data type \'varbinary(n)\', fetch as binary'
-  it(testname, done => {
+  it('test 022 - verify functionality of data type \'varbinary(n)\', fetch as binary', async function handler () {
     const testcolumnsize = 10
     const testcolumntype = ` varbinary(${testcolumnsize})`
     const testcolumnclienttype = 'binary'
@@ -1003,26 +865,15 @@ describe('datatypes', function () {
         [2, binaryBuffer]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 023 - verify functionality of data type \'varbinary(max)\', fetch as binary'
-  it(testname, done => {
+  it('test 023 - verify functionality of data type \'varbinary(max)\', fetch as binary', async function handler () {
     const testcolumnsize = 0
     const testcolumntype = ' varbinary(max)'
     const testcolumnclienttype = 'binary'
@@ -1044,21 +895,11 @@ describe('datatypes', function () {
         [2, binaryBuffer]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
@@ -1082,8 +923,7 @@ describe('datatypes', function () {
     expect(r.first[0].col1).to.deep.equal(binaryBuffer)
   })
 
-  testname = 'test 024 - verify functionality of data type \'image\', fetch as binary'
-  it(testname, done => {
+  it('test 024 - verify functionality of data type \'image\', fetch as binary', async function handler () {
     const testcolumnsize = 2147483647
     const testcolumntype = ' image'
     const testcolumnclienttype = 'binary'
@@ -1106,26 +946,15 @@ describe('datatypes', function () {
         [2, binaryBuffer]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 025 - verify functionality of data type \'xml\', fetch as text'
-  it(testname, done => {
+  it('test 025 - verify functionality of data type \'xml\', fetch as text', async function handler () {
     const testcolumnsize = 0
     const testcolumntype = ' xml'
     const testcolumnclienttype = 'text'
@@ -1147,29 +976,17 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    if (env.commonTestFns.SKIP_FAILING_TEST_ISSUE_36 === true) {
-      done()
-    } else {
-      env.async.series([
-        asyncDone => {
-          env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-        },
-        asyncDone => {
-          env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-        },
-        asyncDone => {
-          env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-        },
-        () => {
-          env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-        }
-      ]) // end of env.async.series()
-    }
+    if (env.commonTestFns.SKIP_FAILING_TEST_ISSUE_36 === true) return
+
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 026 - verify functionality of data type \'char\', fetch as text'
-  it(testname, done => {
+  it('test 026 - verify functionality of data type \'char\', fetch as text', async function handler () {
     const testcolumnsize = 10
     const testcolumntype = ` char(${testcolumnsize})`
     const testcolumnclienttype = 'text'
@@ -1192,26 +1009,15 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 027 - verify functionality of data type \'varchar(n)\', fetch as text'
-  it(testname, done => {
+  it('test 027 - verify functionality of data type \'varchar(n)\', fetch as text', async function handler () {
     const testcolumnsize = 20
     const testcolumntype = ` varchar(${testcolumnsize})`
     const testcolumnclienttype = 'text'
@@ -1234,26 +1040,15 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 028 - verify functionality of data type \'varchar(max)\', fetch as text'
-  it(testname, done => {
+  it('test 028 - verify functionality of data type \'varchar(max)\', fetch as text', async function handler () {
     const testcolumnsize = 0
     const testcolumntype = ' varchar(max)'
     const testcolumnclienttype = 'text'
@@ -1276,26 +1071,15 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 029 - verify functionality of data type \'text\', fetch as text'
-  it(testname, done => {
+  it('test 029 - verify functionality of data type \'text\', fetch as text', async function handler () {
     const testcolumnsize = 2147483647
     const testcolumntype = ' text'
     const testcolumnclienttype = 'text'
@@ -1317,26 +1101,15 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 030 - verify functionality of data type \'nchar\', fetch as text'
-  it(testname, done => {
+  it('test 030 - verify functionality of data type \'nchar\', fetch as text', async function handler () {
     const testcolumnsize = 10
     const testcolumntype = ` nchar(${testcolumnsize})`
     const testcolumnclienttype = 'text'
@@ -1359,26 +1132,15 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 031 - verify functionality of data type \'nvarchar(n)\', fetch as text'
-  it(testname, done => {
+  it('test 031 - verify functionality of data type \'nvarchar(n)\', fetch as text', async function handler () {
     const testcolumnsize = 20
     const testcolumntype = ` nvarchar(${testcolumnsize})`
     const testcolumnclienttype = 'text'
@@ -1401,26 +1163,15 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 032 - verify functionality of data type \'nvarchar(max)\', fetch as text'
-  it(testname, done => {
+  it('test 032 - verify functionality of data type \'nvarchar(max)\', fetch as text', async function handler () {
     const testcolumnsize = 0
     const testcolumntype = ' nvarchar(max)'
     const testcolumnclienttype = 'text'
@@ -1443,26 +1194,15 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 033 - verify functionality of data type \'ntext\', fetch as text'
-  it(testname, done => {
+  it('test 033 - verify functionality of data type \'ntext\', fetch as text', async function handler () {
     const testcolumnsize = 1073741823
     const testcolumntype = ' ntext'
     const testcolumnclienttype = 'text'
@@ -1484,26 +1224,15 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 034 - verify functionality of data type \'sysname\', fetch as text'
-  it(testname, done => {
+  it('test 034 - verify functionality of data type \'sysname\', fetch as text', async function handler () {
     const testcolumnsize = 128
     const testcolumntype = ' sysname'
     const testcolumnclienttype = 'text'
@@ -1528,20 +1257,10 @@ describe('datatypes', function () {
           [2, testdata2Expected]]
       }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1TsqlInsert, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ])
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1TsqlInsert)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
   })
 })
