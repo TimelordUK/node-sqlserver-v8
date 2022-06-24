@@ -1081,7 +1081,7 @@ END
         reject(e)
       })
 
-      qp.on('submitted', (q) => {
+      qp.on('submitted', () => {
         // console.log('submitted')
         submitted = true
       })

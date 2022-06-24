@@ -70,7 +70,7 @@ describe('prepared', function () {
     const prepared = await env.theConnection.promises.prepare(q)
     const res = await prepared.promises.query([])
     assert.deepStrictEqual(res.first[0].v, s.slice(0, 4))
-    await prepared.free()
+    await prepared.promises.free()
   })
 
   it('use prepared and select nvarchar max with max default size on query', async function handler () {
@@ -83,7 +83,7 @@ describe('prepared', function () {
     const prepared = await env.theConnection.promises.prepare(q)
     const res = await prepared.promises.query([])
     assert.deepStrictEqual(res.first[0].v, s.slice(0, 4))
-    await prepared.free()
+    await prepared.promises.free()
   })
 
   it('use prepared and select nvarchar(max)', async function handler () {
@@ -92,7 +92,7 @@ describe('prepared', function () {
     const prepared = await env.theConnection.promises.prepare(q)
     const res = await prepared.promises.query([])
     assert.deepStrictEqual(res.first[0].v, s)
-    await prepared.free()
+    await prepared.promises.free()
   })
 
   it('use prepared to reserve and read multiple rows.', async function handler () {
@@ -101,7 +101,7 @@ describe('prepared', function () {
     const res = await pq.promises.query([])
     assert(res != null)
     assert(res.first.length > 0)
-    await pq.free()
+    await pq.promises.free()
   })
 
   it('use prepared to select 0 rows - expect no error (await promise)', async function handler () {

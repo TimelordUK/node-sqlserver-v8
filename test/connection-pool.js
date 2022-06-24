@@ -60,7 +60,7 @@ describe('connection-pool', function () {
     const pool = env.pool()
     await pool.promises.open()
     await pool.promises.close()
-    pool.query('select @@SPID as spid', async function handler (e, r) {
+    pool.query('select @@SPID as spid', async function handler (e) {
       assert(e !== null)
       assert(e.message.includes('closed'))
     })
@@ -85,7 +85,7 @@ describe('connection-pool', function () {
   it('submit bad query to pool with callback - expect error on cb', async function handler () {
     const pool = env.pool()
     await pool.open()
-    pool.query('select a from b', async function handler (e, r) {
+    pool.query('select a from b', async function handler (e) {
       assert(e !== null)
       assert(e.message.includes('Invalid object'))
       await pool.close()
@@ -125,7 +125,7 @@ describe('connection-pool', function () {
     await pool.promises.open()
     const b = env.repeat('z', 4000)
     const helper = env.typeTableHelper('NVARCHAR(MAX)', pool)
-    const expected = helper.getVec(10, i => b)
+    const expected = helper.getVec(10, _ => b)
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
@@ -225,7 +225,7 @@ describe('connection-pool', function () {
     let done = 0
     let free = 0
     function submit (sql) {
-      const q = pool.query(sql, (e, res) => {
+      const q = pool.query(sql, (e) => {
         errors.push(e)
       })
       q.on('submitted', () => {
