@@ -369,7 +369,7 @@ export interface BulkTableMgrPromises
 export interface BulkTableMgr {
     promises: BulkTableMgrPromises
     getSummary(): BulkMgrSummary
-    asUserType(name:string): string
+    asUserType(name?:string): string
     // the driver will be sent column types in table rather than deriving from data
     // necessary to switch on for TZ adjustment i.e. for non UTC times sent
     useMetaType(yn:boolean): void
