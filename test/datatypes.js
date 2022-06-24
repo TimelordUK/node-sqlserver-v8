@@ -18,17 +18,17 @@
 // ---------------------------------------------------------------------------------------------------------------------------------`
 
 /* globals describe it */
-
 const chai = require('chai')
 const expect = chai.expect
 chai.use(require('chai-as-promised'))
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
-const tablename = 'types_table'
-let testname = 'not set yet'
-const driver = 'SQL Server Native Client 11.0'
 
 describe('datatypes', function () {
+  const tablename = 'types_table'
+  let testname = 'not set yet'
+  const driver = 'SQL Server Native Client 11.0'
+
   this.timeout(20000)
 
   this.beforeEach(done => {
@@ -37,26 +37,6 @@ describe('datatypes', function () {
 
   this.afterEach(done => {
     env.close().then(() => done())
-  })
-
-  it('test 023a - fetch large varbinary in chunks \'varbinary(max)\', fetch as binary', async function handler () {
-    const testcolumntype = ' varbinary(' + 'max' + ')'
-    const testcolumnname = 'col1'
-
-    const buffer = []
-    let i
-    for (i = 0; i < 2 * 1024 * 1024; ++i) {
-      buffer[buffer.length] = i % 255
-    }
-
-    const binaryBuffer = Buffer.from(buffer)
-    await env.commonTestFnPromises.create(env.theConnection, tablename, testcolumnname, testcolumntype)
-    const promises = env.theConnection.promises
-    const insertSql = `insert into ${tablename} (${testcolumnname} )  values ( ? )`
-    await promises.query(insertSql, [binaryBuffer])
-    const selectSql = `select ${testcolumnname} from ${tablename}`
-    const r = await promises.query(selectSql, [binaryBuffer])
-    expect(r.first[0].col1).to.deep.equal(binaryBuffer)
   })
 
   it('write / read an image column', async function handler () {
@@ -73,7 +53,7 @@ describe('datatypes', function () {
     expect(r.first[0].col1).to.deep.equal(binaryBuffer)
   })
 
-  it('test 001 2 - verify functionality of data type \'smalldatetime\', fetch as date', async function handler () {
+  it('test 001 - verify functionality of data type \'smalldatetime\', fetch as date', async function handler () {
     //  var testcolumnsize = 16
     const testcolumntype = ' smalldatetime'
     //  var testcolumnclienttype = 'date'
@@ -91,73 +71,17 @@ describe('datatypes', function () {
     const testdata2TsqlInsert = `'${testdata2Expected}'`
     // Month in JS is 0-based, so expected will be month minus 1
     const jsDateExpected = new Date(year, month - 1, day, hour - env.commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
+
     const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(null)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData_Datetime(rowWithNullData, jsDateExpected, testname)
+    proxy.params.jsDateExpected = jsDateExpected
+    proxy.params.rowWithNullData = rowWithNullData
+    proxy.params.testcolumntype = testcolumntype
+    proxy.params.testdata2TsqlInsert = testdata2TsqlInsert
+
+    await proxy.testerDatetime()
   })
 
-  it('test 001 - verify functionality of data type \'smalldatetime\', fetch as date', done => {
-    //  var testcolumnsize = 16
-    const testcolumntype = ' smalldatetime'
-    //  var testcolumnclienttype = 'date'
-    const testcolumnname = 'col2'
-    const rowWithNullData = 1
-    // test date = 1955-12-13 12:43:00
-    const year = 1955
-    const month = 12
-    const day = 13
-    const hour = 12
-    const minute = 43
-    const second = 0
-    const nanosecond = 0
-    const testdata2Expected = `${year}-${month}-${day} ${hour}:${minute}:${second}`
-    const testdata2TsqlInsert = `'${testdata2Expected}'`
-    // Month in JS is 0-based, so expected will be month minus 1
-    const jsDateExpected = new Date(year, month - 1, day, hour - env.commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
-
-    const actions =
-      [
-        asyncDone => {
-          // console.log("createTable");
-          env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, () => {
-            // console.log("run");
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          // console.log("insertDataTSQL");
-          env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, null, () => {
-            // console.log("run");
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          // console.log("insertDataTSQL");
-          env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
-            // console.log("run");
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          // console.log("verifyData_Datetime");
-          env.commonTestFns.verifyData_Datetime(env.theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
-            // console.log("run");
-            asyncDone()
-          })
-        }
-      ]
-
-    env.async.series(actions,
-      () => {
-        // console.log("all done ... end each");
-        done()
-      })
-  })
-
-  testname = 'test 002 - verify functionality of data type \'datetime\', fetch as date'
-  it(testname, done => {
+  it('test 002 - verify functionality of data type \'datetime\', fetch as date', async function handler () {
     // var testcolumnsize = 23
     const testcolumntype = ' datetime'
     //  var testcolumnclienttype = 'date'
@@ -176,36 +100,14 @@ describe('datatypes', function () {
     // Month in JS is 0-based, so expected will be month minus 1
     const jsDateExpected = new Date(year, month - 1, day, hour - env.commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
 
-    const fns = [
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, null, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.verifyData_Datetime(env.theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      done()
-    }) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.insert(null)
+    await proxy.verifyData_Datetime(rowWithNullData, jsDateExpected, testname)
   }) // end of it(
 
-  testname = 'test 003_a - insert valid data into time(7) via TSQL, fetch as date'
-  it(testname, done => {
+  it('test 003_a - insert valid data into time(7) via TSQL, fetch as date', async function handler () {
     //  var testcolumnsize = 16
     const testdatetimescale = 7
     const testcolumntype = ` time(${testdatetimescale})`
@@ -226,37 +128,14 @@ describe('datatypes', function () {
     const testdata2Expected = '12:10:05.1234567'
     const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    const fns = [
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.verifyData_Datetime(env.theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      done()
-    })
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData_Datetime(rowWithNullData, jsDateExpected, testname)
   }) // end of it()
 
-  testname = 'test 003_b - insert valid data into time(0) via TSQL, fetch as date'
-  it(testname, done => {
+  it('test 003_b - insert valid data into time(0) via TSQL, fetch as date', async function handler () {
     //  var testcolumnsize = 16
     const testdatetimescale = 0
     const testcolumntype = ` time(${testdatetimescale})`
@@ -277,37 +156,14 @@ describe('datatypes', function () {
     const testdata2Expected = '12:10:05.1234567'
     const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    const fns =
-      [
-        asyncDone => {
-          env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, () => {
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, () => {
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          env.commonTestFns.verifyData_Datetime(env.theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
-            asyncDone()
-          })
-        }
-      ]
-
-    env.async.series(fns, () => {
-      done()
-    }) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData_Datetime(rowWithNullData, jsDateExpected, testname)
   }) // end of it()
 
-  testname = 'test 004_a - insert valid data into datetime2(7) via TSQL, fetch as date'
-  it(testname, done => {
+  it('test 004_a - insert valid data into datetime2(7) via TSQL, fetch as date', async function handler () {
     //  var testcolumnsize = 27
     const testdatetimescale = 7
     const testcolumntype = ` datetime2(${testdatetimescale})`
@@ -328,37 +184,14 @@ describe('datatypes', function () {
     const testdata2Expected = '2001-04-10 10:12:59.1234567'
     const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    const fns =
-      [
-        asyncDone => {
-          env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, () => {
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, () => {
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          env.commonTestFns.verifyData_Datetime(env.theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
-            asyncDone()
-          })
-        }
-      ]
-
-    env.async.series(fns, () => {
-      done()
-    }) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData_Datetime(rowWithNullData, jsDateExpected, testname)
   })
 
-  testname = 'test 004_b - insert valid data into datetime2(0) via TSQL, fetch as date'
-  it(testname, done => {
+  it('test 004_b - insert valid data into datetime2(0) via TSQL, fetch as date', async function handler () {
     //  var testcolumnsize = 19
     const testdatetimescale = 0
     const testcolumntype = ` datetime2(${testdatetimescale})`
@@ -379,37 +212,14 @@ describe('datatypes', function () {
     const testdata2Expected = '2001-04-10 10:12:59.1234567'
     const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    const fns = [
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.verifyData_Datetime(env.theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      done()
-    })
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData_Datetime(rowWithNullData, jsDateExpected, testname)
   }) // end of it()
 
-  testname = 'test 005_a - insert valid data into datetimeoffset(7) via TSQL, fetch as date'
-  it(testname, done => {
+  it('test 005_a - insert valid data into datetimeoffset(7) via TSQL, fetch as date', async function handler () {
     //  var testcolumnsize = 34
     const testdatetimescale = 7
     const testcolumntype = ` datetimeoffset(${testdatetimescale})`
@@ -437,37 +247,14 @@ describe('datatypes', function () {
     const testdata2Expected = `2001-04-10 10:12:59.1234567 +${offsetHours}:${offsetMinutes}`
     const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    const fns = [
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.verifyData_Datetime(env.theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      done()
-    })
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData_Datetime(rowWithNullData, jsDateExpected, testname)
   }) // end of it()
 
-  testname = 'test 005_b - insert valid data into datetimeoffset(0) via TSQL, fetch as date'
-  it(testname, done => {
+  it('test 005_b - insert valid data into datetimeoffset(0) via TSQL, fetch as date', async function handler () {
     //  var testcolumnsize = 26
     const testdatetimescale = 0
     const testcolumntype = ` datetimeoffset(${testdatetimescale})`
@@ -495,37 +282,14 @@ describe('datatypes', function () {
     const testdata2Expected = `2001-04-10 10:12:59.1234567 +${offsetHours}:${offsetMinutes}`
     const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    const fns = [
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.verifyData_Datetime(env.theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      done()
-    })
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData_Datetime(rowWithNullData, jsDateExpected, testname)
   }) // end of it()
 
-  testname = 'test 006_a - insert valid data into datetimeoffset(7) via TSQL, fetch as date UTC'
-  it(testname, done => {
+  it('test 006_a - insert valid data into datetimeoffset(7) via TSQL, fetch as date UTC', async function handler () {
     //  var testcolumnsize = 34
     const testdatetimescale = 7
     const testcolumntype = ` datetimeoffset(${testdatetimescale})`
@@ -552,37 +316,14 @@ describe('datatypes', function () {
     const testdata2Expected = `2001-04-10 10:12:59.1234567 +${offsetHours}:${offsetMinutes}`
     const testdata2TsqlInsert = '\'' + testdata2Expected + '\''
 
-    const fns = [
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.verifyData_Datetime(env.theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      done()
-    })
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData_Datetime(rowWithNullData, jsDateExpected, testname)
   }) // end of it()
 
-  testname = 'test 007 - insert valid data into date via TSQL, fetch as date'
-  it(testname, done => {
+  it('test 007 - insert valid data into date via TSQL, fetch as date', async function handler () {
     //  var testcolumnsize = 10
     //  var testdatetimescale = 0
     const testcolumntype = ' date'
@@ -602,37 +343,14 @@ describe('datatypes', function () {
     const testdata2TsqlInsert = `'${testdata2Expected}'`
     const jsDateExpected = new Date(year, month - 1, day, hour - env.commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
 
-    const fns = [
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, () => {
-          asyncDone()
-        })
-      },
-      asyncDone => {
-        env.commonTestFns.verifyData_Datetime(env.theConnection, tablename, testcolumnname, rowWithNullData, jsDateExpected, testname, () => {
-          asyncDone()
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      done()
-    })
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData_Datetime(rowWithNullData, jsDateExpected, testname)
   }) // end of it()
 
-  testname = 'test 008 - insert null into varchar(max) via TSQL, fetch as text'
-  it(testname, done => {
+  it('test 008 - insert null into varchar(max) via TSQL, fetch as text', async function handler () {
     const testcolumnsize = 0
     const testcolumntype = ' varchar(max)'
     const testcolumnclienttype = 'text'
@@ -643,7 +361,10 @@ describe('datatypes', function () {
     const testdata2TsqlInsert = `'${testdata2Expected}'`
 
     const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
+      meta: [
+        {
+          name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'
+        },
         {
           name: testcolumnname,
           size: testcolumnsize,
@@ -655,27 +376,16 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
   // currently, buffer size is 2048 characters, so a 2048 char string should not call 'more' in the OdbcConnection.cpp, but fetch entire result set at once.
-  testname = 'test 008_bndryCheck_VC - insert 2048 char string into varchar(max) via TSQL, fetch as text'
-  it(testname, done => {
+  it('test 008_bndryCheck_VC - insert 2048 char string into varchar(max) via TSQL, fetch as text', async function handler () {
     const testcolumnsize = 0
     const testcolumntype = ' varchar(max)'
     const testcolumnclienttype = 'text'
@@ -700,27 +410,16 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
   // currently, buffer size is 2048 characters, so a 2049 char string should call 'more' in the OdbcConnection.cpp and concatenate to correctly return larger data
-  testname = 'test 008_bndryCheck_NVC - insert 2049 char string into nvarchar(max) via TSQL, fetch as text'
-  it(testname, done => {
+  it('test 008_bndryCheck_NVC - insert 2049 char string into nvarchar(max) via TSQL, fetch as text', async function handler () {
     const testcolumnsize = 0
     const testcolumntype = ' nvarchar(max)'
     const testcolumnclienttype = 'text'
@@ -745,26 +444,15 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    env.async.series([
-
-      asyncDone => {
-        env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-      },
-      asyncDone => {
-        env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-      },
-      () => {
-        env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-      }
-    ]) // end of env.async.series()
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
-  testname = 'test 009 - verify functionality of data type \'guid\', fetch as text'
-  it(testname, done => {
+  it('test 009 - verify functionality of data type \'guid\', fetch as text', async function handler () {
     const testcolumnsize = 36
     const testcolumntype = ' uniqueidentifier'
     const testcolumnclienttype = 'text'
@@ -786,24 +474,13 @@ describe('datatypes', function () {
         [2, testdata2Expected]]
     }
 
-    if (env.commonTestFns.SKIP_FAILING_TEST_ISSUE_34 === true) {
-      done()
-    } else {
-      env.async.series([
-        asyncDone => {
-          env.commonTestFns.createTable(env.theConnection, tablename, testcolumnname, testcolumntype, asyncDone)
-        },
-        asyncDone => {
-          env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata1, asyncDone)
-        },
-        asyncDone => {
-          env.commonTestFns.insertDataTSQL(env.theConnection, tablename, testcolumnname, testdata2TsqlInsert, asyncDone)
-        },
-        () => {
-          env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
-        }
-      ]) // end of env.async.series()
-    }
+    if (env.commonTestFns.SKIP_FAILING_TEST_ISSUE_34 === true) return
+
+    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
+    await proxy.create(testcolumntype)
+    await proxy.insert(testdata1)
+    await proxy.insert(testdata2TsqlInsert)
+    await proxy.verifyData(expected, testname)
     // end of it():
   })
 
@@ -1023,6 +700,7 @@ describe('datatypes', function () {
     //  var testcolumnclienttype = 'number'
     const testcolumnname = 'col2'
     const testdata1 = null
+    // eslint-disable-next-line no-loss-of-precision
     const testdata2TsqlInsert = -922337203685477.5808
 
     const tsql = 'SELECT * FROM types_table ORDER BY id'
@@ -1382,6 +1060,26 @@ describe('datatypes', function () {
       }
     ]) // end of env.async.series()
     // end of it():
+  })
+
+  it('test 023a - fetch large varbinary in chunks \'varbinary(max)\', fetch as binary', async function handler () {
+    const testcolumntype = ' varbinary(' + 'max' + ')'
+    const testcolumnname = 'col1'
+
+    const buffer = []
+    let i
+    for (i = 0; i < 2 * 1024 * 1024; ++i) {
+      buffer[buffer.length] = i % 255
+    }
+
+    const binaryBuffer = Buffer.from(buffer)
+    await env.commonTestFnPromises.create(env.theConnection, tablename, testcolumnname, testcolumntype)
+    const promises = env.theConnection.promises
+    const insertSql = `insert into ${tablename} (${testcolumnname} )  values ( ? )`
+    await promises.query(insertSql, [binaryBuffer])
+    const selectSql = `select ${testcolumnname} from ${tablename}`
+    const r = await promises.query(selectSql, [binaryBuffer])
+    expect(r.first[0].col1).to.deep.equal(binaryBuffer)
   })
 
   testname = 'test 024 - verify functionality of data type \'image\', fetch as binary'

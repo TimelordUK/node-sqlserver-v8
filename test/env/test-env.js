@@ -29,24 +29,52 @@ class CommonTestFnPromises {
 
 // await testPromises.create(env.theConnection, tablename, testcolumnname, testcolumntype)
 //
+
+class CommonTestFnParams {
+  constructor (tableName, testColumnName) {
+    this.tableName = tableName
+    this.testColumnName = testColumnName
+    this.testcolumntype = null
+    this.testdata1 = null
+    this.testdata2TsqlInsert = null
+    this.rowWithNullData = null
+    this.jsDateExpected = null
+    this.testname = 'proxy'
+  }
+}
+
 class CommonTestFnProxy {
   constructor (connectionProxy, tableName, testColumnName) {
     this.connectionProxy = connectionProxy
-    this.tableName = tableName
-    this.testColumnName = testColumnName
     this.promises = new CommonTestFnPromises()
+    this.params = new CommonTestFnParams(tableName, testColumnName)
   }
 
   create (testcolumntype) {
-    return this.promises.create(this.connectionProxy, this.tableName, this.testColumnName, testcolumntype)
+    this.params.testcolumntype = testcolumntype
+    return this.promises.create(this.connectionProxy, this.params.tableName, this.params.testColumnName, testcolumntype)
   }
 
   insert (val) {
-    return this.promises.insert(this.connectionProxy, this.tableName, this.testColumnName, val)
+    return this.promises.insert(this.connectionProxy, this.params.tableName, this.params.testColumnName, val)
   }
 
   verifyData_Datetime (rowWithNullData, jsDateExpected, testname) {
-    return this.promises.verifyData_Datetime(this.connectionProxy, this.tableName, this.testColumnName, rowWithNullData, jsDateExpected, testname)
+    return this.promises.verifyData_Datetime(this.connectionProxy, this.params.tableName, this.params.testColumnName, rowWithNullData, jsDateExpected, testname)
+  }
+
+  verifyData (expected, testname) {
+    return this.promises.verifyData(this.connectionProxy, this.params.tableName, this.params.testColumnName, expected, testname)
+  }
+
+  //  env.commonTestFns.verifyData(env.theConnection, tablename, testcolumnname, expected, testname, done)
+
+  async testerDatetime () {
+    const p = this.params
+    await this.create(p.testcolumntype)
+    await this.insert(p.testdata1)
+    await this.insert(p.testdata2TsqlInsert)
+    await this.verifyData_Datetime(p.rowWithNullData, p.jsDateExpected, p.testname)
   }
 }
 
