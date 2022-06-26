@@ -21,9 +21,12 @@
 
 /* globals describe it */
 
-const assert = require('chai').assert
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
+const chai = require('chai')
+const assert = chai.assert
+const expect = chai.expect
+chai.use(require('chai-as-promised'))
 
 describe('prepared', function () {
   const tableName = 'employee'
@@ -207,54 +210,31 @@ describe('prepared', function () {
     }
   })
 
-  it('stress test prepared statement with 500 invocations cycling through primary key', testDone => {
+  it('stress test prepared statement with 500 invocations cycling through primary key', async function handler () {
     const select = prepared.select
     const meta = select.getMeta()
     assert(meta.length > 0)
-    let businessId = 1
-    let iteration = 0
     const totalIterations = 500
     const max = parsedJSON[parsedJSON.length - 1].BusinessEntityID
-    next(businessId, iterate)
 
-    function iterate () {
-      businessId++
-      if (businessId > max) businessId = 1
-      ++iteration
-      if (iteration < totalIterations) {
-        next(businessId, iterate)
-      } else {
-        testDone()
-      }
-    }
-
-    function next (businessId, done) {
-      select.preparedQuery([businessId],
-        (err, res1) => {
-          assert.ifError(err)
-          assert(res1[0].BusinessEntityID === businessId)
-          done()
-        })
+    for (let i = 0; i < totalIterations; ++i) {
+      const businessId = i % max + 1
+      const res = await select.promises.query([businessId])
+      expect(res.first[0]).to.deep.equal(parsedJSON[businessId - 1])
     }
   })
 
-  it('use prepared statement twice with different params.', testDone => {
+  it('use prepared statement twice with different params.', async function handler () {
     const select = prepared.select
     const meta = select.getMeta()
     const id1 = 2
     const id2 = 3
     assert(meta.length > 0)
-    select.preparedQuery([id1], (err, res1) => {
-      assert.ifError(err)
-      select.preparedQuery([id2], (err, res2) => {
-        assert.ifError(err)
-        const o1 = parsedJSON[id1 - 1]
-        assert.deepStrictEqual(o1, res1[0], 'results didn\'t match')
-
-        const o2 = parsedJSON[id2 - 1]
-        assert.deepStrictEqual(o2, res2[0], 'results didn\'t match')
-        testDone()
-      })
-    })
+    const res1 = await select.promises.query([id1])
+    const res2 = await select.promises.query([id2])
+    const o1 = parsedJSON[id1 - 1]
+    const o2 = parsedJSON[id2 - 1]
+    expect(res1.first[0]).to.deep.equal(o1)
+    expect(res2.first[0]).to.deep.equal(o2)
   })
 })
