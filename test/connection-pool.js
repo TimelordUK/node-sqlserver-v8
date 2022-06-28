@@ -84,17 +84,17 @@ describe('connection-pool', function () {
 
   it('submit bad query to pool with callback - expect error on cb', async function handler () {
     const pool = env.pool()
-    await pool.open()
+    await pool.promises.open()
     pool.query('select a from b', async function handler (e) {
       assert(e !== null)
       assert(e.message.includes('Invalid object'))
-      await pool.close()
+      await pool.promises.close()
     })
   })
 
   it('use pool to call proc', async function handler () {
     const pool = env.pool()
-    await pool.open()
+    await pool.promises.open()
     const spName = 'test_sp_get_optional_p'
     const a = 10
     const b = 20
@@ -117,7 +117,7 @@ describe('connection-pool', function () {
     const o = {}
     const res = await pool.promises.callProc(spName, o)
     expect(res.output).to.be.deep.equal(expected)
-    await pool.close()
+    await pool.promises.close()
   })
 
   it('use tableMgr on pool bulk insert varchar vector - exactly 4000 chars', async function handler () {
@@ -133,7 +133,7 @@ describe('connection-pool', function () {
     await promisedInsert(expected)
     const res = await promisedSelect(expected)
     expect(res).to.be.deep.equals(expected)
-    await pool.close()
+    await pool.promises.close()
   })
 
   it('use pool for tvp insert', async function handler () {
@@ -151,7 +151,7 @@ describe('connection-pool', function () {
     // use a connection having inserted with pool
     const res = await pool.promises.query(`select * from ${tableName}`)
     expect(res.first).to.be.deep.equal(vec)
-    await pool.close()
+    await pool.promises.close()
   })
 
   it('submit error queries on pool with no on.error catch', async function handler () {

@@ -300,7 +300,7 @@ describe('bulk', function () {
   async function runVarCharMaxWithChars (n, proxy) {
     const b = env.repeat('z', n)
     const helper = env.typeTableHelper('NVARCHAR(MAX)', proxy)
-    const expected = helper.getVec(10, i => b)
+    const expected = helper.getVec(10, _ => b)
     const table = await helper.create()
     const promisedInsert = table.promises.insert
     const promisedSelect = table.promises.select
