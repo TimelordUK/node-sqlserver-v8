@@ -350,167 +350,135 @@ describe('datatypes', function () {
     await proxy.verifyData_Datetime(rowWithNullData, jsDateExpected, testname)
   }) // end of it()
 
-  it('test 008 - insert null into varchar(max) via TSQL, fetch as text', async function handler () {
-    const testcolumnsize = 0
-    const testcolumntype = ' varchar(max)'
-    const testcolumnclienttype = 'text'
-    const testcolumnsqltype = 'varchar'
-    const testcolumnname = 'col2'
-    const testdata1 = null
-    const testdata2Expected = 'string data row 2'
-    const testdata2TsqlInsert = `'${testdata2Expected}'`
+  class ParamsTester {
+    static A100CharacterString = '0234567890123456789022345678903234567890423456789052345678906234567890723456789082345678909234567890'
+    static A2000CharacterString = ParamsTester.A100CharacterString.repeat(20)
 
-    const expected = {
-      meta: [
-        {
-          name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'
-        },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumnsqltype
-        }],
-      rows: [[1, testdata1],
-        [2, testdata2Expected]]
+    static makeExpected (testParams) {
+      return {
+        meta: [
+          {
+            name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity'
+          },
+          {
+            name: testParams.testcolumnname,
+            size: testParams.testcolumnsize,
+            nullable: true,
+            type: testParams.testcolumnclienttype,
+            sqlType: testParams.testcolumnsqltype.trim()
+          }
+        ],
+        rows: [
+          [1, testParams.testdata1],
+          [2, testParams.testdata2Expected]
+        ]
+      }
     }
 
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    static async runTestParams (testParams) {
+      const expected = ParamsTester.makeExpected(testParams)
+      const proxy = env.makeTestFnProxy(tablename, testParams.testcolumnname)
+      await proxy.create(testParams.testcolumntype)
+      await proxy.insert(testParams.testdata1)
+      await proxy.insert(testParams.testdata2TsqlInsert)
+      await proxy.verifyData(expected, testParams.testname)
+    }
+
+    static inQuotes (s) {
+      return `'${s}'`
+    }
+
+    static getUniqueIdentifierParams (testdata1, testdata2Expected, testdata2TsqlInsert) {
+      return {
+        testcolumnsize: 36,
+        testcolumntype: ' uniqueidentifier',
+        testcolumnclienttype: 'text',
+        testcolumnsqltype: 'uniqueidentifier',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
+    static getVarCharMaxParams (testdata1, testdata2Expected, testdata2TsqlInsert) {
+      return {
+        testcolumnsize: 0,
+        testcolumntype: ' varchar(max)',
+        testcolumnclienttype: 'text',
+        testcolumnsqltype: 'varchar',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
+    static getTinyIntxParams (testdata1, testdata2Expected, testdata2TsqlInsert) {
+      return {
+        testcolumnsize: 3,
+        testcolumntype: ' tinyint',
+        testcolumnclienttype: 'number',
+        testcolumnsqltype: 'tinyint',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+  }
+
+  it('test 008 - insert null into varchar(max) via TSQL, fetch as text', async function handler () {
+    const s = 'string data row 2'
+    const testParams = ParamsTester.getVarCharMaxParams(
+      null,
+      s,
+      ParamsTester.inQuotes(s))
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
   // currently, buffer size is 2048 characters, so a 2048 char string should not call 'more' in the OdbcConnection.cpp, but fetch entire result set at once.
   it('test 008_bndryCheck_VC - insert 2048 char string into varchar(max) via TSQL, fetch as text', async function handler () {
-    const testcolumnsize = 0
-    const testcolumntype = ' varchar(max)'
-    const testcolumnclienttype = 'text'
-    const testcolumnsqltype = 'varchar'
-    const testcolumnname = 'col2'
-    const testdata1 = null
-    const A100CharacterString = '0234567890123456789022345678903234567890423456789052345678906234567890723456789082345678909234567890'
-    const A2000CharacterString = A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString
+    const A2000CharacterString = ParamsTester.A2000CharacterString
     const testdata2Expected = 'AStringWith2048Characters_aaaa5aaa10aaa15aaa20aa' + A2000CharacterString
-    const testdata2TsqlInsert = `'${testdata2Expected}'`
-
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumnsqltype
-        }],
-      rows: [[1, testdata1],
-        [2, testdata2Expected]]
-    }
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getVarCharMaxParams(
+      null,
+      testdata2Expected,
+      ParamsTester.inQuotes(testdata2Expected))
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
   // currently, buffer size is 2048 characters, so a 2049 char string should call 'more' in the OdbcConnection.cpp and concatenate to correctly return larger data
   it('test 008_bndryCheck_NVC - insert 2049 char string into nvarchar(max) via TSQL, fetch as text', async function handler () {
-    const testcolumnsize = 0
-    const testcolumntype = ' nvarchar(max)'
-    const testcolumnclienttype = 'text'
-    const testcolumnsqltype = 'nvarchar'
-    const testcolumnname = 'col2'
-    const testdata1 = null
-    const A100CharacterString = '0234567890123456789022345678903234567890423456789052345678906234567890723456789082345678909234567890'
-    const A2000CharacterString = A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString + A100CharacterString
+    const A2000CharacterString = ParamsTester.A2000CharacterString
     const testdata2Expected = `AStringWith2049Characters_aaaa5aaa10aaa15aaa20aaa${A2000CharacterString}`
-    const testdata2TsqlInsert = `'${testdata2Expected}'`
-
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumnsqltype
-        }],
-      rows: [[1, testdata1],
-        [2, testdata2Expected]]
-    }
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getVarCharMaxParams(
+      null,
+      testdata2Expected,
+      ParamsTester.inQuotes(testdata2Expected))
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
   it('test 009 - verify functionality of data type \'guid\', fetch as text', async function handler () {
-    const testcolumnsize = 36
-    const testcolumntype = ' uniqueidentifier'
-    const testcolumnclienttype = 'text'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     const testdata2Expected = '0E984725-C51C-4BF4-9960-E1C80E27ABA0'
-    const testdata2TsqlInsert = `'${testdata2Expected}'`
-
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumntype.trim()
-        }],
-      rows: [[1, testdata1],
-        [2, testdata2Expected]]
-    }
-
-    if (env.commonTestFns.SKIP_FAILING_TEST_ISSUE_34 === true) return
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getUniqueIdentifierParams(
+      null,
+      testdata2Expected,
+      ParamsTester.inQuotes(testdata2Expected))
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
   it('test 010 - verify functionality of data type \'tinyint\', fetch as number', async function handler () {
-    const testcolumnsize = 3
-    const testcolumntype = ' tinyint'
-    const testcolumnclienttype = 'number'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     const testdata2Expected = 255
-    const testdata2TsqlInsert = testdata2Expected
-
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumntype.trim()
-        }],
-      rows: [[1, testdata1],
-        [2, testdata2Expected]]
-    }
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getTinyIntxParams(
+      null,
+      testdata2Expected,
+      testdata2Expected)
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 

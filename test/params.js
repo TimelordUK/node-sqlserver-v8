@@ -424,13 +424,10 @@ describe('params', function () {
     const o = { field1: 'value1', field2: -1 }
     await testBoilerPlateAsync('non_buffer_object',
       { object_col: 'varbinary(100)' },
-      async function () {
-        try {
-          await env.theConnection.promises.query('INSERT INTO non_buffer_object (object_col) VALUES (?)', [o.field1, o.field2])
-          assert.deepStrictEqual(1, 0)
-        } catch (e) {
-          assert(e)
-        }
+      async function handler () {
+        await expect(env.theConnection.promises.query('INSERT INTO non_buffer_object (object_col) VALUES (?)',
+          [o.field1, o.field2]))
+          .to.be.rejectedWith('Implicit conversion from data type nvarchar to varbinary is not allowed')
       })
   })
 
@@ -471,15 +468,9 @@ describe('params', function () {
     await testBoilerPlateAsync('buffer_param_test',
       { buffer_param: 'varbinary(5)' },
       async function handler () {
-        try {
-          const res = await env.theConnection.promises.query('INSERT INTO buffer_param_test (buffer_param) VALUES (?)', [b])
-          assert(res)
-        } catch (e) {
-          const expectedError = new Error('[Microsoft][SQL Server Native Client 11.0][SQL Server]String or binary data would be truncated.')
-          expectedError.sqlstate = '22001'
-          expectedError.code = 8152
-          assert(e.message.indexOf('String or binary data would be truncated') >= 0)
-        }
+        await expect(env.theConnection.promises
+          .query('INSERT INTO buffer_param_test (buffer_param) VALUES (?)', [b]))
+          .to.be.rejectedWith('String or binary data would be truncated')
       })
   })
 
