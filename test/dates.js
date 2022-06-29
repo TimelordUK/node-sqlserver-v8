@@ -41,7 +41,6 @@ describe('dates', function () {
       const randomHour = Math.floor(Math.random() * 24)
       const randomMinute = Math.floor(Math.random() * 60)
       const randomSecond = Math.floor(Math.random() * 60)
-      let randomMs = []
       const nanoseconds = [1e-9 * 100, 0.9999999, 0.5]
       const nanosecondsDeltaExpected = [1e-7, 0.0009999, 0]
       let insertHoursQuery = [tt.insertSql]
@@ -49,7 +48,7 @@ describe('dates', function () {
         insertHoursQuery.push(['(\'', h, ':00:00.00\'),'].join(''))
       }
       insertHoursQuery = insertHoursQuery.join('')
-      insertHoursQuery = insertHoursQuery.substr(0, insertHoursQuery.length - 1)
+      insertHoursQuery = insertHoursQuery.substring(0, insertHoursQuery.length - 1)
       insertHoursQuery += ';'
 
       let insertMinutesSql = [tt.insertSql]
@@ -57,7 +56,7 @@ describe('dates', function () {
         insertMinutesSql.push(['(\'', randomHour, ':', m, ':00.00\'),'].join(''))
       }
       insertMinutesSql = insertMinutesSql.join('')
-      insertMinutesSql = insertMinutesSql.substr(0, insertMinutesSql.length - 1)
+      insertMinutesSql = insertMinutesSql.substring(0, insertMinutesSql.length - 1)
       insertMinutesSql += ';'
 
       let insertSecondsSql = [tt.insertSql]
@@ -65,26 +64,34 @@ describe('dates', function () {
         insertSecondsSql.push(['(\'', randomHour, ':', randomMinute, ':', s, '.00\'),'].join(''))
       }
       insertSecondsSql = insertSecondsSql.join('')
-      insertSecondsSql = insertSecondsSql.substr(0, insertSecondsSql.length - 1)
+      insertSecondsSql = insertSecondsSql
+        .substring(0, insertSecondsSql.length - 1)
       insertSecondsSql += ';'
 
       let insertMilliSecondsSql = [tt.insertSql]
-      randomMs = []
+      const randomMs = []
 
       for (let ms = 0; ms <= 50; ++ms) {
         randomMs.push(Math.floor(Math.random() * 1000))
-        insertMilliSecondsSql.push(['(\'', randomHour, ':', randomMinute, ':', randomSecond, (randomMs[ms] / 1000).toFixed(3).substr(1), '\'),'].join(''))
+        insertMilliSecondsSql.push(['(\'', randomHour, ':', randomMinute, ':', randomSecond, (randomMs[ms] / 1000)
+          .toFixed(3)
+          .substring(1), '\'),']
+          .join(''))
       }
       insertMilliSecondsSql = insertMilliSecondsSql.join('')
-      insertMilliSecondsSql = insertMilliSecondsSql.substr(0, insertMilliSecondsSql.length - 1)
+      insertMilliSecondsSql = insertMilliSecondsSql
+        .substring(0, insertMilliSecondsSql.length - 1)
       insertMilliSecondsSql += ';'
 
       let insertNanoSecondsSql = [tt.insertSql]
       for (const i in nanoseconds) {
-        insertNanoSecondsSql.push(['(\'', randomHour, ':', randomMinute, ':', randomSecond, (nanoseconds[i]).toFixed(7).substr(1), '\'),'].join(''))
+        insertNanoSecondsSql.push(['(\'', randomHour, ':', randomMinute, ':', randomSecond, (nanoseconds[i])
+          .toFixed(7)
+          .substring(1), '\'),'].join(''))
       }
       insertNanoSecondsSql = insertNanoSecondsSql.join('')
-      insertNanoSecondsSql = insertNanoSecondsSql.substr(0, insertNanoSecondsSql.length - 1)
+      insertNanoSecondsSql = insertNanoSecondsSql
+        .substring(0, insertNanoSecondsSql.length - 1)
       insertNanoSecondsSql += ';'
 
       this.randomHour = randomHour
@@ -307,8 +314,7 @@ describe('dates', function () {
     function get (tz) {
       const paddedYear = tzYear < 1000 ? '0' + tzYear : tzYear
       const sign = (tz < 0) ? '' : '+'
-      const x = `${paddedYear}-${tzMonth + 1}-${tzDay} ${tzHour}:${tzMinute}:${tzSecond}${sign}${tz}:00`
-      return x
+      return `${paddedYear}-${tzMonth + 1}-${tzDay} ${tzHour}:${tzMinute}:${tzSecond}${sign}${tz}:00`
     }
 
     const tt = env.bulkTableTest(tableDef)

@@ -1,10 +1,12 @@
 'use strict'
 /* globals describe it */
 
-const assert = require('chai').assert
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
-
+const chai = require('chai')
+const expect = chai.expect
+const assert = chai.assert
+chai.use(require('chai-as-promised'))
 describe('bcp', function () {
   this.timeout(100000)
 
@@ -88,60 +90,50 @@ describe('bcp', function () {
   })
 
   it('bcp expect error null in non null column', async function handler () {
-    try {
-      const rows = 10
-      const bcp = env.bcpEntry({
-        tableName: 'test_table_bcp',
-        columns: [
-          {
-            name: 'id',
-            type: 'INT PRIMARY KEY'
-          },
-          {
-            name: 'n1',
-            type: 'smallint not NULL'
-          }]
-      }, i => {
-        return {
-          id: i,
-          n1: i % 2 === 0 ? Math.pow(2, 10) + i : null
-        }
-      })
-      await bcp.runner(rows)
-      return new Error('expected NULL constraint')
-    } catch (e) {
-      assert(e.message.includes('Cannot insert the value NULL into column'))
-    }
+    const rows = 10
+    const bcp = env.bcpEntry({
+      tableName: 'test_table_bcp',
+      columns: [
+        {
+          name: 'id',
+          type: 'INT PRIMARY KEY'
+        },
+        {
+          name: 'n1',
+          type: 'smallint not NULL'
+        }]
+    }, i => {
+      return {
+        id: i,
+        n1: i % 2 === 0 ? Math.pow(2, 10) + i : null
+      }
+    })
+    await expect(bcp.runner(rows)).to.be.rejectedWith('Cannot insert the value NULL into column')
   })
   /*
 ''[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Cannot insert the value NULL into column 'n1', table 'node.dbo.test_table_bcp'; column does not allow nulls. INSERT fails.''
     */
 
   it('bcp expect error duplicate primary key', async function handler () {
-    try {
-      const rows = 10
-      const bcp = env.bcpEntry({
-        tableName: 'test_table_bcp',
-        columns: [
-          {
-            name: 'id',
-            type: 'INT PRIMARY KEY'
-          },
-          {
-            name: 'n1',
-            type: 'smallint'
-          }]
-      }, i => {
-        return {
-          id: i % 5,
-          n1: i % 2 === 0 ? Math.pow(2, 10) + i : -Math.pow(2, 10) - i
-        }
-      })
-      await bcp.runner(rows)
-      throw new Error('expected violation constraint')
-    } catch (e) {
-      assert(e.message.includes('Violation of PRIMARY KEY constraint'))
-    }
+    const rows = 10
+    const bcp = env.bcpEntry({
+      tableName: 'test_table_bcp',
+      columns: [
+        {
+          name: 'id',
+          type: 'INT PRIMARY KEY'
+        },
+        {
+          name: 'n1',
+          type: 'smallint'
+        }]
+    }, i => {
+      return {
+        id: i % 5,
+        n1: i % 2 === 0 ? Math.pow(2, 10) + i : -Math.pow(2, 10) - i
+      }
+    })
+    await expect(bcp.runner(rows)).to.be.rejectedWith('Violation of PRIMARY KEY constraint')
     /*
 '[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Violation of PRIMARY KEY constraint 'PK__test_tab__3213E83F11822873'. Cannot insert duplicate key in object 'dbo.test_table_bcp'. The duplicate key value is (0).'
     */
@@ -172,13 +164,8 @@ describe('bcp', function () {
     /*
 '[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Violation of PRIMARY KEY constraint 'PK__test_tab__3213E83F11822873'. Cannot insert duplicate key in object 'dbo.test_table_bcp'. The duplicate key value is (0).'
     */
-    try {
-      await bcp.runner(rows)
-      throw new Error('expected violation constraint')
-    } catch (e) {
-      assert(e.message.includes('Violation of PRIMARY KEY constraint'))
-    }
 
+    await expect(bcp.runner(rows)).to.be.rejectedWith('Violation of PRIMARY KEY constraint')
     const res = await env.theConnection.promises.query(`select count(*) as count from ${name}`)
     assert.deepStrictEqual(res.first[0].count, 0)
   })
@@ -323,6 +310,16 @@ describe('bcp', function () {
     return await bcp.runner(rows)
   })
 
+  function realCompare (actual, expected) {
+    expect(actual.length).to.equal(expected.length)
+    for (let i = 0; i < actual.length; ++i) {
+      const lhs = actual[i]
+      const rhs = expected[i]
+      expect(lhs.id).to.equal(rhs.id)
+      assert(Math.abs(lhs.r1 - rhs.r1) < 1e-5)
+    }
+  }
+
   it('bcp real with null', async function handler () {
     function get (i) {
       const v = Math.sqrt(i + 1)
@@ -346,15 +343,8 @@ describe('bcp', function () {
         id: i,
         r1: i % 2 === 0 ? null : get(i) * 2
       }
-    }, (actual, expected) => {
-      assert.deepStrictEqual(actual.length, expected.length)
-      for (let i = 0; i < actual.length; ++i) {
-        const lhs = actual[i]
-        const rhs = expected[i]
-        assert.deepStrictEqual(lhs.id, rhs.id)
-        assert(Math.abs(lhs.r1 - rhs.r1) < 1e-5)
-      }
-    })
+    }, realCompare
+    )
     return await bcp.runner(rows)
   })
 
@@ -381,15 +371,7 @@ describe('bcp', function () {
         id: i,
         r1: i % 2 === 0 ? get(i) : get(i) * 2
       }
-    }, (actual, expected) => {
-      assert.deepStrictEqual(actual.length, expected.length)
-      for (let i = 0; i < actual.length; ++i) {
-        const lhs = actual[i]
-        const rhs = expected[i]
-        assert.deepStrictEqual(lhs.id, rhs.id)
-        assert(Math.abs(lhs.r1 - rhs.r1) < 1e-5)
-      }
-    })
+    }, realCompare)
     return await bcp.runner(rows)
   })
 
@@ -474,6 +456,16 @@ describe('bcp', function () {
     return await bcp.runner(rows)
   })
 
+  function numberCompare (actual, expected) {
+    expect(actual.length).to.equal(expected.length)
+    for (let i = 0; i < actual.length; ++i) {
+      const lhs = actual[i]
+      const rhs = expected[i]
+      expect(lhs.id).to.equal(rhs.id)
+      expect(lhs.n1).to.approximately(rhs.n1, 1e-5)
+    }
+  }
+
   it('bcp numeric', async function handler () {
     function get (i) {
       const v = Math.sqrt(i + 1)
@@ -497,17 +489,17 @@ describe('bcp', function () {
         id: i,
         n1: i % 2 === 0 ? get(i) : get(i) * 16
       }
-    }, (actual, expected) => {
-      assert.deepStrictEqual(actual.length, expected.length)
-      for (let i = 0; i < actual.length; ++i) {
-        const lhs = actual[i]
-        const rhs = expected[i]
-        assert.deepStrictEqual(lhs.id, rhs.id)
-        assert(Math.abs(lhs.n1 - rhs.n1) < 1e-5)
-      }
-    })
+    }, numberCompare)
     return await bcp.runner(rows)
   })
+
+  function timeFactory (testDate, i) {
+    return {
+      id: i,
+      d1: i % 2 === 0 ? null : new Date(testDate.getTime() + i * 60 * 60 * 1000),
+      d2: i % 3 === 0 ? null : new Date(testDate.getTime() - i * 60 * 60 * 1000)
+    }
+  }
 
   it('bcp varchar(max) (10k chars)', async function handler () {
     const rows = 150
@@ -534,6 +526,23 @@ describe('bcp', function () {
     return await bcp.runner(rows)
   })
 
+  function dateTimeCompare (actual, expected) {
+    expect(actual.length).to.equal(expected.length)
+    for (let i = 0; i < actual.length; ++i) {
+      const lhs = actual[i]
+      const rhs = expected[i]
+      expect(lhs.id).to.equal(rhs.id)
+      if (rhs.d1) {
+        delete lhs.d1.nanosecondsDelta
+        expect(lhs.d1).to.deep.equal(rhs.d1)
+      }
+      if (rhs.d2) {
+        delete lhs.d2.nanosecondsDelta
+        expect(lhs.d2).to.deep.equal(rhs.d2)
+      }
+    }
+  }
+
   it('bcp datetimeoffset datetimeoffset - mix with nulls', async function handler () {
     const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
     const bcp = env.bcpEntry({
@@ -551,28 +560,8 @@ describe('bcp', function () {
           name: 'd2',
           type: 'datetimeoffset'
         }]
-    }, i => {
-      return {
-        id: i,
-        d1: i % 2 === 0 ? null : new Date(testDate.getTime() + i * 60 * 60 * 1000),
-        d2: i % 3 === 0 ? null : new Date(testDate.getTime() - i * 60 * 60 * 1000)
-      }
-    }, (actual, expected) => {
-      assert.deepStrictEqual(actual.length, expected.length)
-      for (let i = 0; i < actual.length; ++i) {
-        const lhs = actual[i]
-        const rhs = expected[i]
-        assert.deepStrictEqual(lhs.id, rhs.id)
-        if (rhs.d1) {
-          delete lhs.d1.nanosecondsDelta
-          assert.deepStrictEqual(lhs.d1, rhs.d1)
-        }
-        if (rhs.d2) {
-          delete lhs.d2.nanosecondsDelta
-          assert.deepStrictEqual(lhs.d2, rhs.d2)
-        }
-      }
-    })
+    }, i => timeFactory(testDate, i)
+    , dateTimeCompare)
     return await bcp.runner()
   })
 
@@ -599,18 +588,7 @@ describe('bcp', function () {
         d1: new Date(testDate.getTime() + i * 60 * 60 * 1000),
         d2: new Date(testDate.getTime() - i * 60 * 60 * 1000)
       }
-    }, (actual, expected) => {
-      assert.deepStrictEqual(actual.length, expected.length)
-      for (let i = 0; i < actual.length; ++i) {
-        const lhs = actual[i]
-        const rhs = expected[i]
-        assert.deepStrictEqual(lhs.id, rhs.id)
-        delete lhs.d1.nanosecondsDelta
-        delete lhs.d2.nanosecondsDelta
-        assert.deepStrictEqual(lhs.d1, rhs.d1)
-        assert.deepStrictEqual(lhs.d2, rhs.d2)
-      }
-    })
+    }, dateTimeCompare)
     return await bcp.runner()
   })
 
@@ -709,28 +687,8 @@ describe('bcp', function () {
           name: 'd2',
           type: 'datetime'
         }]
-    }, i => {
-      return {
-        id: i,
-        d1: i % 2 === 0 ? null : new Date(testDate.getTime() + i * 60 * 60 * 1000),
-        d2: i % 3 === 0 ? null : new Date(testDate.getTime() - i * 60 * 60 * 1000)
-      }
-    }, (actual, expected) => {
-      assert.deepStrictEqual(actual.length, expected.length)
-      for (let i = 0; i < actual.length; ++i) {
-        const lhs = actual[i]
-        const rhs = expected[i]
-        assert.deepStrictEqual(lhs.id, rhs.id)
-        if (rhs.d1) {
-          delete lhs.d1.nanosecondsDelta
-          assert.deepStrictEqual(lhs.d1, rhs.d1)
-        }
-        if (rhs.d2) {
-          delete lhs.d2.nanosecondsDelta
-          assert.deepStrictEqual(lhs.d2, rhs.d2)
-        }
-      }
-    })
+    }, i => timeFactory(testDate, i)
+    , dateTimeCompare)
     return await bcp.runner()
   })
 
@@ -757,18 +715,7 @@ describe('bcp', function () {
         d1: new Date(testDate.getTime() + i * 60 * 60 * 1000),
         d2: new Date(testDate.getTime() - i * 60 * 60 * 1000)
       }
-    }, (actual, expected) => {
-      assert.deepStrictEqual(actual.length, expected.length)
-      for (let i = 0; i < actual.length; ++i) {
-        const lhs = actual[i]
-        const rhs = expected[i]
-        assert.deepStrictEqual(lhs.id, rhs.id)
-        delete lhs.d1.nanosecondsDelta
-        delete lhs.d2.nanosecondsDelta
-        assert.deepStrictEqual(lhs.d1, rhs.d1)
-        assert.deepStrictEqual(lhs.d2, rhs.d2)
-      }
-    })
+    }, dateTimeCompare)
     return await bcp.runner()
   })
 

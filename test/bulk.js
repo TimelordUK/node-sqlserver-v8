@@ -4,7 +4,6 @@
 const assert = require('chai').assert
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
-const sql = require('msnodesqlv8')
 const totalObjectsForInsert = 10
 const test1BatchSize = 1
 const test2BatchSize = 10
@@ -64,8 +63,8 @@ describe('bulk', function () {
       return d
     }
 
-    const c1 = await sql.promises.open(env.connectionString)
-    const c2 = await sql.promises.open(env.connectionString)
+    const c1 = await env.sql.promises.open(env.connectionString)
+    const c2 = await env.sql.promises.open(env.connectionString)
     await c1.promises.query(dropTableSql)
     await c2.promises.query(dropTableSql)
 
@@ -777,7 +776,7 @@ describe('bulk', function () {
   it('bind to db with space', async function handler () {
     const tableName = 'bindTest'
     // const connectionString = 'Driver={SQL Server Native Client 11.0}; Server=(localdb)\\node; Database={scratch 2}; Trusted_Connection=Yes;'
-    const conn = await sql.promises.open(env.connectionString)
+    const conn = await env.sql.promises.open(env.connectionString)
     await setupSimpleType(conn, tableName)
     const table = conn.promises.getTable(tableName)
     assert(table !== null)
@@ -793,12 +792,9 @@ describe('bulk', function () {
     const nullJohn = 'INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (null), (N\'John\')'
     const error = 'Cannot insert the value NULL into column'
 
-    const b1 = await env.doesThrow(johnNullSql, error)
-    assert(b1)
-    const b2 = await env.doesThrow(nullSql, error)
-    assert(b2)
-    const b3 = await env.doesThrow(nullJohn, error)
-    assert(b3)
+    await env.doesThrow(johnNullSql, error)
+    await env.doesThrow(nullSql, error)
+    await env.doesThrow(nullJohn, error)
   })
 
   it('non null varchar write empty string', async function handler () {

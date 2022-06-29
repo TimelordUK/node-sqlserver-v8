@@ -17,6 +17,9 @@ const { TvpHelper } = require('./tvp-helper')
 const util = require('util')
 const fs = require('fs')
 const path = require('path')
+const chai = require('chai')
+const expect = chai.expect
+chai.use(require('chai-as-promised'))
 
 class CommonTestFnPromises {
   constructor () {
@@ -213,12 +216,7 @@ class TestEnv {
 
   async doesThrow (sql, message, connection) {
     const proxy = connection || this.theConnection
-    try {
-      await proxy.promises.query(sql)
-      return false
-    } catch (e) {
-      return (e.message.includes(message))
-    }
+    await expect(proxy.promises.query(sql)).to.be.rejectedWith(message)
   }
 
   /*

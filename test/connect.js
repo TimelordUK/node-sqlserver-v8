@@ -6,7 +6,6 @@ const assert = require('chai').assert
 const expect = require('chai').expect
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
-const sql = require('msnodesqlv8')
 const connectionString = env.connectionString
 
 describe('connection', function () {
@@ -21,7 +20,7 @@ describe('connection', function () {
   })
 
   it('connection closes OK in sequence with query', done => {
-    sql.open(connectionString,
+    env.sql.open(connectionString,
       (err, conn) => {
         const expected = [{
           n: 1
@@ -38,7 +37,7 @@ describe('connection', function () {
   })
 
   it('verify closed connection throws an exception', done => {
-    sql.open(connectionString, (err, conn) => {
+    env.sql.open(connectionString, (err, conn) => {
       assert(err === null || err === false)
       conn.close(() => {
         expect(() => {
@@ -52,7 +51,7 @@ describe('connection', function () {
   })
 
   it('verify connection is not closed prematurely until a query is complete', done => {
-    sql.open(connectionString, (err, conn) => {
+    env.sql.open(connectionString, (err, conn) => {
       assert(err === null || err === false)
       const stmt = conn.queryRaw('select 1')
       stmt.on('meta', () => {
@@ -73,7 +72,7 @@ describe('connection', function () {
   })
 
   it('verify that close immediately flag only accepts booleans', done => {
-    sql.open(connectionString, (err, conn) => {
+    env.sql.open(connectionString, (err, conn) => {
       assert(err === null || err === false)
       expect(() => {
         conn.close('SELECT 1', err => {
