@@ -193,6 +193,19 @@ describe('multiple-error', function () {
     })
   })
 
+  it('multiple errors - use promise', async function handler () {
+    try {
+      await env.theConnection.promises.query('select a;select b;')
+    } catch (e) {
+      expect(e).haveOwnProperty('_results')
+      const res = e._results
+      // eslint-disable-next-line no-unused-expressions
+      expect(res.errors.length).to.equal(2)
+      expect(res.errors[0].message).include('Invalid column name \'a\'')
+      expect(res.errors[1].message).include('Invalid column name \'b\'')
+    }
+  })
+
   it('event based multiple errors', done => {
     const errors = []
     let callbacks = 0
