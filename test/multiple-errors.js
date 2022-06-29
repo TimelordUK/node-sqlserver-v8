@@ -19,7 +19,10 @@
 
 'use strict'
 
-const assert = require('chai').assert
+const chai = require('chai')
+const expect = chai.expect
+const assert = chai.assert
+chai.use(require('chai-as-promised'))
 
 /* globals describe it */
 
@@ -48,6 +51,20 @@ describe('multiple-error', function () {
         assert(err.message.indexOf('Login failed for user') > 0)
         done()
       })
+  })
+
+  it('select then use print statement capture print - using promise query', async function handler () {
+    const res = await env.theConnection.promises.query('select 1 as one; print \'hello world!\'')
+    expect(res.info[0]).to.equal('hello world!')
+    const expectedMeta = {
+      size: 10,
+      name: 'one',
+      nullable: false,
+      type: 'number',
+      sqlType: 'int'
+    }
+    expect(res.first[0].one).to.equal(1)
+    expect(res.meta[0][0]).to.deep.equal(expectedMeta)
   })
 
   it('select then use print statement capture print', done => {
@@ -79,10 +96,10 @@ describe('multiple-error', function () {
     })
 
     q.on('done', () => {
-      assert.deepStrictEqual(expectedInfo, info)
-      assert(errors.length === 0)
-      assert.deepStrictEqual(1, rows.length)
-      assert.deepStrictEqual(rows, [
+      expect(expectedInfo).to.deep.equal(info)
+      expect(errors.length).to.equal(0)
+      expect(rows.length).to.equal(1)
+      expect(rows).to.deep.equal([
         [
           1
         ]
@@ -134,10 +151,10 @@ describe('multiple-error', function () {
     })
 
     q.on('done', () => {
-      assert.deepStrictEqual(expectedInfo, info)
-      assert(errors.length === 0)
-      assert.deepStrictEqual(1, rows.length)
-      assert.deepStrictEqual(rows, [
+      expect(expectedInfo).to.deep.equal(info)
+      expect(errors.length).to.equal(0)
+      expect(rows.length).to.equal(1)
+      expect(rows).to.deep.equal([
         [
           1
         ]
