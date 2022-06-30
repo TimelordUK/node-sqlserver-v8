@@ -453,12 +453,55 @@ describe('datatypes', function () {
       }
     }
 
+    static getBitParams (testdata1, testdata2Expected, testdata2TsqlInsert) {
+      return {
+        testcolumnsize: 1,
+        testcolumntype: ' bit',
+        testcolumnclienttype: 'boolean',
+        testcolumnsqltype: 'bit',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
     static getBigIntParams (testdata1, testdata2Expected, testdata2TsqlInsert) {
       return {
         testcolumnsize: 19,
         testcolumntype: ' bigint',
         testcolumnclienttype: 'number',
         testcolumnsqltype: 'bigint',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
+    static getNumericParams (testdata1, testdata2Expected, testdata2TsqlInsert, colSize, decPlaces) {
+      colSize = colSize || 7
+      decPlaces = decPlaces || 3
+      return {
+        testcolumnsize: colSize,
+        testcolumntype: `numeric (${colSize}, ${decPlaces})`,
+        testcolumnclienttype: 'number',
+        testcolumnsqltype: 'numeric',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
+    static getDecimalParams (testdata1, testdata2Expected, testdata2TsqlInsert, colSize, decPlaces) {
+      colSize = colSize || 7
+      decPlaces = decPlaces || 3
+      return {
+        testcolumnsize: colSize,
+        testcolumntype: `decimal (${colSize}, ${decPlaces})`,
+        testcolumnclienttype: 'number',
+        testcolumnsqltype: 'decimal',
         testcolumnname: 'col2',
         testdata1,
         testdata2Expected,
@@ -597,93 +640,32 @@ describe('datatypes', function () {
   })
 
   it('test 016 - verify functionality of data type \'numeric(7,3)\', fetch as number', async function handler () {
-    const testcolumnsize = 7
-    const testcolumntype = ' numeric(7,3)'
-    const testcolumnclienttype = 'number'
-    const testcolumnsqltype = 'numeric'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     const testdata2Expected = 1234.567
-    const testdata2TsqlInsert = testdata2Expected
-
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumnsqltype
-        }],
-      rows: [[1, testdata1],
-        [2, testdata2Expected]]
-    }
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getNumericParams(
+      null,
+      testdata2Expected,
+      testdata2Expected, 7, 3)
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
   it('test 017 - verify functionality of data type \'decimal(7,3)\', fetch as number', async function handler () {
-    const testcolumnsize = 7
-    const testcolumntype = ' decimal(7,3)'
-    const testcolumnclienttype = 'number'
-    const testcolumnsqltype = 'decimal'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     const testdata2Expected = 1234.567
-    const testdata2TsqlInsert = testdata2Expected
-
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumnsqltype
-        }],
-      rows: [[1, testdata1],
-        [2, testdata2Expected]]
-    }
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getDecimalParams(
+      null,
+      testdata2Expected,
+      testdata2Expected, 7, 3)
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
   it('test 018 - verify functionality of data type \'bit\', fetch as number', async function handler () {
-    const testcolumnsize = 1
-    const testcolumntype = ' bit'
-    const testcolumnclienttype = 'boolean'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     const testdata2TsqlInsert = 1
-
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumntype.trim()
-        }],
-      rows: [[1, testdata1],
-        [2, true]]
-    }
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getBitParams(
+      null,
+      testdata2TsqlInsert,
+      testdata2TsqlInsert)
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
