@@ -466,6 +466,47 @@ describe('datatypes', function () {
       }
     }
 
+    static getBinaryParams (testdata1, testdata2Expected, testdata2TsqlInsert, colSize) {
+      colSize = colSize || 10
+      return {
+        testcolumnsize: colSize,
+        testcolumntype: ` binary (${colSize})`,
+        testcolumnclienttype: 'binary',
+        testcolumnsqltype: 'binary',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
+    static getVarBinaryParams (testdata1, testdata2Expected, testdata2TsqlInsert, colSize) {
+      colSize = colSize || 10
+      return {
+        testcolumnsize: colSize,
+        testcolumntype: ` varbinary (${colSize})`,
+        testcolumnclienttype: 'binary',
+        testcolumnsqltype: 'varbinary',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
+    static getRealParams (testdata1, testdata2Expected, testdata2TsqlInsert) {
+      return {
+        testcolumnsize: 24,
+        testcolumntype: ' real',
+        testcolumnclienttype: 'number',
+        testcolumnsqltype: 'real',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
     static getBigIntParams (testdata1, testdata2Expected, testdata2TsqlInsert) {
       return {
         testcolumnsize: 19,
@@ -487,6 +528,20 @@ describe('datatypes', function () {
         testcolumntype: `numeric (${colSize}, ${decPlaces})`,
         testcolumnclienttype: 'number',
         testcolumnsqltype: 'numeric',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
+    static getFloatParams (testdata1, testdata2Expected, testdata2TsqlInsert, colSize) {
+      colSize = colSize || 53
+      return {
+        testcolumnsize: colSize,
+        testcolumntype: `float (${colSize})`,
+        testcolumnclienttype: 'number',
+        testcolumnsqltype: 'float',
         testcolumnname: 'col2',
         testdata1,
         testdata2Expected,
@@ -670,127 +725,50 @@ describe('datatypes', function () {
   })
 
   it('test 019 - verify functionality of data type \'float(53)\', fetch as number', async function handler () {
-    const testcolumnsize = 53
-    const testcolumntype = ' float(53)'
-    const testcolumnclienttype = 'number'
-    const testcolumnsqltype = 'float'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     const testdata2Expected = '1.79E+308'
-    const testdata2TsqlInsert = testdata2Expected
-
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumnsqltype
-        }],
-      rows: [[1, testdata1],
-        [2, testdata2Expected]]
-    }
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getFloatParams(
+      null,
+      testdata2Expected,
+      testdata2Expected, 53)
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
   it('test 020 - verify functionality of data type \'real\', fetch as number', async function handler () {
-    const testcolumnsize = 24
-    const testcolumntype = ' real'
-    const testcolumnclienttype = 'number'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     const testdata2Expected = '44.44000244140625'
-    const testdata2TsqlInsert = testdata2Expected
-
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumntype.trim()
-        }],
-      rows: [[1, testdata1],
-        [2, testdata2Expected]]
-    }
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getRealParams(
+      null,
+      testdata2Expected,
+      testdata2Expected)
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
   it('test 021 - verify functionality of data type \'binary(n)\', fetch as binary', async function handler () {
     const testcolumnsize = 10
-    const testcolumntype = ` binary(${testcolumnsize})`
-    const testcolumnclienttype = 'binary'
-    const testcolumnsqltype = 'binary'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     const testdata2TsqlInsert = 0x0123
-
     const binaryBuffer = Buffer.from('00000000000000000123', 'hex')
 
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumnsqltype
-        }],
-      rows: [[1, testdata1],
-        [2, binaryBuffer]]
-    }
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getBinaryParams(
+      null,
+      binaryBuffer,
+      testdata2TsqlInsert, testcolumnsize
+    )
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
   it('test 022 - verify functionality of data type \'varbinary(n)\', fetch as binary', async function handler () {
     const testcolumnsize = 10
-    const testcolumntype = ` varbinary(${testcolumnsize})`
-    const testcolumnclienttype = 'binary'
-    const testcolumnsqltype = 'varbinary'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     const testdata2TsqlInsert = 0x0123
-
     const binaryBuffer = Buffer.from('00000123', 'hex')
 
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumnsqltype
-        }],
-      rows: [[1, testdata1],
-        [2, binaryBuffer]]
-    }
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getVarBinaryParams(
+      null,
+      binaryBuffer,
+      testdata2TsqlInsert, testcolumnsize
+    )
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
