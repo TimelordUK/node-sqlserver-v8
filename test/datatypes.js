@@ -384,7 +384,8 @@ describe('datatypes', function () {
       const proxy = env.makeTestFnProxy(tablename, testParams.testcolumnname)
       await proxy.create(testParams.testcolumntype)
       await proxy.insert(testParams.testdata1)
-      await proxy.insert(testParams.testdata2TsqlInsert)
+      if (testParams.testdata1TsqlInsert) await proxy.insert(testParams.testdata1TsqlInsert)
+      if (testParams.testdata2TsqlInsert) await proxy.insert(testParams.testdata2TsqlInsert)
       await proxy.verifyData(expected, testParams.testname)
     }
 
