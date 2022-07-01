@@ -355,6 +355,10 @@ describe('datatypes', function () {
     static A2000CharacterString = ParamsTester.A100CharacterString.repeat(20)
 
     static makeExpected (testParams) {
+      let nullable = true
+      if (Object.prototype.hasOwnProperty.call(testParams, 'nullable')) {
+        nullable = testParams.insert
+      }
       return {
         meta: [
           {
@@ -363,7 +367,7 @@ describe('datatypes', function () {
           {
             name: testParams.testcolumnname,
             size: testParams.testcolumnsize,
-            nullable: true,
+            nullable,
             type: testParams.testcolumnclienttype,
             sqlType: testParams.testcolumnsqltype.trim()
           }
@@ -414,7 +418,20 @@ describe('datatypes', function () {
       }
     }
 
-    static getTinyIntxParams (testdata1, testdata2Expected, testdata2TsqlInsert) {
+    static getTextMaxParams (testdata1, testdata2Expected, testdata2TsqlInsert, colSize) {
+      return {
+        testcolumnsize: colSize,
+        testcolumntype: ' text',
+        testcolumnclienttype: 'text',
+        testcolumnsqltype: 'text',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
+    static getTinyIntParams (testdata1, testdata2Expected, testdata2TsqlInsert) {
       return {
         testcolumnsize: 3,
         testcolumntype: ' tinyint',
@@ -466,6 +483,102 @@ describe('datatypes', function () {
       }
     }
 
+    static getNCharParams (testdata1, testdata2Expected, testdata2TsqlInsert, colSize) {
+      colSize = colSize || 10
+      return {
+        testcolumnsize: colSize,
+        testcolumntype: ` nchar (${colSize})`,
+        testcolumnclienttype: 'text',
+        testcolumnsqltype: 'nchar',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
+    static getNVarCharParams (testdata1, testdata2Expected, testdata2TsqlInsert, colSize) {
+      colSize = colSize || 10
+      return {
+        testcolumnsize: colSize,
+        testcolumntype: ` nvarchar (${colSize})`,
+        testcolumnclienttype: 'text',
+        testcolumnsqltype: 'nvarchar',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
+    static getNTextParams (testdata1, testdata2Expected, testdata2TsqlInsert, colSize) {
+      return {
+        testcolumnsize: colSize,
+        testcolumntype: ' ntext',
+        testcolumnclienttype: 'text',
+        testcolumnsqltype: 'ntext',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
+    static getSysNameParams (testdata1, testdata2Expected, testdata2TsqlInsert, colSize) {
+      return {
+        testcolumnsize: colSize,
+        testcolumntype: ' sysname',
+        testcolumnclienttype: 'text',
+        testcolumnsqltype: 'nvarchar',
+        testcolumnname: 'col2',
+        nullable: false,
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
+    static getNVarCharMaxParams (testdata1, testdata2Expected, testdata2TsqlInsert) {
+      return {
+        testcolumnsize: 0,
+        testcolumntype: ' nvarchar (max)',
+        testcolumnclienttype: 'text',
+        testcolumnsqltype: 'nvarchar',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
+    static getCharParams (testdata1, testdata2Expected, testdata2TsqlInsert, colSize) {
+      colSize = colSize || 10
+      return {
+        testcolumnsize: colSize,
+        testcolumntype: ` char (${colSize})`,
+        testcolumnclienttype: 'text',
+        testcolumnsqltype: 'char',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
+    static getVarCharParams (testdata1, testdata2Expected, testdata2TsqlInsert, colSize) {
+      colSize = colSize || 10
+      return {
+        testcolumnsize: colSize,
+        testcolumntype: ` varchar (${colSize})`,
+        testcolumnclienttype: 'text',
+        testcolumnsqltype: 'varchar',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
     static getBinaryParams (testdata1, testdata2Expected, testdata2TsqlInsert, colSize) {
       colSize = colSize || 10
       return {
@@ -485,6 +598,45 @@ describe('datatypes', function () {
       return {
         testcolumnsize: colSize,
         testcolumntype: ` varbinary (${colSize})`,
+        testcolumnclienttype: 'binary',
+        testcolumnsqltype: 'varbinary',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
+    static getImageParams (testdata1, testdata2Expected, testdata2TsqlInsert, colSize) {
+      return {
+        testcolumnsize: colSize,
+        testcolumntype: ' image',
+        testcolumnclienttype: 'binary',
+        testcolumnsqltype: 'image',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
+    static getXmlParams (testdata1, testdata2Expected, testdata2TsqlInsert) {
+      return {
+        testcolumnsize: 0,
+        testcolumntype: ' xml',
+        testcolumnclienttype: 'text',
+        testcolumnsqltype: 'xml',
+        testcolumnname: 'col2',
+        testdata1,
+        testdata2Expected,
+        testdata2TsqlInsert
+      }
+    }
+
+    static getVarBinaryMaxParams (testdata1, testdata2Expected, testdata2TsqlInsert) {
+      return {
+        testcolumnsize: 0,
+        testcolumntype: 'varbinary (max)',
         testcolumnclienttype: 'binary',
         testcolumnsqltype: 'varbinary',
         testcolumnname: 'col2',
@@ -624,7 +776,7 @@ describe('datatypes', function () {
 
   it('test 010 - verify functionality of data type \'tinyint\', fetch as number', async function handler () {
     const testdata2Expected = 255
-    const testParams = ParamsTester.getTinyIntxParams(
+    const testParams = ParamsTester.getTinyIntParams(
       null,
       testdata2Expected,
       testdata2Expected)
@@ -774,41 +926,25 @@ describe('datatypes', function () {
 
   it('test 023 - verify functionality of data type \'varbinary(max)\', fetch as binary', async function handler () {
     const testcolumnsize = 0
-    const testcolumntype = ' varbinary(max)'
-    const testcolumnclienttype = 'binary'
-    const testcolumnsqltype = 'varbinary'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     const testdata2TsqlInsert = 'CONVERT(varbinary(max), 0x0123456789AB)'
     const binaryBuffer = Buffer.from('0123456789AB', 'hex')
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumnsqltype
-        }],
-      rows: [[1, testdata1],
-        [2, binaryBuffer]]
-    }
 
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getVarBinaryMaxParams(
+      null,
+      binaryBuffer,
+      testdata2TsqlInsert,
+      testcolumnsize
+    )
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
   it('test 023a - fetch large varbinary in chunks \'varbinary(max)\', fetch as binary', async function handler () {
     const testcolumntype = ' varbinary(' + 'max' + ')'
     const testcolumnname = 'col1'
-
+    const bufferSize = 0.5 * 1024 * 1024
     const buffer = []
-    let i
-    for (i = 0; i < 2 * 1024 * 1024; ++i) {
+    for (let i = 0; i < bufferSize; ++i) {
       buffer[buffer.length] = i % 255
     }
 
@@ -824,310 +960,152 @@ describe('datatypes', function () {
 
   it('test 024 - verify functionality of data type \'image\', fetch as binary', async function handler () {
     const testcolumnsize = 2147483647
-    const testcolumntype = ' image'
-    const testcolumnclienttype = 'binary'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     //  var testdata2Expected = 0x0123
     const testdata2TsqlInsert = 'CONVERT(varbinary(50), 0x0123456789AB)'
     const binaryBuffer = Buffer.from('0123456789AB', 'hex')
 
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumntype.trim()
-        }],
-      rows: [[1, testdata1],
-        [2, binaryBuffer]]
-    }
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getImageParams(
+      null,
+      binaryBuffer,
+      testdata2TsqlInsert,
+      testcolumnsize
+    )
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
   it('test 025 - verify functionality of data type \'xml\', fetch as text', async function handler () {
-    const testcolumnsize = 0
-    const testcolumntype = ' xml'
-    const testcolumnclienttype = 'text'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     const testdata2Expected = '<data>zzzzz</data>'
     const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumntype.trim()
-        }],
-      rows: [[1, testdata1],
-        [2, testdata2Expected]]
-    }
+    const testParams = ParamsTester.getXmlParams(
+      null,
+      testdata2Expected,
+      testdata2TsqlInsert
+    )
 
     if (env.commonTestFns.SKIP_FAILING_TEST_ISSUE_36 === true) return
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
   it('test 026 - verify functionality of data type \'char\', fetch as text', async function handler () {
     const testcolumnsize = 10
-    const testcolumntype = ` char(${testcolumnsize})`
-    const testcolumnclienttype = 'text'
-    const testcolumnsqltype = 'char'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     const testdata2Expected = 'char data '
     const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumnsqltype
-        }],
-      rows: [[1, testdata1],
-        [2, testdata2Expected]]
-    }
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getCharParams(
+      null,
+      testdata2Expected,
+      testdata2TsqlInsert,
+      testcolumnsize
+    )
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
   it('test 027 - verify functionality of data type \'varchar(n)\', fetch as text', async function handler () {
     const testcolumnsize = 20
-    const testcolumntype = ` varchar(${testcolumnsize})`
-    const testcolumnclienttype = 'text'
-    const testcolumnsqltype = 'varchar'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     const testdata2Expected = 'varchar data'
     const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumnsqltype
-        }],
-      rows: [[1, testdata1],
-        [2, testdata2Expected]]
-    }
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getVarCharParams(
+      null,
+      testdata2Expected,
+      testdata2TsqlInsert,
+      testcolumnsize
+    )
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
   it('test 028 - verify functionality of data type \'varchar(max)\', fetch as text', async function handler () {
     const testcolumnsize = 0
-    const testcolumntype = ' varchar(max)'
-    const testcolumnclienttype = 'text'
-    const testcolumnsqltype = 'varchar'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     const testdata2Expected = 'varchar_max data'
     const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumnsqltype
-        }],
-      rows: [[1, testdata1],
-        [2, testdata2Expected]]
-    }
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getVarCharMaxParams(
+      null,
+      testdata2Expected,
+      testdata2TsqlInsert,
+      testcolumnsize
+    )
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
   it('test 029 - verify functionality of data type \'text\', fetch as text', async function handler () {
     const testcolumnsize = 2147483647
-    const testcolumntype = ' text'
-    const testcolumnclienttype = 'text'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     const testdata2Expected = 'text data'
     const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumntype.trim()
-        }],
-      rows: [[1, testdata1],
-        [2, testdata2Expected]]
-    }
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getVarCharMaxParams(
+      null,
+      testdata2Expected,
+      testdata2TsqlInsert,
+      testcolumnsize
+    )
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
   it('test 030 - verify functionality of data type \'nchar\', fetch as text', async function handler () {
     const testcolumnsize = 10
-    const testcolumntype = ` nchar(${testcolumnsize})`
-    const testcolumnclienttype = 'text'
-    const testcolumnsqltype = 'nchar'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     const testdata2Expected = 'char data '
     const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumnsqltype
-        }],
-      rows: [[1, testdata1],
-        [2, testdata2Expected]]
-    }
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getNCharParams(
+      null,
+      testdata2Expected,
+      testdata2TsqlInsert,
+      testcolumnsize
+    )
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
   it('test 031 - verify functionality of data type \'nvarchar(n)\', fetch as text', async function handler () {
     const testcolumnsize = 20
-    const testcolumntype = ` nvarchar(${testcolumnsize})`
-    const testcolumnclienttype = 'text'
-    const testcolumnsqltype = 'nvarchar'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     const testdata2Expected = 'nvarchar data'
     const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumnsqltype
-        }],
-      rows: [[1, testdata1],
-        [2, testdata2Expected]]
-    }
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getNVarCharParams(
+      null,
+      testdata2Expected,
+      testdata2TsqlInsert,
+      testcolumnsize
+    )
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
   it('test 032 - verify functionality of data type \'nvarchar(max)\', fetch as text', async function handler () {
     const testcolumnsize = 0
-    const testcolumntype = ' nvarchar(max)'
-    const testcolumnclienttype = 'text'
-    const testcolumnsqltype = 'nvarchar'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     const testdata2Expected = 'nvarchar_max data'
     const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumnsqltype
-        }],
-      rows: [[1, testdata1],
-        [2, testdata2Expected]]
-    }
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getNVarCharMaxParams(
+      null,
+      testdata2Expected,
+      testdata2TsqlInsert,
+      testcolumnsize
+    )
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
   it('test 033 - verify functionality of data type \'ntext\', fetch as text', async function handler () {
     const testcolumnsize = 1073741823
-    const testcolumntype = ' ntext'
-    const testcolumnclienttype = 'text'
-    const testcolumnname = 'col2'
-    const testdata1 = null
     const testdata2Expected = 'ntext data'
     const testdata2TsqlInsert = `'${testdata2Expected}'`
 
-    const expected = {
-      meta: [{ name: 'id', size: 10, nullable: false, type: 'number', sqlType: 'int identity' },
-        {
-          name: testcolumnname,
-          size: testcolumnsize,
-          nullable: true,
-          type: testcolumnclienttype,
-          sqlType: testcolumntype.trim()
-        }],
-      rows: [[1, testdata1],
-        [2, testdata2Expected]]
-    }
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData(expected, testname)
+    const testParams = ParamsTester.getNTextParams(
+      null,
+      testdata2Expected,
+      testdata2TsqlInsert,
+      testcolumnsize
+    )
+    await ParamsTester.runTestParams(testParams)
     // end of it():
   })
 
