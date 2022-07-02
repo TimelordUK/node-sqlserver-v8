@@ -107,6 +107,14 @@ class TestEnv {
         ret = config[key].DEFAULT
       }
     }
+
+    if (!ret) {
+      key = 'CONNECTION_KEY'
+      if (subSection[key]) {
+        key = subSection[key]
+        ret = subSection[key]
+      }
+    }
     // subSection[key] || config[key]?.DEFAULT
     return ret
   }
