@@ -284,14 +284,16 @@ namespace mssql
         return -1;
     }
 
-    int bcp::insert() {
+    int bcp::insert(int version) {
+        auto vs = std::to_string(version);
         #ifdef WINDOWS_BUILD
-        if (!dynload(L"msodbcsql17.dll")) {
+        if (!dynload(L"msodbcsql" + vs + ".dll")) {
             return -1;
         }
         #endif
         #ifdef LINUX_BUILD
-        if (!dynload("libmsodbcsql-17.so") && !dynload("libmsodbcsql.17.dylib")) {
+        
+        if (!dynload("libmsodbcsql-" + vs + ".so") && !dynload("libmsodbcsql." + vs + ".dylib")) {
             return -1;
         }
         #endif

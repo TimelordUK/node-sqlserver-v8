@@ -51,7 +51,7 @@ namespace mssql
         inline DBINT bcp_sendrow(HDBC const) const;
         inline DBINT bcp_done(HDBC const) const;
 
-        typedef const RETCODE (__cdecl* plug_bcp_bind)(HDBC const, const LPCBYTE, const INT, const DBINT, const LPCBYTE, const INT, const INT, const INT);
+        typedef RETCODE (__cdecl* plug_bcp_bind)(HDBC const, const LPCBYTE, const INT, const DBINT, const LPCBYTE, const INT, const INT, const INT);
         typedef RETCODE (__cdecl* plug_bcp_init)(HDBC, LPCWSTR, LPCWSTR, LPCWSTR, INT);
 		typedef DBINT (__cdecl* plug_bcp_sendrow)(HDBC);
 		typedef DBINT (__cdecl* plug_bcp_done)(HDBC);
@@ -78,7 +78,7 @@ namespace mssql
 	struct bcp 
 	{
 		bcp(const shared_ptr<BoundDatumSet> param_set, shared_ptr<OdbcConnectionHandle> h);
-        int insert();
+        int insert(int version = 17);
         bool init();
         bool bind();
         bool send();

@@ -157,7 +157,6 @@ namespace mssql
 
 	long strtohextoval(const SQL_NUMERIC_STRUCT &numeric)
 	{
-		long val = 0;
 		long value = 0;
 		int i = 1, last = 1, current;
 		int a = 0, b = 0;

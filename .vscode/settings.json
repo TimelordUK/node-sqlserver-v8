@@ -70,7 +70,8 @@
         "xloctime": "cpp",
         "xmemory": "cpp",
         "xstddef": "cpp",
-        "*.rh": "cpp"
+        "*.rh": "cpp",
+        "cstring": "cpp"
     },
     "cmake.configureOnOpen": false
 }
