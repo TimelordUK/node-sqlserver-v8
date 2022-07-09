@@ -640,7 +640,7 @@ namespace mssql
 
 	bool OdbcStatement::try_bcp(const shared_ptr<BoundDatumSet> &param_set, int32_t version)
 	{
-		cerr << "bcp version " << version << endl;
+		// cerr << "bcp version " << version << endl;
 		if (version == 0) version = 17;
 		bcp b(param_set, _connectionHandles->connectionHandle());
 		const auto ret = b.insert(version);
