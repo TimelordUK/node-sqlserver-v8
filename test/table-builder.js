@@ -6,7 +6,7 @@ const assert = require('chai').assert
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 
-describe('table-builder', function () {
+describe('table-builder.js', function () {
   this.timeout(30000)
 
   this.beforeEach(done => {

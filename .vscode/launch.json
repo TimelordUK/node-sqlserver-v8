@@ -31,7 +31,7 @@
                // "runtest", "-k", "linux", 
                // "runtest", "-k", "linux",
                // "runtest",
-               // "-t", "table-builder", 
+               // "-t", "table-builder.js",
                // "-t", "querycancel",
                // "-t", "pause"
                // "-t", "prepared",
