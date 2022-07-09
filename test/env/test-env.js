@@ -204,6 +204,12 @@ class TestEnv {
     return match[1]
   }
 
+  decodeSqlServerVersion () {
+    const myRegexp = /Driver=\{ODBC Driver (.*?) for SQL Server}.*$/g
+    const match = myRegexp.exec(this.connectionString)
+    return match !== null ? parseInt(match[1]) : 0
+  }
+
   repeat (c, num) {
     return new Array(num + 1).join(c)
   }
@@ -289,6 +295,7 @@ END`
     this.employee = null
     this.connectionString = this.getConnection(key)
     this.driver = this.decodeDriver()
+    this.driverVersion = this.decodeSqlServerVersion()
     const ds = new supp.DemoSupport(sql)
     this.support = ds
     this.helper = new ds.EmployeeHelper(sql, this.connectionString)
