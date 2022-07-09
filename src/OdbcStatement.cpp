@@ -638,11 +638,12 @@ namespace mssql
 		return true;
 	}
 
-	bool OdbcStatement::try_bcp(const shared_ptr<BoundDatumSet> &param_set)
+	bool OdbcStatement::try_bcp(const shared_ptr<BoundDatumSet> &param_set, int32_t version)
 	{
-
+		cerr << "bcp version " << version << endl;
+		if (version == 0) version = 17;
 		bcp b(param_set, _connectionHandles->connectionHandle());
-		const auto ret = b.insert();
+		const auto ret = b.insert(version);
 		_resultset = make_unique<ResultSet>(0);
 		_resultset->_end_of_rows = true;
 		_errors->clear();
@@ -734,7 +735,7 @@ namespace mssql
 			const auto &first = (*param_set).atIndex(0);
 			if (first->is_bcp)
 			{
-				return try_bcp(param_set);
+				return try_bcp(param_set, first->bcp_version);
 			}
 		}
 

@@ -393,6 +393,8 @@ export interface BulkTableMgr {
     // only works on ODBC Driver 17 for SQL Server
     setUseBcp(bcp:boolean):void
     getUseBcp():boolean
+    setBcpVersion(v:number) : void
+    getBcpVersion():number
     // for a set of objects abstract primary key fields only
     keys(vec:any[]): any[]
 }

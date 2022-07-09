@@ -1507,6 +1507,7 @@ namespace mssql
 		{
 			 is_bcp = Nan::To<bool>(bcp).ToChecked();
 			 if (is_bcp) {
+				bcp_version = MutateJS::getint32(pv, "bcp_version");
 				const auto table_name_str = get_as_string(pv, "table_name");
 				if (!table_name_str->IsNullOrUndefined())
 				{

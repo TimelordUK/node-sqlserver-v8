@@ -84,7 +84,7 @@ namespace mssql
 
 		bool try_prepare(const shared_ptr<QueryOperationParams>& q);
 		bool bind_fetch(const shared_ptr<BoundDatumSet>& param_set);
-		bool try_bcp(const shared_ptr<BoundDatumSet>& param_set);
+		bool try_bcp(const shared_ptr<BoundDatumSet>& param_set, int32_t version);
 		bool try_execute_direct(const shared_ptr<QueryOperationParams>& q, const shared_ptr<BoundDatumSet>& paramSet);
 		bool cancel_handle();
 		bool try_read_columns(size_t number_rows);

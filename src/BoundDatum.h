@@ -83,6 +83,7 @@ namespace mssql
 		uint16_t param_type;
 		int32_t offset;
 		bool is_bcp;
+		int32_t bcp_version;
 		uint32_t ordinal_position;
 		SQLULEN bcp_terminator_len;
 		LPCBYTE bcp_terminator;
