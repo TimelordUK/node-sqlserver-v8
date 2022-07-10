@@ -65,9 +65,10 @@ describe('table-builder.js', function () {
 
     function checkOne (lhs, rhs) {
       rhs.col_a = th.getUTCTime(rhs.col_a)
+      lhs.col_a = th.getUTCTime(lhs.col_a)
       expect(lhs.id).to.equal(rhs.id)
       // expect(lhs.col_a).approximately(rhs.col_a, 1e-5)
-      expect(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)
+      expect(Math.abs(lhs.col_a - rhs.col_a)).is.lessThanOrEqual(1e-5)
     }
 
     const e = await run(builder => {
