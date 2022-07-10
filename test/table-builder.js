@@ -2,9 +2,12 @@
 
 /* globals describe it */
 
-const assert = require('chai').assert
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
+const chai = require('chai')
+const expect = chai.expect
+const assert = chai.assert
+chai.use(require('chai-as-promised'))
 
 describe('table-builder.js', function () {
   this.timeout(30000)
@@ -62,8 +65,9 @@ describe('table-builder.js', function () {
 
     function checkOne (lhs, rhs) {
       rhs.col_a = th.getUTCTime(rhs.col_a)
-      assert.deepStrictEqual(lhs.id, rhs.id)
-      assert(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)
+      expect(lhs.id).to.equal(rhs.id)
+      // expect(lhs.col_a).approximately(rhs.col_a, 1e-5)
+      expect(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)
     }
 
     const e = await run(builder => {
