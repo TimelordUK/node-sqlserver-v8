@@ -28,16 +28,7 @@ for:
         - cmd: net start sqlbrowser
 
       install:
-        - ps: Install-Product node $env:nodejs_version $env:platform
-        - ps: Write-Host "Installing ODBC driver..." -ForegroundColor Cyan
-        - ps: Write-Host "Downloading..."
-        - ps: $msiPath = "$($env:USERPROFILE)\msodbcsql.msi"
-        - ps: $msiLog = "$($env:USERPROFILE)\msodbcsql.txt"
-        - ps: (New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/E/6/B/E6BFDC7A-5BCD-4C51-9912-635646DA801E/en-US/17.5.2.1/x64/msodbcsql.msi', $msiPath)
-        - ps: Write-Host "Installing..."
-        - ps: Get-Item -Path $msiPath
-        - ps: Write-Host $msiPath
-        - ps: msiexec /quiet /qn /norestart /log $msiLog /i $msiPath IACCEPTMSODBCSQLLICENSETERMS=YES
+        - ps: tool\install-driver.ps1
         - npm install
 
       build_script:

@@ -1,9 +1,13 @@
 'use strict'
 /* globals describe it */
 
-const assert = require('chai').assert
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
+const chai = require('chai')
+const expect = chai.expect
+const assert = chai.assert
+chai.use(require('chai-as-promised'))
+
 const totalObjectsForInsert = 10
 const test1BatchSize = 1
 const test2BatchSize = 10
@@ -600,6 +604,34 @@ describe('bulk', function () {
 
   it('pool: use tableMgr bulk insert var char vector - no nulls', async function handler () {
     await env.asPool(t18)
+  })
+
+  async function t18a (proxy) {
+    const helper = env.typeTableHelper('timestamp', proxy)
+    const expected = Array(10).fill(0).map((_, i) => {
+      return {
+        id: i
+      }
+    })
+    const table = await helper.create()
+    const promisedInsert = table.promises.insert
+    const promisedSelect = table.promises.select
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    for (let i = 0; i < res.length; ++i) {
+      const v = res[i]
+      expect(v).to.not.equal(null)
+      delete v.col_a
+    }
+    expect(res).to.deep.equal(expected)
+  }
+
+  it('connection: use tableMgr bulk insert timestamp i.e. id only', async function handler () {
+    await t18a(env.theConnection)
+  })
+
+  it('pool: use tableMgr bulk insert timestamp i.e. id only', async function handler () {
+    await env.asPool(t18a)
   })
 
   async function t1 (proxy) {
