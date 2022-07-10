@@ -19,6 +19,7 @@
             ]
         ],
         'variables': {
+          "openssl_fips" : "0",
           'msodbcsql%': 'msodbcsql17',
           'ext%': '.cpp',
           'homebrew%': '/opt/homebrew/lib/libodbc.a',
