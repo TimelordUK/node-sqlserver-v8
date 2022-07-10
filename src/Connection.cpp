@@ -53,7 +53,7 @@ namespace mssql
 	}
 
 	void Connection::Init(Local<Object> exports) {
-		const auto context =  exports->GetCreationContext().ToLocalChecked();
+		const auto context = exports->CreationContext();
   		Nan::HandleScope scope;
 		const auto initialized = OdbcConnection::InitializeEnvironment();
 		const auto name = Nan::New("Connection").ToLocalChecked();
