@@ -634,6 +634,34 @@ describe('bulk', function () {
     await env.asPool(t18a)
   })
 
+  async function t18b (proxy) {
+    const helper = env.typeTableHelper('rowversion', proxy)
+    const expected = Array(10).fill(0).map((_, i) => {
+      return {
+        id: i
+      }
+    })
+    const table = await helper.create()
+    const promisedInsert = table.promises.insert
+    const promisedSelect = table.promises.select
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+    for (let i = 0; i < res.length; ++i) {
+      const v = res[i]
+      expect(v).to.not.equal(null)
+      delete v.col_a
+    }
+    expect(res).to.deep.equal(expected)
+  }
+
+  it('connection: use tableMgr bulk insert rowversion i.e. id only', async function handler () {
+    await t18b(env.theConnection)
+  })
+
+  it('pool: use tableMgr bulk insert rowversion i.e. id only', async function handler () {
+    await env.asPool(t18b)
+  })
+
   async function t1 (proxy) {
     const helper = env.tableHelper(proxy)
     const expected = helper.getVec(10)
