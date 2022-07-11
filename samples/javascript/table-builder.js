@@ -29,10 +29,7 @@ async function builder () {
     builder.addColumn('SearchTerm').asNVarCharMax().notNull()
     builder.addColumn('Comparator').asNVarChar(20).notNull()
 
-    const vec = []
-    for (let i = 0; i < rows; ++i) {
-      vec.push(makeOne(i))
-    }
+    const vec = Array(rows).fill(0).map((_, i) => makeOne(i))
     const t = builder.toTable()
     const dropTypeSql = builder.dropTypeSql
     const userTypeSql = builder.userTypeTableSql
