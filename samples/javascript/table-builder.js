@@ -33,7 +33,10 @@ async function builder () {
     const t = builder.toTable()
     const dropTypeSql = builder.dropTypeSql
     const userTypeSql = builder.userTypeTableSql
-    const selectSql = 'select * from ?;'
+    const typeName = `${tableName}Type`
+    const selectSql = `DECLARE @test AS ${typeName};
+      INSERT INTO @test SELECT * FROM ?;
+      SELECT * FROM @test`
 
     const create = builder.createTableSql
     const drop = builder.dropTableSql
@@ -51,7 +54,10 @@ async function builder () {
     table.addRowsFromObjects(vec)
     // use a type the native driver can understand, using column based bulk binding.
     const tp = sql.TvpFromTable(table)
+    // can now clear rows
+    table.rows = []
     const res = await connection.promises.query(selectSql, [tp])
+    console.log(JSON.stringify(res.meta[0], null, 4))
     console.log(JSON.stringify(res.first, null, 4))
     await builder.drop()
     await connection.promises.close()
