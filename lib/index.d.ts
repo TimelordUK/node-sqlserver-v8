@@ -393,6 +393,12 @@ export interface BulkTableMgr {
     // only works on ODBC Driver 17 for SQL Server
     setUseBcp(bcp:boolean):void
     getUseBcp():boolean
+    // bcp requires the ms odbc driver to be dynamically loaded as it is not part of
+    // ODBC. If driver default as below is used, this method is automatically called
+    // with 17, 18 (numeric). The default value is 17. If using an alias or DCN entry
+    //  may need to manually call this method.
+    // "UAT18": "Driver={ODBC Driver 18 for SQL Server}; Server= ... Database=node;TrustServerCertificate=yes;",
+    // "UAT": "Driver={ODBC Driver 17 for SQL Server}; Server= ...  Database=node",
     setBcpVersion(v:number) : void
     getBcpVersion():number
     // for a set of objects abstract primary key fields only
@@ -534,6 +540,8 @@ export interface TableBuilder {
     create (): Promise<any>
     truncate () : Promise<any>
     clear (): void
+    dropTypeSql: string
+    userTypeTableSql: string
     dropTableSql: string
     createTableSql: string
     clusteredSql: string

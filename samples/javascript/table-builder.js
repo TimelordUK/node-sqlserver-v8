@@ -1,5 +1,9 @@
 const sql = require('msnodesqlv8')
-const connectionString = 'Driver={ODBC Driver 17 for SQL Server}; Server=DESKTOP-VIUCH90;UID=linux; PWD=linux; Database=node'
+// const connectionString = 'Driver={ODBC Driver 17 for SQL Server}; Server=DESKTOP-VIUCH90;UID=linux; PWD=linux; Database=node'
+
+const { TestEnv } = require('../../test/env/test-env')
+const env = new TestEnv()
+const connectionString = env.connectionString
 
 builder().then(() => console.log('done'))
 
@@ -30,13 +34,8 @@ async function builder () {
       vec.push(makeOne(i))
     }
     const t = builder.toTable()
-    const typeName = 'tmpTableBuilderType'
-    const dropTypeSql = `IF TYPE_ID(N'${typeName}') IS not NULL drop type ${typeName}`
-    const userTypeSql = `CREATE TYPE ${typeName} AS TABLE (
-      id int,
-      MatterColumn varchar(100) not null,
-      SearchTerm nvarchar(max) not null,
-      Comparator nvarchar(20) not null)`
+    const dropTypeSql = builder.dropTypeSql
+    const userTypeSql = builder.userTypeTableSql
     const selectSql = 'select * from ?;'
 
     const create = builder.createTableSql
