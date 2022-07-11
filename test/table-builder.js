@@ -170,13 +170,32 @@ describe('table-builder.js', function () {
     }
 
     function checkOne (lhs, rhs) {
-      assert.deepStrictEqual(lhs.id, rhs.id)
-      assert(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)
+      expect(lhs.id).to.equal(rhs.id)
+      expect(lhs.col_a).to.approximately(rhs.col_a, 1e-5)
     }
 
     await run(builder => {
       builder.addColumn('id').asInt().isPrimaryKey(1)
       builder.addColumn('col_a').asDecimal(23, 18)
+    }, makeOne, checkOne)
+  })
+
+  it('use table builder to bind to a table int, smallMoney', async function handler () {
+    function makeOne (i) {
+      return {
+        id: i,
+        col_a: i * 50.0 / ((i * i) + (1.0))
+      }
+    }
+
+    function checkOne (lhs, rhs) {
+      expect(lhs.id).to.equal(rhs.id)
+      expect(lhs.col_a).to.approximately(rhs.col_a, 1e-4)
+    }
+
+    await run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asSmallMoney()
     }, makeOne, checkOne)
   })
 
@@ -189,8 +208,8 @@ describe('table-builder.js', function () {
     }
 
     function checkOne (lhs, rhs) {
-      assert.deepStrictEqual(lhs.id, rhs.id)
-      assert(Math.abs(lhs.col_a - rhs.col_a) < 1e-5)
+      expect(lhs.id).to.equal(rhs.id)
+      expect(lhs.col_a).to.approximately(rhs.col_a, 1e-5)
     }
 
     await run(builder => {
