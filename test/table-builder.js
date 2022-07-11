@@ -397,6 +397,30 @@ describe('table-builder.js', function () {
     }, makeOne)
   })
 
+  it('use table builder to bind to a table int, varchar(20), identity', async function handler () {
+    function makeOne (i) {
+      return {
+        id: i,
+        col_b: i % 2 === 0 ? i * i : i,
+        col_c: env.repeat('A', i)
+      }
+    }
+
+    function checkOne (lhs, rhs) {
+      expect(lhs.id).is.equal(rhs.id)
+      expect(rhs.col_a).is.equal(rhs.id + 1)
+      expect(lhs.col_b).is.equal(rhs.col_b)
+      expect(lhs.col_c).is.equal(rhs.col_c)
+    }
+
+    await run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asInt().isIdentity(1, 1)
+      builder.addColumn('col_b').asInt()
+      builder.addColumn('col_c').asVarChar(20)
+    }, makeOne, checkOne)
+  })
+
   it('use table builder to bind to a table int, int', async function handler () {
     function makeOne (i) {
       return {
