@@ -222,6 +222,21 @@ function DemoSupport (native) {
       return keys
     }
 
+    async function bindInsert (connection, tableName) {
+      tableName = tableName || 'employee'
+      const parsedJSON = getJSON()
+      const keys = extractKey(parsedJSON, 'BusinessEntityID')
+      const bulkMgr = await connection.promises.getTable(tableName)
+      await bulkMgr.promises.insert(parsedJSON)
+      const results = await bulkMgr.promises.select(keys)
+      assert(results.length === parsedJSON.length)
+      assert.deepStrictEqual(results, parsedJSON, 'results didn\'t match')
+      return {
+        bulkMgr,
+        parsedJSON
+      }
+    }
+
     function dropCreateTable (params, doneFunction) {
       const async = new Async()
       const tableName = params.tableName
@@ -376,7 +391,7 @@ function DemoSupport (native) {
     }
 
     function cloneEmployee (src) {
-      const res = {
+      return {
         BusinessEntityID: src.BusinessEntityID,
         NationalIDNumber: src.NationalIDNumber,
         LoginID: src.LoginID,
@@ -394,7 +409,6 @@ function DemoSupport (native) {
         rowguid: src.rowguid,
         ModifiedDate: src.ModifiedDate
       }
-      return res
     }
 
     function getJSON (stem) {
@@ -417,6 +431,7 @@ function DemoSupport (native) {
       return parsedJSON
     }
 
+    this.bindInsert = bindInsert
     this.compareEmployee = compareEmployee
     this.getJSON = getJSON
     this.dropCreateTable = dropCreateTable

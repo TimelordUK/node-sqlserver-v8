@@ -20,6 +20,46 @@ describe('table-builder.js', function () {
     env.close().then(() => done())
   })
 
+  it('use proc to insert a JSON based complex object - check meta', async function handler () {
+    const tableName = 'employee'
+    await env.promisedDropCreateTable({
+      tableName
+    })
+    const r = await env.helper.bindInsert(env.theConnection, tableName)
+    const bulkMgr = r.bulkMgr
+    const summary = bulkMgr.getSummary()
+    const columns = summary.columns
+
+    expect(columns.length).is.equal(16)
+
+    const identity = columns.filter(c => c.is_identity)
+    expect(identity.length).is.equal(0)
+
+    const primary = columns.filter(c => c.is_primary_key)
+    expect(primary.length).is.equal(1)
+    expect(primary[0].name).is.equal('BusinessEntityID')
+
+    const computed = columns.filter(c => c.is_computed)
+    expect(computed.length).is.equal(1)
+    expect(computed[0].name).is.equal('OrganizationLevel')
+
+    const nullable = columns.filter(c => c.is_nullable)
+    expect(nullable.length).is.equal(2)
+    expect(nullable[0].name).is.equal('OrganizationNode')
+    expect(nullable[1].name).is.equal('OrganizationLevel')
+
+    const bit = columns.filter(c => c.type === 'bit')
+    expect(bit.length).is.equal(2)
+    expect(bit[0].name).is.equal('SalariedFlag')
+    expect(bit[1].name).is.equal('CurrentFlag')
+
+    const tz = columns.filter(c => c.isTzAdjusted())
+    expect(tz.length).is.equal(3)
+    expect(tz[0].name).is.equal('BirthDate')
+    expect(tz[1].name).is.equal('HireDate')
+    expect(tz[2].name).is.equal('ModifiedDate')
+  })
+
   it('use table builder to bind to a table provide no catalogue', async function handler () {
     function makeOne (i) {
       return {
