@@ -166,7 +166,9 @@ export interface TableColumn {
     // sql declared type used by table builder / user type
     typed(user?: boolean):string
     // is column considered readonly based on is_computed etc
-    readOnly(): boolean
+    isReadOnly(): boolean
+    // based on type - is date field requiring tz adjustment
+    isTzAdjusted(): boolean
     // helper methods when manually adding tables with table builder
     isComputed (v?: number): TableColumn
     asExpression(s: string): TableColumn // 'AS ([OrganizationNode].[GetLevel]())'
