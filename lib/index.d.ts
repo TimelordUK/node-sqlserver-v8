@@ -163,6 +163,10 @@ export interface TableColumn {
     is_primary_key: number,
     is_foreign_key: number
 
+    // sql declared type used by table builder / user type
+    typed(user?: boolean):string
+    // is column considered readonly based on is_computed etc
+    readOnly(): boolean
     // helper methods when manually adding tables with table builder
     isComputed (v?: number): TableColumn
     asExpression(s: string): TableColumn // 'AS ([OrganizationNode].[GetLevel]())'
@@ -540,9 +544,13 @@ export interface TableBuilder {
     create (): Promise<any>
     truncate () : Promise<any>
     clear (): void
+    // IF TYPE_ID(N'dbo.tmpTableBuilderType') IS not NULL drop type dbo.tmpTableBuilderType
     dropTypeSql: string
+    // CREATE TYPE dbo.tmpTableBuilderType AS TABLE ([id] int , [MatterColumn] varchar (100) NOT NULL, [SearchTerm] nvarchar (MAX) NOT NULL, [Comparator] nvarchar (20) NOT NULL)
     userTypeTableSql: string
+    // IF OBJECT_ID('dbo.tmpTableBuilder', 'U') IS NOT NULL DROP TABLE dbo.tmpTableBuilder;
     dropTableSql: string
+    // CREATE TABLE dbo.tmpTableBuilder ([id] int , [MatterColumn] varchar (100) NOT NULL, [SearchTerm] nvarchar (MAX) NOT NULL, [Comparator] nvarchar (20) NOT NULL)
     createTableSql: string
     clusteredSql: string
     selectSql: string
