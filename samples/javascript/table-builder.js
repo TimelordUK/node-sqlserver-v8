@@ -5,7 +5,41 @@ const { TestEnv } = require('../../test/env/test-env')
 const env = new TestEnv()
 const connectionString = env.connectionString
 
-builder().then(() => console.log('done'))
+builder().then(() => {
+  console.log(stripEscape('[node].[dbo].[BusinessID]'))
+  console.log(stripEscape('[col_a]'))
+  console.log(stripEscape('col_a'))
+  console.log('done')
+})
+
+function stripEscape (columnName) {
+  const columnParts = columnName.split(/\.(?![^[]*])/g)
+  const qualified = columnParts[columnParts.length - 1]
+  const columnNameRegexp = /\[?(.*?)]?$/g
+  const match = columnNameRegexp.exec(qualified)
+  const trim = match.filter(r => r !== '')
+  return trim[trim.length - 1]
+}
+
+function decomposeSchema (qualifiedName, cat) {
+  const tableParts = qualifiedName.split(/\.(?![^[]*])/g) // Split table names like 'dbo.table1' to: ['dbo', 'table1'] and 'table1' to: ['table1']
+  const table = tableParts[tableParts.length - 1] // get the table name
+  let fullTableName = table
+  const schema = tableParts.length >= 2 ? tableParts[tableParts.length - 2] || '' : '' // get the table schema, if missing set schema to ''
+  if (tableParts.length > 2) {
+    cat = tableParts[tableParts.length - 3]
+  } else if (table[0] === '#') {
+    cat = '[tempdb]'
+    fullTableName = `${cat}.${schema}.${table}`
+  }
+  return {
+    qualifiedName,
+    fullTableName,
+    cat,
+    schema,
+    table
+  }
+}
 
 async function builder () {
   function makeOne (i) {

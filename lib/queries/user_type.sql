@@ -27,8 +27,8 @@ JOIN sys.systypes AS ST
 ON  ST.xtype = col.system_type_id  and st.xusertype=col.user_type_id
 where
 	type_t.is_user_defined = 1
-	and type_t.schema_id = schema_id('<schema_name>')
-	and type_t.name = '<user_type_name>'
+	and type_t.schema_id = schema_id('<table_schema>')
+	and type_t.name = '<table_name>'
 
 ORDER BY type_name,
          col.column_id
