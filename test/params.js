@@ -24,6 +24,7 @@ const chai = require('chai')
 const assert = chai.assert
 const expect = chai.expect
 chai.use(require('chai-as-promised'))
+const utilModule = require('./../lib/util').utilModule
 
 /* globals describe it */
 
