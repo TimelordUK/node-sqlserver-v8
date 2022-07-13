@@ -1,8 +1,8 @@
 version: 1.0.{build}
 
-image: 
-  - Visual Studio 2017
+image:
   - Ubuntu
+  - Visual Studio 2017
 
 platform: 
   - x64
