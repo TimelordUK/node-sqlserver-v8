@@ -8,7 +8,7 @@ Write-Host "Installing ODBC driver..." -ForegroundColor Cyan
 Write-Host "Downloading..."
 $msiPath = "$($env:USERPROFILE)\msodbcsql.msi"
 $msiLog = "$($env:USERPROFILE)\msodbcsql.txt"
-(New-Object Net.WebClient).DownloadFile('', $msiPath)
+(New-Object Net.WebClient).DownloadFile($src, $msiPath)
 Write-Host "Installing..."
 Get-Item -Path $msiPath
 Write-Host $msiPath
