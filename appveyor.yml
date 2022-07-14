@@ -1,8 +1,8 @@
 version: 1.0.{build}
 
 image:
+  - Visual Studio 2019
   - Ubuntu2004
-  - Visual Studio 2022
 
 platform: 
   - x64
