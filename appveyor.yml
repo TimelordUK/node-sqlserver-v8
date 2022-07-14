@@ -1,7 +1,7 @@
 version: 1.0.{build}
 
 image:
-  - Ubuntu
+  - Ubuntu2004
   - Visual Studio 2017
 
 platform: 
@@ -42,7 +42,7 @@ for:
   -        
       matrix:
         only:
-          - image: Ubuntu2024
+          - image: Ubuntu2004
           - platform: x64
 
       services:
