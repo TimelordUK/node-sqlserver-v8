@@ -1,8 +1,8 @@
 version: 1.0.{build}
 
 image:
-  - Visual Studio 2019
-  - Ubuntu2004
+  - Visual Studio 2017
+  - Ubuntu
 
 platform: 
   - x64
@@ -41,7 +41,8 @@ for:
   -        
       matrix:
         only:
-          - image: Ubuntu2004
+          - image: Ubuntu
+          - platform: x64
 
       services:
         - mssql
