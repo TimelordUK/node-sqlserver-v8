@@ -42,7 +42,7 @@ for:
   -        
       matrix:
         only:
-          - image: Ubuntu
+          - image: Ubuntu2024
           - platform: x64
 
       services:
