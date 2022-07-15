@@ -1,13 +1,14 @@
 version: 1.0.{build}
 
 image:
-  - Visual Studio 2022
+  - Visual Studio 2019
   - Ubuntu2004
 
 platform: 
   - x64
 
 environment:
+
     matrix:
       - nodejs_version: 16
       - nodejs_version: 14
