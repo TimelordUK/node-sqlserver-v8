@@ -1,7 +1,7 @@
 version: 1.0.{build}
 
 image:
-  - Visual Studio 2019
+  - Visual Studio 2022
   - Ubuntu2004
 
 platform: 
@@ -20,7 +20,7 @@ for:
   -
       matrix:
         only:
-          - image: Visual Studio 2017
+          - image: Visual Studio 2022
     
       clone_folder: c:\projects\node_modules\msnodesqlv8
 
@@ -42,7 +42,7 @@ for:
   -        
       matrix:
         only:
-          - image: Ubuntu
+          - image: Ubuntu2004
           - platform: x64
 
       services:
