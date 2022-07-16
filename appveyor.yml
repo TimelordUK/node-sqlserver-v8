@@ -46,7 +46,7 @@ for:
           - image: Ubuntu2004
             platform: x64
 
-        exclude:
+        except:
           - nodejs_version: 18
 
       services:
