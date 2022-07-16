@@ -8,16 +8,16 @@ platform:
   - x64
 
 environment:
+  matrix:
+    - nodejs_version: 18
+    - nodejs_version: 16
+    - nodejs_version: 14
+    - nodejs_version: 12
 
-    matrix:
-      - nodejs_version: 18
-      - nodejs_version: 16
-      - nodejs_version: 14
-      - nodejs_version: 12
-
-    exclude:
-      - image: Ubuntu2004
-        nodejs_version: 18
+matrix:
+  exclude:
+    - image: Ubuntu2004
+      nodejs_version: 18
 
 test_script:
   - ps: Write-Host "msnodesqlv8 test script"    
