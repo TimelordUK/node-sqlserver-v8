@@ -42,7 +42,7 @@ Releases include pre-compiled binaries for both x64 and x86 targets for Node and
 
 This library only works with Node versions greater than 10.0 or electron greater than 5.0
 
-## BCP (odbc v17 only)
+## BCP (odbc v17 / v18 only)
 
 BCP allows fast insert speed from client to a designated table.  This is achieved via allocating fixed positions in memory binding each column on that table and re-populating/sending each row to the server. It is in effect a memory copy from the client to the table.  
 
@@ -68,9 +68,9 @@ a 16 column Employee table mixed with binary, varchar, date, int and decimal can
         const promisedQuery = util.promisify(theConnection.query)
 ```
 
-This protocol is not part of the ODBC specification and its use therefore depends on using correct ODBC driver.  For linux users, this should work out the box as ODBC 17 is the only driver supported and this is one used for BCP.  The feature has been tested on Ubuntu, MacOS, Debian and Alpine.
+This protocol is not part of the ODBC specification and its use therefore depends on using correct ODBC driver.  For linux users, this should work out the box as ODBC 17, 18 are the only drivers supported. The feature has been tested on Ubuntu, MacOS, Debian and Alpine.
 
-For windows users, older drivers can still be used on all non bcp functions just as before - however presently only ODBC 17 is supported for bcp. Hence you need to have installed ODBC data source "ODBC Driver 17 for SQL Server".  No other driver will work and attempts to do so will probably crash the node instance.
+For windows users, older drivers can still be used on all non bcp functions just as before - however presently only ODBC 17 and 18 are supported for bcp. Hence you need to have installed ODBC data source "ODBC Driver 17 for SQL Server" or "ODBC Driver 18 for SQL Server".  No other driver will work and attempts to do so will probably crash the node instance.
 
 see wiki for more details or bcp unit tests - bcp is accessed via the table manager i.e. binding to a table and enabling bcp on that table returned.
 
