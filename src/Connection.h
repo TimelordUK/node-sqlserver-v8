@@ -30,7 +30,7 @@ namespace mssql
     class Connection : public Nan::ObjectWrap
     {
     public:
-		static void Init(v8::Local<v8::Object> exports);
+		static NAN_MODULE_INIT(Init);
 		Connection();
 		virtual ~Connection();
 
