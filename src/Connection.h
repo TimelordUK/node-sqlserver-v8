@@ -35,7 +35,7 @@ namespace mssql
 		virtual ~Connection();
 
 	private:
-		typedef Nan::FunctionCallbackInfo<v8::Value> NanCb;
+		typedef Nan::NAN_METHOD_ARGS_TYPE NanCb;
 		static NAN_METHOD(New);
 		static NAN_METHOD(close);
 		static NAN_METHOD(begin_transaction);
