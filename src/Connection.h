@@ -35,24 +35,24 @@ namespace mssql
 		virtual ~Connection();
 
 	private:
-		
-		static void New(const Nan::FunctionCallbackInfo<v8::Value>& info);
-		static void close(const Nan::FunctionCallbackInfo<v8::Value>& info);
-		static void begin_transaction(const Nan::FunctionCallbackInfo<v8::Value>& info);
-		static void commit(const Nan::FunctionCallbackInfo<v8::Value>& info);
-		static void rollback(const Nan::FunctionCallbackInfo<v8::Value>& info);
-		static void open(const Nan::FunctionCallbackInfo<v8::Value>& info);
-		static void query(const Nan::FunctionCallbackInfo<v8::Value>& info);
-		static void prepare(const Nan::FunctionCallbackInfo<v8::Value>& info);
-		static void bind_query(const Nan::FunctionCallbackInfo<v8::Value>& info);
-		static void call_procedure(const Nan::FunctionCallbackInfo<v8::Value>& info);
-		static void unbind(const Nan::FunctionCallbackInfo<v8::Value>& info);
-		static void free_statement(const Nan::FunctionCallbackInfo<v8::Value>& info);
-		static void read_row(const Nan::FunctionCallbackInfo<v8::Value>& info);
-		static void cancel_statement(const Nan::FunctionCallbackInfo<v8::Value>& info);
-		static void read_column(const Nan::FunctionCallbackInfo<v8::Value>& info);
-		static void read_next_result(const Nan::FunctionCallbackInfo<v8::Value>& info);
-		static void polling_mode(const Nan::FunctionCallbackInfo<v8::Value>& info);
+		typedef Nan::FunctionCallbackInfo<v8::Value> NanCb;
+		static NAN_METHOD(New);
+		static NAN_METHOD(close);
+		static NAN_METHOD(begin_transaction);
+		static NAN_METHOD(commit);
+		static NAN_METHOD(rollback);
+		static NAN_METHOD(open);
+		static NAN_METHOD(query);
+		static NAN_METHOD(prepare);
+		static NAN_METHOD(bind_query);
+		static NAN_METHOD(call_procedure);
+		static NAN_METHOD(unbind);
+		static NAN_METHOD(free_statement);
+		static NAN_METHOD(read_row);
+		static NAN_METHOD(cancel_statement);
+		static NAN_METHOD(read_column);
+		static NAN_METHOD(read_next_result);
+		static NAN_METHOD(polling_mode);
 		
 		static Nan::Persistent<v8::Function> constructor;
 		static void api(Local<FunctionTemplate>& tpl);
