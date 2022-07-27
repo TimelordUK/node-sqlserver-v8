@@ -75,8 +75,7 @@ namespace mssql
 			//fprintf(stderr, "dont fetch id %ld\n", statementId);
 			return nullptr;
 		}
-		auto statement = find(statement_id);
-		if (statement) return statement;
+		if (auto statement = find(statement_id)) return statement;
 		return store(make_shared<OdbcStatement>(statement_id, _connectionHandles));
 	}
 
