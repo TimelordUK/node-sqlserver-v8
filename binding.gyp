@@ -114,7 +114,7 @@
               'UNICODE'
             ], 
             'cflags_cc': [
-              '-std=c++1y'
+              '-std=c++17'
             ],
             'include_dirs': [
               '/usr/include/',
@@ -134,7 +134,7 @@
               'UNICODE'
             ], 
             'cflags_cc': [
-              '-std=c++1y'
+              '-std=c++17'
             ],
             'include_dirs': [
               '/usr/local/opt/<(msodbcsql)/include/',
