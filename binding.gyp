@@ -4,15 +4,18 @@
               'OS=="mac"', {
                 'variables': {
                     'arch%': '<!(uname -m)',
+                    "cflags_cpp" : "gnu++17",
                 }
               },
               'OS=="linux"', {
                 'variables': {
-                    'arch%': '<!(uname -m)',
+                  "cflags_cpp" : "-std=c++17",
+                  'arch%': '<!(uname -m)',
                 }
               },
               'OS=="win"', {
                 'variables': {
+                  "cflags_cpp" : "-std:=c++17",
                   'arch%': '<!(echo %PROCESSOR_ARCHITECTURE%)'
                 }
               }
@@ -74,8 +77,7 @@
       'actions': [
           {
             'action_name': 'print_variables',
-            'action': ['echo', 'arch: <(arch) | link_path: <(link_path) | msodbcsql <(msodbcsql) | fileset <(fileset)'],
-
+            'action': ['echo', 'cflags_cpp <(cflags_cpp) | arch: <(arch) | link_path: <(link_path) | msodbcsql <(msodbcsql) | fileset <(fileset)'],
             'inputs': [],
             'outputs': [
               "<!@(node -p \"'<(fileset)'.split(' ')[0]\")"
@@ -83,6 +85,18 @@
             #'outputs': ['src/ConnectionHandles.cpp']
           }
       ],
+#
+# currently for electron v20+ manually set the package.json 
+# for node_modules/prebuild dependencies to else code will not
+# compile - need to raise PR for prebuild
+# cat .\package.json | grep gyp
+#    "node-gyp": "^9.1.0",
+#    "nw-gyp": "^3.6.3",
+# prebuilds\msnodesqlv8-v2.6.0-electron-v103-win32-x64.tar.gz
+# also patch nan with https://github.com/VerteDinde/nan/tree/deprecate_accessor_signature
+# whilst the PR is pending - this is only needed for electron v20 and
+# above
+#
       'conditions': [
             ['target < "13.0"', {
                   'defines': [
@@ -112,10 +126,8 @@
             'defines': [
               'LINUX_BUILD',
               'UNICODE'
-            ], 
-            'cflags_cc': [
-              '-std=c++17'
             ],
+            'cflags_cc': ['<(cflags_cpp)'], 
             'include_dirs': [
               '/usr/include/',
               '/opt/microsoft/<(msodbcsql)/include/',
@@ -132,10 +144,10 @@
             'defines': [
               'LINUX_BUILD',
               'UNICODE'
-            ], 
-            'cflags_cc': [
-              '-std=c++17'
             ],
+            'xcode_settings': {
+              'CLANG_CXX_LANGUAGE_STANDARD': '<(cflags_cpp)'
+            },
             'include_dirs': [
               '/usr/local/opt/<(msodbcsql)/include/',
               '/usr/local/opt/<(msodbcsql)/include/<(msodbcsql)/',
