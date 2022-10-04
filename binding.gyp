@@ -87,12 +87,12 @@
       ],
 #
 # currently for electron v20+ manually set the package.json 
-# for node_modules/prebuild dependencies to else code will not
-# compile - need to raise PR for prebuild
+# for node_modules/prebuild dependencies (else code will not
+# compile) - need to raise PR for prebuild
 # cat .\package.json | grep gyp
 #    "node-gyp": "^9.1.0",
 #    "nw-gyp": "^3.6.3",
-# prebuilds\msnodesqlv8-v2.6.0-electron-v103-win32-x64.tar.gz
+#
 # also patch nan with https://github.com/VerteDinde/nan/tree/deprecate_accessor_signature
 # whilst the PR is pending - this is only needed for electron v20 and
 # above
