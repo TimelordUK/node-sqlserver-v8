@@ -220,7 +220,7 @@ namespace mssql
 				_statementState = OdbcStatementState::STATEMENT_CANCEL_HANDLE;
 				// cerr << " cancel STATEMENT_CANCEL_HANDLE " << endl;
 				const auto &hnd = *_statement;
-				const auto ret2 = SQLCancelHandle(hnd.HandleType, hnd.get());
+				SQLCancelHandle(hnd.HandleType, hnd.get());
 				_cancelRequested = false;
 				_resultset = make_unique<ResultSet>(0);
 				_resultset->_end_of_rows = false;
@@ -804,6 +804,8 @@ namespace mssql
 
 		ret = SQLExecDirect(*_statement, reinterpret_cast<SQLWCHAR *>(query->data()), query->size());
 		{
+			// we may have cancelled this query on a different thread
+			// so only switch state if this query completed.
 			lock_guard<mutex> lock(g_i_mutex);
 			{			
 				if (_statementState == OdbcStatementState::STATEMENT_SUBMITTED) {
@@ -816,21 +818,6 @@ namespace mssql
 			set_state(OdbcStatementState::STATEMENT_POLLING);
 			ret = poll_check(ret, query, true);
 		} 
-
-		const auto state = get_state();
-		// std::cerr << " state " << (int)state << std::endl;
-		
-		if (state == OdbcStatementState::STATEMENT_CANCEL_HANDLE) {
-			{
-				lock_guard<mutex> lock(g_i_mutex);
-				if (_statementState == OdbcStatementState::STATEMENT_CANCEL_HANDLE) {
-					_resultset->_end_of_rows = true;
-					_endOfResults = true;
-					raise_cancel();
-					return false;
-				}
-			}
-		}
 	
 		// cerr << "ret = " << ret << endl;
 		if (ret == SQL_NO_DATA)
