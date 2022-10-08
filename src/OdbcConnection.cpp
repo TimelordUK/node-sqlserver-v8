@@ -178,11 +178,12 @@ namespace mssql
 		return CheckOdbcError(ret);
 	}
 
-	void OdbcConnection::send(OdbcOperation* op) const
+	bool OdbcConnection::send(OdbcOperation* op) const
 	{
 		//fprintf(stderr, "OdbcConnection send\n");
-		op->fetch_statement();
+		auto res = op->fetch_statement();
 		Nan::AsyncQueueWorker(op);
+		return res;
 	}
 
 	bool OdbcConnection::try_end_tran(const SQLSMALLINT completion_type)

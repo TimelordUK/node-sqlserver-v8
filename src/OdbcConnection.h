@@ -40,7 +40,7 @@ namespace mssql
 		~OdbcConnection();
 		static bool InitializeEnvironment();
 		bool try_begin_tran();
-		void send(OdbcOperation* op) const;
+		bool send(OdbcOperation* op) const;
 		bool try_end_tran(SQLSMALLINT completion_type);
 		bool try_open(shared_ptr<vector<uint16_t>> connection_string, int timeout);
 		shared_ptr<vector<shared_ptr<OdbcError>>> errors(void) const { return _errors; }

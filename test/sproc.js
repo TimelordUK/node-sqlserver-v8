@@ -18,7 +18,9 @@ describe('sproc', function () {
   })
 
   this.afterEach(done => {
-    env.close().then(() => done())
+    env.close().then((e) => {
+      done()
+    })
   })
 
   // this will be either Pool or connection
@@ -46,6 +48,27 @@ describe('sproc', function () {
       })
     })
   }
+
+  it('connection: sproc with timeout early terminates', async function handler () {
+    const spName = 'timeoutTest'
+
+    const def = `CREATE OR ALTER PROCEDURE <name>
+AS
+BEGIN
+\tSET NOCOUNT ON;
+\tSET XACT_ABORT ON;
+
+\tWAITFOR DELAY '00:10'; -- 10 minutes
+END;
+`
+    await env.promisedCreate(spName, def)
+    try {
+      await env.theConnection.promises.callProc(spName, {}, { timeoutMs: 2500 })
+    } catch (err) {
+      assert(err)
+      assert(err.message.includes('Query cancelled'))
+    }
+  })
 
   async function t1 (connectionProxy, iterations) {
     const spName = 'test_sp_get_optional_p'

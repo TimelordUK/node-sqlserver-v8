@@ -75,6 +75,9 @@ namespace mssql
 			//fprintf(stderr, "dont fetch id %ld\n", statementId);
 			return nullptr;
 		}
+		if (_spent_statements.find(statement_id) != _spent_statements.end()) {
+			return nullptr;
+		}
 		if (auto statement = find(statement_id)) return statement;
 		return store(make_shared<OdbcStatement>(statement_id, _connectionHandles));
 	}
@@ -87,6 +90,7 @@ namespace mssql
 			statement->done();
 		    // cerr << "checkin  " << statement_id << endl;
 			_connectionHandles->checkin(statement_id);
+			_spent_statements.emplace(statement_id);
 			statements.erase(statement_id);
 		}
 	}

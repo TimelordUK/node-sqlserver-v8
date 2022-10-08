@@ -71,7 +71,16 @@
         "xmemory": "cpp",
         "xstddef": "cpp",
         "*.rh": "cpp",
-        "cstring": "cpp"
+        "cstring": "cpp",
+        "ios": "cpp",
+        "xthread": "cpp",
+        "xfacet": "cpp",
+        "xiosbase": "cpp",
+        "xlocbuf": "cpp",
+        "xlocmes": "cpp",
+        "xmemory0": "cpp",
+        "xtr1common": "cpp",
+        "unordered_set": "cpp"
     },
     "cmake.configureOnOpen": false
 }

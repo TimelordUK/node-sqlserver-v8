@@ -68,7 +68,7 @@
     "@types/electron": "^1.4.38",
     "@types/mocha": "^10.0.0",
     "@types/mochawesome": "^6.2.1",
-    "@types/node": "^18.8.2",
+    "@types/node": "^18.8.3",
     "@types/sequelize": "^4.28.14",
     "chai": "^4.3.6",
     "chai-as-promised": "^7.1.1",
