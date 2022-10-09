@@ -31,6 +31,16 @@ BEGIN
 END;
 `
 
+const timeoutSproc1Sec = `CREATE OR ALTER PROCEDURE <name>
+AS
+BEGIN
+\tSET NOCOUNT ON;
+\tSET XACT_ABORT ON;
+
+\tWAITFOR DELAY '00:00:01'; -- 1 sec
+END;
+`
+
   it('connection: sproc with timeout early terminates', async function handler () {
     const spName = 'timeoutTest'
     await env.promisedCreate(spName, timeoutSproc)
@@ -66,6 +76,24 @@ END;
       throw e
     })
   */
+
+    it('pool: sproc that completes with timeout - check pool', async function handler () {
+      const spName = 'timeoutTest'
+      const size = 4
+      const pool = env.pool(size)
+      const promises = pool.promises
+      await pool.promises.open()
+      await env.promisedCreate(spName, timeoutSproc1Sec)
+      try {
+        await promises.callProc(spName, {}, { timeoutMs: 5000 })
+        const res2 = await promises.query('select 1 as n')
+        expect(res2.first[0].n).equals(1)
+      } catch (err) {
+        assert(err)
+      } finally {
+        await pool.close()
+      }
+    })
 
     it('pool: sproc with timeout early terminates - check pool', async function handler () {
       const spName = 'timeoutTest'
