@@ -304,8 +304,8 @@ describe('connection-pool', function () {
     }
   })
 
-  it('submit 1000 short queries to pool of 4 - expect concurrent queries and fast completion', testDone => {
-    tester(1000, 4, () => 'select @@SPID as spid', 5000, 0, testDone)
+  it('submit 500 short queries to pool of 4 - expect concurrent queries and fast completion', testDone => {
+    tester(500, 4, () => 'select @@SPID as spid', 5000, 0, testDone)
   })
 
   it('open pool size 4 - submit queries on parked connections', testDone => {
