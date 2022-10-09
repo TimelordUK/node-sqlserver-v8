@@ -171,7 +171,7 @@ namespace mssql
 		shared_ptr<BoundDatumSet> _boundParamsSet;
 		shared_ptr<BoundDatumSet> _preparedStorage;
 
-		mutex g_i_mutex;
+		recursive_mutex g_i_mutex;
 		
 
 		const static size_t prepared_rows_to_bind = 50;

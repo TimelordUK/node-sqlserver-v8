@@ -214,14 +214,12 @@ namespace mssql
 	bool OdbcStatement::cancel()
 	{
 		{
-			lock_guard<mutex> lock(g_i_mutex);
-			auto state = _statementState;
+			lock_guard<recursive_mutex> lock(g_i_mutex);
+			auto state = get_state();
 			if (!_pollingEnabled && state == OdbcStatementState::STATEMENT_SUBMITTED) {
-				_statementState = OdbcStatementState::STATEMENT_CANCEL_HANDLE;
+				set_state(OdbcStatementState::STATEMENT_CANCEL_HANDLE);
 				// cerr << " cancel STATEMENT_CANCEL_HANDLE " << endl;
-				const auto &hnd = *_statement;
-				SQLCancelHandle(hnd.HandleType, hnd.get());
-				_cancelRequested = false;
+				cancel_handle();
 				_resultset = make_unique<ResultSet>(0);
 				_resultset->_end_of_rows = false;
 				_endOfResults = false;
@@ -242,19 +240,19 @@ namespace mssql
 	}
 
 	void OdbcStatement::set_state(const OdbcStatementState state) {
-		lock_guard<mutex> lock(g_i_mutex);
+		lock_guard<recursive_mutex> lock(g_i_mutex);
 		_statementState = state;
 	}
 
 	OdbcStatement::OdbcStatementState OdbcStatement::get_state() {
-		lock_guard<mutex> lock(g_i_mutex);
+		lock_guard<recursive_mutex> lock(g_i_mutex);
 		auto state = _statementState; 
 		return state;
 	}
 
 	bool OdbcStatement::set_polling(const bool mode)
 	{
-		lock_guard<mutex> lock(g_i_mutex);
+		lock_guard<recursive_mutex> lock(g_i_mutex);
 		if (_statementState == OdbcStatementState::STATEMENT_BINDING || _statementState == OdbcStatementState::STATEMENT_SUBMITTED) {
 		  return true;	
 		}
@@ -264,14 +262,14 @@ namespace mssql
 
 	bool OdbcStatement::get_polling()
 	{
-		lock_guard<mutex> lock(g_i_mutex);
+		lock_guard<recursive_mutex> lock(g_i_mutex);
 		auto polling = _pollingEnabled;
 		return polling;
 	}
 
 	bool OdbcStatement::set_numeric_string(const bool mode)
 	{
-		lock_guard<mutex> lock(g_i_mutex);
+		lock_guard<recursive_mutex> lock(g_i_mutex);
 		_numericStringEnabled = mode;
 		return true;
 	}
@@ -651,7 +649,7 @@ namespace mssql
 				usleep(1000); // wait 1 MS
 #endif
 				{
-					lock_guard<mutex> lock(g_i_mutex);
+					lock_guard<recursive_mutex> lock(g_i_mutex);
 					submit_cancel = _cancelRequested;
 				}
 
@@ -748,7 +746,7 @@ namespace mssql
 			return false;
 		}
 		{
-			lock_guard<mutex> lock(g_i_mutex);
+			lock_guard<recursive_mutex> lock(g_i_mutex);
 			_cancelRequested = false;
 		}
 		// set_state(OdbcStatementState::STATEMENT_CANCELLED);
@@ -776,8 +774,8 @@ namespace mssql
 		}
 		bool polling_mode = get_polling();
 		{
-			lock_guard<mutex> lock(g_i_mutex);
-			_statementState = OdbcStatementState::STATEMENT_BINDING;
+			lock_guard<recursive_mutex> lock(g_i_mutex);
+			set_state(OdbcStatementState::STATEMENT_BINDING);
 			const auto bound = bind_params(param_set);
 			if (!bound)
 			{
@@ -797,19 +795,17 @@ namespace mssql
 		}
 		const auto query = q->query_string();
 		SQLRETURN ret;
-		{
-			lock_guard<mutex> lock(g_i_mutex);
-			_statementState = OdbcStatementState::STATEMENT_SUBMITTED;
-		}
-
+		
+		set_state(OdbcStatementState::STATEMENT_SUBMITTED);	
 		ret = SQLExecDirect(*_statement, reinterpret_cast<SQLWCHAR *>(query->data()), query->size());
 		{
 			// we may have cancelled this query on a different thread
 			// so only switch state if this query completed.
-			lock_guard<mutex> lock(g_i_mutex);
+			lock_guard<recursive_mutex> lock(g_i_mutex);
 			{			
-				if (_statementState == OdbcStatementState::STATEMENT_SUBMITTED) {
-					_statementState = OdbcStatementState::STATEMENT_READING;
+				auto state = get_state();
+				if (state == OdbcStatementState::STATEMENT_SUBMITTED) {
+					set_state(OdbcStatementState::STATEMENT_READING);
 				}
 			}
 		}

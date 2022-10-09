@@ -50,6 +50,7 @@ namespace mssql
 			// cerr << "destruct OdbcStatementCache - erase statement" << id << endl;
 			statements.erase(id);
 		});
+		_spent_statements.clear();
 	}
 
 	shared_ptr<OdbcStatement> OdbcStatementCache::find(const long statement_id)
