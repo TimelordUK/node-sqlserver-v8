@@ -304,8 +304,8 @@ describe('connection-pool', function () {
     }
   })
 
-  it('submit 1000 short queries to pool of 4 - expect concurrent queries and fast completion', testDone => {
-    tester(1000, 4, () => 'select @@SPID as spid', 5000, 0, testDone)
+  it('submit 500 short queries to pool of 4 - expect concurrent queries and fast completion', testDone => {
+    tester(500, 4, () => 'select @@SPID as spid', 5000, 0, testDone)
   })
 
   it('open pool size 4 - submit queries on parked connections', testDone => {
@@ -600,11 +600,11 @@ describe('connection-pool', function () {
   }
 
   it('submit 4 queries to pool of 2 connections - expect 2 x queue 2 x concurrent queries', testDone => {
-    tester(4, 2, () => 'waitfor delay \'00:00:01\';', 2000, 0, testDone)
+    tester(4, 2, () => 'waitfor delay \'00:00:01\';', 3000, 0, testDone)
   })
 
   it('submit 4 queries to pool of 4 connections - expect 4 x concurrent queries', testDone => {
-    tester(4, 4, i => `waitfor delay '00:00:0${i + 1}';`, 8000, 0, testDone)
+    tester(4, 4, i => `waitfor delay '00:00:0${i + 1}';`, 10000, 0, testDone)
   })
 
   it('open and close a pool with 2 connections without error', testDone => {
