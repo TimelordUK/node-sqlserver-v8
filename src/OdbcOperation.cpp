@@ -99,7 +99,11 @@ namespace mssql
 		if (!_failures || _failures->empty())
 		{
 			_failures = make_shared<vector<shared_ptr<OdbcError>>>();
-			_failures->push_back(make_shared<OdbcError>("unknown", "internal error", -1, 0, "", "", 0));
+			if (!_statement) {
+				_failures->push_back(make_shared<OdbcError>("0000", "cannot call dead statement", -1, 0, "", "", 0));
+			} else {
+				_failures->push_back(make_shared<OdbcError>("unknown", "internal error", -1, 0, "", "", 0));
+			}
 		}
 	}
 

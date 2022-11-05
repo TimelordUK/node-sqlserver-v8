@@ -41,10 +41,13 @@ namespace mssql
 			STATEMENT_CREATED = 1,
 			STATEMENT_PREPARED = 2,
 			STATEMENT_SUBMITTED = 3,
-			STATEMENT_FETCHING = 4,
-			STATEMENT_CANCELLED = 5,
-			STATEMENT_ERROR = 6,
-			STATEMENT_CLOSED = 7
+			STATEMENT_READING = 4,
+			STATEMENT_CANCEL_HANDLE = 5,
+			STATEMENT_CANCELLED = 6,
+			STATEMENT_ERROR = 7,
+			STATEMENT_CLOSED = 8,
+			STATEMENT_BINDING = 9,
+			STATEMENT_POLLING = 10,
 		};
 
 		bool created() { return  _statementState == OdbcStatementState::STATEMENT_CREATED; }
@@ -75,6 +78,9 @@ namespace mssql
 		Local<Value> end_of_rows() const;
 		Local<Value> get_column_values() const;
 		bool set_polling(bool mode);
+		bool get_polling();
+		void set_state(const OdbcStatement::OdbcStatementState state);
+		OdbcStatement::OdbcStatementState get_state();
 		bool set_numeric_string(bool mode);
 
 		shared_ptr<vector<shared_ptr<OdbcError>>> errors(void) const
@@ -165,7 +171,7 @@ namespace mssql
 		shared_ptr<BoundDatumSet> _boundParamsSet;
 		shared_ptr<BoundDatumSet> _preparedStorage;
 
-		mutex g_i_mutex;
+		recursive_mutex g_i_mutex;
 		
 
 		const static size_t prepared_rows_to_bind = 50;

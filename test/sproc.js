@@ -18,7 +18,9 @@ describe('sproc', function () {
   })
 
   this.afterEach(done => {
-    env.close().then(() => done())
+    env.close().then((e) => {
+      done()
+    })
   })
 
   // this will be either Pool or connection
