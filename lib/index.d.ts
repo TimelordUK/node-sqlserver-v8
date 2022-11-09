@@ -2,18 +2,18 @@
  * Created by admin on 19/01/2017.
  */
 
-export interface AggregatorPromises {
+interface AggregatorPromises {
     query(sql: string, params?: any[], options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
     callProc(name: string, params?: any, options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
 }
-   
+
 interface SqlClientPromises  {
     query(conn_str: string, sql: string, params?: any[], options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
     callProc(conn_str: string, name: string, params?: any, options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
     open(conn_str: string): Promise<Connection>
 }
 
-export interface SqlClient {
+interface SqlClient {
     promises: SqlClientPromises
     open(description: ConnectDescription, cb: OpenCb): void
     open(conn_str: string, cb: OpenCb): void
@@ -65,26 +65,26 @@ export interface SqlClient {
     Pool: { (options:PoolOptions) : Pool } & { new (options:PoolOptions) : Pool }
 }
 
-export interface Table {
+interface Table {
     name:string
     rows: any[]
     columns: TableColumn[]
     addRowsFromObjects(vec:any) : void
 }
 
-export interface PoolOptions {
+interface PoolOptions {
     floor?: number
     ceiling?: number
     heartbeatSecs?: number
     heartbeatSql?: string
     inactivityTimeoutSecs?: number
     useUTC?: boolean
-    useNumericString?: boolean, // avoid bigint overflow return string 
+    useNumericString?: boolean, // avoid bigint overflow return string
     maxPreparedColumnSize?: number, // nvarchar(max) prepared columns must be constrained (Default 8k)
     connectionString: string
 }
 
-export interface QueryAggregatorResults {
+interface QueryAggregatorResults {
     elapsed: number // elapsed ms for call to complete
     meta: Meta[][] // array of meta for each query
     first: any[] // first set of rows i.e. results[0] if any else null
@@ -96,13 +96,13 @@ export interface QueryAggregatorResults {
     errors: Error[] // errors collected by running sql (up to promise reject)
   }
 
-export interface QueryAggregatorOptions {
+interface QueryAggregatorOptions {
     timeoutMs?: number // default 0 i.e. no timeout
     raw?: boolean // results as arrays or objects with column names
     replaceEmptyColumnNames?: boolean // replace meta empty col name with Column0, Column1
 }
 
-export interface PoolPromises extends AggregatorPromises {
+interface PoolPromises extends AggregatorPromises {
     open(): Promise<Pool>
     close(): Promise<any>
     getUserTypeTable(name: string): Promise<Table>
@@ -110,7 +110,7 @@ export interface PoolPromises extends AggregatorPromises {
     getProc(name: string): Promise<ProcedureDefinition>
 }
 
-export interface Pool  {
+interface Pool  {
     promises: PoolPromises
     getUseUTC():boolean
     setUseUTC(utc: boolean): void
@@ -126,7 +126,7 @@ export interface Pool  {
     queryRaw(sql: string, cb: QueryRawCb): Query
     isClosed(): boolean
     // pool.on('debug', msg => { console.log(msg) })
-    on(debug: string, cb?: MessageCb): void 
+    on(debug: string, cb?: MessageCb): void
     // pool.on('open', options = {} )
     on(open: string, cb?: PoolOptionsEventCb): void
     // pool.on('error', err = {} )
@@ -137,12 +137,12 @@ export interface Pool  {
     on(status: string, statusRecord?: PoolStatusRecordCb): void
 }
 
-export interface TableColumnType {
+interface TableColumnType {
     declaration:string
     length:string
 }
 
-export interface TableColumn {
+interface TableColumn {
     ordinal_position: number,
     table_catalog: string,
     table_schema: string,
@@ -175,26 +175,26 @@ export interface TableColumn {
     isIdentity (v:number, start?:number, inc?:number): TableColumn
     isHidden (v: number): TableColumn
     isPrimaryKey (v: number): TableColumn
-    isForeignKey (v: number): TableColumn 
-    asBit (): TableColumn 
+    isForeignKey (v: number): TableColumn
+    asBit (): TableColumn
     asInt (): TableColumn
     asBigInt (): TableColumn
     asSmallInt (): TableColumn
     asTinyInt (): TableColumn
-    asNVarCharMax (): TableColumn 
-    asNVarChar (length: number): TableColumn 
-    asVarChar (length: number): TableColumn 
-    asDate (): TableColumn 
-    asTime (): TableColumn 
+    asNVarCharMax (): TableColumn
+    asNVarChar (length: number): TableColumn
+    asVarChar (length: number): TableColumn
+    asDate (): TableColumn
+    asTime (): TableColumn
     asDateTime (): TableColumn
     asDateTimeOffset (): TableColumn
-    asSmallMoney (): TableColumn 
-    asNumeric (precision: number, length: number): TableColumn 
-    asDecimal (precision: number, scale: number): TableColumn 
-    asUniqueIdentifier (): TableColumn 
-    asHierarchyId (): TableColumn 
-    asVarBiary (length: number): TableColumn 
-    asReal (): TableColumn 
+    asSmallMoney (): TableColumn
+    asNumeric (precision: number, length: number): TableColumn
+    asDecimal (precision: number, scale: number): TableColumn
+    asUniqueIdentifier (): TableColumn
+    asHierarchyId (): TableColumn
+    asVarBiary (length: number): TableColumn
+    asReal (): TableColumn
     asNChar (length: number): TableColumn
 }
 
@@ -210,7 +210,7 @@ interface ConnectionPromises extends AggregatorPromises {
     rollback(): Promise<any>
 }
 
-export interface Connection {
+interface Connection {
     promises: ConnectionPromises
     getUserTypeTable(name: string, cb:TableCb):void
     id:number
@@ -246,7 +246,7 @@ export interface Connection {
     isClosed(): boolean
 }
 
-export interface Query {
+interface Query {
     on(name: string, cb: SubmittedEventCb): void
     on(name: string, cb: EventCb): void
     on(name: string, cb: EventColumnCb): void
@@ -256,22 +256,22 @@ export interface Query {
     isPaused(): boolean
 }
 
-export interface ConnectDescription {
+interface ConnectDescription {
     conn_str: string
     conn_timeout: number
 }
 
-export interface QueryDescription {
+interface QueryDescription {
     query_str: string
     numeric_string?: boolean // for BigInt can return string to avoid overflow
     query_timeout?: number
     query_polling?: boolean
     query_tz_adjustment?: number,
     // constrain nvarchar(max) for prepared statements
-    max_prepared_column_size?: number 
+    max_prepared_column_size?: number
 }
 
-export interface Meta {
+interface Meta {
     name: string
     nullable: boolean
     size: number
@@ -279,7 +279,7 @@ export interface Meta {
     type: string
 }
 
-export interface Error
+interface Error
 {
     code?: number
     severity?: number
@@ -287,15 +287,15 @@ export interface Error
     serverName?: string
     procName?: string
     message:string
-    sqlstate?: string   
+    sqlstate?: string
 }
 
-export interface RawData {
+interface RawData {
     meta: Meta[]
     rows: Array<any[]>
 }
 
-export interface PoolStatusRecord {
+interface PoolStatusRecord {
     time: Date,
     parked: number,
     idle: number,
@@ -308,51 +308,51 @@ export interface PoolStatusRecord {
     lastSql?: string
   }
 
-export interface PoolStatusRecordCb { (status: PoolStatusRecord): void
+interface PoolStatusRecordCb { (status: PoolStatusRecord): void
 }
-export interface QueryDescriptionCb { (description: QueryDescription): void
+interface QueryDescriptionCb { (description: QueryDescription): void
 }
-export interface MessageCb { (msg: string): void
+interface MessageCb { (msg: string): void
 }
-export interface PoolOptionsEventCb { (options: PoolOptions): void
+interface PoolOptionsEventCb { (options: PoolOptions): void
 }
-export interface PoolOpenCb { (err: Error, options: PoolOptions): void
+interface PoolOpenCb { (err: Error, options: PoolOptions): void
 }
-export interface SimpleCb { (): void
+interface SimpleCb { (): void
 }
-export interface TableCb { (err: Error, table: Table): void
+interface TableCb { (err: Error, table: Table): void
 }
-export interface BindCb { (cb: BulkTableMgr): void
+interface BindCb { (cb: BulkTableMgr): void
 }
-export interface GetTableCb { (err: Error, table: BulkTableMgr): void
+interface GetTableCb { (err: Error, table: BulkTableMgr): void
 }
-export interface OpenCb { (err: Error, connection: Connection): void
+interface OpenCb { (err: Error, connection: Connection): void
 }
-export interface QueryCb { (err?: Error, rows?: any[], more?: boolean): void
+interface QueryCb { (err?: Error, rows?: any[], more?: boolean): void
 }
-export interface CallProcedureCb { (err?: Error, rows?: any[], outputParams?:any[]): void
+interface CallProcedureCb { (err?: Error, rows?: any[], outputParams?:any[]): void
 }
-export interface QueryRawCb { (err?: Error, raw?: RawData, more?: boolean): void
+interface QueryRawCb { (err?: Error, raw?: RawData, more?: boolean): void
 }
-export interface StatusCb { (err?: Error): void
+interface StatusCb { (err?: Error): void
 }
-export interface PrepareCb { (err?: Error, statement?: PreparedStatement): void
+interface PrepareCb { (err?: Error, statement?: PreparedStatement): void
 }
-export interface EventCb { (data: any): void
+interface EventCb { (data: any): void
 }
-export interface SubmittedEventCb { (sql: string, params:any[]): void
+interface SubmittedEventCb { (sql: string, params:any[]): void
 }
-export interface EventColumnCb { (colIndex: number, data:any, more:boolean): void
+interface EventColumnCb { (colIndex: number, data:any, more:boolean): void
 }
-export interface BulkSelectCb { (err: Error, rows: any[]): void
+interface BulkSelectCb { (err: Error, rows: any[]): void
 }
-export interface DescribeProcedureCb { (description?: ProcedureSummary): void
+interface DescribeProcedureCb { (description?: ProcedureSummary): void
 }
-export interface GetProcedureCb { (procedure?: ProcedureDefinition): void
+interface GetProcedureCb { (procedure?: ProcedureDefinition): void
 }
-export interface GetProcCb { (err:Error, procedure?: ProcedureDefinition): void
+interface GetProcCb { (err:Error, procedure?: ProcedureDefinition): void
 }
-export interface BulkMgrSummary {
+interface BulkMgrSummary {
     insertSignature: string
     whereColumns: TableColumn[]
     updateColumns: TableColumn[]
@@ -364,7 +364,7 @@ export interface BulkMgrSummary {
     assignableColumns: TableColumn
 }
 
-export interface BulkTableMgrPromises
+interface BulkTableMgrPromises
 {
     select(cols: any[]): Promise<any[]>
     insert(rows: any[]): Promise<any>
@@ -372,7 +372,7 @@ export interface BulkTableMgrPromises
     update(rows: any[]): Promise<any>
 }
 
-export interface BulkTableMgr {
+interface BulkTableMgr {
     promises: BulkTableMgrPromises
     getSummary(): BulkMgrSummary
     asUserType(name?:string): string
@@ -395,7 +395,7 @@ export interface BulkTableMgr {
     getUpdateColumns(): TableColumn[]
     getPrimaryColumns(): TableColumn[]
     getAssignableColumns(): TableColumn[]
-    // insert only - use bcp for increased bcp speed - 
+    // insert only - use bcp for increased bcp speed -
     // only works on ODBC Driver 17 for SQL Server
     setUseBcp(bcp:boolean):void
     getUseBcp():boolean
@@ -411,7 +411,7 @@ export interface BulkTableMgr {
     keys(vec:any[]): any[]
 }
 
-export interface TableValueParam {
+interface TableValueParam {
     /*
 type_name	column_id	ordered_column	column_name	data_type	nullable	length	precision	scale	collation
 dbo.PersonTVP	1	01: vFirstName	vFirstName	varchar		255	0	0	SQL_Latin1_General_CP1_CI_AS
@@ -433,7 +433,7 @@ dbo.PersonTVP	4	04: vCity	vCity	varchar		255	0	0	SQL_Latin1_General_CP1_CI_AS
     collation:number
 }
 
-export interface ProcedureParam {
+interface ProcedureParam {
     table_value_param?:TableValueParam[]
     is_user_defined?:boolean
     is_output: boolean
@@ -446,7 +446,7 @@ export interface ProcedureParam {
     val: any
 }
 
-export interface ProcedureDefinition
+interface ProcedureDefinition
 {
     setDialect(dialect: ServerDialect): boolean
     paramsArray(params: any[]): any[]
@@ -457,7 +457,7 @@ export interface ProcedureDefinition
     getName(): string
 }
 
-export interface ProcedureSummary {
+interface ProcedureSummary {
     select:string
     signature: string
     summary: string
@@ -467,8 +467,8 @@ export interface ProcedureSummary {
 /*
   user define and register a proc e.g. for Sybase Adaptive Server
 
-   @last_name varchar(30) = "knowles", 
-  @first_name varchar(18) = "beyonce" as 
+   @last_name varchar(30) = "knowles",
+  @first_name varchar(18) = "beyonce" as
   select @first_name + " " + @last_name `
 
   const connection = await sql.promises.open(connectionString)
@@ -482,7 +482,7 @@ export interface ProcedureSummary {
   pm.addProc(spName, params)
 */
 
-export interface ProcedureManager {
+interface ProcedureManager {
     /**
      * @deprecated Please use `getProc`
      */
@@ -497,7 +497,7 @@ export interface ProcedureManager {
     ServerDialect:ServerDialect
 }
 
-export interface ProcedureParamMeta {
+interface ProcedureParamMeta {
         proc_name: string,
         type_desc: string,
         object_id: number,
@@ -530,19 +530,19 @@ export interface ProcedureParamMeta {
         const vec = getVec(20)
 */
 
-export interface ServerDialect {
+interface ServerDialect {
     SqlServer: ServerDialect
     Sybase: ServerDialect
 }
 
-export interface TableBuilder {
+interface TableBuilder {
     // can use utility method e.g. builder.addColumn('col_b').asVarChar(100)
     addColumn (columnName: string, columnType?: string, maxLength?:number, isPrimaryKey?: number): TableColumn
      // builder.setDialect(mgr.ServerDialect.Sybase)
     setDialect(dialect: ServerDialect): boolean
     compute () : void
     toTable () : BulkTableMgr
-    drop (): Promise<any> 
+    drop (): Promise<any>
     create (): Promise<any>
     truncate () : Promise<any>
     clear (): void
@@ -562,12 +562,12 @@ export interface TableBuilder {
     insertParamsSql: string
   }
 
-export interface TableManagerPromises {
+interface TableManagerPromises {
     getTable(name: string) : Promise<BulkTableMgr>
     getUserTypeTable(name: string): Promise<Table>
 }
 
-export interface TableManager {
+interface TableManager {
     /**
      * @deprecated Please use `getTable`
      */
@@ -583,12 +583,12 @@ export interface TableManager {
     makeColumn (tableName: string, tableSchema: string, position: number, columnName: string, paramType: string, paramLength: number, isPrimaryKey: number): TableColumn
 }
 
-export interface PreparedPromises {
+interface PreparedPromises {
     free(): Promise<any>
     query(params?: any[], options?: QueryAggregatorOptions) : Promise<QueryAggregatorResults>
 }
 
-export interface PreparedStatement {
+interface PreparedStatement {
     promises: PreparedPromises
     preparedQuery(params?: any[], cb ?: QueryCb): Query
     free(cb: StatusCb): void
@@ -597,7 +597,7 @@ export interface PreparedStatement {
     getMeta(): Meta[]
 }
 
-export enum QueryEvent {
+enum QueryEvent {
     meta = 'meta',
     column = 'column',
     partial = 'partial',
@@ -611,3 +611,6 @@ export enum QueryEvent {
     submitted = 'submitted',
     output = 'output'
 }
+
+declare const sql: SqlClient;
+export = sql;
