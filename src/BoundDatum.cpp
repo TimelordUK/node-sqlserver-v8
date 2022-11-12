@@ -1267,6 +1267,18 @@ namespace mssql
 		return res;
 	}
 
+	bool is_char(const wstring& v)
+	{
+		const auto res = v == L"char";
+		return res;
+	}
+
+	bool is_nvarchar(const wstring& v)
+	{
+		const auto res = v == L"nvarchar";
+		return res;
+	}
+
 	bool is_string(const wstring& v)
 	{
 		const auto res = v == L"char"
@@ -1323,6 +1335,22 @@ namespace mssql
 		return res;
 	}
 
+	bool sql_type_s_maps_to_char(const Local<Value> p)
+	{
+		const auto str = get_as_string(p, "type_id");
+		const auto v = FromV8String(str);
+		const auto res = is_char(v);
+		return res;
+	}
+
+		bool sql_type_s_maps_to_nvarchar(const Local<Value> p)
+	{
+		const auto str = get_as_string(p, "type_id");
+		const auto v = FromV8String(str);
+		const auto res = is_nvarchar(v);
+		return res;
+	}
+
 	bool sql_type_s_maps_to_string(const Local<Value> p)
 	{
 		const auto str = get_as_string(p, "type_id");
@@ -1351,6 +1379,7 @@ namespace mssql
 	{
 		const nodeTypeFactory fact;
 		const auto context = fact.isolate->GetCurrentContext();
+		
 		if (p->IsNull())
 		{
 			bind_null(p);
@@ -1493,6 +1522,17 @@ namespace mssql
 		else
 		{
 			param_type = SQL_PARAM_INPUT;
+		}
+
+		if (sql_type_s_maps_to_char(p)) {
+			param_size = size;
+			 bind_var_char(pval);
+			 return true;
+		} else if (sql_type_s_maps_to_nvarchar(p)) {
+			param_size = size / 2;
+			bind_datum_type(pval);
+			sql_type = SQL_WVARCHAR;
+			return true;
 		}
 
 		return bind_datum_type(pval);
