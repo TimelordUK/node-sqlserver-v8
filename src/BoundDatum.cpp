@@ -143,27 +143,33 @@ namespace mssql
 		bind_var_char(p, static_cast<int>(precision));
 	}
 
-	void BoundDatum::reserve_var_char(const size_t precision, const size_t array_len)
+	void BoundDatum::reserve_var_char_array(const size_t max_str_len, const size_t array_len)
 	{
 		js_type = JS_STRING;
 		c_type = SQL_C_CHAR;
-		sql_type = precision > 8000 ? SQL_WLONGVARCHAR : SQL_VARCHAR;
-		if (precision == 4000) {
+		sql_type = max_str_len > 8000 ? SQL_WLONGVARCHAR : SQL_VARCHAR;
+		if (max_str_len == 4000) {
 			sql_type = SQL_WCHAR;
 		}
 		digits = 0;
-		_indvec[0] = SQL_NULL_DATA;
 		_indvec.resize(array_len);
-		_storage->ReserveChars(max(1, static_cast<int>(array_len * precision)));	
+		_storage->ReserveChars(max(1, static_cast<int>(array_len * max_str_len)));	
 		auto* itr_p = _storage->charvec_ptr->data();
 		buffer = itr_p;
-		buffer_len = static_cast<SQLLEN>(precision);
-		param_size = max(buffer_len, static_cast<SQLLEN>(1));
+		buffer_len = static_cast<SQLLEN>(max_str_len);
+		if (max_str_len >= 4000)
+		{
+			param_size = 0;
+		}
+		else
+		{
+			param_size = max(buffer_len, static_cast<SQLLEN>(1));
+		}
 	}
 	
 	void BoundDatum::bind_var_char(const Local<Value>& p, const int precision)
 	{
-		reserve_var_char(precision, 1);
+		reserve_var_char_array(precision, 1);
 		if (!p->IsNullOrUndefined())
 		{	
 			const auto str_param = Nan::To<String>(p).FromMaybe(Nan::EmptyString());
@@ -236,7 +242,7 @@ namespace mssql
 		const auto max_str_len = max(1, get_max_str_len(p));
 		const auto arr = Local<Array>::Cast(p);
 		const auto array_len = arr->Length();
-		reserve_var_char(max_str_len, array_len);
+		reserve_var_char_array(max_str_len, array_len);
 		auto itr = _storage->charvec_ptr->begin();
 		for (uint32_t i = 0; i < array_len; ++i)
 		{
@@ -1721,7 +1727,7 @@ namespace mssql
 		}
 		else
 		{
-			bind_w_var_char(pp);
+			bind_var_char(pp);
 		}
 	}
 
@@ -2082,6 +2088,10 @@ namespace mssql
 
 		case SQL_CHAR:
 		case SQL_VARCHAR:
+		    len = max(len, get_default_size(len));
+        	reserve_var_char_array(len + 1, row_count);
+		break;
+
 		case SQL_LONGVARCHAR:
 		case SQL_WCHAR:
 		case SQL_WVARCHAR:

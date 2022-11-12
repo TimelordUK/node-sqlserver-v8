@@ -866,6 +866,9 @@ namespace mssql
 
 		case SQL_CHAR:
 		case SQL_VARCHAR:
+			res = reserved_chars(rows_read, column_size, column);
+			break;
+		break;
 		case SQL_LONGVARCHAR:
 		case SQL_WCHAR:
 		case SQL_WVARCHAR:
@@ -1643,6 +1646,29 @@ namespace mssql
 		capture.trim();
 		// cerr << "lob add StringColumn column " << endl;
 		_resultset->add_column(row_id, make_shared<StringColumn>(column, capture.src_data, capture.src_data->size()));
+		return true;
+	}
+
+	bool OdbcStatement::reserved_chars(const size_t row_count, const size_t column_size, const size_t column) const
+	{
+		const auto &bound_datum = _preparedStorage->atIndex(static_cast<int>(column));
+		const auto &ind = bound_datum->get_ind_vec();
+		const auto storage = bound_datum->get_storage();
+		for (size_t row_id = 0; row_id < row_count; ++row_id)
+		{
+			constexpr auto size = sizeof(uint8_t);
+			const auto str_len_or_ind_ptr = ind[row_id];
+			if (str_len_or_ind_ptr == SQL_NULL_DATA)
+			{
+				_resultset->add_column(row_id, make_shared<NullColumn>(column));
+				continue;
+			}
+			auto offset = (column_size + 1) * row_id;
+			size_t actual_size = ind[row_id] / size;
+			auto to_read = min(actual_size, column_size);
+			const auto value = make_shared<CharColumn>(column, storage->charvec_ptr, offset, to_read);
+			_resultset->add_column(row_id, value);
+		}
 		return true;
 	}
 
