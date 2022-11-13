@@ -163,8 +163,9 @@ interface TableColumn {
     is_primary_key: number,
     is_foreign_key: number
 
+    procTyped(): string
     // sql declared type used by table builder / user type
-    typed(user?: boolean):string
+    typed(user?: boolean, withDecorator?: boolean):string
     // is column considered readonly based on is_computed etc
     isReadOnly(): boolean
     // based on type - is date field requiring tz adjustment
@@ -188,6 +189,7 @@ interface TableColumn {
     asTime (): TableColumn
     asDateTime (): TableColumn
     asDateTimeOffset (): TableColumn
+    asMoney (): TableColumn
     asSmallMoney (): TableColumn
     asNumeric (precision: number, length: number): TableColumn
     asDecimal (precision: number, scale: number): TableColumn
@@ -196,6 +198,10 @@ interface TableColumn {
     asVarBiary (length: number): TableColumn
     asReal (): TableColumn
     asNChar (length: number): TableColumn
+    asChar (length: number): TableColumn
+    withDecorator (v: string): TableColumn
+    notNull(): TableColumn
+    null(): TableColumn
 }
 
 interface ConnectionPromises extends AggregatorPromises {

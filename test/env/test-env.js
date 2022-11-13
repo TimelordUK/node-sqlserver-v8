@@ -290,6 +290,11 @@ END`
     return new CommonTestFnProxy(connectionProxy, tableName, testColumnName)
   }
 
+  async getDbName () {
+    const res = await this.theConnection.promises.query('SELECT db_NAME() as [db]')
+    return res.first[0].db || 'node'
+  }
+
   constructor (key) {
     this.theConnection = null
     this.employee = null

@@ -494,8 +494,8 @@ describe('table-builder.js', function () {
   async function run (adder, makeOne, checkOne) {
     const tableName = 'tmpTableBuilder'
     const mgr = env.theConnection.tableMgr()
-    const res = await env.theConnection.promises.query('SELECT db_NAME() as [db]')
-    const builder = mgr.makeBuilder(tableName, res.first[0].db || 'node')
+    const res = await env.getDbName()
+    const builder = mgr.makeBuilder(tableName, res)
 
     adder(builder)
 
