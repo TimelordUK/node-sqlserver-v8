@@ -7,6 +7,7 @@ const expect = chai.expect
 chai.use(require('chai-as-promised'))
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
+const { EOL } = require('os')
 
 describe('encrypt', function () {
   this.timeout(30000)
@@ -16,7 +17,7 @@ describe('encrypt', function () {
   })
 
   this.afterEach(done => {
-    env.close().then((e) => {
+    env.close().then(() => {
       done()
     })
   })
@@ -51,7 +52,7 @@ describe('encrypt', function () {
       const procname = this.fieldBuilder.procName
       const tableName = this.fieldBuilder.tableName
       const builder = this.builder
-      const { EOL } = require('os')
+
       const cnl = `, ${EOL}\t\t`
       const nl = `${EOL}\t\t`
       const insertColumns = builder.columns.filter(c => !c.is_identity)
@@ -127,6 +128,18 @@ describe('encrypt', function () {
     }
   }
 
+  class FieldBuilderBit extends FieldBuilder {
+    constructor (tableName) {
+      super(tableName)
+    }
+
+    build(builder) {
+      builder.addColumn('field').asBit().withDecorator(fieldWithEncrpyt)
+    }
+    makeValue() {
+      return true
+    }
+  }
   class FieldBuilderBigInt extends FieldBuilder {
     constructor (tableName) {
       super(tableName)
@@ -214,6 +227,15 @@ describe('encrypt', function () {
       if (!env.isEncryptedConnection()) return
 
       const tester = new EncryptionFieldTester(new FieldBuilderChar())
+      await tester.prepare()
+      await tester.test()
+    })
+
+  it('encrypted bit via proc',
+    async function handler () {
+      if (!env.isEncryptedConnection()) return
+
+      const tester = new EncryptionFieldTester(new FieldBuilderBit())
       await tester.prepare()
       await tester.test()
     })

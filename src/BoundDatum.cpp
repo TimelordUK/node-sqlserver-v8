@@ -1651,7 +1651,9 @@ namespace mssql
 			 bind_int16(pval);
 		} else if (sql_type_s_maps_to_tiny_int(p)) {
 			 bind_int8(pval);
-		} else {
+		} else if (sql_type_s_maps_to_boolean(p)) {
+			 bind_boolean(pval);
+		}else {
 			res = bind_datum_type(pval); 
 		}
 
