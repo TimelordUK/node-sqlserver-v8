@@ -127,6 +127,18 @@ describe('encrypt', function () {
     }
   }
 
+  class FieldBuilderBigInt extends FieldBuilder {
+    constructor (tableName) {
+      super(tableName)
+    }
+
+    build(builder) {
+      builder.addColumn('field').asBigInt().withDecorator(fieldWithEncrpyt)
+    }
+    makeValue() {
+      return 1234567890123
+    }
+  }
   class FieldBuilderTinyInt extends FieldBuilder {
     constructor (tableName) {
       super(tableName)
@@ -202,6 +214,15 @@ describe('encrypt', function () {
       if (!env.isEncryptedConnection()) return
 
       const tester = new EncryptionFieldTester(new FieldBuilderChar())
+      await tester.prepare()
+      await tester.test()
+    })
+
+  it('encrypted big int via proc',
+    async function handler () {
+      if (!env.isEncryptedConnection()) return
+
+      const tester = new EncryptionFieldTester(new FieldBuilderBigInt())
       await tester.prepare()
       await tester.test()
     })
