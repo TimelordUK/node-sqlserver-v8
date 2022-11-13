@@ -127,6 +127,11 @@ namespace mssql
 		void bind_numeric_array(const Local<Value> & p);
 		void reserve_numeric(SQLLEN len);
 
+
+		void bind_int16(const Local<Value> & p);
+		void reserve_int16(SQLLEN len);
+		void bind_int16_array(const Local<Value> & p);
+
 		void bind_int32(const Local<Value> & p);
 		void reserve_int32(SQLLEN len);
 		void bind_int32_array(const Local<Value> & p);

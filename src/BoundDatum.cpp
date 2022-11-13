@@ -700,6 +700,21 @@ namespace mssql
 		sql_type = SQL_SMALLINT;
 	}
 
+	void BoundDatum::bind_int16(const Local<Value>& p)
+	{
+		reserve_int16(1);
+		_indvec[0] = SQL_NULL_DATA;
+		auto& vec = *_storage->int16vec_ptr;
+		vec[0] = SQL_NULL_DATA;
+		if (!p->IsNullOrUndefined())
+		{			
+			const auto local = Nan::To<Int32>(p).FromMaybe(Nan::New<Int32>(0));	
+			const auto d = local->Value();
+			vec[0] = d;
+			_indvec[0] = 0;
+		}
+	}
+
 	void BoundDatum::bind_int32(const Local<Value>& p)
 	{
 		reserve_int32(1);
@@ -712,6 +727,27 @@ namespace mssql
 			const auto d = local->Value();
 			vec[0] = d;
 			_indvec[0] = 0;
+		}
+	}
+
+	void BoundDatum::bind_int16_array(const Local<Value>& p)
+	{
+		const auto arr = Local<Array>::Cast(p);
+		const auto len = arr->Length();
+		reserve_int16(len);
+		auto& vec = *_storage->int16vec_ptr;
+
+		for (unsigned int i = 0; i < len; ++i)
+		{
+			_indvec[i] = SQL_NULL_DATA;
+			auto maybe_elem = Nan::Get(arr, i);
+			if (!maybe_elem.IsEmpty()) {
+				const auto local_elem = maybe_elem.ToLocalChecked();
+				if (local_elem->IsNullOrUndefined()) continue;
+				const auto local = Nan::To<Int32>(local_elem).FromMaybe(Nan::New<Int32>(0));
+				vec[i] = local->Value();
+				_indvec[i] = is_bcp ? sizeof(int16_t) : 0;
+			}
 		}
 	}
 
@@ -733,6 +769,24 @@ namespace mssql
 				vec[i] = local->Value();
 				_indvec[i] = is_bcp ? sizeof(int32_t) : 0;
 			}
+		}
+	}
+
+	void BoundDatum::reserve_int16(const SQLLEN len)
+	{
+		constexpr auto size = sizeof(int16_t);
+		buffer_len = len * static_cast<SQLLEN>(size);
+		_storage->ReserveInt16(len);
+		_indvec.resize(len);
+		js_type = JS_INT;
+		c_type = SQL_C_SHORT;
+		sql_type = SQL_SMALLINT;
+		buffer = _storage->int16vec_ptr->data();
+		param_size = size;
+		digits = 0;
+		if (is_bcp) {
+			sql_type = SQLINT2;
+			param_size = sizeof(DBSMALLINT);
 		}
 	}
 
@@ -1258,12 +1312,18 @@ namespace mssql
 		return res;
 	}
 
-	bool is_int(const wstring& v)
+	bool is_any_int(const wstring& v)
 	{
 		const auto res = v == L"smallint"
 			|| v == L"int"
 			|| v == L"bigint"
 			|| v == L"tinyint";
+		return res;
+	}
+
+	bool is_small_int(const wstring& v)
+	{
+		const auto res = v == L"smallint";
 		return res;
 	}
 
@@ -1327,11 +1387,19 @@ namespace mssql
 		return res;
 	}
 
-	bool sql_type_s_maps_to_int32(const Local<Value> p)
+	bool sql_type_s_maps_to_any_int32(const Local<Value> p)
 	{
 		const auto str = get_as_string(p, "type_id");
 		const auto v = FromV8String(str);
-		const auto res = is_int(v);
+		const auto res = is_any_int(v);
+		return res;
+	}
+
+	bool sql_type_s_maps_to_small_int(const Local<Value> p)
+	{
+		const auto str = get_as_string(p, "type_id");
+		const auto v = FromV8String(str);
+		const auto res = is_small_int(v);
 		return res;
 	}
 
@@ -1440,7 +1508,7 @@ namespace mssql
 		Local<Value> pval;
 		const nodeTypeFactory fact;
 
-		if (sql_type_s_maps_to_int32(p) || sql_type_s_maps_to_boolean(p))
+		if (sql_type_s_maps_to_any_int32(p) || sql_type_s_maps_to_boolean(p))
 		{
 			pval = fact.new_int32(0);
 		}
@@ -1533,6 +1601,9 @@ namespace mssql
 			bind_datum_type(pval);
 			sql_type = SQL_WVARCHAR;
 			return true;
+		} if (sql_type_s_maps_to_small_int(p)) {
+			 bind_int16(pval);
+			 return true;
 		}
 
 		return bind_datum_type(pval);

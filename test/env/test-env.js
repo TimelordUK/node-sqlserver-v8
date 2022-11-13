@@ -295,6 +295,10 @@ END`
     return res.first[0].db || 'node'
   }
 
+  isEncryptedConnection() {
+    return (this.connectionString.includes('ColumnEncryption=Enabled'))
+  }
+
   constructor (key) {
     this.theConnection = null
     this.employee = null
