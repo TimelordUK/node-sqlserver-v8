@@ -26,7 +26,7 @@
             "program": "C:/Program Files/nodejs/node.exe",
             "args": [
                 "./node_modules/mocha/bin/mocha.js",
-               "test/encrypt"
+               "test/sproc"
                // "simple-demo"
                // "runtest", "-k", "linux", 
                // "runtest", "-k", "linux",

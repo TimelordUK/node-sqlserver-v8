@@ -1689,7 +1689,11 @@ namespace mssql
 		
 		bool res = true;
 	
-		res = bind_datum_type(pval_value); 
+		if (!pval_value->IsNullOrUndefined()) {
+			res = bind_datum_type(pval_value); 
+		} else {
+			res = bind_datum_type(pval); 
+		}
 		return res;
 	}
 

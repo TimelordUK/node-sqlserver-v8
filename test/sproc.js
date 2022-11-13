@@ -49,6 +49,11 @@ describe('sproc', function () {
     })
   }
 
+  it('connection: call proc that returns length of input string and decribes itself in results', async function handler () {
+    await t25(env.theConnection, 1)
+  })
+
+
   async function t1 (connectionProxy, iterations) {
     const spName = 'test_sp_get_optional_p'
     const a = 10
@@ -1270,9 +1275,6 @@ waitfor delay @timeout;END
     await usePoolCallProcAsync(t25, 5)
   })
 
-  it('connection: call proc that returns length of input string and decribes itself in results', async function handler () {
-    await t25(env.theConnection, 1)
-  })
 
   async function t26 (connectionProxy, iterations) {
     const spName = 'test_sp'
