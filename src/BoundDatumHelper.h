@@ -26,6 +26,7 @@ namespace mssql
 		typedef vector<shared_ptr<uint16_t_vec_t>> uint16_vec_t_vec_t;
 		typedef vector<char> char_vec_t;
 		typedef vector<shared_ptr<char_vec_t>> char_vec_t_vec_t;
+		typedef vector<int8_t> int8_vec_t;
 		typedef vector<int16_t> int16_vec_t;
 		typedef vector<int32_t> int32_vec_t;
 		typedef vector<uint32_t> uint32_vec_t;
@@ -39,6 +40,7 @@ namespace mssql
 		typedef vector<SQL_NUMERIC_STRUCT> numeric_struct_vec_t;
 
 		DatumStorage() :
+			int8vec_ptr(nullptr),
 			int16vec_ptr(nullptr),
 			int32vec_ptr(nullptr),
 			uint32vec_ptr(nullptr),
@@ -122,6 +124,15 @@ namespace mssql
 			int32vec_ptr = reserve_vec<int32_t>(int32vec_ptr, len);
 		}
 
+		inline bool isInt8() const {
+			return int8vec_ptr  && !int8vec_ptr->empty();
+		}
+
+		inline void ReserveInt8(size_t len)
+		{
+			int8vec_ptr = reserve_vec<int8_t>(int8vec_ptr, len);
+		}
+
 		inline bool isInt16() const {
 			return int16vec_ptr  && !int16vec_ptr->empty();
 		}
@@ -201,6 +212,7 @@ namespace mssql
 			datevec_ptr = reserve_vec<SQL_DATE_STRUCT>(datevec_ptr, len);
 		}
 
+		shared_ptr<int8_vec_t> int8vec_ptr;
 		shared_ptr<int16_vec_t> int16vec_ptr;
 		shared_ptr<int32_vec_t> int32vec_ptr;
 		shared_ptr<uint32_vec_t> uint32vec_ptr;

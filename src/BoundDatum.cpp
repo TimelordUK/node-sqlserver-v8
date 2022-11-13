@@ -700,6 +700,21 @@ namespace mssql
 		sql_type = SQL_SMALLINT;
 	}
 
+	void BoundDatum::bind_int8(const Local<Value>& p)
+	{
+		reserve_int8(1);
+		_indvec[0] = SQL_NULL_DATA;
+		auto& vec = *_storage->int8vec_ptr;
+		vec[0] = SQL_NULL_DATA;
+		if (!p->IsNullOrUndefined())
+		{			
+			const auto local = Nan::To<Int32>(p).FromMaybe(Nan::New<Int32>(0));	
+			const auto d = local->Value();
+			vec[0] = d;
+			_indvec[0] = 0;
+		}
+	}
+
 	void BoundDatum::bind_int16(const Local<Value>& p)
 	{
 		reserve_int16(1);
@@ -769,6 +784,24 @@ namespace mssql
 				vec[i] = local->Value();
 				_indvec[i] = is_bcp ? sizeof(int32_t) : 0;
 			}
+		}
+	}
+
+	void BoundDatum::reserve_int8(const SQLLEN len)
+	{
+		constexpr auto size = sizeof(int8_t);
+		buffer_len = len * static_cast<SQLLEN>(size);
+		_storage->ReserveInt8(len);
+		_indvec.resize(len);
+		js_type = JS_INT;
+		c_type = SQL_C_TINYINT;
+		sql_type = SQL_TINYINT;
+		buffer = _storage->int8vec_ptr->data();
+		param_size = size;
+		digits = 0;
+		if (is_bcp) {
+			sql_type = SQLINT1;
+			param_size = sizeof(DBTINYINT);
 		}
 	}
 
@@ -1321,6 +1354,12 @@ namespace mssql
 		return res;
 	}
 
+	bool is_tiny_int(const wstring& v)
+	{
+		const auto res = v == L"tinyint";
+		return res;
+	}
+
 	bool is_small_int(const wstring& v)
 	{
 		const auto res = v == L"smallint";
@@ -1392,6 +1431,14 @@ namespace mssql
 		const auto str = get_as_string(p, "type_id");
 		const auto v = FromV8String(str);
 		const auto res = is_any_int(v);
+		return res;
+	}
+
+	bool sql_type_s_maps_to_tiny_int(const Local<Value> p)
+	{
+		const auto str = get_as_string(p, "type_id");
+		const auto v = FromV8String(str);
+		const auto res = is_tiny_int(v);
 		return res;
 	}
 
@@ -1592,21 +1639,23 @@ namespace mssql
 			param_type = SQL_PARAM_INPUT;
 		}
 
+		bool res = true;
 		if (sql_type_s_maps_to_char(p)) {
 			param_size = size;
 			 bind_var_char(pval);
-			 return true;
 		} else if (sql_type_s_maps_to_nvarchar(p)) {
 			param_size = size / 2;
 			bind_datum_type(pval);
 			sql_type = SQL_WVARCHAR;
-			return true;
-		} if (sql_type_s_maps_to_small_int(p)) {
+		} else if (sql_type_s_maps_to_small_int(p)) {
 			 bind_int16(pval);
-			 return true;
+		} else if (sql_type_s_maps_to_tiny_int(p)) {
+			 bind_int8(pval);
+		} else {
+			res = bind_datum_type(pval); 
 		}
 
-		return bind_datum_type(pval);
+		return res;
 	}
 
 	void BoundDatum::assign_precision(Local<Object>& pv)

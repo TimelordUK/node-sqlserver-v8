@@ -127,6 +127,18 @@ describe('encrypt', function () {
     }
   }
 
+  class FieldBuilderTinyInt extends FieldBuilder {
+    constructor (tableName) {
+      super(tableName)
+    }
+
+    build(builder) {
+      builder.addColumn('field').asTinyInt().withDecorator(fieldWithEncrpyt)
+    }
+    makeValue() {
+      return 120
+    }
+  }
   class FieldBuilderInt extends FieldBuilder {
     constructor (tableName) {
       super(tableName)
@@ -151,7 +163,6 @@ describe('encrypt', function () {
       return 1234
     }
   }
-
   class FieldBuilderChar extends FieldBuilder {
     constructor (tableName) {
       super(tableName)
@@ -164,7 +175,6 @@ describe('encrypt', function () {
       return '0123456789'
     }
   }
-
   class FieldBuilderNVarChar extends FieldBuilder {
     constructor (tableName) {
       super(tableName)
@@ -192,6 +202,15 @@ describe('encrypt', function () {
       if (!env.isEncryptedConnection()) return
 
       const tester = new EncryptionFieldTester(new FieldBuilderChar())
+      await tester.prepare()
+      await tester.test()
+    })
+
+  it('encrypted tiny int via proc',
+    async function handler () {
+      if (!env.isEncryptedConnection()) return
+
+      const tester = new EncryptionFieldTester(new FieldBuilderTinyInt())
       await tester.prepare()
       await tester.test()
     })
