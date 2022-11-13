@@ -3,7 +3,18 @@ with proc_exist_cte(object_id, proc_name, type_desc) as
 	SELECT object_id, name as proc_name, type_desc  
 		FROM sys.objects WHERE type = 'P' AND object_id = object_id('<schema_name>.<escaped_procedure_name>')
 ), 
-proc_params_cte(object_id,has_default_value,default_value,is_output,[name],type_id,max_length,[order],collation,is_user_defined) as
+proc_params_cte(object_id,
+has_default_value,
+default_value,
+is_output,
+[name],
+type_id,
+max_length,
+[precision],
+[scale],
+[order],
+collation,
+is_user_defined) as
 ( 
 select
 	object_id,
@@ -13,6 +24,8 @@ select
     sp.name,
     type_id   = type_name(sp.user_type_id),
     sp.max_length,
+    sp.precision,
+    sp.scale,
     'order'  = parameter_id,
     'collation'   = convert(sysname,
         case

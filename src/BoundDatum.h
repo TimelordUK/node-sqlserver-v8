@@ -152,6 +152,9 @@ namespace mssql
 		void bind_float(const Local<Value> & p);
 		void bind_real(const Local<Value> & p);
 
+		void bind_decimal(const Local<Value>& p);
+		void reserve_decimal(SQLLEN len);
+
 		void bind_double(const Local<Value>& p);
 		void reserve_double(SQLLEN len);
 		void bind_double_array(const Local<Value> & p);
@@ -208,6 +211,7 @@ namespace mssql
 		void sql_real(Local<Value> pp);
 		void sql_tinyint(Local<Value> pp);
 		void sql_smallint(Local<Value> pp);
+		void sql_decimal(const Local<Value> pp);
 		void sql_numeric(Local<Value> pp);
 		void sql_char(Local<Value> pp);
 		void sql_varchar(Local<Value> pp);

@@ -446,6 +446,8 @@ interface ProcedureParam {
     name: string
     type_id: string
     max_length: number
+    precision: number
+    scale: number
     order: number
     update_signature: string
     collation: any

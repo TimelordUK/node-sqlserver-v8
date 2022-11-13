@@ -38,7 +38,7 @@ describe('encrypt', function () {
     procName = null
     constructor (tableName) {
       this.tableName = tableName || 'test_encrpted_table'
-      this.procName = `proc_insert_${tableName}`
+      this.procName = `proc_insert_${this.tableName}`
     }
     build(builder) {}
     makeValue() {}
@@ -128,6 +128,19 @@ describe('encrypt', function () {
     }
   }
 
+  class FieldBuilderDecimal extends FieldBuilder {
+    constructor (tableName) {
+      super(tableName)
+    }
+
+    build(builder) {
+      builder.addColumn('field').asDecimal(20,18).withDecorator(fieldWithEncrpyt)
+    }
+    makeValue() {
+      return 12.123456789
+    }
+  }
+
   class FieldBuilderBit extends FieldBuilder {
     constructor (tableName) {
       super(tableName)
@@ -212,6 +225,15 @@ describe('encrypt', function () {
       return 'hello world!'
     }
   }
+
+  it('encrypted decimal via proc',
+    async function handler () {
+      if (!env.isEncryptedConnection()) return
+
+      const tester = new EncryptionFieldTester(new FieldBuilderDecimal())
+      await tester.prepare()
+      await tester.test()
+    })
 
   it('encrypted nvarchar via proc',
     async function handler () {

@@ -690,14 +690,12 @@ namespace mssql
 
 	void BoundDatum::bind_tiny_int(const Local<Value>& p)
 	{
-		bind_int32(p);
-		sql_type = SQL_TINYINT;
+		bind_int8(p);
 	}
 
 	void BoundDatum::bind_small_int(const Local<Value>& p)
 	{
-		bind_int32(p);
-		sql_type = SQL_SMALLINT;
+		bind_int16(p);
 	}
 
 	void BoundDatum::bind_int8(const Local<Value>& p)
@@ -1233,6 +1231,35 @@ namespace mssql
 		}
 	}
 
+	void BoundDatum::reserve_decimal(const SQLLEN len)
+	{
+		constexpr auto size = sizeof(double);
+		_storage->ReserveDouble(len);
+		_indvec.resize(len);
+		js_type = JS_NUMBER;
+		c_type = SQL_C_DOUBLE;
+		sql_type = SQL_DECIMAL;
+		buffer = _storage->doublevec_ptr->data();
+		buffer_len = static_cast<SQLLEN>(size) * len;
+		if (is_bcp) {
+			sql_type = SQLFLTN;
+			param_size = sizeof(double);
+		}
+	}
+
+	void BoundDatum::bind_decimal(const Local<Value>& p)
+	{
+		reserve_decimal(1);
+		auto& vec = *_storage->doublevec_ptr;
+		_indvec[0] = SQL_NULL_DATA;
+		if (!p->IsNullOrUndefined())
+		{
+			const auto v = Nan::To<double>(p).ToChecked();
+			vec[0] = v;
+			_indvec[0] = 0;	
+		}
+	}
+
 	void BoundDatum::reserve_double(const SQLLEN len)
 	{
 		constexpr auto size = sizeof(double);
@@ -1334,7 +1361,13 @@ namespace mssql
 		return false;
 	}
 
-	bool is_numeric(const wstring& v)
+	bool is_decimal(const wstring& v)
+	{
+		const auto res = v == L"decimal";
+		return res;
+	}
+
+	bool is_any_float(const wstring& v)
 	{
 		const auto res = v == L"numeric"
 			|| v == L"decimal"
@@ -1414,7 +1447,7 @@ namespace mssql
 	{
 		const auto str = get_as_string(p, "type_id");
 		const auto v = FromV8String(str);
-		const auto res = is_numeric(v);
+		const auto res = is_any_float(v);
 		return res;
 	}
 
@@ -1599,6 +1632,7 @@ namespace mssql
 		}
 
 		Local<Value> pval;
+		Local<Value> pval_value;
 		const auto maybe_object = p->ToObject(context);
 		Local<Object> local_object;
 		if (!maybe_object.ToLocal(&local_object))
@@ -1625,11 +1659,18 @@ namespace mssql
 		{
 			return false;
 		}
+
+		Local<Object> as_pval_object;
+		if (!pval->ToObject(context).ToLocal(&as_pval_object))
+		{
+			return false;
+		}
+		pval_value = get("value", as_pval_object);	
 		if (is_output_i != 0)
 		{
-			if (pval->IsNull()) {
+			if (pval_value->IsNull()) {
 				param_type = SQL_PARAM_OUTPUT;
-				pval = reserve_output_param(p, size);
+				pval_value = reserve_output_param(p, size);
 			} else {
 				param_type = SQL_PARAM_INPUT_OUTPUT;
 			}	
@@ -1638,25 +1679,17 @@ namespace mssql
 		{
 			param_type = SQL_PARAM_INPUT;
 		}
-
-		bool res = true;
-		if (sql_type_s_maps_to_char(p)) {
-			param_size = size;
-			 bind_var_char(pval);
-		} else if (sql_type_s_maps_to_nvarchar(p)) {
-			param_size = size / 2;
-			bind_datum_type(pval);
-			sql_type = SQL_WVARCHAR;
-		} else if (sql_type_s_maps_to_small_int(p)) {
-			 bind_int16(pval);
-		} else if (sql_type_s_maps_to_tiny_int(p)) {
-			 bind_int8(pval);
-		} else if (sql_type_s_maps_to_boolean(p)) {
-			 bind_boolean(pval);
-		}else {
-			res = bind_datum_type(pval); 
+		auto user_type_val = get("sql_type", as_pval_object);	
+		if (!user_type_val->IsUndefined())
+		{
+			if (!sql_type_s_maps_to_tvp(p) && param_type == SQL_PARAM_INPUT) {
+				return user_bind(pval, user_type_val);
+			}
 		}
-
+		
+		bool res = true;
+	
+		res = bind_datum_type(pval_value); 
 		return res;
 	}
 
@@ -1849,6 +1882,22 @@ namespace mssql
 		}
 	}
 
+	void BoundDatum::sql_decimal(const Local<Value> pp)
+	{
+		if (pp->IsArray())
+		{
+			if (is_bcp) {
+				bind_numeric_array(pp);
+			} else {
+				bind_double_array(pp);
+			}
+		}
+		else
+		{
+			bind_decimal(pp);
+		}
+	}
+
 	void BoundDatum::sql_numeric(const Local<Value> pp)
 	{
 		if (pp->IsArray())
@@ -2038,6 +2087,10 @@ namespace mssql
 
 		case SQL_SMALLINT:
 			sql_smallint(pp);
+			break;
+
+		case SQL_DECIMAL:
+			sql_decimal(pp);
 			break;
 
 		case SQL_NUMERIC:
