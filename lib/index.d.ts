@@ -187,6 +187,7 @@ interface TableColumn {
     asVarChar (length: number): TableColumn
     asDate (): TableColumn
     asTime (): TableColumn
+    asDateTime2 (): TableColumn
     asDateTime (): TableColumn
     asDateTimeOffset (): TableColumn
     asMoney (): TableColumn

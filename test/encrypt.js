@@ -269,6 +269,28 @@ describe('encrypt', function () {
       return  Buffer.from('5AE178', 'hex')
     }
   }
+  class FieldBuilderDateTime2 extends FieldBuilder {
+    value = null
+    constructor (val) {
+      super()
+      this.value = val || env.timeHelper.getUTCDateHH(new Date())
+    }
+
+    build(builder) {
+      builder.addColumn('field').asDateTime2().withDecorator(fieldWithEncrpyt)
+    }
+    makeValue() {
+      return this.value
+    }
+  }
+
+  it('UTC datetime2', async function handler () {
+      if (!env.isEncryptedConnection()) return
+
+      const tester = new EncryptionFieldTester(new FieldBuilderDateTime2())
+      await tester.prepare()
+      await tester.test()
+    })
 
   it('encrypted numeric -12.12345 via proc',
     async function handler () {
@@ -278,6 +300,7 @@ describe('encrypt', function () {
       await tester.prepare()
       await tester.test()
     })
+
 
   it('encrypted numeric 12.12345 via proc',
     async function handler () {
