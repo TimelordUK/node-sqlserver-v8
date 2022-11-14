@@ -41,6 +41,9 @@ describe('encrypt', function () {
       this.tableName = tableName || 'test_encrpted_table'
       this.procName = `proc_insert_${this.tableName}`
     }
+    checkEqual(lhs, rhs) {
+      expect(lhs).to.deep.equals(rhs)
+    }
     build(builder) {}
     makeValue() {}
   }
@@ -123,12 +126,29 @@ describe('encrypt', function () {
       const procname = this.fieldBuilder.procName
       const promises = env.theConnection.promises
       const res = await promises.callProc(procname, procParams)
-      expect(this.noID(res)).to.deep.equals(procParams)
+      this.fieldBuilder.checkEqual(this.noID(res), procParams)
       const res2 = await promises.query(`select * from ${this.fieldBuilder.tableName} `)
-      expect(this.noID(res2)).to.deep.equals(procParams)
+      this.fieldBuilder.checkEqual(this.noID(res2), procParams)
     }
   }
 
+  class FieldBuilderNumeric extends FieldBuilder {
+    constructor (val) {
+      super()
+      this.value = val || 12.12345678901234
+    }
+
+    checkEqual (lhs, rhs) {
+      expect(lhs.field).closeTo(rhs.field,  1e-7)
+    }
+
+    build(builder) {
+      builder.addColumn('field').asNumeric(20,15).withDecorator(fieldWithEncrpyt)
+    }
+    makeValue() {
+      return this.value
+    }
+  }
   class FieldBuilderDecimal extends FieldBuilder {
     constructor (tableName) {
       super(tableName)
@@ -250,6 +270,33 @@ describe('encrypt', function () {
     }
   }
 
+  it('encrypted numeric -12.12345 via proc',
+    async function handler () {
+      if (!env.isEncryptedConnection()) return
+
+      const tester = new EncryptionFieldTester(new FieldBuilderNumeric(12.12345))
+      await tester.prepare()
+      await tester.test()
+    })
+
+  it('encrypted numeric 12.12345 via proc',
+    async function handler () {
+      if (!env.isEncryptedConnection()) return
+
+      const tester = new EncryptionFieldTester(new FieldBuilderNumeric(12.12345))
+      await tester.prepare()
+      await tester.test()
+    })
+
+  it('encrypted numeric 12.12345678901234 via proc',
+    async function handler () {
+      if (!env.isEncryptedConnection()) return
+
+      const tester = new EncryptionFieldTester(new FieldBuilderNumeric())
+      await tester.prepare()
+      await tester.test()
+    })
+
   it('encrypted binary via proc',
     async function handler () {
       if (!env.isEncryptedConnection()) return
@@ -267,6 +314,7 @@ describe('encrypt', function () {
       await tester.prepare()
       await tester.test()
     })
+
 
   it('encrypted decimal via proc',
     async function handler () {

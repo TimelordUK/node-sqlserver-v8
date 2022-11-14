@@ -665,6 +665,20 @@ namespace mssql
 		}
 	}
 
+	double rescale(double d, int param_size, int digits) {
+		SQL_NUMERIC_STRUCT ns;
+		double scale_d = d;
+		encode_numeric_struct(d, static_cast<int>(param_size), digits, ns);
+		if(ns.scale < digits) {
+			double powers = pow(10, digits);
+			scale_d *= powers;
+		}
+		return scale_d;
+	}
+
+	// if we are given 15 digits for say numeric(20,15) then
+	// if only provided 5, will have to multiply by full scale
+
 	void BoundDatum::bind_numeric(const Local<Value>& p)
 	{
 		reserve_numeric(1);
@@ -673,12 +687,14 @@ namespace mssql
 		if (!p->IsNullOrUndefined())
 		{
 			const auto local = Nan::To<Number>(p).ToLocalChecked();
-			const auto d = local->Value();
+			auto d = local->Value();
 			auto& vec = *_storage->numeric_ptr;
 			auto& ns = vec[0];
+			if (digits > 0) d = rescale(d, param_size, digits);
 			encode_numeric_struct(d, static_cast<int>(param_size), digits, ns);
-			param_size = ns.precision;
-			digits = static_cast<unsigned char>(ns.scale);
+			if (param_size == 0) param_size = ns.precision;
+			if (digits == 0) digits = static_cast<unsigned char>(ns.scale);
+			else ns.scale = digits;
 			_indvec[0] = sizeof(SQL_NUMERIC_STRUCT);
 		}
 	}

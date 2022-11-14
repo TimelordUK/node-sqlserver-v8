@@ -192,7 +192,13 @@ namespace mssql
 				divisor = divisor * 10;
 			}
 		}
+		
+		int sign = 0;
 		auto final_val = (double)myvalue / (double)divisor;
+		if(!numeric.sign) sign = -1;
+      	else sign  = 1;
+
+   		final_val *= sign;
 		return final_val;
 	}
 
@@ -225,7 +231,9 @@ namespace mssql
 		}
 
 		numeric.sign = v >= 0.0 ? 1 : 0;
-		numeric.precision = precision > 0 ? static_cast<SQLCHAR>(precision) : static_cast<SQLCHAR>(log10(encode) + 1);
+		numeric.precision = precision > 0 ? 
+		static_cast<SQLCHAR>(precision) : 
+		static_cast<SQLCHAR>(log10(encode) + 1);
 		numeric.scale = static_cast<SQLSCHAR>(min(upscale_limit, scale));
 	}
 
