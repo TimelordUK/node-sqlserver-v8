@@ -180,6 +180,11 @@ namespace mssql
 
 		void bind_tvp(Local<Value> & p);
 
+		void bind_binary( Local<Value> & p);
+		void bind_binary_array(const Local<Value> & p);
+		void bind_binary_array_bcp(const Local<Value> & p);
+		void reserve_binary_array(size_t max_obj_len, size_t  array_len);
+
 		void bind_var_binary( Local<Value> & p);
 		void bind_var_binary_array(const Local<Value> & p);
 		void bind_var_binary_array_bcp(const Local<Value> & p);
@@ -220,6 +225,7 @@ namespace mssql
 		void sql_type_timestamp(Local<Value> pp);
 		void sql_ss_timestampoffset(Local<Value> pp);
 		void sql_varbinary(Local<Value> pp);
+		void sql_binary(Local<Value> pp);
 		size_t get_default_size(size_t len);
 
 		static Local<Value> unbind_null();

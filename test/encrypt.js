@@ -237,6 +237,27 @@ describe('encrypt', function () {
       return  Buffer.from('5AE178', 'hex')
     }
   }
+  class FieldBuilderBinary extends FieldBuilder {
+    constructor (tableName) {
+      super(tableName)
+    }
+
+    build(builder) {
+      builder.addColumn('field').asBinary(3).withDecorator(fieldWithEncrpyt)
+    }
+    makeValue() {
+      return  Buffer.from('5AE178', 'hex')
+    }
+  }
+
+  it('encrypted binary via proc',
+    async function handler () {
+      if (!env.isEncryptedConnection()) return
+
+      const tester = new EncryptionFieldTester(new FieldBuilderBinary())
+      await tester.prepare()
+      await tester.test()
+    })
 
   it('encrypted varbinary via proc',
     async function handler () {

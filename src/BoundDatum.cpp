@@ -397,6 +397,20 @@ namespace mssql
 		sql_type = SQL_LONGVARBINARY;
 	}
 
+	void BoundDatum::reserve_binary_array(const size_t max_obj_len, const size_t array_len)
+	{
+		js_type = JS_BUFFER;
+		c_type = SQL_C_BINARY;
+		sql_type = SQL_BINARY;
+		digits = 0;
+		constexpr auto size = sizeof(uint8_t);
+		_storage->ReserveChars(array_len * max_obj_len);
+		_indvec.resize(array_len);
+		buffer = _storage->charvec_ptr->data();
+		buffer_len = static_cast<SQLLEN>(max_obj_len) * static_cast<SQLLEN>(size);
+		param_size = max_obj_len;
+	}
+
 	void BoundDatum::reserve_var_binary_array(const size_t max_obj_len, const size_t array_len)
 	{
 		js_type = JS_BUFFER;
@@ -492,6 +506,26 @@ namespace mssql
 		param_size = rows; // max no of rows.
 		_indvec[0] = rows; // no of rows.
 		digits = 0;
+	}
+
+	void BoundDatum::bind_binary(Local<Value>& p)
+	{
+		Local<Object> o;
+		_indvec[0] = SQL_NULL_DATA;
+		if (!p->IsNullOrUndefined()) {
+		 	o = p.As<Object>();
+		}
+		const auto valid = !p->IsNullOrUndefined() && !o->IsNullOrUndefined();
+		const auto obj_len = valid ? node::Buffer::Length(o) : 0;
+		reserve_binary_array(obj_len, 1);
+
+		if (valid)
+		{
+			const auto itr = _storage->charvec_ptr->begin();
+			const auto* const ptr = node::Buffer::Data(o);
+			_indvec[0] = static_cast<SQLLEN>(obj_len);
+			memcpy(&*itr, ptr, obj_len);
+		}
 	}
 
 	void BoundDatum::bind_var_binary(Local<Value>& p)
@@ -1995,6 +2029,27 @@ namespace mssql
 		}
 	}
 
+	void BoundDatum::sql_binary(Local<Value> pp)
+	{
+		if (pp->IsArray())
+		{
+			bind_var_binary_array(pp);
+		}
+		else
+		{
+			if (pp->IsNull()
+				|| (pp->IsObject() && node::Buffer::HasInstance(pp)))
+			{
+				bind_binary(pp);
+			}
+			else
+			{
+				err = const_cast<char*>("Invalid parameter type");
+			}
+		}
+	}
+
+
 	void BoundDatum::sql_varbinary(Local<Value> pp)
 	{
 		if (pp->IsArray())
@@ -2041,6 +2096,13 @@ namespace mssql
 		case SQL_LONGVARBINARY:
 			sql_longvarbinary(pp);
 			break;
+
+		case SQL_BINARY:
+		{
+			sql_binary(pp);
+			if (err) return false;
+		}
+		break;
 
 		case SQL_VARBINARY:
 		{
