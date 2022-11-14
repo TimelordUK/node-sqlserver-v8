@@ -22,14 +22,15 @@ describe('encrypt', function () {
     })
   })
 
-  const txtWithEncrypt = 'COLLATE Latin1_General_BIN2 ENCRYPTED WITH (' +
-    'COLUMN_ENCRYPTION_KEY = [CEK_Auto1], ' +
-    'ENCRYPTION_TYPE = Deterministic, ' +
-    'ALGORITHM = \'AEAD_AES_256_CBC_HMAC_SHA_256\'' +
-    ')'
+  const encrptKey = 'CEK_Auto1'
+  const encrptAlgo = 'AEAD_AES_256_CBC_HMAC_SHA_256'
 
-    const fieldWithEncrpyt =  'ENCRYPTED WITH (COLUMN_ENCRYPTION_KEY = [CEK_Auto1], ' +
-      'ENCRYPTION_TYPE = Deterministic, ALGORITHM = \'AEAD_AES_256_CBC_HMAC_SHA_256\')'
+  const fieldWithEncrpyt =  `ENCRYPTED WITH 
+  (COLUMN_ENCRYPTION_KEY = [${encrptKey}], 
+  ENCRYPTION_TYPE = Deterministic, 
+  ALGORITHM = '${encrptAlgo}')`
+
+  const txtWithEncrypt = `COLLATE Latin1_General_BIN2 ${fieldWithEncrpyt}`
 
 
   class FieldBuilder
@@ -140,7 +141,6 @@ describe('encrypt', function () {
       return 12.123456789
     }
   }
-
   class FieldBuilderBit extends FieldBuilder {
     constructor (tableName) {
       super(tableName)
@@ -225,6 +225,27 @@ describe('encrypt', function () {
       return 'hello world!'
     }
   }
+  class FieldBuilderVarBinary extends FieldBuilder {
+    constructor (tableName) {
+      super(tableName)
+    }
+
+    build(builder) {
+      builder.addColumn('field').asVarBinary(50).withDecorator(fieldWithEncrpyt)
+    }
+    makeValue() {
+      return  Buffer.from('5AE178', 'hex')
+    }
+  }
+
+  it('encrypted varbinary via proc',
+    async function handler () {
+      if (!env.isEncryptedConnection()) return
+
+      const tester = new EncryptionFieldTester(new FieldBuilderVarBinary())
+      await tester.prepare()
+      await tester.test()
+    })
 
   it('encrypted decimal via proc',
     async function handler () {

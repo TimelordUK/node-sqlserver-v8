@@ -206,7 +206,9 @@ describe('bcp', function () {
     }, i => {
       return {
         id: i,
-        b1: i % 2 === 0 ? Buffer.from('5AE178', 'hex') : Buffer.from('', 'hex')
+        b1: i % 2 === 0 ?
+          Buffer.from('5AE178', 'hex') :
+          Buffer.from('', 'hex')
       }
     })
     return await bcp.runner()
