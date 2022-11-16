@@ -52,6 +52,27 @@ describe('encrypt', function () {
     builder = null
     fieldBuilder = null
 
+/*
+  CREATE TABLE [dbo].[test_encrpted_table](
+    [id] [int] IDENTITY(1,1) NOT NULL,
+    [field] [real] ENCRYPTED WITH (COLUMN_ENCRYPTION_KEY = [CEK_Auto1], ENCRYPTION_TYPE = Deterministic, ALGORITHM = 'AEAD_AES_256_CBC_HMAC_SHA_256') NULL
+  ) ON [PRIMARY]
+ */
+
+/*
+    create procedure proc_insert_test_encrpted_table
+    (
+      @field float (8)
+    )
+    as
+    begin
+      declare @ae_field float (8)  = @field
+      insert into test_encrpted_table (field)
+      output inserted.*
+      values (@ae_field)
+    end
+ */
+
     makeProcSql () {
       const procname = this.fieldBuilder.procName
       const tableName = this.fieldBuilder.tableName
