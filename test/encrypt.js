@@ -300,138 +300,84 @@ describe('encrypt', function () {
     }
   }
 
-  it('float', async function handler () {
+  async function run (fieldBuilder) {
     if (!env.isEncryptedConnection()) return
 
-    const tester = new EncryptionFieldTester(new FieldBuilderFloat())
+    const tester = new EncryptionFieldTester(fieldBuilder)
     await tester.prepare()
     await tester.test()
+  }
+
+  it('encrypted float', async function handler () {
+    await run (new FieldBuilderFloat())
   })
 
-  it('UTC datetime2', async function handler () {
-      if (!env.isEncryptedConnection()) return
-
-      const tester = new EncryptionFieldTester(new FieldBuilderDateTime2())
-      await tester.prepare()
-      await tester.test()
-    })
+  it('encrypted UTC datetime2', async function handler () {
+    await run (new FieldBuilderDateTime2())
+  })
 
   it('encrypted numeric -12.12345 via proc',
     async function handler () {
-      if (!env.isEncryptedConnection()) return
-
-      const tester = new EncryptionFieldTester(new FieldBuilderNumeric(12.12345))
-      await tester.prepare()
-      await tester.test()
-    })
-
+      await run (new FieldBuilderNumeric(12.12345))
+  })
 
   it('encrypted numeric 12.12345 via proc',
     async function handler () {
-      if (!env.isEncryptedConnection()) return
-
-      const tester = new EncryptionFieldTester(new FieldBuilderNumeric(12.12345))
-      await tester.prepare()
-      await tester.test()
+      await run(new FieldBuilderNumeric(12.12345))
     })
 
   it('encrypted numeric 12.12345678901234 via proc',
     async function handler () {
-      if (!env.isEncryptedConnection()) return
-
-      const tester = new EncryptionFieldTester(new FieldBuilderNumeric())
-      await tester.prepare()
-      await tester.test()
-    })
+      await run(new FieldBuilderNumeric())
+  })
 
   it('encrypted binary via proc',
     async function handler () {
-      if (!env.isEncryptedConnection()) return
-
-      const tester = new EncryptionFieldTester(new FieldBuilderBinary())
-      await tester.prepare()
-      await tester.test()
+      await run(new FieldBuilderBinary())
     })
 
   it('encrypted varbinary via proc',
     async function handler () {
-      if (!env.isEncryptedConnection()) return
-
-      const tester = new EncryptionFieldTester(new FieldBuilderVarBinary())
-      await tester.prepare()
-      await tester.test()
+      await run(new FieldBuilderVarBinary())
     })
-
 
   it('encrypted decimal via proc',
     async function handler () {
-      if (!env.isEncryptedConnection()) return
-
-      const tester = new EncryptionFieldTester(new FieldBuilderDecimal())
-      await tester.prepare()
-      await tester.test()
+      await run(new FieldBuilderDecimal())
     })
 
   it('encrypted nvarchar via proc',
     async function handler () {
-      if (!env.isEncryptedConnection()) return
-
-      const tester = new EncryptionFieldTester(new FieldBuilderNVarChar())
-      await tester.prepare()
-      await tester.test()
+      await run(new FieldBuilderNVarChar())
     })
 
   it('encrypted char 10 via proc',
     async function handler () {
-      if (!env.isEncryptedConnection()) return
-
-      const tester = new EncryptionFieldTester(new FieldBuilderChar())
-      await tester.prepare()
-      await tester.test()
+      await run(new FieldBuilderChar())
     })
 
   it('encrypted bit via proc',
     async function handler () {
-      if (!env.isEncryptedConnection()) return
-
-      const tester = new EncryptionFieldTester(new FieldBuilderBit())
-      await tester.prepare()
-      await tester.test()
+      await run(new FieldBuilderBit())
     })
 
   it('encrypted big int via proc',
     async function handler () {
-      if (!env.isEncryptedConnection()) return
-
-      const tester = new EncryptionFieldTester(new FieldBuilderBigInt())
-      await tester.prepare()
-      await tester.test()
+      await run(new FieldBuilderBigInt())
     })
 
   it('encrypted tiny int via proc',
     async function handler () {
-      if (!env.isEncryptedConnection()) return
-
-      const tester = new EncryptionFieldTester(new FieldBuilderTinyInt())
-      await tester.prepare()
-      await tester.test()
+      await run(new FieldBuilderTinyInt())
     })
 
   it('encrypted small int via proc',
     async function handler () {
-      if (!env.isEncryptedConnection()) return
-
-      const tester = new EncryptionFieldTester(new FieldBuilderSmallInt())
-      await tester.prepare()
-      await tester.test()
+      await run(new FieldBuilderSmallInt())
     })
 
   it('encrypted int via proc',
     async function handler () {
-      if (!env.isEncryptedConnection()) return
-
-      const tester = new EncryptionFieldTester(new FieldBuilderInt())
-      await tester.prepare()
-      await tester.test()
+      await run(new FieldBuilderInt())
     })
 })
