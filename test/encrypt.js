@@ -80,7 +80,7 @@ describe('encrypt', function () {
 
       const cnl = `, ${EOL}\t\t`
       const nl = `${EOL}\t\t`
-      const insertColumns = builder.columns.filter(c => !c.is_identity)
+      const insertColumns = builder.columns.filter(c => !c.isReadOnly())
       const params = insertColumns.map(c => `@${c.name} ${c.procTyped()}`).join(cnl)
       const declare = insertColumns.map(c => `declare @ae_${c.name} ${c.procTyped()} = @${c.name}`).join(nl)
       const paramNames = insertColumns.map(c => `${c.name}`).join(', ')
