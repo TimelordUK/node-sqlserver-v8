@@ -131,7 +131,23 @@ describe('encrypt', function () {
       this.fieldBuilder.checkEqual(this.noID(res2), procParams)
     }
   }
+  class FieldBuilderFloat extends FieldBuilder {
+    constructor (val) {
+      super()
+      this.value = val || 12.1234
+    }
 
+    checkEqual (lhs, rhs) {
+      expect(lhs.field).closeTo(rhs.field,  1e-5)
+    }
+
+    build(builder) {
+      builder.addColumn('field').asFloat().withDecorator(fieldWithEncrpyt)
+    }
+    makeValue() {
+      return this.value
+    }
+  }
   class FieldBuilderNumeric extends FieldBuilder {
     constructor (val) {
       super()
@@ -283,6 +299,14 @@ describe('encrypt', function () {
       return this.value
     }
   }
+
+  it('float', async function handler () {
+    if (!env.isEncryptedConnection()) return
+
+    const tester = new EncryptionFieldTester(new FieldBuilderFloat())
+    await tester.prepare()
+    await tester.test()
+  })
 
   it('UTC datetime2', async function handler () {
       if (!env.isEncryptedConnection()) return

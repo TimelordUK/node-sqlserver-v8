@@ -197,6 +197,7 @@ interface TableColumn {
     asUniqueIdentifier (): TableColumn
     asHierarchyId (): TableColumn
     asVarBiary (length: number): TableColumn
+    asFloat (scale: number): TableColumn
     asReal (): TableColumn
     asNChar (length: number): TableColumn
     asChar (length: number): TableColumn
