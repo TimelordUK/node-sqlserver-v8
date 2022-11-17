@@ -350,7 +350,20 @@ describe('encrypt', function () {
       return this.value
     }
   }
+  class FieldBuilderTime extends FieldBuilder {
+    value = null
+    constructor (val) {
+      super()
+      this.value = val || env.timeHelper.getUTCTime1900(new Date())
+    }
 
+    build(builder) {
+      builder.addColumn('field').asTime().withDecorator(fieldWithEncrpyt)
+    }
+    makeValue() {
+      return this.value
+    }
+  }
   async function run (fieldBuilder) {
     if (!env.isEncryptedConnection()) return
 
@@ -358,6 +371,10 @@ describe('encrypt', function () {
     await tester.prepare()
     await tester.test()
   }
+
+  it('encrypted time via proc', async function handler () {
+    await run (new FieldBuilderTime())
+  })
 
   it('encrypted date via proc', async function handler () {
     await run (new FieldBuilderDate())
