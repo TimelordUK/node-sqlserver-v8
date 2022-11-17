@@ -87,7 +87,7 @@ describe('encrypt', function () {
       const declareNames = insertColumns.map(c => `@ae_${c.name}`).join(', ')
       const insert = `insert into ${tableName} (${paramNames})`
       const values = `values (${declareNames})`
-      const sql2 = `create procedure ${procname}
+      return `create procedure ${procname}
     ( 
       ${params}
     )
@@ -99,7 +99,6 @@ describe('encrypt', function () {
       ${values}
     end
     `
-      return sql2
     }
 
     constructor (fieldBuilder) {
@@ -164,6 +163,23 @@ describe('encrypt', function () {
 
     build(builder) {
       builder.addColumn('field').asFloat().withDecorator(fieldWithEncrpyt)
+    }
+    makeValue() {
+      return this.value
+    }
+  }
+  class FieldBuilderReal extends FieldBuilder {
+    constructor (val) {
+      super()
+      this.value = val || -12.1234
+    }
+
+    checkEqual (lhs, rhs) {
+      expect(lhs.field).closeTo(rhs.field,  1e-5)
+    }
+
+    build(builder) {
+      builder.addColumn('field').asReal().withDecorator(fieldWithEncrpyt)
     }
     makeValue() {
       return this.value
@@ -329,11 +345,15 @@ describe('encrypt', function () {
     await tester.test()
   }
 
-  it('encrypted float', async function handler () {
+  it('encrypted real via proc', async function handler () {
+    await run (new FieldBuilderReal())
+  })
+
+  it('encrypted float via proc', async function handler () {
     await run (new FieldBuilderFloat())
   })
 
-  it('encrypted UTC datetime2', async function handler () {
+  it('encrypted UTC datetime2 via proc', async function handler () {
     await run (new FieldBuilderDateTime2())
   })
 
