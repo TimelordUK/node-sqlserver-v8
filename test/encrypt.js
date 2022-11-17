@@ -322,6 +322,20 @@ describe('encrypt', function () {
       return  Buffer.from('5AE178', 'hex')
     }
   }
+  class FieldBuilderDate extends FieldBuilder {
+    value = null
+    constructor (val) {
+      super()
+      this.value = val || env.timeHelper.getUTCDate(new Date())
+    }
+
+    build(builder) {
+      builder.addColumn('field').asDate().withDecorator(fieldWithEncrpyt)
+    }
+    makeValue() {
+      return this.value
+    }
+  }
   class FieldBuilderDateTime2 extends FieldBuilder {
     value = null
     constructor (val) {
@@ -344,6 +358,10 @@ describe('encrypt', function () {
     await tester.prepare()
     await tester.test()
   }
+
+  it('encrypted date via proc', async function handler () {
+    await run (new FieldBuilderDate())
+  })
 
   it('encrypted real via proc', async function handler () {
     await run (new FieldBuilderReal())
