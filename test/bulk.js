@@ -38,6 +38,35 @@ describe('bulk', function () {
     return v
   }
 
+  async function numericTest (batchSize, selectAfterInsert, deleteAfterTest, runUpdateFunction) {
+    const params = {
+      columnType: 'numeric(18,4)',
+      buildFunction: i => (i * 10) + (i * 0.1),
+      updateFunction: runUpdateFunction ? i => (i * 1) + (i * 0.2) : null,
+      check: selectAfterInsert,
+      deleteAfterTest,
+      batchSize
+    }
+
+    await simpleColumnBulkTest(params)
+  }
+
+  it(`bulk insert/select numeric column batchSize ${test1BatchSize}`, async function handler () {
+    await numericTest(test1BatchSize, true, false, false)
+  })
+
+  it(`bulk insert/select numeric column batchSize ${test2BatchSize}`, async function handler () {
+    await numericTest(test2BatchSize, true, false, false)
+  })
+
+  it(`bulk insert/select/delete numeric column batchSize ${test2BatchSize}`, async function handler () {
+    await numericTest(test2BatchSize, true, true, false)
+  })
+
+  it(`bulk insert/update/select numeric column batchSize ${test2BatchSize}`, async function handler () {
+    await numericTest(test2BatchSize, true, false, true)
+  })
+
   it('employee tmp table created on 2 connections - check name clash', async function handler () {
     const tableName = '#test_table'
 

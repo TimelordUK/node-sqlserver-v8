@@ -679,6 +679,14 @@ namespace mssql
 	// if we are given 15 digits for say numeric(20,15) then
 	// if only provided 5, will have to multiply by full scale
 
+	void BoundDatum::bind_numeric_struct(double d,  SQL_NUMERIC_STRUCT & ns) {
+		if (digits > 0) d = rescale(d, param_size, digits);
+		encode_numeric_struct(d, static_cast<int>(param_size), digits, ns);
+		if (param_size <= 0) param_size = ns.precision;
+		if (digits <= 0) digits = static_cast<unsigned char>(ns.scale);
+		else ns.scale = digits;
+	}
+
 	void BoundDatum::bind_numeric(const Local<Value>& p)
 	{
 		reserve_numeric(1);
@@ -690,11 +698,7 @@ namespace mssql
 			auto d = local->Value();
 			auto& vec = *_storage->numeric_ptr;
 			auto& ns = vec[0];
-			if (digits > 0) d = rescale(d, param_size, digits);
-			encode_numeric_struct(d, static_cast<int>(param_size), digits, ns);
-			if (param_size == 0) param_size = ns.precision;
-			if (digits == 0) digits = static_cast<unsigned char>(ns.scale);
-			else ns.scale = digits;
+			bind_numeric_struct(d, ns);
 			_indvec[0] = sizeof(SQL_NUMERIC_STRUCT);
 		}
 	}
@@ -714,9 +718,8 @@ namespace mssql
 			{
 				const auto num = Nan::To<Number>(elem).ToLocalChecked();
 				const auto d = num->Value();
+				bind_numeric_struct(d, ns);
 				encode_numeric_struct(d, static_cast<int>(param_size), 0, ns);
-				param_size = max(static_cast<unsigned int>(param_size), static_cast<unsigned int>(ns.precision));
-				digits = 0;
 				_indvec[i] = sizeof(SQL_NUMERIC_STRUCT);
 			}
 		}
@@ -1956,11 +1959,13 @@ namespace mssql
 	{
 		if (pp->IsArray())
 		{
+			bind_numeric_array(pp);
+			/*
 			if (is_bcp) {
 				bind_numeric_array(pp);
 			} else {
 				bind_double_array(pp);
-			}
+			}*/
 		}
 		else
 		{
@@ -2192,6 +2197,10 @@ namespace mssql
 			break;
 
 		case SQL_TYPE_TIMESTAMP:
+			sql_type_timestamp(pp);
+			break;
+
+		case SQL_DATETIME:
 			sql_type_timestamp(pp);
 			break;
 

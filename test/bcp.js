@@ -18,6 +18,55 @@ describe('bcp', function () {
     env.close().then(() => done())
   })
 
+  it('bcp datetime - mix with nulls', async function handler () {
+    const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
+    const bcp = env.bcpEntry({
+      tableName: 'test_table_bcp',
+      columns: [
+        {
+          name: 'id',
+          type: 'INT PRIMARY KEY'
+        },
+        {
+          name: 'd1',
+          type: 'datetime'
+        },
+        {
+          name: 'd2',
+          type: 'datetime'
+        }]
+    }, i => timeFactory(testDate, i)
+    , dateTimeCompare)
+    return await bcp.runner()
+  })
+
+  it('bcp datetime timestamp - no null', async function handler () {
+    const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
+    const bcp = env.bcpEntry({
+      tableName: 'test_table_bcp',
+      columns: [
+        {
+          name: 'id',
+          type: 'INT PRIMARY KEY'
+        },
+        {
+          name: 'd1',
+          type: 'datetime'
+        },
+        {
+          name: 'd2',
+          type: 'datetime'
+        }]
+    }, i => {
+      return {
+        id: i,
+        d1: new Date(testDate.getTime() + i * 60 * 60 * 1000),
+        d2: new Date(testDate.getTime() - i * 60 * 60 * 1000)
+      }
+    }, dateTimeCompare)
+    return await bcp.runner()
+  })
+
   it('bcp employee', async function handler () {
     const employee = env.employee
     const table = await employee.create()
@@ -206,9 +255,9 @@ describe('bcp', function () {
     }, i => {
       return {
         id: i,
-        b1: i % 2 === 0 ?
-          Buffer.from('5AE178', 'hex') :
-          Buffer.from('', 'hex')
+        b1: i % 2 === 0
+          ? Buffer.from('5AE178', 'hex')
+          : Buffer.from('', 'hex')
       }
     })
     return await bcp.runner()
@@ -669,55 +718,6 @@ describe('bcp', function () {
         b2: i % 3 === 0 ? null : i % 5 === 0
       }
     })
-    return await bcp.runner()
-  })
-
-  it('bcp timestamp timestamp - mix with nulls', async function handler () {
-    const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
-    const bcp = env.bcpEntry({
-      tableName: 'test_table_bcp',
-      columns: [
-        {
-          name: 'id',
-          type: 'INT PRIMARY KEY'
-        },
-        {
-          name: 'd1',
-          type: 'datetime'
-        },
-        {
-          name: 'd2',
-          type: 'datetime'
-        }]
-    }, i => timeFactory(testDate, i)
-    , dateTimeCompare)
-    return await bcp.runner()
-  })
-
-  it('bcp timestamp timestamp - no null', async function handler () {
-    const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
-    const bcp = env.bcpEntry({
-      tableName: 'test_table_bcp',
-      columns: [
-        {
-          name: 'id',
-          type: 'INT PRIMARY KEY'
-        },
-        {
-          name: 'd1',
-          type: 'datetime'
-        },
-        {
-          name: 'd2',
-          type: 'datetime'
-        }]
-    }, i => {
-      return {
-        id: i,
-        d1: new Date(testDate.getTime() + i * 60 * 60 * 1000),
-        d2: new Date(testDate.getTime() - i * 60 * 60 * 1000)
-      }
-    }, dateTimeCompare)
     return await bcp.runner()
   })
 
