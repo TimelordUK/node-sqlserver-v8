@@ -25,41 +25,41 @@ describe('encrypt', function () {
   const encrptKey = 'CEK_Auto1'
   const encrptAlgo = 'AEAD_AES_256_CBC_HMAC_SHA_256'
 
-  const fieldWithEncrpyt =  `ENCRYPTED WITH 
+  const fieldWithEncrpyt = `ENCRYPTED WITH 
   (COLUMN_ENCRYPTION_KEY = [${encrptKey}], 
   ENCRYPTION_TYPE = Deterministic, 
   ALGORITHM = '${encrptAlgo}')`
 
   const txtWithEncrypt = `COLLATE Latin1_General_BIN2 ${fieldWithEncrpyt}`
 
-
-  class FieldBuilder
-  {
+  class FieldBuilder {
     tableName = null
     procName = null
     constructor (tableName) {
       this.tableName = tableName || 'test_encrpted_table'
       this.procName = `proc_insert_${this.tableName}`
     }
-    checkEqual(lhs, rhs) {
+
+    checkEqual (lhs, rhs) {
       expect(lhs).to.deep.equals(rhs)
     }
-    build(builder) {}
-    makeValue() {}
+
+    build (builder) {}
+    makeValue () {}
   }
 
   class EncryptionFieldTester {
     builder = null
     fieldBuilder = null
 
-/*
+    /*
   CREATE TABLE [dbo].[test_encrpted_table](
     [id] [int] IDENTITY(1,1) NOT NULL,
     [field] [real] ENCRYPTED WITH (COLUMN_ENCRYPTION_KEY = [CEK_Auto1], ENCRYPTION_TYPE = Deterministic, ALGORITHM = 'AEAD_AES_256_CBC_HMAC_SHA_256') NULL
   ) ON [PRIMARY]
  */
 
-/*
+    /*
     create procedure proc_insert_test_encrpted_table
     (
       @field float (8)
@@ -139,7 +139,7 @@ describe('encrypt', function () {
       await promises.query(`exec sp_refresh_parameter_encryption ${procDef2.name}`)
     }
 
-    async test() {
+    async test () {
       const procParams = {
         field: this.fieldBuilder.makeValue()
       }
@@ -158,13 +158,14 @@ describe('encrypt', function () {
     }
 
     checkEqual (lhs, rhs) {
-      expect(lhs.field).closeTo(rhs.field,  1e-5)
+      expect(lhs.field).closeTo(rhs.field, 1e-5)
     }
 
-    build(builder) {
+    build (builder) {
       builder.addColumn('field').asFloat().withDecorator(fieldWithEncrpyt)
     }
-    makeValue() {
+
+    makeValue () {
       return this.value
     }
   }
@@ -175,13 +176,14 @@ describe('encrypt', function () {
     }
 
     checkEqual (lhs, rhs) {
-      expect(lhs.field).closeTo(rhs.field,  1e-5)
+      expect(lhs.field).closeTo(rhs.field, 1e-5)
     }
 
-    build(builder) {
+    build (builder) {
       builder.addColumn('field').asReal().withDecorator(fieldWithEncrpyt)
     }
-    makeValue() {
+
+    makeValue () {
       return this.value
     }
   }
@@ -192,134 +194,105 @@ describe('encrypt', function () {
     }
 
     checkEqual (lhs, rhs) {
-      expect(lhs.field).closeTo(rhs.field,  1e-7)
+      expect(lhs.field).closeTo(rhs.field, 1e-7)
     }
 
-    build(builder) {
-      builder.addColumn('field').asNumeric(20,15).withDecorator(fieldWithEncrpyt)
+    build (builder) {
+      builder.addColumn('field').asNumeric(20, 15).withDecorator(fieldWithEncrpyt)
     }
-    makeValue() {
+
+    makeValue () {
       return this.value
     }
   }
   class FieldBuilderDecimal extends FieldBuilder {
-    constructor (tableName) {
-      super(tableName)
+    build (builder) {
+      builder.addColumn('field').asDecimal(20, 18).withDecorator(fieldWithEncrpyt)
     }
 
-    build(builder) {
-      builder.addColumn('field').asDecimal(20,18).withDecorator(fieldWithEncrpyt)
-    }
-    makeValue() {
+    makeValue () {
       return 12.123456789
     }
   }
   class FieldBuilderBit extends FieldBuilder {
-    constructor (tableName) {
-      super(tableName)
-    }
-
-    build(builder) {
+    build (builder) {
       builder.addColumn('field').asBit().withDecorator(fieldWithEncrpyt)
     }
-    makeValue() {
+
+    makeValue () {
       return true
     }
   }
   class FieldBuilderBigInt extends FieldBuilder {
-    constructor (tableName) {
-      super(tableName)
-    }
-
-    build(builder) {
+    build (builder) {
       builder.addColumn('field').asBigInt().withDecorator(fieldWithEncrpyt)
     }
-    makeValue() {
+
+    makeValue () {
       return 1234567890123
     }
   }
   class FieldBuilderTinyInt extends FieldBuilder {
-    constructor (tableName) {
-      super(tableName)
-    }
-
-    build(builder) {
+    build (builder) {
       builder.addColumn('field').asTinyInt().withDecorator(fieldWithEncrpyt)
     }
-    makeValue() {
+
+    makeValue () {
       return 120
     }
   }
   class FieldBuilderInt extends FieldBuilder {
-    constructor (tableName) {
-      super(tableName)
-    }
-
-    build(builder) {
+    build (builder) {
       builder.addColumn('field').asInt().withDecorator(fieldWithEncrpyt)
     }
-    makeValue() {
+
+    makeValue () {
       return 12345
     }
   }
   class FieldBuilderSmallInt extends FieldBuilder {
-    constructor (tableName) {
-      super(tableName)
-    }
-
-    build(builder) {
+    build (builder) {
       builder.addColumn('field').asSmallInt().withDecorator(fieldWithEncrpyt)
     }
-    makeValue() {
+
+    makeValue () {
       return 1234
     }
   }
   class FieldBuilderChar extends FieldBuilder {
-    constructor (tableName) {
-      super(tableName)
-    }
-
-    build(builder) {
+    build (builder) {
       builder.addColumn('field').asChar(10).withDecorator(txtWithEncrypt)
     }
-    makeValue() {
+
+    makeValue () {
       return '0123456789'
     }
   }
   class FieldBuilderNVarChar extends FieldBuilder {
-    constructor (tableName) {
-      super(tableName)
-    }
-
-    build(builder) {
+    build (builder) {
       builder.addColumn('field').asNVarChar(50).withDecorator(txtWithEncrypt)
     }
-    makeValue() {
+
+    makeValue () {
       return 'hello world!'
     }
   }
   class FieldBuilderVarBinary extends FieldBuilder {
-    constructor (tableName) {
-      super(tableName)
-    }
-
-    build(builder) {
+    build (builder) {
       builder.addColumn('field').asVarBinary(50).withDecorator(fieldWithEncrpyt)
     }
-    makeValue() {
-      return  Buffer.from('5AE178', 'hex')
+
+    makeValue () {
+      return Buffer.from('5AE178', 'hex')
     }
   }
   class FieldBuilderBinary extends FieldBuilder {
-    constructor (tableName) {
-      super(tableName)
-    }
-
-    build(builder) {
+    build (builder) {
       builder.addColumn('field').asBinary(3).withDecorator(fieldWithEncrpyt)
     }
-    makeValue() {
-      return  Buffer.from('5AE178', 'hex')
+
+    makeValue () {
+      return Buffer.from('5AE178', 'hex')
     }
   }
   class FieldBuilderDate extends FieldBuilder {
@@ -329,10 +302,11 @@ describe('encrypt', function () {
       this.value = val || env.timeHelper.getUTCDate(new Date())
     }
 
-    build(builder) {
+    build (builder) {
       builder.addColumn('field').asDate().withDecorator(fieldWithEncrpyt)
     }
-    makeValue() {
+
+    makeValue () {
       return this.value
     }
   }
@@ -343,10 +317,11 @@ describe('encrypt', function () {
       this.value = val || env.timeHelper.getUTCDateHHMMSS(new Date())
     }
 
-    build(builder) {
+    build (builder) {
       builder.addColumn('field').asDateTime2().withDecorator(fieldWithEncrpyt)
     }
-    makeValue() {
+
+    makeValue () {
       return this.value
     }
   }
@@ -357,10 +332,11 @@ describe('encrypt', function () {
       this.value = val || env.timeHelper.getUTCTime1900(new Date())
     }
 
-    build(builder) {
+    build (builder) {
       builder.addColumn('field').asTime().withDecorator(fieldWithEncrpyt)
     }
-    makeValue() {
+
+    makeValue () {
       return this.value
     }
   }
@@ -371,13 +347,14 @@ describe('encrypt', function () {
     }
 
     checkEqual (lhs, rhs) {
-      expect(lhs.field).closeTo(rhs.field,  1e-7)
+      expect(lhs.field).closeTo(rhs.field, 1e-7)
     }
 
-    build(builder) {
+    build (builder) {
       builder.addColumn('field').asMoney().withDecorator(fieldWithEncrpyt)
     }
-    makeValue() {
+
+    makeValue () {
       return this.value
     }
   }
@@ -390,33 +367,33 @@ describe('encrypt', function () {
   }
 
   it('encrypted money via proc', async function handler () {
-    await run (new FieldBuilderMoney())
+    await run(new FieldBuilderMoney())
   })
 
   it('encrypted time via proc', async function handler () {
-    await run (new FieldBuilderTime())
+    await run(new FieldBuilderTime())
   })
 
   it('encrypted date via proc', async function handler () {
-    await run (new FieldBuilderDate())
+    await run(new FieldBuilderDate())
   })
 
   it('encrypted real via proc', async function handler () {
-    await run (new FieldBuilderReal())
+    await run(new FieldBuilderReal())
   })
 
   it('encrypted float via proc', async function handler () {
-    await run (new FieldBuilderFloat())
+    await run(new FieldBuilderFloat())
   })
 
   it('encrypted UTC datetime2 via proc', async function handler () {
-    await run (new FieldBuilderDateTime2())
+    await run(new FieldBuilderDateTime2())
   })
 
   it('encrypted numeric -12.12345 via proc',
     async function handler () {
-      await run (new FieldBuilderNumeric(12.12345))
-  })
+      await run(new FieldBuilderNumeric(12.12345))
+    })
 
   it('encrypted numeric 12.12345 via proc',
     async function handler () {
@@ -426,7 +403,7 @@ describe('encrypt', function () {
   it('encrypted numeric 12.12345678901234 via proc',
     async function handler () {
       await run(new FieldBuilderNumeric())
-  })
+    })
 
   it('encrypted binary via proc',
     async function handler () {

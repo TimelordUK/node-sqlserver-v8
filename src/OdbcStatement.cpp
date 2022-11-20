@@ -330,13 +330,17 @@ namespace mssql
 			auto moneyType = isSmallMoney 
 			? (SQLPOINTER)SQL_SS_TYPE_SMALLMONEY 
 			: (SQLPOINTER)SQL_SS_TYPE_MONEY;
+		    
+			int   x = 0;
+			r = SQLGetStmtAttr(statement, SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, nullptr);
 
-			auto r = SQLGetStmtAttr(_statement->get(), SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, nullptr);			
-			r = SQLSetDescField(hdesc, static_cast<SQLUSMALLINT>(current_param), 
+			r = SQLGetDescField( hdesc, current_param, SQL_DESC_PRECISION, (SQLPOINTER)&x, sizeof(x), 0);
+			r = SQLGetDescField( hdesc, current_param, SQL_DESC_TYPE, (SQLPOINTER)&x, sizeof(x), 0);
+    
+			r = SQLSetDescField(hdesc, current_param, 
 			SQL_CA_SS_SERVER_TYPE, 
 			SQL_SS_TYPE_DEFAULT, 
 			SQL_IS_INTEGER);
-			
 			/*
 			SQLGetStmtAttr(statement, SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, NULL);
 			SQLSetDescField(hdesc, current_param, SQL_DESC_PRECISION, (SQLPOINTER)(datum->param_size), 0);
