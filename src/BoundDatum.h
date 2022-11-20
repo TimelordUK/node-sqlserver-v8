@@ -45,6 +45,7 @@ namespace mssql
 			bcp_terminator_len(0),
 			bcp_terminator(NULL),
 			is_tvp(false),
+			is_money(false),
 			tvp_no_cols(0),
 			definedPrecision(false),
 			definedScale(false),
@@ -89,6 +90,7 @@ namespace mssql
 		LPCBYTE bcp_terminator;
 
 		bool is_tvp;
+		bool is_money;
 		int tvp_no_cols;
 		wstring name;
 

@@ -1759,6 +1759,12 @@ namespace mssql
 			param_size = maybe_param_size.FromMaybe(0);
 		}
 
+		const auto money = get("money", pv);
+		if (!money->IsUndefined())
+		{
+			 is_money = Nan::To<bool>(money).ToChecked();
+		}
+
 		const auto bcp = get("bcp", pv);
 		if (!bcp->IsUndefined())
 		{

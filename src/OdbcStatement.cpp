@@ -202,12 +202,12 @@ namespace mssql
 	{
 		/* Modify the fields in the implicit application parameter descriptor */
 		SQLHDESC hdesc = nullptr;
-
-		SQLGetStmtAttr(_statement->get(), SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, nullptr);
-		SQLSetDescField(hdesc, current_param, SQL_DESC_TYPE, reinterpret_cast<SQLPOINTER>(datum->c_type), 0);
-		SQLSetDescField(hdesc, current_param, SQL_DESC_PRECISION, reinterpret_cast<SQLPOINTER>(datum->param_size), 0);
-		SQLSetDescField(hdesc, current_param, SQL_DESC_SCALE, reinterpret_cast<SQLPOINTER>(datum->digits), 0);
-		SQLSetDescField(hdesc, current_param, SQL_DESC_DATA_PTR, static_cast<SQLPOINTER>(datum->buffer), 0);
+		const SQLINTEGER bufferLength = 0;
+		auto r = SQLGetStmtAttr(_statement->get(), SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, nullptr);
+		r = SQLSetDescField(hdesc, current_param, SQL_DESC_TYPE, reinterpret_cast<SQLPOINTER>(datum->c_type), bufferLength);
+		r = SQLSetDescField(hdesc, current_param, SQL_DESC_PRECISION, reinterpret_cast<SQLPOINTER>(datum->param_size), bufferLength);
+		r = SQLSetDescField(hdesc, current_param, SQL_DESC_SCALE, reinterpret_cast<SQLPOINTER>(datum->digits), bufferLength);
+		r = SQLSetDescField(hdesc, current_param, SQL_DESC_DATA_PTR, static_cast<SQLPOINTER>(datum->buffer), bufferLength);
 	}
 
 	// this will show on a different thread to the current executing query.
@@ -309,12 +309,39 @@ namespace mssql
 		if (!_statement)
 			return false;
 		const auto &statement = *_statement;
-		auto r = SQLBindParameter(statement, static_cast<SQLUSMALLINT>(current_param), datum->param_type, datum->c_type, datum->sql_type,
-								  datum->param_size, datum->digits, datum->buffer, datum->buffer_len,
-								  datum->get_ind_vec().data());
+
+		auto r = SQLBindParameter(statement, static_cast<SQLUSMALLINT>(current_param), 
+			datum->param_type, 
+			datum->c_type, 
+			datum->sql_type,
+			datum->param_size, 
+			datum->digits, 
+			datum->buffer, 
+			datum->buffer_len,
+			datum->get_ind_vec().data());
+				
 		if (!check_odbc_error(r))
 		{
 			return false;
+		}
+		if (datum->is_money) {
+			auto isSmallMoney = false;
+			SQLHANDLE hdesc = nullptr;
+			auto moneyType = isSmallMoney 
+			? (SQLPOINTER)SQL_SS_TYPE_SMALLMONEY 
+			: (SQLPOINTER)SQL_SS_TYPE_MONEY;
+
+			auto r = SQLGetStmtAttr(_statement->get(), SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, nullptr);			
+			r = SQLSetDescField(hdesc, static_cast<SQLUSMALLINT>(current_param), 
+			SQL_CA_SS_SERVER_TYPE, 
+			SQL_SS_TYPE_DEFAULT, 
+			SQL_IS_INTEGER);
+			
+			/*
+			SQLGetStmtAttr(statement, SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, NULL);
+			SQLSetDescField(hdesc, current_param, SQL_DESC_PRECISION, (SQLPOINTER)(datum->param_size), 0);
+			SQLSetDescField(hdesc, current_param, SQL_DESC_SCALE, (SQLPOINTER)(datum->digits), 0);
+			SQLSetDescField(hdesc, current_param, SQL_DESC_DATA_PTR, &var, 0);*/
 		}
 		if (datum->get_defined_precision())
 		{
