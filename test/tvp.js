@@ -18,6 +18,18 @@ describe('tvp', function () {
     env.close().then(() => done())
   })
 
+  it('non dbo schema use tvp simple test type select test', async function handler () {
+    const tableName = 'TestSchema.TestTvp'
+    const helper = env.tvpHelper(tableName)
+    const vec = helper.getVec(100)
+    const table = await helper.create(tableName)
+    table.addRowsFromObjects(vec)
+    const tp = env.sql.TvpFromTable(table)
+    table.rows = []
+    const res = await env.theConnection.promises.query('select * from ?;', [tp])
+    expect(res.first).to.deep.equal(vec)
+  })
+
   it('use tvp simple test type insert test extended ascii', async function handler () {
     const tableName = 'TestTvp'
     const helper = env.tvpHelper(tableName)
@@ -184,17 +196,7 @@ describe('tvp', function () {
     expect(res.first).to.deep.equal(vec)
   })
 
-  it('non dbo schema use tvp simple test type select test', async function handler () {
-    const tableName = 'TestSchema.TestTvp'
-    const helper = env.tvpHelper(tableName)
-    const vec = helper.getVec(100)
-    const table = await helper.create(tableName)
-    table.addRowsFromObjects(vec)
-    const tp = env.sql.TvpFromTable(table)
-    table.rows = []
-    const res = await env.theConnection.promises.query('select * from ?;', [tp])
-    expect(res.first).to.deep.equal(vec)
-  })
+
 
   it('dbo schema use tvp simple test type select test', async function handler () {
     const tableName = 'TestTvp'

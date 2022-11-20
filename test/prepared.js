@@ -65,6 +65,15 @@ describe('prepared', function () {
       .then(() => done())
   })
 
+  it('use prepared and select nvarchar(max)', async function handler () {
+    const s = 'hello'
+    const q = `DECLARE @v NVARCHAR(MAX) = '${s}'; SELECT @v AS v`
+    const prepared = await env.theConnection.promises.prepare(q)
+    const res = await prepared.promises.query([])
+    assert.deepStrictEqual(res.first[0].v, s)
+    await prepared.promises.free()
+  })
+
   it('use prepared and select nvarchar max with max default size on connection', async function handler () {
     const s = 'hello'
     const max = 4
@@ -86,15 +95,6 @@ describe('prepared', function () {
     const prepared = await env.theConnection.promises.prepare(q)
     const res = await prepared.promises.query([])
     assert.deepStrictEqual(res.first[0].v, s.slice(0, 4))
-    await prepared.promises.free()
-  })
-
-  it('use prepared and select nvarchar(max)', async function handler () {
-    const s = 'hello'
-    const q = `DECLARE @v NVARCHAR(MAX) = '${s}'; SELECT @v AS v`
-    const prepared = await env.theConnection.promises.prepare(q)
-    const res = await prepared.promises.query([])
-    assert.deepStrictEqual(res.first[0].v, s)
     await prepared.promises.free()
   })
 

@@ -669,7 +669,7 @@ namespace mssql
 		SQL_NUMERIC_STRUCT ns;
 		double scale_d = d;
 		encode_numeric_struct(d, static_cast<int>(param_size), digits, ns);
-		if(ns.scale < digits) {
+			if(ns.scale < digits) {
 			double powers = pow(10, digits);
 			scale_d *= powers;
 		}
@@ -719,7 +719,6 @@ namespace mssql
 				const auto num = Nan::To<Number>(elem).ToLocalChecked();
 				const auto d = num->Value();
 				bind_numeric_struct(d, ns);
-				encode_numeric_struct(d, static_cast<int>(param_size), 0, ns);
 				_indvec[i] = sizeof(SQL_NUMERIC_STRUCT);
 			}
 		}
@@ -1959,13 +1958,11 @@ namespace mssql
 	{
 		if (pp->IsArray())
 		{
-			bind_numeric_array(pp);
-			/*
 			if (is_bcp) {
 				bind_numeric_array(pp);
 			} else {
-				bind_double_array(pp);
-			}*/
+				bind_numeric_array(pp);
+			}
 		}
 		else
 		{

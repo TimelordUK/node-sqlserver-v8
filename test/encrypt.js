@@ -364,6 +364,23 @@ describe('encrypt', function () {
       return this.value
     }
   }
+  class FieldBuilderMoney extends FieldBuilder {
+    constructor (val) {
+      super()
+      this.value = val || 12.12345678901234
+    }
+
+    checkEqual (lhs, rhs) {
+      expect(lhs.field).closeTo(rhs.field,  1e-7)
+    }
+
+    build(builder) {
+      builder.addColumn('field').asMoney().withDecorator(fieldWithEncrpyt)
+    }
+    makeValue() {
+      return this.value
+    }
+  }
   async function run (fieldBuilder) {
     if (!env.isEncryptedConnection()) return
 
@@ -371,6 +388,10 @@ describe('encrypt', function () {
     await tester.prepare()
     await tester.test()
   }
+
+  it('encrypted money via proc', async function handler () {
+    await run (new FieldBuilderMoney())
+  })
 
   it('encrypted time via proc', async function handler () {
     await run (new FieldBuilderTime())
