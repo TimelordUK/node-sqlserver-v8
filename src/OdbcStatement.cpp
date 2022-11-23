@@ -324,6 +324,7 @@ namespace mssql
 		{
 			return false;
 		}
+		/*
 		if (datum->is_money) {
 			auto isSmallMoney = false;
 			SQLHANDLE hdesc = nullptr;
@@ -341,12 +342,13 @@ namespace mssql
 			SQL_CA_SS_SERVER_TYPE, 
 			SQL_SS_TYPE_DEFAULT, 
 			SQL_IS_INTEGER);
-			/*
+		
 			SQLGetStmtAttr(statement, SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, NULL);
 			SQLSetDescField(hdesc, current_param, SQL_DESC_PRECISION, (SQLPOINTER)(datum->param_size), 0);
 			SQLSetDescField(hdesc, current_param, SQL_DESC_SCALE, (SQLPOINTER)(datum->digits), 0);
-			SQLSetDescField(hdesc, current_param, SQL_DESC_DATA_PTR, &var, 0);*/
+			SQLSetDescField(hdesc, current_param, SQL_DESC_DATA_PTR, &var, 0);	
 		}
+		*/
 		if (datum->get_defined_precision())
 		{
 			apply_precision(datum, current_param);

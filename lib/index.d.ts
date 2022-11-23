@@ -556,6 +556,8 @@ interface TableBuilder {
     create (): Promise<any>
     truncate () : Promise<any>
     clear (): void
+    // a wrapper procedure definition with column as parameters
+    insertProcSql (procname?: string): string
     // IF TYPE_ID(N'dbo.tmpTableBuilderType') IS not NULL drop type dbo.tmpTableBuilderType
     dropTypeSql: string
     // CREATE TYPE dbo.tmpTableBuilderType AS TABLE ([id] int , [MatterColumn] varchar (100) NOT NULL, [SearchTerm] nvarchar (MAX) NOT NULL, [Comparator] nvarchar (20) NOT NULL)
@@ -622,5 +624,5 @@ enum QueryEvent {
     output = 'output'
 }
 
-declare const sql: SqlClient;
-export = sql;
+declare const sql: SqlClient
+export = sql
