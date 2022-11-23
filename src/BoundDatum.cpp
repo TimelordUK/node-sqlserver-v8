@@ -1006,6 +1006,7 @@ namespace mssql
 		const auto len = arr->Length();
 		reserve_time(len);
 		auto& vec = *_storage->time2vec_ptr;
+		param_size = sizeof(SQL_SS_TIME2_STRUCT);
 		for (uint32_t i = 0; i < len; ++i)
 		{
 			_indvec[i] = SQL_NULL_DATA;
@@ -1020,8 +1021,6 @@ namespace mssql
 				const auto ms = local->Value() - offset * 60000;
 				const TimestampColumn sql_date(-1, ms);
 				sql_date.ToTime2Struct(time2);
-				sql_type = SQL_SS_TIME2;
-				c_type = SQL_TIME;
 				_indvec[i] = sizeof(SQL_SS_TIME2_STRUCT);
 			}
 		}
@@ -1048,12 +1047,12 @@ namespace mssql
 
 	void BoundDatum::reserve_time(const SQLLEN len)
 	{
-		buffer_len = static_cast<SQLLEN>(len * sizeof(SQL_SS_TIME2_STRUCT));
+		buffer_len = static_cast<SQLLEN>(len) * static_cast<SQLLEN>(sizeof(SQL_SS_TIME2_STRUCT));
 		_storage->Reservetime2(len);
 		_indvec.resize(len);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC		
 		js_type = JS_DATE;
-		c_type = SQL_C_BINARY;
+		c_type = SQL_C_TYPE_TIME;
 		// TODO: Determine proper SQL type based on version of server we're talking to
 		sql_type = SQL_SS_TIME2;
 		buffer = _storage->time2vec_ptr->data();
@@ -2008,8 +2007,8 @@ namespace mssql
 	{
 		if (pp->IsArray())
 		{
-			// bind_time_array(pp);
-			bind_time_stamp_offset_array(pp);
+			bind_time_array(pp);
+			// bind_time_stamp_offset_array(pp);
 		}
 		else
 		{

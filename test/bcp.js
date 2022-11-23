@@ -40,6 +40,41 @@ describe('bcp', function () {
     return await bcp.runner()
   })
 
+  it('bcp time', async function handler () {
+    const timeHelper = env.timeHelper
+    const testDate = timeHelper.parseTime('16:47:04')
+    const rows = 2000
+
+    const bcp = env.bcpEntry({
+      tableName: 'test_table_bcp',
+      columns: [
+        {
+          name: 'id',
+          type: 'INT PRIMARY KEY'
+        },
+        {
+          name: 't1',
+          type: 'time'
+        }]
+    }, i => {
+      return {
+        id: i,
+        t1: testDate
+      }
+    }, (actual, expected) => {
+      assert.deepStrictEqual(actual.length, expected.length)
+      actual.forEach(a => {
+        a.t1 = timeHelper.getUTCTime(a.t1)
+      })
+      expected.forEach(a => {
+        a.t1 = timeHelper.getUTCTime(a.t1)
+        return a
+      })
+      assert.deepStrictEqual(actual, expected)
+    })
+    return await bcp.runner(rows)
+  })
+
   it('bcp datetime timestamp - no null', async function handler () {
     const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
     const bcp = env.bcpEntry({
@@ -468,41 +503,6 @@ describe('bcp', function () {
         id: i,
         n1: i % 2 === 0 ? Math.pow(2, 40) + i : Math.pow(2, 40) - i
       }
-    })
-    return await bcp.runner(rows)
-  })
-
-  it('bcp time', async function handler () {
-    const timeHelper = env.timeHelper
-    const testDate = timeHelper.parseTime('16:47:04')
-    const rows = 2000
-
-    const bcp = env.bcpEntry({
-      tableName: 'test_table_bcp',
-      columns: [
-        {
-          name: 'id',
-          type: 'INT PRIMARY KEY'
-        },
-        {
-          name: 't1',
-          type: 'time'
-        }]
-    }, i => {
-      return {
-        id: i,
-        t1: testDate
-      }
-    }, (actual, expected) => {
-      assert.deepStrictEqual(actual.length, expected.length)
-      actual.forEach(a => {
-        a.t1 = timeHelper.getUTCTime(a.t1)
-      })
-      expected.forEach(a => {
-        a.t1 = timeHelper.getUTCTime(a.t1)
-        return a
-      })
-      assert.deepStrictEqual(actual, expected)
     })
     return await bcp.runner(rows)
   })

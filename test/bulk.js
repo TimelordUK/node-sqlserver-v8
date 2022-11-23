@@ -245,11 +245,12 @@ describe('bulk', function () {
     await env.asPool(t2)
   })
 
+  let t3Size = 1
   async function t3 (proxy) {
     const timeHelper = env.timeHelper
     const helper = env.typeTableHelper('time', proxy)
     const testDate = timeHelper.parseTime('16:47:04')
-    const expected = helper.getVec(1, () => testDate)
+    const expected = helper.getVec(t3Size, () => testDate)
     proxy.setUseUTC(true)
     const table = await helper.create()
     const promisedInsert = table.promises.insert
@@ -272,10 +273,22 @@ describe('bulk', function () {
   }
 
   it('connection: use tableMgr bulk insert single non UTC based time with time col', async function handler () {
+    t3Size = 1
     await t3(env.theConnection)
   })
 
   it('pool: use tableMgr bulk insert single non UTC based time with time col', async function handler () {
+    t3Size = 1
+    await env.asPool(t3)
+  })
+
+  it('connection: use tableMgr bulk insert vector non UTC based time with time col', async function handler () {
+    t3Size = 10
+    await t3(env.theConnection)
+  })
+
+  it('pool: use tableMgr bulk insert vector non UTC based time with time col', async function handler () {
+    t3Size = 10
     await env.asPool(t3)
   })
 

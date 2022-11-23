@@ -90,6 +90,23 @@ describe('encrypt', function () {
       await promises.query(`exec sp_refresh_parameter_encryption ${procDef2.name}`)
     }
 
+    async testTable (rows) {
+      rows = rows || 50
+      const vec = Array(rows).fill(0).map((_, i) => {
+        const builder = this.fieldBuilder
+        return {
+          field: builder.makeValue(i)
+        }
+      })
+      const promises = this.table.promises
+      await promises.insert(vec)
+      const res2 = await env.theConnection.promises.query(`select field from ${this.fieldBuilder.tableName} `)
+      expect(res2.first.length).to.equals(vec.length)
+      for (let i = 0; i < vec.length; ++i) {
+        this.fieldBuilder.checkEqual(res2.first[i], vec[i])
+      }
+    }
+
     async testProc () {
       const procParams = {
         field: this.fieldBuilder.makeValue(0)
@@ -102,6 +119,7 @@ describe('encrypt', function () {
       this.fieldBuilder.checkEqual(this.noID(res2), procParams)
     }
   }
+
   class FieldBuilderFloat extends FieldBuilder {
     constructor (val) {
       super()
@@ -198,9 +216,8 @@ describe('encrypt', function () {
 
     makeValue (i) {
       const addition = (i % 10)
-      const v = 120 + addition
-      const sign = i % 2 === 0 ? 1 : -1
-      return v * sign
+      const v = (200 + addition) % 255
+      return v
     }
   }
   class FieldBuilderInt extends FieldBuilder {
@@ -319,7 +336,7 @@ describe('encrypt', function () {
     }
   }
 
-  async function run (fieldBuilder) {
+  async function runProc (fieldBuilder) {
     if (!env.isEncryptedConnection()) return
 
     const tester = new EncryptionFieldTester(fieldBuilder)
@@ -327,88 +344,130 @@ describe('encrypt', function () {
     await tester.testProc()
   }
 
+  async function runTable (fieldBuilder) {
+    if (!env.isEncryptedConnection()) return
+
+    const tester = new EncryptionFieldTester(fieldBuilder)
+    await tester.prepare()
+    await tester.testTable()
+  }
+
   it('encrypted time via proc', async function handler () {
-    await run(new FieldBuilderTime())
+    await runProc(new FieldBuilderTime())
+  })
+
+  it('encrypted time array via table', async function handler () {
+    await runTable(new FieldBuilderTime())
   })
 
   it('encrypted date via proc', async function handler () {
-    await run(new FieldBuilderDate())
+    await runProc(new FieldBuilderDate())
   })
 
   it('encrypted real via proc', async function handler () {
-    await run(new FieldBuilderReal())
+    await runProc(new FieldBuilderReal())
   })
 
   it('encrypted float via proc', async function handler () {
-    await run(new FieldBuilderFloat())
+    await runProc(new FieldBuilderFloat())
   })
 
   it('encrypted UTC datetime2 via proc', async function handler () {
-    await run(new FieldBuilderDateTime2())
+    await runProc(new FieldBuilderDateTime2())
   })
 
   it('encrypted numeric -12.12345 via proc',
     async function handler () {
-      await run(new FieldBuilderNumeric(-12.12345))
+      await runProc(new FieldBuilderNumeric(-12.12345))
     })
 
   it('encrypted numeric 12.12345 via proc',
     async function handler () {
-      await run(new FieldBuilderNumeric(12.12345))
+      await runProc(new FieldBuilderNumeric(12.12345))
     })
 
   it('encrypted numeric 12.12345678901234 via proc',
     async function handler () {
-      await run(new FieldBuilderNumeric())
+      await runProc(new FieldBuilderNumeric())
     })
 
   it('encrypted binary via proc',
     async function handler () {
-      await run(new FieldBuilderBinary())
+      await runProc(new FieldBuilderBinary())
     })
 
   it('encrypted varbinary via proc',
     async function handler () {
-      await run(new FieldBuilderVarBinary())
+      await runProc(new FieldBuilderVarBinary())
     })
 
   it('encrypted decimal via proc',
     async function handler () {
-      await run(new FieldBuilderDecimal())
+      await runProc(new FieldBuilderDecimal())
     })
 
   it('encrypted nvarchar via proc',
     async function handler () {
-      await run(new FieldBuilderNVarChar())
+      await runProc(new FieldBuilderNVarChar())
     })
 
   it('encrypted char 10 via proc',
     async function handler () {
-      await run(new FieldBuilderChar())
+      await runProc(new FieldBuilderChar())
+    })
+
+  it('encrypted char 10 via table',
+    async function handler () {
+      await runTable(new FieldBuilderChar())
     })
 
   it('encrypted bit via proc',
     async function handler () {
-      await run(new FieldBuilderBit())
+      await runProc(new FieldBuilderBit())
+    })
+
+  it('encrypted bit via table',
+    async function handler () {
+      await runTable(new FieldBuilderBit())
     })
 
   it('encrypted big int via proc',
     async function handler () {
-      await run(new FieldBuilderBigInt())
+      await runProc(new FieldBuilderBigInt())
+    })
+
+  it('encrypted big int via table',
+    async function handler () {
+      await runTable(new FieldBuilderBigInt())
     })
 
   it('encrypted tiny int via proc',
     async function handler () {
-      await run(new FieldBuilderTinyInt())
+      await runProc(new FieldBuilderTinyInt())
+    })
+
+  it('encrypted tiny int via table',
+    async function handler () {
+      await runTable(new FieldBuilderTinyInt())
     })
 
   it('encrypted small int via proc',
     async function handler () {
-      await run(new FieldBuilderSmallInt())
+      await runProc(new FieldBuilderSmallInt())
+    })
+
+  it('encrypted small int via table',
+    async function handler () {
+      await runTable(new FieldBuilderSmallInt())
     })
 
   it('encrypted int via proc',
     async function handler () {
-      await run(new FieldBuilderInt())
+      await runProc(new FieldBuilderInt())
+    })
+
+  it('encrypted int via table',
+    async function handler () {
+      await runTable(new FieldBuilderInt())
     })
 })
