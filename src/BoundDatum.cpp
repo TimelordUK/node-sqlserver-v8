@@ -1311,6 +1311,29 @@ namespace mssql
 		}
 	}
 
+	void BoundDatum::bind_decimal_array(const Local<Value>& p)
+	{
+		const auto arr = Local<Array>::Cast(p);
+		const auto len = arr->Length();
+		reserve_decimal(len);
+		auto& vec = *_storage->doublevec_ptr;
+		for (uint32_t i = 0; i < len; ++i)
+		{
+			_indvec[i] = SQL_NULL_DATA;
+			auto maybe = Nan::Get(arr, i);
+			if (maybe.IsEmpty()) continue;
+			const auto local_elem = maybe.ToLocalChecked();
+			if (local_elem->IsNullOrUndefined()) continue;
+			const auto v = Nan::To<double>(local_elem).ToChecked();
+			vec[i] = v;
+			if (is_bcp) {
+				_indvec[i] = sizeof(double);
+			} else {
+				_indvec[i] = 0;
+			}
+		}
+	}
+
 	void BoundDatum::reserve_double(const SQLLEN len)
 	{
 		constexpr auto size = sizeof(double);
@@ -1950,7 +1973,7 @@ namespace mssql
 			if (is_bcp) {
 				bind_numeric_array(pp);
 			} else {
-				bind_double_array(pp);
+				bind_decimal_array(pp);
 			}
 		}
 		else
@@ -1963,11 +1986,7 @@ namespace mssql
 	{
 		if (pp->IsArray())
 		{
-			if (is_bcp) {
-				bind_numeric_array(pp);
-			} else {
-				bind_numeric_array(pp);
-			}
+			bind_numeric_array(pp);
 		}
 		else
 		{
@@ -1979,7 +1998,7 @@ namespace mssql
 	{
 		if (pp->IsArray())
 		{
-			bind_w_var_char_array(pp);
+			bind_var_char_array(pp);
 		}
 		else
 		{

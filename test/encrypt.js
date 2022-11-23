@@ -376,6 +376,10 @@ describe('encrypt', function () {
     await runProc(new FieldBuilderDateTime2())
   })
 
+  it('encrypted UTC datetime2 via table', async function handler () {
+    await runTable(new FieldBuilderDateTime2())
+  })
+
   it('encrypted numeric -12.12345 via proc',
     async function handler () {
       await runProc(new FieldBuilderNumeric(-12.12345))
@@ -391,9 +395,19 @@ describe('encrypt', function () {
       await runProc(new FieldBuilderNumeric())
     })
 
+  it('encrypted numeric via table',
+    async function handler () {
+      await runTable(new FieldBuilderNumeric())
+    })
+
   it('encrypted binary via proc',
     async function handler () {
       await runProc(new FieldBuilderBinary())
+    })
+
+  it('encrypted binary via table',
+    async function handler () {
+      await runTable(new FieldBuilderBinary())
     })
 
   it('encrypted varbinary via proc',
@@ -401,14 +415,29 @@ describe('encrypt', function () {
       await runProc(new FieldBuilderVarBinary())
     })
 
+  it('encrypted varbinary via table',
+    async function handler () {
+      await runTable(new FieldBuilderVarBinary())
+    })
+
   it('encrypted decimal via proc',
     async function handler () {
       await runProc(new FieldBuilderDecimal())
     })
 
+  it('encrypted decimal via table',
+    async function handler () {
+      await runTable(new FieldBuilderDecimal())
+    })
+
   it('encrypted nvarchar via proc',
     async function handler () {
       await runProc(new FieldBuilderNVarChar())
+    })
+
+  it('encrypted nvarchar via table',
+    async function handler () {
+      await runTable(new FieldBuilderNVarChar())
     })
 
   it('encrypted char 10 via proc',

@@ -157,6 +157,7 @@ namespace mssql
 
 		void bind_decimal(const Local<Value>& p);
 		void reserve_decimal(SQLLEN len);
+		void bind_decimal_array(const Local<Value>& p);
 
 		void bind_double(const Local<Value>& p);
 		void reserve_double(SQLLEN len);
