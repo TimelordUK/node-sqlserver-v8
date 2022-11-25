@@ -938,47 +938,6 @@ namespace mssql
 		digits = 0;
 	}
 
-	void BoundDatum::bind_date(const Local<Value>& p)
-	{
-		reserve_date(1);
-		auto& vec = *_storage->datevec_ptr;
-		// Since JS dates have no timezone context, all dates are assumed to be UTC
-		_indvec[0] = SQL_NULL_DATA;
-		if (!p->IsNullOrUndefined())
-		{
-				const auto d = Local<Date>::Cast<Value>(p);
-				auto& dt = vec[0];
-				const auto local = Nan::To<Number>(d).ToLocalChecked() ;
-				const auto ms = local->Value() - offset * 60000;
-				const TimestampColumn sql_date(-1, ms);
-				sql_date.ToDateStruct(dt);
-				_indvec[0] = sizeof(SQL_DATE_STRUCT);
-		}
-	}
-
-	void BoundDatum::bind_date_array(const Local<Value>& p)
-	{
-		const auto arr = Local<Array>::Cast(p);
-		const auto len = arr->Length();
-		reserve_date(len);
-		auto& vec = *_storage->datevec_ptr;
-		for (uint32_t i = 0; i < len; ++i)
-		{
-			_indvec[i] = SQL_NULL_DATA;
-			const auto elem = Nan::Get(arr, i).ToLocalChecked();
-			if (!elem->IsNullOrUndefined())
-			{
-				const auto d = Local<Date>::Cast<Value>(elem);
-				auto& dt = vec[i];
-				const auto local = Nan::To<Number>(d).ToLocalChecked() ;
-				const auto ms = local->Value() - offset * 60000;
-				const TimestampColumn sql_date(-1, ms);
-				sql_date.ToDateStruct(dt);
-				_indvec[i] = sizeof(SQL_DATE_STRUCT);
-			}
-		}
-	}
-
 	void BoundDatum::reserve_date(SQLLEN len)
 	{
 		buffer_len = sizeof(SQL_DATE_STRUCT);
@@ -1018,6 +977,48 @@ namespace mssql
 		const auto local = Nan::To<Number>(d).ToLocalChecked();
 		TimestampColumn sql_date(-1, local->Value(), 0, offset);
 		sql_date.to_timestamp_offset(ts);
+	}
+
+	void bind_date_struct(const Local<Date> & d, SQL_DATE_STRUCT & dt, int32_t offset) {
+		const auto local = Nan::To<Number>(d).ToLocalChecked() ;
+		const auto ms = local->Value() - offset * 60000;
+		const TimestampColumn sql_date(-1, ms);
+		sql_date.ToDateStruct(dt);
+	}
+
+	void BoundDatum::bind_date(const Local<Value>& p)
+	{
+		reserve_date(1);
+		auto& vec = *_storage->datevec_ptr;
+		// Since JS dates have no timezone context, all dates are assumed to be UTC
+		_indvec[0] = SQL_NULL_DATA;
+		if (!p->IsNullOrUndefined())
+		{
+			const auto d = Local<Date>::Cast<Value>(p);
+			auto& dt = vec[0];
+			bind_date_struct(d, dt, offset);
+			_indvec[0] = sizeof(SQL_DATE_STRUCT);
+		}
+	}
+
+	void BoundDatum::bind_date_array(const Local<Value>& p)
+	{
+		const auto arr = Local<Array>::Cast(p);
+		const auto len = arr->Length();
+		reserve_date(len);
+		auto& vec = *_storage->datevec_ptr;
+		for (uint32_t i = 0; i < len; ++i)
+		{
+			_indvec[i] = SQL_NULL_DATA;
+			const auto elem = Nan::Get(arr, i).ToLocalChecked();
+			if (!elem->IsNullOrUndefined())
+			{
+				const auto d = Local<Date>::Cast<Value>(elem);
+				auto& dt = vec[i];
+				bind_date_struct(d, dt, offset);
+				_indvec[i] = sizeof(SQL_DATE_STRUCT);
+			}
+		}
 	}
 
 	void BoundDatum::bind_time_array(const Local<Value>& p)
