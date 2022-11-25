@@ -87,7 +87,7 @@ namespace mssql
 			time2.hour = ts.hour;
 			time2.minute = ts.minute;
 			time2.second = ts.second;
-			time2.fraction = ts.fraction;
+			time2.fraction = ts.fraction / 1e2;
 		}
 
 		void ToDateStruct(SQL_DATE_STRUCT & dt) const

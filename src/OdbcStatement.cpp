@@ -1121,7 +1121,7 @@ namespace mssql
 		datetime.hour = time.hour;
 		datetime.minute = time.minute;
 		datetime.second = time.second;
-		datetime.fraction = time.fraction;
+		datetime.fraction = time.fraction * 100;
 
 		_resultset->add_column(row_id, make_shared<TimestampColumn>(column, datetime));
 		return true;

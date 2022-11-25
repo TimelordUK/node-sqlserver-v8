@@ -98,6 +98,7 @@ class TimeHelper {
   }
 
   getUTCTime1900 (a) {
+    a = a || new Date()
     return new Date(Date.UTC(
       1900,
       0,
@@ -105,9 +106,8 @@ class TimeHelper {
       a.getUTCHours(),
       a.getMinutes(),
       a.getSeconds(),
-      0))
+      a.getUTCMilliseconds()))
   }
-
 
   getUTCTime (a) {
     const localDate = new Date()

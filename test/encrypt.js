@@ -331,7 +331,7 @@ describe('encrypt', function () {
       builder.addColumn('field').asTime().withDecorator(fieldWithEncrpyt)
     }
 
-    makeValue () {
+    makeValue (i) {
       return this.value
     }
   }
@@ -364,12 +364,24 @@ describe('encrypt', function () {
     await runProc(new FieldBuilderDate())
   })
 
+  it('encrypted date via table', async function handler () {
+    await runTable(new FieldBuilderDate())
+  })
+
   it('encrypted real via proc', async function handler () {
     await runProc(new FieldBuilderReal())
   })
 
+  it('encrypted real via table', async function handler () {
+    await runTable(new FieldBuilderReal())
+  })
+
   it('encrypted float via proc', async function handler () {
     await runProc(new FieldBuilderFloat())
+  })
+
+  it('encrypted float via table', async function handler () {
+    await runTable(new FieldBuilderFloat())
   })
 
   it('encrypted UTC datetime2 via proc', async function handler () {

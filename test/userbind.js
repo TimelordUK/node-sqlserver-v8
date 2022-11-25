@@ -232,20 +232,13 @@ describe('userbind', function () {
   })
 
   it('user bind Time', async function handler () {
-    const today = new Date()
-    const timeOnly = new Date(Date.UTC(1900,
-      0,
-      1,
-      today.getUTCHours(),
-      today.getUTCMinutes(),
-      today.getUTCSeconds(),
-      today.getUTCMilliseconds()))
+    const timeOnly = env.timeHelper.getUTCTime1900()
     timeOnly.nanosecondsDelta = 0
 
     const params = {
       query: 'declare @v time = ?; select @v as v',
-      min: today,
-      max: today,
+      min: timeOnly,
+      max: timeOnly,
       expected: [
         timeOnly,
         timeOnly

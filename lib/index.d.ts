@@ -51,7 +51,6 @@ interface SqlClient {
     LongVarBinary(v:any) : any
     Image(v:any) : any
     Time(v:Date) : any
-    Time2(v:Date) : any
     Date(v:Date) : any
     DateTime(v:Date) : any
     DateTime2(v:Date) : any
