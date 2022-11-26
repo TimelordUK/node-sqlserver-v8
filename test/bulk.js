@@ -55,7 +55,7 @@ describe('bulk', function () {
   async function t3 (proxy) {
     const timeHelper = env.timeHelper
     const helper = env.typeTableHelper('time(7)', proxy)
-    const testDate = timeHelper.getUTCTime1900HHMMSSMS()
+    const testDate = timeHelper.getUTCTime1900HHMMSS()
     testDate.nanosecondsDelta = 0
     const expected = helper.getVec(t3Size, () => testDate)
     proxy.setUseUTC(true)
@@ -72,6 +72,16 @@ describe('bulk', function () {
     // console.log(JSON.stringify(expected, null, 4))
     assert.deepStrictEqual(res, expected)
   }
+
+  it('connection: use tableMgr bulk insert vector non UTC based time with time col', async function handler () {
+    t3Size = 10
+    await t3(env.theConnection)
+  })
+
+  it('pool: use tableMgr bulk insert vector non UTC based time with time col', async function handler () {
+    t3Size = 10
+    await env.asPool(t3)
+  })
 
   it('connection: use tableMgr bulk insert single non UTC based time with time col', async function handler () {
     t3Size = 1
@@ -277,15 +287,6 @@ describe('bulk', function () {
     await env.asPool(t2)
   })
 
-  it('connection: use tableMgr bulk insert vector non UTC based time with time col', async function handler () {
-    t3Size = 10
-    await t3(env.theConnection)
-  })
-
-  it('pool: use tableMgr bulk insert vector non UTC based time with time col', async function handler () {
-    t3Size = 10
-    await env.asPool(t3)
-  })
 
   async function t4 (proxy) {
     const helper = env.typeTableHelper('datetime', proxy)

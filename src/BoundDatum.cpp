@@ -1058,7 +1058,7 @@ namespace mssql
 
 	void BoundDatum::reserve_time(const SQLLEN len)
 	{
-		buffer_len = static_cast<SQLLEN>(len) * static_cast<SQLLEN>(sizeof(SQL_SS_TIME2_STRUCT));
+		buffer_len = sizeof(SQL_SS_TIME2_STRUCT);
 		_storage->Reservetime2(len);
 		_indvec.resize(len);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC		

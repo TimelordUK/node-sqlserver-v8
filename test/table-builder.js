@@ -20,6 +20,29 @@ describe('table-builder.js', function () {
     env.close().then(() => done())
   })
 
+  it('use table builder to bind to a table int, time', async function handler () {
+    const th = env.timeHelper
+    function makeOne (i) {
+      return {
+        id: i,
+        col_a: th.getUTCDateTime(th.parseTime(`16:47:${i + 10}`))
+      }
+    }
+
+    function checkOne (lhs, rhs) {
+      rhs.col_a = th.getUTCTime(rhs.col_a)
+      lhs.col_a = th.getUTCTime(lhs.col_a)
+      expect(lhs.id).to.equal(rhs.id)
+      // expect(lhs.col_a).approximately(rhs.col_a, 1e-5)
+      expect(Math.abs(lhs.col_a - rhs.col_a)).is.lessThanOrEqual(1e-5)
+    }
+
+    await run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asTime(7)
+    }, makeOne, checkOne)
+  })
+
   it('use proc to insert a JSON based complex object - check meta', async function handler () {
     const tableName = 'employee'
     await env.promisedDropCreateTable({
@@ -89,29 +112,6 @@ describe('table-builder.js', function () {
       builder.addColumn('col_d').asInt()
       builder.addColumn('col_e').asVarChar(100)
     }, makeOne)
-  })
-
-  it('use table builder to bind to a table int, time', async function handler () {
-    const th = env.timeHelper
-    function makeOne (i) {
-      return {
-        id: i,
-        col_a: th.parseTime(`16:47:${i + 10}`)
-      }
-    }
-
-    function checkOne (lhs, rhs) {
-      rhs.col_a = th.getUTCTime(rhs.col_a)
-      lhs.col_a = th.getUTCTime(lhs.col_a)
-      expect(lhs.id).to.equal(rhs.id)
-      // expect(lhs.col_a).approximately(rhs.col_a, 1e-5)
-      expect(Math.abs(lhs.col_a - rhs.col_a)).is.lessThanOrEqual(1e-5)
-    }
-
-    await run(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asTime()
-    }, makeOne, checkOne)
   })
 
   it('use table builder to bind to a table int, datetimeoffset', async function handler () {

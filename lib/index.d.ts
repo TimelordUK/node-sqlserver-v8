@@ -185,7 +185,7 @@ interface TableColumn {
     asNVarChar (length: number): TableColumn
     asVarChar (length: number): TableColumn
     asDate (): TableColumn
-    asTime (): TableColumn
+    asTime (scale?: number): TableColumn
     asDateTime2 (): TableColumn
     asDateTime (): TableColumn
     asDateTimeOffset (): TableColumn
