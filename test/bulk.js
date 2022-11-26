@@ -287,8 +287,8 @@ describe('bulk', function () {
     await env.asPool(t2)
   })
 
-  async function t4 (proxy) {
-    const helper = env.typeTableHelper('datetime', proxy)
+  async function t4typed (proxy, type) {
+    const helper = env.typeTableHelper(type, proxy)
     const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
     const expected = helper.getVec(1, () => testDate)
     proxy.setUseUTC(true)
@@ -304,6 +304,10 @@ describe('bulk', function () {
     assert.deepStrictEqual(res, expected)
   }
 
+  async function t4 (proxy) {
+    await t4typed(proxy, 'datetime')
+  }
+
   it('connection: use tableMgr bulk insert single non UTC based date with datetime col', async function handler () {
     await t4(env.theConnection)
   })
@@ -313,20 +317,7 @@ describe('bulk', function () {
   })
 
   async function t5 (proxy) {
-    const helper = env.typeTableHelper('DATETIMEOFFSET', proxy)
-    const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
-    const expected = helper.getVec(1, () => testDate)
-    proxy.setUseUTC(true)
-    const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
-    res.forEach(a => {
-      delete a.col_a.nanosecondsDelta
-    })
-    assert.deepStrictEqual(res, expected)
+    await t4typed(proxy, 'DATETIMEOFFSET')
   }
 
   it('connection: use tableMgr bulk insert single non UTC based date with DATETIMEOFFSET col', async function handler () {
