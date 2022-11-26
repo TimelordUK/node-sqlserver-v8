@@ -26,7 +26,7 @@ const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 
 describe('dates', function () {
-  this.timeout(10000)
+  this.timeout(60000)
 
   this.beforeEach(done => {
     env.open().then(() => done())
@@ -189,6 +189,7 @@ describe('dates', function () {
       assert(nsCount === 3)
     }
 
+    await milliSeconds()
     await hours()
     await minutes()
     await seconds()

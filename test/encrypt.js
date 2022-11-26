@@ -324,7 +324,7 @@ describe('encrypt', function () {
     value = null
     constructor (val) {
       super()
-      this.value = val || env.timeHelper.getUTCTime1900(new Date())
+      this.value = val || env.timeHelper.getUTCTime1900HHMMSSMS(new Date())
     }
 
     build (builder) {

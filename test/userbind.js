@@ -48,6 +48,72 @@ describe('userbind', function () {
     expect(res).to.deep.equal(expected)
   }
 
+  it('user bind time', async function handler () {
+    const timeOnly = env.timeHelper.getUTCTime1900HHMMSSMS()
+    timeOnly.nanosecondsDelta = 0
+
+    const params = {
+      query: 'declare @v time = ?; select @v as v',
+      min: timeOnly,
+      max: timeOnly,
+      expected: [
+        timeOnly,
+        timeOnly
+      ],
+      setter: v => {
+        return env.sql.Time(v)
+      }
+    }
+    const res = await testUserBindAsync(params)
+    compare(params, res)
+  })
+
+  async function timeTest (n) {
+    const timeOnly = n > 0
+      ? env.timeHelper.getUTCTime1900HHMMSSMS()
+      : env.timeHelper.getUTCTime1900HHMMSS()
+    timeOnly.nanosecondsDelta = 0
+
+    const params = {
+      query: `declare @v time(${n}) = ?; select @v as v`,
+      min: timeOnly,
+      max: timeOnly,
+      expected: [
+        timeOnly,
+        timeOnly
+      ],
+      setter: v => {
+        return env.sql.Time(v, n)
+      }
+    }
+    const res = await testUserBindAsync(params)
+    compare(params, res)
+  }
+
+  it('user bind time(0)', async function handler () {
+    await timeTest(0)
+  })
+
+  it('user bind time(7)', async function handler () {
+    await timeTest(7)
+  })
+
+  it('user bind time(6)', async function handler () {
+    await timeTest(6)
+  })
+
+  it('user bind time(5)', async function handler () {
+    await timeTest(5)
+  })
+
+  it('user bind time(4)', async function handler () {
+    await timeTest(4)
+  })
+
+  it('user bind time(3)', async function handler () {
+    await timeTest(3)
+  })
+
   it('user bind DateTimeOffset to sql type DateTimeOffset - provide offset of 60 minutes', async function handler () {
     const offset = 60
     const scale = 7
@@ -225,26 +291,6 @@ describe('userbind', function () {
       max: '45E8F437-670D-4409-93CB-F9424A40D6EE',
       setter: v => {
         return env.sql.UniqueIdentifier(v)
-      }
-    }
-    const res = await testUserBindAsync(params)
-    compare(params, res)
-  })
-
-  it('user bind Time', async function handler () {
-    const timeOnly = env.timeHelper.getUTCTime1900()
-    timeOnly.nanosecondsDelta = 0
-
-    const params = {
-      query: 'declare @v time = ?; select @v as v',
-      min: timeOnly,
-      max: timeOnly,
-      expected: [
-        timeOnly,
-        timeOnly
-      ],
-      setter: v => {
-        return env.sql.Time(v)
       }
     }
     const res = await testUserBindAsync(params)

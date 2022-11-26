@@ -51,6 +51,38 @@ describe('bulk', function () {
     await simpleColumnBulkTest(params)
   }
 
+  let t3Size = 1
+  async function t3 (proxy) {
+    const timeHelper = env.timeHelper
+    const helper = env.typeTableHelper('time(7)', proxy)
+    const testDate = timeHelper.getUTCTime1900HHMMSSMS()
+    testDate.nanosecondsDelta = 0
+    const expected = helper.getVec(t3Size, () => testDate)
+    proxy.setUseUTC(true)
+    const table = await helper.create()
+    const promisedInsert = table.promises.insert
+    const promisedSelect = table.promises.select
+
+    await promisedInsert(expected)
+    const res = await promisedSelect(expected)
+
+    // console.log('res')
+    // console.log(JSON.stringify(res, null, 4))
+    // console.log('expected')
+    // console.log(JSON.stringify(expected, null, 4))
+    assert.deepStrictEqual(res, expected)
+  }
+
+  it('connection: use tableMgr bulk insert single non UTC based time with time col', async function handler () {
+    t3Size = 1
+    await t3(env.theConnection)
+  })
+
+  it('pool: use tableMgr bulk insert single non UTC based time with time col', async function handler () {
+    t3Size = 1
+    await env.asPool(t3)
+  })
+
   it(`bulk insert/select numeric column batchSize ${test1BatchSize}`, async function handler () {
     await numericTest(test1BatchSize, true, false, false)
   })
@@ -243,43 +275,6 @@ describe('bulk', function () {
 
   it('pool: load large number rows', async function handler () {
     await env.asPool(t2)
-  })
-
-  let t3Size = 1
-  async function t3 (proxy) {
-    const timeHelper = env.timeHelper
-    const helper = env.typeTableHelper('time', proxy)
-    const testDate = timeHelper.parseTime('16:47:04')
-    const expected = helper.getVec(t3Size, () => testDate)
-    proxy.setUseUTC(true)
-    const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
-    res.forEach(a => {
-      a.col_a = timeHelper.getUTCTime(a.col_a)
-    })
-    expected.forEach(a => {
-      a.col_a = timeHelper.getUTCTime(a.col_a)
-      return a
-    })
-    // console.log('res')
-    // console.log(JSON.stringify(res, null, 4))
-    // console.log('expected')
-    // console.log(JSON.stringify(expected, null, 4))
-    assert.deepStrictEqual(res, expected)
-  }
-
-  it('connection: use tableMgr bulk insert single non UTC based time with time col', async function handler () {
-    t3Size = 1
-    await t3(env.theConnection)
-  })
-
-  it('pool: use tableMgr bulk insert single non UTC based time with time col', async function handler () {
-    t3Size = 1
-    await env.asPool(t3)
   })
 
   it('connection: use tableMgr bulk insert vector non UTC based time with time col', async function handler () {

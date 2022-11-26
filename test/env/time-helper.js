@@ -97,7 +97,7 @@ class TimeHelper {
       0))
   }
 
-  getUTCTime1900 (a) {
+  getUTCTime1900HHMMSSMS (a) {
     a = a || new Date()
     return new Date(Date.UTC(
       1900,
@@ -109,6 +109,18 @@ class TimeHelper {
       a.getUTCMilliseconds()))
   }
 
+  getUTCTime1900HHMMSS (a) {
+    a = a || new Date()
+    return new Date(Date.UTC(
+      1900,
+      0,
+      1,
+      a.getUTCHours(),
+      a.getMinutes(),
+      a.getSeconds(),
+      0))
+  }
+
   getUTCTime (a) {
     const localDate = new Date()
     return Date.UTC(
@@ -118,7 +130,7 @@ class TimeHelper {
       a.getUTCHours(),
       a.getMinutes(),
       a.getSeconds(),
-      0)
+      a.getUTCMilliseconds())
   }
 
   toUTCDate (localDate) {

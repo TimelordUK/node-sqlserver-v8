@@ -1099,15 +1099,21 @@ namespace mssql
 		return res;
 	}
 
+
 	bool OdbcStatement::d_time(const size_t row_id, const size_t column)
 	{
 		const auto &statement = *_statement;
 		SQLLEN str_len_or_ind_ptr = 0;
 		SQL_SS_TIME2_STRUCT time = {};
-
-		const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_DEFAULT, &time, sizeof(time), &str_len_or_ind_ptr);
+		SQLLEN   precision = 0;
+		SQLLEN   colscale = 0;
+		auto ret2 = SQLColAttribute(statement, column + 1, SQL_COLUMN_PRECISION, nullptr, 0, nullptr, &precision);
+		auto ret3 = SQLColAttribute(statement, column + 1, SQL_COLUMN_SCALE, nullptr, 0, nullptr, &colscale);
+		const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY, &time, sizeof(time), &str_len_or_ind_ptr);
+		
 		if (!check_odbc_error(ret))
 			return false;
+
 		if (str_len_or_ind_ptr == SQL_NULL_DATA)
 		{
 			_resultset->add_column(row_id, make_shared<NullColumn>(column));
@@ -1121,8 +1127,8 @@ namespace mssql
 		datetime.hour = time.hour;
 		datetime.minute = time.minute;
 		datetime.second = time.second;
-		datetime.fraction = time.fraction * 100;
-
+		datetime.fraction = time.fraction;
+		
 		_resultset->add_column(row_id, make_shared<TimestampColumn>(column, datetime));
 		return true;
 	}
@@ -1397,7 +1403,7 @@ namespace mssql
 			datetime.hour = time.hour;
 			datetime.minute = time.minute;
 			datetime.second = time.second;
-			datetime.fraction = time.fraction;
+			datetime.fraction = time.fraction * 100;
 
 			_resultset->add_column(row_id, make_shared<TimestampColumn>(column, datetime));
 		}
