@@ -359,7 +359,7 @@ describe('encrypt', function () {
   it('encrypted time array via table', async function handler () {
     await runTable(new FieldBuilderTime())
   })
-  
+
   it('encrypted date via proc', async function handler () {
     await runProc(new FieldBuilderDate())
   })

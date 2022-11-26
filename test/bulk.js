@@ -287,7 +287,6 @@ describe('bulk', function () {
     await env.asPool(t2)
   })
 
-
   async function t4 (proxy) {
     const helper = env.typeTableHelper('datetime', proxy)
     const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
@@ -644,8 +643,8 @@ describe('bulk', function () {
     await env.asPool(t18)
   })
 
-  async function t18a (proxy) {
-    const helper = env.typeTableHelper('timestamp', proxy)
+  async function t18typed (proxy, type) {
+    const helper = env.typeTableHelper(type, proxy)
     const expected = Array(10).fill(0).map((_, i) => {
       return {
         id: i
@@ -664,6 +663,10 @@ describe('bulk', function () {
     expect(res).to.deep.equal(expected)
   }
 
+  async function t18a (proxy) {
+    await t18typed(proxy, 'timestamp')
+  }
+
   it('connection: use tableMgr bulk insert timestamp i.e. id only', async function handler () {
     await t18a(env.theConnection)
   })
@@ -673,23 +676,7 @@ describe('bulk', function () {
   })
 
   async function t18b (proxy) {
-    const helper = env.typeTableHelper('rowversion', proxy)
-    const expected = Array(10).fill(0).map((_, i) => {
-      return {
-        id: i
-      }
-    })
-    const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
-    for (let i = 0; i < res.length; ++i) {
-      const v = res[i]
-      expect(v).to.not.equal(null)
-      delete v.col_a
-    }
-    expect(res).to.deep.equal(expected)
+    await t18typed(proxy, 'rowversion')
   }
 
   it('connection: use tableMgr bulk insert rowversion i.e. id only', async function handler () {
