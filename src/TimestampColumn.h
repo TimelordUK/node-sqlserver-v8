@@ -80,9 +80,8 @@ namespace mssql
 			timestamp.fraction = ts.fraction;
 		}
 
-		void ToTime2Struct(SQL_SS_TIME2_STRUCT & time2, int scale) const
+		void ToTime2Struct(SQL_SS_TIME2_STRUCT & time2) const
 		{
-			scale = min(scale, 7);
 			SQL_SS_TIMESTAMPOFFSET_STRUCT ts;
 			to_timestamp_offset(ts);
 			time2.hour = ts.hour;

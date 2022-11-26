@@ -959,11 +959,11 @@ namespace mssql
 		}
 	}
 
-	void bind_time_struct(const Local<Date> & d, SQL_SS_TIME2_STRUCT & time2, int32_t offset, int digits) {
+	void bind_time_struct(const Local<Date> & d, SQL_SS_TIME2_STRUCT & time2, int32_t offset) {
 		const auto local = Nan::To<Number>(d).ToLocalChecked() ;
 		const auto ms = local->Value() - offset * 60000;
 		const TimestampColumn sql_date(-1, ms);
-		sql_date.ToTime2Struct(time2, digits);
+		sql_date.ToTime2Struct(time2);
 	}
 
 	void bind_timestamp_struct(const Local<Date> & d, SQL_TIMESTAMP_STRUCT & ts, int32_t offset) {
@@ -1035,7 +1035,7 @@ namespace mssql
 			{
 				const auto d = Local<Date>::Cast<Value>(elem);
 				auto& time2 = vec[i];
-				bind_time_struct(d, time2, offset, digits);
+				bind_time_struct(d, time2, offset);
 				_indvec[i] = sizeof(SQL_SS_TIME2_STRUCT);
 			}
 		}
@@ -1051,7 +1051,7 @@ namespace mssql
 		{
 			const auto d = Local<Date>::Cast<Value>(p);
 			auto& time2 = vec[0];
-			bind_time_struct(d, time2, offset, digits);
+			bind_time_struct(d, time2, offset);
 			_indvec[0] = sizeof(SQL_SS_TIME2_STRUCT);
 		}
 	}

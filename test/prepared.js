@@ -66,6 +66,7 @@ describe('prepared', function () {
   })
 
   it('use prepared and select nvarchar(max)', async function handler () {
+    if (env.isEncryptedConnection()) return
     const s = 'hello'
     const q = `DECLARE @v NVARCHAR(MAX) = '${s}'; SELECT @v AS v`
     const prepared = await env.theConnection.promises.prepare(q)
@@ -75,6 +76,7 @@ describe('prepared', function () {
   })
 
   it('use prepared and select nvarchar max with max default size on connection', async function handler () {
+    if (env.isEncryptedConnection()) return
     const s = 'hello'
     const max = 4
     const q = `DECLARE @v NVARCHAR(MAX) = '${s}'; SELECT @v AS v`
@@ -86,6 +88,7 @@ describe('prepared', function () {
   })
 
   it('use prepared and select nvarchar max with max default size on query', async function handler () {
+    if (env.isEncryptedConnection()) return
     const s = 'hello'
     const max = 4
     const q = {
