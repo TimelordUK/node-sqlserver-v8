@@ -52,10 +52,9 @@ describe('bulk', function () {
   }
 
   let t3Size = 1
-  async function t3 (proxy) {
-    const timeHelper = env.timeHelper
-    const helper = env.typeTableHelper('time(7)', proxy)
-    const testDate = timeHelper.getUTCTime1900HHMMSS()
+  async function t3 (proxy, testDate, scale) {
+    scale = scale || 7
+    const helper = env.typeTableHelper(`time(${scale})`, proxy)
     testDate.nanosecondsDelta = 0
     const expected = helper.getVec(t3Size, () => testDate)
     proxy.setUseUTC(true)
@@ -66,31 +65,63 @@ describe('bulk', function () {
     await promisedInsert(expected)
     const res = await promisedSelect(expected)
 
-    // console.log('res')
-    // console.log(JSON.stringify(res, null, 4))
-    // console.log('expected')
-    // console.log(JSON.stringify(expected, null, 4))
     assert.deepStrictEqual(res, expected)
   }
 
-  it('connection: use tableMgr bulk insert vector non UTC based time with time col', async function handler () {
+  it('connection: use tableMgr bulk insert vector non UTC based time(7) with time col - no MS', async function handler () {
     t3Size = 10
-    await t3(env.theConnection)
+    const timeHelper = env.timeHelper
+    const testDate = timeHelper.getUTCTime1900HHMMSS()
+    await t3(env.theConnection, testDate)
   })
 
-  it('pool: use tableMgr bulk insert vector non UTC based time with time col', async function handler () {
+  it('pool: use tableMgr bulk insert vector non UTC based time with time(7) col - no MS', async function handler () {
     t3Size = 10
-    await env.asPool(t3)
+    const timeHelper = env.timeHelper
+    const testDate = timeHelper.getUTCTime1900HHMMSS()
+    await t3(env.theConnection, testDate)
   })
 
-  it('connection: use tableMgr bulk insert single non UTC based time with time col', async function handler () {
-    t3Size = 1
-    await t3(env.theConnection)
+  it('connection: use tableMgr bulk insert vector non UTC based time(0) with time col - no MS', async function handler () {
+    t3Size = 10
+    const timeHelper = env.timeHelper
+    const testDate = timeHelper.getUTCTime1900HHMMSS()
+    await t3(env.theConnection, testDate, 0)
   })
 
-  it('pool: use tableMgr bulk insert single non UTC based time with time col', async function handler () {
+  it('pool: use tableMgr bulk insert vector non UTC based time with time(0) col - no MS', async function handler () {
+    t3Size = 10
+    const timeHelper = env.timeHelper
+    const testDate = timeHelper.getUTCTime1900HHMMSS()
+    await t3(env.theConnection, testDate, 0)
+  })
+
+  it('connection: use tableMgr bulk insert vector non UTC based time with time(7) col - with MS', async function handler () {
+    t3Size = 10
+    const timeHelper = env.timeHelper
+    const testDate = timeHelper.getUTCTime1900HHMMSSMS()
+    await t3(env.theConnection, testDate)
+  })
+
+  it('pool: use tableMgr bulk insert vector non UTC based time with time(7) col - with MS', async function handler () {
+    t3Size = 10
+    const timeHelper = env.timeHelper
+    const testDate = timeHelper.getUTCTime1900HHMMSSMS()
+    await t3(env.theConnection, testDate)
+  })
+
+  it('connection: use tableMgr bulk insert single non UTC based time with time(7) col - no MS', async function handler () {
     t3Size = 1
-    await env.asPool(t3)
+    const timeHelper = env.timeHelper
+    const testDate = timeHelper.getUTCTime1900HHMMSS()
+    await t3(env.theConnection, testDate)
+  })
+
+  it('pool: use tableMgr bulk insert single non UTC based time with time(7) col - no MS', async function handler () {
+    t3Size = 1
+    const timeHelper = env.timeHelper
+    const testDate = timeHelper.getUTCTime1900HHMMSS()
+    await t3(env.theConnection, testDate)
   })
 
   it(`bulk insert/select numeric column batchSize ${test1BatchSize}`, async function handler () {
