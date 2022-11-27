@@ -322,13 +322,16 @@ describe('encrypt', function () {
   }
   class FieldBuilderTime extends FieldBuilder {
     value = null
-    constructor (val) {
+    constructor (scale) {
       super()
-      this.value = val || env.timeHelper.getUTCTime1900HHMMSSMS(new Date())
+      this.scale = scale
+      this.value = scale >= 3
+        ? env.timeHelper.getUTCTime1900HHMMSSMS(new Date())
+        : env.timeHelper.getUTCTime1900HHMMSS(new Date())
     }
 
     build (builder) {
-      builder.addColumn('field').asTime().withDecorator(fieldWithEncrpyt)
+      builder.addColumn('field').asTime(this.scale).withDecorator(fieldWithEncrpyt)
     }
 
     makeValue (i) {
@@ -352,12 +355,28 @@ describe('encrypt', function () {
     await tester.testTable()
   }
 
-  it('encrypted time via proc', async function handler () {
-    await runProc(new FieldBuilderTime())
+  it('encrypted time(0) via proc', async function handler () {
+    await runProc(new FieldBuilderTime(0))
   })
 
-  it('encrypted time array via table', async function handler () {
-    await runTable(new FieldBuilderTime())
+  it('encrypted time(3) via proc', async function handler () {
+    await runProc(new FieldBuilderTime(3))
+  })
+
+  it('encrypted time(4) via proc', async function handler () {
+    await runProc(new FieldBuilderTime(4))
+  })
+
+  it('encrypted time(7) via proc', async function handler () {
+    await runProc(new FieldBuilderTime(7))
+  })
+
+  it('encrypted time(0) array via table', async function handler () {
+    await runTable(new FieldBuilderTime(0))
+  })
+
+  it('encrypted time(7) array via table', async function handler () {
+    await runTable(new FieldBuilderTime(7))
   })
 
   it('encrypted date via proc', async function handler () {
