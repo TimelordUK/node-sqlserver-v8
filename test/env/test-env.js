@@ -14,6 +14,7 @@ const { ProcTest } = require('./proc-helper')
 const { BcpEntry } = require('./bcp-entry')
 const { BuilderChecker } = require('./builder-checker')
 const { TvpHelper } = require('./tvp-helper')
+const { EncryptHelper } = require('./encrypt-helper')
 const util = require('util')
 const fs = require('fs')
 const path = require('path')
@@ -315,6 +316,7 @@ END`
     this.procedureHelper.setVerbose(false)
     this.async = new ds.Async()
     this.timeHelper = new TimeHelper()
+    this.encryptHelper = new EncryptHelper()
     this.commonTestFns = commonTestFns
     this.commonTestFnPromises = new CommonTestFnPromises()
     this.sql = sql

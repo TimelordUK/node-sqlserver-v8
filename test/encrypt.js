@@ -21,15 +21,7 @@ describe('encrypt', function () {
     })
   })
 
-  const encrptKey = 'CEK_Auto1'
-  const encrptAlgo = 'AEAD_AES_256_CBC_HMAC_SHA_256'
-
-  const fieldWithEncrpyt = `ENCRYPTED WITH 
-  (COLUMN_ENCRYPTION_KEY = [${encrptKey}], 
-  ENCRYPTION_TYPE = Deterministic, 
-  ALGORITHM = '${encrptAlgo}')`
-
-  const txtWithEncrypt = `COLLATE Latin1_General_BIN2 ${fieldWithEncrpyt}`
+  const encryptHelper = env.encryptHelper
 
   class FieldBuilder {
     tableName = null
@@ -90,20 +82,27 @@ describe('encrypt', function () {
       await promises.query(`exec sp_refresh_parameter_encryption ${procDef2.name}`)
     }
 
-    async testTable (rows) {
+    make (rows) {
       rows = rows || 50
-      const vec = Array(rows).fill(0).map((_, i) => {
+      return Array(rows).fill(0).map((_, i) => {
         const builder = this.fieldBuilder
         return {
           field: builder.makeValue(i)
         }
       })
+    }
+
+    async testTable (rows) {
+      rows = rows || 50
+      const expected = this.make(rows)
       const promises = this.table.promises
-      await promises.insert(vec)
-      const res2 = await env.theConnection.promises.query(`select field from ${this.fieldBuilder.tableName} `)
-      expect(res2.first.length).to.equals(vec.length)
-      for (let i = 0; i < vec.length; ++i) {
-        this.fieldBuilder.checkEqual(res2.first[i], vec[i])
+      const tableName = this.fieldBuilder.tableName
+      await promises.insert(expected)
+      const conPromises = env.theConnection.promises
+      const actual = await conPromises.query(`select field from ${tableName} `)
+      expect(actual.first.length).to.equals(expected.length)
+      for (let i = 0; i < expected.length; ++i) {
+        this.fieldBuilder.checkEqual(actual.first[i], expected[i])
       }
     }
 
@@ -131,7 +130,7 @@ describe('encrypt', function () {
     }
 
     build (builder) {
-      builder.addColumn('field').asFloat().withDecorator(fieldWithEncrpyt)
+      builder.addColumn('field').asFloat().withDecorator(encryptHelper.fieldWithEncrpyt)
     }
 
     makeValue (i) {
@@ -151,7 +150,7 @@ describe('encrypt', function () {
     }
 
     build (builder) {
-      builder.addColumn('field').asReal().withDecorator(fieldWithEncrpyt)
+      builder.addColumn('field').asReal().withDecorator(encryptHelper.fieldWithEncrpyt)
     }
 
     makeValue (i) {
@@ -169,7 +168,7 @@ describe('encrypt', function () {
     }
 
     build (builder) {
-      builder.addColumn('field').asNumeric(20, 15).withDecorator(fieldWithEncrpyt)
+      builder.addColumn('field').asNumeric(20, 15).withDecorator(encryptHelper.fieldWithEncrpyt)
     }
 
     makeValue (i) {
@@ -180,7 +179,7 @@ describe('encrypt', function () {
   }
   class FieldBuilderDecimal extends FieldBuilder {
     build (builder) {
-      builder.addColumn('field').asDecimal(20, 18).withDecorator(fieldWithEncrpyt)
+      builder.addColumn('field').asDecimal(20, 18).withDecorator(encryptHelper.fieldWithEncrpyt)
     }
 
     makeValue (i) {
@@ -190,7 +189,7 @@ describe('encrypt', function () {
   }
   class FieldBuilderBit extends FieldBuilder {
     build (builder) {
-      builder.addColumn('field').asBit().withDecorator(fieldWithEncrpyt)
+      builder.addColumn('field').asBit().withDecorator(encryptHelper.fieldWithEncrpyt)
     }
 
     makeValue (i) {
@@ -199,7 +198,7 @@ describe('encrypt', function () {
   }
   class FieldBuilderBigInt extends FieldBuilder {
     build (builder) {
-      builder.addColumn('field').asBigInt().withDecorator(fieldWithEncrpyt)
+      builder.addColumn('field').asBigInt().withDecorator(encryptHelper.fieldWithEncrpyt)
     }
 
     makeValue (i) {
@@ -211,7 +210,7 @@ describe('encrypt', function () {
   }
   class FieldBuilderTinyInt extends FieldBuilder {
     build (builder) {
-      builder.addColumn('field').asTinyInt().withDecorator(fieldWithEncrpyt)
+      builder.addColumn('field').asTinyInt().withDecorator(encryptHelper.fieldWithEncrpyt)
     }
 
     makeValue (i) {
@@ -222,7 +221,7 @@ describe('encrypt', function () {
   }
   class FieldBuilderInt extends FieldBuilder {
     build (builder) {
-      builder.addColumn('field').asInt().withDecorator(fieldWithEncrpyt)
+      builder.addColumn('field').asInt().withDecorator(encryptHelper.fieldWithEncrpyt)
     }
 
     makeValue (i) {
@@ -234,7 +233,7 @@ describe('encrypt', function () {
   }
   class FieldBuilderSmallInt extends FieldBuilder {
     build (builder) {
-      builder.addColumn('field').asSmallInt().withDecorator(fieldWithEncrpyt)
+      builder.addColumn('field').asSmallInt().withDecorator(encryptHelper.fieldWithEncrpyt)
     }
 
     makeValue (i) {
@@ -246,7 +245,7 @@ describe('encrypt', function () {
   }
   class FieldBuilderChar extends FieldBuilder {
     build (builder) {
-      builder.addColumn('field').asChar(10).withDecorator(txtWithEncrypt)
+      builder.addColumn('field').asChar(10).withDecorator(encryptHelper.txtWithEncrypt)
     }
 
     makeValue (i) {
@@ -257,7 +256,7 @@ describe('encrypt', function () {
   }
   class FieldBuilderNVarChar extends FieldBuilder {
     build (builder) {
-      builder.addColumn('field').asNVarChar(50).withDecorator(txtWithEncrypt)
+      builder.addColumn('field').asNVarChar(50).withDecorator(encryptHelper.txtWithEncrypt)
     }
 
     makeValue (i) {
@@ -268,7 +267,7 @@ describe('encrypt', function () {
   }
   class FieldBuilderVarBinary extends FieldBuilder {
     build (builder) {
-      builder.addColumn('field').asVarBinary(50).withDecorator(fieldWithEncrpyt)
+      builder.addColumn('field').asVarBinary(50).withDecorator(encryptHelper.fieldWithEncrpyt)
     }
 
     makeValue () {
@@ -277,7 +276,7 @@ describe('encrypt', function () {
   }
   class FieldBuilderBinary extends FieldBuilder {
     build (builder) {
-      builder.addColumn('field').asBinary(3).withDecorator(fieldWithEncrpyt)
+      builder.addColumn('field').asBinary(3).withDecorator(encryptHelper.fieldWithEncrpyt)
     }
 
     makeValue () {
@@ -292,7 +291,7 @@ describe('encrypt', function () {
     }
 
     build (builder) {
-      builder.addColumn('field').asDate().withDecorator(fieldWithEncrpyt)
+      builder.addColumn('field').asDate().withDecorator(encryptHelper.fieldWithEncrpyt)
     }
 
     makeValue (i) {
@@ -310,7 +309,7 @@ describe('encrypt', function () {
     }
 
     build (builder) {
-      builder.addColumn('field').asDateTime2().withDecorator(fieldWithEncrpyt)
+      builder.addColumn('field').asDateTime2().withDecorator(encryptHelper.fieldWithEncrpyt)
     }
 
     makeValue (i) {
@@ -331,7 +330,7 @@ describe('encrypt', function () {
     }
 
     build (builder) {
-      builder.addColumn('field').asTime(this.scale).withDecorator(fieldWithEncrpyt)
+      builder.addColumn('field').asTime(this.scale).withDecorator(encryptHelper.fieldWithEncrpyt)
     }
 
     makeValue (i) {
