@@ -1115,7 +1115,8 @@ namespace mssql
 
 	void BoundDatum::reserve_time_stamp(const SQLLEN len)
 	{
-		buffer_len = static_cast<SQLLEN>(len) * static_cast<SQLLEN>(sizeof(SQL_TIMESTAMP_STRUCT));
+		// buffer_len = static_cast<SQLLEN>(len) * static_cast<SQLLEN>(sizeof(SQL_TIMESTAMP_STRUCT));
+		buffer_len = sizeof(SQL_TIMESTAMP_STRUCT);	
 		_storage->ReserveTimestamp(len);
 		_indvec.resize(len);
 		// Since JS dates have no timezone context, all dates are assumed to be UTC		
@@ -1125,8 +1126,12 @@ namespace mssql
 		sql_type = SQL_TYPE_TIMESTAMP;
 		buffer = _storage->timestampvec_ptr->data();
 		// TODO: Determine proper precision and size based on version of server we're talking to
-		param_size = sql_server_2008_default_timestamp_precision;
-		if (digits <= 0) digits = sql_server_2008_default_datetime_scale;
+		if (param_size <= 0) {
+			param_size = sql_server_2008_default_timestamp_precision;
+		}
+		if (digits <= 0) {
+			digits = sql_server_2008_default_datetime_scale;
+		}
 		if (is_bcp) {
 			sql_type = SQLDATETIME2N;
 			param_size = sizeof(SQL_TIMESTAMP_STRUCT);
@@ -1346,7 +1351,7 @@ namespace mssql
 		buffer = _storage->doublevec_ptr->data();
 		buffer_len = static_cast<SQLLEN>(size) * len;
 		param_size = size;
-		digits = 0;
+		// digits = 0;
 		if (is_bcp) {
 			sql_type = SQLFLT8;
 			param_size = sizeof(double);

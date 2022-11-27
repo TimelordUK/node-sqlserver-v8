@@ -354,6 +354,14 @@ describe('encrypt', function () {
     await tester.testTable()
   }
 
+  it('encrypted float via proc', async function handler () {
+    await runProc(new FieldBuilderFloat())
+  })
+
+  it('encrypted float via table', async function handler () {
+    await runTable(new FieldBuilderFloat())
+  })
+
   it('encrypted time(0) via proc', async function handler () {
     await runProc(new FieldBuilderTime(0))
   })
@@ -393,16 +401,6 @@ describe('encrypt', function () {
   it('encrypted real via table', async function handler () {
     await runTable(new FieldBuilderReal())
   })
-
-  it('encrypted float via proc', async function handler () {
-    await runProc(new FieldBuilderFloat())
-  })
-
-  /*
-  it('encrypted float via table', async function handler () {
-    await runTable(new FieldBuilderFloat())
-  })
-  */
 
   it('encrypted UTC datetime2 via proc', async function handler () {
     await runProc(new FieldBuilderDateTime2())
