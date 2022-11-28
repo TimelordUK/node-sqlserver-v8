@@ -31,6 +31,13 @@ describe('encrypt', function () {
       this.procName = `proc_insert_${this.tableName}`
     }
 
+    makeProcParams (i) {
+      i = i || 0
+      return {
+        field: this.makeValue(i)
+      }
+    }
+
     checkEqual (lhs, rhs) {
       expect(lhs).to.deep.equals(rhs)
     }
@@ -58,8 +65,8 @@ describe('encrypt', function () {
     }
 
     noID (res) {
-      const { id, ...first } = res.first[0]
-      return first
+      const { id, ...rest } = res
+      return rest
     }
 
     async prepare () {
@@ -86,39 +93,145 @@ describe('encrypt', function () {
       rows = rows || 50
       return Array(rows).fill(0).map((_, i) => {
         const builder = this.fieldBuilder
-        return {
-          field: builder.makeValue(i)
-        }
+        return builder.makeProcParams(i)
       })
     }
 
     async testTable (rows) {
-      rows = rows || 50
+      rows = rows || 1
       const expected = this.make(rows)
       const promises = this.table.promises
       const tableName = this.fieldBuilder.tableName
       await promises.insert(expected)
       const conPromises = env.theConnection.promises
-      const actual = await conPromises.query(`select field from ${tableName} `)
+      const actual = await conPromises.query(`select * from ${tableName} `)
       expect(actual.first.length).to.equals(expected.length)
       for (let i = 0; i < expected.length; ++i) {
-        this.fieldBuilder.checkEqual(actual.first[i], expected[i])
+        this.fieldBuilder.checkEqual(this.noID(actual.first[i]), expected[i])
       }
     }
 
     async testProc () {
-      const procParams = {
-        field: this.fieldBuilder.makeValue(0)
-      }
+      const procParams = this.fieldBuilder.makeProcParams()
       const procname = this.fieldBuilder.procName
       const promises = env.theConnection.promises
       const res = await promises.callProc(procname, procParams)
-      this.fieldBuilder.checkEqual(this.noID(res), procParams)
+      this.fieldBuilder.checkEqual(this.noID(res.first[0]), procParams)
       const res2 = await promises.query(`select * from ${this.fieldBuilder.tableName} `)
-      this.fieldBuilder.checkEqual(this.noID(res2), procParams)
+      this.fieldBuilder.checkEqual(this.noID(res2.first[0]), procParams)
     }
   }
 
+  /**
+   * CREATE TABLE [dbo].[test_encrpted_table](
+   *  [id] [int] IDENTITY(1,1) NOT NULL,
+   *  [BusinessEntityID] [int] NULL,
+   *  [NationalIDNumber] [nvarchar](15) COLLATE Latin1_General_BIN2 ENCRYPTED WITH (COLUMN_ENCRYPTION_KEY = [CEK_Auto1], ENCRYPTION_TYPE = Deterministic, ALGORITHM = 'AEAD_AES_256_CBC_HMAC_SHA_256') NOT NULL,
+   *  [LoginID] [nvarchar](256) COLLATE Latin1_General_BIN2 ENCRYPTED WITH (COLUMN_ENCRYPTION_KEY = [CEK_Auto1], ENCRYPTION_TYPE = Deterministic, ALGORITHM = 'AEAD_AES_256_CBC_HMAC_SHA_256') NOT NULL,
+   *  [OrganizationNode] [hierarchyid] NULL,
+   *  [OrganizationLevel]  AS ([OrganizationNode].[GetLevel]()),
+   *  [JobTitle] [nvarchar](50) COLLATE Latin1_General_BIN2 ENCRYPTED WITH (COLUMN_ENCRYPTION_KEY = [CEK_Auto1], ENCRYPTION_TYPE = Deterministic, ALGORITHM = 'AEAD_AES_256_CBC_HMAC_SHA_256') NOT NULL,
+   *  [BirthDate] [date] ENCRYPTED WITH (COLUMN_ENCRYPTION_KEY = [CEK_Auto1], ENCRYPTION_TYPE = Deterministic, ALGORITHM = 'AEAD_AES_256_CBC_HMAC_SHA_256') NOT NULL,
+   *  [MaritalStatus] [char](1) COLLATE Latin1_General_BIN2 ENCRYPTED WITH (COLUMN_ENCRYPTION_KEY = [CEK_Auto1], ENCRYPTION_TYPE = Deterministic, ALGORITHM = 'AEAD_AES_256_CBC_HMAC_SHA_256') NOT NULL,
+   *  [Gender] [char](1) COLLATE Latin1_General_BIN2 ENCRYPTED WITH (COLUMN_ENCRYPTION_KEY = [CEK_Auto1], ENCRYPTION_TYPE = Deterministic, ALGORITHM = 'AEAD_AES_256_CBC_HMAC_SHA_256') NOT NULL,
+   *  [HireDate] [date] ENCRYPTED WITH (COLUMN_ENCRYPTION_KEY = [CEK_Auto1], ENCRYPTION_TYPE = Deterministic, ALGORITHM = 'AEAD_AES_256_CBC_HMAC_SHA_256') NOT NULL,
+   *  [SalariedFlag] [bit] ENCRYPTED WITH (COLUMN_ENCRYPTION_KEY = [CEK_Auto1], ENCRYPTION_TYPE = Deterministic, ALGORITHM = 'AEAD_AES_256_CBC_HMAC_SHA_256') NOT NULL,
+   *  [VacationHours] [smallint] ENCRYPTED WITH (COLUMN_ENCRYPTION_KEY = [CEK_Auto1], ENCRYPTION_TYPE = Deterministic, ALGORITHM = 'AEAD_AES_256_CBC_HMAC_SHA_256') NOT NULL,
+   *  [SickLeaveHours] [smallint] ENCRYPTED WITH (COLUMN_ENCRYPTION_KEY = [CEK_Auto1], ENCRYPTION_TYPE = Deterministic, ALGORITHM = 'AEAD_AES_256_CBC_HMAC_SHA_256') NOT NULL,
+   *  [CurrentFlag] [bit] ENCRYPTED WITH (COLUMN_ENCRYPTION_KEY = [CEK_Auto1], ENCRYPTION_TYPE = Deterministic, ALGORITHM = 'AEAD_AES_256_CBC_HMAC_SHA_256') NOT NULL,
+   *  [rowguid] [uniqueidentifier] ROWGUIDCOL  NOT NULL,
+   *  [ModifiedDate] [datetime2](7) ENCRYPTED WITH (COLUMN_ENCRYPTION_KEY = [CEK_Auto1], ENCRYPTION_TYPE = Deterministic, ALGORITHM = 'AEAD_AES_256_CBC_HMAC_SHA_256') NOT NULL
+   * ) ON [PRIMARY]
+   * */
+
+  /**
+   * create procedure [dbo].[proc_insert_test_encrpted_table]
+   *   (
+   *     @BusinessEntityID int ,
+   *    @NationalIDNumber nvarchar (15) ,
+   *    @LoginID nvarchar (256) ,
+   *    @OrganizationNode hierarchyid ,
+   *    @JobTitle nvarchar (50) ,
+   *    @BirthDate date ,
+   *    @MaritalStatus char (1) ,
+   *    @Gender char (1) ,
+   *    @HireDate date ,
+   *    @SalariedFlag bit ,
+   *    @VacationHours smallint ,
+   *    @SickLeaveHours smallint ,
+   *    @CurrentFlag bit ,
+   *    @rowguid uniqueidentifier ,
+   *    @ModifiedDate datetime2
+   *   )
+   *   as
+   *   begin
+   *     declare @ae_BusinessEntityID int  = @BusinessEntityID
+   *    declare @ae_NationalIDNumber nvarchar (15)  = @NationalIDNumber
+   *    declare @ae_LoginID nvarchar (256)  = @LoginID
+   *    declare @ae_OrganizationNode hierarchyid  = @OrganizationNode
+   *    declare @ae_JobTitle nvarchar (50)  = @JobTitle
+   *    declare @ae_BirthDate date  = @BirthDate
+   *    declare @ae_MaritalStatus char (1)  = @MaritalStatus
+   *    declare @ae_Gender char (1)  = @Gender
+   *    declare @ae_HireDate date  = @HireDate
+   *    declare @ae_SalariedFlag bit  = @SalariedFlag
+   *    declare @ae_VacationHours smallint  = @VacationHours
+   *    declare @ae_SickLeaveHours smallint  = @SickLeaveHours
+   *    declare @ae_CurrentFlag bit  = @CurrentFlag
+   *    declare @ae_rowguid uniqueidentifier  = @rowguid
+   *    declare @ae_ModifiedDate datetime2  = @ModifiedDate
+   *     insert into node.dbo.test_encrpted_table (BusinessEntityID, NationalIDNumber, LoginID, OrganizationNode, JobTitle, BirthDate, MaritalStatus, Gender, HireDate, SalariedFlag, VacationHours, SickLeaveHours, CurrentFlag, rowguid, ModifiedDate)
+   *     output inserted.*
+   *     values (@ae_BusinessEntityID, @ae_NationalIDNumber, @ae_LoginID, @ae_OrganizationNode, @ae_JobTitle, @ae_BirthDate, @ae_MaritalStatus, @ae_Gender, @ae_HireDate, @ae_SalariedFlag, @ae_VacationHours, @ae_SickLeaveHours, @ae_CurrentFlag, @ae_rowguid, @ae_ModifiedDate)
+   *   end
+   *
+   */
+
+  class FieldBuilderEmployee extends FieldBuilder {
+    constructor () {
+      super()
+      const employee = env.employee
+      this.records = employee.make(250)
+    }
+
+    noOrgLevel (v) {
+      const { OrganizationLevel, ...rest } = v
+      return rest
+    }
+
+    makeProcParams (i) {
+      i = i || 0
+      const v = this.makeValue(i)
+      return this.noOrgLevel(v)
+    }
+
+    checkEqual (lhs, rhs) {
+      expect(this.noOrgLevel(lhs)).to.deep.equals(this.noOrgLevel(rhs))
+    }
+
+    build (builder) {
+      builder.addColumn('[BusinessEntityID]').asInt().isPrimaryKey(1)
+      builder.addColumn('[NationalIDNumber]').asNVarChar(15).withDecorator(encryptHelper.txtWithEncrypt).notNull()
+      builder.addColumn('[LoginID]').asNVarChar(256).withDecorator(encryptHelper.txtWithEncrypt).notNull()
+      builder.addColumn('[OrganizationNode]').asHierarchyId().null()
+      builder.addColumn('[OrganizationLevel]').asInt().asExpression('AS ([OrganizationNode].[GetLevel]())')
+      builder.addColumn('[JobTitle]').asNVarChar(50).withDecorator(encryptHelper.txtWithEncrypt).notNull()
+      builder.addColumn('[BirthDate]').asDate().withDecorator(encryptHelper.fieldWithEncrpyt).notNull()
+      builder.addColumn('[MaritalStatus]').asChar(1).withDecorator(encryptHelper.txtWithEncrypt).notNull()
+      builder.addColumn('[Gender]').asChar(1).withDecorator(encryptHelper.txtWithEncrypt).notNull()
+      builder.addColumn('[HireDate]').asDate().withDecorator(encryptHelper.fieldWithEncrpyt).notNull()
+      builder.addColumn('[SalariedFlag]').asBit().withDecorator(encryptHelper.fieldWithEncrpyt).notNull()
+      builder.addColumn('[VacationHours]').asSmallInt().withDecorator(encryptHelper.fieldWithEncrpyt).notNull()
+      builder.addColumn('[SickLeaveHours]').asSmallInt().withDecorator(encryptHelper.fieldWithEncrpyt).notNull()
+      builder.addColumn('[CurrentFlag]').asBit().withDecorator(encryptHelper.fieldWithEncrpyt).notNull()
+      builder.addColumn('[rowguid]').asUniqueIdentifier().withDecorator('ROWGUIDCOL  NOT NULL')
+      builder.addColumn('[ModifiedDate]').asDateTime2().withDecorator(encryptHelper.fieldWithEncrpyt).notNull()
+    }
+
+    makeValue (i) {
+      return this.records[i % this.records.length]
+    }
+  }
   class FieldBuilderFloat extends FieldBuilder {
     constructor (val) {
       super()
@@ -354,13 +467,22 @@ describe('encrypt', function () {
     await tester.testTable()
   }
 
+  it('encrypted employee via table', async function handler () {
+    await runTable(new FieldBuilderEmployee())
+  })
+
+  it('encrypted employee via proc', async function handler () {
+    await runProc(new FieldBuilderEmployee())
+  })
+
   it('encrypted float via proc', async function handler () {
     await runProc(new FieldBuilderFloat())
   })
 
+  /*
   it('encrypted float via table', async function handler () {
     await runTable(new FieldBuilderFloat())
-  })
+  }) */
 
   it('encrypted time(0) via proc', async function handler () {
     await runProc(new FieldBuilderTime(0))

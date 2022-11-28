@@ -133,6 +133,7 @@ namespace mssql
 	void BoundDatum::bind_char(const Local<Value>& p)
 	{
 		bind_var_char(p);
+		sql_type = SQL_CHAR;
 	}
 
 	void BoundDatum::bind_var_char(const Local<Value>& p)
@@ -157,13 +158,15 @@ namespace mssql
 		auto* itr_p = _storage->charvec_ptr->data();
 		buffer = itr_p;
 		buffer_len = static_cast<SQLLEN>(max_str_len);
-		if (max_str_len >= 4000)
-		{
-			param_size = 0;
-		}
-		else
-		{
-			param_size = max(buffer_len, static_cast<SQLLEN>(1));
+		if (param_size <= 0) {
+			if (max_str_len >= 4000)
+			{
+				param_size = 0;
+			}
+			else
+			{
+				param_size = max(buffer_len, static_cast<SQLLEN>(1));
+			}
 		}
 	}
 	
@@ -243,9 +246,10 @@ namespace mssql
 		const auto arr = Local<Array>::Cast(p);
 		const auto array_len = arr->Length();
 		reserve_var_char_array(max_str_len, array_len);
-		auto itr = _storage->charvec_ptr->begin();
+		auto* const base = _storage->charvec_ptr->data();
 		for (uint32_t i = 0; i < array_len; ++i)
 		{
+			auto* const itr = base + (max_str_len * i);
 			_indvec[i] = SQL_NULL_DATA;
 			auto elem = Nan::Get(arr, i);
 			if (elem.IsEmpty()) continue;
@@ -255,8 +259,7 @@ namespace mssql
 			_indvec[i] = width;
 			Nan::Utf8String x(str);
 			const auto *x_p = *x;
-			memcpy(&*itr, x_p, max_str_len);
-			itr += max_str_len;
+			memcpy(&*itr, x_p, width);
 		}
 	}
 	
@@ -270,13 +273,18 @@ namespace mssql
 		_storage->ReserveUint16(array_len * max_str_len);
 		buffer = _storage->uint16vec_ptr->data();
 		buffer_len = static_cast<SQLLEN>(max_str_len * size);
-		if (max_str_len >= 4000)
-		{
-			param_size = 0;
+		if (max_length > 0) {
+			param_size = max_length / 2;
 		}
-		else
-		{
-			param_size = max(buffer_len, static_cast<SQLLEN>(1));
+		else if (param_size <= 0) {
+			if (max_str_len >= 4000)
+			{
+				param_size = 0;
+			}
+			else
+			{
+				param_size = max(buffer_len / 2, static_cast<SQLLEN>(1));
+			}
 		}
 	}
 
@@ -359,14 +367,6 @@ namespace mssql
 			auto* const first_p = _storage->uint16vec_ptr->data();
 			DecodeWrite(reinterpret_cast<char*>(first_p), static_cast<size_t>(str_param->Length()) * 2, str_param, Nan::UCS2);
 			buffer_len = static_cast<SQLLEN>(precision) * static_cast<SQLLEN>(size);
-			if (precision >= 4000)
-			{
-				param_size = 0;
-			}
-			else
-			{
-				param_size = max(buffer_len, static_cast<SQLLEN>(1));
-			}
 			_indvec[0] = buffer_len;
 		}
 	}
@@ -1787,6 +1787,13 @@ namespace mssql
 			param_size = maybe_param_size.FromMaybe(0);
 		}
 
+		const auto max_length_p = get("max_length", pv);
+		if (!max_length_p->IsUndefined())
+		{
+			const auto maybe_max_length = max_length_p->Int32Value(context);
+			max_length = maybe_max_length.FromMaybe(0);
+		}
+
 		const auto money = get("money", pv);
 		if (!money->IsUndefined())
 		{
@@ -2004,7 +2011,11 @@ namespace mssql
 	{
 		if (pp->IsArray())
 		{
-			bind_var_char_array(pp);
+			if (is_bcp) {
+				bind_w_var_char_array(pp);
+			} else {
+				bind_var_char_array(pp);
+			}
 		}
 		else
 		{

@@ -35,6 +35,7 @@ namespace mssql
 			c_type(0),
 			sql_type(0),
 			param_size(0),
+			max_length(0),
 			digits(0),
 			buffer(nullptr),
 			buffer_len(0),
@@ -78,6 +79,7 @@ namespace mssql
 		SQLSMALLINT c_type;
 		SQLSMALLINT sql_type;
 		SQLULEN param_size;
+		SQLULEN max_length;
 		SQLSMALLINT digits;
 		SQLPOINTER buffer;
 		SQLLEN buffer_len;

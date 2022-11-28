@@ -18,6 +18,64 @@ describe('bcp', function () {
     env.close().then(() => done())
   })
 
+  it('bcp nchar(1)', async function handler () {
+    const bcp = env.bcpEntry({
+      tableName: 'test_table_bcp',
+      columns: [
+        {
+          name: 'id',
+          type: 'INT PRIMARY KEY'
+        },
+        {
+          name: 's1',
+          type: 'nchar(1)'
+        }]
+    }, i => {
+      return {
+        id: i,
+        s1: 's'
+      }
+    }
+    , dateTimeCompare)
+    return await bcp.runner()
+  })
+
+  it('bcp employee', async function handler () {
+    const employee = env.employee
+    const table = await employee.create()
+    const records = employee.make(200)
+    /*
+    const recs = records.map(r => {
+      const { rowguid, OrganizationLevel, OrganizationNode, ...rest } = r
+      return rest
+    }) */
+    const res = await employee.insertSelect(table, records)
+    assert.deepStrictEqual(res, records)
+  })
+
+  it('bcp date', async function handler () {
+    const testDate = env.timeHelper.getUTCDate()
+    const bcp = env.bcpEntry({
+      tableName: 'test_table_bcp',
+      columns: [
+        {
+          name: 'id',
+          type: 'INT PRIMARY KEY'
+        },
+        {
+          name: 'd1',
+          type: 'datetime'
+        }]
+    }, i => {
+      return {
+        id: i,
+        d1: testDate
+      }
+    }
+    , dateTimeCompare)
+    return await bcp.runner()
+  })
+
   it('bcp datetime - mix with nulls', async function handler () {
     const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
     const bcp = env.bcpEntry({
@@ -100,14 +158,6 @@ describe('bcp', function () {
       }
     }, dateTimeCompare)
     return await bcp.runner()
-  })
-
-  it('bcp employee', async function handler () {
-    const employee = env.employee
-    const table = await employee.create()
-    const records = employee.make(200)
-    const res = await employee.insertSelect(table, records)
-    assert.deepStrictEqual(res, records)
   })
 
   it('bcp 7 column mixed table ', async function handler () {

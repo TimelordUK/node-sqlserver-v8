@@ -18,6 +18,33 @@ describe('tvp', function () {
     env.close().then(() => done())
   })
 
+  async function checkTxt (tableName, vec) {
+    tableName = tableName || 'TestTvp'
+    const helper = env.tvpHelper(tableName)
+    const promises = env.theConnection.promises
+    const table = await helper.create(tableName)
+    table.addRowsFromObjects(vec)
+    const tp = env.sql.TvpFromTable(table)
+    table.rows = []
+    await promises.query('exec insertTestTvp @tvp = ?;', [tp])
+    const res = await promises.query(`select * from ${tableName}`)
+    expect(res.first).to.deep.equal(vec)
+  }
+
+  it('use tvp simple test type insert test long string 8 * 1024', async function handler () {
+    const tableName = 'TestTvp'
+    const helper = env.tvpHelper(tableName)
+    const vec = helper.getVec(8 * 1024)
+    await checkTxt(tableName, vec)
+  })
+
+  it('use tvp simple test type insert test extended ascii', async function handler () {
+    const tableName = 'TestTvp'
+    const helper = env.tvpHelper(tableName)
+    const vec = helper.getExtendedVec(8 * 1024)
+    await checkTxt(tableName, vec)
+  })
+
   async function namedtvp (tableName) {
     const helper = env.tvpHelper(tableName)
     const vec = helper.getVec(100)
@@ -37,33 +64,6 @@ describe('tvp', function () {
   it('non dbo schema use tvp simple test type select test', async function handler () {
     const tableName = 'TestSchema.TestTvp'
     await namedtvp(tableName)
-  })
-
-  async function checkTxt (tableName, vec) {
-    tableName = tableName || 'TestTvp'
-    const helper = env.tvpHelper(tableName)
-    const promises = env.theConnection.promises
-    const table = await helper.create(tableName)
-    table.addRowsFromObjects(vec)
-    const tp = env.sql.TvpFromTable(table)
-    table.rows = []
-    await promises.query('exec insertTestTvp @tvp = ?;', [tp])
-    const res = await promises.query(`select * from ${tableName}`)
-    expect(res.first).to.deep.equal(vec)
-  }
-
-  it('use tvp simple test type insert test extended ascii', async function handler () {
-    const tableName = 'TestTvp'
-    const helper = env.tvpHelper(tableName)
-    const vec = helper.getExtendedVec(8 * 1024)
-    await checkTxt(tableName, vec)
-  })
-
-  it('use tvp simple test type insert test long string 8 * 1024', async function handler () {
-    const tableName = 'TestTvp'
-    const helper = env.tvpHelper(tableName)
-    const vec = helper.getVec(8 * 1024)
-    await checkTxt(tableName, vec)
   })
 
   it('call tvp proc with local table', async function handler () {
