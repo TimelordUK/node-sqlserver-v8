@@ -20,6 +20,20 @@ describe('table-builder.js', function () {
     env.close().then(() => done())
   })
 
+  it('use table builder to bind to a table int, nvarchar(max)', async function handler () {
+    function makeOne (i) {
+      return {
+        id: i,
+        col_a: repeat('z', 4000)
+      }
+    }
+
+    await run(builder => {
+      builder.addColumn('id').asInt().isPrimaryKey(1)
+      builder.addColumn('col_a').asNVarCharMax()
+    }, makeOne)
+  })
+
   it('use table builder to bind to a table int, time', async function handler () {
     const th = env.timeHelper
     function makeOne (i) {
@@ -83,6 +97,15 @@ describe('table-builder.js', function () {
     expect(tz[2].name).is.equal('ModifiedDate')
   })
 
+  function intVarCharBuilder (builder) {
+    builder.addColumn('id').asInt().isPrimaryKey(1)
+    builder.addColumn('col_a').asInt()
+    builder.addColumn('col_b').asVarChar(100)
+    builder.addColumn('col_c').asInt()
+    builder.addColumn('col_d').asInt()
+    builder.addColumn('col_e').asVarChar(100)
+  }
+
   it('use table builder to bind to a table provide no catalogue', async function handler () {
     function makeOne (i) {
       return {
@@ -104,14 +127,7 @@ describe('table-builder.js', function () {
       await checker.check(makeOne, checkOne)
     }
 
-    await runLocal(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asInt()
-      builder.addColumn('col_b').asVarChar(100)
-      builder.addColumn('col_c').asInt()
-      builder.addColumn('col_d').asInt()
-      builder.addColumn('col_e').asVarChar(100)
-    }, makeOne)
+    await runLocal(builder => intVarCharBuilder(builder), makeOne)
   })
 
   it('use table builder to bind to a table int, datetimeoffset', async function handler () {
@@ -140,20 +156,6 @@ describe('table-builder.js', function () {
       builder.addColumn('col_a').asDateTimeOffset()
       builder.addColumn('col_b').asDateTimeOffset()
     }, makeOne, checkOne)
-  })
-
-  it('use table builder to bind to a table int, nvarchar(max)', async function handler () {
-    function makeOne (i) {
-      return {
-        id: i,
-        col_a: repeat('z', 4000)
-      }
-    }
-
-    await run(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asNVarCharMax()
-    }, makeOne)
   })
 
   it('use table builder to bind to a table int, nvarchar(10)', async function handler () {
@@ -519,13 +521,6 @@ describe('table-builder.js', function () {
       }
     }
 
-    await run(builder => {
-      builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asInt()
-      builder.addColumn('col_b').asVarChar(100)
-      builder.addColumn('col_c').asInt()
-      builder.addColumn('col_d').asInt()
-      builder.addColumn('col_e').asVarChar(100)
-    }, makeOne)
+    await run(builder => intVarCharBuilder(builder), makeOne)
   })
 })

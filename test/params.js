@@ -421,6 +421,7 @@ describe('params', function () {
   })
 
   it('verify that non-Buffer object parameter returns an error', async function handler () {
+    if (env.isEncryptedConnection()) return
     const o = { field1: 'value1', field2: -1 }
     await testBoilerPlateAsync('non_buffer_object',
       { object_col: 'varbinary(100)' },
