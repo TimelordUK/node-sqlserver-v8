@@ -851,7 +851,7 @@ namespace mssql
 		digits = 0;
 		if (is_bcp) {
 			sql_type = SQLINT1;
-			param_size = sizeof(DBTINYINT);
+			param_size = size;
 		}
 	}
 
