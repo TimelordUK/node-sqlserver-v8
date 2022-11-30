@@ -1131,7 +1131,11 @@ namespace mssql
 		SQLLEN   precision = 0;
 		SQLLEN   colscale = 0;
 		auto ret2 = SQLColAttribute(statement, column + 1, SQL_COLUMN_PRECISION, nullptr, 0, nullptr, &precision);
+		if (!check_odbc_error(ret2))
+        	return false;
 		auto ret3 = SQLColAttribute(statement, column + 1, SQL_COLUMN_SCALE, nullptr, 0, nullptr, &colscale);
+		if (!check_odbc_error(ret3))
+        	return false;
 		const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY, &time, sizeof(time), &str_len_or_ind_ptr);
 		
 		if (!check_odbc_error(ret))
