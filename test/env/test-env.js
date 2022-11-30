@@ -157,7 +157,7 @@ class TestEnv {
   }
 
   builderChecker (builder) {
-    return new BuilderChecker(builder)
+    return new BuilderChecker(builder, this)
   }
 
   tvpHelper (tableName, connectionProxy) {

@@ -103,6 +103,10 @@ describe('encrypt', function () {
       const promises = this.table.promises
       const tableName = this.fieldBuilder.tableName
       await promises.insert(expected)
+      await this.selectCheck(tableName, expected)
+    }
+
+    async selectCheck (tableName, expected) {
       const conPromises = env.theConnection.promises
       const actual = await conPromises.query(`select * from ${tableName} `)
       expect(actual.first.length).to.equals(expected.length)
@@ -110,6 +114,8 @@ describe('encrypt', function () {
         this.fieldBuilder.checkEqual(this.noID(actual.first[i]), expected[i])
       }
     }
+
+
 
     async testProc () {
       const procParams = this.fieldBuilder.makeProcParams()

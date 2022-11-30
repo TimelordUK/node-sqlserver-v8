@@ -502,6 +502,7 @@ describe('table-builder.js', function () {
     adder(builder)
 
     const checker = env.builderChecker(builder)
+    await checker.checkTvp(makeOne, checkOne)
     await checker.check(makeOne, checkOne)
   }
 
