@@ -557,6 +557,10 @@ interface TableBuilder {
     clear (): void
     // a wrapper procedure definition with column as parameters
     insertProcSql (procname?: string): string
+    // proc to accept tvp param for table and copy/bulk insert
+    insertTvpProcSql (procname?: string, tableTypeName?: string): string
+    // dbo.tmpTableBuilderType
+    typeName: string
     // IF TYPE_ID(N'dbo.tmpTableBuilderType') IS not NULL drop type dbo.tmpTableBuilderType
     dropTypeSql: string
     // CREATE TYPE dbo.tmpTableBuilderType AS TABLE ([id] int , [MatterColumn] varchar (100) NOT NULL, [SearchTerm] nvarchar (MAX) NOT NULL, [Comparator] nvarchar (20) NOT NULL)
@@ -571,6 +575,8 @@ interface TableBuilder {
     truncateSql: string
     paramsSql: string
     insertParamsSql: string
+    insertTvpProcedureName: string
+    insertProcedureTvpSql: string
   }
 
 interface TableManagerPromises {
