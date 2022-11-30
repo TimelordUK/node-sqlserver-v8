@@ -869,7 +869,7 @@ namespace mssql
 		digits = 0;
 		if (is_bcp) {
 			sql_type = SQLINT2;
-			param_size = sizeof(DBSMALLINT);
+			param_size = size;
 		}
 	}
 
@@ -887,7 +887,7 @@ namespace mssql
 		digits = 0;
 		if (is_bcp) {
 			sql_type = SQLINT4;
-			param_size = sizeof(DBINT);
+			param_size = size;
 		}
 	}
 
