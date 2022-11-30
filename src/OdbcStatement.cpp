@@ -198,16 +198,37 @@ namespace mssql
 		return result;
 	}
 
-	void OdbcStatement::apply_precision(const shared_ptr<BoundDatum> &datum, const int current_param) const
+	bool OdbcStatement::apply_precision(const shared_ptr<BoundDatum> &datum, const int current_param)
 	{
 		/* Modify the fields in the implicit application parameter descriptor */
 		SQLHDESC hdesc = nullptr;
 		const SQLINTEGER bufferLength = 0;
 		auto r = SQLGetStmtAttr(_statement->get(), SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, nullptr);
+		if (!check_odbc_error(r))
+        {
+        	return false;
+        }
 		r = SQLSetDescField(hdesc, current_param, SQL_DESC_TYPE, reinterpret_cast<SQLPOINTER>(datum->c_type), bufferLength);
+		if (!check_odbc_error(r))
+        {
+        	return false;
+        }
 		r = SQLSetDescField(hdesc, current_param, SQL_DESC_PRECISION, reinterpret_cast<SQLPOINTER>(datum->param_size), bufferLength);
+		if (!check_odbc_error(r))
+        {
+        	return false;
+        }
 		r = SQLSetDescField(hdesc, current_param, SQL_DESC_SCALE, reinterpret_cast<SQLPOINTER>(datum->digits), bufferLength);
+		if (!check_odbc_error(r))
+        {
+        	return false;
+        }
 		r = SQLSetDescField(hdesc, current_param, SQL_DESC_DATA_PTR, static_cast<SQLPOINTER>(datum->buffer), bufferLength);
+		if (!check_odbc_error(r))
+        {
+            return false;
+        }
+        return true;
 	}
 
 	// this will show on a different thread to the current executing query.
@@ -351,7 +372,9 @@ namespace mssql
 		*/
 		if (datum->get_defined_precision())
 		{
-			apply_precision(datum, current_param);
+			if (!apply_precision(datum, current_param)) {
+			    return  false;
+			}
 		}
 		const auto name = datum->name;
 		if (!name.empty())
