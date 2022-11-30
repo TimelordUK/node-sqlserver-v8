@@ -63,7 +63,7 @@
 // #define interface struct 	// for the COM interfaces in sqlncli.h and to avoid including extra files
 
 #ifdef WINDOWS_BUILD
-    #include "msodbcsql.h"	 	// SQL Server specific constants
+    #include "sqlncli.h"	 	// SQL Server specific constants
 #endif
 
 
