@@ -447,7 +447,7 @@ namespace mssql
 									  // actually available.
 	 */
 
-	static int get_row_count(Local<Value>& p)
+	static int get_row_count(const Local<Value>& p)
 	{
 		auto rows = 1;
 		auto maybe_object = Nan::To<Object>(p);
@@ -665,12 +665,12 @@ namespace mssql
 		}
 	}
 
-	double rescale(double d, int param_size, int digits) {
+	double rescale(const double d, const int param_size, const int digits) {
 		SQL_NUMERIC_STRUCT ns;
 		double scale_d = d;
 		encode_numeric_struct(d, static_cast<int>(param_size), digits, ns);
 			if(ns.scale < digits) {
-			double powers = pow(10, digits);
+				const double powers = pow(10, digits);
 			scale_d *= powers;
 		}
 		return scale_d;
@@ -959,27 +959,27 @@ namespace mssql
 		}
 	}
 
-	void bind_time_struct(const Local<Date> & d, SQL_SS_TIME2_STRUCT & time2, int32_t offset) {
+	void bind_time_struct(const Local<Date> & d, SQL_SS_TIME2_STRUCT & time2, const int32_t offset) {
 		const auto local = Nan::To<Number>(d).ToLocalChecked() ;
 		const auto ms = local->Value() - offset * 60000;
 		const TimestampColumn sql_date(-1, ms);
 		sql_date.ToTime2Struct(time2);
 	}
 
-	void bind_timestamp_struct(const Local<Date> & d, SQL_TIMESTAMP_STRUCT & ts, int32_t offset) {
+	void bind_timestamp_struct(const Local<Date> & d, SQL_TIMESTAMP_STRUCT & ts, const int32_t offset) {
 		const auto local = Nan::To<Number>(d).ToLocalChecked() ;
 		const auto ms = local->Value() - offset * 60000;
 		const TimestampColumn sql_date(-1, ms);
 		sql_date.to_timestamp_struct(ts);
 	}
 
-	void bind_timestamp_offset_struct(const Local<Date> & d, SQL_SS_TIMESTAMPOFFSET_STRUCT & ts, int32_t offset) {
+	void bind_timestamp_offset_struct(const Local<Date> & d, SQL_SS_TIMESTAMPOFFSET_STRUCT & ts, const int32_t offset) {
 		const auto local = Nan::To<Number>(d).ToLocalChecked();
-		TimestampColumn sql_date(-1, local->Value(), 0, offset);
+		const TimestampColumn sql_date(-1, local->Value(), 0, offset);
 		sql_date.to_timestamp_offset(ts);
 	}
 
-	void bind_date_struct(const Local<Date> & d, SQL_DATE_STRUCT & dt, int32_t offset) {
+	void bind_date_struct(const Local<Date> & d, SQL_DATE_STRUCT & dt, const int32_t offset) {
 		const auto local = Nan::To<Number>(d).ToLocalChecked() ;
 		const auto ms = local->Value() - offset * 60000;
 		const TimestampColumn sql_date(-1, ms);
@@ -1712,7 +1712,6 @@ namespace mssql
 		}
 
 		Local<Value> pval;
-		Local<Value> pval_value;
 		const auto maybe_object = p->ToObject(context);
 		Local<Object> local_object;
 		if (!maybe_object.ToLocal(&local_object))
@@ -1745,7 +1744,7 @@ namespace mssql
 		{
 			return false;
 		}
-		pval_value = get("value", as_pval_object);	
+		Local<Value> pval_value = get("value", as_pval_object);	
 		if (is_output_i != 0)
 		{
 			if (pval_value->IsNull()) {
@@ -2413,7 +2412,7 @@ namespace mssql
 		return tsc.ToValue();
 	}
 
-	size_t BoundDatum::get_default_size(size_t len) {
+	size_t BoundDatum::get_default_size(size_t len) const {
 		if (len != 0) return len;
 		const uint32_t defaultSize = _params->max_prepared_column_size();
 		len = defaultSize > 0 ? defaultSize : 8 * 1024;

@@ -181,7 +181,7 @@ namespace mssql
 	bool OdbcConnection::send(OdbcOperation* op) const
 	{
 		//fprintf(stderr, "OdbcConnection send\n");
-		auto res = op->fetch_statement();
+		const auto res = op->fetch_statement();
 		Nan::AsyncQueueWorker(op);
 		return res;
 	}
