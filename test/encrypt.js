@@ -420,6 +420,24 @@ describe('encrypt', function () {
       return this.value
     }
   }
+  class FieldBuilderDateTimeOffset extends FieldBuilder {
+    value = null
+    constructor (val) {
+      super()
+      this.value = val || env.timeHelper.getUTCDateHHMMSS(new Date())
+    }
+
+    build (builder) {
+      builder.addColumn('field').asDateTimeOffset().withDecorator(encryptHelper.fieldWithEncrpyt)
+    }
+
+    makeValue (i) {
+      const offset = i % 10
+      const result = new Date(this.value)
+      result.setDate(result.getDate() - offset)
+      return this.value
+    }
+  }
   class FieldBuilderDateTime2 extends FieldBuilder {
     value = null
     constructor (val) {
@@ -472,6 +490,13 @@ describe('encrypt', function () {
     await tester.prepare()
     await tester.testTable()
   }
+  it('encrypted UTC datetimeoffset via proc', async function handler () {
+    await runProc(new FieldBuilderDateTimeOffset())
+  })
+
+  it('encrypted UTC datetimeoffset via table', async function handler () {
+    await runTable(new FieldBuilderDateTimeOffset())
+  })
 
   it('encrypted employee via table', async function handler () {
     await runTable(new FieldBuilderEmployee())
