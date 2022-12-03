@@ -1060,7 +1060,7 @@ namespace mssql
 	{
 		buffer_len = sizeof(SQL_SS_TIME2_STRUCT);
 		_storage->Reservetime2(len);
-		_indvec.resize(len);
+		_indvec.resize(len);in
 		// Since JS dates have no timezone context, all dates are assumed to be UTC		
 		js_type = JS_DATE;
 		c_type = SQL_C_BINARY;

@@ -2,18 +2,18 @@
  * Created by admin on 19/01/2017.
  */
 
-interface AggregatorPromises {
+export interface AggregatorPromises {
     query(sql: string, params?: any[], options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
     callProc(name: string, params?: any, options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
 }
 
-interface SqlClientPromises  {
+export interface SqlClientPromises  {
     query(conn_str: string, sql: string, params?: any[], options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
     callProc(conn_str: string, name: string, params?: any, options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
     open(conn_str: string): Promise<Connection>
 }
 
-interface SqlClient {
+export interface SqlClient {
     promises: SqlClientPromises
     open(description: ConnectDescription, cb: OpenCb): void
     open(conn_str: string, cb: OpenCb): void
@@ -64,14 +64,14 @@ interface SqlClient {
     Pool: { (options:PoolOptions) : Pool } & { new (options:PoolOptions) : Pool }
 }
 
-interface Table {
+export interface Table {
     name:string
     rows: any[]
     columns: TableColumn[]
     addRowsFromObjects(vec:any) : void
 }
 
-interface PoolOptions {
+export interface PoolOptions {
     floor?: number
     ceiling?: number
     heartbeatSecs?: number
@@ -83,7 +83,7 @@ interface PoolOptions {
     connectionString: string
 }
 
-interface QueryAggregatorResults {
+export interface QueryAggregatorResults {
     elapsed: number // elapsed ms for call to complete
     meta: Meta[][] // array of meta for each query
     first: any[] // first set of rows i.e. results[0] if any else null
@@ -95,13 +95,13 @@ interface QueryAggregatorResults {
     errors: Error[] // errors collected by running sql (up to promise reject)
   }
 
-interface QueryAggregatorOptions {
+export interface QueryAggregatorOptions {
     timeoutMs?: number // default 0 i.e. no timeout
     raw?: boolean // results as arrays or objects with column names
     replaceEmptyColumnNames?: boolean // replace meta empty col name with Column0, Column1
 }
 
-interface PoolPromises extends AggregatorPromises {
+export interface PoolPromises extends AggregatorPromises {
     open(): Promise<Pool>
     close(): Promise<any>
     getUserTypeTable(name: string): Promise<Table>
@@ -109,7 +109,7 @@ interface PoolPromises extends AggregatorPromises {
     getProc(name: string): Promise<ProcedureDefinition>
 }
 
-interface Pool  {
+export interface Pool  {
     promises: PoolPromises
     getUseUTC():boolean
     setUseUTC(utc: boolean): void
@@ -136,12 +136,12 @@ interface Pool  {
     on(status: string, statusRecord?: PoolStatusRecordCb): void
 }
 
-interface TableColumnType {
+export interface TableColumnType {
     declaration:string
     length:string
 }
 
-interface TableColumn {
+export interface TableColumn {
     ordinal_position: number,
     table_catalog: string,
     table_schema: string,
@@ -205,7 +205,7 @@ interface TableColumn {
     null(): TableColumn
 }
 
-interface ConnectionPromises extends AggregatorPromises {
+export interface ConnectionPromises extends AggregatorPromises {
     prepare(sql: string | QueryDescription): Promise<PreparedStatement>
     getTable(name: string): Promise<BulkTableMgr>
     getProc(name: string): Promise<ProcedureDefinition>
@@ -217,7 +217,7 @@ interface ConnectionPromises extends AggregatorPromises {
     rollback(): Promise<any>
 }
 
-interface Connection {
+export interface Connection {
     promises: ConnectionPromises
     getUserTypeTable(name: string, cb:TableCb):void
     id:number
@@ -253,7 +253,7 @@ interface Connection {
     isClosed(): boolean
 }
 
-interface Query {
+export interface Query {
     on(name: string, cb: SubmittedEventCb): void
     on(name: string, cb: EventCb): void
     on(name: string, cb: EventColumnCb): void
@@ -263,12 +263,12 @@ interface Query {
     isPaused(): boolean
 }
 
-interface ConnectDescription {
+export interface ConnectDescription {
     conn_str: string
     conn_timeout: number
 }
 
-interface QueryDescription {
+export interface QueryDescription {
     query_str: string
     numeric_string?: boolean // for BigInt can return string to avoid overflow
     query_timeout?: number
@@ -278,7 +278,7 @@ interface QueryDescription {
     max_prepared_column_size?: number
 }
 
-interface Meta {
+export interface Meta {
     name: string
     nullable: boolean
     size: number
@@ -286,7 +286,7 @@ interface Meta {
     type: string
 }
 
-interface Error
+export interface Error
 {
     code?: number
     severity?: number
@@ -297,12 +297,12 @@ interface Error
     sqlstate?: string
 }
 
-interface RawData {
+export interface RawData {
     meta: Meta[]
     rows: Array<any[]>
 }
 
-interface PoolStatusRecord {
+export interface PoolStatusRecord {
     time: Date,
     parked: number,
     idle: number,
@@ -315,51 +315,51 @@ interface PoolStatusRecord {
     lastSql?: string
   }
 
-interface PoolStatusRecordCb { (status: PoolStatusRecord): void
+export interface PoolStatusRecordCb { (status: PoolStatusRecord): void
 }
-interface QueryDescriptionCb { (description: QueryDescription): void
+export interface QueryDescriptionCb { (description: QueryDescription): void
 }
-interface MessageCb { (msg: string): void
+export interface MessageCb { (msg: string): void
 }
-interface PoolOptionsEventCb { (options: PoolOptions): void
+export interface PoolOptionsEventCb { (options: PoolOptions): void
 }
-interface PoolOpenCb { (err: Error, options: PoolOptions): void
+export interface PoolOpenCb { (err: Error, options: PoolOptions): void
 }
-interface SimpleCb { (): void
+export interface SimpleCb { (): void
 }
-interface TableCb { (err: Error, table: Table): void
+export interface TableCb { (err: Error, table: Table): void
 }
-interface BindCb { (cb: BulkTableMgr): void
+export interface BindCb { (cb: BulkTableMgr): void
 }
-interface GetTableCb { (err: Error, table: BulkTableMgr): void
+export interface GetTableCb { (err: Error, table: BulkTableMgr): void
 }
-interface OpenCb { (err: Error, connection: Connection): void
+export interface OpenCb { (err: Error, connection: Connection): void
 }
-interface QueryCb { (err?: Error, rows?: any[], more?: boolean): void
+export interface QueryCb { (err?: Error, rows?: any[], more?: boolean): void
 }
-interface CallProcedureCb { (err?: Error, rows?: any[], outputParams?:any[]): void
+export interface CallProcedureCb { (err?: Error, rows?: any[], outputParams?:any[]): void
 }
-interface QueryRawCb { (err?: Error, raw?: RawData, more?: boolean): void
+export interface QueryRawCb { (err?: Error, raw?: RawData, more?: boolean): void
 }
-interface StatusCb { (err?: Error): void
+export interface StatusCb { (err?: Error): void
 }
-interface PrepareCb { (err?: Error, statement?: PreparedStatement): void
+export interface PrepareCb { (err?: Error, statement?: PreparedStatement): void
 }
-interface EventCb { (data: any): void
+export interface EventCb { (data: any): void
 }
-interface SubmittedEventCb { (sql: string, params:any[]): void
+export interface SubmittedEventCb { (sql: string, params:any[]): void
 }
-interface EventColumnCb { (colIndex: number, data:any, more:boolean): void
+export interface EventColumnCb { (colIndex: number, data:any, more:boolean): void
 }
-interface BulkSelectCb { (err: Error, rows: any[]): void
+export interface BulkSelectCb { (err: Error, rows: any[]): void
 }
-interface DescribeProcedureCb { (description?: ProcedureSummary): void
+export interface DescribeProcedureCb { (description?: ProcedureSummary): void
 }
-interface GetProcedureCb { (procedure?: ProcedureDefinition): void
+export interface GetProcedureCb { (procedure?: ProcedureDefinition): void
 }
-interface GetProcCb { (err:Error, procedure?: ProcedureDefinition): void
+export interface GetProcCb { (err:Error, procedure?: ProcedureDefinition): void
 }
-interface BulkMgrSummary {
+export interface BulkMgrSummary {
     insertSignature: string
     whereColumns: TableColumn[]
     updateColumns: TableColumn[]
@@ -371,7 +371,7 @@ interface BulkMgrSummary {
     assignableColumns: TableColumn
 }
 
-interface BulkTableMgrPromises
+export interface BulkTableMgrPromises
 {
     select(cols: any[]): Promise<any[]>
     insert(rows: any[]): Promise<any>
@@ -379,7 +379,7 @@ interface BulkTableMgrPromises
     update(rows: any[]): Promise<any>
 }
 
-interface BulkTableMgr {
+export interface BulkTableMgr {
     promises: BulkTableMgrPromises
     getSummary(): BulkMgrSummary
     asUserType(name?:string): string
@@ -418,7 +418,7 @@ interface BulkTableMgr {
     keys(vec:any[]): any[]
 }
 
-interface TableValueParam {
+export interface TableValueParam {
     /*
 type_name	column_id	ordered_column	column_name	data_type	nullable	length	precision	scale	collation
 dbo.PersonTVP	1	01: vFirstName	vFirstName	varchar		255	0	0	SQL_Latin1_General_CP1_CI_AS
@@ -440,7 +440,7 @@ dbo.PersonTVP	4	04: vCity	vCity	varchar		255	0	0	SQL_Latin1_General_CP1_CI_AS
     collation:number
 }
 
-interface ProcedureParam {
+export interface ProcedureParam {
     table_value_param?:TableValueParam[]
     is_user_defined?:boolean
     is_output: boolean
@@ -455,7 +455,7 @@ interface ProcedureParam {
     val: any
 }
 
-interface ProcedureDefinition
+export interface ProcedureDefinition
 {
     setDialect(dialect: ServerDialect): boolean
     paramsArray(params: any[]): any[]
@@ -466,7 +466,7 @@ interface ProcedureDefinition
     getName(): string
 }
 
-interface ProcedureSummary {
+export interface ProcedureSummary {
     select:string
     signature: string
     summary: string
@@ -491,7 +491,7 @@ interface ProcedureSummary {
   pm.addProc(spName, params)
 */
 
-interface ProcedureManager {
+export interface ProcedureManager {
     /**
      * @deprecated Please use `getProc`
      */
@@ -506,7 +506,7 @@ interface ProcedureManager {
     ServerDialect:ServerDialect
 }
 
-interface ProcedureParamMeta {
+export interface ProcedureParamMeta {
         proc_name: string,
         type_desc: string,
         object_id: number,
@@ -539,12 +539,12 @@ interface ProcedureParamMeta {
         const vec = getVec(20)
 */
 
-interface ServerDialect {
+export interface ServerDialect {
     SqlServer: ServerDialect
     Sybase: ServerDialect
 }
 
-interface TableBuilder {
+export interface TableBuilder {
     // can use utility method e.g. builder.addColumn('col_b').asVarChar(100)
     addColumn (columnName: string, columnType?: string, maxLength?:number, isPrimaryKey?: number): TableColumn
      // builder.setDialect(mgr.ServerDialect.Sybase)
@@ -579,12 +579,12 @@ interface TableBuilder {
     insertProcedureTvpSql: string
   }
 
-interface TableManagerPromises {
+export interface TableManagerPromises {
     getTable(name: string) : Promise<BulkTableMgr>
     getUserTypeTable(name: string): Promise<Table>
 }
 
-interface TableManager {
+export interface TableManager {
     /**
      * @deprecated Please use `getTable`
      */
@@ -600,12 +600,12 @@ interface TableManager {
     makeColumn (tableName: string, tableSchema: string, position: number, columnName: string, paramType: string, paramLength: number, isPrimaryKey: number): TableColumn
 }
 
-interface PreparedPromises {
+export interface PreparedPromises {
     free(): Promise<any>
     query(params?: any[], options?: QueryAggregatorOptions) : Promise<QueryAggregatorResults>
 }
 
-interface PreparedStatement {
+export interface PreparedStatement {
     promises: PreparedPromises
     preparedQuery(params?: any[], cb ?: QueryCb): Query
     free(cb: StatusCb): void
@@ -614,7 +614,7 @@ interface PreparedStatement {
     getMeta(): Meta[]
 }
 
-enum QueryEvent {
+export enum QueryEvent {
     meta = 'meta',
     column = 'column',
     partial = 'partial',
@@ -629,5 +629,8 @@ enum QueryEvent {
     output = 'output'
 }
 
+/*
 declare const sql: SqlClient
 export = sql
+*/
+
