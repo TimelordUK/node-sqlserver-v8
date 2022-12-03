@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="TypeScript File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/package.json" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/src/OdbcStatement.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/src/ResultSet.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/test/connect.js" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/test/connection-pool.js" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/test/json.js" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/test/params.js" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/test/pause.js" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/test/promises.js" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/test/querycancel.js" root0="FORCE_HIGHLIGHTING" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="1eai96CdG5HB3kIihIPzTufTbKF" />
+  <component name="ProjectViewState">
+    <option name="autoscrollFromSource" value="true" />
+    <option name="autoscrollToSource" value="true" />
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Stephen/dev/js/sql/node_modules/msnodesqlv8/test&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs.mocha.mocha_node_package_dir&quot;: &quot;C:/Users/Stephen/dev/js/sql/node_modules/msnodesqlv8/node_modules/mocha&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Stephen\dev\js\sql\node_modules\msnodesqlv8\samples\javascript" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="test" type="mocha-javascript-test-runner" nameIsGenerated="true">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
+      <working-directory>$PROJECT_DIR$</working-directory>
+      <pass-parent-env>true</pass-parent-env>
+      <ui>bdd</ui>
+      <extra-mocha-options />
+      <test-kind>DIRECTORY</test-kind>
+      <test-directory>$PROJECT_DIR$/test</test-directory>
+      <recursive>false</recursive>
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="" />
+      <created>1594565950138</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1594565950138</updated>
+      <workItem from="1594565954346" duration="10817000" />
+      <workItem from="1595082920951" duration="619000" />
+      <workItem from="1595355258970" duration="12000" />
+      <workItem from="1595355303525" duration="77000" />
+      <workItem from="1595614214325" duration="180000" />
+      <workItem from="1595614486847" duration="797000" />
+      <workItem from="1595761947357" duration="2468000" />
+      <workItem from="1596233383288" duration="104000" />
+      <workItem from="1596233575103" duration="1160000" />
+      <workItem from="1596280719751" duration="1210000" />
+      <workItem from="1596374368296" duration="2025000" />
+      <workItem from="1596667966357" duration="600000" />
+      <workItem from="1596786980249" duration="1539000" />
+      <workItem from="1597953267643" duration="13000" />
+      <workItem from="1598306573829" duration="14000" />
+      <workItem from="1598876443575" duration="635000" />
+      <workItem from="1599779473173" duration="1345000" />
+      <workItem from="1600803970701" duration="19000" />
+      <workItem from="1600804017788" duration="19000" />
+      <workItem from="1601229471444" duration="629000" />
+      <workItem from="1602808539650" duration="19000" />
+      <workItem from="1602808588019" duration="703000" />
+      <workItem from="1602964388537" duration="2799000" />
+      <workItem from="1603802048836" duration="788000" />
+      <workItem from="1603905055139" duration="20000" />
+      <workItem from="1604236476169" duration="2365000" />
+      <workItem from="1605224476614" duration="23000" />
+      <workItem from="1606053051945" duration="9000" />
+      <workItem from="1607172944436" duration="1226000" />
+      <workItem from="1607293007615" duration="7000" />
+      <workItem from="1608407436992" duration="624000" />
+      <workItem from="1608560227016" duration="32000" />
+      <workItem from="1608825270308" duration="4997000" />
+      <workItem from="1610651347564" duration="21000" />
+      <workItem from="1610651421679" duration="22000" />
+      <workItem from="1611944119689" duration="21000" />
+      <workItem from="1619382208837" duration="684000" />
+      <workItem from="1619957340309" duration="21000" />
+      <workItem from="1619957411236" duration="98000" />
+      <workItem from="1639871449298" duration="180000" />
+      <workItem from="1639871839425" duration="26000" />
+      <workItem from="1655052670903" duration="3844000" />
+      <workItem from="1655306017941" duration="639000" />
+      <workItem from="1655652839122" duration="1407000" />
+      <workItem from="1656241179822" duration="37000" />
+      <workItem from="1656241265963" duration="777000" />
+      <workItem from="1657137642653" duration="623000" />
+      <workItem from="1657564983185" duration="694000" />
+    </task>
+    <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
+      <created>1594574042218</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1594574042218</updated>
+    </task>
+    <task id="LOCAL-00002" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
+      <created>1594574066833</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1594574066833</updated>
+    </task>
+    <task id="LOCAL-00003" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
+      <created>1594574133466</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1594574133466</updated>
+    </task>
+    <task id="LOCAL-00004" summary="update packages">
+      <created>1602965385478</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1602965385478</updated>
+    </task>
+    <task id="LOCAL-00005" summary="abstract config for samples out to json common file">
+      <created>1608825773922</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1608825773922</updated>
+    </task>
+    <task id="LOCAL-00006" summary="update packages">
+      <created>1619382565513</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1619382565514</updated>
+    </task>
+    <task id="LOCAL-00007" summary="patch for 32 bit build - will drop support soon">
+      <created>1655053845564</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1655053845564</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early" />
+    <MESSAGE value="abstract config for samples out to json common file" />
+    <MESSAGE value="update packages" />
+    <MESSAGE value="patch for 32 bit build - will drop support soon" />
+    <option name="LAST_COMMIT_MESSAGE" value="patch for 32 bit build - will drop support soon" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/unit.tests/compoundqueries.js</url>
+          <line>76</line>
+          <option name="timeStamp" value="31" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/unit.tests/compoundqueries.js</url>
+          <line>78</line>
+          <option name="timeStamp" value="32" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/unit.tests/compoundqueries.js</url>
+          <line>72</line>
+          <option name="timeStamp" value="39" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>

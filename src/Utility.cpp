@@ -158,11 +158,11 @@ namespace mssql
 	long strtohextoval(const SQL_NUMERIC_STRUCT &numeric)
 	{
 		long value = 0;
-		int i = 1, last = 1, current;
+		int i = 1, last = 1;
 		int a = 0, b = 0;
 		for (i = 0; i <= 15; i++)
 		{
-			current = (int)numeric.val[i];
+			const int current = (int)numeric.val[i];
 			a = current % 16; // Obtain LSD
 			b = current / 16; // Obtain MSD
 
@@ -178,7 +178,7 @@ namespace mssql
 	{
 		// Call to convert the little endian mode data into numeric data.
 
-		auto myvalue = strtohextoval(numeric);
+		const auto myvalue = strtohextoval(numeric);
 
 		// The returned value in the above code is scaled to the value specified
 		// in the scale field of the numeric structure. For example 25.212 would
@@ -194,7 +194,7 @@ namespace mssql
 		}
 		
 		int sign = 0;
-		auto final_val = (double)myvalue / (double)divisor;
+		auto final_val = static_cast<double>(myvalue) / static_cast<double>(divisor);
 		if(!numeric.sign) sign = -1;
       	else sign  = 1;
 

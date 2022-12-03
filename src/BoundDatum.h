@@ -232,7 +232,7 @@ namespace mssql
 		void sql_ss_timestampoffset(Local<Value> pp);
 		void sql_varbinary(Local<Value> pp);
 		void sql_binary(Local<Value> pp);
-		size_t get_default_size(size_t len);
+		size_t get_default_size(size_t len) const;
 
 		static Local<Value> unbind_null();
 		Local<Value> unbind_string() const;

@@ -26,11 +26,11 @@ namespace mssql
 		for (uint32_t i = 0; i < set->get_column_count(); ++i) {
 			const auto binding = make_shared<BoundDatum>(_params);
 			auto& def = set->get_meta_data(i);
-			size_t size = def.columnSize;
-			size_t newSize = size;
-			binding->reserve_column_type(def.dataType, newSize, row_count);
-			if (size != newSize) {
-				def.columnSize = newSize;
+			const size_t size = def.columnSize;
+			size_t new_size = size;
+			binding->reserve_column_type(def.dataType, new_size, row_count);
+			if (size != new_size) {
+				def.columnSize = new_size;
 			}
 			_bindings->push_back(binding);
 		}
@@ -44,7 +44,7 @@ namespace mssql
 		return val;
 	}
 
-	int get_tvp_col_count(Local<Value>& v)
+	int get_tvp_col_count(const Local<Value>& v)
 	{
 		const auto tvp_columns = Nan::Get(Nan::To<Object>(v).ToLocalChecked(), Nan::New("table_value_param").ToLocalChecked()).ToLocalChecked();
 		const auto cols = tvp_columns.As<Array>();

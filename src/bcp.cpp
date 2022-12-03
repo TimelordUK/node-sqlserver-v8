@@ -29,7 +29,7 @@
 
 namespace mssql
 {
-    bool plugin_bcp::load(const SYN_SIG& shared_lib, shared_ptr<vector<shared_ptr<OdbcError>>> errors) {
+    bool plugin_bcp::load(const SYN_SIG& shared_lib, const shared_ptr<vector<shared_ptr<OdbcError>>> errors) {
         #ifdef WINDOWS_BUILD
         hinstLib = DYN_OPEN(shared_lib.data());
         #endif
@@ -180,7 +180,7 @@ namespace mssql
         return true;
     }
 
-    inline shared_ptr<basestorage> get_storage(shared_ptr<BoundDatum> p) {
+    inline shared_ptr<basestorage> get_storage(const shared_ptr<BoundDatum> p) {
         shared_ptr<basestorage> r = nullptr;
         const auto storage = p->get_storage();
         const auto &ind = p->get_ind_vec();

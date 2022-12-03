@@ -236,7 +236,7 @@ namespace mssql
 	{
 		{
 			lock_guard<recursive_mutex> lock(g_i_mutex);
-			auto state = get_state();
+			const auto state = get_state();
 			if (!_pollingEnabled && state == OdbcStatementState::STATEMENT_SUBMITTED) {
 				set_state(OdbcStatementState::STATEMENT_CANCEL_HANDLE);
 				// cerr << " cancel STATEMENT_CANCEL_HANDLE " << endl;
@@ -247,8 +247,7 @@ namespace mssql
 				return true;
 			}
 		}
-		auto polling = get_polling();
-		if (polling)
+		if (auto polling = get_polling())
 		{
 			_cancelRequested = true;
 			return true;
@@ -267,7 +266,7 @@ namespace mssql
 
 	OdbcStatement::OdbcStatementState OdbcStatement::get_state() {
 		lock_guard<recursive_mutex> lock(g_i_mutex);
-		auto state = _statementState; 
+		const auto state = _statementState; 
 		return state;
 	}
 
@@ -284,7 +283,7 @@ namespace mssql
 	bool OdbcStatement::get_polling()
 	{
 		lock_guard<recursive_mutex> lock(g_i_mutex);
-		auto polling = _pollingEnabled;
+		const auto polling = _pollingEnabled;
 		return polling;
 	}
 
@@ -675,7 +674,7 @@ namespace mssql
 		return true;
 	}
 
-	SQLRETURN OdbcStatement::poll_check(SQLRETURN ret, shared_ptr<vector<uint16_t>> query, const bool direct)
+	SQLRETURN OdbcStatement::poll_check(SQLRETURN ret, const shared_ptr<vector<uint16_t>> query, const bool direct)
 	{
 		const auto &statement = *_statement;
 
@@ -748,7 +747,7 @@ namespace mssql
 		if (!_statement)
 			return false;
 		const auto &statement = *_statement;
-		bool polling_mode = get_polling();
+		const bool polling_mode = get_polling();
 		const auto bound = bind_params(param_set);
 		if (!bound)
 		{
@@ -828,7 +827,7 @@ namespace mssql
 				return try_bcp(param_set, first->bcp_version);
 			}
 		}
-		bool polling_mode = get_polling();
+		const bool polling_mode = get_polling();
 		{
 			lock_guard<recursive_mutex> lock(g_i_mutex);
 			set_state(OdbcStatementState::STATEMENT_BINDING);
@@ -840,7 +839,7 @@ namespace mssql
 			}
 			
 			_endOfResults = true; // reset
-			auto ret = query_timeout(timeout);
+			const auto ret = query_timeout(timeout);
 			if (!check_odbc_error(ret))
 				return false;
 			
@@ -850,16 +849,15 @@ namespace mssql
 			} 
 		}
 		const auto query = q->query_string();
-		SQLRETURN ret;
-		
+
 		set_state(OdbcStatementState::STATEMENT_SUBMITTED);	
-		ret = SQLExecDirect(*_statement, reinterpret_cast<SQLWCHAR *>(query->data()), query->size());
+		SQLRETURN ret = SQLExecDirect(*_statement, reinterpret_cast<SQLWCHAR*>(query->data()), query->size());
 		{
 			// we may have cancelled this query on a different thread
 			// so only switch state if this query completed.
 			lock_guard<recursive_mutex> lock(g_i_mutex);
-			{			
-				auto state = get_state();
+			{
+				const auto state = get_state();
 				if (state == OdbcStatementState::STATEMENT_SUBMITTED) {
 					set_state(OdbcStatementState::STATEMENT_READING);
 				}
@@ -1130,10 +1128,10 @@ namespace mssql
 		SQL_SS_TIME2_STRUCT time = {};
 		SQLLEN   precision = 0;
 		SQLLEN   colscale = 0;
-		auto ret2 = SQLColAttribute(statement, column + 1, SQL_COLUMN_PRECISION, nullptr, 0, nullptr, &precision);
+		const auto ret2 = SQLColAttribute(statement, column + 1, SQL_COLUMN_PRECISION, nullptr, 0, nullptr, &precision);
 		if (!check_odbc_error(ret2))
         	return false;
-		auto ret3 = SQLColAttribute(statement, column + 1, SQL_COLUMN_SCALE, nullptr, 0, nullptr, &colscale);
+		const auto ret3 = SQLColAttribute(statement, column + 1, SQL_COLUMN_SCALE, nullptr, 0, nullptr, &colscale);
 		if (!check_odbc_error(ret3))
         	return false;
 		const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY, &time, sizeof(time), &str_len_or_ind_ptr);
@@ -1212,7 +1210,7 @@ namespace mssql
 			_resultset->add_column(row_id, make_shared<NullColumn>(column));
 			return true;
 		}
-		auto col = make_shared<BigIntColumn>(column, v);
+		const auto col = make_shared<BigIntColumn>(column, v);
 		if (_numericStringEnabled)
 		{
 			col->AsString();
@@ -1236,7 +1234,7 @@ namespace mssql
 			_resultset->add_column(row_id, make_shared<NullColumn>(column));
 			return true;
 		}
-		auto col = make_shared<IntColumn>(column, v);
+		const auto col = make_shared<IntColumn>(column, v);
 		if (_numericStringEnabled)
 		{
 			col->AsString();
@@ -1349,7 +1347,7 @@ namespace mssql
 				v2 >= static_cast<long double>(numeric_limits<DatumStorage::bigint_t>::min()) &&
 				v2 <= static_cast<long double>(numeric_limits<DatumStorage::bigint_t>::max()))
 			{
-				auto bi = (DatumStorage::bigint_t)v;
+				auto bi = static_cast<DatumStorage::bigint_t>(v);
 				auto col = make_shared<BigIntColumn>(column, bi);
 				if (_numericStringEnabled)
 				{
@@ -1452,11 +1450,11 @@ namespace mssql
 			return true;
 		}
 
-		auto x = decode_numeric_struct(v);
+		const auto x = decode_numeric_struct(v);
 		if (trunc(x) == x)
 		{
-			auto bi = (DatumStorage::bigint_t)x;
-			auto col = make_shared<BigIntColumn>(column, bi);
+			auto bi = static_cast<DatumStorage::bigint_t>(x);
+			const auto col = make_shared<BigIntColumn>(column, bi);
 			if (_numericStringEnabled)
 			{
 				col->AsString();
@@ -1465,7 +1463,7 @@ namespace mssql
 		}
 		else
 		{
-			auto col = make_shared<NumberColumn>(column, (double)x);
+			const auto col = make_shared<NumberColumn>(column, static_cast<double>(x));
 			if (_numericStringEnabled)
 			{
 				col->AsString();
@@ -1496,8 +1494,8 @@ namespace mssql
 			v2 >= static_cast<long double>(numeric_limits<DatumStorage::bigint_t>::min()) &&
 			v2 <= static_cast<long double>(numeric_limits<DatumStorage::bigint_t>::max()))
 		{
-			auto bi = (DatumStorage::bigint_t)v;
-			auto col = make_shared<BigIntColumn>(column, bi);
+			auto bi = static_cast<DatumStorage::bigint_t>(v);
+			const auto col = make_shared<BigIntColumn>(column, bi);
 			if (_numericStringEnabled)
 			{
 				col->AsString();
@@ -1506,7 +1504,7 @@ namespace mssql
 		}
 		else
 		{
-			auto col = make_shared<NumberColumn>(column, v);
+			const auto col = make_shared<NumberColumn>(column, v);
 			if (_numericStringEnabled)
 			{
 				col->AsString();

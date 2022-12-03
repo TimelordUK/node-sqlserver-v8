@@ -34,10 +34,10 @@ namespace mssql {
     Local<Value> BinaryColumn::ToString()
 	{
 		const auto* const ptr = storage->data() + offset;
-		std::string s(ptr, ptr + len);
+		const std::string s(ptr, ptr + len);
 		storage->reserve(0);
 		storage = nullptr;
-		auto st = Nan::Encode(s.data() + offset, s.size() * 2, Nan::UCS2);
+		const auto st = Nan::Encode(s.data() + offset, s.size() * 2, Nan::UCS2);
 		// fprintf(stderr, "[%d], ToValue len = %zu, offset = %zu, ptr = %p, destructed = %d\n", Id(), len, offset, str, destructed);
 		return st;
 	}
