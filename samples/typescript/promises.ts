@@ -6,10 +6,10 @@ import {
     QueryAggregatorResults, 
     ConnectionPromises, 
     BulkTableMgr
-} from 'msnodesqlv8'
+} from 'msnodesqlv8';
 
 // require the module so it can be used in your node JS code.
-export const sql: SqlClient = require('msnodesqlv8')
+const sql: SqlClient = require('msnodesqlv8');
 const { TestEnv } = require('../../../test/env/test-env')
 const env = new TestEnv()
 
