@@ -1,7 +1,7 @@
-import { SqlClient, TableBuilder, Connection, TableManager } from 'msnodesqlv8'
+import { SqlClient, TableBuilder, Connection, TableManager } from 'msnodesqlv8';
 
 // require the module so it can be used in your node JS code.
-const sql: SqlClient = require('msnodesqlv8')
+export const sql: SqlClient = require('msnodesqlv8');
 
 const { TestEnv } = require('../../../test/env/test-env')
 const env = new TestEnv()

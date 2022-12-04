@@ -588,18 +588,8 @@ declare enum QueryEvent {
     submitted = 'submitted',
     output = 'output'
 }
-export interface SqlClient {
-    promises: SqlClientPromises
-    open(description: ConnectDescription, cb: OpenCb): void
-    open(conn_str: string, cb: OpenCb): void
-    query(conn_str: string, sql: string, cb?: QueryCb): Query
-    query(conn_str: string, sql: string, params?: any[], cb?: QueryCb): Query
-    query(conn_str: string, description: QueryDescription, cb?: QueryCb): Query
-    query(conn_str: string, description: QueryDescription, params?: any[], cb?: QueryCb): Query
-    queryRaw(conn_str: string, description: QueryDescription, cb: QueryRawCb): Query
-    queryRaw(conn_str: string, description: QueryDescription, params?: any[], cb?: QueryRawCb): Query
-    queryRaw(conn_str: string, sql: string, params?: any[], cb?: QueryRawCb): Query
-    queryRaw(conn_str: string, sql: string, cb: QueryRawCb): Query
+
+interface UserConversion {
     Bit(v:number): ConcreteColumnType
     BigInt(v:number): ConcreteColumnType
     Int(v:number): ConcreteColumnType
@@ -632,12 +622,23 @@ export interface SqlClient {
     DateRound(v:Date) : ConcreteColumnType
     SmallDateTime(v:Date) : ConcreteColumnType
     DateTimeOffset(v:Date) : ConcreteColumnType
+}
+
+export interface SqlClient extends UserConversion{
+    promises: SqlClientPromises
+    Pool: { (options:PoolOptions) : Pool } & { new (options:PoolOptions) : Pool }
+    open(description: ConnectDescription, cb: OpenCb): void
+    open(conn_str: string, cb: OpenCb): void
+    query(conn_str: string, sql: string, cb?: QueryCb): Query
+    query(conn_str: string, sql: string, params?: any[], cb?: QueryCb): Query
+    query(conn_str: string, description: QueryDescription, cb?: QueryCb): Query
+    query(conn_str: string, description: QueryDescription, params?: any[], cb?: QueryCb): Query
+    queryRaw(conn_str: string, description: QueryDescription, cb: QueryRawCb): Query
+    queryRaw(conn_str: string, description: QueryDescription, params?: any[], cb?: QueryRawCb): Query
+    queryRaw(conn_str: string, sql: string, params?: any[], cb?: QueryRawCb): Query
+    queryRaw(conn_str: string, sql: string, cb: QueryRawCb): Query
     PollingQuery(s:string) : QueryDescription
     TimeoutQuery(s:string, to:number) : QueryDescription
     TzOffsetQuery(s:string, offsetMinutes?:number) : QueryDescription
     TvpFromTable(table:Table) : ProcedureParam
-    Pool: { (options:PoolOptions) : Pool } & { new (options:PoolOptions) : Pool }
 }
-
-
-
