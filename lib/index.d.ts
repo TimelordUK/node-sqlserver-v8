@@ -22,33 +22,96 @@ interface Table {
 }
 
 interface PoolOptions {
+    /**
+     * minimum number of connections to keep open even when quiet.
+     */
     floor?: number
+    /**
+     * never exceed this many open connections, work will queue.
+     */
     ceiling?: number
+    /**
+     * during no activity a heartbeat is sent every interval to check connection
+     */
     heartbeatSecs?: number
+    /**
+     * override the sql used to test the connection
+     */
     heartbeatSql?: string
+    /**
+     * if no queries for this period issued close connection and reopen when required.
+     */
     inactivityTimeoutSecs?: number
+    /**
+     * convert date time cols to UTC
+     */
     useUTC?: boolean
-    useNumericString?: boolean, // avoid bigint overflow return string
-    maxPreparedColumnSize?: number, // nvarchar(max) prepared columns must be constrained (Default 8k)
+    /**
+     * avoid bigint overflow return string
+     */
+    useNumericString?: boolean,
+    /**
+     * nvarchar(max) prepared columns must be constrained (Default 8k)
+     */
+    maxPreparedColumnSize?: number,
+    /**
+     * the connection string used for each connection opened in pool
+     */
     connectionString: string
 }
 
 interface QueryAggregatorResults {
-    elapsed: number // elapsed ms for call to complete
-    meta: Meta[][] // array of meta for each query
-    first: any[] // first set of rows i.e. results[0] if any else null
-    results: any[][] // each result set either as array of arrays or array of objects
-    output: any[] // output params if any
-    info: string[] // prints from procedure collected
-    counts: number[] // row counts returned from update, insert, delete statements.
-    returns: any // return code from procedure
-    errors: Error[] // errors collected by running sql (up to promise reject)
+    /**
+     * elapsed ms for call to complete
+     */
+    elapsed: number
+    /**
+     * array of meta for each query i.e. an array of arrays of data per column
+     */
+    meta: Meta[][]
+    /**
+     * first set of rows i.e. results[0] if any else null
+     */
+    first: any[]
+    /**
+     * each result set either as array of arrays or array of objects
+     */
+    results: any[][]
+    /**
+     * output params if any from a proc call
+     */
+    output: any[]
+    /**
+     * prints from procedure collected
+     */
+    info: string[]
+    /**
+     * row counts returned from update, insert, delete statements.
+     */
+    counts: number[]
+    /**
+     * return code from procedure
+     */
+    returns: any
+    /**
+     * errors collected by running sql (up to promise reject)
+     */
+    errors: Error[] //
   }
 
 interface QueryAggregatorOptions {
-    timeoutMs?: number // default 0 i.e. no timeout
-    raw?: boolean // results as arrays or objects with column names
-    replaceEmptyColumnNames?: boolean // replace meta empty col name with Column0, Column1
+    /**
+     * default 0 i.e. no timeout - else force query to cancel early
+     */
+    timeoutMs?: number
+    /**
+     * results as arrays or objects with column names
+     */
+    raw?: boolean
+    /**
+     * replace meta empty col name with Column0, Column1
+     */
+    replaceEmptyColumnNames?: boolean
 }
 
 interface PoolPromises extends AggregatorPromises {
@@ -59,7 +122,8 @@ interface PoolPromises extends AggregatorPromises {
     getProc(name: string): Promise<ProcedureDefinition>
 }
 
-interface Pool  {
+declare class Pool  {
+    constructor(poolOptions?: PoolOptions)
     promises: PoolPromises
     getUseUTC():boolean
     setUseUTC(utc: boolean): void
@@ -74,7 +138,12 @@ interface Pool  {
     queryRaw(sql: string, params?: any[], cb?: QueryRawCb): Query
     queryRaw(sql: string, cb: QueryRawCb): Query
     isClosed(): boolean
-    // pool.on('debug', msg => { console.log(msg) })
+
+    /**
+     * pool.on('debug', msg => { console.log(msg) })
+     * @param debug 'debug' as string
+     * @param cb  callback containing txt status update messages for debug
+     */
     on(debug: string, cb?: MessageCb): void
     // pool.on('open', options = {} )
     on(open: string, cb?: PoolOptionsEventCb): void
@@ -84,11 +153,6 @@ interface Pool  {
     on(submitted: string, query?: QueryDescriptionCb): void
      // pool.on('status', q => {} )
     on(status: string, statusRecord?: PoolStatusRecordCb): void
-}
-
-interface TableColumnType {
-    declaration:string
-    length:string
 }
 
 interface TableColumn {
@@ -612,9 +676,9 @@ interface UserConversion {
     Xml(v:String) : ConcreteColumnType
     WLongVarChar(v:string) : ConcreteColumnType
     UniqueIdentifier(v:String) : ConcreteColumnType
-    VarBinary(v:any) : ConcreteColumnType
-    LongVarBinary(v:any) : ConcreteColumnType
-    Image(v:any) : ConcreteColumnType
+    VarBinary(v:Buffer) : ConcreteColumnType
+    LongVarBinary(v:Buffer) : ConcreteColumnType
+    Image(v:Buffer) : ConcreteColumnType
     Time(v:Date) : ConcreteColumnType
     Date(v:Date) : ConcreteColumnType
     DateTime(v:Date) : ConcreteColumnType
@@ -625,11 +689,44 @@ interface UserConversion {
 }
 
 export interface SqlClient extends UserConversion{
+    /**
+     * helper promises allowing async style await to open connection
+     */
     promises: SqlClientPromises
-    Pool: { (options:PoolOptions) : Pool } & { new (options:PoolOptions) : Pool }
+    /**
+     * instanitate an instance of connection pool which improves concurrency
+     * by using a number of connections to balance load where a queue of
+     * queries is serviced by next available connection. Pool will if configured
+     * close idle connections and test with periodic keep alive.
+     */
+    Pool: { (options:PoolOptions) : Pool } & { new (options?:PoolOptions) : Pool }
     open(description: ConnectDescription, cb: OpenCb): void
+
+    /**
+     * async operation to open a connection to the database
+     * @param conn_str - string representing connection of form Driver={ODBC Driver 17 for SQL Server};Server= ..
+     * @param cb - will return error or connection object
+     */
     open(conn_str: string, cb: OpenCb): void
+
+    /**
+     * adhoc async query to open connection to database, execute a query and close connection
+     * @param conn_str - string representing connection
+     * @param sql - the textual string submitted to database
+     * @param cb - optional callback representing an error or results (if any) from query.
+     * @returns - a query object which can be used to monitor progress via event notification
+     */
     query(conn_str: string, sql: string, cb?: QueryCb): Query
+
+    /**
+     * adhoc async query with supplied parameters to open connection to database, execute a query
+     * and close connection.
+     * @param conn_str - string representing connection
+     * @param sql - the textual string submitted to database
+     * @param params - array of parameters used to bind query
+     * @param cb - optional callback containing error or rows in object form column names as proeprties
+     * @returns - a query object which can be used to monitor progress via event notification
+     */
     query(conn_str: string, sql: string, params?: any[], cb?: QueryCb): Query
     query(conn_str: string, description: QueryDescription, cb?: QueryCb): Query
     query(conn_str: string, description: QueryDescription, params?: any[], cb?: QueryCb): Query
