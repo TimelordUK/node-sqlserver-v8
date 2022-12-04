@@ -6,9 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="tmp rollback of index.d.ts as typescript is not compiling">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/index.d.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/samples/typescript/builder.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/builder.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/typescript/db-backup.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/db-backup.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/samples/typescript/mssql-demo.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/mssql-demo.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/samples/typescript/pooling.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/pooling.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/samples/typescript/promises.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/promises.ts" afterDir="false" />
@@ -224,7 +222,14 @@
       <option name="project" value="LOCAL" />
       <updated>1670101264589</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="tmp rollback of index.d.ts as typescript is not compiling">
+      <created>1670152137358</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1670152137358</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
