@@ -13,7 +13,6 @@ interface SqlClientPromises  {
     open(conn_str: string): Promise<Connection>
 }
 
-
 interface Table {
     name:string
     rows: any[]
@@ -115,15 +114,36 @@ interface QueryAggregatorOptions {
 }
 
 interface PoolPromises extends AggregatorPromises {
+    /**
+     * open connections to database and ready pool for use.
+     * @returns promise returning pool when connections are up.
+     */
     open(): Promise<Pool>
+    /**
+     * terminate all open connections.
+     * @returns promise to await for close to complete.
+     */
     close(): Promise<any>
     getUserTypeTable(name: string): Promise<Table>
+
+    /**
+     * fetch a table definition which can be used for bulk insert operations
+     * @param name of table to bind too
+     * @returns promise of bound table with methods to insert objects.
+     */
     getTable(name: string): Promise<BulkTableMgr>
+
+    /**
+     * fetch a stored procedure definition which can be called with
+     * correctly bound parameter types.
+     * @param name of stored procedure to fetch.
+     * @returns promise of bound proc to call.
+     */
     getProc(name: string): Promise<ProcedureDefinition>
 }
 
 declare class Pool  {
-    constructor(poolOptions?: PoolOptions)
+    constructor(poolOptions: PoolOptions)
     promises: PoolPromises
     getUseUTC():boolean
     setUseUTC(utc: boolean): void
@@ -688,6 +708,90 @@ interface UserConversion {
     DateTimeOffset(v:Date) : ConcreteColumnType
 }
 
+interface NativeReadColumnInfo {
+    end_rows: boolean
+    data: any[]
+}
+
+interface NativeNextResultInfo {
+    endOfResults: boolean
+    preRowCount: boolean
+    rowCount: number
+    meta?: Meta[]
+}
+
+interface NativeReadColumnCb { (err: Error, results: NativeReadColumnInfo): void
+}
+
+interface NativeNextResultCb { (err: Error, results: NativeNextResultInfo): void
+}
+
+interface NativeUnbindCb { (err: Error, outputVector: any[]): void
+}
+
+interface NativePrepareCb { (err: Error, meta: Meta[]): void
+}
+
+interface NativeQueryCb { (err: Error, results: NativeNextResultInfo, more:boolean): void
+}
+
+interface NativeQueryObj {
+    query_str: string
+    numeric_string?: boolean
+    query_polling?: boolean
+    query_timeout?: number
+    max_prepared_column_size?: number
+}
+
+interface NativeCustomBinding {
+    precision?: number
+    scale?: number
+    offset?: number
+    value?: string|string[]
+        |boolean|boolean[]
+        |Buffer|Buffer[]|
+        Date|Date[]|
+        number|number[]
+}
+
+interface NativeParam {
+    is_user_defined?: boolean
+    type_id?: number
+    schema?: string
+    bcp?: boolean
+    bcp_version?: number
+    table_name?: string
+    ordinal_position?: number
+    scale?: number
+    offset?: number
+    precision?: number
+    is_output?: boolean
+    name?: string
+    value?: string|string[]
+        |boolean|boolean[]
+        |Buffer|Buffer[]|
+        Date|Date[]|
+        number|number[]|
+        NativeCustomBinding
+}
+
+declare class NativeConnection {
+    constructor()
+    readColumn(queryId: number, rowBatchSize: number, cb: NativeReadColumnCb): void
+    nextResult(queryId: number, cb: NativeNextResultCb): void
+    unbind(queryId: number, cb: NativeUnbindCb): void
+    close(cb: StatusCb): void
+    cancelQuery(qid: number, cb: StatusCb): void
+    freeStatement(qid: number, cb: StatusCb): void
+    beginTransaction(cb: StatusCb): void
+    rollback(cb: StatusCb): void
+    commit(cb: StatusCb): void
+    prepare(qid: number, queryObj: NativeQueryObj, cb: NativePrepareCb): void
+    bindQuery(qid: number, params: NativeParam[], cb: NativePrepareCb): void
+    query(qid: number, queryObj: NativeQueryObj, params: NativeParam[], cb: NativeQueryCb): void
+    callProcedure(qid: number, procedure: string, params: NativeParam[], cb: NativeQueryCb): void
+}
+
 export interface SqlClient extends UserConversion{
     /**
      * helper promises allowing async style await to open connection
@@ -700,6 +804,7 @@ export interface SqlClient extends UserConversion{
      * close idle connections and test with periodic keep alive.
      */
     Pool: { (options:PoolOptions) : Pool } & { new (options?:PoolOptions) : Pool }
+    // Connection: { () : NativeConnection } & { new () : NativeConnection }
     open(description: ConnectDescription, cb: OpenCb): void
 
     /**
