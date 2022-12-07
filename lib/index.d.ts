@@ -580,36 +580,132 @@ interface ServerDialect {
 
 interface TableBuilder {
     // can use utility method e.g. builder.addColumn('col_b').asVarChar(100)
+    /**
+     * e.g. builder.addColumn('col_b').asVarChar(100)
+     * @param columnName must be unique for table and reprents new column
+     * @param columnType the textual type as represented in database
+     * @param maxLength optional for certain types
+     * @param isPrimaryKey 1 is prmary key
+     * @returns the column instance that can be further specialised with fluent api
+     */
     addColumn (columnName: string, columnType?: string, maxLength?:number, isPrimaryKey?: number): TableColumn
      // builder.setDialect(mgr.ServerDialect.Sybase)
+    /**
+     *
+     * @param dialect specifies if using Sybase, defaults to SQL server
+     */
     setDialect(dialect: ServerDialect): boolean
+
+    /**
+     * recompute the table properties based on columns added
+     */
     compute () : void
+    /**
+     * constructs a bulk table manager to register which will be used
+     * rather than via a call to server to obtain meta data.
+     * @returns a bulk table that can be registered with table manager.
+     */
     toTable () : BulkTableMgr
+    /**
+     * used for testing where table can be dropped ready for re-creation.
+     * @returns await promise to drop the table
+     */
     drop (): Promise<any>
+    /**
+     * used for testing where table is created in server based on columns
+     * @returns promise to await for table created.
+     */
     create (): Promise<any>
+    /**
+     * used for testing where table can be truncated.
+     * @returns promise to await for table to be truncated.
+     */
     truncate () : Promise<any>
+    /**
+     * remove all columns added so far
+     */
     clear (): void
     // a wrapper procedure definition with column as parameters
+    /**
+     * a stored proc which has params representing the columns where a row
+     * is inserted into table.
+     * @param procname the name of the procedure
+     * @returns sql representing a stored proc to insert a row into the table.
+     */
     insertProcSql (procname?: string): string
     // proc to accept tvp param for table and copy/bulk insert
+    /**
+     * a stored proc which has a single TVP param representing the columns where rows
+     * are inserted into table by selecting from tvp
+     * @param procname the name of the procedure
+     * @param tableTypeName the name of the tvp type as param of proc
+     * @returns sql representing a stored proc to insert a row into the table.
+     */
     insertTvpProcSql (procname?: string, tableTypeName?: string): string
-    // dbo.tmpTableBuilderType
+    /**
+     * the name of table type represented by table e.g. dbo.tmpTableBuilderType
+     */
     typeName: string
-    // IF TYPE_ID(N'dbo.tmpTableBuilderType') IS not NULL drop type dbo.tmpTableBuilderType
+    /**
+     * the columns added into the table
+     */
+    columns: TableColumn[]
+    /**
+     * the columns which are not readonly and form part of insert statement
+     */
+    insertColumns: TableColumn[]
+    /**
+     * sql to drop the table type e.g.
+     * IF TYPE_ID(N'dbo.tmpTableBuilderType') IS not NULL drop type dbo.tmpTableBuilderType
+     */
+    //
     dropTypeSql: string
-    // CREATE TYPE dbo.tmpTableBuilderType AS TABLE ([id] int , [MatterColumn] varchar (100) NOT NULL, [SearchTerm] nvarchar (MAX) NOT NULL, [Comparator] nvarchar (20) NOT NULL)
+    /**
+     * sql to create the table type representing the table.
+     * e.g. CREATE TYPE dbo.tmpTableBuilderType AS TABLE ([id] int , [MatterColumn] varchar (100) NOT NULL, [SearchTerm] nvarchar (MAX) NOT NULL, [Comparator] nvarchar (20) NOT NULL)
+     */
+    //
     userTypeTableSql: string
-    // IF OBJECT_ID('dbo.tmpTableBuilder', 'U') IS NOT NULL DROP TABLE dbo.tmpTableBuilder;
+    /**
+     * the sql to dtop the table
+     * e.g. IF OBJECT_ID('dbo.tmpTableBuilder', 'U') IS NOT NULL DROP TABLE dbo.tmpTableBuilder;
+     */
+    //
     dropTableSql: string
-    // CREATE TABLE dbo.tmpTableBuilder ([id] int , [MatterColumn] varchar (100) NOT NULL, [SearchTerm] nvarchar (MAX) NOT NULL, [Comparator] nvarchar (20) NOT NULL)
+    /**
+     * the sql to create the table
+     * e.g. CREATE TABLE dbo.tmpTableBuilder ([id] int , [MatterColumn] varchar (100) NOT NULL, [SearchTerm] nvarchar (MAX) NOT NULL, [Comparator] nvarchar (20) NOT NULL)
+     */
     createTableSql: string
+    /**
+     * sql for a clustered index around primary keys
+     */
     clusteredSql: string
+    /**
+     * the select signature to fetch all columns
+     */
     selectSql: string
+    /**
+     * sql to insert into server.
+     */
     insertSql: string
+    /**
+     * sql to truncate the table
+     */
     truncateSql: string
+    /**
+     * sql of the signature of insert params
+     * e.g. ('?', '?')
+     */
     paramsSql: string
     insertParamsSql: string
+    /**
+     * the proc sql to insert a row via params
+     */
     insertTvpProcedureName: string
+    /**
+     * the proc sql taking a tvp param
+     */
     insertProcedureTvpSql: string
   }
 
@@ -635,16 +731,50 @@ interface TableManager {
 }
 
 interface PreparedPromises {
+    /**
+     * free the unmanaged resources representing the prepared statement
+     * @returns promise to await for statement to be released on server
+     */
     free(): Promise<any>
+    /**
+     * submit a query on a prepared statement
+     * @param params array of parameters previously bound in prepared query.
+     * @param options optional params on query such as timeout
+     * @returns promise to await for query results
+     */
     query(params?: any[], options?: QueryAggregatorOptions) : Promise<QueryAggregatorResults>
 }
 
 interface PreparedStatement {
+    /**
+     * promises to query and free the statement
+     */
     promises: PreparedPromises
+    /**
+     * submit bound query using provided params
+     * @param params - the param array on query
+     * @param cb - called with query results.
+     */
     preparedQuery(params?: any[], cb ?: QueryCb): Query
+    /**
+     * free the prepared statement
+     * @param cb called when server frees the statement
+     */
     free(cb: StatusCb): void
+    /**
+     * the sql representing the bound query.
+     * @returns sql submitted to bind statement.
+     */
     getSignature(): string
+    /**
+     * the id representing the prepared query
+     * @returns the numeric id of statement
+     */
     getId(): number
+    /**
+     * metadata returned by binding the prepared query.
+     * @returns array of bound parameters
+     */
     getMeta(): Meta[]
 }
 
@@ -806,14 +936,12 @@ export interface SqlClient extends UserConversion{
     Pool: { (options:PoolOptions) : Pool } & { new (options?:PoolOptions) : Pool }
     // Connection: { () : NativeConnection } & { new () : NativeConnection }
     open(description: ConnectDescription, cb: OpenCb): void
-
     /**
      * async operation to open a connection to the database
      * @param conn_str - string representing connection of form Driver={ODBC Driver 17 for SQL Server};Server= ..
      * @param cb - will return error or connection object
      */
     open(conn_str: string, cb: OpenCb): void
-
     /**
      * adhoc async query to open connection to database, execute a query and close connection
      * @param conn_str - string representing connection
@@ -822,7 +950,6 @@ export interface SqlClient extends UserConversion{
      * @returns - a query object which can be used to monitor progress via event notification
      */
     query(conn_str: string, sql: string, cb?: QueryCb): Query
-
     /**
      * adhoc async query with supplied parameters to open connection to database, execute a query
      * and close connection.
