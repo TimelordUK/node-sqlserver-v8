@@ -9,7 +9,20 @@ interface AggregatorPromises {
 
 interface SqlClientPromises  {
     query(conn_str: string, sql: string, params?: any[], options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
+    /**
+     * adhoc call to a stored procedure using a connection string, proc name and params
+     * @param conn_str - the connection string
+     * @param name - the name of the stored proc to call
+     * @param params - optional params for the proc
+     * @param options - query options such as timeout.
+     * @returns promise to await for results from query.
+     */
     callProc(conn_str: string, name: string, params?: any, options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
+    /**
+     * open a connection to server using an odbc style connection string.
+     * @param conn_str - the connection string
+     * @returns - a promise to await for a new connection to the database
+     */
     open(conn_str: string): Promise<Connection>
 }
 
@@ -158,20 +171,40 @@ declare class Pool  {
     queryRaw(sql: string, params?: any[], cb?: QueryRawCb): Query
     queryRaw(sql: string, cb: QueryRawCb): Query
     isClosed(): boolean
-
     /**
-     * pool.on('debug', msg => { console.log(msg) })
+     * event subscription for debug
+     * e.g. pool.on('debug', msg => { console.log(msg) })
      * @param debug 'debug' as string
-     * @param cb  callback containing txt status update messages for debug
+     * @param cb callback containing txt status update messages for debug
      */
     on(debug: string, cb?: MessageCb): void
-    // pool.on('open', options = {} )
+    /**
+     * event subscription for when pool is opened.
+     * e.g. pool.on('open', options = {} )
+     * @param open 'open' as string
+     * @param cb callback containing options on opened pool.
+     */
     on(open: string, cb?: PoolOptionsEventCb): void
-    // pool.on('error', err = {} )
+    /**
+     * event subscription for when error is raised.
+     * e.g. pool.on('error', err = {} )
+     * @param error 'error' as string
+     * @param err cb containing the raised error
+     */
     on(error: string, err?: StatusCb): void
-    // pool.on('submitted', q => {} )
+    /**
+     * event subscription for when query is submitted on connection.
+     * pool.on('submitted', q => {} )
+     * @param submitted 'submitted' as string
+     * @param query cb containing the query submited to server.
+     */
     on(submitted: string, query?: QueryDescriptionCb): void
-     // pool.on('status', q => {} )
+    /**
+     * event subscription for when status is raised by pool from state update
+     * e.g. pool.on('status', q => {} )
+     * @param status 'status' as string
+     * @param statusRecord cb containing the status based on pool state.
+     */
     on(status: string, statusRecord?: PoolStatusRecordCb): void
 }
 
@@ -715,10 +748,10 @@ interface TableManagerPromises {
 }
 
 interface TableManager {
+    promises: TableManagerPromises
     /**
      * @deprecated Please use `getTable`
      */
-    promises: TableManagerPromises
     bind(tableName: string, cb: BindCb): void // cannot promisify (table)
     getTable(tableName: string, cb: GetTableCb): void // promise friendly (err, table)
     // manually register a table

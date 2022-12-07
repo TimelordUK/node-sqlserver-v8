@@ -7,7 +7,6 @@
     <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="start to doc the api">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/index.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/table.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -165,7 +164,7 @@
       <workItem from="1657137642653" duration="623000" />
       <workItem from="1657564983185" duration="694000" />
       <workItem from="1670355188946" duration="11807000" />
-      <workItem from="1670448109779" duration="2257000" />
+      <workItem from="1670448109779" duration="3358000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -258,7 +257,14 @@
       <option name="project" value="LOCAL" />
       <updated>1670362783231</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="start to doc the api">
+      <created>1670450562652</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1670450562652</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
