@@ -440,10 +440,21 @@ interface BulkMgrSummary {
 
 interface BulkTableMgrPromises
 {
-    select(cols: any[]): Promise<any[]>
-    insert(rows: any[]): Promise<any>
-    delete(rows: any[]): Promise<any>
-    update(rows: any[]): Promise<any>
+    select(cols: object[]): Promise<any[]>
+    /**
+     * promise to submit rows to database where each row is represented
+     * each column is bound precisely as defined on the table hence
+     * will work with always on encryption.
+     * by column name
+     * {
+     *     id: 1
+     *     col_a: 'hello'
+     * }
+     * @param rows - array of objects to be inserted as rows.
+     */
+    insert(rows: object[]): Promise<any>
+    delete(rows: object[]): Promise<any>
+    update(rows: object[]): Promise<any>
 }
 
 interface BulkTableMgr {
@@ -469,20 +480,40 @@ interface BulkTableMgr {
     getUpdateColumns(): TableColumn[]
     getPrimaryColumns(): TableColumn[]
     getAssignableColumns(): TableColumn[]
-    // insert only - use bcp for increased bcp speed -
-    // only works on ODBC Driver 17 for SQL Server
+    /**
+     * effects insert only - use bcp for increased bcp speed
+     * only works on ODBC Driver 17/18 for SQL Server
+     * bcp will bind block of memory and copy rows into that block
+     * and send to server - resulting in fast insert speeds.
+     * @param bcp - switch insert bcp on/off
+     */
     setUseBcp(bcp:boolean):void
+    /**
+     * get current bcp mode ie. is bcp on
+     * @returns bcp status
+     */
     getUseBcp():boolean
-    // bcp requires the ms odbc driver to be dynamically loaded as it is not part of
-    // ODBC. If driver default as below is used, this method is automatically called
-    // with 17, 18 (numeric). The default value is 17. If using an alias or DCN entry
-    //  may need to manually call this method.
-    // "UAT18": "Driver={ODBC Driver 18 for SQL Server}; Server= ... Database=node;TrustServerCertificate=yes;",
-    // "UAT": "Driver={ODBC Driver 17 for SQL Server}; Server= ...  Database=node",
+    /**
+     * bcp requires the ms odbc driver to be dynamically loaded as it is not part of
+     * ODBC. If driver default as below is used, this method is automatically called
+     * with 17, 18 (numeric). The default value is 17. If using an alias or DCN entry
+     * may need to manually call this method.
+     * "UAT18": "Driver={ODBC Driver 18 for SQL Server}; Server= ... Database=node;TrustServerCertificate=yes;",
+     * "UAT": "Driver={ODBC Driver 17 for SQL Server}; Server= ...  Database=node",
+     * @param v the driver version used for bcp
+     */
     setBcpVersion(v:number) : void
+    /**
+     * current driver version used by driver to dynamically load library for bcp
+     * @returns the driver version
+     */
     getBcpVersion():number
-    // for a set of objects abstract primary key fields only
-    keys(vec:any[]): any[]
+    /**
+     * for a set of objects extract primary key fields only
+     * @param vec - array of objects
+     * @returns - array of objects containing only primary keys
+     */
+    keys(vec:object[]): object[]
 }
 
 interface TableValueParam {
