@@ -1,6 +1,7 @@
 /**
  * Created by admin on 19/01/2017.
  */
+import * as buffer from "buffer";
 
 interface AggregatorPromises {
     query(sql: string, params?: any[], options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
@@ -837,18 +838,45 @@ interface PreparedStatement {
     getId(): number
     /**
      * metadata returned by binding the prepared query.
-     * @returns array of bound parameters
+     * @returns array of bound parameter information describing parameter.
      */
     getMeta(): Meta[]
 }
 
 interface ConcreteColumnType {
+    /***
+     * the ODBC type which will be used to bind parameter. If this is not
+     * provided, the value is used to guess what binding should be used.
+     * This works for all non encrypted columns as the server will cast
+     * the parameter to target colmn type. When using encryption the driver
+     * assigns this and precision, scale based on metadata describing the
+     * column or parameter type.
+     */
     sql_type: number
-    value: any
+    /**
+     * the actual JS value sent to native driver to be comverted to native
+     * c type and on to the server.
+     */
+    value?: string|string[]
+        |boolean|boolean[]
+        |Buffer|Buffer[]|
+        Date|Date[]|
+        number|number[]
     precision?: number
     scale?: number
+    /**
+     * used in datetimeoffset based parameters
+     */
     offset?: number
+    /**
+     * is the parameter a datetime type.
+     * do not set - this is computed and used by native driver in binding parameter.
+     */
     isDateTime: boolean
+    /**
+     * is the parameter a time2 type.
+     * do not set - this is computed and used by native driver in binding parameter.
+     */
     isTime2: boolean
     fraction?: number
 }
