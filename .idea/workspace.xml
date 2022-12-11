@@ -7,6 +7,12 @@
     <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="start to doc the api">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/index.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/samples/javascript/sequelize.js" beforeDir="false" afterPath="$PROJECT_DIR$/samples/javascript/sequelize.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/samples/typescript/mssql-demo.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/mssql-demo.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/compoundqueries.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/compoundqueries.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/concurrent.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/concurrent.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/connection-pool.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/connection-pool.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/env/test-env.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/env/test-env.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -67,29 +73,107 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;javascript.nodejs.core.library.configured.version&quot;: &quot;18.9.0&quot;,
-    &quot;javascript.nodejs.core.library.typings.version&quot;: &quot;18.11.11&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Stephen/dev/js/sql/node_modules/msnodesqlv8/test&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs.mocha.mocha_node_package_dir&quot;: &quot;C:/Users/Stephen/dev/js/sql/node_modules/msnodesqlv8/node_modules/mocha&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\Stephen\\dev\\js\\v8\\node_modules\\msnodesqlv8\\node_modules\\typescript\\lib&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "javascript.nodejs.core.library.configured.version": "18.9.0",
+    "javascript.nodejs.core.library.typings.version": "18.11.11",
+    "last_opened_file_path": "C:/Users/Stephen/dev/js/sql/node_modules/msnodesqlv8/test",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs.mocha.mocha_node_package_dir": "C:/Users/Stephen/dev/js/v8/node_modules/msnodesqlv8/node_modules/mocha",
+    "nodejs_package_manager_path": "npm",
+    "ts.external.directory.path": "C:\\Users\\Stephen\\dev\\js\\v8\\node_modules\\msnodesqlv8\\node_modules\\typescript\\lib",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Stephen\dev\js\sql\node_modules\msnodesqlv8\samples\javascript" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Mocha.connection-pool.open pool size 4 - submit queries on parked connections">
+    <configuration name="compoundqueries" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
+      <working-directory>$PROJECT_DIR$</working-directory>
+      <pass-parent-env>true</pass-parent-env>
+      <ui>bdd</ui>
+      <extra-mocha-options />
+      <test-kind>SUITE</test-kind>
+      <test-file>$PROJECT_DIR$/test/compoundqueries.js</test-file>
+      <test-names>
+        <name value="compoundqueries" />
+      </test-names>
+      <method v="2" />
+    </configuration>
+    <configuration name="concurrent" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
+      <working-directory>$PROJECT_DIR$</working-directory>
+      <pass-parent-env>true</pass-parent-env>
+      <ui>bdd</ui>
+      <extra-mocha-options />
+      <test-kind>SUITE</test-kind>
+      <test-file>$PROJECT_DIR$/test/concurrent.js</test-file>
+      <test-names>
+        <name value="concurrent" />
+      </test-names>
+      <method v="2" />
+    </configuration>
+    <configuration name="concurrent.open connections in sequence and prove distinct connection objects created" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
+      <working-directory>$PROJECT_DIR$</working-directory>
+      <pass-parent-env>true</pass-parent-env>
+      <ui>bdd</ui>
+      <extra-mocha-options />
+      <test-kind>TEST</test-kind>
+      <test-file>$PROJECT_DIR$/test/concurrent.js</test-file>
+      <test-names>
+        <name value="concurrent" />
+        <name value="open connections in sequence and prove distinct connection objects created" />
+      </test-names>
+      <method v="2" />
+    </configuration>
+    <configuration name="concurrent.open connections simultaneously and prove distinct connection objects created" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
+      <working-directory>$PROJECT_DIR$</working-directory>
+      <pass-parent-env>true</pass-parent-env>
+      <ui>bdd</ui>
+      <extra-mocha-options />
+      <test-kind>TEST</test-kind>
+      <test-file>$PROJECT_DIR$/test/concurrent.js</test-file>
+      <test-names>
+        <name value="concurrent" />
+        <name value="open connections simultaneously and prove distinct connection objects created" />
+      </test-names>
+      <method v="2" />
+    </configuration>
+    <configuration name="connection-pool.open pool size 4 - submit queries on parked connections" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
+      <working-directory>$PROJECT_DIR$</working-directory>
+      <pass-parent-env>true</pass-parent-env>
+      <ui>bdd</ui>
+      <extra-mocha-options />
+      <test-kind>TEST</test-kind>
+      <test-file>$PROJECT_DIR$/test/connection-pool.js</test-file>
+      <test-names>
+        <name value="connection-pool" />
+        <name value="open pool size 4 - submit queries on parked connections" />
+      </test-names>
+      <method v="2" />
+    </configuration>
     <configuration name="test" type="mocha-javascript-test-runner" nameIsGenerated="true">
       <node-interpreter>project</node-interpreter>
       <node-options />
@@ -103,6 +187,15 @@
       <recursive>false</recursive>
       <method v="2" />
     </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Mocha.connection-pool.open pool size 4 - submit queries on parked connections" />
+        <item itemvalue="Mocha.concurrent" />
+        <item itemvalue="Mocha.concurrent.open connections simultaneously and prove distinct connection objects created" />
+        <item itemvalue="Mocha.concurrent.open connections in sequence and prove distinct connection objects created" />
+        <item itemvalue="Mocha.compoundqueries" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
@@ -164,7 +257,8 @@
       <workItem from="1657137642653" duration="623000" />
       <workItem from="1657564983185" duration="694000" />
       <workItem from="1670355188946" duration="11807000" />
-      <workItem from="1670448109779" duration="7733000" />
+      <workItem from="1670448109779" duration="9557000" />
+      <workItem from="1670765693919" duration="5219000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -278,7 +372,14 @@
       <option name="project" value="LOCAL" />
       <updated>1670452576004</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="start to doc the api">
+      <created>1670542782940</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1670542782940</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

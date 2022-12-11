@@ -2,7 +2,7 @@
 const commonTestFns = require('./CommonTestFunctions')
 
 const supp = require('../../samples/typescript/demo-support')
-const sql = require('msnodesqlv8')
+const sql = require('../../../msnodesqlv8')
 const { TimeHelper } = require('./time-helper')
 const { Employee } = require('./employee')
 const { GeographyHelper } = require('./geography-helper')

@@ -17,6 +17,39 @@ describe('concurrent', function () {
     env.close().then(() => done())
   })
 
+  function checkClean (connections, testDone) {
+    const c0 = connections[0]
+    const c1 = connections[1]
+    const c2 = connections[2]
+
+    const t1 = c0 === c1 && c1 === c2
+    assert(t1 === false)
+    assert(c0.id !== c1.id)
+    assert(c1.id !== c2.id)
+
+    const clean = [
+      asyncDone => {
+        c0.close(() => {
+          asyncDone()
+        })
+      },
+      asyncDone => {
+        c1.close(() => {
+          asyncDone()
+        })
+      },
+      asyncDone => {
+        c2.close(() => {
+          asyncDone()
+        })
+      }
+    ]
+
+    env.async.series(clean, () => {
+      testDone()
+    })
+  }
+
   it('open connections in sequence and prove distinct connection objects created', testDone => {
     const connections = []
 
@@ -26,43 +59,10 @@ describe('concurrent', function () {
         connections.push(conn2)
         open(conn3 => {
           connections.push(conn3)
-          done()
+          checkClean(connections, testDone)
         })
       })
     })
-
-    function done () {
-      const c0 = connections[0]
-      const c1 = connections[1]
-      const c2 = connections[2]
-
-      const t1 = c0 === c1 && c1 === c2
-      assert(t1 === false)
-      assert(c0.id !== c1.id)
-      assert(c1.id !== c2.id)
-
-      const clean = [
-        asyncDone => {
-          c0.close(() => {
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          c1.close(() => {
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          c2.close(() => {
-            asyncDone()
-          })
-        }
-      ]
-
-      env.async.series(clean, () => {
-        testDone()
-      })
-    }
   })
 
   const open = done => {
@@ -180,51 +180,18 @@ describe('concurrent', function () {
 
     open(conn1 => {
       connections.push(conn1)
-      if (connections.length === 3) done()
+      if (connections.length === 3) checkClean(connections, testDone)
     })
 
     open(conn2 => {
       connections.push(conn2)
-      if (connections.length === 3) done()
+      if (connections.length === 3) checkClean(connections, testDone)
     })
 
     open(conn3 => {
       connections.push(conn3)
-      if (connections.length === 3) done()
+      if (connections.length === 3) checkClean(connections, testDone)
     })
-
-    function done () {
-      const c0 = connections[0]
-      const c1 = connections[1]
-      const c2 = connections[2]
-
-      const t1 = c0 === c1 && c1 === c2
-      assert(t1 === false)
-      assert(c0.id !== c1.id)
-      assert(c1.id !== c2.id)
-
-      const clean = [
-        asyncDone => {
-          c0.close(() => {
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          c1.close(() => {
-            asyncDone()
-          })
-        },
-        asyncDone => {
-          c2.close(() => {
-            asyncDone()
-          })
-        }
-      ]
-
-      env.async.series(clean, () => {
-        testDone()
-      })
-    }
   })
 
   it('make sure two concurrent connections each have unique spid ', testDone => {

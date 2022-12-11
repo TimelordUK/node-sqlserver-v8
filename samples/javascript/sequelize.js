@@ -88,6 +88,7 @@ async function userModel () {
 }
 
 userModel().then(() => {
-  sequelize.close()
-  console.log('done')
+  sequelize.close().then(() => {
+    console.log('done')
+  })
 })

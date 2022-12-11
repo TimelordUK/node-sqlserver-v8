@@ -39,28 +39,41 @@ describe('compoundqueries', function () {
     env.close().then(() => done())
   })
 
-  it('check row count emission is as expected for compound queries 1 insert', testDone => {
-    const expected = [1]
-    const received = []
+  class Batcher {
+    constructor () {
+      this.received = []
+    }
 
+    send (cmd, expected, testDone) {
+      const received = this.received
+
+      const batch = cmd.join(';')
+      this.q = env.theConnection.query(batch)
+      const q = this.q
+      q.on('error', e => {
+        assert.ifError(e)
+      })
+
+      q.on('rowcount', count => {
+        received.push(count)
+        if (received.length === expected.length) {
+          assert.deepStrictEqual(expected, received)
+          testDone()
+        }
+      })
+      return q
+    }
+  }
+
+  it('check row count emission is as expected for compound queries 1 insert', testDone => {
     const cmd = [
       'create table rowsAffectedTest (id int, val int)',
       'insert into rowsAffectedTest values (1, 5)',
       'drop table rowsAffectedTest'
     ]
-
-    const batch = cmd.join(';')
-    const q = env.theConnection.query(batch, err => {
-      assert.ifError(err)
-    })
-
-    q.on('rowcount', count => {
-      received.push(count)
-      if (received.length === expected.length) {
-        assert.deepStrictEqual(expected, received)
-        testDone()
-      }
-    })
+    const expected = [1]
+    const batcher = new Batcher()
+    batcher.send(cmd, expected, testDone)
   })
 
   testname = 'test 001 - batched query: SELECT....; INSERT ....; SELECT....;'
@@ -146,7 +159,6 @@ describe('compoundqueries', function () {
 
   it('check row count emission is as expected for compound queries 3 inserts, update all', testDone => {
     const expected = [1, 1, 1, 3]
-    const received = []
 
     const cmd = [
       'create table rowsAffectedTest (id int)',
@@ -156,24 +168,12 @@ describe('compoundqueries', function () {
       'update rowsAffectedTest set id = 1',
       'drop table rowsAffectedTest'
     ]
-
-    const batch = cmd.join(';')
-    const q = env.theConnection.query(batch, err => {
-      assert.ifError(err)
-    })
-
-    q.on('rowcount', count => {
-      received.push(count)
-      if (received.length === expected.length) {
-        assert.deepStrictEqual(expected, received)
-        testDone()
-      }
-    })
+    const batcher = new Batcher()
+    batcher.send(cmd, expected, testDone)
   })
 
   it('check row count emission is as expected for compound queries 4 inserts, 2 updates, 2 updates, update all', testDone => {
     const expected = [1, 1, 1, 1, 2, 2, 4]
-    const received = []
 
     const cmd = [
       'create table rowsAffectedTest (id int, val int)',
@@ -189,18 +189,8 @@ describe('compoundqueries', function () {
       'drop table rowsAffectedTest'
     ]
 
-    const batch = cmd.join(';')
-    const q = env.theConnection.query(batch, err => {
-      assert.ifError(err)
-    })
-
-    q.on('rowcount', count => {
-      received.push(count)
-      if (received.length === expected.length) {
-        assert.deepStrictEqual(expected, received)
-        testDone()
-      }
-    })
+    const batcher = new Batcher()
+    batcher.send(cmd, expected, testDone)
   })
 
   /*

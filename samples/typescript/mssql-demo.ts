@@ -1,4 +1,4 @@
-import {Connection, Error, PreparedStatement, Query, SqlClient, QueryDescription, BulkTableMgr,} from 'msnodesqlv8';
+import {Connection, Error, PreparedStatement, Query, SqlClient, QueryDescription, BulkTableMgr} from 'msnodesqlv8';
 
 // require the module so it can be used in your node JS code.
 const sql : SqlClient = require('msnodesqlv8')

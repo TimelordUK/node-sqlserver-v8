@@ -308,21 +308,31 @@ describe('connection-pool', function () {
     tester(500, 4, () => 'select @@SPID as spid', 5000, 0, testDone)
   })
 
+  class PoolTester {
+    create (size) {
+      const pool = new env.sql.Pool({
+        connectionString: env.connectionString,
+        ceiling: size,
+        heartbeatSecs: 1,
+        inactivityTimeoutSecs: 3
+      })
+
+      pool.on('error', e => {
+        assert.ifError(e)
+      })
+      pool.open()
+
+      return pool
+    }
+  }
+
   it('open pool size 4 - submit queries on parked connections', testDone => {
     const size = 4
     const iterations = 4
-    const pool = new env.sql.Pool({
-      connectionString: env.connectionString,
-      ceiling: size,
-      heartbeatSecs: 1,
-      inactivityTimeoutSecs: 3
-    })
 
-    pool.on('error', e => {
-      assert.ifError(e)
-    })
+    const tester = new PoolTester()
+    const pool = tester.create(size)
 
-    pool.open()
     let opened = false
     const parked = []
     const checkin = []
