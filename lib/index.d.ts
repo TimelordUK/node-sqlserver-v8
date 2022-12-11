@@ -5,13 +5,24 @@
 declare module 'msnodesqlv8' {
     type sqlJsColumnType = (string|boolean|Date|number|Buffer)
     type sqlObjectType = (Record<string|number, sqlJsColumnType>)
-    type sqlQueryParamType = (string|string[] | number|number[] | boolean|boolean[] | Date|Date[] | Buffer|Buffer[] | ConcreteColumnType|ConcreteColumnType[])
+    type sqlQueryNativeParamType = (string|string[] | number|number[] | boolean|boolean[] | Date|Date[] | Buffer|Buffer[])
+    type sqlQueryParamType = (sqlQueryNativeParamType | ConcreteColumnType | ConcreteColumnType[])
     type sqlPoolEventType = MessageCb|PoolStatusRecordCb|PoolOptionsEventCb|StatusCb|QueryDescriptionCb
-    type sqlQueryEventType = SubmittedEventCb|ColumnEventCb|EventColumnCb|StatusCb|RowEventCb
+    type sqlQueryEventType = SubmittedEventCb|ColumnEventCb|EventColumnCb|StatusCb|RowEventCb|MetaEventCb
     type sqlProcParamType = sqlObjectType|sqlQueryParamType[]
-    type sqlQueryType = string|QueryDescription
-    type sqlConnectType = string|ConnectDescription
-    type sqlColumnResultsType = any[]|Record<string, any>[]|sqlJsColumnType[]
+    type sqlQueryType = string | QueryDescription
+    type sqlConnectType = string | ConnectDescription
+    type sqlColumnResultsType = any[] | Record<string, any>[] | sqlJsColumnType[]
+
+    interface GetSetUTC {
+        setUseUTC(utc: boolean): void
+        getUseUTC(): boolean
+    }
+
+    interface SubmitQuery {
+        query(sqlOrQuery: sqlQueryType, paramsOrCb?: sqlQueryParamType[] | QueryCb, cb?: QueryCb): Query
+        queryRaw(sqlOrQuery: sqlQueryType, paramsOrCb?: sqlQueryParamType[] | QueryRawCb, cb?: QueryRawCb): Query
+    }
 
     interface AggregatorPromises {
         /**
@@ -36,7 +47,7 @@ declare module 'msnodesqlv8' {
     }
 
     interface SqlClientPromises {
-        query(conn_str: string, sql: string, params?: sqlQueryParamType[], options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
+        query(conn_str: sqlConnectType, sql: string, params?: sqlQueryParamType[], options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
         /**
          * adhoc call to a stored procedure using a connection string, proc name and params
          * @param conn_str - the connection string
@@ -45,22 +56,21 @@ declare module 'msnodesqlv8' {
          * @param options - query options such as timeout.
          * @returns promise to await for results from query.
          */
-        callProc(conn_str: string, name: string, params?: sqlProcParamType, options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
+        callProc(conn_str: sqlConnectType, name: string, params?: sqlProcParamType, options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
 
         /**
          * open a connection to server using an odbc style connection string.
          * @param conn_str - the connection string
          * @returns - a promise to await for a new connection to the database
          */
-        open(conn_str: string): Promise<Connection>
+        open(conn_str: sqlConnectType): Promise<Connection>
     }
 
     interface Table {
         name: string
-        rows: any[]
+        rows: sqlJsColumnType[]
         columns: TableColumn[]
-
-        addRowsFromObjects(vec: any): void
+        addRowsFromObjects(vec: sqlObjectType[]): void
     }
 
     interface PoolOptions {
@@ -183,12 +193,17 @@ declare module 'msnodesqlv8' {
         getProc(name: string): Promise<ProcedureDefinition>
     }
 
-     class Pool {
+     class Pool implements GetSetUTC, SubmitQuery {
          constructor(poolOptions: PoolOptions)
          promises: PoolPromises
          getUseUTC(): boolean
          setUseUTC(utc: boolean): void
          open(cb?: PoolOpenCb): void
+         /**
+          * close the pool such that all active connections are closed and pool is no longer
+          * usable.
+          * @param cb callback when operation is complete
+          */
          close(cb?: StatusCb): void
          query(sqlOrQuery: sqlQueryType, paramsOrCb?: sqlQueryParamType[] | QueryCb, cb?: QueryCb): Query
          queryRaw(sqlOrQuery: sqlQueryType, paramsOrCb?: sqlQueryParamType[] | QueryRawCb, cb?: QueryRawCb): Query
@@ -326,28 +341,17 @@ declare module 'msnodesqlv8' {
         rollback(): Promise<any>
     }
 
-    interface Connection {
+    interface Connection extends GetSetUTC, SubmitQuery {
         promises: ConnectionPromises
         getUserTypeTable(name: string, cb: TableCb): void
-
         id: number
-
-        setUseUTC(utc: boolean): void
-
-        getUseUTC(): boolean
-
         // optionally return all number based columns as strings
         setUseNumericString(numericString: boolean): void
-
         getUseNumericString(): boolean
-
         // set max length of prepared strings or binary columns
         setMaxPreparedColumnSize(size: number): void
-
         getMaxPreparedColumnSize(): number
         close(cb: StatusCb): void
-        query(sqlOrQuery: sqlQueryType, paramsOrCb?: sqlQueryParamType[] | QueryCb, cb?: QueryCb): Query
-        queryRaw(sqlOrQuery: sqlQueryType, paramsOrCb?: sqlQueryParamType[] | QueryRawCb, cb?: QueryRawCb): Query
         beginTransaction(cb?: StatusCb): void
         commit(cb?: StatusCb): void
         rollback(cb?: StatusCb): void
@@ -363,6 +367,12 @@ declare module 'msnodesqlv8' {
     }
 
     interface Query {
+        /**
+         * subscribe for an event relating to query progress where events are
+         * @param event - 'meta', 'submitted', 'column', 'row', 'error', 'info', 'done', 'free'
+         * 'meta' -
+         * @param cb - callback containing data related to subscription
+         */
         on(event: string, cb: sqlQueryEventType): void
         cancelQuery(qcb?: StatusCb): void
         pauseQuery(qcb?: StatusCb): void
@@ -479,6 +489,10 @@ declare module 'msnodesqlv8' {
 
     interface PrepareCb {
         (err?: Error, statement?: PreparedStatement): void
+    }
+
+    interface MetaEventCb {
+        (meta: Meta[]): void
     }
 
     interface RowEventCb {
@@ -1000,11 +1014,7 @@ declare module 'msnodesqlv8' {
          * the actual JS value sent to native driver to be comverted to native
          * c type and on to the server.
          */
-        value?: string | string[]
-            | boolean | boolean[]
-            | Buffer | Buffer[] |
-            Date | Date[] |
-            number | number[]
+        value?: sqlQueryNativeParamType
         precision?: number
         scale?: number
         /**
@@ -1149,11 +1159,7 @@ declare module 'msnodesqlv8' {
         precision?: number
         scale?: number
         offset?: number
-        value?: string | string[]
-            | boolean | boolean[]
-            | Buffer | Buffer[] |
-            Date | Date[] |
-            number | number[]
+        value?: sqlQueryNativeParamType
     }
 
     interface NativeParam {
@@ -1169,12 +1175,7 @@ declare module 'msnodesqlv8' {
         precision?: number
         is_output?: boolean
         name?: string
-        value?: string | string[]
-            | boolean | boolean[]
-            | Buffer | Buffer[] |
-            Date | Date[] |
-            number | number[] |
-            NativeCustomBinding
+        value?: sqlQueryParamType
     }
 
     class NativeConnection {
