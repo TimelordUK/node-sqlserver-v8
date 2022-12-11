@@ -296,7 +296,7 @@ END`
     return res.first[0].db || 'node'
   }
 
-  isEncryptedConnection() {
+  isEncryptedConnection () {
     return (this.connectionString.includes('ColumnEncryption=Enabled'))
   }
 

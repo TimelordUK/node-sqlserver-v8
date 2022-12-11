@@ -1,6 +1,16 @@
 
 
-import {SqlClient, Error, Meta, EventColumnCb, PreparedStatement, Query, Connection} from "msnodesqlv8";
+import {
+    SqlClient,
+    Error,
+    Meta,
+    EventColumnCb,
+    PreparedStatement,
+    Query,
+    Connection,
+    RawData,
+    QueryDescription
+} from "msnodesqlv8";
 
 /**
  * Created by Stephen on 1/22/2017.
@@ -48,9 +58,9 @@ export module MsNodeSqlWrapperModule {
         _onRowCount: queryCb<number> | undefined;
         _onRow: queryCb<number> | undefined;
         _onDone: queryCb<any> | undefined;
-        _onSubmitted: queryCb<any> | undefined;
-        _onError: queryCb<string> | undefined;
-        _onClosed: queryCb<string> | undefined;
+        _onSubmitted: queryCb<QueryDescription> | undefined;
+        _onError: queryCb<Error> | undefined;
+        _onClosed: queryCb<Error> | undefined;
 
         _query: Query | undefined;
         _preparedStatement: PreparedStatement | undefined;
@@ -131,12 +141,12 @@ export module MsNodeSqlWrapperModule {
             return this;
         }
 
-        public onError(cb: queryCb<string>): SqlCommand {
+        public onError(cb: queryCb<Error>): SqlCommand {
             this._onError = cb;
             return this;
         }
 
-        public onClosed(cb: queryCb<string>): SqlCommand {
+        public onClosed(cb: queryCb<Error>): SqlCommand {
             this._onClosed = cb;
             return this;
         }
@@ -169,16 +179,16 @@ export module MsNodeSqlWrapperModule {
                     query.on('row', (m:any) => this._onRow(m));
                 }
                 if (this._onDone != null) {
-                    query.on('done', m => this._onDone(m));
+                    query.on('done', (e:Error) => this._onDone(e));
                 }
                 if (this._onError != null) {
-                    query.on('error', m => this._onError(m));
+                    query.on('error', (e: Error) => this._onError(e));
                 }
                 if (this._onClosed != null) {
-                    query.on('closed', m => this._onClosed(m));
+                    query.on('closed', (e: Error) => this._onClosed(e));
                 }
                 if (this._onSubmitted != null) {
-                    query.on('submitted', m => this._onSubmitted(m));
+                    query.on('submitted', (m:QueryDescription) => this._onSubmitted(m));
                 }
             }            
         }
@@ -373,9 +383,9 @@ export module MsNodeSqlWrapperModule {
         }
     }
 
-    export class RawData implements RawData {
-        public meta: Meta[] = [];
-        public rows: Array<any[]> [];
+    class LocalRawData implements RawData {
+        meta: Meta[];
+        rows: Array<(number | Date | string | boolean | Buffer)[]>;
     }
 
     export class SqlCommandResponse {
@@ -383,7 +393,7 @@ export module MsNodeSqlWrapperModule {
         public aggregateRaw(raw: RawData) {
             let rd = this.rawData;
             if (rd == null) {
-                this.rawData = rd = new RawData();
+                this.rawData = rd = new LocalRawData();
                 rd.meta = raw.meta;
                 rd.rows = [];
             }

@@ -187,7 +187,7 @@ async function table() {
       try {
         const connStr = env.connectionString
         const connection = await sql.promises.open(connStr)
-        const tm = env.bulkTableTest(sampleTableDef)
+        const tm = env.bulkTableTest(sampleTableDef, connection)
         const table: BulkTableMgr = await tm.create()
         const vec: SampleRecord[] = getInsertVec(10)
         console.log(`table = ${tm.createTableSql}`)

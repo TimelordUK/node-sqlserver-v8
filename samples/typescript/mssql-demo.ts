@@ -129,7 +129,7 @@ function event(done: Function): void {
                 console.log('event: partial column = ' + col);
             });
 
-            q.on('submitted', (q: string) => {
+            q.on('submitted', (q: QueryDescription) => {
                 console.log('event: submitted query = ' + JSON.stringify(q));
             });
 

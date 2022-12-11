@@ -4,14 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="start to doc the api">
+    <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="start to doc the api - add back JS style export where both TS and JS IDE typings supported">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/MsNodeSqWrapperModule.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/MsNodeSqWrapperModule.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/index.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/javascript/sequelize.js" beforeDir="false" afterPath="$PROJECT_DIR$/samples/javascript/sequelize.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/samples/typescript/db-backup.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/db-backup.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/samples/typescript/mssql-demo.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/mssql-demo.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/compoundqueries.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/compoundqueries.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/concurrent.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/concurrent.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/connection-pool.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/connection-pool.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/samples/typescript/promises.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/promises.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test/env/test-env.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/env/test-env.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -258,7 +257,7 @@
       <workItem from="1657564983185" duration="694000" />
       <workItem from="1670355188946" duration="11807000" />
       <workItem from="1670448109779" duration="9557000" />
-      <workItem from="1670765693919" duration="5219000" />
+      <workItem from="1670765693919" duration="14779000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -379,7 +378,14 @@
       <option name="project" value="LOCAL" />
       <updated>1670542782940</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="start to doc the api - add back JS style export where both TS and JS IDE typings supported">
+      <created>1670771018202</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1670771018202</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -409,7 +415,8 @@
     <MESSAGE value="patch for 32 bit build - will drop support soon" />
     <MESSAGE value="tmp rollback of index.d.ts as typescript is not compiling" />
     <MESSAGE value="start to doc the api" />
-    <option name="LAST_COMMIT_MESSAGE" value="start to doc the api" />
+    <MESSAGE value="start to doc the api - add back JS style export where both TS and JS IDE typings supported" />
+    <option name="LAST_COMMIT_MESSAGE" value="start to doc the api - add back JS style export where both TS and JS IDE typings supported" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

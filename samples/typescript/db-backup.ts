@@ -12,12 +12,12 @@ const query = sql.query(connectionString, sqlQuery, (err, rows, more) => {
     console.log(`cb rows`)
 })
 
-query.on('info', info => {
-    console.log(`info: ${info}`)
+query.on('info', (info:Error) => {
+    console.log(`info: ${JSON.stringify(info)}`)
 })
 
-query.on('error', info => {
-    console.log(`error: ${info}`)
+query.on('error', (e:Error) => {
+    console.log(`error: ${JSON.stringify(e)}`)
 })
 
 query.on('done', () => {
