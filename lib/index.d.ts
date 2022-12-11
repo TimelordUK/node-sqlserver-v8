@@ -9,15 +9,34 @@ declare module 'msnodesqlv8' {
     type sqlPoolEventType = MessageCb|PoolStatusRecordCb|PoolOptionsEventCb|StatusCb|QueryDescriptionCb
     type sqlQueryEventType = SubmittedEventCb|ColumnEventCb|EventColumnCb|StatusCb|RowEventCb
     type sqlProcParamType = sqlObjectType|sqlQueryParamType[]
+    type sqlQueryType = string|QueryDescription
+    type sqlConnectType = string|ConnectDescription
+    type sqlColumnResultsType = any[]|Record<string, any>[]|sqlJsColumnType[]
 
     interface AggregatorPromises {
+        /**
+         *
+         * @param sql the textual query to submit
+         * @param params optional bound parameters either array of JS native types or bound user defined parameters
+         * @param options optional parameters for query execution e.g. timeout
+         * @returns a promise to return all results from all compounded queries submitted
+         */
         query(sql: string, params?:sqlQueryParamType[], options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
+        /**
+         *
+         * @param name the name of procedure to call
+         * @param params optional bound parameters either array of JS native types or bound user defined parameters
+         * or object with properties assigned matching procedure parameter names.
+         * alter PROCEDURE <name> (@a INT = 5)
+         * then call with object parameter { a: 4 } to override default value 5
+         * @param options optional parameters for query execution e.g. timeout
+         * @returns a promise to return all results from all compounded queries submitted
+         */
         callProc(name: string, params?: sqlProcParamType, options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
     }
 
     interface SqlClientPromises {
         query(conn_str: string, sql: string, params?: sqlQueryParamType[], options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
-
         /**
          * adhoc call to a stored procedure using a connection string, proc name and params
          * @param conn_str - the connection string
@@ -89,17 +108,17 @@ declare module 'msnodesqlv8' {
          */
         elapsed: number
         /**
-         * array of meta for each query i.e. an array of arrays of data per column
+         * array of meta for each query i.e. an array holding an array of meta descriptions one per column
          */
-        meta: Meta[][]
+        meta: Array<Meta[]>
         /**
          * first set of rows i.e. results[0] if any else null
          */
-        first: any[]
+        first: sqlColumnResultsType
         /**
-         * each result set either as array of arrays or array of objects
+         * each result set either as array of arrays or array of objects with column names as properties
          */
-        results: any[][]
+        results: Array<sqlColumnResultsType>
         /**
          * output params if any from a proc call
          */
@@ -115,11 +134,11 @@ declare module 'msnodesqlv8' {
         /**
          * return code from procedure
          */
-        returns: any
+        returns: sqlJsColumnType
         /**
          * errors collected by running sql (up to promise reject)
          */
-        errors: Error[] //
+        errors: Error[]
     }
 
     interface QueryAggregatorOptions {
@@ -143,22 +162,18 @@ declare module 'msnodesqlv8' {
          * @returns promise returning pool when connections are up.
          */
         open(): Promise<Pool>
-
         /**
          * terminate all open connections.
          * @returns promise to await for close to complete.
          */
         close(): Promise<any>
-
         getUserTypeTable(name: string): Promise<Table>
-
         /**
          * fetch a table definition which can be used for bulk insert operations
          * @param name of table to bind too
          * @returns promise of bound table with methods to insert objects.
          */
         getTable(name: string): Promise<BulkTableMgr>
-
         /**
          * fetch a stored procedure definition which can be called with
          * correctly bound parameter types.
@@ -169,29 +184,23 @@ declare module 'msnodesqlv8' {
     }
 
      class Pool {
-        constructor(poolOptions: PoolOptions)
-        promises: PoolPromises
-        getUseUTC(): boolean
-        setUseUTC(utc: boolean): void
-        open(cb?: PoolOpenCb): void
-        close(cb?: StatusCb): void
-        query(sql: string, cb?: QueryCb): Query
-        query(sql: string, params?: any[], cb?: QueryCb): Query
-        query(description: QueryDescription, cb?: QueryCb): Query
-        query(description: QueryDescription, params?: any[], cb?: QueryCb): Query
-        queryRaw(description: QueryDescription, cb: QueryRawCb): Query
-        queryRaw(description: QueryDescription, params?: any[], cb?: QueryRawCb): Query
-        queryRaw(sql: string, params?: any[], cb?: QueryRawCb): Query
-        queryRaw(sql: string, cb: QueryRawCb): Query
-        isClosed(): boolean
-        /**
-         * event subscription for debug
-         * e.g. pool.on('debug', msg => { console.log(msg) })
-         * @param event one of 'debug', 'open', 'error', 'status', 'submitted' as string
-         * @param cb callback containing txt status update messages for debug
-         */
-        on(event: string, cb?: sqlPoolEventType): void
-    }
+         constructor(poolOptions: PoolOptions)
+         promises: PoolPromises
+         getUseUTC(): boolean
+         setUseUTC(utc: boolean): void
+         open(cb?: PoolOpenCb): void
+         close(cb?: StatusCb): void
+         query(sqlOrQuery: sqlQueryType, paramsOrCb?: sqlQueryParamType[] | QueryCb, cb?: QueryCb): Query
+         queryRaw(sqlOrQuery: sqlQueryType, paramsOrCb?: sqlQueryParamType[] | QueryRawCb, cb?: QueryRawCb): Query
+         isClosed(): boolean
+         /**
+          * event subscription
+          * e.g. pool.on('debug', msg => { console.log(msg) })
+          * @param event one of 'debug', 'open', 'error', 'status', 'submitted' as string
+          * @param cb callback related to event subscribed
+          */
+         on(event: string, cb?: sqlPoolEventType): void
+     }
 
     interface TableColumn {
         ordinal_position: number,
@@ -293,28 +302,32 @@ declare module 'msnodesqlv8' {
     }
 
     interface ConnectionPromises extends AggregatorPromises {
-        prepare(sql: string | QueryDescription): Promise<PreparedStatement>
-
+        prepare(sql: sqlQueryType): Promise<PreparedStatement>
         getTable(name: string): Promise<BulkTableMgr>
-
         getProc(name: string): Promise<ProcedureDefinition>
-
         getUserTypeTable(name: string): Promise<Table>
-
         close(): Promise<any>
-
         cancel(name: string): Promise<any>
-
+        /**
+         * open a transaction on this connection instance.  Expected to commit or rollback
+         * at some later point in time.
+         * @returns promise to await for transaction to be opened
+         */
         beginTransaction(): Promise<any>
-
+        /**
+         * commit the currently opened transaction.  Expected to have previously called beginTransaction
+         * @returns promise to await for transaction to be committed
+         */
         commit(): Promise<any>
-
+        /**
+         * rollback the currently opened transaction.  Expected to have previously called beginTransaction
+         * @returns promise to await for transaction to be rolled back
+         */
         rollback(): Promise<any>
     }
 
     interface Connection {
         promises: ConnectionPromises
-
         getUserTypeTable(name: string, cb: TableCb): void
 
         id: number
@@ -332,49 +345,20 @@ declare module 'msnodesqlv8' {
         setMaxPreparedColumnSize(size: number): void
 
         getMaxPreparedColumnSize(): number
-
         close(cb: StatusCb): void
-
-        query(sql: string, cb?: QueryCb): Query
-
-        query(sql: string, params?: any[], cb?: QueryCb): Query
-
-        query(description: QueryDescription, cb?: QueryCb): Query
-
-        query(description: QueryDescription, params?: any[], cb?: QueryCb): Query
-
-        queryRaw(description: QueryDescription, cb: QueryRawCb): Query
-
-        queryRaw(description: QueryDescription, params?: sqlQueryParamType[], cb?: QueryRawCb): Query
-
-        queryRaw(sql: string, params?: any[], cb?: QueryRawCb): Query
-
-        queryRaw(sql: string, cb: QueryRawCb): Query
-
+        query(sqlOrQuery: sqlQueryType, paramsOrCb?: sqlQueryParamType[] | QueryCb, cb?: QueryCb): Query
+        queryRaw(sqlOrQuery: sqlQueryType, paramsOrCb?: sqlQueryParamType[] | QueryRawCb, cb?: QueryRawCb): Query
         beginTransaction(cb?: StatusCb): void
-
         commit(cb?: StatusCb): void
-
         rollback(cb?: StatusCb): void
-
         procedureMgr(): ProcedureManager
-
         tableMgr(): TableManager
-
         pollingMode(q: Query, v: boolean, cb?: SimpleCb): void
-
         cancelQuery(q: Query, cb?: StatusCb): void
-
-        prepare(sql: string, cb: PrepareCb): void
-
-        prepare(description: QueryDescription, cb: PrepareCb): void
-
+        prepare(sql: sqlQueryType, cb: PrepareCb): void
         setFilterNonCriticalErrors(flag: boolean): void
-
         callproc(name: string, params?: sqlProcParamType[], cb?: CallProcedureCb): Query
-
         callprocAggregator(name: string, params?: sqlProcParamType, optons?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
-
         isClosed(): boolean
     }
 
@@ -1260,8 +1244,8 @@ declare module 'msnodesqlv8' {
          * @param cb - optional callback containing error or array of objects with column names as proeprties
          * @returns - a query object which can be used to monitor progress via event notification
          */
-        query(conn_str: string, sqlOrQuery: string|QueryDescription, paramsOrCb?: sqlQueryParamType[]|QueryCb, cb?: QueryCb): Query
-        queryRaw(conn_str: string, sqlOrQuery: string|QueryDescription, paramsOrCb?: sqlQueryParamType[]|QueryRawCb, cb?: QueryRawCb): Query
+        query(conn_str: string, sqlOrQuery: sqlQueryType, paramsOrCb?: sqlQueryParamType[]|QueryCb, cb?: QueryCb): Query
+        queryRaw(conn_str: string, sqlOrQuery: sqlQueryType, paramsOrCb?: sqlQueryParamType[]|QueryRawCb, cb?: QueryRawCb): Query
         PollingQuery(s: string): QueryDescription
         TimeoutQuery(s: string, to: number): QueryDescription
         TzOffsetQuery(s: string, offsetMinutes?: number): QueryDescription

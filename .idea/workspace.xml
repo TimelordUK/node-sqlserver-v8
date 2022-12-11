@@ -6,12 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="start to doc the api - add back JS style export where both TS and JS IDE typings supported">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/MsNodeSqWrapperModule.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/MsNodeSqWrapperModule.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/index.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/typescript/db-backup.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/db-backup.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/typescript/mssql-demo.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/mssql-demo.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/typescript/promises.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/promises.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/env/test-env.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/env/test-env.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/sproc.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/sproc.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -257,7 +253,7 @@
       <workItem from="1657564983185" duration="694000" />
       <workItem from="1670355188946" duration="11807000" />
       <workItem from="1670448109779" duration="9557000" />
-      <workItem from="1670765693919" duration="14779000" />
+      <workItem from="1670765693919" duration="18665000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -385,7 +381,14 @@
       <option name="project" value="LOCAL" />
       <updated>1670771018202</updated>
     </task>
-    <option name="localTasksCounter" value="19" />
+    <task id="LOCAL-00019" summary="start to doc the api - add back JS style export where both TS and JS IDE typings supported">
+      <created>1670788778863</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1670788778863</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

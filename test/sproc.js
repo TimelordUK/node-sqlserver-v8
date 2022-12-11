@@ -53,7 +53,6 @@ describe('sproc', function () {
     await t25(env.theConnection, 1)
   })
 
-
   async function t1 (connectionProxy, iterations) {
     const spName = 'test_sp_get_optional_p'
     const a = 10
