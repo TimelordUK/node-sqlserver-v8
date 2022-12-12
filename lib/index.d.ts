@@ -342,8 +342,23 @@ declare module 'msnodesqlv8' {
     }
 
     interface Connection extends GetSetUTC, SubmitQuery {
+        /**
+         * collection of promises to close connection, get a proc, table, prepare a query
+         * and transaction management.
+         * @returns a set of utility promises on this connection instance.
+         */
         promises: ConnectionPromises
+        /**
+         * given a type of form create type MyType AS TABLE (col1, col2) fetch metadata
+         * describing that type.
+         * @param name the name as defined in database for table type.
+         * @param cb callback containing the metadata describing the table.
+         */
         getUserTypeTable(name: string, cb: TableCb): void
+        /**
+         * numeric integer representing this connection instance.
+         * @returns the unique id
+         */
         id: number
         // optionally return all number based columns as strings
         setUseNumericString(numericString: boolean): void
@@ -355,13 +370,24 @@ declare module 'msnodesqlv8' {
         beginTransaction(cb?: StatusCb): void
         commit(cb?: StatusCb): void
         rollback(cb?: StatusCb): void
+        /**
+         *  note - can use promises.callProc, callProc or callprocAggregator directly.
+         *  provides access to procedure manager where proc definitions can be manually
+         *  registered and called.
+         */
         procedureMgr(): ProcedureManager
+        /**
+         * note - can use getTable, promises.getTable directly.
+         * provides access to table manager where tables can be manually registered
+         * or bound
+         */
         tableMgr(): TableManager
         pollingMode(q: Query, v: boolean, cb?: SimpleCb): void
         cancelQuery(q: Query, cb?: StatusCb): void
         prepare(sql: sqlQueryType, cb: PrepareCb): void
         setFilterNonCriticalErrors(flag: boolean): void
         callproc(name: string, params?: sqlProcParamType[], cb?: CallProcedureCb): Query
+        getTable(tableName: string, cb: GetTableCb): void
         callprocAggregator(name: string, params?: sqlProcParamType, optons?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
         isClosed(): boolean
     }
@@ -370,13 +396,31 @@ declare module 'msnodesqlv8' {
         /**
          * subscribe for an event relating to query progress where events are
          * @param event - 'meta', 'submitted', 'column', 'row', 'error', 'info', 'done', 'free'
-         * 'meta' -
+         * 'meta' - array of Meta relating to query submitted
+         * 'submitted' - raised when query submitted to native driver (maybe held on outbound q)
+         * 'column' - column index and data returned as results are returned - can index into
+         * meta array previously returned.
+         * 'row' - indicating the start of a new row of data
+         * 'error' - critical error that caused the query to end
+         * 'info' - non-critical warning raised during query execution
+         * 'done' - the JS has cosumed all data and query is complete.
+         * 'free' - when the native driver releases resources relating to query and entire lifecyce
+         * comes to an end.
          * @param cb - callback containing data related to subscription
          */
         on(event: string, cb: sqlQueryEventType): void
         cancelQuery(qcb?: StatusCb): void
+        /**
+         *
+         * @param qcb
+         */
         pauseQuery(qcb?: StatusCb): void
         resumeQuery(qcb?: StatusCb): void
+        /**
+         * is this instance of query currently paused in which case
+         * no more results will be returned until query is resumed.
+         * @returns flag indicating if the query is paused.
+         */
         isPaused(): boolean
     }
 
@@ -386,12 +430,23 @@ declare module 'msnodesqlv8' {
     }
 
     interface QueryDescription {
+        /**
+         * the sql to submit to server to execute.
+         */
         query_str: string
-        numeric_string?: boolean // for BigInt can return string to avoid overflow
+        /**
+         * for BigInt can return string to avoid overflow
+         */
+        numeric_string?: boolean
         query_timeout?: number
         query_polling?: boolean
         query_tz_adjustment?: number,
-        // constrain nvarchar(max) for prepared statements
+        /**
+         * constrain nvarchar(max) columns for prepared statements - i.e. will
+         * set aefault 8k max size on nvarchar(max) columns. Note this
+         * will not work when an encrypted connection is beng used - the
+         * query will not prepare and return an error.
+         */
         max_prepared_column_size?: number
     }
 
@@ -562,9 +617,13 @@ declare module 'msnodesqlv8' {
 
     interface BulkTableMgr {
         promises: BulkTableMgrPromises
-
         getSummary(): BulkMgrSummary
-
+        /**
+         * utiity method returning a SQL definition of an equivalent user table type
+         * that can be used for a TVP stored proc param type allowing bulk select
+         * and insert into the table to which this type represents.
+         * @param name
+         */
         asUserType(name?: string): string
 
         // the driver will be sent column types in table rather than deriving from data
@@ -677,13 +736,18 @@ declare module 'msnodesqlv8' {
         order: number
         update_signature: string
         collation: any
-        val: any
+        val: sqlProcParamType
     }
 
     interface ProcedureDefinition {
         setDialect(dialect: ServerDialect): boolean
-
-        paramsArray(params: any[]): any[]
+        /**
+         * @deprecated - given an object containing parameters as proeprties produce
+         * an array of parameters that can be provided to call.  This is no longer
+         * necessary, an object can be passed directly to call.
+         * @param params
+         */
+        paramsArray(params: sqlObjectType): sqlProcParamType[]
 
         call(params?: sqlProcParamType[], cb?: CallProcedureCb): Query
 
@@ -692,7 +756,9 @@ declare module 'msnodesqlv8' {
         setPolling(polling: boolean): void
 
         getMeta(): ProcedureSummary
-
+        /**
+         *  the name of the bound stored procedure
+         */
         getName(): string
     }
 
