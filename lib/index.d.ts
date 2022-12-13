@@ -15,7 +15,15 @@ declare module 'msnodesqlv8' {
     type sqlColumnResultsType = any[] | Record<string, any>[] | sqlJsColumnType[]
 
     interface GetSetUTC {
+        /**
+         * used to switch on date conversion for date columns from database to UTC 
+         * @param utc flag to turn conversio on or off
+         */
         setUseUTC(utc: boolean): void
+        /**
+         * fetch the current UTC conversion status.
+         * @returns a flag for conversion.
+         */
         getUseUTC(): boolean
     }
 
@@ -47,29 +55,59 @@ declare module 'msnodesqlv8' {
     }
 
     interface SqlClientPromises {
+        /**
+         * adhoc query where connection is opened, query submitted, results fetched, connection closed
+         * and results returned as a promide completed when connection is closed.
+         * @param conn_str connection string or connection object
+         * @param sql the sql to execute on server
+         * @param params an array of parameters which can be simple JS types or bound types including metadata of type
+         * @param options - query options such as timeout.
+         */
         query(conn_str: sqlConnectType, sql: string, params?: sqlQueryParamType[], options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
         /**
          * adhoc call to a stored procedure using a connection string, proc name and params
-         * @param conn_str - the connection string
+         * the connection is opened, the proc definition bound, call made and connection closed.
+         * results returned once close is complete. Note this is not efficient for many calls
+         * 
+         * @param conn_str - the connection string or object
          * @param name - the name of the stored proc to call
-         * @param params - optional params for the proc
+         * @param params optional bound parameters either array of JS native types or bound user defined parameters
+         * or object with properties assigned matching procedure parameter names.
+         * alter PROCEDURE <name> (@a INT = 5)
+         * then call with object parameter { a: 4 } to override default value 5 or {} taking default.
          * @param options - query options such as timeout.
          * @returns promise to await for results from query.
          */
         callProc(conn_str: sqlConnectType, name: string, params?: sqlProcParamType, options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
-
         /**
          * open a connection to server using an odbc style connection string.
-         * @param conn_str - the connection string
+         * @param conn_str - the connection string or object
          * @returns - a promise to await for a new connection to the database
          */
         open(conn_str: sqlConnectType): Promise<Connection>
     }
 
+    /***
+     * representation of a table user type used in TVP bulk operations
+     */
     interface Table {
+        /**
+         * of the table to which this type refers.
+         */
         name: string
-        rows: sqlJsColumnType[]
+        /**
+         * the rows to be included within the TVP query
+         */
+        rows: Array<sqlJsColumnType[]>
+        /**
+         * metadata describing the columns of table type.
+         */
         columns: TableColumn[]
+        /**
+         * add rows of data as an object array where each instance holds
+         * properties for columns { cola: 'hello' }, { cola: 'world'  }
+         * @param vec the object array to be converted into rows.
+         */
         addRowsFromObjects(vec: sqlObjectType[]): void
     }
 
@@ -177,6 +215,12 @@ declare module 'msnodesqlv8' {
          * @returns promise to await for close to complete.
          */
         close(): Promise<any>
+        /**
+         * utility method to fetch a user table type definition containing
+         * the column metadata representing the type.
+         * @param name the user type definition to fetch
+         * @returns a promise of table type definition
+         */
         getUserTypeTable(name: string): Promise<Table>
         /**
          * fetch a table definition which can be used for bulk insert operations
