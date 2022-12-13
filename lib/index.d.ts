@@ -410,6 +410,12 @@ declare module 'msnodesqlv8' {
         // set max length of prepared strings or binary columns
         setMaxPreparedColumnSize(size: number): void
         getMaxPreparedColumnSize(): number
+        /**
+         * permanently closes connection and frees unmanaged native resources
+         * related to connection ie. connection ODBC handle along with any
+         * remaining statement handles.
+         * @param cb callback when connection closed.
+         */
         close(cb: StatusCb): void
         beginTransaction(cb?: StatusCb): void
         commit(cb?: StatusCb): void
@@ -433,6 +439,10 @@ declare module 'msnodesqlv8' {
         callproc(name: string, params?: sqlProcParamType[], cb?: CallProcedureCb): Query
         getTable(tableName: string, cb: GetTableCb): void
         callprocAggregator(name: string, params?: sqlProcParamType, optons?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
+        /**
+         * flag indicating if connection is closed and hence can no longer be used
+         * for queries.
+         */
         isClosed(): boolean
     }
 
@@ -440,25 +450,34 @@ declare module 'msnodesqlv8' {
         /**
          * subscribe for an event relating to query progress where events are
          * @param event - 'meta', 'submitted', 'column', 'row', 'error', 'info', 'done', 'free'
-         * 'meta' - array of Meta relating to query submitted
+         * 'meta' - array of Meta relating to query submitted indexed by column ID
          * 'submitted' - raised when query submitted to native driver (maybe held on outbound q)
          * 'column' - column index and data returned as results are returned - can index into
-         * meta array previously returned.
-         * 'row' - indicating the start of a new row of data
+         *  meta array previously returned.
+         * 'row' - indicating the start of a new row of data along with row index 0,1 ..
          * 'error' - critical error that caused the query to end
          * 'info' - non-critical warning raised during query execution
-         * 'done' - the JS has cosumed all data and query is complete.
+         * 'done' - the JS has consumed all data and query is complete.
          * 'free' - when the native driver releases resources relating to query and entire lifecyce
-         * comes to an end.
+         * comes to an end. the ODBC statement handle has been released at this point by native driver
          * @param cb - callback containing data related to subscription
          */
         on(event: string, cb: sqlQueryEventType): void
         cancelQuery(qcb?: StatusCb): void
         /**
-         *
-         * @param qcb
+         * temporarily suspend flow of data sent by native driver to be used
+         * as flow control where for example expensive time consuming processing
+         * is taken place on a batch - receive N rows, pause, process, resume
+         * this prevents large memory build up where data arrives faster than
+         * it is being processed.
+         * @param qcb callback indicating query is paused.
          */
         pauseQuery(qcb?: StatusCb): void
+        /**
+         * resume processing i.e. instruct native driver to send more data which 
+         * will continue unless query is paused once more.
+         * @param qcb 
+         */
         resumeQuery(qcb?: StatusCb): void
         /**
          * is this instance of query currently paused in which case
