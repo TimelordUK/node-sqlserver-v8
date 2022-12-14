@@ -476,24 +476,34 @@ declare module 'msnodesqlv8' {
         getTable(name: string): Promise<BulkTableMgr>
         getProc(name: string): Promise<ProcedureDefinition>
         getUserTypeTable(name: string): Promise<Table>
-        close(): Promise<any>
-        cancel(name: string): Promise<any>
+        /**
+         * close the active connection and release ODBC handle within
+         * native driver.
+         * @returns promise to await for connection to close.
+         */
+        close(): Promise<void>
+        /**
+         * cancel the provided query - note await con.promises.cancel(q)
+         * is equivalent to await q.promises.cancel()
+         * @returns await promise for cancel to complete on provided query.
+         */
+        cancel(query:Query): Promise<void>
         /**
          * open a transaction on this connection instance.  Expected to commit or rollback
          * at some later point in time.
          * @returns promise to await for transaction to be opened
          */
-        beginTransaction(): Promise<any>
+        beginTransaction(): Promise<void>
         /**
          * commit the currently opened transaction.  Expected to have previously called beginTransaction
          * @returns promise to await for transaction to be committed
          */
-        commit(): Promise<any>
+        commit(): Promise<void>
         /**
          * rollback the currently opened transaction.  Expected to have previously called beginTransaction
          * @returns promise to await for transaction to be rolled back
          */
-        rollback(): Promise<any>
+        rollback(): Promise<void>
     }
 
     interface Connection extends GetSetUTC, SubmitQuery {
@@ -515,10 +525,25 @@ declare module 'msnodesqlv8' {
          * @returns the unique id
          */
         id: number
-        // optionally return all number based columns as strings
+        /**
+         * optionally return all number based columns as strings
+         * to prevent exceeding max numeric for JS
+         * @param numericString boolean true for numers as strings.
+         */
         setUseNumericString(numericString: boolean): void
+        /**
+         * returns flag to indicate if numeric conversion to strings is active
+         * @returns flag for numeric to string.
+         */
         getUseNumericString(): boolean
-        // set max length of prepared strings or binary columns
+        /**
+         * set max length of prepared strings or binary columns. Note this
+         * will not work for a connection with always on encryption enabled
+         * else a column marked nvarchar(max) is given a max size allocated
+         * in prepared statement defaults to 8k. Truncation will occur for
+         * parameters exceeding this size.
+         * @param size
+         */
         setMaxPreparedColumnSize(size: number): void
         getMaxPreparedColumnSize(): number
         /**
@@ -535,12 +560,14 @@ declare module 'msnodesqlv8' {
          *  note - can use promises.callProc, callProc or callprocAggregator directly.
          *  provides access to procedure manager where proc definitions can be manually
          *  registered and called.
+         *  @returns the procedure manager instance.
          */
         procedureMgr(): ProcedureManager
         /**
          * note - can use getTable, promises.getTable directly.
          * provides access to table manager where tables can be manually registered
          * or bound
+         * @returns the table manager instance.
          */
         tableMgr(): TableManager
         pollingMode(q: Query, v: boolean, cb?: SimpleCb): void
@@ -607,7 +634,7 @@ declare module 'msnodesqlv8' {
 
     interface ConnectDescription {
         conn_str: string
-        conn_timeout: number
+        conn_timeout?: number
     }
 
     interface QueryDescription {
