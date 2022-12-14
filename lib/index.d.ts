@@ -262,6 +262,7 @@ declare module 'msnodesqlv8' {
      }
 
     interface TableColumn {
+        schema_name: string
         ordinal_position: number,
         table_catalog: string,
         table_schema: string,
