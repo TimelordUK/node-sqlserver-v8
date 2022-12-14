@@ -7,13 +7,7 @@
     <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="start to doc the api - add back JS style export where both TS and JS IDE typings supported">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/index.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/meta.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/meta.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/pool.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/pool.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/procedure.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/procedure.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/reader.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/reader.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/table.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/user.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/user.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/util.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/util.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,7 +46,7 @@
     </option>
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/lib/index.d.ts" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/lib/index.d.ts" root0="SKIP_INSPECTION" />
     <setting file="file://$PROJECT_DIR$/package.json" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/src/OdbcStatement.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/src/ResultSet.h" root0="FORCE_HIGHLIGHTING" />
@@ -268,7 +262,8 @@
       <workItem from="1670879550908" duration="979000" />
       <workItem from="1670970390892" duration="116000" />
       <workItem from="1670970534558" duration="2496000" />
-      <workItem from="1671025725323" duration="2743000" />
+      <workItem from="1671025725323" duration="3587000" />
+      <workItem from="1671030837505" duration="4508000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -417,7 +412,28 @@
       <option name="project" value="LOCAL" />
       <updated>1670794471243</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="start to doc the api - add back JS style export where both TS and JS IDE typings supported">
+      <created>1671029811789</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1671029811789</updated>
+    </task>
+    <task id="LOCAL-00023" summary="start to doc the api - add back JS style export where both TS and JS IDE typings supported">
+      <created>1671030155850</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1671030155850</updated>
+    </task>
+    <task id="LOCAL-00024" summary="start to doc the api - add back JS style export where both TS and JS IDE typings supported">
+      <created>1671032606890</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1671032606890</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

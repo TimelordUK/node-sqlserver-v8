@@ -262,14 +262,14 @@ declare module 'msnodesqlv8' {
      }
 
     interface TableColumn {
+        name: string,
+        type: string,
         schema_name: string
         ordinal_position: number,
         table_catalog: string,
         table_schema: string,
         table_name: string,
         column_default: string,
-        name: string,
-        type: string,
         max_length: number,
         precision: number,
         scale: number,
@@ -282,7 +282,10 @@ declare module 'msnodesqlv8' {
         is_hidden: number,
         is_primary_key: number,
         is_foreign_key: number
-
+        /**
+         * type declaration if using as a proc parameter i.e. without
+         * the null decorator char(15)
+         */
         procTyped(): string
         /**
          * sql declared type used by table builder / user type
@@ -326,53 +329,125 @@ declare module 'msnodesqlv8' {
         isPrimaryKey(v: number): TableColumn
 
         isForeignKey(v: number): TableColumn
-
+        /**
+         * nominate column as boolean 'bit'
+         * @returns this column instance for fluent calls
+         */
         asBit(): TableColumn
-
+        /**
+         * nominate column as int32 signed 32 bit 'int'
+         * @returns this column instance for fluent calls
+         */
         asInt(): TableColumn
-
+        /**
+         * nominate column as int64 signed 64 bit 'bigint'
+         * @returns this column instance for fluent calls
+         */
         asBigInt(): TableColumn
-
+        /**
+         * nominate column as int16 signed 16 bit 'smallint'
+         * @returns this column instance for fluent calls
+         */
         asSmallInt(): TableColumn
-
+        /**
+         * nominate column as int8 signed 8 bit 'byte'
+         * @returns this column instance for fluent calls
+         */
         asTinyInt(): TableColumn
-
+        /**
+         * nominate column as Unicode 'nvarchar(max)'
+         * @returns this column instance for fluent calls
+         */
         asNVarCharMax(): TableColumn
-
+        /**
+         * nominate column as Unicode 'nvarchar(p)' defaults to nvarchar(28)
+         * @returns this column instance for fluent calls
+         */
         asNVarChar(length: number): TableColumn
-
+        /**
+         * nominate column as non-Unicode 'varchar(p)' defaults to varchar(28)
+         * @returns this column instance for fluent calls
+         */
         asVarChar(length: number): TableColumn
-
+        /**
+         * nominate column as 'date'
+         * @returns this column instance for fluent calls
+         */
         asDate(): TableColumn
-
+        /**
+         * nominate column as 'time'
+         * @returns this column instance for fluent calls
+         */
         asTime(scale?: number): TableColumn
-
+        /**
+         * nominate column as 'datetime2'
+         * @returns this column instance for fluent calls
+         */
         asDateTime2(): TableColumn
-
+        /**
+         * nominate column as 'datetime'
+         * @returns this column instance for fluent calls
+         */
         asDateTime(): TableColumn
-
+        /**
+         * nominate column as 'datetimeoffset'
+         * @returns this column instance for fluent calls
+         */
         asDateTimeOffset(): TableColumn
-
+        /**
+         * nominate column as 'money'
+         * @returns this column instance for fluent calls
+         */
         asMoney(): TableColumn
 
         asSmallMoney(): TableColumn
-
+        /**
+         * nominate column as 'numeric(p,s)' defaults to numeric(20,15)
+         * @returns this column instance for fluent calls
+         */
         asNumeric(precision: number, length: number): TableColumn
-
-        asDecimal(precision: number, scale: number): TableColumn
-
+        /**
+         * nominate column as 'decimal(p,s)' defaults to decimal(23,18)
+         * @returns this column instance for fluent calls
+         */
+        asDecimal(precision?: number, scale?: number): TableColumn
+        /**
+         * nominate column as 'uniqueidentifier'
+         * @returns this column instance for fluent calls
+         */
         asUniqueIdentifier(): TableColumn
-
+        /**
+         * nominate column as 'hierarchyid'
+         * @returns this column instance for fluent calls
+         */
         asHierarchyId(): TableColumn
-
-        asVarBiary(length: number): TableColumn
-
+        /**
+         * nominate column as 'varbinary(l)'
+         * @param length of column
+         * @returns this column instance for fluent calls
+         */
+        asVarBinary(length: number): TableColumn
+        /**
+         * nominate column as 'float'
+         * @returns this column instance for fluent calls
+         */
         asFloat(scale: number): TableColumn
-
+        /**
+         * nominate column as 'real'
+         * @returns this column instance for fluent calls
+         */
         asReal(): TableColumn
-
+        /**
+         * nominate column as 'nchar(l)'
+         * @param length of column
+         * @returns this column instance for fluent calls
+         */
         asNChar(length: number): TableColumn
-
+        /**
+         * nominate column as 'char(l)'
+         * @param length of column
+         * @returns this column instance for fluent calls
+         */
         asChar(length: number): TableColumn
         /**
          * add to the type declaration as part of the column definition
