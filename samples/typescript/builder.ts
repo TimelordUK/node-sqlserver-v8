@@ -1,22 +1,25 @@
 import { SqlClient, TableBuilder, Connection, TableManager } from 'msnodesqlv8';
 
-// require the module so it can be used in your node JS code.
-export const sql: SqlClient = require('msnodesqlv8');
+export const sql: SqlClient = require('msnodesqlv8')
 
 const { TestEnv } = require('../../../test/env/test-env')
 const env = new TestEnv()
 const connectionString = env.connectionString
 
+class Row {
+  constructor(readonly id: number,
+              readonly col_a: number,
+              readonly col_b: string,
+              readonly col_c: number,
+              readonly col_d: number,
+              readonly col_e: string) {
+  }
+}
+
 async function builder () {
-    function makeOne (i: number): any {
-      return {
-        id: i,
-        col_a: i * 5,
-        col_b: `str_${i}`,
-        col_c: i + 1,
-        col_d: i - 1,
-        col_e: `str2_${i}`
-      }
+    function makeOne (i: number): Row {
+      return new Row(
+        i, i * 5, `str_${i}`, i + 1, i - 1, `str2_${i}`)
     }
   
     try {
@@ -33,7 +36,8 @@ async function builder () {
       builder.addColumn('col_c').asInt()
       builder.addColumn('col_d').asInt()
       builder.addColumn('col_e').asVarChar(100)
-      const vec = Array(rows).fill(0).map((_, i) => makeOne(i))
+
+      const vec: Row[] = Array(rows).fill(0).map((_, i) => makeOne(i))
       const t = builder.toTable()
       const create: string = builder.createTableSql
       const drop: string = builder.dropTableSql
@@ -42,8 +46,8 @@ async function builder () {
       console.log(create)
       await builder.create()
       await t.promises.insert(vec)
-      const keys: any[] = t.keys(vec)
-      const res: any[] = await t.promises.select(keys)
+      const keys: object[] = t.keys(vec)
+      const res: Row[] = await t.promises.select(keys)
       console.log(JSON.stringify(res, null, 4))
       await builder.drop()
       await connection.promises.close()

@@ -3,16 +3,17 @@
  */
 
 declare module 'msnodesqlv8' {
-    type sqlJsColumnType = (string|boolean|Date|number|Buffer)
-    type sqlObjectType = (Record<string|number, sqlJsColumnType>)
-    type sqlQueryNativeParamType = (string|string[] | number|number[] | boolean|boolean[] | Date|Date[] | Buffer|Buffer[])
-    type sqlQueryParamType = (sqlQueryNativeParamType | ConcreteColumnType | ConcreteColumnType[])
-    type sqlPoolEventType = MessageCb|PoolStatusRecordCb|PoolOptionsEventCb|StatusCb|QueryDescriptionCb
-    type sqlQueryEventType = SubmittedEventCb|ColumnEventCb|EventColumnCb|StatusCb|RowEventCb|MetaEventCb
-    type sqlProcParamType = sqlObjectType|sqlQueryParamType[]
+    type sqlJsColumnType = string|boolean|Date|number|Buffer
+    type sqlObjectType = Record<string|number, sqlJsColumnType> | object | any
+    type sqlQueryNativeParamType = string|string[] | number|number[] | boolean|boolean[] | Date|Date[] | Buffer|Buffer[]
+    type sqlQueryParamType = sqlQueryNativeParamType | ConcreteColumnType | ConcreteColumnType[]
+    type sqlPoolEventType = MessageCb | PoolStatusRecordCb | PoolOptionsEventCb | StatusCb | QueryDescriptionCb
+    type sqlQueryEventType = SubmittedEventCb | ColumnEventCb | EventColumnCb | StatusCb | RowEventCb | MetaEventCb
+    type sqlProcParamType = sqlObjectType | sqlQueryParamType[]
     type sqlQueryType = string | QueryDescription
     type sqlConnectType = string | ConnectDescription
-    type sqlColumnResultsType = any[] | Record<string, any>[] | sqlJsColumnType[]
+    type sqlColumnResultsType = sqlObjectType[] | sqlJsColumnType[]
+    type sqlBulkType = sqlObjectType[]
 
     interface GetSetUTC {
         /**
@@ -804,23 +805,22 @@ declare module 'msnodesqlv8' {
 
     interface BulkTableMgrPromises {
         select(cols: sqlObjectType[]): Promise<sqlObjectType[]>
-
         /**
          * promise to submit rows to database where each row is represented
-         * each column is bound precisely as defined on the table hence
-         * will work with always on encryption.
          * by column name
          * {
-         *     id: 1
+         *     id: 1,
          *     col_a: 'hello'
          * }
+         * each column is bound precisely as defined on the table hence
+         * will work with always on encryption.
          * @param rows - array of objects to be inserted as rows.
          */
-        insert(rows: object[]): Promise<any>
+        insert(rows: sqlBulkType): Promise<void>
 
-        delete(rows: object[]): Promise<any>
+        delete(rows: sqlBulkType): Promise<void>
 
-        update(rows: object[]): Promise<any>
+        update(rows: sqlBulkType): Promise<void>
     }
 
     interface BulkTableMgr {
