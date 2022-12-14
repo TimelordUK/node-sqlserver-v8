@@ -284,20 +284,41 @@ declare module 'msnodesqlv8' {
         is_foreign_key: number
 
         procTyped(): string
-
-        // sql declared type used by table builder / user type
+        /**
+         * sql declared type used by table builder / user type
+         * @param user flag is this user type declaration (or table column)
+         * @param withDecorator i.e. should include 'null' 'not null' etc
+         */
         typed(user?: boolean, withDecorator?: boolean): string
-
-        // is column considered readonly based on is_computed etc
+        /**
+         * is column considered readonly based on is_computed etc
+         * @returns flag indicates if this column is insertable or readonly
+         */
         isReadOnly(): boolean
-
-        // based on type - is date field requiring tz adjustment
+        /**
+         * based on type - is date field requiring tz adjustment
+         * @returns flag indicating if column is tz adjusted.
+         */
         isTzAdjusted(): boolean
-
+        /**
+         * the length decorator for string column description i.e
+         * 10 or MAX for
+         * @returns decorator part of type description.
+         */
+        maxLength (): number | string
+        /**
+         * specifies if this column is insertable or is computed
+         * @param v 0 = not computed, 1 = this column is computed
+         * @returns this column instance for fluent calls
+         */
         // helper methods when manually adding tables with table builder
         isComputed(v?: number): TableColumn
-
-        asExpression(s: string): TableColumn // 'AS ([OrganizationNode].[GetLevel]())'
+        /**
+         * specifies an epression representing this column
+         * @param s e.g. 'AS ([OrganizationNode].[GetLevel]())'
+         * @returns this column instance for fluent calls
+         */
+        asExpression(s: string): TableColumn
         isIdentity(v: number, start?: number, inc?: number): TableColumn
 
         isHidden(v: number): TableColumn
@@ -353,11 +374,25 @@ declare module 'msnodesqlv8' {
         asNChar(length: number): TableColumn
 
         asChar(length: number): TableColumn
-
+        /**
+         * add to the type declaration as part of the column definition
+         * e.g. to use always on encryption
+         * builder.addColumn('[NationalIDNumber]')
+         * .asNVarChar(15)
+         * .withDecorator(encryptHelper.txtWithEncrypt)
+         * .notNull()`)
+         * @param string representing decorator to add to declaration
+         */
         withDecorator(v: string): TableColumn
-
+        /**
+         * specifies if this column is not nullable i.e. adds 'not null' to decorator on type
+         * @returns this column instance for fluent calls
+         */
         notNull(): TableColumn
-
+        /**
+         * specifies if this column is nullable i.e. adds 'null' to decorator on type
+         * @returns this column instance for fluent calls
+         */
         null(): TableColumn
     }
 
@@ -464,6 +499,13 @@ declare module 'msnodesqlv8' {
          * @param cb - callback containing data related to subscription
          */
         on(event: string, cb: sqlQueryEventType): void
+        /**
+         * cancel active query - this will submit cancel on native driver on a different
+         * thread such that if the query thread is blocked, the query will still be
+         * cancelled.  If results are being streamed then the results are halted
+         * and query is terminated.
+         * @param qcb status callback indicating the cancel has been actioned.
+         */
         cancelQuery(qcb?: StatusCb): void
         /**
          * temporarily suspend flow of data sent by native driver to be used
