@@ -8,7 +8,7 @@ declare module 'msnodesqlv8' {
     type sqlObjectType = sqlRecordType | object | any
     type sqlQueryParamType = sqlJsColumnType | sqlJsColumnType[] | ConcreteColumnType | ConcreteColumnType[]
     type sqlPoolEventType = MessageCb | PoolStatusRecordCb | PoolOptionsEventCb | StatusCb | QueryDescriptionCb
-    type sqlQueryEventType = SubmittedEventCb | ColumnEventCb | EventColumnCb | StatusCb | RowEventCb | MetaEventCb
+    type sqlQueryEventType = SubmittedEventCb | ColumnEventCb | EventColumnCb | StatusCb | RowEventCb | MetaEventCb | RowCountEventCb
     type sqlProcParamType = sqlObjectType | sqlQueryParamType
     type sqlQueryType = string | QueryDescription
     type sqlConnectType = string | ConnectDescription
@@ -644,20 +644,46 @@ declare module 'msnodesqlv8' {
         isClosed(): boolean
     }
 
+    interface QueryPromises {
+        cancel(): Promise<void>
+    }
+
     interface Query {
+        promises: QueryPromises
         /**
          * subscribe for an event relating to query progress where events are
-         * @param event - 'meta', 'submitted', 'column', 'row', 'error', 'info', 'done', 'free'
+         * @param event - 'meta', 'submitted', 'rowcount', column', 'row', 'error', 'info', 'done', 'free'
+         *
+         *
          * 'meta' - array of Meta relating to query submitted indexed by column ID
+         *
+         *
          * 'submitted' - raised when query submitted to native driver (maybe held on outbound q)
+         *
+         *
          * 'column' - column index and data returned as results are returned - can index into
          *  meta array previously returned.
+         *
+         *
          * 'row' - indicating the start of a new row of data along with row index 0,1 ..
+         *
+         *
+         * 'rowcount' - number of rows effected
+         *
+         *
          * 'error' - critical error that caused the query to end
+         *
+         *
          * 'info' - non-critical warning raised during query execution
+         *
+         *
          * 'done' - the JS has consumed all data and query is complete.
-         * 'free' - when the native driver releases resources relating to query and entire lifecyce
+         *
+         *
+         * 'free' - when the native driver releases resources relating to query and entire lifecycle
          * comes to an end. the ODBC statement handle has been released at this point by native driver
+         *
+         *
          * @param cb - callback containing data related to subscription
          */
         on(event: string, cb: sqlQueryEventType): void
@@ -816,6 +842,10 @@ declare module 'msnodesqlv8' {
 
     interface MetaEventCb {
         (meta: Meta[]): void
+    }
+
+    interface RowCountEventCb {
+        (rowcount: number): void
     }
 
     interface RowEventCb {
@@ -1543,7 +1573,8 @@ declare module 'msnodesqlv8' {
 
     interface SqlClient extends UserConversion {
         /**
-         * helper promises allowing async style await to open connection
+         * helper promises allowing async style await to open connection or
+         * submit adhoc query on a temporarily opened connection.
          */
         promises: SqlClientPromises
         /**

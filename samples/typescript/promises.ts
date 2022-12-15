@@ -5,7 +5,9 @@ import {
   Connection,
   QueryAggregatorResults,
   ConnectionPromises,
-  BulkTableMgr
+  BulkTableMgr,
+  Query,
+  QueryDescription
 } from 'msnodesqlv8'
 
 const sql: SqlClient = require('msnodesqlv8')
@@ -14,6 +16,7 @@ const env = new TestEnv()
 
 async function run (): Promise<void> {
   await env.open()
+  await cancelQuery()
   await openSelectClose()
   await proc()
   await adhocProc()
@@ -29,6 +32,26 @@ run().then(() => {
 }).catch(e => {
   console.error(e)
 })
+
+async function cancelQuery (): Promise<any> {
+  const connStr = env.connectionString
+  const conn: Connection = await sql.promises.open(connStr)
+  const waitsql = 'waitfor delay \'00:00:20\';'
+  const q: Query = conn.query(waitsql)
+  q.on('submitted', (description: QueryDescription) => {
+    console.log(JSON.stringify(description, null, 4))
+  })
+  q.on('error', (e: Error) => {
+    console.error(e)
+  })
+  q.on('done', () => {
+    console.log('done')
+  })
+  q.on('free', () => {
+    console.log('free')
+  })
+  await q.promises.cancel()
+}
 
 async function openSelectClose (): Promise<void> {
   try {

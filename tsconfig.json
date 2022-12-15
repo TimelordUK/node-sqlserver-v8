@@ -18,8 +18,9 @@
   "compileOnSave": true,
   "include": [
     "samples/typescript/*.ts",
-    "lib/**/*.ts",
-    "lib/*.ts"
+    "lib/**/*",
+    "test/**/*",
+    "lib/*"
   ],
   "exclude": [
     "node_modules",
