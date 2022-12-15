@@ -645,7 +645,19 @@ declare module 'msnodesqlv8' {
     }
 
     interface QueryPromises {
-        cancel(): Promise<void>
+        /**
+         * promise to cancel current executing query - will wait
+         * for 'free' event where resources related to query have
+         * been cleaned from native driver.  If expected 'error' is
+         * raised from driver this is returned by promise. Any other error
+         * or if timeout occurs then promise is rejected.
+         * @param timeout defaults 5000ms it should not br necessary
+         * to change the default as when query is canceled the timer
+         * is cleared.
+         * @returns the expected error raised by driver when the query
+         * is canceled. Any other error will reject promise.
+         */
+        cancel(timeout?: number): Promise<Error>
     }
 
     interface Query {

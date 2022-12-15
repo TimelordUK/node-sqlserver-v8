@@ -5,13 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="start to doc the api - add back JS style export where both TS and JS IDE typings supported use eslint for TS">
-      <change beforePath="$PROJECT_DIR$/.eslintrc" beforeDir="false" afterPath="$PROJECT_DIR$/.eslintrc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/index.d.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/notifier.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/notifier.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/typescript/promises.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/promises.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/env/cmd-test.ts" beforeDir="false" afterPath="$PROJECT_DIR$/test/env/cmd-test.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/util.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/util.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/querycancel.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/querycancel.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -246,7 +244,7 @@
       <workItem from="1671108764724" duration="379000" />
       <workItem from="1671109173892" duration="7105000" />
       <workItem from="1671116427766" duration="678000" />
-      <workItem from="1671117308247" duration="4616000" />
+      <workItem from="1671117308247" duration="8123000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -451,7 +449,14 @@
       <option name="project" value="LOCAL" />
       <updated>1671114662416</updated>
     </task>
-    <option name="localTasksCounter" value="30" />
+    <task id="LOCAL-00030" summary="start to doc the api - add back JS style export where both TS and JS IDE typings supported use eslint for TS">
+      <created>1671122446456</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1671122446456</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -507,21 +512,6 @@
           <url>file://$PROJECT_DIR$/samples/typescript/builder.ts</url>
           <line>25</line>
           <option name="timeStamp" value="44" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/samples/typescript/promises.ts</url>
-          <line>36</line>
-          <option name="timeStamp" value="45" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/samples/typescript/promises.ts</url>
-          <line>52</line>
-          <option name="timeStamp" value="46" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/lib/notifier.js</url>
-          <line>89</line>
-          <option name="timeStamp" value="47" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/samples/typescript/promises.ts</url>

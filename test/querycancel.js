@@ -18,6 +18,14 @@ describe('querycancel', function () {
     env.close().then(() => done())
   })
 
+  it('use promise on query to cancel', async function handler () {
+    const conn = env.theConnection
+    const waitsql = 'waitfor delay \'00:00:20\';'
+    const q = conn.query(waitsql)
+    const err = await q.promises.cancel()
+    assert(err.message.includes('Operation canceled'))
+  })
+
   it('nested cancel - expect Operation canceled on both', testDone => {
     const q1 = env.theConnection.query(env.sql.PollingQuery('waitfor delay \'00:00:50\';'), err => {
       assert(err.message.indexOf('Operation canceled') > 0)
