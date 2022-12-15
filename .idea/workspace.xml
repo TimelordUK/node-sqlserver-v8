@@ -4,20 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="start to doc the api - add back JS style export where both TS and JS IDE typings supported">
-      <change beforePath="$PROJECT_DIR$/.eslintrc" beforeDir="false" afterPath="$PROJECT_DIR$/.eslintrc" afterDir="false" />
+    <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="start to doc the api - add back JS style export where both TS and JS IDE typings supported use eslint for TS">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/MsNodeSqWrapperModule.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/MsNodeSqWrapperModule.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/index.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/table.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/typescript/builder.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/builder.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/typescript/db-backup.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/db-backup.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/typescript/mssql-demo.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/mssql-demo.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/typescript/pooling.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/pooling.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/typescript/promises.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/promises.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/samples/typescript/simple-demo.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/simple-demo.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -263,7 +252,7 @@
       <workItem from="1671025725323" duration="3587000" />
       <workItem from="1671030837505" duration="18517000" />
       <workItem from="1671108764724" duration="379000" />
-      <workItem from="1671109173892" duration="4651000" />
+      <workItem from="1671109173892" duration="5246000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -454,16 +443,20 @@
       <option name="project" value="LOCAL" />
       <updated>1671052329067</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="start to doc the api - add back JS style export where both TS and JS IDE typings supported use eslint for TS">
+      <created>1671114085687</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1671114085687</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
     <option name="exactExcludedFiles">
       <list>
-        <option value="$PROJECT_DIR$/lib/MsNodeSqWrapperModule.d.ts" />
-        <option value="$PROJECT_DIR$/lib/MsNodeSqWrapperModule.js" />
-        <option value="$PROJECT_DIR$/lib/MsNodeSqWrapperModule.js.map" />
         <option value="$PROJECT_DIR$/samples/typescript/promises.js" />
         <option value="$PROJECT_DIR$/samples/typescript/simple-demo.js" />
         <option value="$PROJECT_DIR$/samples/typescript/db-backup.js" />
@@ -510,7 +503,8 @@
     <MESSAGE value="tmp rollback of index.d.ts as typescript is not compiling" />
     <MESSAGE value="start to doc the api" />
     <MESSAGE value="start to doc the api - add back JS style export where both TS and JS IDE typings supported" />
-    <option name="LAST_COMMIT_MESSAGE" value="start to doc the api - add back JS style export where both TS and JS IDE typings supported" />
+    <MESSAGE value="start to doc the api - add back JS style export where both TS and JS IDE typings supported use eslint for TS" />
+    <option name="LAST_COMMIT_MESSAGE" value="start to doc the api - add back JS style export where both TS and JS IDE typings supported use eslint for TS" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
