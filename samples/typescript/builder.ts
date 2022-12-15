@@ -1,10 +1,9 @@
-import { SqlClient, TableBuilder, Connection, TableManager } from 'msnodesqlv8'
+import { SqlClient, TableBuilder, Connection, TableManager, BulkTableMgr } from 'msnodesqlv8'
 
 export const sql: SqlClient = require('msnodesqlv8')
 
 const { TestEnv } = require('../../../test/env/test-env')
 const env = new TestEnv()
-const connectionString = env.connectionString
 
 class Row {
   constructor (readonly id: number,
@@ -24,7 +23,8 @@ async function builder (): Promise<void> {
 
   try {
     const rows = 5
-    const connection: Connection = await sql.promises.open(connectionString)
+    await env.open()
+    const connection: Connection = env.theConnection
     const tableName = 'tmpTableBuilder'
     const mgr: TableManager = connection.tableMgr()
     const builder: TableBuilder = mgr.makeBuilder(tableName)
@@ -38,7 +38,7 @@ async function builder (): Promise<void> {
     builder.addColumn('col_e').asVarChar(100)
 
     const vec: Row[] = Array(rows).fill(0).map((_, i) => makeOne(i))
-    const t = builder.toTable()
+    const t: BulkTableMgr = builder.toTable()
     const create: string = builder.createTableSql
     const drop: string = builder.dropTableSql
     console.log(drop)
@@ -49,8 +49,27 @@ async function builder (): Promise<void> {
     const keys: object[] = t.keys(vec)
     const res: object[] = await t.promises.select(keys)
     console.log(JSON.stringify(res, null, 4))
+    await builder.truncate()
+    const typeTableSql = builder.userTypeTableSql
+    console.log(typeTableSql)
+    const tvpProcSql = builder.insertProcedureTvpSql
+    console.log(tvpProcSql)
+    // use a stored proc to bulk insert rows via tvp
+    // generated from table
+    const checker = env.builderChecker(builder)
+    function compareOne (lhs: any, rhs: any): boolean {
+      const eq = lhs.col_a === rhs.col_a &&
+          lhs.col_b === rhs.col_b &&
+          lhs.col_c === rhs.col_c &&
+          lhs.col_d === rhs.col_d &&
+          lhs.col_e === rhs.col_e
+      console.log(`id ${lhs.id} equals ${eq}`)
+      return eq
+    }
+
+    await checker.checkTvp(makeOne, compareOne, 5)
     await builder.drop()
-    await connection.promises.close()
+    await env.close()
   } catch (e) {
     console.log(e)
   }
