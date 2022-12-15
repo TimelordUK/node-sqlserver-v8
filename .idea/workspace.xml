@@ -6,10 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="start to doc the api - add back JS style export where both TS and JS IDE typings supported use eslint for TS">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/index.d.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/notifier.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/notifier.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/util.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/util.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/querycancel.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/querycancel.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/env/test-env.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/env/test-env.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -96,42 +94,11 @@
       <recent name="C:\Users\Stephen\dev\js\sql\node_modules\msnodesqlv8\samples\javascript" />
     </key>
   </component>
-  <component name="RunManager" selected="Node.js.promises.js">
+  <component name="RunManager" selected="Mocha.querycancel">
     <configuration name="builder.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/dist/samples/typescript/builder.js" working-dir="$PROJECT_DIR$/dist/samples/typescript">
       <method v="2" />
     </configuration>
     <configuration name="promises.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/dist/samples/typescript/promises.js" working-dir="$PROJECT_DIR$/dist/samples/typescript">
-      <method v="2" />
-    </configuration>
-    <configuration name="concurrent" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
-      <node-interpreter>project</node-interpreter>
-      <node-options />
-      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
-      <working-directory>$PROJECT_DIR$</working-directory>
-      <pass-parent-env>true</pass-parent-env>
-      <ui>bdd</ui>
-      <extra-mocha-options />
-      <test-kind>SUITE</test-kind>
-      <test-file>$PROJECT_DIR$/test/concurrent.js</test-file>
-      <test-names>
-        <name value="concurrent" />
-      </test-names>
-      <method v="2" />
-    </configuration>
-    <configuration name="concurrent.open connections simultaneously and prove distinct connection objects created" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
-      <node-interpreter>project</node-interpreter>
-      <node-options />
-      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
-      <working-directory>$PROJECT_DIR$</working-directory>
-      <pass-parent-env>true</pass-parent-env>
-      <ui>bdd</ui>
-      <extra-mocha-options />
-      <test-kind>TEST</test-kind>
-      <test-file>$PROJECT_DIR$/test/concurrent.js</test-file>
-      <test-names>
-        <name value="concurrent" />
-        <name value="open connections simultaneously and prove distinct connection objects created" />
-      </test-names>
       <method v="2" />
     </configuration>
     <configuration name="connection-pool.open pool size 4 - submit queries on parked connections" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
@@ -150,6 +117,37 @@
       </test-names>
       <method v="2" />
     </configuration>
+    <configuration name="querycancel" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
+      <working-directory>$PROJECT_DIR$</working-directory>
+      <pass-parent-env>true</pass-parent-env>
+      <ui>bdd</ui>
+      <extra-mocha-options />
+      <test-kind>SUITE</test-kind>
+      <test-file>$PROJECT_DIR$/test/querycancel.js</test-file>
+      <test-names>
+        <name value="querycancel" />
+      </test-names>
+      <method v="2" />
+    </configuration>
+    <configuration name="querycancel.use promise on query to cancel" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
+      <working-directory>$PROJECT_DIR$</working-directory>
+      <pass-parent-env>true</pass-parent-env>
+      <ui>bdd</ui>
+      <extra-mocha-options />
+      <test-kind>TEST</test-kind>
+      <test-file>$PROJECT_DIR$/test/querycancel.js</test-file>
+      <test-names>
+        <name value="querycancel" />
+        <name value="use promise on query to cancel" />
+      </test-names>
+      <method v="2" />
+    </configuration>
     <configuration name="test" type="mocha-javascript-test-runner" nameIsGenerated="true">
       <node-interpreter>project</node-interpreter>
       <node-options />
@@ -165,11 +163,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Mocha.querycancel" />
+        <item itemvalue="Mocha.querycancel.use promise on query to cancel" />
         <item itemvalue="Node.js.promises.js" />
         <item itemvalue="Node.js.builder.js" />
         <item itemvalue="Mocha.connection-pool.open pool size 4 - submit queries on parked connections" />
-        <item itemvalue="Mocha.concurrent" />
-        <item itemvalue="Mocha.concurrent.open connections simultaneously and prove distinct connection objects created" />
       </list>
     </recent_temporary>
   </component>
@@ -244,7 +242,9 @@
       <workItem from="1671108764724" duration="379000" />
       <workItem from="1671109173892" duration="7105000" />
       <workItem from="1671116427766" duration="678000" />
-      <workItem from="1671117308247" duration="8123000" />
+      <workItem from="1671117308247" duration="9772000" />
+      <workItem from="1671131633385" duration="962000" />
+      <workItem from="1671134828541" duration="1348000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -456,7 +456,14 @@
       <option name="project" value="LOCAL" />
       <updated>1671122446456</updated>
     </task>
-    <option name="localTasksCounter" value="31" />
+    <task id="LOCAL-00031" summary="start to doc the api - add back JS style export where both TS and JS IDE typings supported use eslint for TS">
+      <created>1671129867027</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1671129867027</updated>
+    </task>
+    <option name="localTasksCounter" value="32" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -515,7 +522,6 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/samples/typescript/promises.ts</url>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="48" />
         </line-breakpoint>
       </breakpoints>

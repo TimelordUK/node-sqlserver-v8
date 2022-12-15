@@ -296,6 +296,11 @@ END`
     return res.first[0].db || 'node'
   }
 
+  waitForSql (secs) {
+    const waitsql = `waitfor delay '00:00:${secs}';`
+    return waitsql
+  }
+
   isEncryptedConnection () {
     return (this.connectionString.includes('ColumnEncryption=Enabled'))
   }
