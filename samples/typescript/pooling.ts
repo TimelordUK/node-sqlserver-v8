@@ -1,7 +1,6 @@
-import {Error, PoolOptions, Query, SqlClient, QueryDescription, Pool, PoolStatusRecord} from 'msnodesqlv8';
+import { Error, PoolOptions, Query, SqlClient, QueryDescription, Pool, PoolStatusRecord } from 'msnodesqlv8'
 
-// require the module so it can be used in your node JS code.
-const sql : SqlClient = require('msnodesqlv8')
+const sql: SqlClient = require('msnodesqlv8')
 
 const { TestEnv } = require('../../../test/env/test-env')
 const env = new TestEnv()
@@ -63,10 +62,10 @@ setInterval(() => {
   submit(testSql)
 }, 60000)
 
-pool.open((e: Error, options:PoolOptions) => {
-    if (e) {
-        console.log(`Error ${e.message}`)
-    } else {
-        console.log(JSON.stringify(options,null, 4))
-    }
+pool.open((e: Error, options: PoolOptions) => {
+  if (e != null) {
+    console.log(`Error ${e.message}`)
+  } else {
+    console.log(JSON.stringify(options, null, 4))
+  }
 })

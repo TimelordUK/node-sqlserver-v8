@@ -5,9 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="start to doc the api - add back JS style export where both TS and JS IDE typings supported">
+      <change beforePath="$PROJECT_DIR$/.eslintrc" beforeDir="false" afterPath="$PROJECT_DIR$/.eslintrc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/MsNodeSqWrapperModule.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/MsNodeSqWrapperModule.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/index.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/table.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/samples/typescript/builder.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/builder.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/samples/typescript/db-backup.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/db-backup.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/samples/typescript/mssql-demo.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/mssql-demo.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/samples/typescript/pooling.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/pooling.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/samples/typescript/promises.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/promises.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -251,7 +261,9 @@
       <workItem from="1670970390892" duration="116000" />
       <workItem from="1670970534558" duration="2496000" />
       <workItem from="1671025725323" duration="3587000" />
-      <workItem from="1671030837505" duration="9884000" />
+      <workItem from="1671030837505" duration="18517000" />
+      <workItem from="1671108764724" duration="379000" />
+      <workItem from="1671109173892" duration="4651000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -435,11 +447,43 @@
       <option name="project" value="LOCAL" />
       <updated>1671050566069</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="start to doc the api - add back JS style export where both TS and JS IDE typings supported">
+      <created>1671052329067</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1671052329067</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+    <option name="exactExcludedFiles">
+      <list>
+        <option value="$PROJECT_DIR$/lib/MsNodeSqWrapperModule.d.ts" />
+        <option value="$PROJECT_DIR$/lib/MsNodeSqWrapperModule.js" />
+        <option value="$PROJECT_DIR$/lib/MsNodeSqWrapperModule.js.map" />
+        <option value="$PROJECT_DIR$/samples/typescript/promises.js" />
+        <option value="$PROJECT_DIR$/samples/typescript/simple-demo.js" />
+        <option value="$PROJECT_DIR$/samples/typescript/db-backup.js" />
+        <option value="$PROJECT_DIR$/samples/typescript/pooling.js" />
+        <option value="$PROJECT_DIR$/samples/typescript/simple-demo.d.ts" />
+        <option value="$PROJECT_DIR$/samples/typescript/simple-demo.js.map" />
+        <option value="$PROJECT_DIR$/samples/typescript/db-backup.js.map" />
+        <option value="$PROJECT_DIR$/samples/typescript/promises.d.ts" />
+        <option value="$PROJECT_DIR$/samples/typescript/mssql-demo.js" />
+        <option value="$PROJECT_DIR$/samples/typescript/builder.js.map" />
+        <option value="$PROJECT_DIR$/samples/typescript/pooling.d.ts" />
+        <option value="$PROJECT_DIR$/samples/typescript/db-backup.d.ts" />
+        <option value="$PROJECT_DIR$/samples/typescript/mssql-demo.js.map" />
+        <option value="$PROJECT_DIR$/samples/typescript/builder.d.ts" />
+        <option value="$PROJECT_DIR$/samples/typescript/builder.js" />
+        <option value="$PROJECT_DIR$/samples/typescript/pooling.js.map" />
+        <option value="$PROJECT_DIR$/samples/typescript/mssql-demo.d.ts" />
+        <option value="$PROJECT_DIR$/samples/typescript/promises.js.map" />
+      </list>
+    </option>
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -485,12 +529,6 @@
           <url>file://$PROJECT_DIR$/unit.tests/compoundqueries.js</url>
           <line>72</line>
           <option name="timeStamp" value="39" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/samples/typescript/builder.ts</url>
-          <line>25</line>
-          <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="40" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

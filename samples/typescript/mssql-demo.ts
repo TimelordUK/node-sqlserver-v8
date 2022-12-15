@@ -1,9 +1,10 @@
-import {Connection, Error, PreparedStatement, Query, SqlClient, QueryDescription, BulkTableMgr} from 'msnodesqlv8';
+import {
+  Connection, Error, PreparedStatement,
+  Query, SqlClient, QueryDescription, BulkTableMgr, Meta
+} from 'msnodesqlv8'
 
-// require the module so it can be used in your node JS code.
-const sql : SqlClient = require('msnodesqlv8')
-
-let supp = require('./demo-support')
+const sql: SqlClient = require('msnodesqlv8')
+const supp = require('./demo-support')
 
 /*
  This demo assumes a SQL server database is available.  Modify the connection string below
@@ -21,418 +22,409 @@ let supp = require('./demo-support')
 // this will be used automatically.  To use another connection string for test
 // uncomment below.
 
-let conn_str: string;
+let connectionStr: string
 
-let demos = [
-    // open connection, simple query and close.
-    connection,
-    // prepared statements to repeat execute SQL with different params.
-    prepared,
-    // use the table manager to bind to a table and interact with it.
-    table,
-    // create and execute a stored procedure using pm.
-    procedure,
-    // query both ad hoc and via an open connection.
-    query,
-    // shows driver based events can be captured.
-    event,
-    // cancel a long running query
-    cancel
-];
+const demos = [
+  // open connection, simple query and close.
+  connection,
+  // prepared statements to repeat execute SQL with different params.
+  prepared,
+  // use the table manager to bind to a table and interact with it.
+  table,
+  // create and execute a stored procedure using pm.
+  procedure,
+  // query both ad hoc and via an open connection.
+  query,
+  // shows driver based events can be captured.
+  event,
+  // cancel a long running query
+  cancel
+]
 
 interface Employee {
-    BusinessEntityID: number
-    NationalIDNumber: string
-    LoginID: string
-    OrganizationNode: any
-    OrganizationLevel: number,
-    JobTitle: string,
-    BirthDate: Date,
-    MaritalStatus: string,
-    Gender: string,
-    HireDate: string,
-    SalariedFlag: boolean,
-    VacationHours: number,
-    SickLeaveHours: number,
-    CurrentFlag: boolean,
-    rowguid: string,
-    ModifiedDate: Date
+  BusinessEntityID: number
+  NationalIDNumber: string
+  LoginID: string
+  OrganizationNode: any
+  OrganizationLevel: number
+  JobTitle: string
+  BirthDate: Date
+  MaritalStatus: string
+  Gender: string
+  HireDate: string
+  SalariedFlag: boolean
+  VacationHours: number
+  SickLeaveHours: number
+  CurrentFlag: boolean
+  rowguid: string
+  ModifiedDate: Date
 }
 
-let support: any = null;
-let procedureHelper: any = null;
-let helper: any = null;
-let parsedJSON: Array<Employee> | null = null;
+let support: any = null
+let procedureHelper: any = null
+let helper: any = null
+let parsedJSON: Employee[]
 
 supp.GlobalConn.init(sql, (co: any) => {
-        conn_str = co.conn_str;
-        support = co.support;
-        procedureHelper = new support.ProcedureHelper(conn_str);
-        procedureHelper.setVerbose(false);
-        let async = co.async;
-        helper = co.helper;
-        parsedJSON = helper.getJSON('../../test/json');
+  connectionStr = co.conn_str
+  support = co.support
+  procedureHelper = new support.ProcedureHelper(connectionStr)
+  procedureHelper.setVerbose(false)
+  const async = co.async
+  helper = co.helper
+  parsedJSON = helper.getJSON('../../test/json')
 
-        console.log(conn_str);
-        async.series(demos, () => {
-            console.log("demo has finished.");
-        });
-    }
+  console.log(connectionStr)
+  async.series(demos, () => {
+    console.log('demo has finished.')
+  })
+}
 // to override an auto discovered sqllocaldb str assign above and uncomment below.
 // , test_conn_str
-);
+)
 
-function event(done: Function): void {
+function event (done: Function): void {
+  const async = new support.Async()
+  const Assert = new support.Assert()
+  let conn: Connection
 
-    let async = new support.Async();
-    let Assert = new support.Assert();
-    let conn: Connection;
+  const fns: Function[] = [
 
-    let fns: Array<Function> = [
+    function (asyncDone: Function) {
+      console.log('event begins ...... ')
+      asyncDone()
+    },
 
-        function (async_done: Function) {
-            console.log("event begins ...... ");
-            async_done();
-        },
+    function (asyncDone: Function) {
+      console.log('opening a connection ....')
+      sql.open(connectionStr, (err: Error, connection: Connection) => {
+        Assert.ifError(err)
+        conn = connection
+        Assert.check(conn != null, 'connection from open is null.')
+        console.log('... open')
+        asyncDone()
+      })
+    },
 
-        function (async_done: Function) {
-            console.log("opening a connection ....");
-            sql.open(conn_str, (err: Error, new_conn: Connection) => {
-                Assert.ifError(err);
-                conn = new_conn;
-                Assert.check(conn != null, "connection from open is null.");
-                console.log("... open");
-                async_done();
-            });
-        },
+    function (asyncDone: Function) {
+      console.log('listen to the events raised from the driver')
+      const s = "select top 1 id, name, type, crdate from sysobjects so where so.type='U'"
+      console.log(s)
+      const q = conn.query(s, (err: Error, res: any[]) => {
+        Assert.ifError(err)
+        console.log(`res.length = ${res.length}`)
+        console.log(res)
+        asyncDone()
+      })
 
-        function (async_done: Function) {
-            console.log("listen to the events raised from the driver");
-            let s = "select top 1 id, name, type, crdate from sysobjects so where so.type='U'";
-            console.log(s);
-            let q = conn.query(s, (err: Error, res: Array<any>) => {
-                Assert.ifError(err);
-                console.log("res.length = " + res.length);
-                console.log(res);
-                async_done();
-            });
+      q.on('meta', (meta: Meta[]) => {
+        console.log(`event: meta[0].name = ${meta[0].name}`)
+      })
 
-            q.on('meta', (meta: any) => {
-                console.log('event: meta[0].name = ' + meta[0].name);
-            });
+      q.on('column', (col: number) => {
+        console.log(`event: column = ${col}`)
+      })
 
-            q.on('column', (col: any) => {
-                console.log('event: column = ' + col);
-            });
+      q.on('submitted', (q: QueryDescription) => {
+        console.log('event: submitted query = ' + JSON.stringify(q))
+      })
 
-            q.on('partial', (col: any) => {
-                console.log('event: partial column = ' + col);
-            });
+      q.on('rowcount', (count: number) => {
+        console.log(`event: rowcount ${count}`)
+      })
 
-            q.on('submitted', (q: QueryDescription) => {
-                console.log('event: submitted query = ' + JSON.stringify(q));
-            });
+      q.on('row', (row: number) => {
+        console.log(`event: row = ${row}`)
+      })
 
-            q.on('rowcount', (count: any) => {
-                console.log('event: rowcount = ' + count);
-            });
+      q.on('done', () => {
+        console.log('event: done')
+      })
 
-            q.on('row', (row: any) => {
-                console.log('event: row = ' + row);
-            });
+      q.on('open', () => {
+        console.log('event: open')
+      })
 
-            q.on('done', () => {
-                console.log('event: done');
-            });
+      q.on('closed', () => {
+        console.log('event: open')
+      })
 
-            q.on('open', () => {
-                console.log('event: open');
-            });
+      q.on('error', (err: Error) => {
+        console.log(JSON.stringify(err))
+      })
 
-            q.on('closed', () => {
-                console.log('event: open');
-            });
+      q.on('warning', (err: Error) => {
+        console.log(JSON.stringify(err))
+      })
+    },
 
-            q.on('error', (err: any) => {
-                console.log(JSON.stringify(err));
-            });
+    function (asyncDone: Function) {
+      console.log('close connection.')
+      conn.close(() => {
+        asyncDone()
+      })
+    },
 
-            q.on('warning', (err: any) => {
-                console.log(JSON.stringify(err));
-            });
-        },
+    function (asyncDone: Function) {
+      console.log('...... event ends.')
+      asyncDone()
+    }
+  ]
 
-        function (async_done: Function) {
-            console.log("close connection.");
-            conn.close(() => {
-                async_done()
-            });
-        },
-
-        function (async_done: Function) {
-            console.log("...... event ends.");
-            async_done();
-        }
-    ];
-
-    console.log("executing async set of functions .....");
-    async.series(fns, () => {
-        console.log("..... async completes. \n\n\n\n\n\n");
-        done();
-    })
+  console.log('executing async set of functions .....')
+  async.series(fns, () => {
+    console.log('..... async completes. \n\n\n\n\n\n')
+    done()
+  })
 }
 
-function query(done: Function) {
+function query (done: Function): void {
+  const async = new support.Async()
+  const Assert = new support.Assert()
 
-    let async = new support.Async();
-    let Assert = new support.Assert();
+  let conn: Connection
 
-    let conn: Connection;
+  const fns = [
 
-    let fns = [
+    function (asyncDone: Function) {
+      console.log('query begins ...... ')
+      asyncDone()
+    },
 
-        function (async_done: Function) {
-            console.log("query begins ...... ");
-            async_done();
-        },
+    function (asyncDone: Function) {
+      console.log('execute an ad hoc query with temporary connection.')
+      const q = 'declare @s NVARCHAR(MAX) = ?; select @s as s'
+      sql.query(connectionStr, q, ['node is great'], (err, res) => {
+        Assert.ifError(err)
+        console.log(res)
+        asyncDone()
+      })
+    },
 
-        function (async_done: Function) {
-            console.log('execute an ad hoc query with temporary connection.');
-            let q = "declare @s NVARCHAR(MAX) = ?; select @s as s";
-            sql.query(conn_str, q, ['node is great'], (err, res) => {
-                Assert.ifError(err);
-                console.log(res);
-                async_done();
-            });
-        },
+    function (asyncDone: Function): void {
+      console.log('opening a connection ....')
+      sql.open(connectionStr, (err, connection) => {
+        Assert.ifError(err)
+        conn = connection
+        Assert.check(conn != null, 'connection from open is null.')
+        console.log('... open')
+        asyncDone()
+      })
+    },
 
-        function (async_done: Function) {
-            console.log("opening a connection ....");
-            sql.open(conn_str, (err, new_conn) => {
-                Assert.ifError(err);
-                conn = new_conn;
-                Assert.check(conn != null, "connection from open is null.");
-                console.log("... open");
-                async_done();
-            });
-        },
-
-        function (async_done: Function) {
-            console.log("use an open connection to call query()");
-            let s = "select top 1 id, name, type, crdate from sysobjects so where so.type='U'";
-            console.log(s);
-            conn.query(s, (err, res) => {
-                Assert.ifError(err);
-                if (res) {
-                    console.log("res.length = " + res.length);
-                    console.log(res);    
-                }
-
-                async_done();
-            })
-        },
-
-        function (async_done: Function) {
-            console.log("use an open connection to call queryRaw()");
-            let s = "select top 1 id, name, type, crdate from sysobjects so where so.type='U'";
-            console.log(s);
-            conn.queryRaw(s, (err, res) => {
-                Assert.ifError(err);
-                if (res) {
-                    console.log("res.length = " + res.rows.length);
-                    console.log(res);
-                }
-                
-                async_done();
-            })
-        },
-
-        function (async_done: Function) {
-            console.log('use timeout to place limit on how long to wait for query.');
-            let queryObj: QueryDescription = {
-                query_str: "waitfor delay \'00:00:10\';",
-                query_timeout: 2
-            };
-
-            conn.query(queryObj, (err: any) => {
-                Assert.check(err != null);
-                Assert.check(err.message.indexOf('Query timeout expired') > 0);
-                async_done();
-            });
-        },
-
-        function (async_done: Function) {
-            console.log("close connection.");
-            conn.close(() => {
-                async_done();
-            });
-        },
-
-        function (async_done: Function) {
-            console.log("...... query ends.");
-            async_done();
+    function (asyncDone: Function) {
+      console.log('use an open connection to call query()')
+      const s = "select top 1 id, name, type, crdate from sysobjects so where so.type='U'"
+      console.log(s)
+      conn.query(s, (err, res) => {
+        Assert.ifError(err)
+        if (res != null) {
+          console.log(`res.length = ${res.length}`)
+          console.log(res)
         }
-    ];
 
-    console.log("executing async set of functions .....");
-    async.series(fns, () => {
-        console.log("..... async completes. \n\n\n\n\n\n");
-        done();
-    })
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('use an open connection to call queryRaw()')
+      const s = "select top 1 id, name, type, crdate from sysobjects so where so.type='U'"
+      console.log(s)
+      conn.queryRaw(s, (err, res) => {
+        Assert.ifError(err)
+        if (res != null) {
+          console.log(`res.length = ${res.rows.length}`)
+          console.log(res)
+        }
+
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('use timeout to place limit on how long to wait for query.')
+      const queryObj: QueryDescription = {
+        query_str: `waitfor delay ${'00:00:10'}`,
+        query_timeout: 2
+      }
+
+      conn.query(queryObj, (err: any) => {
+        Assert.check(err != null)
+        Assert.check(err.message.indexOf('Query timeout expired') > 0)
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('close connection.')
+      conn.close(() => {
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('...... query ends.')
+      asyncDone()
+    }
+  ]
+
+  console.log('executing async set of functions .....')
+  async.series(fns, () => {
+    console.log('..... async completes. \n\n\n\n\n\n')
+    done()
+  })
 }
 
-function procedure(done: Function) {
+function procedure (done: Function): void {
+  const async = new support.Async()
+  const Assert = new support.Assert()
 
-    let async = new support.Async();
-    let Assert = new support.Assert();
+  let conn: Connection
 
-    let conn: Connection;
+  const spName = 'test_sp_get_int_int'
+  let def = 'alter PROCEDURE <name>' +
+        '(\n' +
+        '@num1 INT,\n' +
+        '@num2 INT,\n' +
+        '@num3 INT OUTPUT\n' +
+        '\n)' +
+        'AS\n' +
+        'BEGIN\n' +
+        '   SET @num3 = @num1 + @num2\n' +
+        '   RETURN 99;\n' +
+        'END\n'
 
-    let sp_name = "test_sp_get_int_int";
-    let def = "alter PROCEDURE <name>" +
-        "(\n" +
-        "@num1 INT,\n" +
-        "@num2 INT,\n" +
-        "@num3 INT OUTPUT\n" +
-        "\n)" +
-        "AS\n" +
-        "BEGIN\n" +
-        "   SET @num3 = @num1 + @num2\n" +
-        "   RETURN 99;\n" +
-        "END\n";
+  const fns: Array<(asyncDone: Function) => any> = [
 
-    let fns: ((async_done: Function) => any)[] = [
+    function (asyncDone: Function) {
+      console.log('procedure begins ...... ')
+      asyncDone()
+    },
 
-        function (async_done: Function) {
-            console.log("procedure begins ...... ");
-            async_done();
-        },
+    function (asyncDone: Function) {
+      console.log('opening a connection ....')
+      sql.open(connectionStr, (err, connection) => {
+        Assert.ifError(err)
+        conn = connection
+        Assert.check(conn != null, 'connection from open is null.')
+        console.log('... open')
+        asyncDone()
+      })
+    },
 
-        function (async_done: Function) {
-            console.log("opening a connection ....");
-            sql.open(conn_str, (err, new_conn) => {
-                Assert.ifError(err);
-                conn = new_conn;
-                Assert.check(conn != null, "connection from open is null.");
-                console.log("... open");
-                async_done();
-            });
-        },
+    function (asyncDone: Function) {
+      def = def.replace(/<name>/g, spName)
+      console.log('create a procedure ' + spName)
+      console.log(def)
+      procedureHelper.createProcedure(spName, def, () => {
+        asyncDone()
+      })
+    },
 
-        function (async_done: Function) {
-            def = def.replace(/<name>/g, sp_name);
-            console.log("create a procedure " + sp_name);
-            console.log(def);
-            procedureHelper.createProcedure(sp_name, def, () => {
-                async_done();
-            })
-        },
+    function (asyncDone: Function) {
+      const pm = conn.procedureMgr()
+      pm.callproc(spName, [10, 5], (err: Error, results: any, output: any[]) => {
+        Assert.ifError(err)
+        const expected = [99, 15]
+        console.log(output)
+        Assert.check(expected[0] === output[0], "results didn't match")
+        Assert.check(expected[1] === output[1], "results didn't match")
+        asyncDone()
+      })
+    },
 
-        function (async_done: Function) {
-            let pm = conn.procedureMgr();
-            pm.callproc(sp_name, [10, 5], (err: Error, results: any, output: Array<any>) => {
-                Assert.ifError(err);
-                let expected = [99, 15];
-                console.log(output);
-                Assert.check(expected[0] == output[0], "results didn't match");
-                Assert.check(expected[1] == output[1], "results didn't match");
-                async_done();
-            });
-        },
+    function (asyncDone: Function) {
+      const pm = conn.procedureMgr()
+      console.log('describe procedure.')
+      pm.describe(spName, summary => {
+        const s = JSON.stringify(summary, null, 2)
+        console.log(s)
+        asyncDone()
+      })
+    },
 
-        function (async_done: Function) {
-            let pm = conn.procedureMgr();
-            console.log("describe procedure.");
-            pm.describe(sp_name, summary => {
-                let s = JSON.stringify(summary, null, 2);
-                console.log(s);
-                async_done();
-            });
-        },
+    function (asyncDone: Function) {
+      console.log('close connection.')
+      conn.close(() => {
+        asyncDone()
+      })
+    },
 
-        function (async_done: Function) {
-            console.log("close connection.");
-            conn.close(() => {
-                async_done();
-            });
-        },
+    function (asyncDone: Function) {
+      console.log('...... procedure ends.')
+      asyncDone()
+    }
+  ]
 
-        function (async_done: Function) {
-            console.log("...... procedure ends.");
-            async_done();
-        }
-    ];
-
-    console.log("executing async set of functions .....");
-    async.series(fns, () => {
-        console.log("..... async completes. \n\n\n\n\n\n");
-        done();
-    })
+  console.log('executing async set of functions .....')
+  async.series(fns, () => {
+    console.log('..... async completes. \n\n\n\n\n\n')
+    done()
+  })
 }
 
-function connection(done: Function) {
+function connection (done: Function): void {
+  const async = new support.Async()
+  const Assert = new support.Assert()
 
-    let async = new support.Async();
-    let Assert = new support.Assert();
+  let conn: Connection
 
-    let conn: Connection;
+  const fns = [
 
-    let fns = [
+    function (asyncDone: Function) {
+      console.log('connection begins ...... ')
+      asyncDone()
+    },
 
-        function (async_done: Function) {
-            console.log("connection begins ...... ");
-            async_done();
-        },
+    function (asyncDone: Function) {
+      console.log('opening a connection ....')
+      sql.open(connectionStr, (err, connection) => {
+        Assert.ifError(err)
+        conn = connection
+        Assert.check(conn != null, 'connection from open is null.')
+        console.log('... open')
+        asyncDone()
+      })
+    },
 
-        function (async_done: Function) {
-            console.log("opening a connection ....");
-            sql.open(conn_str, (err, new_conn) => {
-                Assert.ifError(err);
-                conn = new_conn;
-                Assert.check(conn != null, "connection from open is null.");
-                console.log("... open");
-                async_done();
-            });
-        },
+    function (asyncDone: Function) {
+      console.log('fetch spid for the connection.')
+      conn.query('select @@SPID as id, CURRENT_USER as name', (err, res) => {
+        Assert.ifError(err)
 
-        function (async_done: Function) {
-            console.log("fetch spid for the connection.");
-            conn.query("select @@SPID as id, CURRENT_USER as name", (err, res) => {
-                Assert.ifError(err);
-
-                if (res) {
-                    Assert.check(res.length == 1, "unexpected result length.");
-                    let sp = res[0]['id'];
-                    Assert.check(sp != null, "did not find expected id.");  
-                }
-                
-                async_done();
-            });
-        },
-
-        function (async_done: Function) {
-            console.log("close connection.");
-            conn.close(() => {
-                async_done();
-            });
-        },
-
-        function (async_done: Function) {
-            console.log("...... connection ends.");
-            async_done();
+        if (res != null) {
+          Assert.check(res.length === 1, 'unexpected result length.')
+          const sp = res[0].id
+          Assert.check(sp != null, 'did not find expected id.')
         }
-    ];
 
-    console.log("executing async set of functions .....");
-    async.series(fns, () => {
-        console.log("..... async completes. \n\n\n\n\n\n");
-        done();
-    })
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('close connection.')
+      conn.close(() => {
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('...... connection ends.')
+      asyncDone()
+    }
+  ]
+
+  console.log('executing async set of functions .....')
+  async.series(fns, () => {
+    console.log('..... async completes. \n\n\n\n\n\n')
+    done()
+  })
 }
 
-function empSelectSQL() {
-
-    return `SELECT [BusinessEntityID]
+function empSelectSQL (): string {
+  return `SELECT [BusinessEntityID]
      ,[NationalIDNumber]
      ,[LoginID]
      ,[OrganizationNode]
@@ -449,497 +441,494 @@ function empSelectSQL() {
      ,[rowguid]
      ,[ModifiedDate]
      FROM [scratch].[dbo].[Employee]
-     WHERE BusinessEntityID = ?`;
+     WHERE BusinessEntityID = ?`
 }
 
-function empDeleteSQL() {
-
-    return `DELETE FROM [scratch].[dbo].[Employee]
-        WHERE BusinessEntityID = ?`;
+function empDeleteSQL (): string {
+  return `DELETE FROM [scratch].[dbo].[Employee]
+        WHERE BusinessEntityID = ?`
 }
 
-interface Statements {
-    selectStatement?: PreparedStatement
-    deleteStatement?: PreparedStatement
+class Statements {
+  constructor (public selectStatement?: PreparedStatement, public deleteStatement?: PreparedStatement) {
+  }
 }
 
-function prepared(done: Function) {
-
+function prepared (done: Function): void {
 // create and populate table - fetch prepared statements to select and free records for employee table.
-// use the prepared statements to select and free rows.
-// free the statements and indicate this part of the demo has finished.
+  // use the prepared statements to select and free rows.
+  // free the statements and indicate this part of the demo has finished.
 
-    let async = new support.Async();
-    let Assert = new support.Assert();
+  const async = new support.Async()
+  const Assert = new support.Assert()
 
-    function statementsFactory(): Statements {
-        return {
-        }
-    }
+  function statementsFactory (): Statements {
+    return new Statements()
+  }
 
-    let statements:Statements = statementsFactory();
+  const statements: Statements = statementsFactory()
 
-    let table_name = "Employee";
+  const employeeTableName = 'Employee'
 
-    let conn: Connection;
+  let conn: Connection
 
-    function employeePrepare(query: string, done: Function) {
-        conn.prepare(query, (err, ps) => {
-            Assert.ifError(err);
-            done(ps);
-        });
-    }
-
-    let fns = [
-
-        function (async_done: Function) {
-            console.log("prepared begins ...... ");
-            async_done();
-        },
-
-        function (async_done: Function) {
-            console.log("opening a connection ....");
-            sql.open(conn_str, (err, new_conn) => {
-                Assert.ifError(err);
-                conn = new_conn;
-                Assert.check(conn != null, "connection from open is null.");
-                console.log("... open");
-                async_done();
-            });
-        },
-
-        // drop / create an Employee table.
-        function (async_done: Function) {
-            helper.dropCreateTable({
-                tableName: table_name
-            }, function () {
-                async_done();
-            });
-        },
-
-        // insert test set using bulk insert
-        function (async_done: Function) {
-            let tm = conn.tableMgr();
-            tm.bind(table_name, (bulkMgr: BulkTableMgr) => {
-                bulkMgr.insertRows(parsedJSON, () => {
-                    async_done();
-                });
-            });
-        },
-
-        // prepare a select statement.
-        function (async_done: Function) {
-            console.log("preparing a select statement.");
-            employeePrepare(empSelectSQL(), (ps: PreparedStatement) => {
-                statements.selectStatement = ps;
-                async_done();
-            })
-        },
-
-        // prepare a free statement.
-        function (async_done: Function) {
-            console.log("preparing a free statement.");
-            employeePrepare(empDeleteSQL(), (ps: PreparedStatement) => {
-                statements.deleteStatement = ps;
-                async_done();
-            })
-        },
-
-        function (async_done: Function) {
-            console.log("check statements.");
-            Assert.check(statements != null, "prepared statement object is null.");
-            Assert.check(statements.selectStatement != null, "prepared select is null");
-            Assert.check(statements.deleteStatement != null, "prepared free is null");
-            async_done();
-        },
-
-        function (async_done: Function) {
-            let id = 1;
-            console.log("use prepared statement to fetch " + id);
-            statements.selectStatement.preparedQuery([id], (err, res) => {
-                Assert.ifError(err);
-
-                if (res) {
-                    Assert.check(res.length == 1);
-                    console.log(res[0]);
-                }
-               
-                async_done();
-            })
-        },
-
-        function (async_done: Function) {
-            let id = 2;
-            console.log("use prepared statement to fetch " + id);
-            statements.selectStatement.preparedQuery([id], (err, res) => {
-                Assert.ifError(err);
-
-                if (res) {
-                    Assert.check(res.length == 1);
-                    console.log(res[0]);    
-                }
-                
-                async_done();
-            })
-        },
-
-        function (async_done: Function) {
-            let id = 5;
-            console.log("use prepared statement to free " + id);
-            statements.deleteStatement.preparedQuery([id], err => {
-                Assert.ifError(err);
-                async_done();
-            })
-        },
-
-        function (async_done: Function) {
-            console.log("check how many rows are left.");
-            conn.query("select * from Employee", (err, res) => {
-                Assert.ifError(err);
-
-                if (res) {
-                    console.log("returned rows " + res.length);
-                    Assert.check(res.length == 9, "one row should have been deleted.");   
-                }
-               
-                async_done();
-            });
-        },
-
-        function (async_done: Function) {
-            console.log("free statements");
-            statements.selectStatement.free(() => {
-                statements.deleteStatement.free(() => {
-                    async_done();
-                })
-            })
-        },
-
-        function (async_done: Function) {
-            console.log("close connection.");
-            conn.close(() => {
-                async_done();
-            });
-        },
-
-        function (async_done: Function) {
-            console.log("...... prepared ends.");
-            async_done();
-        }
-    ];
-
-    console.log("executing async set of functions .....");
-    async.series(fns, () => {
-        console.log("..... async completes. \n\n\n\n\n\n");
-        done();
-    });
-}
-
-function table(done: Function) {
-
-    let async = new support.Async();
-    let Assert = new support.Assert();
-    let helper = new support.EmployeeHelper(sql, conn_str);
-    let conn: Connection;
-    let table_name = "Employee";
-    let bm: BulkTableMgr;
-    let records : Array<Employee>= helper.getJSON();
-
-
-    let fns = [
-
-        function (async_done: Function) {
-            console.log("table begins ...... ");
-            async_done();
-        },
-
-        function (async_done: Function) {
-            console.log("opening a connection ....");
-            sql.open(conn_str, (err, new_conn) => {
-                Assert.ifError(err);
-                conn = new_conn;
-                Assert.check(conn != null, "connection from open is null.");
-                console.log("... open");
-                async_done();
-            });
-        },
-
-        function (async_done: Function) {
-            console.log("create an employee table.");
-            helper.dropCreateTable({
-                tableName: table_name
-            }, function () {
-                async_done();
-            });
-        },
-
-        function (async_done: Function) {
-            let tm = conn.tableMgr();
-            console.log("bind to table " + table_name);
-            tm.bind(table_name, (bulk: BulkTableMgr) => {
-                bm = bulk;
-                Assert.check(bm, "no bulk manager returned.");
-                async_done();
-            })
-        },
-
-        function (async_done: Function) {
-            console.log("bulk insert records.");
-            bm.insertRows(records, () => {
-                async_done();
-            });
-        },
-
-        function (async_done: Function) {
-            console.log("check rows have been inserted.");
-            conn.query("select * from " + table_name, (err, res) => {
-                Assert.ifError(err);
-
-                if (res) {
-                    Assert.check(res.length == records.length);
-                }
-                
-                async_done();
-            });
-        },
-
-        function (async_done: Function) {
-            console.log("update a column.");
-            let newDate = new Date("2015-01-01T00:00:00.000Z");
-            let modifications: Array<any> = [];
-            records.forEach((emp: Employee) => {
-                emp.ModifiedDate = newDate;
-                modifications.push({
-                    BusinessEntityID: emp.BusinessEntityID,
-                    ModifiedDate: newDate
-                });
-            });
-
-            let updateCols = [
-                {
-                    name: 'ModifiedDate'
-                }
-            ];
-
-            bm.setUpdateCols(updateCols);
-            bm.updateRows(modifications, () => {
-                async_done();
-            });
-        },
-
-        // use the select signature to construct a prepared query.
-
-        function (async_done: Function) {
-            let summary = bm.getSummary();
-            let s = JSON.stringify(summary, null, 2);
-            console.log(s);
-            console.log(summary.selectSignature);
-            console.log("prepare the above statement.");
-            let select: string = summary.selectSignature;
-            conn.prepare(select, (err: Error, ps: PreparedStatement) => {
-                Assert.ifError(err);
-                ps.preparedQuery([1], (err, res) => {
-                    Assert.ifError(err);
-                    
-                    if (res) {
-                        Assert.check(res.length == 1);
-                    }
-                    
-                    async_done();
-                });
-            });
-        },
-
-        function (async_done: Function) {
-            console.log("free the records using bulk operation.");
-            let keys = helper.extractKey(records, 'BusinessEntityID');
-            bm.deleteRows(keys, () => {
-                async_done();
-            });
-        },
-
-        function (async_done: Function) {
-            console.log("check rows have been deleted.");
-            conn.query("select * from " + table_name, (err, res) => {
-                Assert.ifError(err);
-
-                if (res) {
-                    Assert.check(res.length == 0);
-                }
-                
-                async_done();
-            });
-        },
-
-        function (async_done: Function) {
-            console.log("close connection.");
-            conn.close(() => {
-                async_done();
-            });
-        },
-
-        function (async_done: Function) {
-            console.log("...... table ends.");
-            async_done();
-        }
-    ];
-
-    console.log("executing async set of functions .....");
-    async.series(fns, () => {
-        console.log("..... async completes. \n\n\n\n\n\n");
-        done();
-    });
-}
-
-function cancel(done: Function): void {
-
-    let async = new support.Async();
-    let Assert = new support.Assert();
-    let conn: Connection;
-
-    let fns: Array<Function> = [
-
-        function (async_done: Function) {
-            console.log("cancel begins ...... ");
-            async_done();
-        },
-
-        function (async_done: Function) {
-            console.log("opening a connection ....");
-            sql.open(conn_str, (err: Error, new_conn: Connection) => {
-                Assert.ifError(err);
-                conn = new_conn;
-                Assert.check(conn, "connection from open is null.");
-                console.log("... open");
-                async_done();
-            });
-        },
-
-        function (async_done: Function) {
-            console.log("use an open connection to call query(), then cancel it");
-            let q: Query = conn.query(sql.PollingQuery("waitfor delay \'00:00:20\';"), err => {
-                if (err) {
-                    Assert.check(err.message.indexOf('Operation canceled') > 0);
-                }
-                
-                async_done();
-            });
-
-            conn.cancelQuery(q,  err => {
-                Assert.ifError(err);
-            });
-        },
-
-        function (async_done: Function) {
-            console.log("cancel using query identifier.");
-            let q: Query = conn.query(sql.PollingQuery("waitfor delay \'00:00:20\';"), function (err) {
-                if (err) {
-                    Assert.check(err.message.indexOf('Operation canceled') > 0);
-                }
-                
-                async_done();
-            });
-
-            q.cancelQuery( err => {
-                Assert.ifError(err);
-            });
-        },
-
-        function (async_done:Function) {
-            console.log("cancel a prepared statement.");
-            let s = "waitfor delay ?;";
-            let prepared: PreparedStatement;
-
-            let fns :Function[] = [
-                function (async_done:Function) {
-                    conn.prepare(sql.PollingQuery(s), (err: Error, pq: PreparedStatement) => {
-                        Assert.check(!err);
-                        prepared = pq;
-                        async_done();
-                    });
-                },
-
-                function (async_done:Function) {
-                    let q: Query = prepared.preparedQuery(['00:00:20'], (err: Error) => {
-                        Assert.check(err.message.indexOf('Operation canceled') > 0);
-                        async_done();
-                    });
-
-                    q.on('submitted', function () {
-                        q.cancelQuery((e: Error) => {
-                            Assert.ifError(e);
-                        });
-                    });
-                }
-            ];
-
-            async.series(fns, () => {
-                async_done();
-            })
-        },
-
-        function(async_done:Function) {
-            console.log("cancel a stored proc.");
-
-            let sp_name = "test_spwait_for";
-
-            let def = "alter PROCEDURE <name>" +
-                "(\n" +
-                "@timeout datetime" +
-                "\n)" +
-                "AS\n" +
-                "BEGIN\n" +
-                "waitfor delay @timeout;" +
-                "END\n";
-
-            let fns: Function[] = [
-                function (async_done: Function) {
-                    procedureHelper.createProcedure(sp_name, def, function () {
-                        async_done();
-                    });
-                },
-
-                function (async_done: Function) {
-                    let pm = conn.procedureMgr();
-                    pm.setPolling(true);
-                    let q: Query = pm.callproc(sp_name, ['0:0:20'], function (err) {
-                        Assert.check(err);
-                        
-                        if (err) {
-                            Assert.check(err.message.indexOf('Operation canceled') > 0);
-                        }
-                        
-                        async_done();
-                    });
-                    q.on('submitted', function () {
-                        q.cancelQuery(function (err) {
-                            Assert.check(!err);
-                        });
-                    });
-                }
-            ];
-
-            async.series(fns, function () {
-                async_done();
-            });
-        },
-
-        function (async_done: Function) {
-            console.log("close connection.");
-            conn.close(() => {
-                async_done()
-            });
-        },
-
-        function (async_done: Function) {
-            console.log("...... cancel ends.");
-            async_done();
-        }
-    ];
-
-    console.log("executing async set of functions .....");
-    async.series(fns, () => {
-        console.log("..... async completes. \n\n\n\n\n\n");
-        done();
+  function employeePrepare (query: string, done: Function): void {
+    conn.prepare(query, (err, ps) => {
+      Assert.ifError(err)
+      done(ps)
     })
+  }
+
+  const fns = [
+
+    function (asyncDone: Function) {
+      console.log('prepared begins ...... ')
+      asyncDone()
+    },
+
+    function (asyncDone: Function) {
+      console.log('opening a connection ....')
+      sql.open(connectionStr, (err, connection) => {
+        Assert.ifError(err)
+        conn = connection
+        Assert.check(conn != null, 'connection from open is null.')
+        console.log('... open')
+        asyncDone()
+      })
+    },
+
+    // drop / create an Employee table.
+    function (asyncDone: Function) {
+      helper.dropCreateTable({
+        tableName: employeeTableName
+      }, function () {
+        asyncDone()
+      })
+    },
+
+    // insert test set using bulk insert
+    function (asyncDone: Function) {
+      const tm = conn.tableMgr()
+      tm.bind(employeeTableName, (bulkMgr: BulkTableMgr) => {
+        bulkMgr.insertRows(parsedJSON, () => {
+          asyncDone()
+        })
+      })
+    },
+
+    // prepare a select statement.
+    function (asyncDone: Function) {
+      console.log('preparing a select statement.')
+      employeePrepare(empSelectSQL(), (ps: PreparedStatement) => {
+        statements.selectStatement = ps
+        asyncDone()
+      })
+    },
+
+    // prepare a free statement.
+    function (asyncDone: Function) {
+      console.log('preparing a free statement.')
+      employeePrepare(empDeleteSQL(), (ps: PreparedStatement) => {
+        statements.deleteStatement = ps
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('check statements.')
+      Assert.check(statements != null, 'prepared statement object is null.')
+      Assert.check(statements.selectStatement != null, 'prepared select is null')
+      Assert.check(statements.deleteStatement != null, 'prepared free is null')
+      asyncDone()
+    },
+
+    function (asyncDone: Function) {
+      const id = 1
+      console.log(`use prepared statement to fetch ${id}`)
+      if (statements.selectStatement != null) {
+        statements.selectStatement.preparedQuery([id], (err, res) => {
+          Assert.ifError(err)
+          if (res != null) {
+            Assert.check(res.length === 1)
+            console.log(res[0])
+          }
+          asyncDone()
+        })
+      }
+    },
+
+    function (asyncDone: Function) {
+      const id = 2
+      console.log(`use prepared statement to fetch ${id}`)
+      if (statements.selectStatement != null) {
+        statements.selectStatement.preparedQuery([id], (err, res) => {
+          Assert.ifError(err)
+          if (res != null) {
+            Assert.check(res.length === 1)
+            console.log(res[0])
+          }
+          asyncDone()
+        })
+      }
+    },
+
+    function (asyncDone: Function) {
+      const id = 5
+      console.log(`use prepared statement to free ${id}`)
+      if (statements.deleteStatement != null) {
+        statements.deleteStatement.preparedQuery([id], err => {
+          Assert.ifError(err)
+          asyncDone()
+        })
+      }
+    },
+
+    function (asyncDone: Function) {
+      console.log('check how many rows are left.')
+      conn.query('select * from Employee', (err, res) => {
+        Assert.ifError(err)
+
+        if (res != null) {
+          console.log(`returned rows ${res.length}`)
+          Assert.check(res.length === 9, 'one row should have been deleted.')
+        }
+
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('free statements')
+      if (statements.selectStatement != null) {
+        statements.selectStatement.free()
+      }
+      if (statements.deleteStatement != null) {
+        statements.deleteStatement.free()
+      }
+    },
+
+    function (asyncDone: Function) {
+      console.log('close connection.')
+      conn.close(() => {
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('...... prepared ends.')
+      asyncDone()
+    }
+  ]
+
+  console.log('executing async set of functions .....')
+  async.series(fns, () => {
+    console.log('..... async completes. \n\n\n\n\n\n')
+    done()
+  })
+}
+
+function table (done: Function): void {
+  const async = new support.Async()
+  const Assert = new support.Assert()
+  const helper = new support.EmployeeHelper(sql, connectionStr)
+  let conn: Connection
+  const employeeTableName = 'Employee'
+  let bm: BulkTableMgr
+  const records: Employee[] = helper.getJSON()
+
+  const fns = [
+
+    function (asyncDone: Function) {
+      console.log('table begins ...... ')
+      asyncDone()
+    },
+
+    function (asyncDone: Function) {
+      console.log('opening a connection ....')
+      sql.open(connectionStr, (err, connection) => {
+        Assert.ifError(err)
+        conn = connection
+        Assert.check(conn != null, 'connection from open is null.')
+        console.log('... open')
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('create an employee table.')
+      helper.dropCreateTable({
+        tableName: employeeTableName
+      }, function () {
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      const tm = conn.tableMgr()
+      console.log('bind to table ' + employeeTableName)
+      tm.bind(employeeTableName, (bulk: BulkTableMgr) => {
+        bm = bulk
+        Assert.check(bm, 'no bulk manager returned.')
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('bulk insert records.')
+      bm.insertRows(records, () => {
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('check rows have been inserted.')
+      conn.query('select * from ' + employeeTableName, (err, res) => {
+        Assert.ifError(err)
+
+        if (res != null) {
+          Assert.check(res.length === records.length)
+        }
+
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('update a column.')
+      const newDate = new Date('2015-01-01T00:00:00.000Z')
+      const modifications: any[] = []
+      records.forEach((emp: Employee) => {
+        emp.ModifiedDate = newDate
+        modifications.push({
+          BusinessEntityID: emp.BusinessEntityID,
+          ModifiedDate: newDate
+        })
+      })
+
+      const updateCols = [
+        {
+          name: 'ModifiedDate'
+        }
+      ]
+
+      bm.setUpdateCols(updateCols)
+      bm.updateRows(modifications, () => {
+        asyncDone()
+      })
+    },
+
+    // use the select signature to construct a prepared query.
+
+    function (asyncDone: Function) {
+      const summary = bm.getSummary()
+      const s = JSON.stringify(summary, null, 2)
+      console.log(s)
+      console.log(summary.selectSignature)
+      console.log('prepare the above statement.')
+      const select: string = summary.selectSignature
+      conn.prepare(select, (err: Error, ps: PreparedStatement) => {
+        Assert.ifError(err)
+        ps.preparedQuery([1], (err, res) => {
+          Assert.ifError(err)
+
+          if (res != null) {
+            Assert.check(res.length === 1)
+          }
+
+          asyncDone()
+        })
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('free the records using bulk operation.')
+      const keys = helper.extractKey(records, 'BusinessEntityID')
+      bm.deleteRows(keys, () => {
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('check rows have been deleted.')
+      conn.query('select * from ' + employeeTableName, (err, res) => {
+        Assert.ifError(err)
+
+        if (res != null) {
+          Assert.check(res.length === 0)
+        }
+
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('close connection.')
+      conn.close(() => {
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('...... table ends.')
+      asyncDone()
+    }
+  ]
+
+  console.log('executing async set of functions .....')
+  async.series(fns, () => {
+    console.log('..... async completes. \n\n\n\n\n\n')
+    done()
+  })
+}
+
+function cancel (done: Function): void {
+  const async = new support.Async()
+  const Assert = new support.Assert()
+  let conn: Connection
+
+  const fns: Function[] = [
+
+    function (asyncDone: Function) {
+      console.log('cancel begins ...... ')
+      asyncDone()
+    },
+
+    function (asyncDone: Function) {
+      console.log('opening a connection ....')
+      sql.open(connectionStr, (err: Error, connection: Connection) => {
+        Assert.ifError(err)
+        conn = connection
+        Assert.check(conn, 'connection from open is null.')
+        console.log('... open')
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('use an open connection to call query(), then cancel it')
+      const q: Query = conn.query(sql.PollingQuery('waitfor delay \'00:00:20\';'), err => {
+        if (err != null) {
+          Assert.check(err.message.indexOf('Operation canceled') > 0)
+        }
+
+        asyncDone()
+      })
+
+      conn.cancelQuery(q, err => {
+        Assert.ifError(err)
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('cancel using query identifier.')
+      const q: Query = conn.query(sql.PollingQuery('waitfor delay \'00:00:20\''), function (err) {
+        if (err != null) {
+          Assert.check(err.message.indexOf('Operation canceled') > 0)
+        }
+
+        asyncDone()
+      })
+
+      q.cancelQuery(err => {
+        Assert.ifError(err)
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('cancel a prepared statement.')
+      const s = 'waitfor delay ?;'
+      let prepared: PreparedStatement
+
+      const fns: Function[] = [
+        function (asyncDone: Function) {
+          conn.prepare(sql.PollingQuery(s), (err: Error, pq: PreparedStatement) => {
+            Assert.ifError(err)
+            prepared = pq
+            asyncDone()
+          })
+        },
+
+        function (asyncDone: Function) {
+          const q: Query = prepared.preparedQuery(['00:00:20'], (err: Error) => {
+            Assert.check(err.message.indexOf('Operation canceled') > 0)
+            asyncDone()
+          })
+
+          q.on('submitted', function () {
+            q.cancelQuery((e: Error) => {
+              Assert.ifError(e)
+            })
+          })
+        }
+      ]
+
+      async.series(fns, () => {
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('cancel a stored proc.')
+
+      const spWaitForName = 'test_spwait_for'
+
+      const def = 'alter PROCEDURE <name>' +
+                '(\n' +
+                '@timeout datetime' +
+                '\n)' +
+                'AS\n' +
+                'BEGIN\n' +
+                'waitfor delay @timeout;' +
+                'END\n'
+
+      const fns: Function[] = [
+        function (asyncDone: Function) {
+          procedureHelper.createProcedure(spWaitForName, def, function () {
+            asyncDone()
+          })
+        },
+
+        function (asyncDone: Function) {
+          const pm = conn.procedureMgr()
+          pm.setPolling(true)
+          const q: Query = pm.callproc(spWaitForName, ['0:0:20'], function (err) {
+            Assert.check(err)
+
+            if (err != null) {
+              Assert.check(err.message.indexOf('Operation canceled') > 0)
+            }
+
+            asyncDone()
+          })
+          q.on('submitted', function () {
+            q.cancelQuery(function (err) {
+              Assert.check(err == null)
+            })
+          })
+        }
+      ]
+
+      async.series(fns, function () {
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('close connection.')
+      conn.close(() => {
+        asyncDone()
+      })
+    },
+
+    function (asyncDone: Function) {
+      console.log('...... cancel ends.')
+      asyncDone()
+    }
+  ]
+
+  console.log('executing async set of functions .....')
+  async.series(fns, () => {
+    console.log('..... async completes. \n\n\n\n\n\n')
+    done()
+  })
 }

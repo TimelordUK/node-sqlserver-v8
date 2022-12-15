@@ -3,16 +3,16 @@
  */
 
 declare module 'msnodesqlv8' {
-    type sqlJsColumnType = string|boolean|Date|number|Buffer
-    type sqlObjectType = Record<string|number, sqlJsColumnType> | object | any
-    type sqlQueryNativeParamType = string|string[] | number|number[] | boolean|boolean[] | Date|Date[] | Buffer|Buffer[]
-    type sqlQueryParamType = sqlQueryNativeParamType | ConcreteColumnType | ConcreteColumnType[]
+    type sqlJsColumnType = string | boolean | Date | number | Buffer
+    type sqlRecordType = Record<string|number, sqlJsColumnType>
+    type sqlObjectType = sqlRecordType | object | any
+    type sqlQueryParamType = sqlJsColumnType | sqlJsColumnType[] | ConcreteColumnType | ConcreteColumnType[]
     type sqlPoolEventType = MessageCb | PoolStatusRecordCb | PoolOptionsEventCb | StatusCb | QueryDescriptionCb
     type sqlQueryEventType = SubmittedEventCb | ColumnEventCb | EventColumnCb | StatusCb | RowEventCb | MetaEventCb
-    type sqlProcParamType = sqlObjectType | sqlQueryParamType[]
+    type sqlProcParamType = sqlObjectType | sqlQueryParamType
     type sqlQueryType = string | QueryDescription
     type sqlConnectType = string | ConnectDescription
-    type sqlColumnResultsType = sqlObjectType[] | sqlJsColumnType[]
+    type sqlColumnResultsType = sqlObjectType | sqlJsColumnType | any
     type sqlBulkType = sqlObjectType[]
 
     interface GetSetUTC {
@@ -163,11 +163,11 @@ declare module 'msnodesqlv8' {
         /**
          * first set of rows i.e. results[0] if any else null
          */
-        first: sqlColumnResultsType
+        first: (sqlColumnResultsType[])
         /**
          * each result set either as array of arrays or array of objects with column names as properties
          */
-        results: Array<sqlColumnResultsType>
+        results: Array<sqlColumnResultsType[]>
         /**
          * output params if any from a proc call
          */
@@ -256,32 +256,84 @@ declare module 'msnodesqlv8' {
          /**
           * event subscription
           * e.g. pool.on('debug', msg => { console.log(msg) })
-          * @param event one of 'debug', 'open', 'error', 'status', 'submitted' as string
+          * @param event one of
+          * 'debug' - a debug record showing internal state of the pool
+          * 'open' - event on the pool being opened and ready to work.
+          * 'error' - propagated from connection errors
+          * 'status' - information relating to latet operation
+          * 'submitted' - raised when query is submitted where previously was on a queue
           * @param cb callback related to event subscribed
           */
          on(event: string, cb?: sqlPoolEventType): void
      }
 
     interface TableColumn {
+        /**
+         * unique name for this column unique for this table
+         */
         name: string,
+        /**
+         * the type of the column as specified in column definition
+         * without any scaling i.e. date,time,bit,char,varchar
+         */
         type: string,
         schema_name: string
+        /**
+         * used for bcp based bulk insert and represents the ordinal numeric position
+         * of the column within the table.
+         */
         ordinal_position: number,
         table_catalog: string,
+        /**
+         * schema to which parent user type table belongs e.g. 'dbo'
+         */
         table_schema: string,
+        /**
+         * the table name for which this column belongs
+         */
         table_name: string,
+        /**
+         * expression or value describing efault for this column
+         */
         column_default: string,
+        /**
+         * the max space the column occupies
+         */
         max_length: number,
+        /**
+         * related to certain column types e.g. decimal(precision,scale)
+         */
         precision: number,
+        /**
+         * related to certain column types e.g. decimal(precision,scale)
+         */
         scale: number,
+        /**
+         * is the column nullable = 1, else 0
+         */
         is_nullable: number,
+        /**
+         * is the column computed = 1, else 0
+         */
         is_computed: number,
+        /**
+         * is the column an identity = 1, else 0
+         */
         is_identity: number,
+        /**
+         * unique object id for this column
+         */
         object_id: number,
         generated_always_type: bigint,
         generated_always_type_desc: string,
         is_hidden: number,
+        /**
+         * is the column part of primary key for table = 1, else 0
+         */
         is_primary_key: number,
+        /**
+         * is the column a foreign key for table = 1, else 0
+         */
         is_foreign_key: number
         /**
          * type declaration if using as a proc parameter i.e. without
@@ -323,6 +375,13 @@ declare module 'msnodesqlv8' {
          * @returns this column instance for fluent calls
          */
         asExpression(s: string): TableColumn
+        /**
+         * nominates the column as identity type and hence auto increments
+         * and maintains a unique identity.
+         * @param v 1: is an identity, 0 column is not identity
+         * @param start defaults to 1 starting number for identity
+         * @param inc defaults to 1 increments by inc on next insert
+         */
         isIdentity(v: number, start?: number, inc?: number): TableColumn
 
         isHidden(v: number): TableColumn
@@ -439,13 +498,13 @@ declare module 'msnodesqlv8' {
          */
         asReal(): TableColumn
         /**
-         * nominate column as 'nchar(l)'
+         * nominate column as Unicode 'nchar(l)' defaults nchar(128)
          * @param length of column
          * @returns this column instance for fluent calls
          */
         asNChar(length: number): TableColumn
         /**
-         * nominate column as 'char(l)'
+         * nominate column as non-Unicode'char(l)' defaults char(128)
          * @param length of column
          * @returns this column instance for fluent calls
          */
@@ -1253,7 +1312,7 @@ declare module 'msnodesqlv8' {
          * free the prepared statement
          * @param cb called when server frees the statement
          */
-        free(cb: StatusCb): void
+        free(cb?: StatusCb): void
 
         /**
          * the sql representing the bound query.
@@ -1288,7 +1347,7 @@ declare module 'msnodesqlv8' {
          * the actual JS value sent to native driver to be comverted to native
          * c type and on to the server.
          */
-        value?: sqlQueryNativeParamType
+        value?: sqlQueryParamType
         precision?: number
         scale?: number
         /**
@@ -1433,7 +1492,7 @@ declare module 'msnodesqlv8' {
         precision?: number
         scale?: number
         offset?: number
-        value?: sqlQueryNativeParamType
+        value?: sqlQueryParamType
     }
 
     interface NativeParam {

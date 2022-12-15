@@ -1,13 +1,28 @@
 {
-    "compilerOptions": {
-      "target": "es6",
-      "module": "commonjs",
-      "noImplicitAny": true,
-      "removeComments": true,
-      "preserveConstEnums": true,
-      "sourceMap": true,
-      "inlineSources": true,
-      "pretty": true,
-      "outDir": "dist"
-    }
-  }
+  "compilerOptions": {
+    "rootDir": "./",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "target": "es6",
+    "module": "commonjs",
+    "noImplicitAny": true,
+    "declaration": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "pretty": true,
+    "strictNullChecks": true,
+    "outDir": "./dist"
+  },
+  "compileOnSave": true,
+  "include": [
+    "samples/typescript/*.ts",
+    "lib/**/*.ts",
+    "lib/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "./dist"
+  ]
+}
