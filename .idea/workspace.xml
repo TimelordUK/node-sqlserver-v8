@@ -5,9 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="start to doc the api - add back JS style export where both TS and JS IDE typings supported use eslint for TS">
+      <change beforePath="$PROJECT_DIR$/.eslintrc" beforeDir="false" afterPath="$PROJECT_DIR$/.eslintrc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/typescript/builder.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/builder.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/querycancel.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/querycancel.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/samples/javascript/procedure.js" beforeDir="false" afterPath="$PROJECT_DIR$/samples/javascript/procedure.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -69,52 +70,39 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "javascript.nodejs.core.library.configured.version": "18.12.0",
-    "javascript.nodejs.core.library.typings.version": "18.11.13",
-    "last_opened_file_path": "C:/Users/Stephen/dev/js/v8/node_modules/msnodesqlv8",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.standard": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.standard": "C:\\Users\\Stephen\\dev\\js\\v8\\node_modules\\msnodesqlv8\\node_modules\\standard",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs.mocha.mocha_node_package_dir": "C:/Users/Stephen/dev/js/v8/node_modules/msnodesqlv8/node_modules/mocha",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "settings.typescriptcompiler",
-    "ts.external.directory.path": "C:\\Users\\Stephen\\dev\\js\\v8\\node_modules\\msnodesqlv8\\node_modules\\typescript\\lib",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;javascript.nodejs.core.library.configured.version&quot;: &quot;18.12.0&quot;,
+    &quot;javascript.nodejs.core.library.typings.version&quot;: &quot;18.11.13&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Stephen/dev/js/v8/node_modules/msnodesqlv8&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.standard&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.standard&quot;: &quot;C:\\Users\\Stephen\\dev\\js\\v8\\node_modules\\msnodesqlv8\\node_modules\\standard&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs.mocha.mocha_node_package_dir&quot;: &quot;C:/Users/Stephen/dev/js/v8/node_modules/msnodesqlv8/node_modules/mocha&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;settings.typescriptcompiler&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\Stephen\\dev\\js\\v8\\node_modules\\msnodesqlv8\\node_modules\\typescript\\lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Stephen\dev\js\sql\node_modules\msnodesqlv8\samples\javascript" />
     </key>
   </component>
-  <component name="RunManager" selected="Node.js.builder.js">
+  <component name="RunManager" selected="Node.js.procedure.js">
     <configuration name="builder.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/dist/samples/typescript/builder.js" working-dir="$PROJECT_DIR$/dist/samples/typescript">
       <method v="2" />
     </configuration>
-    <configuration name="promises.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/dist/samples/typescript/promises.js" working-dir="$PROJECT_DIR$/dist/samples/typescript">
+    <configuration name="procedure.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/samples/javascript/procedure.js" working-dir="$PROJECT_DIR$/samples/javascript">
       <method v="2" />
     </configuration>
-    <configuration name="connection-pool.open pool size 4 - submit queries on parked connections" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
-      <node-interpreter>project</node-interpreter>
-      <node-options />
-      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
-      <working-directory>$PROJECT_DIR$</working-directory>
-      <pass-parent-env>true</pass-parent-env>
-      <ui>bdd</ui>
-      <extra-mocha-options />
-      <test-kind>TEST</test-kind>
-      <test-file>$PROJECT_DIR$/test/connection-pool.js</test-file>
-      <test-names>
-        <name value="connection-pool" />
-        <name value="open pool size 4 - submit queries on parked connections" />
-      </test-names>
+    <configuration name="promises.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/dist/samples/typescript/promises.js" working-dir="$PROJECT_DIR$/dist/samples/typescript">
       <method v="2" />
     </configuration>
     <configuration name="querycancel" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
@@ -163,11 +151,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Node.js.procedure.js" />
         <item itemvalue="Node.js.builder.js" />
         <item itemvalue="Mocha.querycancel" />
         <item itemvalue="Mocha.querycancel.use promise on query to cancel" />
         <item itemvalue="Node.js.promises.js" />
-        <item itemvalue="Mocha.connection-pool.open pool size 4 - submit queries on parked connections" />
       </list>
     </recent_temporary>
   </component>
@@ -244,7 +232,8 @@
       <workItem from="1671116427766" duration="678000" />
       <workItem from="1671117308247" duration="9772000" />
       <workItem from="1671131633385" duration="962000" />
-      <workItem from="1671134828541" duration="4016000" />
+      <workItem from="1671134828541" duration="5911000" />
+      <workItem from="1671143087670" duration="2021000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -470,7 +459,14 @@
       <option name="project" value="LOCAL" />
       <updated>1671136268466</updated>
     </task>
-    <option name="localTasksCounter" value="33" />
+    <task id="LOCAL-00033" summary="start to doc the api - add back JS style export where both TS and JS IDE typings supported use eslint for TS">
+      <created>1671138971791</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1671138971791</updated>
+    </task>
+    <option name="localTasksCounter" value="34" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -529,26 +525,28 @@
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/test/env/builder-checker.js</url>
           <line>45</line>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="51" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/test/env/builder-checker.js</url>
           <line>57</line>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="52" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/test/env/builder-checker.js</url>
           <line>9</line>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="54" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/test/env/builder-checker.js</url>
           <line>17</line>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="55" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/samples/javascript/procedure.js</url>
+          <line>38</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="56" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

@@ -10,7 +10,8 @@
     "@typescript-eslint/no-unused-vars": "off",
     "@typescript-eslint/restrict-template-expressions": "off",
     "@typescript-eslint/no-misused-promises": "off",
-    "no-this-assignment": "off"
+    "no-this-assignment": "off",
+    "valid-typeof": "off"
   },
 
   "extends": [

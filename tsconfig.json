@@ -17,7 +17,7 @@
   },
   "compileOnSave": true,
   "include": [
-    "samples/typescript/*.ts",
+    "samples/**/*",
     "lib/**/*",
     "test/**/*",
     "lib/*"

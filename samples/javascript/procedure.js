@@ -1,5 +1,3 @@
-const sql = require('msnodesqlv8')
-const { utilModule } = require('msnodesqlv8/lib/util')
 const { TestEnv } = require('../../test/env/test-env')
 const env = new TestEnv()
 const connectionString = env.connectionString
@@ -48,7 +46,7 @@ async function main (invocations) {
 }
 
 async function getTheConnection () {
-  return await sql.promises.open(connectionString)
+  return await env.sql.promises.open(connectionString)
 }
 
 async function asConnectionMessages (procTimeout, invocations) {
@@ -69,7 +67,7 @@ async function asPoolMessages (procTimeout, invocations) {
 }
 
 async function getPool (size) {
-  const pool = new sql.Pool({
+  const pool = new env.sql.Pool({
     connectionString,
     ceiling: size
   })
@@ -132,6 +130,7 @@ async function testTimeout (connectionProxy, invocations, procTimeout) {
 async function asConnection (invocations) {
   try {
     const con = await getTheConnection()
+    console.log(`asConnection running with ${invocations}`)
     const res = await test(con, invocations)
     console.log(`${spName}: asConnection ${invocations} invocations, elapsed = ${res.elapsed}, res length=${res.results.length}`)
     await con.promises.close()
@@ -143,6 +142,7 @@ async function asConnection (invocations) {
 async function asPool (invocations) {
   try {
     const size = 5
+    console.log(`asPool running with ${invocations} pool ${size}`)
     const pool = await getPool(size)
     const res = await test(pool, invocations)
     console.log(`${spName}: asPool [${size}] ${invocations} invocations, elapsed = ${res.elapsed}, res length=${res.results.length}`)
@@ -192,7 +192,6 @@ class ProcedureHelper {
     this.defition = def
     this.dropProcedureSql = dropProcedureSql
     this.connectionProxy = connectionProxy
-    this.aggregator = new utilModule.QueryAggregator(connectionProxy)
   }
 
   async create () {
@@ -201,10 +200,10 @@ class ProcedureHelper {
   }
 
   query (sql, params, options) {
-    return this.aggregator.query(sql, params, options)
+    return this.connectionProxy.promises.query(sql, params, options)
   }
 
   call (o, options) {
-    return this.aggregator.callProc(this.procName, o, options)
+    return this.connectionProxy.promises.callProc(this.procName, o, options)
   }
 }
