@@ -29,6 +29,22 @@ declare module 'msnodesqlv8' {
     }
 
     interface SubmitQuery {
+        /**
+         * submit query on an open connection with optional paramteters that will be bound
+         * by native driver. Can either use an event stream driven mechanism by subscribing to
+         * returned query e.g. on('column', ..) , on ('meta', ..) or provide a callback which
+         * will be invoked when all results are ready.  Event subscription for large queries
+         * can be much more memory efficient as the data will not be cached in driver as results
+         * are built. However a callback can be more convenient.
+         *
+         * @param sqlOrQuery the textual query to submit
+         * @param paramsOrCb optional bound parameters either array of JS native types or bound user defined parameters,
+         * else an optional callback invoked with results of query.
+         * @param cb optional callback invoked when query completes with array of objects built from column names
+         * as properties. e.g. { cola: 1, colb: 'hello }.  Note the oberhead required which for large bumbers
+         * of rows will grow the node process significantly.
+         * @returns a query object which can be used to cancel, pause, resume or subscribe for events.
+         */
         query(sqlOrQuery: sqlQueryType, paramsOrCb?: sqlQueryParamType[] | QueryCb, cb?: QueryCb): Query
         queryRaw(sqlOrQuery: sqlQueryType, paramsOrCb?: sqlQueryParamType[] | QueryRawCb, cb?: QueryRawCb): Query
     }
