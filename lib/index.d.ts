@@ -1035,7 +1035,7 @@ declare module 'msnodesqlv8' {
         keys(vec: object[]): object[]
     }
 
-    interface TableValueColumnParam {
+    interface TableValueColumn {
         /*
     type_name	column_id	ordered_column	column_name	data_type	nullable	length	precision	scale	collation
     dbo.PersonTVP	1	01: vFirstName	vFirstName	varchar		255	0	0	SQL_Latin1_General_CP1_CI_AS
@@ -1072,10 +1072,28 @@ declare module 'msnodesqlv8' {
     }
 
     interface TvpParam extends ProcedureParam {
-        table_value_param: TableValueColumnParam[]
+        /**
+         * the strongly typed parameters relating to the table type
+         * repremted as rows i.e. array of values per column type
+         */
+        table_value_param: ConcreteColumnType[]
+        /**
+         * user table type to which the tvp is targetting
+         */
         table_name: string
+        /**
+         * original table used to populate the tvp
+         * data within this table has been copied into
+         * table_value_param
+         */
         value: Table
-        row_count: number,
+        /**
+         * number rows to be bound
+         */
+        row_count: number
+        /**
+         * schema to which table belongs
+         */
         schema: string
     }
 
@@ -1086,10 +1104,20 @@ declare module 'msnodesqlv8' {
          * an array of parameters that can be provided to call.  This is no longer
          * necessary, an object can be passed directly to call.
          * @param params
+         * @returns an array to be used in method 'call'
          */
         paramsArray(params: sqlObjectType): sqlProcParamType[]
-
-        call(params?: sqlProcParamType[], cb?: CallProcedureCb): Query
+        /**
+         * call a stored procedure witb optional parameters
+         * @param params object parameters { p1: 6, p2: 'hello' } or ordered
+         * array [ 6, 'p2' ]. Note the values given are enriched with metadata for
+         * parameters defined such that they can be precisely bound thus allowing
+         * always on encryption to work for procedure calls.
+         * @param cb optional callback called when procedure call completes
+         * @returns query object which can be used as an event stream or
+         * used to cancel query.
+         */
+        call(params?: sqlProcParamType, cb?: CallProcedureCb): Query
 
         setTimeout(to: number): void
 
@@ -1129,14 +1157,31 @@ declare module 'msnodesqlv8' {
 
     interface ProcedureManager {
         /**
-         * @deprecated Please use `getProc`
+         * @deprecated Please use `getProc` - this is not promise friendly
          */
         get(name: string, cb?: GetProcedureCb): void  // cannot promisify (proc)
         getProc(name: string, cb?: GetProcCb): void // promise friendly (err, proc)
         callproc(name: string, params?: any[], cb?: CallProcedureCb): Query
-
+        /***
+         * manually register a stored procedure.
+         *  const params = [
+         *         pm.makeParam(spName, '@last_name', 'varchar', 30, false),
+         *         pm.makeParam(spName, '@first_name', 'varchar', 18, false)
+         *       ]
+         * @param procName - name of proc to which this param belongs
+         * @param paramName - unique name of the parameter.
+         * @param paramType - the undecorated type declaration varchar, int
+         * @param paramLength - the length of parameter
+         * @param isOutput - is this an output param
+         * @returns the param type equivalent to that fetched when using getProc
+         */
         makeParam(procName: string, paramName: string, paramType: string, paramLength: number, isOutput: boolean): ProcedureParamMeta
-
+        /**
+         * manually register a procedure ie pm.addProc(spName, params)
+         * @param name of the stored procedure to register
+         * @param paramVector the list of parameters making up call
+         * @returns defintion equivalent to that fetched in getProc
+         */
         addProc(name: string, paramVector: ProcedureParamMeta[]): ProcedureDefinition
 
         describe(name: string, cb?: DescribeProcedureCb): void
@@ -1657,6 +1702,17 @@ declare module 'msnodesqlv8' {
         PollingQuery(s: string): QueryDescription
         TimeoutQuery(s: string, to: number): QueryDescription
         TzOffsetQuery(s: string, offsetMinutes?: number): QueryDescription
+        /**
+         * construct a tvp parameter the native driver will recognise from an input
+         * table - note once this parameter has been constructed the input
+         * table.rows can be reset table.rows=[] as the data has been
+         * copied along with column metadta ready for binding by driver.
+         * this parameter can be used as part of a stored prcedure call or
+         * query where bulk select from TVP is then possible. It is an efficient
+         * way of sending data to the database.
+         * @param table
+         * @returns the Table Value Parameter instance ready for use in query
+         */
         TvpFromTable(table: Table): TvpParam
     }
 
