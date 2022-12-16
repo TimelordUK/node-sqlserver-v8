@@ -31,11 +31,11 @@ async function builder (): Promise<void> {
     builder.setDialect(mgr.ServerDialect.SqlServer)
 
     builder.addColumn('id').asInt().isPrimaryKey(1)
-    builder.addColumn('col_a').asInt()
-    builder.addColumn('col_b').asVarChar(100)
-    builder.addColumn('col_c').asInt()
-    builder.addColumn('col_d').asInt()
-    builder.addColumn('col_e').asVarChar(100)
+    builder.addColumn('col_a').asInt().notNull()
+    builder.addColumn('col_b').asVarChar(100).notNull()
+    builder.addColumn('col_c').asInt().notNull()
+    builder.addColumn('col_d').asInt().notNull()
+    builder.addColumn('col_e').asVarChar(100).notNull()
 
     const vec: Row[] = Array(rows).fill(0).map((_, i) => makeOne(i))
     const t: BulkTableMgr = builder.toTable()

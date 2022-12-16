@@ -5,10 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="start to doc the api - add back JS style export where both TS and JS IDE typings supported use eslint for TS">
-      <change beforePath="$PROJECT_DIR$/.eslintrc" beforeDir="false" afterPath="$PROJECT_DIR$/.eslintrc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/javascript/procedure.js" beforeDir="false" afterPath="$PROJECT_DIR$/samples/javascript/procedure.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/index.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/table.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/samples/javascript/table-builder.js" beforeDir="false" afterPath="$PROJECT_DIR$/samples/javascript/table-builder.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/samples/typescript/builder.ts" beforeDir="false" afterPath="$PROJECT_DIR$/samples/typescript/builder.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -233,7 +234,7 @@
       <workItem from="1671117308247" duration="9772000" />
       <workItem from="1671131633385" duration="962000" />
       <workItem from="1671134828541" duration="5911000" />
-      <workItem from="1671143087670" duration="2021000" />
+      <workItem from="1671143087670" duration="7928000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -466,7 +467,14 @@
       <option name="project" value="LOCAL" />
       <updated>1671138971791</updated>
     </task>
-    <option name="localTasksCounter" value="34" />
+    <task id="LOCAL-00034" summary="start to doc the api - add back JS style export where both TS and JS IDE typings supported use eslint for TS">
+      <created>1671145741927</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1671145741927</updated>
+    </task>
+    <option name="localTasksCounter" value="35" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

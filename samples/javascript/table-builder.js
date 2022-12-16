@@ -1,4 +1,4 @@
-const sql = require('msnodesqlv8')
+
 // const connectionString = 'Driver={ODBC Driver 17 for SQL Server}; Server=DESKTOP-VIUCH90;UID=linux; PWD=linux; Database=node'
 
 const { TestEnv } = require('../../test/env/test-env')
@@ -21,7 +21,7 @@ async function builder () {
 
   try {
     const rows = 5
-    const connection = await sql.promises.open(connectionString)
+    const connection = await env.sql.promises.open(connectionString)
     const tableName = 'tmpTableBuilder'
     const mgr = connection.tableMgr()
     const builder = mgr.makeBuilder(tableName)
@@ -61,7 +61,7 @@ async function builder () {
     // convert a set of objects to rows
     table.addRowsFromObjects(vec)
     // use a type the native driver can understand, using column based bulk binding.
-    const tp = sql.TvpFromTable(table)
+    const tp = env.sql.TvpFromTable(table)
     // can now clear rows
     table.rows = []
     const res = await connection.promises.query(selectSql, [tp])

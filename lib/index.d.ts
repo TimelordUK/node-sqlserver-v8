@@ -6,7 +6,7 @@ declare module 'msnodesqlv8' {
     type sqlJsColumnType = string | boolean | Date | number | Buffer
     type sqlRecordType = Record<string|number, sqlJsColumnType>
     type sqlObjectType = sqlRecordType | object | any
-    type sqlQueryParamType = sqlJsColumnType | sqlJsColumnType[] | ConcreteColumnType | ConcreteColumnType[]
+    type sqlQueryParamType = sqlJsColumnType | sqlJsColumnType[] | ConcreteColumnType | ConcreteColumnType[] | TvpParam
     type sqlPoolEventType = MessageCb | PoolStatusRecordCb | PoolOptionsEventCb | StatusCb | QueryDescriptionCb
     type sqlQueryEventType = SubmittedEventCb | ColumnEventCb | EventColumnCb | StatusCb | RowEventCb | MetaEventCb | RowCountEventCb
     type sqlProcParamType = sqlObjectType | sqlQueryParamType
@@ -110,6 +110,13 @@ declare module 'msnodesqlv8' {
          * @param vec the object array to be converted into rows.
          */
         addRowsFromObjects(vec: sqlObjectType[]): void
+    }
+    interface SqlServerVersion {
+        MajorVersion: number
+        ProductLevel: string
+        Edition: string
+        ProductVersion: string
+        Cat: string
     }
 
     interface PoolOptions {
@@ -934,6 +941,7 @@ declare module 'msnodesqlv8' {
          * @param name
          */
         asUserType(name?: string): string
+        asTableType(name?: string): Table
 
         // the driver will be sent column types in table rather than deriving from data
         // necessary to switch on for TZ adjustment i.e. for non UTC times sent
@@ -1011,7 +1019,7 @@ declare module 'msnodesqlv8' {
         keys(vec: object[]): object[]
     }
 
-    interface TableValueParam {
+    interface TableValueColumnParam {
         /*
     type_name	column_id	ordered_column	column_name	data_type	nullable	length	precision	scale	collation
     dbo.PersonTVP	1	01: vFirstName	vFirstName	varchar		255	0	0	SQL_Latin1_General_CP1_CI_AS
@@ -1034,7 +1042,6 @@ declare module 'msnodesqlv8' {
     }
 
     interface ProcedureParam {
-        table_value_param?: TableValueParam[]
         is_user_defined?: boolean
         is_output: boolean
         name: string
@@ -1046,6 +1053,14 @@ declare module 'msnodesqlv8' {
         update_signature: string
         collation: any
         val: sqlProcParamType
+    }
+
+    interface TvpParam extends ProcedureParam {
+        table_value_param: TableValueColumnParam[]
+        table_name: string
+        value: Table
+        row_count: number,
+        schema: string
     }
 
     interface ProcedureDefinition {
@@ -1626,7 +1641,7 @@ declare module 'msnodesqlv8' {
         PollingQuery(s: string): QueryDescription
         TimeoutQuery(s: string, to: number): QueryDescription
         TzOffsetQuery(s: string, offsetMinutes?: number): QueryDescription
-        TvpFromTable(table: Table): ProcedureParam
+        TvpFromTable(table: Table): TvpParam
     }
 
     const sql: SqlClient
