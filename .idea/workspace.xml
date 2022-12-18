@@ -4,14 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="clean bulk manager and align with types declared in&#10;index.d.ts">
-      <change afterPath="$PROJECT_DIR$/lib/table-builder.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/table-bulk-op-mgr.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/table-column.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/table-meta.js" afterDir="false" />
+    <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/table-bulk-op-mgr.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table-bulk-op-mgr.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/table-column.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table-column.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/table.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/bulk.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/bulk.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -107,11 +105,27 @@
       <recent name="C:\Users\Stephen\dev\js\sql\node_modules\msnodesqlv8\samples\javascript" />
     </key>
   </component>
-  <component name="RunManager" selected="Mocha.bulk.connection: use tableMgr bulk insert vector non UTC based time(7) with time col - no MS">
+  <component name="RunManager" selected="Mocha.bulk.connection: use tableMgr bulk insert single non UTC based date with datetime col">
     <configuration name="builder.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/dist/samples/typescript/builder.js" working-dir="$PROJECT_DIR$/dist/samples/typescript">
       <method v="2" />
     </configuration>
     <configuration name="procedure.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/samples/javascript/procedure.js" working-dir="$PROJECT_DIR$/samples/javascript">
+      <method v="2" />
+    </configuration>
+    <configuration name="bulk.connection: use tableMgr bulk insert single non UTC based date with datetime col" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
+      <working-directory>$PROJECT_DIR$</working-directory>
+      <pass-parent-env>true</pass-parent-env>
+      <ui>bdd</ui>
+      <extra-mocha-options />
+      <test-kind>TEST</test-kind>
+      <test-file>$PROJECT_DIR$/test/bulk.js</test-file>
+      <test-names>
+        <name value="bulk" />
+        <name value="connection: use tableMgr bulk insert single non UTC based date with datetime col" />
+      </test-names>
       <method v="2" />
     </configuration>
     <configuration name="bulk.connection: use tableMgr bulk insert vector non UTC based time(7) with time col - no MS" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
@@ -145,22 +159,6 @@
       </test-names>
       <method v="2" />
     </configuration>
-    <configuration name="querycancel.use promise on query to cancel" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
-      <node-interpreter>project</node-interpreter>
-      <node-options />
-      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
-      <working-directory>$PROJECT_DIR$</working-directory>
-      <pass-parent-env>true</pass-parent-env>
-      <ui>bdd</ui>
-      <extra-mocha-options />
-      <test-kind>TEST</test-kind>
-      <test-file>$PROJECT_DIR$/test/querycancel.js</test-file>
-      <test-names>
-        <name value="querycancel" />
-        <name value="use promise on query to cancel" />
-      </test-names>
-      <method v="2" />
-    </configuration>
     <configuration name="test" type="mocha-javascript-test-runner" nameIsGenerated="true">
       <node-interpreter>project</node-interpreter>
       <node-options />
@@ -176,11 +174,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Mocha.bulk.connection: use tableMgr bulk insert single non UTC based date with datetime col" />
         <item itemvalue="Mocha.bulk.connection: use tableMgr bulk insert vector non UTC based time(7) with time col - no MS" />
         <item itemvalue="Node.js.procedure.js" />
         <item itemvalue="Node.js.builder.js" />
         <item itemvalue="Mocha.querycancel" />
-        <item itemvalue="Mocha.querycancel.use promise on query to cancel" />
       </list>
     </recent_temporary>
   </component>
@@ -260,7 +258,8 @@
       <workItem from="1671134828541" duration="5911000" />
       <workItem from="1671143087670" duration="12431000" />
       <workItem from="1671202137623" duration="20700000" />
-      <workItem from="1671372590036" duration="2311000" />
+      <workItem from="1671372590036" duration="4776000" />
+      <workItem from="1671377560082" duration="2372000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -528,7 +527,14 @@
       <option name="project" value="LOCAL" />
       <updated>1671373735692</updated>
     </task>
-    <option name="localTasksCounter" value="39" />
+    <task id="LOCAL-00039" summary="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand">
+      <created>1671375255516</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1671375255516</updated>
+    </task>
+    <option name="localTasksCounter" value="40" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -561,7 +567,8 @@
     <MESSAGE value="start to doc the api - add back JS style export where both TS and JS IDE typings supported" />
     <MESSAGE value="start to doc the api - add back JS style export where both TS and JS IDE typings supported use eslint for TS" />
     <MESSAGE value="clean bulk manager and align with types declared in&#10;index.d.ts" />
-    <option name="LAST_COMMIT_MESSAGE" value="clean bulk manager and align with types declared in&#10;index.d.ts" />
+    <MESSAGE value="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand" />
+    <option name="LAST_COMMIT_MESSAGE" value="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -616,9 +623,14 @@
           <option name="timeStamp" value="58" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/lib/table.js</url>
-          <line>196</line>
-          <option name="timeStamp" value="62" />
+          <url>file://$PROJECT_DIR$/lib/table-bulk-op-mgr.js</url>
+          <line>47</line>
+          <option name="timeStamp" value="77" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/lib/table-bulk-op-mgr.js</url>
+          <line>39</line>
+          <option name="timeStamp" value="78" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

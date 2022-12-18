@@ -59,11 +59,9 @@ describe('bulk', function () {
     const expected = helper.getVec(t3Size, () => testDate)
     proxy.setUseUTC(true)
     const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
+    const promises = table.promises
+    await promises.insert(expected)
+    const res = await promises.select(expected)
 
     assert.deepStrictEqual(res, expected)
   }
@@ -301,7 +299,6 @@ describe('bulk', function () {
     }
     env.theConnection.setUseUTC(true)
     const table = await helper.create()
-
     await table.promises.insert(expected)
     const res = await table.promises.select(expected)
     res.forEach(a => {
@@ -324,11 +321,8 @@ describe('bulk', function () {
     const expected = helper.getVec(1, () => testDate)
     proxy.setUseUTC(true)
     const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
     res.forEach(a => {
       delete a.col_a.nanosecondsDelta
     })
@@ -364,11 +358,8 @@ describe('bulk', function () {
     const helper = env.typeTableHelper('NVARCHAR(MAX)', proxy)
     const expected = helper.getVec(10, _ => b)
     const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
     assert.deepStrictEqual(res, expected)
   }
 
@@ -389,11 +380,8 @@ describe('bulk', function () {
     const helper = env.typeTableHelper('varbinary(10)', proxy)
     const expected = helper.getVec(10, i => i % 2 === 0 ? null : b)
     const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
     assert.deepStrictEqual(res, expected)
   }
 
@@ -411,11 +399,8 @@ describe('bulk', function () {
     const helper = env.typeTableHelper('varbinary(10)', proxy)
     const expected = helper.getVec(10, i => i % 2 === 0 ? emptyBuffer : b)
     const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
     assert.deepStrictEqual(res, expected)
   }
 
@@ -432,11 +417,8 @@ describe('bulk', function () {
     const helper = env.typeTableHelper('varbinary(20)', proxy)
     const expected = helper.getVec(10, _ => b)
     const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
     assert.deepStrictEqual(res, expected)
   }
 
@@ -453,11 +435,8 @@ describe('bulk', function () {
     const helper = env.typeTableHelper('datetime', proxy)
     const expected = helper.getVec(10, i => timeHelper.addDays(i))
     const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
     res.forEach(a => {
       delete a.col_a.nanosecondsDelta
     })
@@ -477,10 +456,8 @@ describe('bulk', function () {
     const helper = env.typeTableHelper('datetime', proxy)
     const expected = helper.getVec(10, i => i % 2 === 0 ? null : timeHelper.addDays(i))
     const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
     res.forEach(a => {
       if (a.col_a) {
         delete a.col_a.nanosecondsDelta
@@ -501,11 +478,8 @@ describe('bulk', function () {
     const helper = env.typeTableHelper('decimal(20,18)', proxy)
     const expected = helper.getVec(10, i => 1 / (i + 2.5))
     const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
     checkDecimalVectors(expected, res)
   }
 
@@ -531,11 +505,8 @@ describe('bulk', function () {
     const helper = env.typeTableHelper('decimal(20,18)', proxy)
     const expected = helper.getVec(10, i => i % 2 === 0 ? null : 1 / (i + 2.5))
     const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
     checkDecimalVectors(expected, res)
   }
 
@@ -551,11 +522,8 @@ describe('bulk', function () {
     const helper = env.typeTableHelper('bit', proxy)
     const expected = helper.getVec(10, i => i % 2 === 0 ? null : i % 2 === 0)
     const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
     assert.deepStrictEqual(expected, res)
   }
 
@@ -571,11 +539,8 @@ describe('bulk', function () {
     const helper = env.typeTableHelper('bit', proxy)
     const expected = helper.getVec(10, i => i % 2 === 0)
     const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
     assert.deepStrictEqual(expected, res)
   }
 
@@ -591,10 +556,8 @@ describe('bulk', function () {
     const helper = env.typeTableHelper('int', proxy)
     const expected = helper.getVec(10, i => i % 2 === 0 ? null : i * 10)
     const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
     assert.deepStrictEqual(expected, res)
   }
 
@@ -610,11 +573,8 @@ describe('bulk', function () {
     const helper = env.typeTableHelper('int', proxy)
     const expected = helper.getVec(10, i => i * 10)
     const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
     assert.deepStrictEqual(expected, res)
   }
 
@@ -630,11 +590,8 @@ describe('bulk', function () {
     const helper = env.typeTableHelper('varchar(100)', proxy)
     const expected = helper.getVec(10, i => i % 2 === 0 ? null : `string ${i}`)
     const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
     assert.deepStrictEqual(expected, res)
   }
 
@@ -650,10 +607,8 @@ describe('bulk', function () {
     const helper = env.typeTableHelper('varchar(100)', proxy)
     const expected = helper.getVec(10, i => `string ${i}`)
     const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
     assert.deepStrictEqual(expected, res)
   }
 
@@ -673,10 +628,8 @@ describe('bulk', function () {
       }
     })
     const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
     for (let i = 0; i < res.length; ++i) {
       const v = res[i]
       expect(v).to.not.equal(null)
@@ -741,11 +694,8 @@ describe('bulk', function () {
       }
     })
 
-    const promisedUpdate = table.promises.update
-    const promisedSelect = table.promises.select
-
-    await promisedUpdate(updated)
-    const res2 = await promisedSelect(updated)
+    await table.promises.update(updated)
+    const res2 = await table.promises.select(updated)
     assert.deepStrictEqual(updated, res2)
   }
 
