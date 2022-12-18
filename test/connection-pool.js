@@ -127,11 +127,9 @@ describe('connection-pool', function () {
     const helper = env.typeTableHelper('NVARCHAR(MAX)', pool)
     const expected = helper.getVec(10, _ => b)
     const table = await helper.create()
-    const promisedInsert = table.promises.insert
-    const promisedSelect = table.promises.select
 
-    await promisedInsert(expected)
-    const res = await promisedSelect(expected)
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
     expect(res).to.be.deep.equals(expected)
     await pool.promises.close()
   })

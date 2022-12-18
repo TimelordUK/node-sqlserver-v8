@@ -5,8 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand">
+      <change beforePath="$PROJECT_DIR$/.env-cmdrc" beforeDir="false" afterPath="$PROJECT_DIR$/.env-cmdrc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/table-bulk-op-mgr.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table-bulk-op-mgr.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/bcp.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/bcp.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/connection-pool.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/connection-pool.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -102,11 +104,27 @@
       <recent name="C:\Users\Stephen\dev\js\sql\node_modules\msnodesqlv8\samples\javascript" />
     </key>
   </component>
-  <component name="RunManager" selected="Mocha.bulk.connection: use tableMgr bulk insert vector non UTC based time(7) with time col - no MS">
+  <component name="RunManager" selected="Mocha.bcp.bcp recovery from error.">
     <configuration name="builder.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/dist/samples/typescript/builder.js" working-dir="$PROJECT_DIR$/dist/samples/typescript">
       <method v="2" />
     </configuration>
     <configuration name="procedure.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/samples/javascript/procedure.js" working-dir="$PROJECT_DIR$/samples/javascript">
+      <method v="2" />
+    </configuration>
+    <configuration name="bcp.bcp recovery from error." type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
+      <working-directory>$PROJECT_DIR$</working-directory>
+      <pass-parent-env>true</pass-parent-env>
+      <ui>bdd</ui>
+      <extra-mocha-options />
+      <test-kind>TEST</test-kind>
+      <test-file>$PROJECT_DIR$/test/bcp.js</test-file>
+      <test-names>
+        <name value="bcp" />
+        <name value="bcp recovery from error." />
+      </test-names>
       <method v="2" />
     </configuration>
     <configuration name="bulk.connection: use tableMgr bulk insert single non UTC based date with datetime col" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
@@ -141,21 +159,6 @@
       </test-names>
       <method v="2" />
     </configuration>
-    <configuration name="querycancel" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
-      <node-interpreter>project</node-interpreter>
-      <node-options />
-      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
-      <working-directory>$PROJECT_DIR$</working-directory>
-      <pass-parent-env>true</pass-parent-env>
-      <ui>bdd</ui>
-      <extra-mocha-options />
-      <test-kind>SUITE</test-kind>
-      <test-file>$PROJECT_DIR$/test/querycancel.js</test-file>
-      <test-names>
-        <name value="querycancel" />
-      </test-names>
-      <method v="2" />
-    </configuration>
     <configuration name="test" type="mocha-javascript-test-runner" nameIsGenerated="true">
       <node-interpreter>project</node-interpreter>
       <node-options />
@@ -171,11 +174,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Mocha.bcp.bcp recovery from error." />
         <item itemvalue="Mocha.bulk.connection: use tableMgr bulk insert vector non UTC based time(7) with time col - no MS" />
         <item itemvalue="Mocha.bulk.connection: use tableMgr bulk insert single non UTC based date with datetime col" />
         <item itemvalue="Node.js.procedure.js" />
         <item itemvalue="Node.js.builder.js" />
-        <item itemvalue="Mocha.querycancel" />
       </list>
     </recent_temporary>
   </component>
@@ -256,7 +259,8 @@
       <workItem from="1671143087670" duration="12431000" />
       <workItem from="1671202137623" duration="20700000" />
       <workItem from="1671372590036" duration="4776000" />
-      <workItem from="1671377560082" duration="9845000" />
+      <workItem from="1671377560082" duration="10612000" />
+      <workItem from="1671393451723" duration="1057000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -559,7 +563,14 @@
       <option name="project" value="LOCAL" />
       <updated>1671390979426</updated>
     </task>
-    <option name="localTasksCounter" value="44" />
+    <task id="LOCAL-00044" summary="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand">
+      <created>1671392020921</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1671392020921</updated>
+    </task>
+    <option name="localTasksCounter" value="45" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -646,6 +657,12 @@
           <url>file://$PROJECT_DIR$/lib/index.d.ts</url>
           <line>276</line>
           <option name="timeStamp" value="58" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/test/bcp.js</url>
+          <line>302</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="59" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
