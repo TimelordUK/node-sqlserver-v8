@@ -257,7 +257,7 @@
       <workItem from="1671143087670" duration="12431000" />
       <workItem from="1671202137623" duration="20700000" />
       <workItem from="1671372590036" duration="4776000" />
-      <workItem from="1671377560082" duration="7912000" />
+      <workItem from="1671377560082" duration="8827000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -546,7 +546,14 @@
       <option name="project" value="LOCAL" />
       <updated>1671381538750</updated>
     </task>
-    <option name="localTasksCounter" value="42" />
+    <task id="LOCAL-00042" summary="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand">
+      <created>1671390246567</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1671390246567</updated>
+    </task>
+    <option name="localTasksCounter" value="43" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
