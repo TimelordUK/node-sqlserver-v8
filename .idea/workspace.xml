@@ -7,6 +7,7 @@
     <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="start to doc the api - add back JS style export where both TS and JS IDE typings supported use eslint for TS">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/index.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/table.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,44 +69,57 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "javascript.nodejs.core.library.configured.version": "18.12.0",
-    "javascript.nodejs.core.library.typings.version": "18.11.13",
-    "last_opened_file_path": "C:/Users/Stephen/dev/js/v8/node_modules/msnodesqlv8",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.standard": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.standard": "C:\\Users\\Stephen\\dev\\js\\v8\\node_modules\\msnodesqlv8\\node_modules\\standard",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs.mocha.mocha_node_package_dir": "C:/Users/Stephen/dev/js/v8/node_modules/msnodesqlv8/node_modules/mocha",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "settings.typescriptcompiler",
-    "ts.external.directory.path": "C:\\Users\\Stephen\\dev\\js\\v8\\node_modules\\msnodesqlv8\\node_modules\\typescript\\lib",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;javascript.nodejs.core.library.configured.version&quot;: &quot;18.12.0&quot;,
+    &quot;javascript.nodejs.core.library.typings.version&quot;: &quot;18.11.13&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Stephen/dev/js/v8/node_modules/msnodesqlv8&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.standard&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.standard&quot;: &quot;C:\\Users\\Stephen\\dev\\js\\v8\\node_modules\\msnodesqlv8\\node_modules\\standard&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs.mocha.mocha_node_package_dir&quot;: &quot;C:/Users/Stephen/dev/js/v8/node_modules/msnodesqlv8/node_modules/mocha&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;settings.typescriptcompiler&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\Stephen\\dev\\js\\v8\\node_modules\\msnodesqlv8\\node_modules\\typescript\\lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "DatabaseDriversLRU": [
-      "sqlserver"
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;sqlserver&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Stephen\dev\js\sql\node_modules\msnodesqlv8\samples\javascript" />
     </key>
   </component>
-  <component name="RunManager" selected="Node.js.procedure.js">
+  <component name="RunManager" selected="Mocha.bulk.connection: use tableMgr bulk insert vector non UTC based time(7) with time col - no MS">
     <configuration name="builder.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/dist/samples/typescript/builder.js" working-dir="$PROJECT_DIR$/dist/samples/typescript">
       <method v="2" />
     </configuration>
     <configuration name="procedure.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/samples/javascript/procedure.js" working-dir="$PROJECT_DIR$/samples/javascript">
       <method v="2" />
     </configuration>
-    <configuration name="promises.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/dist/samples/typescript/promises.js" working-dir="$PROJECT_DIR$/dist/samples/typescript">
+    <configuration name="bulk.connection: use tableMgr bulk insert vector non UTC based time(7) with time col - no MS" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
+      <working-directory>$PROJECT_DIR$</working-directory>
+      <pass-parent-env>true</pass-parent-env>
+      <ui>bdd</ui>
+      <extra-mocha-options />
+      <test-kind>TEST</test-kind>
+      <test-file>$PROJECT_DIR$/test/bulk.js</test-file>
+      <test-names>
+        <name value="bulk" />
+        <name value="connection: use tableMgr bulk insert vector non UTC based time(7) with time col - no MS" />
+      </test-names>
       <method v="2" />
     </configuration>
     <configuration name="querycancel" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
@@ -154,11 +168,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Mocha.bulk.connection: use tableMgr bulk insert vector non UTC based time(7) with time col - no MS" />
         <item itemvalue="Node.js.procedure.js" />
         <item itemvalue="Node.js.builder.js" />
         <item itemvalue="Mocha.querycancel" />
         <item itemvalue="Mocha.querycancel.use promise on query to cancel" />
-        <item itemvalue="Node.js.promises.js" />
       </list>
     </recent_temporary>
   </component>
@@ -237,7 +251,8 @@
       <workItem from="1671131633385" duration="962000" />
       <workItem from="1671134828541" duration="5911000" />
       <workItem from="1671143087670" duration="12431000" />
-      <workItem from="1671202137623" duration="10841000" />
+      <workItem from="1671202137623" duration="20700000" />
+      <workItem from="1671372590036" duration="991000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -491,7 +506,14 @@
       <option name="project" value="LOCAL" />
       <updated>1671202552301</updated>
     </task>
-    <option name="localTasksCounter" value="37" />
+    <task id="LOCAL-00037" summary="start to doc the api - add back JS style export where both TS and JS IDE typings supported use eslint for TS">
+      <created>1671231762223</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1671231762223</updated>
+    </task>
+    <option name="localTasksCounter" value="38" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -571,6 +593,16 @@
           <url>file://$PROJECT_DIR$/samples/javascript/procedure.js</url>
           <line>38</line>
           <option name="timeStamp" value="56" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/lib/index.d.ts</url>
+          <line>276</line>
+          <option name="timeStamp" value="58" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/lib/table.js</url>
+          <line>1170</line>
+          <option name="timeStamp" value="62" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

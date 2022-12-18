@@ -104,6 +104,19 @@ declare module 'msnodesqlv8' {
         open(conn_str: sqlConnectType): Promise<Connection>
     }
 
+    interface UserTypeColumnType {
+        offset: number
+        declaration: string
+        length: number
+    }
+    interface UserTypeColumn {
+        name: string
+        userType: string
+        scale: number
+        precision: number
+        type: UserTypeColumnType
+    }
+
     /***
      * representation of a table user type used in TVP bulk operations
      */
@@ -119,7 +132,7 @@ declare module 'msnodesqlv8' {
         /**
          * metadata describing the columns of table type.
          */
-        columns: TableColumn[]
+        columns: UserTypeColumn[]
         /**
          * add rows of data as an object array where each instance holds
          * properties for columns { cola: 'hello' }, { cola: 'world'  }
@@ -280,11 +293,17 @@ declare module 'msnodesqlv8' {
           * event subscription
           * e.g. pool.on('debug', msg => { console.log(msg) })
           * @param event one of
+          *
           * 'debug' - a debug record showing internal state of the pool
+          *
           * 'open' - event on the pool being opened and ready to work.
+          *
           * 'error' - propagated from connection errors
+          *
           * 'status' - information relating to latet operation
+          *
           * 'submitted' - raised when query is submitted where previously was on a queue
+          *
           * @param cb callback related to event subscribed
           */
          on(event: string, cb?: sqlPoolEventType): void
