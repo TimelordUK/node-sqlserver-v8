@@ -7,7 +7,7 @@
     <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/table-bulk-op-mgr.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table-bulk-op-mgr.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/table-column.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table-column.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/table-meta.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table-meta.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -103,7 +103,7 @@
       <recent name="C:\Users\Stephen\dev\js\sql\node_modules\msnodesqlv8\samples\javascript" />
     </key>
   </component>
-  <component name="RunManager" selected="Mocha.bulk.connection: use tableMgr bulk insert single non UTC based date with datetime col">
+  <component name="RunManager" selected="Mocha.bulk.connection: use tableMgr bulk insert vector non UTC based time(7) with time col - no MS">
     <configuration name="builder.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/dist/samples/typescript/builder.js" working-dir="$PROJECT_DIR$/dist/samples/typescript">
       <method v="2" />
     </configuration>
@@ -172,8 +172,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Mocha.bulk.connection: use tableMgr bulk insert single non UTC based date with datetime col" />
         <item itemvalue="Mocha.bulk.connection: use tableMgr bulk insert vector non UTC based time(7) with time col - no MS" />
+        <item itemvalue="Mocha.bulk.connection: use tableMgr bulk insert single non UTC based date with datetime col" />
         <item itemvalue="Node.js.procedure.js" />
         <item itemvalue="Node.js.builder.js" />
         <item itemvalue="Mocha.querycancel" />
@@ -257,7 +257,7 @@
       <workItem from="1671143087670" duration="12431000" />
       <workItem from="1671202137623" duration="20700000" />
       <workItem from="1671372590036" duration="4776000" />
-      <workItem from="1671377560082" duration="3855000" />
+      <workItem from="1671377560082" duration="7912000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -539,7 +539,14 @@
       <option name="project" value="LOCAL" />
       <updated>1671380239126</updated>
     </task>
-    <option name="localTasksCounter" value="41" />
+    <task id="LOCAL-00041" summary="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand">
+      <created>1671381538750</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1671381538750</updated>
+    </task>
+    <option name="localTasksCounter" value="42" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
