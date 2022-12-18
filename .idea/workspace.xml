@@ -8,8 +8,6 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/table-bulk-op-mgr.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table-bulk-op-mgr.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/table-column.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table-column.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/table.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/bulk.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/bulk.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -65,7 +63,7 @@
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="ProjectErrors" />
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectId" id="1eai96CdG5HB3kIihIPzTufTbKF" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -259,7 +257,7 @@
       <workItem from="1671143087670" duration="12431000" />
       <workItem from="1671202137623" duration="20700000" />
       <workItem from="1671372590036" duration="4776000" />
-      <workItem from="1671377560082" duration="2372000" />
+      <workItem from="1671377560082" duration="3855000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -534,7 +532,14 @@
       <option name="project" value="LOCAL" />
       <updated>1671375255516</updated>
     </task>
-    <option name="localTasksCounter" value="40" />
+    <task id="LOCAL-00040" summary="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand">
+      <created>1671380239126</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1671380239126</updated>
+    </task>
+    <option name="localTasksCounter" value="41" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -621,16 +626,6 @@
           <url>file://$PROJECT_DIR$/lib/index.d.ts</url>
           <line>276</line>
           <option name="timeStamp" value="58" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/lib/table-bulk-op-mgr.js</url>
-          <line>47</line>
-          <option name="timeStamp" value="77" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/lib/table-bulk-op-mgr.js</url>
-          <line>39</line>
-          <option name="timeStamp" value="78" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
