@@ -7,7 +7,6 @@
     <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/table-bulk-op-mgr.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table-bulk-op-mgr.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/table-meta.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table-meta.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -257,7 +256,7 @@
       <workItem from="1671143087670" duration="12431000" />
       <workItem from="1671202137623" duration="20700000" />
       <workItem from="1671372590036" duration="4776000" />
-      <workItem from="1671377560082" duration="8827000" />
+      <workItem from="1671377560082" duration="9845000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -553,7 +552,14 @@
       <option name="project" value="LOCAL" />
       <updated>1671390246567</updated>
     </task>
-    <option name="localTasksCounter" value="43" />
+    <task id="LOCAL-00043" summary="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand">
+      <created>1671390979426</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1671390979426</updated>
+    </task>
+    <option name="localTasksCounter" value="44" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
