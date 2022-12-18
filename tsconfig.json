@@ -20,7 +20,8 @@
     "samples/**/*",
     "lib/**/*",
     "test/**/*",
-    "lib/*"
+    "lib/*",
+    "lib/index.d.ts"
   ],
   "exclude": [
     "node_modules",
