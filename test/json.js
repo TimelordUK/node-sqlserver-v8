@@ -1,10 +1,8 @@
 'use strict'
 
-const util = require('util')
-
 /* globals describe it */
-
-const assert = require('chai').assert
+const chai = require('chai')
+const expect = chai.expect
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 
@@ -42,15 +40,15 @@ describe('json', function () {
     const h = env.jsonHelper(tableName, procName, procNameJson)
     await h.create()
     const parsedJSON = env.helper.getJSON()
-    const promisedGetProc = env.theConnection.promises.getProc
-    const p = await promisedGetProc(procNameJson)
+    const promises = env.theConnection.promises
     const json = JSON.stringify(parsedJSON, null, 4)
-    const promisedCall = util.promisify(p.call)
-    const res = await promisedCall({
-      json
+    const res = await promises.callProc(procNameJson, { json })
+    expect(Array.isArray(res.first))
+    const expected = parsedJSON.map(r => {
+      const { OrganizationNode, ...rest } = r
+      return rest
     })
-    assert(res)
-    assert(Array.isArray(res))
+    expect(res.first).to.deep.equals(expected)
   })
 
   it('use proc to insert a JSON based complex object', async function handler () {
@@ -63,11 +61,11 @@ describe('json', function () {
     const promisedGetProc = env.theConnection.promises.getProc
     const p = await promisedGetProc(procName)
     let id = 0
-    const promises = parsedJSON.map(r => insertRec(p, id++, r))
-    const expected = await Promise.all(promises)
-    const promisedQuery = env.theConnection.promises.query
-    const selectedRecords = await promisedQuery(`select * from ${tableName} order by id asc`)
+    const inserts = parsedJSON.map(r => insertRec(p, id++, r))
+    const expected = await Promise.all(inserts)
+    const promises = env.theConnection.promises
+    const selectedRecords = await promises.query(`select * from ${tableName} order by id asc`)
     const selected = selectedRecords.first.map(rec => rec.json)
-    assert.deepStrictEqual(expected, selected)
+    expect(selected).to.deep.equals(expected)
   })
 })

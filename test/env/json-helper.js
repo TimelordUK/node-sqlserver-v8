@@ -32,8 +32,10 @@ SELECT
   HireDate,
   SalariedFlag,
   VacationHours,
-  SickHours,
-  CurrentFlag
+  SickLeaveHours,
+  CurrentFlag,
+  ModifiedDate,
+  rowguid
   FROM OPENJSON(@json)
   WITH (
     BusinessEntityID int 'strict $.BusinessEntityID',
@@ -45,10 +47,12 @@ SELECT
     MaritalStatus char '$.MaritalStatus',
     Gender char '$.Gender',
     HireDate DateTime2 '$.HireDate',
-    SalariedFlag char '$.SalariedFlag',
+    SalariedFlag bit '$.SalariedFlag',
     VacationHours int '$.VacationHours',
-    SickHours int '$.SickHours',
-    CurrentFlag char '$.CurrentFlag'
+    SickLeaveHours int '$.SickLeaveHours',
+    CurrentFlag bit '$.CurrentFlag',
+    ModifiedDate DateTime2 '$.ModifiedDate',
+    rowguid uniqueidentifier '$.rowguid'
   )
 END`
 
