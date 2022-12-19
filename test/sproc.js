@@ -1274,7 +1274,6 @@ waitfor delay @timeout;END
     await usePoolCallProcAsync(t25, 5)
   })
 
-
   async function t26 (connectionProxy, iterations) {
     const spName = 'test_sp'
 

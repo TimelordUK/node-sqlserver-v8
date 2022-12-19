@@ -6,9 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/index.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/procedure-bound.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/procedure-bound.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/promises.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/promises.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/sproc.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/sproc.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -288,14 +286,7 @@
       <workItem from="1671395614721" duration="2688000" />
       <workItem from="1671398563378" duration="1707000" />
       <workItem from="1671400315771" duration="9265000" />
-      <workItem from="1671464167266" duration="3851000" />
-    </task>
-    <task id="LOCAL-00002" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
-      <created>1594574066833</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1594574066833</updated>
+      <workItem from="1671464167266" duration="4787000" />
     </task>
     <task id="LOCAL-00003" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574133466</created>
@@ -633,7 +624,14 @@
       <option name="project" value="LOCAL" />
       <updated>1671466828454</updated>
     </task>
-    <option name="localTasksCounter" value="51" />
+    <task id="LOCAL-00051" summary="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand">
+      <created>1671468162254</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1671468162254</updated>
+    </task>
+    <option name="localTasksCounter" value="52" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
