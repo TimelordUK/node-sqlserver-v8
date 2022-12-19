@@ -31,9 +31,8 @@ describe('promises', function () {
     expect(r1.first[1].Column1).is.equal(4)
   })
 
-  it('adhoc proc promise: open call close', async function handler () {
-    const spName = 'sp_test'
-    const def = {
+  function procDef (spName) {
+    return {
       name: spName,
       sql: `create PROCEDURE ${spName} @param VARCHAR(50) 
           AS 
@@ -42,11 +41,33 @@ describe('promises', function () {
           END 
           `
     }
+  }
 
-    const msg = 'hello world'
+  async function createProc (spName) {
+    spName = spName || 'sp_test'
+    const def = procDef(spName)
     const proc = env.procTest(def)
     await proc.create()
+  }
+
+  it('adhoc proc promise on sql: open call close', async function handler () {
+    const spName = 'sp_test'
+    await createProc(spName)
+    const msg = 'hello world'
     const res = await env.sql.promises.callProc(env.connectionString, spName, {
+      param: msg
+    })
+    assert(res !== null)
+    assert(res.output !== null)
+    assert.deepStrictEqual(res.output[0], msg.length)
+  })
+
+  it('get proc and call promises', async function handler () {
+    const spName = 'sp_test'
+    await createProc(spName)
+    const msg = 'hello world'
+    const proc = await env.theConnection.promises.getProc(spName)
+    const res = await proc.promises.call({
       param: msg
     })
     assert(res !== null)

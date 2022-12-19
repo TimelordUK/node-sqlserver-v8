@@ -1116,7 +1116,12 @@ declare module 'msnodesqlv8' {
         schema: string
     }
 
+    interface ProcedureDefinitionPromises {
+        call(params?: sqlProcParamType, options?: QueryAggregatorOptions): Promise<QueryAggregatorResults>
+    }
+
     interface ProcedureDefinition {
+        promises: ProcedureDefinitionPromises
         setDialect(dialect: ServerDialect): boolean
         /**
          * @deprecated - given an object containing parameters as proeprties produce

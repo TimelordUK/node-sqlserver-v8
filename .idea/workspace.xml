@@ -6,10 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/index.d.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/procedure-bound.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/procedure-bound.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/procedure.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/procedure.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/env/json-helper.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/env/json-helper.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/json.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/json.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/promises.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/promises.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -65,7 +64,7 @@
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
+    <option name="selectedTabId" value="ProjectErrors" />
   </component>
   <component name="ProjectId" id="1eai96CdG5HB3kIihIPzTufTbKF" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -105,39 +104,7 @@
       <recent name="C:\Users\Stephen\dev\js\sql\node_modules\msnodesqlv8\samples\javascript" />
     </key>
   </component>
-  <component name="RunManager" selected="Mocha.json">
-    <configuration name="bcp.bcp recovery from error." type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
-      <node-interpreter>project</node-interpreter>
-      <node-options />
-      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
-      <working-directory>$PROJECT_DIR$</working-directory>
-      <pass-parent-env>true</pass-parent-env>
-      <ui>bdd</ui>
-      <extra-mocha-options />
-      <test-kind>TEST</test-kind>
-      <test-file>$PROJECT_DIR$/test/bcp.js</test-file>
-      <test-names>
-        <name value="bcp" />
-        <name value="bcp recovery from error." />
-      </test-names>
-      <method v="2" />
-    </configuration>
-    <configuration name="bulk.connection: use tableMgr bulk insert vector non UTC based time(7) with time col - no MS" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
-      <node-interpreter>project</node-interpreter>
-      <node-options />
-      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
-      <working-directory>$PROJECT_DIR$</working-directory>
-      <pass-parent-env>true</pass-parent-env>
-      <ui>bdd</ui>
-      <extra-mocha-options />
-      <test-kind>TEST</test-kind>
-      <test-file>$PROJECT_DIR$/test/bulk.js</test-file>
-      <test-names>
-        <name value="bulk" />
-        <name value="connection: use tableMgr bulk insert vector non UTC based time(7) with time col - no MS" />
-      </test-names>
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Mocha.promises.get proc and call promises">
     <configuration name="json" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
       <node-interpreter>project</node-interpreter>
       <node-options />
@@ -169,7 +136,22 @@
       </test-names>
       <method v="2" />
     </configuration>
-    <configuration name="sproc.connection: proc with multiple select  - should callback with each" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
+    <configuration name="promises" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
+      <working-directory>$PROJECT_DIR$</working-directory>
+      <pass-parent-env>true</pass-parent-env>
+      <ui>bdd</ui>
+      <extra-mocha-options />
+      <test-kind>SUITE</test-kind>
+      <test-file>$PROJECT_DIR$/test/promises.js</test-file>
+      <test-names>
+        <name value="promises" />
+      </test-names>
+      <method v="2" />
+    </configuration>
+    <configuration name="promises.adhoc proc promise: open call close" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
       <node-interpreter>project</node-interpreter>
       <node-options />
       <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
@@ -178,10 +160,26 @@
       <ui>bdd</ui>
       <extra-mocha-options />
       <test-kind>TEST</test-kind>
-      <test-file>$PROJECT_DIR$/test/sproc.js</test-file>
+      <test-file>$PROJECT_DIR$/test/promises.js</test-file>
       <test-names>
-        <name value="sproc" />
-        <name value="connection: proc with multiple select  - should callback with each" />
+        <name value="promises" />
+        <name value="adhoc proc promise: open call close" />
+      </test-names>
+      <method v="2" />
+    </configuration>
+    <configuration name="promises.get proc and call promises" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
+      <working-directory>$PROJECT_DIR$</working-directory>
+      <pass-parent-env>true</pass-parent-env>
+      <ui>bdd</ui>
+      <extra-mocha-options />
+      <test-kind>TEST</test-kind>
+      <test-file>$PROJECT_DIR$/test/promises.js</test-file>
+      <test-names>
+        <name value="promises" />
+        <name value="get proc and call promises" />
       </test-names>
       <method v="2" />
     </configuration>
@@ -200,11 +198,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Mocha.promises.get proc and call promises" />
+        <item itemvalue="Mocha.promises.adhoc proc promise: open call close" />
+        <item itemvalue="Mocha.promises" />
         <item itemvalue="Mocha.json" />
         <item itemvalue="Mocha.json.use proc to insert a JSON array and bulk parse on server" />
-        <item itemvalue="Mocha.sproc.connection: proc with multiple select  - should callback with each" />
-        <item itemvalue="Mocha.bulk.connection: use tableMgr bulk insert vector non UTC based time(7) with time col - no MS" />
-        <item itemvalue="Mocha.bcp.bcp recovery from error." />
       </list>
     </recent_temporary>
   </component>
@@ -290,14 +288,7 @@
       <workItem from="1671395614721" duration="2688000" />
       <workItem from="1671398563378" duration="1707000" />
       <workItem from="1671400315771" duration="9265000" />
-      <workItem from="1671464167266" duration="2477000" />
-    </task>
-    <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
-      <created>1594574042218</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1594574042218</updated>
+      <workItem from="1671464167266" duration="3851000" />
     </task>
     <task id="LOCAL-00002" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574066833</created>
@@ -635,7 +626,14 @@
       <option name="project" value="LOCAL" />
       <updated>1671462546634</updated>
     </task>
-    <option name="localTasksCounter" value="50" />
+    <task id="LOCAL-00050" summary="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand">
+      <created>1671466828454</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1671466828454</updated>
+    </task>
+    <option name="localTasksCounter" value="51" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -730,9 +728,9 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/lib/procedure-bound.js</url>
-          <line>308</line>
+          <line>294</line>
           <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="60" />
+          <option name="timeStamp" value="66" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
