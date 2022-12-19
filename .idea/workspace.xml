@@ -5,10 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand">
-      <change afterPath="$PROJECT_DIR$/lib/procedure-bound.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/procedure-meta.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/procedure.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/procedure.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/table-bulk-op-mgr.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table-bulk-op-mgr.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/procedure-bound.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/procedure-bound.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -104,10 +103,7 @@
       <recent name="C:\Users\Stephen\dev\js\sql\node_modules\msnodesqlv8\samples\javascript" />
     </key>
   </component>
-  <component name="RunManager" selected="Mocha.bulk.connection: use tableMgr bulk insert vector non UTC based time(7) with time col - no MS">
-    <configuration name="builder.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/dist/samples/typescript/builder.js" working-dir="$PROJECT_DIR$/dist/samples/typescript">
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Mocha.sproc.connection: proc with multiple select  - should callback with each">
     <configuration name="procedure.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/samples/javascript/procedure.js" working-dir="$PROJECT_DIR$/samples/javascript">
       <method v="2" />
     </configuration>
@@ -159,6 +155,22 @@
       </test-names>
       <method v="2" />
     </configuration>
+    <configuration name="sproc.connection: proc with multiple select  - should callback with each" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
+      <working-directory>$PROJECT_DIR$</working-directory>
+      <pass-parent-env>true</pass-parent-env>
+      <ui>bdd</ui>
+      <extra-mocha-options />
+      <test-kind>TEST</test-kind>
+      <test-file>$PROJECT_DIR$/test/sproc.js</test-file>
+      <test-names>
+        <name value="sproc" />
+        <name value="connection: proc with multiple select  - should callback with each" />
+      </test-names>
+      <method v="2" />
+    </configuration>
     <configuration name="test" type="mocha-javascript-test-runner" nameIsGenerated="true">
       <node-interpreter>project</node-interpreter>
       <node-options />
@@ -174,11 +186,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Mocha.sproc.connection: proc with multiple select  - should callback with each" />
         <item itemvalue="Mocha.bulk.connection: use tableMgr bulk insert vector non UTC based time(7) with time col - no MS" />
         <item itemvalue="Mocha.bcp.bcp recovery from error." />
         <item itemvalue="Mocha.bulk.connection: use tableMgr bulk insert single non UTC based date with datetime col" />
         <item itemvalue="Node.js.procedure.js" />
-        <item itemvalue="Node.js.builder.js" />
       </list>
     </recent_temporary>
   </component>
@@ -263,7 +275,7 @@
       <workItem from="1671393451723" duration="1174000" />
       <workItem from="1671395614721" duration="2688000" />
       <workItem from="1671398563378" duration="1707000" />
-      <workItem from="1671400315771" duration="901000" />
+      <workItem from="1671400315771" duration="6333000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -580,7 +592,14 @@
       <option name="project" value="LOCAL" />
       <updated>1671394592784</updated>
     </task>
-    <option name="localTasksCounter" value="46" />
+    <task id="LOCAL-00046" summary="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand">
+      <created>1671401563287</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1671401563287</updated>
+    </task>
+    <option name="localTasksCounter" value="47" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -667,6 +686,18 @@
           <url>file://$PROJECT_DIR$/lib/index.d.ts</url>
           <line>276</line>
           <option name="timeStamp" value="58" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/test/sproc.js</url>
+          <line>873</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="59" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/lib/procedure.js</url>
+          <line>156</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="63" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
