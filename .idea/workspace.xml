@@ -7,6 +7,7 @@
     <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/procedure-meta.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/procedure-meta.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/procedure.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/procedure.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -274,7 +275,7 @@
       <workItem from="1671393451723" duration="1174000" />
       <workItem from="1671395614721" duration="2688000" />
       <workItem from="1671398563378" duration="1707000" />
-      <workItem from="1671400315771" duration="6825000" />
+      <workItem from="1671400315771" duration="9011000" />
     </task>
     <task id="LOCAL-00001" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
       <created>1594574042218</created>
@@ -605,7 +606,14 @@
       <option name="project" value="LOCAL" />
       <updated>1671457664927</updated>
     </task>
-    <option name="localTasksCounter" value="48" />
+    <task id="LOCAL-00048" summary="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand">
+      <created>1671458222151</created>
+      <option name="number" value="00048" />
+      <option name="presentableId" value="LOCAL-00048" />
+      <option name="project" value="LOCAL" />
+      <updated>1671458222151</updated>
+    </task>
+    <option name="localTasksCounter" value="49" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -698,12 +706,6 @@
           <line>873</line>
           <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="59" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/lib/procedure.js</url>
-          <line>156</line>
-          <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="63" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
