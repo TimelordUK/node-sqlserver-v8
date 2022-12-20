@@ -4,11 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="merged typings branch">
-      <change beforePath="$PROJECT_DIR$/.env-cmdrc" beforeDir="false" afterPath="$PROJECT_DIR$/.env-cmdrc" afterDir="false" />
+    <list default="true" id="491a2625-329c-4cb2-885d-e996c4f8854a" name="Default Changelist" comment="merged typings branch - fix for mssql which needs columns property on bulkmgr">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/table-bulk-op-mgr.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/table-bulk-op-mgr.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/encrypt.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/encrypt.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/user.js" beforeDir="false" afterPath="$PROJECT_DIR$/lib/user.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -290,14 +288,7 @@
       <workItem from="1671400315771" duration="9265000" />
       <workItem from="1671464167266" duration="4787000" />
       <workItem from="1671480898678" duration="9299000" />
-      <workItem from="1671543152452" duration="207000" />
-    </task>
-    <task id="LOCAL-00003" summary="handle case where repeated info messages are passed back to query such as in back up request where the query could be terminated too early">
-      <created>1594574133466</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1594574133466</updated>
+      <workItem from="1671543152452" duration="529000" />
     </task>
     <task id="LOCAL-00004" summary="update packages">
       <created>1602965385478</created>
@@ -635,7 +626,14 @@
       <option name="project" value="LOCAL" />
       <updated>1671468162254</updated>
     </task>
-    <option name="localTasksCounter" value="52" />
+    <task id="LOCAL-00052" summary="merged typings branch - fix for mssql which needs columns property on bulkmgr">
+      <created>1671543637756</created>
+      <option name="number" value="00052" />
+      <option name="presentableId" value="LOCAL-00052" />
+      <option name="project" value="LOCAL" />
+      <updated>1671543637766</updated>
+    </task>
+    <option name="localTasksCounter" value="53" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -669,7 +667,8 @@
     <MESSAGE value="start to doc the api - add back JS style export where both TS and JS IDE typings supported use eslint for TS" />
     <MESSAGE value="clean bulk manager and align with types declared in&#10;index.d.ts" />
     <MESSAGE value="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand" />
-    <option name="LAST_COMMIT_MESSAGE" value="clean bulk manager and align with types declared in&#10;index.d.ts move table classes out to their own files to make table mgr easier to understand" />
+    <MESSAGE value="merged typings branch - fix for mssql which needs columns property on bulkmgr" />
+    <option name="LAST_COMMIT_MESSAGE" value="merged typings branch - fix for mssql which needs columns property on bulkmgr" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
