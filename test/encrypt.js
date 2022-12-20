@@ -115,8 +115,6 @@ describe('encrypt', function () {
       }
     }
 
-
-
     async testProc () {
       const procParams = this.fieldBuilder.makeProcParams()
       const procname = this.fieldBuilder.procName
