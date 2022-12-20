@@ -788,6 +788,25 @@ describe('bulk', function () {
     await env.asPool(t20)
   })
 
+  //
+  async function t21 (proxy) {
+    const binaryBuffer = await env.readAsBinary('SampleJPGImage_50kbmb.jpg')
+    const helper = env.typeTableHelper('image', proxy)
+    const expected = helper.getVec(10, i => i % 2 === 0 ? null : binaryBuffer)
+    const table = await helper.create()
+    await table.promises.insert(expected)
+    const res = await table.promises.select(expected)
+    assert.deepStrictEqual(res, expected)
+  }
+
+  it('connection: use tableMgr bulk insert image vector - with null', async function handler () {
+    await t21(env.theConnection)
+  })
+
+  it('pool: use tableMgr bulk insert image vector - with null', async function handler () {
+    await env.asPool(t21)
+  })
+
   it(`bulk insert/select int column of huge unsigned batchSize ${test2BatchSize}`, async function handler () {
     await hugeUnsignedTest(test2BatchSize, true, false)
   })
