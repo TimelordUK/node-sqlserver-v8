@@ -107,16 +107,14 @@ describe('datatypes', function () {
     await proxy.verifyData_Datetime(rowWithNullData, jsDateExpected, testname)
   }) // end of it(
 
-  it('test 003_a - insert valid data into time(7) via TSQL, fetch as date', async function handler () {
-    //  var testcolumnsize = 16
-    const testdatetimescale = 7
+  async function timeTest (testdatetimescale) {
     const testcolumntype = ` time(${testdatetimescale})`
     //  var testcolumnclienttype = 'date'
     const testcolumnname = 'col2'
     const testdata1 = null
     const rowWithNullData = 1
     // test date = <default date> 12:10:05.1234567
-    const year = 1900
+    const year = 1970
     const month = 1
     const day = 1
     const hour = 12
@@ -127,45 +125,24 @@ describe('datatypes', function () {
     const jsDateExpected = new Date(year, month - 1, day, hour - env.commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
     const testdata2Expected = '12:10:05.1234567'
     const testdata2TsqlInsert = `'${testdata2Expected}'`
-
     const proxy = env.makeTestFnProxy(tablename, testcolumnname)
     await proxy.create(testcolumntype)
     await proxy.insert(testdata1)
     await proxy.insert(testdata2TsqlInsert)
     await proxy.verifyData_Datetime(rowWithNullData, jsDateExpected, testname)
+  }
+
+  it('test 003_a - insert valid data into time(7) via TSQL, fetch as date', async function handler () {
+    //  var testcolumnsize = 16
+    await timeTest(7)
   }) // end of it()
 
   it('test 003_b - insert valid data into time(0) via TSQL, fetch as date', async function handler () {
     //  var testcolumnsize = 16
-    const testdatetimescale = 0
-    const testcolumntype = ` time(${testdatetimescale})`
-    //  var testcolumnclienttype = 'date'
-    const testcolumnname = 'col2'
-    const testdata1 = null
-    const rowWithNullData = 1
-    // test date = <default date> 12:10:05
-    const year = 1900
-    const month = 1
-    const day = 1
-    const hour = 12
-    const minute = 10
-    const second = 5
-    const nanosecond = 0
-    // Month in JS is 0-based, so expected will be month minus 1
-    const jsDateExpected = new Date(year, month - 1, day, hour - env.commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
-    const testdata2Expected = '12:10:05.1234567'
-    const testdata2TsqlInsert = `'${testdata2Expected}'`
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData_Datetime(rowWithNullData, jsDateExpected, testname)
+    await timeTest(0)
   }) // end of it()
 
-  it('test 004_a - insert valid data into datetime2(7) via TSQL, fetch as date', async function handler () {
-    //  var testcolumnsize = 27
-    const testdatetimescale = 7
+  async function t04 (testdatetimescale, second) {
     const testcolumntype = ` datetime2(${testdatetimescale})`
     //  var testcolumnclienttype = 'date'
     const testcolumnname = 'col2'
@@ -177,7 +154,6 @@ describe('datatypes', function () {
     const day = 10
     const hour = 10
     const minute = 12
-    const second = 59.1234567
     const nanosecond = 0
     // Month in JS is 0-based, so expected will be month minus 1
     const jsDateExpected = new Date(year, month - 1, day, hour - env.commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
@@ -189,39 +165,19 @@ describe('datatypes', function () {
     await proxy.insert(testdata1)
     await proxy.insert(testdata2TsqlInsert)
     await proxy.verifyData_Datetime(rowWithNullData, jsDateExpected, testname)
+  }
+
+  it('test 004_a - insert valid data into datetime2(7) via TSQL, fetch as date', async function handler () {
+    //  var testcolumnsize = 27
+    await t04(7, 59.1234567)
   })
 
   it('test 004_b - insert valid data into datetime2(0) via TSQL, fetch as date', async function handler () {
     //  var testcolumnsize = 19
-    const testdatetimescale = 0
-    const testcolumntype = ` datetime2(${testdatetimescale})`
-    //  var testcolumnclienttype = 'date'
-    const testcolumnname = 'col2'
-    const testdata1 = null
-    const rowWithNullData = 1
-    // test date = 2001-04-10 10:12:59.1234567
-    const year = 2001
-    const month = 4
-    const day = 10
-    const hour = 10
-    const minute = 12
-    const second = 59
-    const nanosecond = 0
-    // Month in JS is 0-based, so expected will be month minus 1
-    const jsDateExpected = new Date(year, month - 1, day, hour - env.commonTestFns.getTimezoneOffsetInHours(year, month, day), minute, second, nanosecond)
-    const testdata2Expected = '2001-04-10 10:12:59.1234567'
-    const testdata2TsqlInsert = `'${testdata2Expected}'`
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData_Datetime(rowWithNullData, jsDateExpected, testname)
+    await t04(0, 59)
   }) // end of it()
 
-  it('test 005_a - insert valid data into datetimeoffset(7) via TSQL, fetch as date', async function handler () {
-    //  var testcolumnsize = 34
-    const testdatetimescale = 7
+  async function t05 (testdatetimescale, second) {
     const testcolumntype = ` datetimeoffset(${testdatetimescale})`
     //  var testcolumnclienttype = 'date'
     const testcolumnname = 'col2'
@@ -233,7 +189,6 @@ describe('datatypes', function () {
     const day = 10
     const hour = 10
     const minute = 12
-    const second = 59.1234567
     const nanosecond = 0
     const offsetHours = 13
     const offsetMinutes = 30
@@ -252,41 +207,16 @@ describe('datatypes', function () {
     await proxy.insert(testdata1)
     await proxy.insert(testdata2TsqlInsert)
     await proxy.verifyData_Datetime(rowWithNullData, jsDateExpected, testname)
+  }
+
+  it('test 005_a - insert valid data into datetimeoffset(7) via TSQL, fetch as date', async function handler () {
+    //  var testcolumnsize = 34
+    await t05(7, 59.1234567)
   }) // end of it()
 
   it('test 005_b - insert valid data into datetimeoffset(0) via TSQL, fetch as date', async function handler () {
     //  var testcolumnsize = 26
-    const testdatetimescale = 0
-    const testcolumntype = ` datetimeoffset(${testdatetimescale})`
-    //  var testcolumnclienttype = 'date'
-    const testcolumnname = 'col2'
-    const testdata1 = null
-    const rowWithNullData = 1
-    // test date = 2001-04-10 10:12:59 +13:30
-    const year = 2001
-    const month = 4
-    const day = 10
-    const hour = 10
-    const minute = 12
-    const second = 59
-    const nanosecond = 0
-    const offsetHours = 13
-    const offsetMinutes = 30
-    // Month in JS is 0-based, so expected will be month minus 1
-
-    const jsDateExpected = new Date(year, month - 1, day, hour, minute, second, nanosecond)
-    jsDateExpected.setHours(jsDateExpected.getHours() - env.commonTestFns.getTimezoneOffsetInHours(year, month, day))
-    jsDateExpected.setHours(jsDateExpected.getHours() - offsetHours)
-    jsDateExpected.setMinutes(jsDateExpected.getMinutes() - offsetMinutes)
-
-    const testdata2Expected = `2001-04-10 10:12:59.1234567 +${offsetHours}:${offsetMinutes}`
-    const testdata2TsqlInsert = `'${testdata2Expected}'`
-
-    const proxy = env.makeTestFnProxy(tablename, testcolumnname)
-    await proxy.create(testcolumntype)
-    await proxy.insert(testdata1)
-    await proxy.insert(testdata2TsqlInsert)
-    await proxy.verifyData_Datetime(rowWithNullData, jsDateExpected, testname)
+    await t05(0, 59)
   }) // end of it()
 
   it('test 006_a - insert valid data into datetimeoffset(7) via TSQL, fetch as date UTC', async function handler () {

@@ -75,4 +75,6 @@ const int SQL_SERVER_DEFAULT_YEAR  = 1900;
 const int SQL_SERVER_DEFAULT_MONTH = 1;		// JS months are 0 based, SQL Server months are 1 based
 const int SQL_SERVER_DEFAULT_DAY   = 1;
 
+const int JS_DEFAULT_YEAR  = 1970;
+
 #define ErrorIf(x) if (x) goto Error;

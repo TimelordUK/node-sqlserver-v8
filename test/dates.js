@@ -193,7 +193,7 @@ describe('dates', function () {
       await promises.query(ih.insertHoursQuery)
       const expectedHour = 0
       const results = await promises.query(tt.selectSql, [], { raw: true })
-      const expectedDate1 = env.timeHelper.makeUTCJan1900HH(expectedHour)
+      const expectedDate1 = env.timeHelper.makeUTCJan1970HH(expectedHour)
       expectedDate1.nanosecondsDelta = 0
       expect(results.first[0][0]).to.deep.equal(expectedDate1)
     }
@@ -204,7 +204,7 @@ describe('dates', function () {
       await promises.query(ih.insertMinutesSql)
       const results = await promises.query(tt.selectSql, [], { raw: true })
       results.first.forEach(r => {
-        const expectedDate = env.timeHelper.makeUTCJan1900HHMM(ih.randomHour, expectedMinute)
+        const expectedDate = env.timeHelper.makeUTCJan1970HHMM(ih.randomHour, expectedMinute)
         expectedDate.nanosecondsDelta = 0
         expect(r[0]).to.deep.equal(expectedDate)
         ++expectedMinute
@@ -218,7 +218,7 @@ describe('dates', function () {
       await promises.query(ih.insertSecondsSql)
       const results = await promises.query(tt.selectSql, [], { raw: true })
       results.first.forEach(r => {
-        const expectedDate = env.timeHelper.makeUTCJan1900HHMMSS(ih.randomHour, ih.randomMinute, expectedSecond)
+        const expectedDate = env.timeHelper.makeUTCJan1970HHMMSS(ih.randomHour, ih.randomMinute, expectedSecond)
         expectedDate.nanosecondsDelta = 0
         expect(r[0]).to.deep.equal(expectedDate)
         ++expectedSecond
@@ -232,7 +232,7 @@ describe('dates', function () {
       let msCount = 0
       const results = await promises.query(tt.selectSql, [], { raw: true })
       results.first.forEach(r => {
-        const expectedDate = env.timeHelper.makeUTCJan1900HHMMSSMS(ih.randomHour, ih.randomMinute, ih.randomSecond, ih.randomMs[msCount])
+        const expectedDate = env.timeHelper.makeUTCJan1970HHMMSSMS(ih.randomHour, ih.randomMinute, ih.randomSecond, ih.randomMs[msCount])
         expectedDate.nanosecondsDelta = 0
         expect(r[0]).to.deep.equal(expectedDate)
         ++msCount
@@ -246,7 +246,7 @@ describe('dates', function () {
       let nsCount = 0
       const results = await promises.query(tt.selectSql, [], { raw: true })
       results.first.forEach(r => {
-        const expectedDate = env.timeHelper.makeUTCJan1900HHMMSSMS(ih.randomHour, ih.randomMinute, ih.randomSecond, ih.nanoseconds[nsCount] * 1000)
+        const expectedDate = env.timeHelper.makeUTCJan1970HHMMSSMS(ih.randomHour, ih.randomMinute, ih.randomSecond, ih.nanoseconds[nsCount] * 1000)
         expectedDate.nanosecondsDelta = ih.nanosecondsDeltaExpected[nsCount]
         expect(r[0]).to.deep.equal(expectedDate)
         ++nsCount

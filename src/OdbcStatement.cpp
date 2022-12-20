@@ -1146,7 +1146,7 @@ namespace mssql
 		}
 
 		SQL_SS_TIMESTAMPOFFSET_STRUCT datetime = {};
-		datetime.year = SQL_SERVER_DEFAULT_YEAR;
+		datetime.year = JS_DEFAULT_YEAR;
 		datetime.month = SQL_SERVER_DEFAULT_MONTH;
 		datetime.day = SQL_SERVER_DEFAULT_DAY;
 		datetime.hour = time.hour;
@@ -1422,7 +1422,7 @@ namespace mssql
 			}
 
 			SQL_SS_TIMESTAMPOFFSET_STRUCT datetime = {};
-			datetime.year = SQL_SERVER_DEFAULT_YEAR;
+			datetime.year = JS_DEFAULT_YEAR;
 			datetime.month = SQL_SERVER_DEFAULT_MONTH;
 			datetime.day = SQL_SERVER_DEFAULT_DAY;
 			datetime.hour = time.hour;

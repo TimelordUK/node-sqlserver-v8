@@ -49,7 +49,7 @@ describe('userbind', function () {
   }
 
   it('user bind time', async function handler () {
-    const timeOnly = env.timeHelper.getUTCTime1900HHMMSSMS()
+    const timeOnly = env.timeHelper.getUTCTime1970HHMMSSMS()
     timeOnly.nanosecondsDelta = 0
 
     const params = {
@@ -70,8 +70,8 @@ describe('userbind', function () {
 
   async function timeTest (n) {
     const timeOnly = n > 0
-      ? env.timeHelper.getUTCTime1900HHMMSSMS()
-      : env.timeHelper.getUTCTime1900HHMMSS()
+      ? env.timeHelper.getUTCTime1970HHMMSSMS()
+      : env.timeHelper.getUTCTime1970HHMMSS()
     timeOnly.nanosecondsDelta = 0
 
     const params = {
