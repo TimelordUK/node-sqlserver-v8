@@ -108,6 +108,71 @@ describe('dates', function () {
     }
   }
 
+  /*
+ if (utc) {
+        assert.strictEqual(+result.recordset[0].t1, new Date(Date.UTC(1970, 0, 1, 23, 59, 59)).getTime())
+        assert.strictEqual(+result.recordset[0].t2, new Date(Date.UTC(1970, 0, 1, 23, 59, 59, 999)).getTime())
+        assert.strictEqual(+result.recordset[0].t3, new Date(Date.UTC(1970, 0, 1, 23, 59, 59, 999)).getTime())
+      } else {
+        assert.strictEqual(+result.recordset[0].t1, new Date(1970, 0, 1, 23, 59, 59).getTime())
+        assert.strictEqual(+result.recordset[0].t2, new Date(1970, 0, 1, 23, 59, 59, 999).getTime())
+        assert.strictEqual(+result.recordset[0].t3, new Date(1970, 0, 1, 23, 59, 59, 999).getTime())
+      }
+
+      assert.strictEqual(result.recordset[0].t4, null)
+      assert.strictEqual(result.recordset[0].t1.nanosecondsDelta, 0)
+      assert.strictEqual(result.recordset[0].t2.nanosecondsDelta, 0.0009)
+      assert.strictEqual(result.recordset[0].t3.nanosecondsDelta, 0.0009999)
+
+      if (driver === 'tedious') {
+        assert.strictEqual(result.recordset.columns.t1.scale, 0)
+        assert.strictEqual(result.recordset.columns.t2.scale, 4)
+        assert.strictEqual(result.recordset.columns.t3.scale, 7)
+        assert.strictEqual(result.recordset.columns.t4.scale, 1)
+      }
+ */
+
+  function normaliseDate (dt) {
+    const base1970 = new Date(Date.UTC(1970, 0, 1, 0, 0, 0)).getTime()
+    const base1900 = new Date(Date.UTC(1900, 0, 1, 0, 0, 0)).getTime()
+    const tm = dt.getTime()
+    return tm >= base1970
+      ? tm - base1970
+      : tm - base1900
+  }
+
+  it('utc time(0) .. time(7)', async function handler () {
+    const dtStr = '23:59:59.999999999'
+    const s = `declare @t time(1) = null;
+            select convert(time(0), '${dtStr}') as t1, 
+                   convert(time(4), '${dtStr}') as t2, 
+                   convert(time(7), '${dtStr}') as t3, 
+                   @t as t`
+
+    const result = await env.theConnection.promises.query(s)
+    const dt = normaliseDate(new Date(Date.UTC(1970, 0, 1, 23, 59, 59)))
+    const dtMS = normaliseDate(new Date(Date.UTC(1970, 0, 1, 23, 59, 59, 999)))
+
+    const f0 = result.first[0]
+    const rt1 = f0.t1
+    const rt2 = f0.t2
+    const rt3 = f0.t3
+
+    const t1 = normaliseDate(rt1)
+    const t2 = normaliseDate(rt2)
+    const t3 = normaliseDate(rt3)
+    const t4 = result.first[0].t
+
+    expect(t1).is.deep.equal(dt)
+    expect(t2).is.deep.equal(dtMS)
+    expect(t3).is.deep.equal(dtMS)
+
+    assert.strictEqual(t4, null)
+    assert.strictEqual(rt1.nanosecondsDelta, 0)
+    assert.strictEqual(rt2.nanosecondsDelta, 0.0009)
+    assert.strictEqual(rt3.nanosecondsDelta, 0.0009999)
+  })
+
   it('time to millisecond components', async function handler () {
     const tableDef = {
       tableName: 'time_test',
