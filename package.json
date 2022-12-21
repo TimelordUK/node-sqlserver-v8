@@ -28,6 +28,8 @@
     "msnodesql",
     "node-sqlserver",
     "tvp",
+    "bcp",
+    "encryption",
     "sequelize",
     "sybase",
     "adaptive"

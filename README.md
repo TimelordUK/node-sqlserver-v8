@@ -6,9 +6,13 @@
 [![npm](https://img.shields.io/npm/dm/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
 [![npm](https://img.shields.io/npm/dy/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
 
+1. *new* support always on encryption via tables and procedures.
+1. *new* support Node v19
+1. *new* support electron v22
 1. *new* read numerics as strings - see WIKI
 1. *new* Sybase Adaptive Server Enterprise support - see WIKI
 1. *new* thread worker support - see WIKI
+1. *new* manually register tables
 1. *new* manually register and execute stored proc
 1. *new* promises - see WIKI
 1. *new* fast BCP bulk insert - see WIKI
@@ -16,8 +20,7 @@
 1. *new* includes MacOS support
 1. *new* use object based named params for proc calls - see WIKI
 1. *new* improved local date support via bound tables
-1. *new* support Node v17
-1. *new* support electron v17
+
 1. pause/resume long running query
 1. built in connection pool
 1. sequelize support directly included
