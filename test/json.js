@@ -18,18 +18,12 @@ describe('json', function () {
   })
 
   function insertRec (p, id, element) {
-    return new Promise((resolve, reject) => {
-      const txt = JSON.stringify(element, null, 4)
-      p.call({
-        ID: id++,
-        json: txt
-      }, (err) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(txt)
-        }
-      })
+    const txt = JSON.stringify(element, null, 4)
+    return p.promises.call({
+      ID: id++,
+      json: txt
+    }).then(() => {
+      return txt
     })
   }
 
