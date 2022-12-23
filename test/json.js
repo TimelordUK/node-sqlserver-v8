@@ -58,12 +58,11 @@ describe('json', function () {
     const h = env.jsonHelper(tableName, procName, procNameJson)
     await h.create()
     const parsedJSON = env.helper.getJSON()
-    const promisedGetProc = env.theConnection.promises.getProc
-    const p = await promisedGetProc(procName)
+    const promises = env.theConnection.promises
+    const p = await promises.getProc(procName)
     let id = 0
     const inserts = parsedJSON.map(r => insertRec(p, id++, r))
     const expected = await Promise.all(inserts)
-    const promises = env.theConnection.promises
     const selectedRecords = await promises.query(`select * from ${tableName} order by id asc`)
     const selected = selectedRecords.first.map(rec => rec.json)
     expect(selected).to.deep.equals(expected)

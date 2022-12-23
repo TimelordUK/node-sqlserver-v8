@@ -1352,11 +1352,12 @@ END
       num3: 15,
       ___return___: 99
     }]
-    const proc = await connectionProxy.promises.getProc(spName)
+    const promises = connectionProxy.promises
+    const proc = await promises.getProc(spName)
     const meta = proc.getMeta()
     const s = meta.select
     for (let i = 0; i < iterations; ++i) {
-      const res = await connectionProxy.promises.query(s, p)
+      const res = await promises.query(s, p)
       assert.deepStrictEqual(res.first, expected)
     }
   }
