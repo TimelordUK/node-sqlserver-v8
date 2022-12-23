@@ -8,7 +8,6 @@ const expect = chai.expect
 chai.use(require('chai-as-promised'))
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
-const util = require('util')
 
 describe('sproc', function () {
   this.timeout(30000)
@@ -1353,14 +1352,12 @@ END
       num3: 15,
       ___return___: 99
     }]
-    const promisedGet = connectionProxy.promises.getProc
-    const proc = await promisedGet(spName)
+    const proc = await connectionProxy.promises.getProc(spName)
     const meta = proc.getMeta()
     const s = meta.select
-    const promisedQuery = util.promisify(connectionProxy.query)
     for (let i = 0; i < iterations; ++i) {
-      const res = await promisedQuery(s, p)
-      assert.deepStrictEqual(res, expected)
+      const res = await connectionProxy.promises.query(s, p)
+      assert.deepStrictEqual(res.first, expected)
     }
   }
 
