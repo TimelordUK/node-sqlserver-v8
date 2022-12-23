@@ -692,10 +692,8 @@ END
   })
 
   async function t16 (connectionProxy, iterations) {
-    const promisedQueryRaw = connectionProxy.promises.query
-
+    const promises = connectionProxy.promises
     const spName = 'test_sp_multi_statement'
-
     const def = `alter PROCEDURE <name>(
 @p1 INT,
 @p2 nvarchar(15),
@@ -720,8 +718,8 @@ END
         [NationalIDNumber] [nvarchar](15) NOT NULL,
         [LoginID] [nvarchar](256) NOT NULL
         )`
-    await promisedQueryRaw(dropTableSql)
-    await promisedQueryRaw(createTable)
+    await promises.query(dropTableSql)
+    await promises.query(createTable)
     await env.promisedCreate(spName, def)
 
     const o = {
