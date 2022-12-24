@@ -248,19 +248,50 @@ describe('connection-pool', function () {
     }
   })
 
-  it('submit queries with callback for results', testDone => {
-    const size = 4
-    const iterations = 8
-    const pool = env.pool(size)
-    pool.on('error', e => {
-      assert.ifError(e)
-    })
-    pool.open()
+  function optionsFromSize (s, hb) {
+    const options =
+      {
+        connectionString: env.connectionString,
+        ceiling: s,
+        heartbeatSecs: hb || 10,
+        inactivityTimeoutSecs: 3
+      }
+    return options
+  }
 
-    const checkin = []
-    const checkout = []
-    pool.on('open', () => {
+  class Checkins {
+    constructor (options) {
+      this.checkin = []
+      this.checkout = []
+      this.parked = []
+      this.opened = false
+      this.free = 0
+      this.done = 0
+      this.submitted = 0
+      options = options ||
+        {
+          connectionString: env.connectionString,
+          ceiling: 4,
+          heartbeatSecs: 1,
+          inactivityTimeoutSecs: 3
+        }
+      this.pool = new env.sql.Pool(options)
+      const pool = this.pool
+      pool.on('error', e => {
+        assert.ifError(e)
+      })
+      pool.open()
+
+      const checkin = this.checkin
+      const checkout = this.checkout
+      const parked = this.parked
+
+      pool.on('open', () => {
+        this.opened = true
+      })
+
       pool.on('status', s => {
+        if (!this.opened) return
         switch (s.op) {
           case 'checkout':
             checkout.push(s)
@@ -268,11 +299,34 @@ describe('connection-pool', function () {
           case 'checkin':
             checkin.push(s)
             break
+          case 'parked':
+            parked.push(s)
+            break
         }
       })
-    })
+    }
 
-    let done = 0
+    query (sql) {
+      const _this = this
+      const q = this.pool.query(sql)
+      q.on('submitted', () => {
+        _this.submitted = _this.submitted + 1
+      })
+      q.on('done', () => {
+        _this.done = _this.done + 1
+      })
+      q.on('free', () => {
+        _this.free = _this.free + 1
+      })
+      return q
+    }
+  }
+
+  it('submit queries with callback for results', testDone => {
+    const size = 4
+    const iterations = 8
+    const ci = new Checkins(optionsFromSize(size))
+    const pool = ci.pool
     let free = 0
     const results = []
     function submit (sql) {
@@ -281,13 +335,12 @@ describe('connection-pool', function () {
         results.push(res)
       })
       q.on('submitted', () => {
-        q.on('done', () => ++done)
         q.on('free', () => {
           ++free
           if (free === iterations) {
             expect(results.length).to.equal(iterations)
-            expect(checkin.length).to.equal(iterations)
-            expect(checkout.length).to.equal(iterations)
+            expect(ci.checkin.length).to.equal(iterations)
+            expect(ci.checkout.length).to.equal(iterations)
             pool.close(() => {
               testDone()
             })
@@ -306,41 +359,20 @@ describe('connection-pool', function () {
     tester(500, 4, () => 'select @@SPID as spid', 5000, 0, testDone)
   })
 
-  class PoolTester {
-    create (size) {
-      const pool = new env.sql.Pool({
-        connectionString: env.connectionString,
-        ceiling: size,
-        heartbeatSecs: 1,
-        inactivityTimeoutSecs: 3
-      })
-
-      pool.on('error', e => {
-        assert.ifError(e)
-      })
-      pool.open()
-
-      return pool
-    }
-  }
-
   it('open pool size 4 - submit queries on parked connections', testDone => {
     const size = 4
     const iterations = 4
 
-    const tester = new PoolTester()
-    const pool = tester.create(size)
+    const tester = new Checkins(optionsFromSize(4, 1))
 
-    let opened = false
-    const parked = []
-    const checkin = []
-    const checkout = []
-    let done = 0
+    const parked = tester.parked
+    const checkin = tester.checkin
+    const pool = tester.pool
+
     let free = 0
     function submit (sql) {
-      const q = pool.query(sql)
+      const q = tester.query(sql)
       q.on('submitted', () => {
-        q.on('done', () => ++done)
         q.on('free', () => {
           ++free
           if (free === iterations) {
@@ -351,33 +383,22 @@ describe('connection-pool', function () {
       return q
     }
 
-    pool.on('open', (options) => {
-      assert(options)
-      opened = true
-      pool.on('status', s => {
-        switch (s.op) {
-          case 'parked':
-            parked.push(s)
-            if (parked.length === size) {
-              for (let i = 0; i < iterations; ++i) {
-                submit('waitfor delay \'00:00:01\';')
-              }
+    pool.on('status', s => {
+      switch (s.op) {
+        case 'parked':
+          if (parked.length === size) {
+            for (let i = 0; i < iterations; ++i) {
+              submit('waitfor delay \'00:00:01\';')
             }
-            break
-          case 'checkout':
-            checkout.push(s)
-            break
-          case 'checkin':
-            checkin.push(s)
-            break
-        }
-      })
+          }
+          break
+      }
     })
 
     pool.on('close', () => {
       expect(parked[size - 1].parked).to.equal(size)
       expect(parked[size - 1].idle).to.equal(0)
-      expect(opened).to.be.equal(true)
+      expect(tester.opened).to.be.equal(true)
       expect(checkin.length).to.be.equal(size * 5) // 3 x 4 heartbeats + 1 x 4 'grow' + 1 x 4 queries
       // assert.strictEqual(size * 4, checkout.length)
       testDone()
@@ -386,48 +407,31 @@ describe('connection-pool', function () {
 
   it('open pool size 4 - leave inactive so connections closed and parked', testDone => {
     const size = 4
-    const pool = new env.sql.Pool({
+    const ci = new Checkins({
       connectionString: env.connectionString,
       ceiling: size,
       heartbeatSecs: 1,
       inactivityTimeoutSecs: 3
     })
 
-    pool.on('error', e => {
-      assert.ifError(e)
-    })
+    const pool = ci.pool
 
-    pool.open()
-    let opened = false
-    const parked = []
-    const checkin = []
-    const checkout = []
-    pool.on('open', (options) => {
-      assert(options)
-      opened = true
-      pool.on('status', s => {
-        switch (s.op) {
-          case 'parked':
-            parked.push(s)
-            if (parked.length === size) {
-              pool.close()
-            }
-            break
-          case 'checkout':
-            checkout.push(s)
-            break
-          case 'checkin':
-            checkin.push(s)
-            break
-        }
-      })
+    const parked = ci.parked
+    const checkin = ci.checkin
+    const checkout = ci.checkout
+
+    pool.on('status', () => {
+      if (parked.length === 0) return
+      if (parked.length === size) {
+        pool.close()
+      }
     })
 
     // with 3 second inactivity will checkout each connection 3 times for 3 heartbeats
     pool.on('close', () => {
       assert.strictEqual(size, parked[size - 1].parked)
       assert.strictEqual(0, parked[size - 1].idle)
-      assert.strictEqual(true, opened)
+      assert.strictEqual(true, ci.opened)
       assert.strictEqual(size * 3, checkin.length)
       assert.strictEqual(size * 3, checkout.length)
       testDone()
@@ -435,47 +439,29 @@ describe('connection-pool', function () {
   })
 
   function pauseCancelTester (iterations, size, cancelled, strategy, expectedTimeToComplete, testDone) {
-    const pool = env.pool(size)
-    pool.on('error', e => {
-      assert.ifError(e)
-    })
-    pool.open()
+    const ci = new Checkins(optionsFromSize(size))
+    const pool = ci.pool
 
-    const checkin = []
-    const checkout = []
-    pool.on('open', () => {
-      pool.on('status', s => {
-        switch (s.op) {
-          case 'checkout':
-            checkout.push(s)
-            break
-          case 'checkin':
-            checkin.push(s)
-            break
-        }
-      })
-    })
+    const checkin = ci.checkin
+    const checkout = ci.checkout
 
     pool.on('close', () => {
       testDone()
     })
 
-    let done = 0
-    let free = 0
-
     function submit (sql) {
-      const q = pool.query(sql)
-      q.on('done', () => ++done)
-      q.on('free', () => {
-        ++free
-        if (free === iterations) {
-          assert.strictEqual(iterations - cancelled, checkout.length)
-          assert.strictEqual(iterations - cancelled, checkin.length)
-          assert.strictEqual(iterations, done)
-          const elapsed = checkin[checkin.length - 1].time - checkout[0].time
-          assert(elapsed <= expectedTimeToComplete + 1000)
-          pool.close()
-        }
+      const q = ci.query(sql)
+      q.on('submitted', () => {
+        q.on('free', () => {
+          if (ci.free === iterations) {
+            assert.strictEqual(iterations - cancelled, checkout.length)
+            assert.strictEqual(iterations - cancelled, checkin.length)
+            assert.strictEqual(iterations, ci.done)
+            const elapsed = checkin[checkin.length - 1].time - checkout[0].time
+            assert(elapsed <= expectedTimeToComplete + 1000)
+            pool.close()
+          }
+        })
       })
       return q
     }

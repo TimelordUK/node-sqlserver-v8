@@ -7,7 +7,7 @@ declare module 'msnodesqlv8' {
     type sqlRecordType = Record<string|number, sqlJsColumnType>
     type sqlObjectType = sqlRecordType | object | any
     type sqlQueryParamType = sqlJsColumnType | sqlJsColumnType[] | ConcreteColumnType | ConcreteColumnType[] | TvpParam
-    type sqlPoolEventType = MessageCb | PoolStatusRecordCb | PoolOptionsEventCb | StatusCb | QueryDescriptionCb
+    type sqlPoolEventType = MessageCb | PoolStatusRecordCb | PoolOptionsEventCb | StatusCb | PoolQueryCb
     type sqlQueryEventType = SubmittedEventCb | ColumnEventCb | EventColumnCb | StatusCb | RowEventCb | MetaEventCb | RowCountEventCb
     type sqlProcParamType = sqlObjectType | sqlQueryParamType
     type sqlQueryType = string | QueryDescription
@@ -303,6 +303,8 @@ declare module 'msnodesqlv8' {
           * 'status' - information relating to latet operation
           *
           * 'submitted' - raised when query is submitted where previously was on a queue
+          *
+          * 'enqueue' - raised when query is first created in pool
           *
           * @param cb callback related to event subscribed
           */
@@ -836,6 +838,10 @@ declare module 'msnodesqlv8' {
 
     interface PoolStatusRecordCb {
         (status: PoolStatusRecord): void
+    }
+
+    interface PoolQueryCb {
+        (q: Query): void
     }
 
     interface QueryDescriptionCb {
