@@ -50,8 +50,8 @@ END
 
     async function createGeographyTable () {
       async function exec (sql) {
-        const promisedQuery = theConnection.promises.query
-        await promisedQuery(sql)
+        const promises = theConnection.promises
+        await promises.query(sql)
       }
 
       await exec(dropTableSql)

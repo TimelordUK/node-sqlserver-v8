@@ -79,8 +79,8 @@ END`
     async function create () {
       async function exec (sql) {
         // console.log(`exec '${sql}' ....`)
-        const promisedQuery = theConnection.promises.query
-        await promisedQuery(sql)
+        const promises = theConnection.promises
+        await promises.query(sql)
         // console.log('... done')
       }
 
