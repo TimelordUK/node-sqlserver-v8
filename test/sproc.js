@@ -785,7 +785,7 @@ END
   })
 
   async function t18 (connectionProxy, iterations) {
-    const promisedQueryRaw = connectionProxy.promises.query
+    const promises = connectionProxy.promises
     const newBusinessId = 100
     const NationalIDNumber = 'NI123456'
     const loginId = 'Programmer01'
@@ -819,8 +819,8 @@ END
         [NationalIDNumber] [nvarchar](15) NOT NULL,
         [LoginID] [nvarchar](256) NOT NULL
         )`
-    await promisedQueryRaw(dropTableSql)
-    await promisedQueryRaw(createTable)
+    await promises.query(dropTableSql)
+    await promises.query(createTable)
     await env.promisedCreate(spName, def)
 
     const o = {
