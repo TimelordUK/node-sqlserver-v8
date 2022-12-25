@@ -21,6 +21,14 @@ describe('promises', function () {
     env.close().then(() => done())
   })
 
+  it('calculate row receive rate from aggregator', async function handler () {
+    const count = 100
+    const testSql = `select top ${count} * from master..syscomments`
+    const res = await env.theConnection.promises.query(testSql)
+    expect(res.rows).is.equal(count)
+    expect(res.rowRate).is.greaterThan(0)
+  })
+
   it('select promise query with no column name', async function handler () {
     const r1 = await env.theConnection.promises.query('select 1,2 union select 3,4', [],
       { replaceEmptyColumnNames: true })
