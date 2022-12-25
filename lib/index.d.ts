@@ -189,6 +189,16 @@ declare module 'msnodesqlv8' {
 
     interface QueryAggregatorResults {
         /**
+         * the local date when this aggregation query was started
+         */
+        beginAt: Date
+        /**
+         * the local date when query submitted to native driver -
+         * it may have been held on a queue waiting to be submitted
+         * on the designated connection
+         */
+        submittedAt: Date
+        /**
          * elapsed ms for call to complete
          */
         elapsed: number
@@ -224,6 +234,24 @@ declare module 'msnodesqlv8' {
          * errors collected by running sql (up to promise reject)
          */
         errors: Error[]
+        /**
+         * the options submitted on query
+         */
+        options: QueryAggregatorOptions
+        /**
+         * a running total incremented on each new row arriving
+         * select top 10 ... will expect this to equal 10
+         */
+        rows: number
+        /**
+         * the approximate number of rows per second received
+         * over duration of query.
+         */
+        rowRate: number
+        /**
+         * the sql submitted to server producing these results.
+         */
+        sql: string
     }
 
     interface QueryAggregatorOptions {

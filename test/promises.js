@@ -27,6 +27,26 @@ describe('promises', function () {
     const res = await env.theConnection.promises.query(testSql)
     expect(res.rows).is.equal(count)
     expect(res.rowRate).is.greaterThan(0)
+    expect(res.submittedAt).greaterThanOrEqual(res.beginAt)
+  })
+
+  it('compound select test multiple meta', async function handler () {
+    const tableName = 'rowsAffectedTest'
+    const drop = env.dropTableSql(tableName)
+    await env.theConnection.promises.query(drop)
+    const cmd = [
+      `create table ${tableName} (id int, val int)`,
+      `insert into ${tableName} values (1, 5)`,
+      `select * from ${tableName}`,
+      `insert into ${tableName} values (2, 10)`,
+      `select top 2 * from ${tableName}`,
+      `drop table ${tableName}`
+    ]
+    const testSql = cmd.join('; ')
+    const res = await env.theConnection.promises.query(testSql)
+    expect(res.meta.length).to.equal(2)
+    expect(res.results.length).to.equal(2)
+    expect(res.metaElapsed.length).to.equal(2)
   })
 
   it('select promise query with no column name', async function handler () {
