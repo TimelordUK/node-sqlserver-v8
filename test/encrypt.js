@@ -460,8 +460,8 @@ describe('encrypt', function () {
       super()
       this.scale = scale
       this.value = scale >= 3
-        ? env.timeHelper.getUTCTime1900HHMMSSMS(new Date())
-        : env.timeHelper.getUTCTime1900HHMMSS(new Date())
+        ? env.timeHelper.getUTCTime1970HHMMSSMS(new Date())
+        : env.timeHelper.getUTCTime1970HHMMSS(new Date())
     }
 
     build (builder) {
