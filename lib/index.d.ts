@@ -203,9 +203,22 @@ declare module 'msnodesqlv8' {
          */
         elapsed: number
         /**
+         * for a compund query select * from a; select * from b
+         * each time a new statement is started a new elapsed
+         * ms count is added such that a breakdown of where
+         * time is spent in each statement.
+         *
+         */
+        metaElapsed: number[]
+        /**
          * array of meta for each query i.e. an array holding an array of meta descriptions one per column
          */
         meta: Array<Meta[]>
+        /**
+         * the first meta to arrive for the query submitted which
+         * corresponds data rows held in first
+         */
+        firstMeta: Meta[]
         /**
          * first set of rows i.e. results[0] if any else null
          */

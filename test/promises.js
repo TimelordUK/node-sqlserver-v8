@@ -28,6 +28,7 @@ describe('promises', function () {
     expect(res.rows).is.equal(count)
     expect(res.rowRate).is.greaterThan(0)
     expect(res.submittedAt).greaterThanOrEqual(res.beginAt)
+    expect(res.firstMeta.length).greaterThanOrEqual(5)
   })
 
   it('compound select test multiple meta', async function handler () {
@@ -37,9 +38,9 @@ describe('promises', function () {
     const cmd = [
       `create table ${tableName} (id int, val int)`,
       `insert into ${tableName} values (1, 5)`,
-      `select * from ${tableName}`,
+      `select id, val from ${tableName}`,
       `insert into ${tableName} values (2, 10)`,
-      `select top 2 * from ${tableName}`,
+      `select top 2 id, val from ${tableName}`,
       `drop table ${tableName}`
     ]
     const testSql = cmd.join('; ')
@@ -47,6 +48,7 @@ describe('promises', function () {
     expect(res.meta.length).to.equal(2)
     expect(res.results.length).to.equal(2)
     expect(res.metaElapsed.length).to.equal(2)
+    expect(res.firstMeta.length).to.equal(2)
   })
 
   it('select promise query with no column name', async function handler () {
