@@ -236,15 +236,16 @@ async function prepared (): Promise<void> {
     const vec: SampleRecord[] = getInsertVec(2)
     await tm.create()
     console.log(`prepared = ${tm.createTableSql}`)
-    const p1 = await connection.promises.prepare(tm.insertParamsSql)
-    await p1.promises.query(vec[0].asArray())
-    await p1.promises.query(vec[1].asArray())
-    const read = await connection.promises.query(tm.selectSql)
+    const promises: ConnectionPromises = connection.promises
+    const preparedStatement = await promises.prepare(tm.insertParamsSql)
+    await preparedStatement.promises.query(vec[0].asArray())
+    await preparedStatement.promises.query(vec[1].asArray())
+    const read = await promises.query(tm.selectSql)
     console.log(`prepared ${read.first.length} rows from ${tm.tableName}`)
     console.log(JSON.stringify(read.first, null, 4))
-    await p1.promises.free()
+    await preparedStatement.promises.free()
     await tm.drop()
-    await connection.promises.close()
+    await promises.close()
   } catch (e) {
     console.log(e)
   }
