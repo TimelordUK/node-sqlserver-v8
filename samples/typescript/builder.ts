@@ -38,16 +38,16 @@ async function builder (): Promise<void> {
     builder.addColumn('col_e').asVarChar(100).notNull()
 
     const vec: Row[] = Array(rows).fill(0).map((_, i) => makeOne(i))
-    const t: BulkTableMgr = builder.toTable()
+    const table: BulkTableMgr = builder.toTable()
     const create: string = builder.createTableSql
     const drop: string = builder.dropTableSql
     console.log(drop)
     await builder.drop()
     console.log(create)
     await builder.create()
-    await t.promises.insert(vec)
-    const keys: object[] = t.keys(vec)
-    const res: object[] = await t.promises.select(keys)
+    await table.promises.insert(vec)
+    const keys: object[] = table.keys(vec)
+    const res: object[] = await table.promises.select(keys)
     console.log(JSON.stringify(res, null, 4))
     await builder.truncate()
     const typeTableSql = builder.userTypeTableSql
