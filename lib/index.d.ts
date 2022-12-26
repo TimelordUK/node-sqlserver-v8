@@ -193,6 +193,12 @@ declare module 'msnodesqlv8' {
          */
         beginAt: Date
         /**
+         * the promise is resolved or rejected at this local time.  In case of
+         * completing, this will be when the unmanaged native statement
+         * handle is released by the cpp.
+         */
+        endAt: Date
+        /**
          * the local date when query submitted to native driver -
          * it may have been held on a queue waiting to be submitted
          * on the designated connection

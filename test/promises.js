@@ -29,6 +29,7 @@ describe('promises', function () {
     expect(res.rowRate).is.greaterThan(0)
     expect(res.submittedAt).greaterThanOrEqual(res.beginAt)
     expect(res.firstMeta.length).greaterThanOrEqual(5)
+    expect(res.endAt).greaterThanOrEqual(res.beginAt)
   })
 
   it('compound select test multiple meta', async function handler () {
