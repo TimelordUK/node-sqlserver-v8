@@ -15,7 +15,6 @@
   },
 
   "extends": [
-    "standard",
     "standard-with-typescript"
   ],
 
