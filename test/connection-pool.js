@@ -249,14 +249,12 @@ describe('connection-pool', function () {
   })
 
   function optionsFromSize (s, hb) {
-    const options =
-      {
-        connectionString: env.connectionString,
-        ceiling: s,
-        heartbeatSecs: hb || 10,
-        inactivityTimeoutSecs: 3
-      }
-    return options
+    return {
+      connectionString: env.connectionString,
+      ceiling: s,
+      heartbeatSecs: hb || 10,
+      inactivityTimeoutSecs: 3
+    }
   }
 
   class Checkins {
@@ -427,7 +425,7 @@ describe('connection-pool', function () {
       }
     })
 
-    // with 3 second inactivity will checkout each connection 3 times for 3 heartbeats
+    // with 3 second inactivity will check out each connection 3 times for 3 heartbeats
     pool.on('close', () => {
       assert.strictEqual(size, parked[size - 1].parked)
       assert.strictEqual(0, parked[size - 1].idle)

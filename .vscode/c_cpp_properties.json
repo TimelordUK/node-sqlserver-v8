@@ -20,7 +20,7 @@
         {
             "name": "Win32",
             "includePath": [
-                "${LocalAppData}/node-gyp/Cache/18.6.0/include/node/",
+                "${LocalAppData}/node-gyp/Cache/18.12.0/include/node/",
                 "${workspaceFolder}/node_modules/nan",
                 "${workspaceFolder}/src",
                 "${workspaceFolder}/**"
@@ -32,7 +32,7 @@
                 "_UNICODE"
             ],
             "windowsSdkVersion": "10.0.17763.0",
-            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Professional/VC/Tools/MSVC/14.27.29110/bin/Hostx64/x64/cl.exe",
+            "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/MSVC/14.34.31933/bin/Hostx64/x64/cl.exe",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "msvc-x64"
