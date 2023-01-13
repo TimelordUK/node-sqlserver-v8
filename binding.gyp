@@ -184,10 +184,11 @@
               'CLANG_CXX_LANGUAGE_STANDARD': '<(cflags_cpp)'
             },
             'include_dirs': [
-              '/usr/local/opt/<(msodbcsql)/include/',
-              '/usr/local/opt/<(msodbcsql)/include/<(msodbcsql)/',
+              "<!@(node -p \"'<(msodbc_include_folders)'.split(' ').join(' ')\")",
+              # '/usr/local/opt/<(msodbcsql)/include/',
+              # '/usr/local/opt/<(msodbcsql)/include/<(msodbcsql)/',
               '/opt/homebrew/include',
-              '/opt/homebrew/include/<(msodbcsql)',
+              # '/opt/homebrew/include/<(msodbcsql)',
               '/usr/local/include/',
             ],
         }],
