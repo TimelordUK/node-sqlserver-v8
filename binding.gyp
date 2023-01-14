@@ -46,32 +46,25 @@
       # Set the target variable only if it is not passed in by prebuild 
         'target%': '<!(node -e "console.log(process.versions.node)")', 
       # which folders are available for include eg. 
-      # /opt/microsoft/msodbcsql18/include/ /opt/microsoft/msodbcsql17/include/ 
+      # /opt/microsoft/msodbcsql18/include/ /opt/microsoft/msodbcsql17/include/
+
       'msodbc_include_folders%': [
-          "<!@(node -p \""
-              "'<(msodbsver)'"
-              ".split(' ')"
-              ".map(x => { "
-              ""
-              "const options = ["
-                "\`/opt/microsoft/\${x}/include/\`, "
-                "\`/usr/local/opt/\${x}/include\`, "
-                "\`/usr/local/opt/\${x}/include/\${x}/\`, "
-                "\`/opt/homebrew/include/\${x}\`, "
-              "]; "
-              ""
-              "return options"
-              "}"
-              ")"
-              ".flatMap(x => x)"
-              ".filter(x => { "
-              "const fs = require('fs');"
-              "return fs.existsSync(x)"
-              "}"
-              ")"
-              ".join(' ')"
-              "\")"
-          ],     
+       "<!@(node -p \""
+            "'<(msodbsver)'"
+            ".split(' ')"
+            ".map(x => ["
+            "`/opt/microsoft/\${x}/include/`, "
+            "`/usr/local/opt/\${x}/include`, "
+            "`/usr/local/opt/\${x}/include/\${x}/`, "
+            "`/opt/homebrew/include/\${x}`"
+            "])"
+            ".flatMap(x => x)"
+            ".filter(x => require('fs')"
+            ".existsSync(x))"
+            ".map(x => '-L'+ x)"
+            ".join(' ')"
+            "\")"
+      ],
         # set fo
         # the link folders available -L/usr/local/lib -L/usr/lib -L. 
         'link_path%': [

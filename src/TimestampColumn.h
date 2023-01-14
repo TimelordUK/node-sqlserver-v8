@@ -109,7 +109,7 @@ namespace mssql
 									  // return the number of days since Jan 1, 1970
 		double DaysSinceEpoch(SQLSMALLINT y, SQLUSMALLINT m, SQLUSMALLINT d) const;
 
-		void milliseconds_from_timestamp(TIMESTAMP_STRUCT const & ts, int tz_offset = 0);
+		void milliseconds_from_timestamp(TIMESTAMP_STRUCT const & ts, SQLSMALLINT tz_offset = 0);
 
 		// derived from ECMA 262 15.9
 		void milliseconds_from_timestamp_offset(SQL_SS_TIMESTAMPOFFSET_STRUCT const& time_struct);
@@ -121,6 +121,6 @@ namespace mssql
 		// since Jan 1, 1970
 		void DateFromMilliseconds(SQL_SS_TIMESTAMPOFFSET_STRUCT& date) const;
 
-		int32_t offset_minutes;
+		SQLSMALLINT offset_minutes;
 	};
 }
