@@ -23,11 +23,11 @@
         ],
         'variables': {
           'openssl_fips' : '0',
+          # look for include files for these versions - taking top first priority
           'msodbsver%': [
             'msodbcsql18',
             'msodbcsql17'
           ],
-          'msodbcsql%': 'msodbcsql17',
           'ext%': '.cpp',
           'homebrew%': '/opt/homebrew/lib/libodbc.a',
           'unixlocalodbc%': '-l/usr/local/odbc',
@@ -61,7 +61,7 @@
                 "'/opt/homebrew/include/' + x + '/'"
                 "])"
               ".flatMap(y => y)"
-              ".filter(z =>require('fs').existsSync(z))"
+              ".filter(z => require('fs').existsSync(z))"
               ".join(' ')"
             "\")"
         ],       
@@ -105,7 +105,7 @@
       'actions': [
           {
             'action_name': 'print_variables',
-            'action': ['echo', 'cflags_cpp <(cflags_cpp) | arch: <(arch) | link_path: <(link_path) | msodbcsql <(msodbcsql) | msodbc_include_folders <(msodbc_include_folders) | fileset <(fileset)'],
+            'action': ['echo', 'cflags_cpp <(cflags_cpp) | arch: <(arch) | link_path: <(link_path) | msodbc_include_folders <(msodbc_include_folders) | fileset <(fileset)'],
             'inputs': [],
             'outputs': [
               "<!@(node -p \"'<(fileset)'.split(' ')[0]\")"
@@ -178,10 +178,7 @@
             },
             'include_dirs': [
               "<!@(node -p \"'<(msodbc_include_folders)'.split(' ').join(' ')\")",
-              # '/usr/local/opt/<(msodbcsql)/include/',
-              # '/usr/local/opt/<(msodbcsql)/include/<(msodbcsql)/',
               '/opt/homebrew/include',
-              # '/opt/homebrew/include/<(msodbcsql)',
               '/usr/local/include/',
             ],
         }],
