@@ -19,6 +19,7 @@ shared_ptr<vector<uint16_t>> _query_string;
 	QueryOperationParams::QueryOperationParams(const Local<Number> query_id, 
 		const Local<Object> query_object) :
 		_timeout(MutateJS::getint32(query_object, "query_timeout")),
+		_query_tz_adjustment(0),
 		_id(MutateJS::getint32(query_id)),
 		_max_prepared_column_size(MutateJS::getint64(query_object, "max_prepared_column_size")),
 		_numeric_string(MutateJS::getbool(query_object, "numeric_string")),
