@@ -28,7 +28,7 @@ async function builder (): Promise<void> {
     const tableName = 'tmpTableBuilder'
     const mgr: TableManager = connection.tableMgr()
     const builder: TableBuilder = mgr.makeBuilder(tableName)
-    builder.setDialect(mgr.ServerDialect.SqlServer)
+    // builder.setDialect(mgr.ServerDialect.SqlServer)
 
     builder.addColumn('id').asInt().isPrimaryKey(1)
     builder.addColumn('col_a').asInt().notNull()
@@ -39,6 +39,9 @@ async function builder (): Promise<void> {
 
     const vec: Row[] = Array(rows).fill(0).map((_, i) => makeOne(i))
     const table: BulkTableMgr = builder.toTable()
+    const dropTvpProcSql = builder.dropInsertTvpProcedure
+    console.log(dropTvpProcSql)
+    await connection.promises.query(dropTvpProcSql)
     const create: string = builder.createTableSql
     const drop: string = builder.dropTableSql
     console.log(drop)
