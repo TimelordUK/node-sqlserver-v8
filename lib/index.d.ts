@@ -1440,6 +1440,11 @@ declare module 'msnodesqlv8' {
          * the proc sql taking a tvp param
          */
         insertProcedureTvpSql: string
+
+        /**
+         * drop the insertProcedureTvpSql proc if it exists
+         */
+        dropInsertTvpProcedure: string
     }
 
     interface TableManagerPromises {
