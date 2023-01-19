@@ -28,7 +28,7 @@ async function builder (): Promise<void> {
     const tableName = 'tmpTableBuilder'
     const mgr: TableManager = connection.tableMgr()
     const builder: TableBuilder = mgr.makeBuilder(tableName)
-    // builder.setDialect(mgr.ServerDialect.SqlServer)
+    builder.setDialect(mgr.ServerDialect.SqlServer)
 
     builder.addColumn('id').asInt().isPrimaryKey(1)
     builder.addColumn('col_a').asInt().notNull()
