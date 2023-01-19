@@ -22,14 +22,20 @@
             ]
         ],
         'variables': {
-          "openssl_fips" : "0",
-          'msodbcsql%': 'msodbcsql17',
+          'openssl_fips' : '0',
+          # look for include files for these versions - taking top first priority
+          'msodbsver%': [
+            'msodbcsql18',
+            'msodbcsql17'
+          ],
           'ext%': '.cpp',
           'homebrew%': '/opt/homebrew/lib/libodbc.a',
           'unixlocalodbc%': '-l/usr/local/odbc',
           'linuxodbc%': '-lodbc',
           'winodbc%': 'odbc32',
-          'linkdir%': '/usr/local/lib /opt/homebrew/lib /usr/lib .'
+          # pick up libodbc from somwhere - note the ms driver is loaded dynamicaly via odbc, no 
+          # link dependency is added
+          'linkdir%': '/usr/local/lib /usr/local/ssl/lib64/ /opt/homebrew/lib /home/linuxbrew/.linuxbrew/lib/ /usr/lib .'
         },
 
   'targets': [
@@ -37,9 +43,30 @@
       'target_name': 'sqlserverv8',
 
       'variables': {
+      # Set the target variable only if it is not passed in by prebuild 
         'target%': '<!(node -e "console.log(process.versions.node)")', 
-          # Set the target variable only if it is not passed in by prebuild 
-        
+      # which folders are available for include eg. 
+      # /opt/microsoft/msodbcsql18/include/ /opt/microsoft/msodbcsql17/include/ 
+     'msodbc_include_folders%': [
+          "<!@(node -p \""
+              "'<(msodbsver)'"
+              ".split(' ')"
+              ".map(x => ["
+                "'/opt/microsoft/' + x +'/include/'"
+                " ,"
+                "'/usr/local/opt/' + x + '/include/'"
+                 " ,"
+                "'/usr/local/opt/' + x + '/include/' + x + '/'"
+                " ,"
+                "'/opt/homebrew/include/' + x + '/'"
+                "])"
+              ".flatMap(y => y)"
+              ".filter(z => require('fs').existsSync(z))"
+              ".join(' ')"
+            "\")"
+        ],       
+        # set fo
+        # the link folders available -L/usr/local/lib -L/usr/lib -L. 
         'link_path%': [
           "<!@(node -p \""
               "'<(linkdir)'"
@@ -51,6 +78,7 @@
               "\")"
           ], # set for macos based on silicon
 
+        # enumerate the cpp src files rather than name them.
         'fileset%': [
           "<!@(node -p \""
             "require('fs')"
@@ -77,7 +105,7 @@
       'actions': [
           {
             'action_name': 'print_variables',
-            'action': ['echo', 'cflags_cpp <(cflags_cpp) | arch: <(arch) | link_path: <(link_path) | msodbcsql <(msodbcsql) | fileset <(fileset)'],
+            'action': ['echo', 'cflags_cpp <(cflags_cpp) | arch: <(arch) | link_path: <(link_path) | msodbc_include_folders <(msodbc_include_folders) | fileset <(fileset)'],
             'inputs': [],
             'outputs': [
               "<!@(node -p \"'<(fileset)'.split(' ')[0]\")"
@@ -129,8 +157,8 @@
             ],
             'cflags_cc': ['<(cflags_cpp)'], 
             'include_dirs': [
-              '/usr/include/',
-              '/opt/microsoft/<(msodbcsql)/include/',
+               "<!@(node -p \"'<(msodbc_include_folders)'.split(' ').join(' ')\")",
+              '/usr/include/'
             ],
         }],
         ['OS=="mac"', {
@@ -149,10 +177,8 @@
               'CLANG_CXX_LANGUAGE_STANDARD': '<(cflags_cpp)'
             },
             'include_dirs': [
-              '/usr/local/opt/<(msodbcsql)/include/',
-              '/usr/local/opt/<(msodbcsql)/include/<(msodbcsql)/',
+              "<!@(node -p \"'<(msodbc_include_folders)'.split(' ').join(' ')\")",
               '/opt/homebrew/include',
-              '/opt/homebrew/include/<(msodbcsql)',
               '/usr/local/include/',
             ],
         }],

@@ -12,7 +12,7 @@ namespace mssql
 
 	Local<Value> UnbindOperation::CreateCompletionArg()
 	{
-		auto a = _statement->unbind_params();
+		const auto a = _statement->unbind_params();
 		const auto ret = a->Clone();
 		return ret;
 	}

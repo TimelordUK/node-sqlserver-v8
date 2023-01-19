@@ -58,10 +58,11 @@ namespace mssql {
 		return floor(days);
 	}
 
-	void TimestampColumn::milliseconds_from_timestamp(TIMESTAMP_STRUCT const & ts, const int32_t tz_offset)
+	void TimestampColumn::milliseconds_from_timestamp(TIMESTAMP_STRUCT const & ts, const SQLSMALLINT tz_offset)
 	{
-		const auto tzhrs = tz_offset / 60;
-		const auto tzmins = tz_offset % 60;
+		const SQLSMALLINT c = 60;
+		const SQLSMALLINT tzhrs = tz_offset / c;
+		const SQLSMALLINT tzmins = tz_offset % c;
 
 		SQL_SS_TIMESTAMPOFFSET_STRUCT time_struct;
 		time_struct.year = ts.year;

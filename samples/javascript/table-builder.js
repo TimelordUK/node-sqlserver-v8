@@ -35,14 +35,18 @@ async function builder () {
     const t = builder.toTable()
     const dropTypeSql = builder.dropTypeSql
     const userTypeSql = builder.userTypeTableSql
+    const dropTvpInsert = builder.dropInsertTvpProcedure
+    const tvpInserterSql = builder.insertProcedureTvpSql
     const typeName = `${tableName}Type`
     const selectSql = `DECLARE @test AS ${typeName};
       INSERT INTO @test SELECT * FROM ?;
       SELECT * FROM @test`
 
+    console.log(dropTvpInsert)
+    await connection.promises.query(dropTvpInsert)
     const create = builder.createTableSql
-    const drop = builder.dropTableSql
-    console.log(drop)
+    const dropTable = builder.dropTableSql
+    console.log(dropTable)
     await builder.drop()
     console.log(create)
     await builder.create()
@@ -50,6 +54,8 @@ async function builder () {
     await connection.promises.query(dropTypeSql)
     console.log(userTypeSql)
     await connection.promises.query(userTypeSql)
+    console.log(tvpInserterSql)
+    await connection.promises.query(tvpInserterSql)
     const table = t.asTableType()
 
     await connection.promises.getUserTypeTable('dbo.' + typeName)
