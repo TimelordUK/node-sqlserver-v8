@@ -60,9 +60,13 @@ async function run () {
   console.log(`run with ${connectionString}`)
   const conn = env.theConnection
 
+  const query = env.connectionString.includes('Oracle')
+    ? 'select * FROM user_tables'
+    : 'select top 5 * from master..syscolumns'
+
   for (let i = 0; i < 5; ++i) {
     const d = new Date()
-    const rows = await dispatch(conn, 'select top 5 * from master..syscolumns')
+    const rows = await dispatch(conn, query)
     const elapsed = new Date() - d
     console.log(`${rows.length} rows returned elapsed ${elapsed}`)
   }

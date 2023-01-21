@@ -202,7 +202,7 @@ class TestEnv {
   decodeDriver () {
     const myRegexp = /Driver=\{(.*?)}.*$/g
     const match = myRegexp.exec(this.connectionString)
-    return match[1]
+    return match != null && match.length > 1 ? match[1] : ''
   }
 
   decodeSqlServerVersion () {
