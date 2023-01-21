@@ -268,11 +268,11 @@ async function run () {
   await env.open()
   await pool()
   await builder()
-  await procAsSelect()
-  await procOuput()
-  await proc()
-  await q1()
-  await promised()
+  // await procAsSelect()
+  // await procOuput()
+  // await proc()
+  // await q1()
+  // await promised()
   await env.close()
 }
 
