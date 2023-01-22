@@ -540,6 +540,7 @@ declare module 'msnodesqlv8' {
       asDateTime: () => TableColumn
       asTimestamp: () => TableColumn
       asNVarChar2: (length: number) => TableColumn
+      asVarChar2: (length: number) => TableColumn
       asRaw: (length: number) => TableColumn
       /**
          * nominate column as 'datetimeoffset'

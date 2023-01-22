@@ -37,18 +37,19 @@ class ConnectionTester {
     function makeOne (i) {
       return {
         id: i,
-        col_a: i % 2 === 0 ? 'Y' : 'N',
-        col_b: `str_${i}`,
-        col_c: `str_${i}`,
-        col_d: `str_${i}`,
-        col_e: i + 1,
-        col_f: i + 1,
-        col_g: Math.pow(10, -(i % 5)),
-        col_h: (i + 1) / (10 + (i * 5)),
-        col_i: Math.pow(10, (i % 3)),
-        col_j: new Date(),
-        col_k: new Date(),
-        col_l: Buffer.from('0123456789abcdef', 'hex')
+        col_0: i % 2 === 0 ? 'Y' : 'N',
+        col_1: `str_${i}`,
+        col_2: `str_${i}`,
+        col_3: `str_${i}`,
+        col_4: `str_${i}`,
+        col_5: i + 1,
+        col_6: i + 1,
+        col_7: Math.pow(10, -(i % 5)),
+        col_8: (i + 1) / (10 + (i * 5)),
+        col_9: Math.pow(10, (i % 3)),
+        col_10: new Date(),
+        col_11: new Date(),
+        col_12: Buffer.from('0123456789abcdef', 'hex')
       }
     }
 
@@ -61,18 +62,25 @@ class ConnectionTester {
       builder.setDialect(mgr.ServerDialect.Oracle)
 
       builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asChar(1)
-      builder.addColumn('col_b').asVarChar(100)
-      builder.addColumn('col_c').asNVarChar2(100)
-      builder.addColumn('col_d').asNChar(10)
-      builder.addColumn('col_e').asInt()
-      builder.addColumn('col_f').asSmallInt()
-      builder.addColumn('col_g').asNumeric(23, 18)
-      builder.addColumn('col_h').asDecimal(23, 18)
-      builder.addColumn('col_i').asReal()
-      builder.addColumn('col_j').asDate()
-      builder.addColumn('col_k').asTimestamp()
-      builder.addColumn('col_l').asRaw(100)
+
+      let colid = 0
+      builder.addColumn(`col_${colid++}`).asChar(1)
+      builder.addColumn(`col_${colid++}`).asVarChar(100)
+      builder.addColumn(`col_${colid++}`).asNVarChar2(100)
+      builder.addColumn(`col_${colid++}`).asVarChar2(100)
+      builder.addColumn(`col_${colid++}`).asNChar(10)
+
+      builder.addColumn(`col_${colid++}`).asInt()
+      builder.addColumn(`col_${colid++}`).asSmallInt()
+
+      builder.addColumn(`col_${colid++}`).asNumeric(23, 18)
+      builder.addColumn(`col_${colid++}`).asDecimal(23, 18)
+      builder.addColumn(`col_${colid++}`).asReal()
+
+      builder.addColumn(`col_${colid++}`).asDate()
+      builder.addColumn(`col_${colid++}`).asTimestamp()
+
+      builder.addColumn(`col_${colid++}`).asRaw(100)
       const vec = []
       for (let i = 0; i < rows; ++i) {
         vec.push(makeOne(i))
