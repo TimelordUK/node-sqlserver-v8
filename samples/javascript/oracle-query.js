@@ -38,15 +38,16 @@ class ConnectionTester {
       return {
         id: i,
         col_a: i * 5,
-        col_b: `str_${i}`,
-        col_c: i + 1,
-        col_d: i - 1,
-        col_e: `str2_${i}`,
+        col_b: i % 2 === 0 ? 'Y' : 'N',
+        col_c: `str_${i}`,
+        col_d: i + 1,
+        col_e: i + 1,
         col_f: Math.pow(10, -(i % 5)),
         col_g: (i + 1) / (10 + (i * 5)),
-        col_h: i % 2 === 0 ? 'Y' : 'N',
+        col_h: Math.pow(10, (i % 3)),
         col_i: new Date(),
-        col_j: new Date()
+        col_j: new Date(),
+        col_k: Buffer.from('0123456789abcdef', 'hex')
       }
     }
 
@@ -57,17 +58,19 @@ class ConnectionTester {
       const mgr = connection.tableMgr()
       const builder = mgr.makeBuilder(tableName, null, 'Node')
       builder.setDialect(mgr.ServerDialect.Oracle)
+
       builder.addColumn('id').asInt().isPrimaryKey(1)
-      builder.addColumn('col_a').asInt()
-      builder.addColumn('col_b').asVarChar(100)
-      builder.addColumn('col_c').asInt()
+      builder.addColumn('col_a').asVarChar(100)
+      builder.addColumn('col_b').asChar(1)
+      builder.addColumn('col_c').asNChar(10)
       builder.addColumn('col_d').asInt()
-      builder.addColumn('col_e').asVarChar(100)
+      builder.addColumn('col_e').asSmallInt()
       builder.addColumn('col_f').asNumeric(23, 18)
       builder.addColumn('col_g').asDecimal(23, 18)
-      builder.addColumn('col_h').asChar(1)
+      builder.addColumn('col_h').asReal()
       builder.addColumn('col_i').asDate()
       builder.addColumn('col_j').asTimestamp()
+      builder.addColumn('col_k').asRaw(100)
       const vec = []
       for (let i = 0; i < rows; ++i) {
         vec.push(makeOne(i))
