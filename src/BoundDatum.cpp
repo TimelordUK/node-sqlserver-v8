@@ -2236,6 +2236,11 @@ namespace mssql
 			sql_type_timestamp(pp);
 			break;
 
+		case SQL_TIMESTAMP:
+			sql_type_timestamp(pp);
+			sql_type = SQL_TIMESTAMP;
+			break;
+
 		case SQL_DATETIME:
 			sql_type_timestamp(pp);
 			break;

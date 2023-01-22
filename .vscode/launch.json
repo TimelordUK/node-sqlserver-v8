@@ -25,8 +25,9 @@
             "request": "launch",
             "program": "C:/Program Files/nodejs/node.exe",
             "args": [
-                "./node_modules/mocha/bin/mocha.js",
-               "test/table-builder"
+                "./samples/javascript/oracle-query.js"
+               // "./node_modules/mocha/bin/mocha.js",
+               // "test/table-builder"
                // "simple-demo"
                // "runtest", "-k", "linux", 
                // "runtest", "-k", "linux",
