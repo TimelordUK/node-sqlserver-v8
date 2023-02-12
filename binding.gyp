@@ -59,6 +59,8 @@
                 "'/usr/local/opt/' + x + '/include/' + x + '/'"
                 " ,"
                 "'/opt/homebrew/include/' + x + '/'"
+                " ,"
+                "'/home/linuxbrew/.linuxbrew/include/'"
                 "])"
               ".flatMap(y => y)"
               ".filter(z => require('fs').existsSync(z))"
