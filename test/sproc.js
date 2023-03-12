@@ -48,7 +48,69 @@ describe('sproc', function () {
     })
   }
 
-  it('connection: call proc that returns length of input string and decribes itself in results', async function handler () {
+  const spName = 'test_sp_missing'
+
+  const def2 = `alter PROCEDURE [dbo].[${spName}](@P1 TINYINT)
+  AS
+  BEGIN
+      SET NOCOUNT ON;
+  
+      CREATE TABLE #Dummy (ID TINYINT);
+      
+      SELECT 'First query' 'FirstQuery';
+  
+      SELECT 'Second query' 'SecondQuery';
+  
+      PRINT 'That was second; now we do third';
+  
+      SELECT 'Third query' 'ThirdQuery';
+  
+      SELECT 'Fourth query' 'FourthQuery';
+  
+      SELECT 'Fifth query' 'FifthQuery';
+  
+      INSERT INTO #Dummy(ID)
+      SELECT SUM(n) 'ID'
+      FROM(VALUES(1),
+                 (NULL)) x(n);
+  
+      INSERT INTO #Dummy(ID)
+      SELECT SUM(n) 'ID'
+      FROM(VALUES(1),
+                 (NULL)) x(n);
+  
+      SELECT 'Sixth query' 'SixthQuery';
+  
+      SELECT 'Seventh query' 'SeventhQuery';
+  
+      RAISERROR('I am warning you!', 10, 1);
+  
+      SELECT 'Eighth query' 'EighthQuery';
+  END
+  `
+
+  it('connection: call proc ensure no drop sets', async function handler () {
+    await env.promisedCreate(spName, def2)
+    const res = await env.theConnection.promises.callProc(spName, [10])
+    expect(res.results.length).is.equal(8)
+
+    expect(res.results[0][0].FirstQuery).is.equal('First query')
+    expect(res.results[1][0].SecondQuery).is.equal('Second query')
+    expect(res.results[2][0].ThirdQuery).is.equal('Third query')
+    expect(res.results[3][0].FourthQuery).is.equal('Fourth query')
+    expect(res.results[4][0].FifthQuery).is.equal('Fifth query')
+    expect(res.results[5][0].SixthQuery).is.equal('Sixth query')
+    expect(res.results[6][0].SeventhQuery).is.equal('Seventh query')
+    expect(res.results[7][0].EighthQuery).is.equal('Eighth query')
+
+    expect(res.info[0]).is.equal('That was second; now we do third')
+    expect(res.info[1]).is.equal('Warning: Null value is eliminated by an aggregate or other SET operation.')
+    expect(res.info[2]).is.equal('I am warning you!')
+
+    // console.log(JSON.stringify(res, null, 4))
+  })
+
+  it('connection: call proc that returns length of input string and describes itself in results', async function handler () {
     await t25(env.theConnection, 1)
   })
 
