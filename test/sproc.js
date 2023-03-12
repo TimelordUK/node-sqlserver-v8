@@ -48,6 +48,64 @@ describe('sproc', function () {
     })
   }
 
+  it('connection: call proc 2 null warnings', async function handler () {
+    const spName = 'test_sp_missing'
+    const tableName = '#Dummy'
+
+    const def2 = `alter PROCEDURE [dbo].[${spName}](@P1 TINYINT)
+  AS
+  BEGIN
+      SET NOCOUNT ON;
+  
+      CREATE TABLE ${tableName} (ID TINYINT);
+  
+      INSERT INTO ${tableName}(ID)
+      SELECT SUM(n) 'ID'
+      FROM(VALUES(1),
+                 (NULL)) x(n);
+                 
+      INSERT INTO ${tableName}(ID)
+      SELECT SUM(n) 'ID'
+      FROM(VALUES(1),
+                 (NULL)) x(n);
+                 
+      select * from ${tableName}; 
+  END
+  `
+
+    await env.promisedCreate(spName, def2)
+    const expectedMeta = [
+      [
+        {
+          size: 3,
+          name: 'ID',
+          nullable: true,
+          type: 'number',
+          sqlType: 'tinyint'
+        }
+      ]
+    ]
+    const expectedResults = [
+      [
+        {
+          ID: 1
+        },
+        {
+          ID: 1
+        }
+      ]
+    ]
+    const expectedInfo = [
+      'Warning: Null value is eliminated by an aggregate or other SET operation.'
+    ]
+    console.log('CALL')
+    const res = await env.theConnection.promises.callProc(spName, [])
+    console.log('RET')
+    expect(res.meta).is.deep.equal(expectedMeta)
+    expect(res.results).is.deep.equal(expectedResults)
+    expect(res.info).is.deep.equal(expectedInfo)
+  })
+
   it('connection: call proc 2 null warnings 2 prints', async function handler () {
     const spName = 'test_sp_missing'
     const tableName = '#Dummy'
