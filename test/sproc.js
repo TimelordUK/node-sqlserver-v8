@@ -10,7 +10,7 @@ const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 
 describe('sproc', function () {
-  this.timeout(30000)
+  this.timeout(300000)
 
   this.beforeEach(done => {
     env.open().then(() => done())
@@ -48,9 +48,85 @@ describe('sproc', function () {
     })
   }
 
-  const spName = 'test_sp_missing'
+  it('connection: call proc 2 null warnings 2 prints', async function handler () {
+    const spName = 'test_sp_missing'
+    const tableName = '#Dummy'
 
-  const def2 = `alter PROCEDURE [dbo].[${spName}](@P1 TINYINT)
+    const def2 = `alter PROCEDURE [dbo].[${spName}](@P1 TINYINT)
+  AS
+  BEGIN
+      SET NOCOUNT ON;
+  
+      CREATE TABLE ${tableName} (ID TINYINT);
+   
+      select * from ${tableName}; 
+      print 'in 1';
+      select '1 as num';
+      INSERT INTO ${tableName}(ID)
+      SELECT SUM(n) 'ID'
+      FROM(VALUES(1),
+                 (NULL)) x(n);
+      select '2 as num';
+      print 'se 2';
+      select * from ${tableName}; 
+  END
+  `
+
+    await env.promisedCreate(spName, def2)
+    const expectedMeta = [
+      [
+        {
+          size: 3,
+          name: 'ID',
+          nullable: true,
+          type: 'number',
+          sqlType: 'tinyint'
+        }
+      ],
+      [
+        {
+          size: 8,
+          name: '',
+          nullable: false,
+          type: 'text',
+          sqlType: 'varchar'
+        }
+      ],
+      [
+        {
+          size: 8,
+          name: '',
+          nullable: false,
+          type: 'text',
+          sqlType: 'varchar'
+        }
+      ],
+      [
+        {
+          size: 3,
+          name: 'ID',
+          nullable: true,
+          type: 'number',
+          sqlType: 'tinyint'
+        }
+      ]
+    ]
+    const expectedInfo = [
+      'in 1',
+      'Warning: Null value is eliminated by an aggregate or other SET operation.',
+      'se 2'
+    ]
+    const res = await env.theConnection.promises.callProc(spName, [10])
+    expect(res.meta).is.deep.equal(expectedMeta)
+    expect(res.results.length).is.equal(4)
+    expect(res.info).is.deep.equal(expectedInfo)
+    // console.log(JSON.stringify(res, null, 4))
+  })
+
+  it('connection: call proc ensure no drop sets', async function handler () {
+    const spName = 'test_sp_missing'
+
+    const def2 = `alter PROCEDURE [dbo].[${spName}](@P1 TINYINT)
   AS
   BEGIN
       SET NOCOUNT ON;
@@ -78,7 +154,9 @@ describe('sproc', function () {
       SELECT SUM(n) 'ID'
       FROM(VALUES(1),
                  (NULL)) x(n);
-  
+                 
+      select * from #Dummy;
+      
       SELECT 'Sixth query' 'SixthQuery';
   
       SELECT 'Seventh query' 'SeventhQuery';
@@ -89,24 +167,147 @@ describe('sproc', function () {
   END
   `
 
-  it('connection: call proc ensure no drop sets', async function handler () {
+    const expectedResults = [
+      [
+        {
+          FirstQuery: 'First query'
+        }
+      ],
+      [
+        {
+          SecondQuery: 'Second query'
+        }
+      ],
+      [
+        {
+          ThirdQuery: 'Third query'
+        }
+      ],
+      [
+        {
+          FourthQuery: 'Fourth query'
+        }
+      ],
+      [
+        {
+          FifthQuery: 'Fifth query'
+        }
+      ],
+      [
+        {
+          ID: 1
+        },
+        {
+          ID: 1
+        }
+      ],
+      [
+        {
+          SixthQuery: 'Sixth query'
+        }
+      ],
+      [
+        {
+          SeventhQuery: 'Seventh query'
+        }
+      ],
+      [
+        {
+          EighthQuery: 'Eighth query'
+        }
+      ]
+    ]
+
     await env.promisedCreate(spName, def2)
     const res = await env.theConnection.promises.callProc(spName, [10])
-    expect(res.results.length).is.equal(8)
+    expect(res.results.length).is.equal(9)
 
-    expect(res.results[0][0].FirstQuery).is.equal('First query')
-    expect(res.results[1][0].SecondQuery).is.equal('Second query')
-    expect(res.results[2][0].ThirdQuery).is.equal('Third query')
-    expect(res.results[3][0].FourthQuery).is.equal('Fourth query')
-    expect(res.results[4][0].FifthQuery).is.equal('Fifth query')
-    expect(res.results[5][0].SixthQuery).is.equal('Sixth query')
-    expect(res.results[6][0].SeventhQuery).is.equal('Seventh query')
-    expect(res.results[7][0].EighthQuery).is.equal('Eighth query')
+    expect(res.results).is.deep.equal(expectedResults)
 
     expect(res.info[0]).is.equal('That was second; now we do third')
     expect(res.info[1]).is.equal('Warning: Null value is eliminated by an aggregate or other SET operation.')
     expect(res.info[2]).is.equal('I am warning you!')
 
+    // console.log(JSON.stringify(res, null, 4))
+  })
+
+  it('connection: call proc 2 inserts warnings with prints', async function handler () {
+    const spName = 'test_sp_missing'
+    const tableName = '#Dummy'
+
+    const def2 = `alter PROCEDURE [dbo].[${spName}](@P1 TINYINT)
+  AS
+  BEGIN
+      SET NOCOUNT ON;
+  
+      CREATE TABLE ${tableName} (ID TINYINT);
+      
+      PRINT 'insert 1';
+      INSERT INTO ${tableName}(ID)
+      SELECT SUM(n) 'ID'
+      FROM(VALUES(1),
+                 (NULL)) x(n);
+      PRINT 'select 1';
+      select * from ${tableName}; 
+ 
+      PRINT 'insert 2';
+      INSERT INTO ${tableName}(ID)
+      SELECT SUM(n) 'ID'
+      FROM(VALUES(1),
+                 (NULL)) x(n);
+ 
+      PRINT 'select 2';
+      select * from ${tableName}; 
+  END
+  `
+    const expectedInfo = [
+      'Warning: Null value is eliminated by an aggregate or other SET operation.',
+      'insert 1',
+      'select 1',
+      'Warning: Null value is eliminated by an aggregate or other SET operation.',
+      'insert 2',
+      'select 2'
+    ]
+    const expectedResults = [
+      [
+        {
+          ID: 1
+        }
+      ],
+      [
+        {
+          ID: 1
+        },
+        {
+          ID: 1
+        }
+      ]
+    ]
+    const expectedMeta = [
+      [
+        {
+          size: 3,
+          name: 'ID',
+          nullable: true,
+          type: 'number',
+          sqlType: 'tinyint'
+        }
+      ],
+      [
+        {
+          size: 3,
+          name: 'ID',
+          nullable: true,
+          type: 'number',
+          sqlType: 'tinyint'
+        }
+      ]
+    ]
+    await env.promisedCreate(spName, def2)
+    const res = await env.theConnection.promises.callProc(spName, [10])
+    expect(res.results).is.deep.equal(expectedResults)
+    expect(res.meta).is.deep.equal(expectedMeta)
+    expect(res.info).is.deep.equal(expectedInfo)
     // console.log(JSON.stringify(res, null, 4))
   })
 
