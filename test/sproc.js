@@ -10,7 +10,7 @@ const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 
 describe('sproc', function () {
-  this.timeout(300000)
+  this.timeout(30000)
 
   this.beforeEach(done => {
     env.open().then(() => done())
@@ -98,9 +98,7 @@ describe('sproc', function () {
     const expectedInfo = [
       'Warning: Null value is eliminated by an aggregate or other SET operation.'
     ]
-    console.log('CALL')
     const res = await env.theConnection.promises.callProc(spName, [])
-    console.log('RET')
     expect(res.meta).is.deep.equal(expectedMeta)
     expect(res.results).is.deep.equal(expectedResults)
     expect(res.info).is.deep.equal(expectedInfo)
