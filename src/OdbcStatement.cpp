@@ -1857,6 +1857,7 @@ namespace mssql
 		{
 			// fprintf(stderr, "SQL_NO_DATA\n");
 			_endOfResults = true;
+			_resultset->_end_of_rows = true;
 			if (_prepared)
 			{
 				SQLCloseCursor(statement);
