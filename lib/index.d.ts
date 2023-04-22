@@ -1,6 +1,3 @@
-/**
- * Created by admin on 19/01/2017.
- */
 
 declare module 'msnodesqlv8' {
     type sqlJsColumnType = string | boolean | Date | number | Buffer
@@ -1544,25 +1541,25 @@ declare module 'msnodesqlv8' {
 
       Real: (v: number) => ConcreteColumnType
 
-      WVarChar: (v: String) => ConcreteColumnType
+      WVarChar: (v: string) => ConcreteColumnType
 
-      Char: (v: String) => ConcreteColumnType
+      Char: (v: string) => ConcreteColumnType
 
-      VarChar: (v: String) => ConcreteColumnType
+      VarChar: (v: string) => ConcreteColumnType
 
-      NChar: (v: String) => ConcreteColumnType
+      NChar: (v: string) => ConcreteColumnType
 
-      NVarChar: (v: String) => ConcreteColumnType
+      NVarChar: (v: string) => ConcreteColumnType
 
-      Text: (v: String) => ConcreteColumnType
+      Text: (v: string) => ConcreteColumnType
 
-      NText: (v: String) => ConcreteColumnType
+      NText: (v: string) => ConcreteColumnType
 
-      Xml: (v: String) => ConcreteColumnType
+      Xml: (v: string) => ConcreteColumnType
 
       WLongVarChar: (v: string) => ConcreteColumnType
 
-      UniqueIdentifier: (v: String) => ConcreteColumnType
+      UniqueIdentifier: (v: string) => ConcreteColumnType
 
       VarBinary: (v: Buffer) => ConcreteColumnType
 
