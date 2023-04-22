@@ -964,91 +964,91 @@ declare module 'msnodesqlv8' {
     }
 
     interface BulkTableMgr {
-      promises: BulkTableMgrPromises
-      getSummary: () => BulkMgrSummary
-      /**
-         * utiity method returning a SQL definition of an equivalent user table type
-         * that can be used for a TVP stored proc param type allowing bulk select
-         * and insert into the table to which this type represents.
-         * @param name
-         */
-      asUserType: (name?: string) => string
       asTableType: (name?: string) => Table
+      /**
+       * utiity method returning a SQL definition of an equivalent user table type
+       * that can be used for a TVP stored proc param type allowing bulk select
+       * and insert into the table to which this type represents.
+       * @param name
+       */
+      asUserType: (name?: string) => string
+      deleteRows: (rows: object[], cb: StatusCb) => void
+      getAssignableColumns: () => TableColumn[]
 
       // the driver will be sent column types in table rather than deriving from data
       // necessary to switch on for TZ adjustment i.e. for non UTC times sent
-      useMetaType: (yn: boolean) => void
-
-      selectRows: (cols: object[], cb: BulkSelectCb) => void
-
-      insertRows: (rows: object[], cb: StatusCb) => void
-
-      deleteRows: (rows: object[], cb: StatusCb) => void
-
-      updateRows: (rows: object[], cb: StatusCb) => void
-
-      setBatchSize: (size: number) => void
-
-      setWhereCols: (cols: object[]) => void
-
-      setUpdateCols: (cols: object[]) => void
-
-      getInsertSignature: () => string
-
-      getSelectSignature: () => string
-
-      getDeleteSignature: () => string
-
-      getUpdateSignature: () => string
+      /**
+       * current driver version used by driver to dynamically load library for bcp
+       * @returns the driver version
+       */
+      getBcpVersion: () => number
 
       getColumnsByName: () => TableColumn[]
 
-      getWhereColumns: () => TableColumn[]
+      getDeleteSignature: () => string
 
-      getUpdateColumns: () => TableColumn[]
+      getInsertSignature: () => string
 
       getPrimaryColumns: () => TableColumn[]
 
-      getAssignableColumns: () => TableColumn[]
+      getSelectSignature: () => string
+
+      getSummary: () => BulkMgrSummary
+
+      getUpdateColumns: () => TableColumn[]
+
+      getUpdateSignature: () => string
 
       /**
-         * effects insert only - use bcp for increased bcp speed
-         * only works on ODBC Driver 17/18 for SQL Server
-         * bcp will bind block of memory and copy rows into that block
-         * and send to server - resulting in fast insert speeds.
-         * @param bcp - switch insert bcp on/off
-         */
-      setUseBcp: (bcp: boolean) => void
-
-      /**
-         * get current bcp mode ie. is bcp on
-         * @returns bcp status
-         */
+       * get current bcp mode ie. is bcp on
+       * @returns bcp status
+       */
       getUseBcp: () => boolean
 
+      getWhereColumns: () => TableColumn[]
+
+      insertRows: (rows: object[], cb: StatusCb) => void
+
       /**
-         * bcp requires the ms odbc driver to be dynamically loaded as it is not part of
-         * ODBC. If driver default as below is used, this method is automatically called
-         * with 17, 18 (numeric). The default value is 17. If using an alias or DCN entry
-         * may need to manually call this method.
-         * "UAT18": "Driver={ODBC Driver 18 for SQL Server}; Server= ... Database=node;TrustServerCertificate=yes;",
-         * "UAT": "Driver={ODBC Driver 17 for SQL Server}; Server= ...  Database=node",
-         * @param v the driver version used for bcp
-         */
+       * for a set of objects extract primary key fields only
+       * @param vec - array of objects
+       * @returns - array of objects containing only primary keys
+       */
+      keys: (vec: object[]) => object[]
+
+      promises: BulkTableMgrPromises
+
+      selectRows: (cols: object[], cb: BulkSelectCb) => void
+
+      setBatchSize: (size: number) => void
+
+      /**
+       * bcp requires the ms odbc driver to be dynamically loaded as it is not part of
+       * ODBC. If driver default as below is used, this method is automatically called
+       * with 17, 18 (numeric). The default value is 17. If using an alias or DCN entry
+       * may need to manually call this method.
+       * "UAT18": "Driver={ODBC Driver 18 for SQL Server}; Server= ... Database=node;TrustServerCertificate=yes;",
+       * "UAT": "Driver={ODBC Driver 17 for SQL Server}; Server= ...  Database=node",
+       * @param v the driver version used for bcp
+       */
       setBcpVersion: (v: number) => void
 
-      /**
-         * current driver version used by driver to dynamically load library for bcp
-         * @returns the driver version
-         */
-      getBcpVersion: () => number
+      setUpdateCols: (cols: object[]) => void
 
       /**
-         * for a set of objects extract primary key fields only
-         * @param vec - array of objects
-         * @returns - array of objects containing only primary keys
-         */
-      keys: (vec: object[]) => object[]
+       * effects insert only - use bcp for increased bcp speed
+       * only works on ODBC Driver 17/18 for SQL Server
+       * bcp will bind block of memory and copy rows into that block
+       * and send to server - resulting in fast insert speeds.
+       * @param bcp - switch insert bcp on/off
+       */
+      setUseBcp: (bcp: boolean) => void
+
+      setWhereCols: (cols: object[]) => void
+
+      updateRows: (rows: object[], cb: StatusCb) => void
+
+      useMetaType: (yn: boolean) => void
     }
 
     interface TableValueColumn {
