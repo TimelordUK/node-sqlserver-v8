@@ -1,18 +1,18 @@
 
-declare module 'msnodesqlv8' {
-    type sqlJsColumnType = string | boolean | Date | number | Buffer
-    type sqlRecordType = Record<string | number, sqlJsColumnType>
-    type sqlObjectType = sqlRecordType | object | any
-    type sqlQueryParamType = sqlJsColumnType | sqlJsColumnType[] | ConcreteColumnType | ConcreteColumnType[] | TvpParam
-    type sqlPoolEventType = MessageCb | PoolStatusRecordCb | PoolOptionsEventCb | StatusCb
-    type sqlQueryEventType = SubmittedEventCb | ColumnEventCb | EventColumnCb | StatusCb | RowEventCb | MetaEventCb | RowCountEventCb
-    type sqlProcParamType = sqlObjectType | sqlQueryParamType
-    type sqlQueryType = string | QueryDescription
-    type sqlConnectType = string | ConnectDescription
-    type sqlColumnResultsType = sqlObjectType | sqlJsColumnType | any
-    type sqlBulkType = sqlObjectType[]
+declare module 'msnodesqlv8/types' {
+   type sqlJsColumnType = string | boolean | Date | number | Buffer
+   type sqlRecordType = Record<string | number, sqlJsColumnType>
+   type sqlObjectType = sqlRecordType | object | any
+   type sqlQueryParamType = sqlJsColumnType | sqlJsColumnType[] | ConcreteColumnType | ConcreteColumnType[] | TvpParam
+   type sqlPoolEventType = MessageCb | PoolStatusRecordCb | PoolOptionsEventCb | StatusCb
+   type sqlQueryEventType = SubmittedEventCb | ColumnEventCb | EventColumnCb | StatusCb | RowEventCb | MetaEventCb | RowCountEventCb
+   type sqlProcParamType = sqlObjectType | sqlQueryParamType
+   type sqlQueryType = string | QueryDescription
+   type sqlConnectType = string | ConnectDescription
+   type sqlColumnResultsType = sqlObjectType | sqlJsColumnType | any
+   type sqlBulkType = sqlObjectType[]
 
-    interface GetSetUTC {
+   interface GetSetUTC {
       /**
          * used to switch on date conversion for date columns from database to UTC
          * @param utc flag to turn conversio on or off
@@ -23,9 +23,9 @@ declare module 'msnodesqlv8' {
          * @returns a flag for conversion.
          */
       getUseUTC: () => boolean
-    }
+   }
 
-    interface SubmitQuery {
+   interface SubmitQuery {
       /**
          * submit query on an open connection with optional paramteters that will be bound
          * by native driver. Can either use an event stream driven mechanism by subscribing to
@@ -44,9 +44,9 @@ declare module 'msnodesqlv8' {
          */
       query: (sqlOrQuery: sqlQueryType, paramsOrCb?: sqlQueryParamType[] | QueryCb, cb?: QueryCb) => Query
       queryRaw: (sqlOrQuery: sqlQueryType, paramsOrCb?: sqlQueryParamType[] | QueryRawCb, cb?: QueryRawCb) => Query
-    }
+   }
 
-    interface AggregatorPromises {
+   interface AggregatorPromises {
       /**
          *
          * @param sql the textual query to submit
@@ -66,9 +66,9 @@ declare module 'msnodesqlv8' {
          * @returns a promise to return all results from all compounded queries submitted
          */
       callProc: (name: string, params?: sqlProcParamType, options?: QueryAggregatorOptions) => Promise<QueryAggregatorResults>
-    }
+   }
 
-    interface SqlClientPromises {
+   interface SqlClientPromises {
       /**
          * adhoc query where connection is opened, query submitted, results fetched, connection closed
          * and results returned as a promide completed when connection is closed.
@@ -99,25 +99,25 @@ declare module 'msnodesqlv8' {
          * @returns - a promise to await for a new connection to the database
          */
       open: (conn_str: sqlConnectType) => Promise<Connection>
-    }
+   }
 
-    interface UserTypeColumnType {
+   interface UserTypeColumnType {
       offset: number
       declaration: string
       length: number
-    }
-    interface UserTypeColumn {
+   }
+   interface UserTypeColumn {
       name: string
       userType: string
       scale: number
       precision: number
       type: UserTypeColumnType
-    }
+   }
 
-    /***
-     * representation of a table user type used in TVP bulk operations
-     */
-    interface Table {
+   /***
+    * representation of a table user type used in TVP bulk operations
+    */
+   interface Table {
       /**
          * of the table to which this type refers.
          */
@@ -136,16 +136,16 @@ declare module 'msnodesqlv8' {
          * @param vec the object array to be converted into rows.
          */
       addRowsFromObjects: (vec: sqlObjectType[]) => void
-    }
-    interface SqlServerVersion {
+   }
+   interface SqlServerVersion {
       MajorVersion: number
       ProductLevel: string
       Edition: string
       ProductVersion: string
       Cat: string
-    }
+   }
 
-    interface PoolOptions {
+   interface PoolOptions {
       /**
          * minimum number of connections to keep open even when quiet.
          */
@@ -182,9 +182,9 @@ declare module 'msnodesqlv8' {
          * the connection string used for each connection opened in pool
          */
       connectionString: string
-    }
+   }
 
-    interface QueryAggregatorResults {
+   interface QueryAggregatorResults {
       /**
          * the local date when this aggregation query was started
          */
@@ -268,9 +268,9 @@ declare module 'msnodesqlv8' {
          * the sql submitted to server producing these results.
          */
       sql: string
-    }
+   }
 
-    interface QueryAggregatorOptions {
+   interface QueryAggregatorOptions {
       /**
          * default 0 i.e. no timeout - else force query to cancel early
          */
@@ -283,9 +283,9 @@ declare module 'msnodesqlv8' {
          * replace meta empty col name with Column0, Column1
          */
       replaceEmptyColumnNames?: boolean
-    }
+   }
 
-    interface PoolPromises extends AggregatorPromises {
+   interface PoolPromises extends AggregatorPromises {
       /**
          * open connections to database and ready pool for use.
          * @returns promise returning pool when connections are up.
@@ -316,9 +316,9 @@ declare module 'msnodesqlv8' {
          * @returns promise of bound proc to call.
          */
       getProc: (name: string) => Promise<ProcedureDefinition>
-    }
+   }
 
-    class Pool implements GetSetUTC, SubmitQuery {
+   class Pool implements GetSetUTC, SubmitQuery {
       constructor (poolOptions: PoolOptions)
       promises: PoolPromises
       getUseUTC (): boolean
@@ -351,9 +351,9 @@ declare module 'msnodesqlv8' {
           * @param cb callback related to event subscribed
           */
       on (event: string, cb?: sqlPoolEventType): void
-    }
+   }
 
-    interface TableColumn {
+   interface TableColumn {
       /**
          * unique name for this column unique for this table
          */
@@ -615,9 +615,9 @@ declare module 'msnodesqlv8' {
          * @returns this column instance for fluent calls
          */
       null: () => TableColumn
-    }
+   }
 
-    interface ConnectionPromises extends AggregatorPromises {
+   interface ConnectionPromises extends AggregatorPromises {
       prepare: (sql: sqlQueryType) => Promise<PreparedStatement>
       getTable: (name: string) => Promise<BulkTableMgr>
       getProc: (name: string) => Promise<ProcedureDefinition>
@@ -650,9 +650,9 @@ declare module 'msnodesqlv8' {
          * @returns promise to await for transaction to be rolled back
          */
       rollback: () => Promise<void>
-    }
+   }
 
-    interface Connection extends GetSetUTC, SubmitQuery {
+   interface Connection extends GetSetUTC, SubmitQuery {
       /**
          * collection of promises to close connection, get a proc, table, prepare a query
          * and transaction management.
@@ -728,9 +728,9 @@ declare module 'msnodesqlv8' {
          * for queries.
          */
       isClosed: () => boolean
-    }
+   }
 
-    interface QueryPromises {
+   interface QueryPromises {
       /**
          * promise to cancel current executing query - will wait
          * for 'free' event where resources related to query have
@@ -744,9 +744,9 @@ declare module 'msnodesqlv8' {
          * is canceled. Any other error will reject promise.
          */
       cancel: (timeout?: number) => Promise<Error>
-    }
+   }
 
-    interface Query {
+   interface Query {
       promises: QueryPromises
       /**
          * subscribe for an event relating to query progress where events are
@@ -814,14 +814,14 @@ declare module 'msnodesqlv8' {
          * @returns flag indicating if the query is paused.
          */
       isPaused: () => boolean
-    }
+   }
 
-    interface ConnectDescription {
+   interface ConnectDescription {
       conn_str: string
       conn_timeout?: number
-    }
+   }
 
-    interface QueryDescription {
+   interface QueryDescription {
       /**
          * the sql to submit to server to execute.
          */
@@ -840,17 +840,17 @@ declare module 'msnodesqlv8' {
          * query will not prepare and return an error.
          */
       max_prepared_column_size?: number
-    }
+   }
 
-    interface Meta {
+   interface Meta {
       name: string
       nullable: boolean
       size: number
       sqlType: string
       type: string
-    }
+   }
 
-    interface Error {
+   interface Error {
       code?: number
       severity?: number
       lineNumber?: number
@@ -858,14 +858,14 @@ declare module 'msnodesqlv8' {
       procName?: string
       message: string
       sqlstate?: string
-    }
+   }
 
-    interface RawData {
+   interface RawData {
       meta: Meta[]
       rows: sqlJsColumnType[][]
-    }
+   }
 
-    interface PoolStatusRecord {
+   interface PoolStatusRecord {
       time: Date
       parked: number
       idle: number
@@ -876,59 +876,59 @@ declare module 'msnodesqlv8' {
       activity: string
       op: string
       lastSql?: string
-    }
+   }
 
-    type PoolStatusRecordCb = (status: PoolStatusRecord) => void
+   type PoolStatusRecordCb = (status: PoolStatusRecord) => void
 
-    type QueryDescriptionCb = (description: QueryDescription) => void
+   type QueryDescriptionCb = (description: QueryDescription) => void
 
-    type MessageCb = (msg: string) => void
+   type MessageCb = (msg: string) => void
 
-    type PoolOptionsEventCb = (options: PoolOptions) => void
+   type PoolOptionsEventCb = (options: PoolOptions) => void
 
-    type PoolOpenCb = (err: Error, options: PoolOptions) => void
+   type PoolOpenCb = (err: Error, options: PoolOptions) => void
 
-    type SimpleCb = () => void
+   type SimpleCb = () => void
 
-    type TableCb = (err: Error, table: Table) => void
+   type TableCb = (err: Error, table: Table) => void
 
-    type BindCb = (cb: BulkTableMgr) => void
+   type BindCb = (cb: BulkTableMgr) => void
 
-    type GetTableCb = (err: Error, table: BulkTableMgr) => void
+   type GetTableCb = (err: Error, table: BulkTableMgr) => void
 
-    type OpenCb = (err: Error, connection: Connection) => void
+   type OpenCb = (err: Error, connection: Connection) => void
 
-    type QueryCb = (err?: Error, rows?: sqlObjectType[], more?: boolean) => void
+   type QueryCb = (err?: Error, rows?: sqlObjectType[], more?: boolean) => void
 
-    type CallProcedureCb = (err?: Error, rows?: sqlObjectType[], outputParams?: sqlJsColumnType[]) => void
+   type CallProcedureCb = (err?: Error, rows?: sqlObjectType[], outputParams?: sqlJsColumnType[]) => void
 
-    type QueryRawCb = (err?: Error, raw?: RawData, more?: boolean) => void
+   type QueryRawCb = (err?: Error, raw?: RawData, more?: boolean) => void
 
-    type StatusCb = (err?: Error) => void
+   type StatusCb = (err?: Error) => void
 
-    type PrepareCb = (err?: Error, statement?: PreparedStatement) => void
+   type PrepareCb = (err?: Error, statement?: PreparedStatement) => void
 
-    type MetaEventCb = (meta: Meta[]) => void
+   type MetaEventCb = (meta: Meta[]) => void
 
-    type RowCountEventCb = (rowcount: number) => void
+   type RowCountEventCb = (rowcount: number) => void
 
-    type RowEventCb = (row: number) => void
+   type RowEventCb = (row: number) => void
 
-    type ColumnEventCb = (index: number, data: sqlJsColumnType) => void
+   type ColumnEventCb = (index: number, data: sqlJsColumnType) => void
 
-    type SubmittedEventCb = (description: QueryDescription) => void
+   type SubmittedEventCb = (description: QueryDescription) => void
 
-    type EventColumnCb = (colIndex: number, data: any, more: boolean) => void
+   type EventColumnCb = (colIndex: number, data: any, more: boolean) => void
 
-    type BulkSelectCb = (err: Error, rows: sqlObjectType[]) => void
+   type BulkSelectCb = (err: Error, rows: sqlObjectType[]) => void
 
-    type DescribeProcedureCb = (description?: ProcedureSummary) => void
+   type DescribeProcedureCb = (description?: ProcedureSummary) => void
 
-    type GetProcedureCb = (procedure?: ProcedureDefinition) => void
+   type GetProcedureCb = (procedure?: ProcedureDefinition) => void
 
-    type GetProcCb = (err: Error, procedure?: ProcedureDefinition) => void
+   type GetProcCb = (err: Error, procedure?: ProcedureDefinition) => void
 
-    interface BulkMgrSummary {
+   interface BulkMgrSummary {
       insertSignature: string
       whereColumns: TableColumn[]
       updateColumns: TableColumn[]
@@ -938,9 +938,9 @@ declare module 'msnodesqlv8' {
       columns: TableColumn[]
       primaryColumns: TableColumn[]
       assignableColumns: TableColumn
-    }
+   }
 
-    interface BulkTableMgrPromises {
+   interface BulkTableMgrPromises {
       select: (cols: sqlObjectType[]) => Promise<sqlObjectType[]>
       /**
          * promise to submit rows to database where each row is represented
@@ -958,9 +958,9 @@ declare module 'msnodesqlv8' {
       delete: (rows: sqlBulkType) => Promise<void>
 
       update: (rows: sqlBulkType) => Promise<void>
-    }
+   }
 
-    interface BulkTableMgr {
+   interface BulkTableMgr {
       asTableType: (name?: string) => Table
       /**
        * utiity method returning a SQL definition of an equivalent user table type
@@ -1046,9 +1046,9 @@ declare module 'msnodesqlv8' {
       updateRows: (rows: object[], cb: StatusCb) => void
 
       useMetaType: (yn: boolean) => void
-    }
+   }
 
-    interface TableValueColumn {
+   interface TableValueColumn {
 
       name: string
       column_id: number
@@ -1061,9 +1061,9 @@ declare module 'msnodesqlv8' {
       precision: number
       scale: number
       collation: number
-    }
+   }
 
-    interface ProcedureParam {
+   interface ProcedureParam {
       is_user_defined?: boolean
       is_output: boolean
       name: string
@@ -1075,9 +1075,9 @@ declare module 'msnodesqlv8' {
       update_signature: string
       collation: any
       val: sqlProcParamType
-    }
+   }
 
-    interface TvpParam extends ProcedureParam {
+   interface TvpParam extends ProcedureParam {
       /**
          * the strongly typed parameters relating to the table type
          * repremted as rows i.e. array of values per column type
@@ -1101,13 +1101,13 @@ declare module 'msnodesqlv8' {
          * schema to which table belongs
          */
       schema: string
-    }
+   }
 
-    interface ProcedureDefinitionPromises {
+   interface ProcedureDefinitionPromises {
       call: (params?: sqlProcParamType, options?: QueryAggregatorOptions) => Promise<QueryAggregatorResults>
-    }
+   }
 
-    interface ProcedureDefinition {
+   interface ProcedureDefinition {
       promises: ProcedureDefinitionPromises
       setDialect: (dialect: ServerDialect) => boolean
       /**
@@ -1139,34 +1139,34 @@ declare module 'msnodesqlv8' {
          *  the name of the bound stored procedure
          */
       getName: () => string
-    }
+   }
 
-    interface ProcedureSummary {
+   interface ProcedureSummary {
       select: string
       signature: string
       summary: string
       params: ProcedureParam[]
-    }
+   }
 
-    /*
-      user define and register a proc e.g. for Sybase Adaptive Server
+   /*
+     user define and register a proc e.g. for Sybase Adaptive Server
 
-       @last_name varchar(30) = "knowles",
-      @first_name varchar(18) = "beyonce" as
-      select @first_name + " " + @last_name `
+      @last_name varchar(30) = "knowles",
+     @first_name varchar(18) = "beyonce" as
+     select @first_name + " " + @last_name `
 
-      const connection = await sql.promises.open(connectionString)
-      const pm = connection.procedureMgr()
-      const spName = 'tmp_name_concat'
-      const params = [
-        pm.makeParam(spName, '@last_name', 'varchar', 30, false),
-        pm.makeParam(spName, '@first_name', 'varchar', 18, false)
-      ]
+     const connection = await sql.promises.open(connectionString)
+     const pm = connection.procedureMgr()
+     const spName = 'tmp_name_concat'
+     const params = [
+       pm.makeParam(spName, '@last_name', 'varchar', 30, false),
+       pm.makeParam(spName, '@first_name', 'varchar', 18, false)
+     ]
 
-      pm.addProc(spName, params)
-    */
+     pm.addProc(spName, params)
+   */
 
-    interface ProcedureManager {
+   interface ProcedureManager {
       /**
          * @deprecated Please use `getProc` - this is not promise friendly
          */
@@ -1202,9 +1202,9 @@ declare module 'msnodesqlv8' {
       setPolling: (poll: boolean) => void
 
       ServerDialect: ServerDialect
-    }
+   }
 
-    interface ProcedureParamMeta {
+   interface ProcedureParamMeta {
       proc_name: string
       type_desc: string
       object_id: number
@@ -1217,32 +1217,32 @@ declare module 'msnodesqlv8' {
       order: number
       collation: string
       is_user_defined: boolean
-    }
+   }
 
-    /*
-            const tableName = 'tmpTableBuilder'
-            const mgr = theConnection.tableMgr()
-            const builder = mgr.makeBuilder(tableName, 'scratch')
+   /*
+           const tableName = 'tmpTableBuilder'
+           const mgr = theConnection.tableMgr()
+           const builder = mgr.makeBuilder(tableName, 'scratch')
 
-            builder.addColumn('id').asInt().isPrimaryKey(1)
-            builder.addColumn('col_a').asInt()
-            builder.addColumn('col_b').asVarChar(100)
-            builder.addColumn('col_c').asInt()
-            builder.addColumn('col_d').asInt()
-            builder.addColumn('col_e').asVarChar(100)
+           builder.addColumn('id').asInt().isPrimaryKey(1)
+           builder.addColumn('col_a').asInt()
+           builder.addColumn('col_b').asVarChar(100)
+           builder.addColumn('col_c').asInt()
+           builder.addColumn('col_d').asInt()
+           builder.addColumn('col_e').asVarChar(100)
 
-            const table = builder.toTable()
-            await builder.drop()
-            await builder.create()
-            const vec = getVec(20)
-    */
+           const table = builder.toTable()
+           await builder.drop()
+           await builder.create()
+           const vec = getVec(20)
+   */
 
-    interface ServerDialect {
+   interface ServerDialect {
       SqlServer: ServerDialect
       Sybase: ServerDialect
-    }
+   }
 
-    interface TableBuilder {
+   interface TableBuilder {
       // can use utility method e.g. builder.addColumn('col_b').asVarChar(100)
       /**
          * e.g. builder.addColumn('col_b').asVarChar(100)
@@ -1385,15 +1385,15 @@ declare module 'msnodesqlv8' {
          * drop the insertProcedureTvpSql proc if it exists
          */
       dropInsertTvpProcedure: string
-    }
+   }
 
-    interface TableManagerPromises {
+   interface TableManagerPromises {
       getTable: (name: string) => Promise<BulkTableMgr>
 
       getUserTypeTable: (name: string) => Promise<Table>
-    }
+   }
 
-    interface TableManager {
+   interface TableManager {
       promises: TableManagerPromises
 
       /**
@@ -1411,9 +1411,9 @@ declare module 'msnodesqlv8' {
       ServerDialect: ServerDialect
 
       makeColumn: (tableName: string, tableSchema: string, position: number, columnName: string, paramType: string, paramLength: number, isPrimaryKey: number) => TableColumn
-    }
+   }
 
-    interface PreparedPromises {
+   interface PreparedPromises {
       /**
          * free the unmanaged resources representing the prepared statement
          * @returns promise to await for statement to be released on server
@@ -1427,9 +1427,9 @@ declare module 'msnodesqlv8' {
          * @returns promise to await for query results
          */
       query: (params?: any[], options?: QueryAggregatorOptions) => Promise<QueryAggregatorResults>
-    }
+   }
 
-    interface PreparedStatement {
+   interface PreparedStatement {
       /**
          * promises to query and free the statement
          */
@@ -1465,9 +1465,9 @@ declare module 'msnodesqlv8' {
          * @returns array of bound parameter information describing parameter.
          */
       getMeta: () => Meta[]
-    }
+   }
 
-    interface ConcreteColumnType {
+   interface ConcreteColumnType {
       /***
          * the ODBC type which will be used to bind parameter. If this is not
          * provided, the value is used to guess what binding should be used.
@@ -1499,9 +1499,9 @@ declare module 'msnodesqlv8' {
          */
       isTime2: boolean
       fraction?: number
-    }
+   }
 
-    enum QueryEvent {
+   enum QueryEvent {
       meta = 'meta',
       column = 'column',
       partial = 'partial',
@@ -1514,9 +1514,9 @@ declare module 'msnodesqlv8' {
       closed = 'closed',
       submitted = 'submitted',
       output = 'output'
-    }
+   }
 
-    interface UserConversion {
+   interface UserConversion {
       Bit: (v: number) => ConcreteColumnType
 
       BigInt: (v: number) => ConcreteColumnType
@@ -1580,47 +1580,47 @@ declare module 'msnodesqlv8' {
       SmallDateTime: (v: Date) => ConcreteColumnType
 
       DateTimeOffset: (v: Date) => ConcreteColumnType
-    }
+   }
 
-    interface NativeReadColumnInfo {
+   interface NativeReadColumnInfo {
       end_rows: boolean
       data: any[]
-    }
+   }
 
-    interface NativeNextResultInfo {
+   interface NativeNextResultInfo {
       endOfResults: boolean
       endOfRows: boolean
       preRowCount: boolean
       rowCount: number
       meta?: Meta[]
-    }
+   }
 
-    type NativeReadColumnCb = (err: Error, results: NativeReadColumnInfo) => void
+   type NativeReadColumnCb = (err: Error, results: NativeReadColumnInfo) => void
 
-    type NativeNextResultCb = (err: Error, results: NativeNextResultInfo) => void
+   type NativeNextResultCb = (err: Error, results: NativeNextResultInfo) => void
 
-    type NativeUnbindCb = (err: Error, outputVector: any[]) => void
+   type NativeUnbindCb = (err: Error, outputVector: any[]) => void
 
-    type NativePrepareCb = (err: Error, meta: Meta[]) => void
+   type NativePrepareCb = (err: Error, meta: Meta[]) => void
 
-    type NativeQueryCb = (err: Error, results: NativeNextResultInfo, more: boolean) => void
+   type NativeQueryCb = (err: Error, results: NativeNextResultInfo, more: boolean) => void
 
-    interface NativeQueryObj {
+   interface NativeQueryObj {
       query_str: string
       numeric_string?: boolean
       query_polling?: boolean
       query_timeout?: number
       max_prepared_column_size?: number
-    }
+   }
 
-    interface NativeCustomBinding {
+   interface NativeCustomBinding {
       precision?: number
       scale?: number
       offset?: number
       value?: sqlQueryParamType
-    }
+   }
 
-    interface NativeParam {
+   interface NativeParam {
       is_user_defined?: boolean
       type_id?: number
       schema?: string
@@ -1634,9 +1634,9 @@ declare module 'msnodesqlv8' {
       is_output?: boolean
       name?: string
       value?: sqlQueryParamType
-    }
+   }
 
-    class NativeConnection {
+   class NativeConnection {
       constructor ()
 
       readColumn (queryId: number, rowBatchSize: number, cb: NativeReadColumnCb): void
@@ -1664,9 +1664,9 @@ declare module 'msnodesqlv8' {
       query (qid: number, queryObj: NativeQueryObj, params: NativeParam[], cb: NativeQueryCb): void
 
       callProcedure (qid: number, procedure: string, params: NativeParam[], cb: NativeQueryCb): void
-    }
+   }
 
-    interface SqlClient extends UserConversion {
+   interface SqlClient extends UserConversion {
       /**
          * helper promises allowing async style await to open connection or
          * submit adhoc query on a temporarily opened connection.
@@ -1721,9 +1721,11 @@ declare module 'msnodesqlv8' {
          * @returns the Table Value Parameter instance ready for use in query
          */
       TvpFromTable: (table: Table) => TvpParam
-    }
-
-    const sql: SqlClient
+   }
 }
-export * from 'msnodesqlv8'
-export { sql as default } from 'msnodesqlv8'
+
+declare module 'msnodesqlv8' {
+   import { SqlClient } from 'msnodesqlv8/types'
+   const sql: SqlClient
+   export = sql
+}

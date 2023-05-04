@@ -1,7 +1,7 @@
 import {
   Connection, Error, PreparedStatement,
   Query, SqlClient, QueryDescription, BulkTableMgr, Meta
-} from 'msnodesqlv8'
+} from 'msnodesqlv8/types'
 
 const sql: SqlClient = require('msnodesqlv8')
 const supp = require('./demo-support')

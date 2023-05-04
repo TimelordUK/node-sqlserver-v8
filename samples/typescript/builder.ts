@@ -1,4 +1,4 @@
-import { SqlClient, TableBuilder, Connection, TableManager, BulkTableMgr } from 'msnodesqlv8'
+import { SqlClient, TableBuilder, Connection, TableManager, BulkTableMgr } from 'msnodesqlv8/types'
 
 export const sql: SqlClient = require('msnodesqlv8')
 
