@@ -53,11 +53,8 @@ for:
       build_script:
         - sh: node --version
         - sh: npm run build
-        - sh: if [ "$nodejs_version" -ge "18" ]; then
-        - sh:   cd $clone_folder
-        - sh:   tool/openssl.sh
-        - sh: fi
-
+        - sh: $clone_folder/tool/install_openssl.sh
+    
       test_script:
         - sh: "sleep 4"
         - sh: "./node_modules/.bin/env-cmd -e appv-ubuntu ./node_modules/.bin/mocha 2>&1"
