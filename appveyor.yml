@@ -53,7 +53,7 @@ for:
       build_script:
         - sh: node --version
         - sh: npm run build
-        - sh: $clone_folder/tool/install_openssl.sh
+        - sh: /home/appveyor/projects/node_modules/msnodesqlv8/tool/install_openssl.sh
     
       test_script:
         - sh: "sleep 4"
