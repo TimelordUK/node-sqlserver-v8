@@ -1,6 +1,6 @@
-$clone_folder=$HOME/projects/node_modules/msnodesqlv8
-echo "node version $nodejs_version"
+$FOLDER=/home/appveyor/projects/node_modules/msnodesqlv8
+echo "node version $nodejs_version folder $FOLDER"
  if [ "$nodejs_version" -ge "18" ]; then
-    cd $clone_folder
+    cd $FOLDER
     tool/openssl.sh
 fi
