@@ -115,7 +115,7 @@ See our [JavaScript sample app](samples/javascript) for more details.
 Typings are included in the package. Simply import the types you need, and require the module to get started:
 
 ```typescript
-import { SqlClient } from "msnodesqlv8";
+import { SqlClient } from "msnodesqlv8/types";
 
 const sql: SqlClient = require("msnodesqlv8");
 

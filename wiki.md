@@ -535,7 +535,7 @@ for example replace app\components\Home.tsx with following to show module runnin
 import React from 'react';
 import { Link } from 'react-router-dom';
 import routes from '../constants/routes.json';
-import { SqlClient } from 'msnodesqlv8';
+import { SqlClient } from 'msnodesqlv8/types';
 import styles from './Home.css';
 
 export default function Home(): JSX.Element {

@@ -1,4 +1,4 @@
-import { SqlClient, Error } from 'msnodesqlv8'
+import { SqlClient, Error } from 'msnodesqlv8/types'
 const sql: SqlClient = require('msnodesqlv8')
 
 const connectionString = 'Driver={SQL Server Native Client 11.0};Server=(localdb)\\node;Database=AdventureWorks2019;Trusted_Connection=yes;'

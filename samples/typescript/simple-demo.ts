@@ -1,4 +1,4 @@
-import { SqlClient } from 'msnodesqlv8'
+import { SqlClient } from 'msnodesqlv8/types'
 
 const sql: SqlClient = require('msnodesqlv8')
 

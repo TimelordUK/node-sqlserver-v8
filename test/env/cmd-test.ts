@@ -5,7 +5,7 @@ import {
   ProcedureManager,
   PreparedStatement,
   QueryCb
-} from 'msnodesqlv8'
+} from 'msnodesqlv8/types'
 
 const sql: SqlClient = require('msnodesqlv8')
 const { TestEnv } = require('../../../test/env/test-env')
