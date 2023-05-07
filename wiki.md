@@ -6,9 +6,10 @@
 [![npm](https://img.shields.io/npm/dm/msnodesqlv8.svg)]
 [![npm](https://img.shields.io/npm/dy/msnodesqlv8.svg)]
 
-1. [What is this library for?](#what-is-library-for)
+1. [What is this library for?](#what-is-library-for)``
 1. [What Platforms does it support?](#supported-platforms)
 1. [Running on macOS (darwin)](#darwin)
+1. [Linux troubleshoot SEGV (Ubuntu, Debian)](#ubuntu)
 1. [Sequelize Compatibility?](#sequelize-compatibility)
 1. [Is the library production quality?](#production-quality)
 1. [How to install](#install)
@@ -186,6 +187,194 @@ on.submitted select top 750 * from master..syscolumns;
 on.done
 [7] (rowCount 750): last dispatch 50 rows
 done
+```
+
+## Ubuntu ##
+
+for reference check [appveyor](https://ci.appveyor.com/project/TimelordUK/node-sqlserver-v8/branch/master) - note for Node 18, openssl 3.2 is installed to allow Node 18 and this driver to work.
+
+you must have odbc installed on system
+
+```sh
+odbcinst -j
+```
+
+```txt
+unixODBC 2.3.11
+DRIVERS............: /etc/odbcinst.ini
+SYSTEM DATA SOURCES: /etc/odbc.ini
+FILE DATA SOURCES..: /etc/ODBCDataSources
+USER DATA SOURCES..: /home/me/.odbc.ini
+SQLULEN Size.......: 8
+SQLLEN Size........: 8
+SQLSETPOSIROW Size.: 8
+```
+
+```sh
+sudo apt install unixodbc
+sudo apt install odbcinst
+```
+
+ensure ms driver [odbc](https://learn.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-ver16&tabs=ubuntu18-install%2Calpine17-install%2Cdebian8-install%2Credhat7-13-install%2Crhel7-offline) is installed.
+
+check you now have ODBC entry
+
+```sh
+cat /etc/odbcinst.ini
+```
+
+```txt
+[ODBC Driver 18 for SQL Server]
+Description=Microsoft ODBC Driver 18 for SQL Server
+Driver=/opt/microsoft/msodbcsql18/lib64/libmsodbcsql-18.2.so.1.1
+UsageCount=1
+```
+
+check which platform version you are running on
+
+
+```sh
+lsb_release -rs
+```
+
+using appveyor as reference providing above are installed, then using Node 12,14,16 should work - appveyor test is not doing anything other than install the git branch and run.
+
+if you see a SEGV running node versions <= 16 then try node 18,20.  If one of these versions work you very likely have open ssl 3 installed
+
+this has been set up below to show the problem
+
+```sh
+me@asuszen:~/dev/js/sql/v8/node_modules/msnodesqlv8$ node samples/javascript/streaming.js
+Segmentation fault
+me@asuszen:~/dev/js/sql/v8/node_modules/msnodesqlv8$ node --version
+v16.16.0
+```
+
+look at the stack trace to see the violation occurs in openssl
+
+```sh 
+  gdb node
+  (gdb) run samples/javascript/streaming
+Starting program: /home/me/.nvm/versions/node/v16.16.0/bin/node samples/javascript/streaming
+warning: File "/usr/lib/x86_64-linux-gnu/libthread_db-1.0.so" auto-loading has been declined by your `auto-load safe-path' set to "$debugdir:$
+```
+
+from within gdb having seen SEGV
+```sh
+Thread 8 "node" received signal SIGSEGV, Segmentation fault.
+[Switching to LWP 31950]
+0x000000000179eaf0 in EC_GROUP_order_bits ()
+(gdb) bt
+```
+
+```txt
+Thread 8 "node" received signal SIGSEGV, Segmentation fault.
+[Switching to LWP 31950]
+0x000000000179eaf0 in EC_GROUP_order_bits ()
+(gdb) bt
+#0  0x000000000179eaf0 in EC_GROUP_order_bits ()
+#1  0x00007fffd631f60d in engine_unlocked_init () from /usr/local/ssl/lib64/libcrypto.so.3
+#2  0x00007fffd631f796 in ENGINE_init () from /usr/local/ssl/lib64/libcrypto.so.3
+#3  0x00007fffd636b7e7 in EVP_PKEY_CTX_new_from_pkey () from /usr/local/ssl/lib64/libcrypto.so.3
+#4  0x00007fffd66f325b in ssl_setup_sigalgs () from /usr/local/ssl/lib64/libssl.so.3
+#5  0x00007fffd66e858f in SSL_CTX_new_ex () from /usr/local/ssl/lib64/libssl.so.3
+#6  0x00007ffff44aa4f7 in ?? () from /opt/microsoft/msodbcsql18/lib64/libmsodbcsql-18.2.so.1.1
+#7  0x00007ffff44a50d2 in ?? () from /opt/microsoft/msodbcsql18/lib64/libmsodbcsql-18.2.so.1.1
+#8  0x00007ffff44a599b in ?? () from /opt/microsoft/msodbcsql18/lib64/libmsodbcsql-18.2.so.1.1
+#9  0x00007ffff446f5cf in ?? () from /opt/microsoft/msodbcsql18/lib64/libmsodbcsql-18.2.so.1.1
+#10 0x00007ffff446c8cc in ?? () from /opt/microsoft/msodbcsql18/lib64/libmsodbcsql-18.2.so.1.1
+#11 0x00007ffff446d675 in ?? () from /opt/microsoft/msodbcsql18/lib64/libmsodbcsql-18.2.so.1.1
+#12 0x00007ffff446dcd4 in ?? () from /opt/microsoft/msodbcsql18/lib64/libmsodbcsql-18.2.so.1.1
+#13 0x00007ffff43db23c in ?? () from /opt/microsoft/msodbcsql18/lib64/libmsodbcsql-18.2.so.1.1
+#14 0x00007ffff440ff8e in ?? () from /opt/microsoft/msodbcsql18/lib64/libmsodbcsql-18.2.so.1.1
+#15 0x00007ffff43d9dfa in SQLDriverConnectW () from /opt/microsoft/msodbcsql18/lib64/libmsodbcsql-18.2.so.1.1
+#16 0x00007ffff4f952fd in SQLDriverConnectW (hdbc=0x7fffd0000bf0, hwnd=0x0, conn_str_in=0x4bb2e70, len_conn_str_in=110, conn_str_out=0x0,
+    conn_str_out_max=0, ptr_conn_str_out=0x0, driver_completion=0) at SQLDriverConnectW.c:776
+#17 0x00007ffff521f003 in mssql::OdbcConnection::try_open(std::shared_ptr<std::vector<unsigned short, std::allocator<unsigned short> > >, int) () from /home/me/dev/js/sql/v8/node_modules/msnodesqlv8/build/Release/sqlserverv8.node
+#18 0x00007ffff5231ffe in mssql::OpenOperation::TryInvokeOdbc() ()
+   from /home/me/dev/js/sql/v8/node_modules/msnodesqlv8/build/Release/sqlserverv8.node
+#19 0x00007ffff522411f in mssql::OdbcOperation::Execute() ()
+   from /home/me/dev/js/sql/v8/node_modules/msnodesqlv8/build/Release/sqlserverv8.node
+#20 0x0000000001560704 in worker (arg=0x0) at ../deps/uv/src/threadpool.c:122
+#21 0x00007ffff7c51609 in start_thread () from /lib/x86_64-linux-gnu/libpthread.so.0
+#22 0x00007ffff7b76133 in clone () from /lib/x86_64-linux-gnu/libc.so.6
+```
+
+note in this case where ssl is being loaded from
+
+```sh
+/usr/local/ssl/lib64/
+```
+
+```sh
+me@asuszen:~/dev/js/sql/v8/node_modules/msnodesqlv8$ /usr/local/ssl/bin/openssl version
+OpenSSL 3.2.0-dev  (Library: OpenSSL 3.2.0-dev )
+```
+
+we are running Node 16 on Ubuntu with ms driver ODBC 18 and openssl 3.2. This is not a compatible configuration.  In this case we must use node 18 or 20 to fix the problem.
+
+```sh
+me@asuszen:~/dev/js/sql/v8/node_modules/msnodesqlv8$ nvm use 20.0.0
+Now using node v20.0.0 (npm v9.6.4)
+me@asuszen:~/dev/js/sql/v8/node_modules/msnodesqlv8$ npm install
+
+> msnodesqlv8@3.1.0 install
+> prebuild-install || node-gyp rebuild
+
+
+up to date, audited 877 packages in 4s
+
+132 packages are looking for funding
+  run `npm fund` for details
+
+8 vulnerabilities (3 moderate, 5 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+me@asuszen:~/dev/js/sql/v8/node_modules/msnodesqlv8$ node samples/javascript/streaming.js
+run with Driver={ODBC Driver 18 for SQL Server}; Server=DESKTOP-VIUCH90;UID=linux; PWD=linux; Database=node;Encrypt=no;
+submitted select top 5 * from master..syscolumns elapsed 2 ms
+meta = [
+    {
+        "size": 128,
+        "name": "name",
+        "nullable": true,
+        "type": "text",
+        "sqlType": "nvarchar"
+    },
+```
+
+if you see SEGV whilst using Node 18, 20 you must either downgrade Node to version 16 assuming you are not on openssl 3.2 - or you must install openssl 3.2 which is done for app veyor Node 18 testing on Ubuntu.
+
+you can use script used by appveyor as a reference.  Note this script requires su access for install.
+
+```sh
+# note this should only be run by SA after checking dependencies for other systems
+tool/openssl.sh
+```
+
+this script will download openssl from git, configure, build and install it to /usr/local/ssl/bin/openssl.   Note it is important to install to its own folder under local should you wish to easily reverse the effects of install.
+
+should you encounter a problem e.g. another previkously working system now fails with new installed version of openssl then remove the ld dependency 
+
+```sh
+me@asuszen:~/dev/js/sql/v8/node_modules/msnodesqlv8$ cd /etc/ld.so.conf.d/
+me@asuszen:/etc/ld.so.conf.d$ ls
+fakeroot-x86_64-linux-gnu.conf  ld.wsl.conf  libc.conf  openssl-3.2.0.1s.conf  x86_64-linux-gnu.conf
+me@asuszen:/etc/ld.so.conf.d$ sudo mv openssl-3.2.0.1s.conf ~/
+[sudo] password for me:
+me@asuszen:/etc/ld.so.conf.d$ sudo ldconfig -v > /dev/null
+/sbin/ldconfig.real: Can't stat /usr/local/lib/x86_64-linux-gnu: No such file or directory
+/sbin/ldconfig.real: Path `/usr/lib/x86_64-linux-gnu' given more than once
+/sbin/ldconfig.real: Path `/lib/x86_64-linux-gnu' given more than once
+/sbin/ldconfig.real: Path `/usr/lib/x86_64-linux-gnu' given more than once
+/sbin/ldconfig.real: Path `/usr/lib' given more than once
+/sbin/ldconfig.real: /lib/x86_64-linux-gnu/ld-2.31.so is the dynamic linker, ignoring
 ```
 
 ## Sequelize Compatibility ##
@@ -2695,12 +2884,8 @@ using the connection details provided by info, you should be able to connect to 
 
 Note, some useful commands are shown [here](http://stackoverflow.com/questions/14153509/how-to-prevent-sql-server-localdb-auto-shutdown) which prevents your local SQL server instance from shutting down within a period of inactivity.  Very useful during periods of development.
 
-if you wish to run a unit test through an IDE, then for example install visual studio code mocha sidebar and run a test
+if you wish to run a unit test through an IDE, then the following file :-
 
-ensure the connection details are added in .env-cmdrc
-
-the test are run with command line mocha
-
-npm run test. Look at the setup for appveyor.yml as an example.
+[runtest.js](https://github.com/TimelordUK/node-sqlserver-v8/blob/master/runtest.js)
 
 provides a simple start point.  Simply change the test run to whichever you require such as [query.js](https://github.com/TimelordUK/node-sqlserver-v8/blob/master/test/query.js)
