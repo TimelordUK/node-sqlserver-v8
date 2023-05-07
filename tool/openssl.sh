@@ -1,8 +1,3 @@
-if ! [[ "18.04 20.04 22.04" == *"$(lsb_release -rs)"* ]];
-then
-    echo "Ubuntu $(lsb_release -rs) is not currently supported.";
-    exit;
-fi
 mkdir -p $HOME/projects
 cd $HOME/projects
 git clone https://github.com/openssl/openssl.git
