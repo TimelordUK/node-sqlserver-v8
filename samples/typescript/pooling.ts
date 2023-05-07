@@ -1,4 +1,4 @@
-import { Error, PoolOptions, Query, SqlClient, QueryDescription, Pool, PoolStatusRecord } from 'msnodesqlv8'
+import { Error, PoolOptions, Query, SqlClient, QueryDescription, Pool, PoolStatusRecord } from 'msnodesqlv8/types'
 
 const sql: SqlClient = require('msnodesqlv8')
 
