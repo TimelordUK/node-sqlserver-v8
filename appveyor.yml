@@ -1,9 +1,9 @@
 version: 1.0.{build}
 
 image:
-  - Visual Studio 2022
   - Ubuntu2004
-
+  - Visual Studio 2022
+ 
 platform: 
   - x64
 
@@ -13,11 +13,6 @@ environment:
     - nodejs_version: 16
     - nodejs_version: 14
     - nodejs_version: 12
-
-matrix:
-  exclude:
-    - image: Ubuntu2004
-      nodejs_version: 18
 
 test_script:
   - ps: Write-Host "msnodesqlv8 test script"    
@@ -50,9 +45,6 @@ for:
           - image: Ubuntu2004
             platform: x64
 
-        except:
-          - nodejs_version: 18
-
       services:
         - mssql
 
@@ -61,7 +53,9 @@ for:
       build_script:
         - sh: node --version
         - sh: npm run build
-
+        - sh: chmod 775 /home/appveyor/projects/node_modules/msnodesqlv8/tool/install_openssl.sh
+        - sh: /home/appveyor/projects/node_modules/msnodesqlv8/tool/install_openssl.sh
+    
       test_script:
         - sh: "sleep 4"
         - sh: "./node_modules/.bin/env-cmd -e appv-ubuntu ./node_modules/.bin/mocha 2>&1"

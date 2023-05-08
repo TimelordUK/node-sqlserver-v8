@@ -6,21 +6,21 @@
 [![npm](https://img.shields.io/npm/dm/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
 [![npm](https://img.shields.io/npm/dy/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
 
+1. *new* Ubuntu, Debian Node v18, v20 - install openssl 3.2 see WIKI
 1. *new* support always on encryption via tables and procedures.
-1. *new* support Node v19
-1. *new* support electron v22
+1. *new* support Node v20
+1. *new* support electron v24
 1. *new* read numerics as strings - see WIKI
-1. *new* Sybase Adaptive Server Enterprise support - see WIKI
-1. *new* thread worker support - see WIKI
-1. *new* manually register tables
-1. *new* manually register and execute stored proc
-1. *new* promises - see WIKI
-1. *new* fast BCP bulk insert - see WIKI
-1. *new* 64 bit x64 Linux
-1. *new* includes MacOS support
-1. *new* use object based named params for proc calls - see WIKI
-1. *new* improved local date support via bound tables
-
+1. Sybase Adaptive Server Enterprise support - see WIKI
+1. thread worker support - see WIKI
+1. manually register tables
+1. manually register and execute stored proc
+1. promises - see WIKI
+1. fast BCP bulk insert - see WIKI
+1. 64 bit x64 Linux
+1. includes MacOS support
+1. use object based named params for proc calls - see WIKI
+1. improved local date support via bound tables
 1. pause/resume long running query
 1. built in connection pool
 1. sequelize support directly included
@@ -35,6 +35,10 @@
 1. prepared statements
 1. table value parameters
 1. native sequelize support
+
+## Ubuntu Debian SEGV on node v18, v20
+
+please see [appveyor](https://ci.appveyor.com/project/TimelordUK/node-sqlserver-v8) which installs openssl 3.2 allowing this library to work for Node 18, 20. See test script tool\openssl.sh as potential installer, check for dependencies on your system first.
 
 ## Node JS support for SQL server (and other databases with ODBC compliant driver)
 
