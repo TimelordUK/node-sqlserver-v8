@@ -569,8 +569,7 @@ namespace mssql
 								  &current.columnSize, &current.decimalDigits, &current.nullable);
 		if (!check_odbc_error(ret))
 			return false;
-		const auto s = swcvec2str(buffer, name_length);
-		current.name = s;
+		current.name = buffer.data();
 		// wcerr << "read_next " << column << " name = " << current.name << endl;
 		ret = read_col_attributes(current, column);
 		if (!check_odbc_error(ret))
