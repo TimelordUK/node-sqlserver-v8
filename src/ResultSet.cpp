@@ -101,7 +101,7 @@ namespace mssql
 	Local<Object> ResultSet::get_entry(const ColumnDefinition & definition)  {
 		const auto* const type_name = map_type(definition.dataType);
 		const auto entry = Nan::New<Object>();
-		const Local<Value> managedName = Nan::Encode(definition.name.c_str(), definition.name.size() * 2, Nan::UCS2);
+		const Local<Value> managedName = Nan::Encode(definition.name.data(), definition.name.size() * 2, Nan::UCS2);
 		Nan::Set(entry, Nan::New("size").ToLocalChecked(), Nan::New(static_cast<int32_t>(definition.columnSize)));
 		Nan::Set(entry, Nan::New("name").ToLocalChecked(), managedName);
 		Nan::Set(entry, Nan::New("nullable").ToLocalChecked(), Nan::New(definition.nullable != 0));
