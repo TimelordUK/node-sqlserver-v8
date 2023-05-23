@@ -1,6 +1,6 @@
 # NODE-SQLSERVER-V8 #
 
-[![Build status](https://ci.appveyor.com/api/projects/status/7swf644d37pqdmuj/branch/master?svg=true)](https://ci.appveyor.com/project/TimelordUK/node-sqlserver-v8/branch/master) [![npm version](https://badge.fury.io/js/msnodesqlv8.svg)](https://badge.fury.io/js/msnodesqlv8)
+[![Build status](https://ci.appveyor.com/api/projects/status/vkv11o7e24v9u3kr/branch/master?svg=true)](https://ci.appveyor.com/project/TimelordUK/node-sqlserver-v8/branch/master)
 [![GitHub stars](https://img.shields.io/github/stars/TimelordUK/node-sqlserver-v8.svg)](https://github.com/TimelordUK/node-sqlserver-v8/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/TimelordUK/node-sqlserver-v8.svg)](https://github.com/TimelordUK/node-sqlserver-v8/issues)
 [![npm](https://img.shields.io/npm/dm/msnodesqlv8.svg)]
@@ -190,6 +190,20 @@ done
 ```
 
 ## Ubuntu ##
+
+tested platforms
+
+| OS             | Node Version       | ODBC Version | SSL version    | action               |
+|----------------|--------------------|--------------|----------------|----------------------|
+| Windows 10     | 12, 14, 16, 18, 20 | 17, 18       |                | leave default        |
+| Windows 11     | 18, 20             | 18           |                | leave default        |
+| Ubuntu 22.04.2 | 18, 20             | 17, 18       | openssl 3.2    | e.g. tool/openssl.sh |
+| Ubuntu 20.04   | 18, 20             | 18           | openssl 3.2    | e.g. tool/openssl.sh |
+| Ubuntu 20.04   | 12, 14, 16         | 17, 18       | openssl 1.1    | leave default        |
+| Lubuntu 20.04  | 18, 20             | 18           | openssl 3.2    | e.g. tool/openssl.sh |
+| Debian         | 18, 20             |   17, 18           | openssl 3.2    | e.g tool/openssl.sh  |
+| Alpine 3.16    | 18                 | 18           | openssl 1.1.1t | leave default        |
+| MacOS Big Sur  | 18, 20             | 18           | libressl 2.8.3 | leave default        |
 
 for reference check [appveyor](https://ci.appveyor.com/project/TimelordUK/node-sqlserver-v8/branch/master) - note for Node 18, openssl 3.2 is installed to allow Node 18 and this driver to work.
 
