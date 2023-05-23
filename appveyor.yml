@@ -25,8 +25,8 @@ for:
     clone_folder: c:\projects\node_modules\msnodesqlv8
 
     before_test:
-      - cmd: sc config sqlbrowser start= auto
-      - cmd: net start sqlbrowser
+ #     - cmd: sc config sqlbrowser start= auto
+ #     - cmd: net start sqlbrowser
 
     install:
       - ps: tool\install-driver.ps1
