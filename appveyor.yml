@@ -21,12 +21,12 @@ for:
     matrix:
       only:
         - image: Visual Studio 2022
-    
+
     clone_folder: c:\projects\node_modules\msnodesqlv8
 
     before_test:
- #     - cmd: sc config sqlbrowser start= auto
- #     - cmd: net start sqlbrowser
+      - cmd: sc config sqlbrowser start= auto
+      - cmd: net start sqlbrowser
 
     install:
       - ps: tool\install-driver.ps1
@@ -55,7 +55,7 @@ for:
       - sh: npm run build
       - sh: chmod 775 /home/appveyor/projects/node_modules/msnodesqlv8/tool/install_openssl.sh
       - sh: /home/appveyor/projects/node_modules/msnodesqlv8/tool/install_openssl.sh
-    
+
     test_script:
       - sh: "sleep 4"
       - sh: "./node_modules/.bin/env-cmd -e appv-ubuntu ./node_modules/.bin/mocha 2>&1"
