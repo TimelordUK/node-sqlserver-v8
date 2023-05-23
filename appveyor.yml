@@ -1,51 +1,65 @@
----
 version: 1.0.{build}
+
 image:
   - Ubuntu2004
   - Visual Studio 2022
+
 platform:
   - x64
+
 environment:
   matrix:
     - nodejs_version: 18
     - nodejs_version: 16
     - nodejs_version: 14
     - nodejs_version: 12
+
 test_script:
   - ps: Write-Host "msnodesqlv8 test script"
 for:
-  - matrix:
+  -
+    matrix:
       only:
         - image: Visual Studio 2022
+    
     clone_folder: c:\projects\node_modules\msnodesqlv8
+
     before_test:
       - cmd: sc config sqlbrowser start= auto
       - cmd: net start sqlbrowser
+
     install:
       - ps: tool\install-driver.ps1
       - npm install
+
     build_script:
       - cmd: node --version
       - cmd: npm run build
+
     test_script:
       - ps: Get-OdbcDriver
       - cmd: tool\appveyor-win.cmd
-  - matrix:
+  -
+    matrix:
       only:
         - image: Ubuntu2004
           platform: x64
+
     services:
       - mssql
+
     clone_folder: /home/appveyor/projects/node_modules/msnodesqlv8
+
     build_script:
       - sh: node --version
       - sh: npm run build
-      - sh: chmod 775
-          /home/appveyor/projects/node_modules/msnodesqlv8/tool/install_openssl.sh
+      - sh: chmod 775 /home/appveyor/projects/node_modules/msnodesqlv8/tool/install_openssl.sh
       - sh: /home/appveyor/projects/node_modules/msnodesqlv8/tool/install_openssl.sh
+    
     test_script:
-      - sh: sleep 4
-      - sh: ./node_modules/.bin/env-cmd -e appv-ubuntu ./node_modules/.bin/mocha 2>&1
+      - sh: "sleep 4"
+      - sh: "./node_modules/.bin/env-cmd -e appv-ubuntu ./node_modules/.bin/mocha 2>&1"
+
     install:
       - nvm install $nodejs_version
       - npm install
