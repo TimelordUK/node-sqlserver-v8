@@ -33,7 +33,7 @@ namespace mssql
 		typedef vector<shared_ptr<Column>> t_row;
         struct ColumnDefinition
         {
-            string name;
+            vector<SQLWCHAR> name;
             SQLULEN columnSize;
             SQLSMALLINT dataType;
             string dataTypeName;

@@ -247,7 +247,7 @@ namespace mssql
 				return true;
 			}
 		}
-		if (auto polling = get_polling())
+		if (get_polling())
 		{
 			_cancelRequested = true;
 			return true;
@@ -564,13 +564,14 @@ namespace mssql
 		const auto index = column + 1;
 		auto &current = _resultset->get_meta_data(column);
 		const auto l = name_length + static_cast<SQLSMALLINT>(1);
-		vector<SQLWCHAR> buffer(l);
-		auto ret = SQLDescribeCol(statement, index, buffer.data(), buffer.size(), &name_length, &current.dataType,
+		current.name.reserve(l);
+		current.name.resize(l);
+		auto ret = SQLDescribeCol(statement, index, current.name.data(), current.name.size(), &name_length, &current.dataType,
 								  &current.columnSize, &current.decimalDigits, &current.nullable);
 		if (!check_odbc_error(ret))
 			return false;
-		const auto s = swcvec2str(buffer, name_length);
-		current.name = s;
+		current.name.resize(name_length);
+
 		// wcerr << "read_next " << column << " name = " << current.name << endl;
 		ret = read_col_attributes(current, column);
 		if (!check_odbc_error(ret))
