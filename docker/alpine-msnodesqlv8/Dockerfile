@@ -1,7 +1,7 @@
 FROM alpine:3.18
 
 RUN apk update && \
-	apk add curl gcc libc-dev g++ libffi-dev libxml2 unixodbc unixodbc-dev openssl perl gnupg python3 git vim pingu nodejs npm bash
+	apk add curl gcc libc-dev g++ libffi-dev libxml2 unixodbc unixodbc-dev openssl perl gnupg python3 git vim pingu nodejs make npm bash
 
 RUN curl -O https://download.microsoft.com/download/1/f/f/1fffb537-26ab-4947-a46a-7a45c27f6f77/msodbcsql18_18.2.1.1-1_amd64.apk
 RUN curl -O https://download.microsoft.com/download/1/f/f/1fffb537-26ab-4947-a46a-7a45c27f6f77/mssql-tools18_18.2.1.1-1_amd64.apk
