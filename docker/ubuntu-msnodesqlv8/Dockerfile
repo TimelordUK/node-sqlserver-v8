@@ -27,8 +27,10 @@ RUN (cd /usr/local/ssl; mv certs certs.old; ln -s /etc/ssl/certs certs)
 RUN ldconfig -v
 RUN DEBIAN_FRONTEND=noninteractive \
   apt-get update \
-  && apt-get install -y nodejs
+  && apt-get install -y nodejs iputils-ping
 RUN npm install --g yarn
+RUN npm install --g npm-check-updates
 RUN useradd -ms /bin/bash apprunner
 USER apprunner
 RUN (mkdir -p $HOME/app; cd $HOME/app; git clone https://github.com/TimelordUK/msnodesqlv8_yarn_sample.git; cd msnodesqlv8_yarn_sample; yarn install)
+RUN (mkdir -p $HOME/app/driver/node_modules; cd $HOME/app/driver/node_modules; git clone https://github.com/TimelordUK/node-sqlserver-v8.git msnodesqlv8; cd msnodesqlv8; npm install)
