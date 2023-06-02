@@ -1,0 +1,52 @@
+
+from this folder build image
+
+docker build . -t msnodesqlv8-debian
+
+or with human readable log and clean rebuild
+
+docker build --no-cache --progress=plain . 2>&1 | tee build.log
+
+list the docker images
+
+docker images
+
+list these images only
+
+docker images msnodesql*
+
+REPOSITORY           TAG       IMAGE ID       CREATED        SIZE
+msnodesqlv8-alpine   latest    94aa468ed1b3   21 hours ago   1.25GB
+msnodesqlv8-debian   latest    c1eee90b2e4d   26 hours ago   2.42GB
+
+start an interactive shell in a new container
+
+docker run -it msnodesqlv8-debian bash
+
+go to driver folder git repo
+
+cd ~/app/driver/node_modules/msnodesqlv8
+
+change the connection string in
+
+cat .env-cmdrc
+
+exit shell
+
+exit <ret>
+
+list containers
+
+docker container ls
+
+start a container
+
+docker start abc6f443950c
+
+connect interactive shell to the container
+
+docker exec -it upbeat_easley bash
+
+list all container running or stopped
+
+docker ps -a
