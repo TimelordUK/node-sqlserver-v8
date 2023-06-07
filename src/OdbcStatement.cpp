@@ -1343,7 +1343,7 @@ namespace mssql
 				_resultset->add_column(row_id, make_shared<NullColumn>(column));
 				continue;
 			}
-			auto v2 = trunc(v);
+			const auto v2 = trunc(v);
 			if (v2 == v &&
 				v2 >= static_cast<long double>(numeric_limits<DatumStorage::bigint_t>::min()) &&
 				v2 <= static_cast<long double>(numeric_limits<DatumStorage::bigint_t>::max()))
@@ -1490,7 +1490,7 @@ namespace mssql
 			return true;
 		}
 
-		auto v2 = trunc(v);
+		const auto v2 = trunc(v);
 		if (v2 == v &&
 			v2 >= static_cast<long double>(numeric_limits<DatumStorage::bigint_t>::min()) &&
 			v2 <= static_cast<long double>(numeric_limits<DatumStorage::bigint_t>::max()))

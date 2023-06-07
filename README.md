@@ -7,6 +7,7 @@
 [![npm](https://img.shields.io/npm/dy/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
 
 1. *new* Ubuntu, Debian Node v18, v20 - install openssl 3.2 see WIKI
+1. docker images see WIKI
 1. *new* support always on encryption via tables and procedures.
 1. *new* support Node v20
 1. *new* support electron v24
