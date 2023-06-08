@@ -1,18 +1,18 @@
 version: 1.0.{build}
 
 image:
-  - Ubuntu2004
   - Visual Studio 2022
+  - Ubuntu2004
 
 platform:
   - x64
 
 environment:
   matrix:
+    - nodejs_version: 12
     - nodejs_version: 18
     - nodejs_version: 16
     - nodejs_version: 14
-    - nodejs_version: 12
 
 test_script:
   - ps: Write-Host "msnodesqlv8 test script"
