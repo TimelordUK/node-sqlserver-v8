@@ -6,9 +6,10 @@
 [![npm](https://img.shields.io/npm/dm/msnodesqlv8.svg)]
 [![npm](https://img.shields.io/npm/dy/msnodesqlv8.svg)]
 
-1. [What is this library for?](#what-is-library-for)``
+1. [What is this library for?](#what-is-library-for)
 1. [What Platforms does it support?](#supported-platforms)
 1. [Running on macOS (darwin)](#darwin)
+1. [Docker images for Ubuntu, Debian and Alpine](#docker-images)
 1. [Linux troubleshoot SEGV (Ubuntu, Debian)](#ubuntu)
 1. [Sequelize Compatibility?](#sequelize-compatibility)
 1. [Is the library production quality?](#production-quality)
@@ -59,6 +60,86 @@ Please give the module a try and feel free to offer suggestions for improvement.
 [msnodesqlv8](https://www.npmjs.com/package/msnodesqlv8) will run on 32 bit and 64 bit versions of Node JS hosted on the Windows operating system.  All major versions of Node are supported and tested i.e. >= 10 [download node here](https://nodejs.org/en/download/).  [previous node releases](https://nodejs.org/en/download/releases/).
 
 if running on Linux, the odbc driver needs to be installed as outlined here [ODBC 17](https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-ver15). Please use version >= 17.5 which has been tested with this library.  We are running test suite for Linux on AppVeyor which you can see via the badge at top of this page. Linux distros tested so far are Ubuntu 18.04, Alpine 3.12, Ubuntu 20.04, Debian 10.5 and Fedora 32.  The driver also works under windows linux subsystem 2 (WLS).
+
+## docker images ##
+
+cd docker\debian-msnodesqlv8\
+
+from this folder build image
+
+```bash
+docker build . -t msnodesqlv8-debian
+```
+
+or with human readable log and clean rebuild
+
+```
+docker build --no-cache --progress=plain . 2>&1 | tee build.log
+```
+
+list the docker images
+
+```
+docker images
+```
+
+list these images only
+
+```
+docker images msnodesql*
+```
+
+REPOSITORY           TAG       IMAGE ID       CREATED        SIZE
+msnodesqlv8-alpine   latest    94aa468ed1b3   21 hours ago   1.25GB
+msnodesqlv8-debian   latest    c1eee90b2e4d   26 hours ago   2.42GB
+
+start an interactive shell in a new container
+
+```
+docker run -it msnodesqlv8-debian bash
+```
+
+go to driver folder git repo
+
+```
+cd ~/app/driver/node_modules/msnodesqlv8
+```
+
+change the connection string in
+
+```
+cat .env-cmdrc
+```
+
+exit shell
+
+```
+exit <ret>
+```
+
+list containers
+
+```
+docker container ls
+```
+
+start a container
+
+```
+docker start abc6f443950c
+```
+
+connect interactive shell to the container
+
+```
+docker exec -it upbeat_easley bash
+```
+
+list all container running or stopped
+
+```
+docker ps -a
+```
 
 ## debian crash - ssl stack trace ##
 

@@ -695,7 +695,7 @@ namespace mssql
 		if (!p->IsNullOrUndefined())
 		{
 			const auto local = Nan::To<Number>(p).ToLocalChecked();
-			auto d = local->Value();
+			const auto d = local->Value();
 			auto& vec = *_storage->numeric_ptr;
 			auto& ns = vec[0];
 			bind_numeric_struct(d, ns);
