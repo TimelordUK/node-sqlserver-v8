@@ -1,6 +1,6 @@
 mkdir -p $HOME/projects
 cd $HOME/projects
-git clone https://github.com/openssl/openssl.git
+git clone https://github.com/openssl/openssl.git --depth 1 --branch openssl-3.1.1
 cd openssl
 ./config --prefix=/usr/local/ssl --openssldir=/usr/local/ssl shared
 make
