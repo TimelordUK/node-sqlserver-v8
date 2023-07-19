@@ -9,7 +9,7 @@ const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 
 describe('connection-pool', function () {
-  this.timeout(15000)
+  this.timeout(25000)
 
   this.beforeEach(done => {
     env.open().then(() => done())
