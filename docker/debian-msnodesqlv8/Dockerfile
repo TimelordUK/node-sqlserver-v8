@@ -24,7 +24,7 @@ RUN ACCEPT_EULA=Y \
   apt-get install -y mssql-tools18 
 
 RUN mkdir -p $HOME/projects
-RUN git clone https://github.com/openssl/openssl.git $HOME/projects/openssl
+RUN git clone https://github.com/openssl/openssl.git --depth 1 --branch openssl-3.1.1 $HOME/projects/openssl
 RUN ( cd $HOME/projects/openssl ; ./config --prefix=/usr/local/ssl --openssldir=/usr/local/ssl shared; make; make install)
 RUN (cd /etc/ld.so.conf.d/; echo '/usr/local/ssl/lib64/' | tee openssl-3.2.0.1s.conf;)
 RUN (cd /usr/local/ssl; mv certs certs.old; ln -s /etc/ssl/certs certs)
