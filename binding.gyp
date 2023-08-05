@@ -35,7 +35,7 @@
           'winodbc%': 'odbc32',
           # pick up libodbc from somwhere - note the ms driver is loaded dynamicaly via odbc, no 
           # link dependency is added
-          'linkdir%': '/usr/local/lib /usr/local/ssl/lib64/ /opt/homebrew/lib /home/linuxbrew/.linuxbrew/lib/ /usr/lib .'
+          'linkdir%': '/usr/local/lib /usr/local/ssl/lib64/ /opt/homebrew/lib /home/linuxbrew/.linuxbrew/lib/ /usr/lib /usr/lib64 .'
         },
 
   'targets': [
