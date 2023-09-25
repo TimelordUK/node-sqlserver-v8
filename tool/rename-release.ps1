@@ -1,5 +1,5 @@
-$src="v3.1.0"
-$dst="v4.0.0"
+$src="v4.1.0"
+$dst="v4.1.1"
 $path="$HOME\dev\js\sql\v8\node_modules\msnodesqlv8\assets"
 $versions=Get-ChildItem -Path $path *.gz
 $versions | ForEach-Object { 

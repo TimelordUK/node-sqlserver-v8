@@ -56,5 +56,5 @@ USER apprunner
 
 # take latest ssl1 and compile from src with gcc11 as installed version causes double free error
 
-RUN (mkdir -p $HOME/app; cd $HOME/app; git clone https://github.com/TimelordUK/msnodesqlv8_yarn_sample.git; cd msnodesqlv8_yarn_sample;)
-RUN (mkdir -p $HOME/app/driver/node_modules; cd $HOME/app/driver/node_modules; odbcinst -j; git clone https://github.com/TimelordUK/node-sqlserver-v8.git msnodesqlv8; cd msnodesqlv8; )
+RUN (mkdir -p $HOME/app; cd $HOME/app; git clone https://github.com/TimelordUK/msnodesqlv8_yarn_sample.git; cd msnodesqlv8_yarn_sample; )
+RUN (mkdir -p $HOME/app/driver/node_modules; cd $HOME/app/driver/node_modules; odbcinst -j; git clone https://github.com/TimelordUK/node-sqlserver-v8.git msnodesqlv8; cd msnodesqlv8; npm install)
