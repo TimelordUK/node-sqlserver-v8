@@ -61,18 +61,16 @@
   },
   "dependencies": {
     "nan": "^2.18.0",
-    "node-abi": "^3.47.0",
+    "node-abi": "^3.50.0",
     "prebuild-install": "^7.1.1"
   },
   "devDependencies": {
     "@types/chai": "^4.3.6",
     "@types/chai-as-promised": "^7.1.6",
-    "@types/electron": "^1.4.38",
     "@types/mocha": "^10.0.1",
     "@types/mochawesome": "^6.2.1",
     "@types/node": "^20.6.5",
     "@types/sequelize": "^4.28.15",
-    "@typescript-eslint/eslint-plugin-tslint": "^5.59.0",
     "chai": "^4.3.8",
     "chai-as-promised": "^7.1.1",
     "electron": "^26.2.2",
@@ -86,12 +84,10 @@
     "prebuild": "^12.1.0",
     "sequelize": "^6.33.0",
     "typescript": "^5.2.2",
-    "standard": "^17.1.0",
-    "eslint": "^8.39.0",
-    "eslint-config-standard-with-typescript": "^34.0.1",
-    "eslint-plugin-jquery": "^1.5.1",
-    "eslint-plugin-jsdoc": "^43.0.7",
-    "eslint-plugin-node": "^11.1.0"
+    "@typescript-eslint/eslint-plugin": "^6.7.5",
+    "@typescript-eslint/parser": "^6.7.5",
+    "eslint": "^8.51.0",
+    "eslint-config-standard-with-typescript": "^39.1.1"
   },
   "os": [
     "win32",
@@ -106,8 +102,8 @@
     "prebuild-all": "npm run prebuild-node && npm run prebuild-node-ia32 && npm run prebuild-electron && npm run prebuild-electron-ia32",
     "prebuild-node": "prebuild -t 10.16.0 -t 11.15.0 -t 12.18.3 -t 13.14.0 -t 14.14.0 -t 15.11.0 -t 16.13.0 -t 17.0.1 -t 18.7.0 -t 19.2.0 -t 20.0.0 --strip ",
     "prebuild-node-ia32": "prebuild -t 10.16.0 -t 11.15.0 -t 12.18.3 -t 13.14.0 -t 14.14.0 -t 15.11.0 -t 16.13.0 -t 17.0.1 -t 18.7.0 -t 19.2.0 -t 20.0.0 -a ia32 --strip",
-    "prebuild-electron": "prebuild -t 6.1.9 -t 7.2.1 -t 8.2.3 -t 9.0.5 -t 10.1.4 -t 11.3.0 -t 12.0.0 -t 13.0.0 -t 14.0.0 -t 14.2.5 -t 15.0.0 -t 16.0.1 -t 17.0.0 -t 18.1.0 -t 19.0.10 -t 20.3.0 -t 21.3.1 -t 22.0.0 -t 23.0.0 -t 24.0.0 -t 25.1.0 -t 26.0.0 -r electron --strip",
-    "prebuild-electron-ia32": "prebuild -t 6.1.9 -t 7.2.1 -t 8.2.3 -t 9.0.5 -t 10.1.4 -t 11.3.0 -t 12.0.0 -t 13.0.0 -t 14.0.0 -t 14.2.5 -t 15.0.0 -t 16.0.1 -t 17.0.0 -t 18.1.0 -t 19.0.10 -t 20.3.0 -t 21.3.1 -t 22.0.0 -t 23.0.0 -t 24.0.0 -t 25.1.0 -t 26.0.0 -r electron -a ia32 --strip",
+    "prebuild-electron": "prebuild -t 6.1.9 -t 7.2.1 -t 8.2.3 -t 9.0.5 -t 10.1.4 -t 11.3.0 -t 12.0.0 -t 13.0.0 -t 14.0.0 -t 14.2.5 -t 15.0.0 -t 16.0.1 -t 17.0.0 -t 18.1.0 -t 19.0.10 -t 20.3.0 -t 21.3.1 -t 22.0.0 -t 23.0.0 -t 24.0.0 -t 25.1.0 -t 26.0.0 -r electron -t 27.0.0 --strip",
+    "prebuild-electron-ia32": "prebuild -t 6.1.9 -t 7.2.1 -t 8.2.3 -t 9.0.5 -t 10.1.4 -t 11.3.0 -t 12.0.0 -t 13.0.0 -t 14.0.0 -t 14.2.5 -t 15.0.0 -t 16.0.1 -t 17.0.0 -t 18.1.0 -t 19.0.10 -t 20.3.0 -t 21.3.1 -t 22.0.0 -t 23.0.0 -t 24.0.0 -t 25.1.0 -t 26.0.0 -t 27.0.0 -r electron -a ia32 --strip",
     "test": "nyc --reporter=html --reporter=text mocha --reporter mochawesome --require mochawesome/register",
     "bench-comments": "node dist/test/env/cmd-test.js -t benchmark --repeats=5 --delay=4500 2>&1",
     "bench-columns": "node dist/test/env/cmd-test.js -t benchmark --table=syscolumns --repeats=5 --delay=5000 2>&1",
