@@ -1,4 +1,3 @@
-
 const commonTestFns = require('./CommonTestFunctions')
 
 const supp = require('../../samples/typescript/demo-support')
@@ -55,24 +54,24 @@ class CommonTestFnProxy {
     this.params = new CommonTestFnParams(tableName, testColumnName)
   }
 
-  create (testcolumntype) {
+  async create (testcolumntype) {
     this.params.testcolumntype = testcolumntype
     return this.promises.create(this.connectionProxy, this.params.tableName, this.params.testColumnName, testcolumntype)
   }
 
-  insert (val) {
+  async insert (val) {
     return this.promises.insert(this.connectionProxy, this.params.tableName, this.params.testColumnName, val)
   }
 
-  verifyData_Datetime (rowWithNullData, jsDateExpected, testname) {
+  async verifyData_Datetime (rowWithNullData, jsDateExpected, testname) {
     return this.promises.verifyData_Datetime(this.connectionProxy, this.params.tableName, this.params.testColumnName, rowWithNullData, jsDateExpected, testname)
   }
 
-  verifyData (expected, testname) {
+  async verifyData (expected, testname) {
     return this.promises.verifyData(this.connectionProxy, this.params.tableName, this.params.testColumnName, expected, testname)
   }
 
-  invalidQuery (tsql, ExpectedError, testname) {
+  async invalidQuery (tsql, ExpectedError, testname) {
     return this.promises.invalidQueryTSQL(this.connectionProxy, this.params.tableName, tsql, ExpectedError, testname)
   }
 
@@ -122,7 +121,7 @@ class TestEnv {
 
   getConnection (key, fallback) {
     fallback = fallback || 'LINUX'
-    const rcRes = process.env[fallback] || process.env.DEFAULT
+    const rcRes = process.env[fallback] ?? process.env.DEFAULT
     if (rcRes) {
       return rcRes
     } else if (process.env.CONNECTION_KEY) {
@@ -263,7 +262,7 @@ END`
     return `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL DROP TABLE ${tableName}`
   }
 
-  readFile (f) {
+  async readFile (f) {
     return new Promise((resolve, reject) => {
       fs.readFile(f, 'utf8', (err, contents) => {
         if (err) {
@@ -275,7 +274,7 @@ END`
     })
   }
 
-  readAsBinary (file) {
+  async readAsBinary (file) {
     return new Promise((resolve, reject) => {
       const p = path.join(__dirname, 'data', file)
       this.readFile(p).then(d => {

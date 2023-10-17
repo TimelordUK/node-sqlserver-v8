@@ -61,8 +61,8 @@ describe('prepared', function () {
 
   this.afterEach(done => {
     env.employee.free(prepared)
-      .then(() => env.close())
-      .then(() => done())
+      .then(async () => env.close())
+      .then(() => { done() })
   })
 
   it('use prepared and select nvarchar(max)', async function handler () {

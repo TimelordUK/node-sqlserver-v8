@@ -11,11 +11,11 @@ describe('bcp', function () {
   this.timeout(100000)
 
   this.beforeEach(done => {
-    env.open().then(() => done())
+    env.open().then(() => { done() })
   })
 
   this.afterEach(done => {
-    env.close().then(() => done())
+    env.close().then(() => { done() })
   })
 
   it('bcp nchar(1)', async function handler () {
@@ -37,7 +37,7 @@ describe('bcp', function () {
       }
     }
     , dateTimeCompare)
-    return await bcp.runner()
+    await bcp.runner()
   })
 
   it('bcp employee', async function handler () {
@@ -73,7 +73,7 @@ describe('bcp', function () {
       }
     }
     , dateTimeCompare)
-    return await bcp.runner()
+    await bcp.runner()
   })
 
   it('bcp datetime - mix with nulls', async function handler () {
@@ -95,7 +95,7 @@ describe('bcp', function () {
         }]
     }, i => timeFactory(testDate, i)
     , dateTimeCompare)
-    return await bcp.runner()
+    await bcp.runner()
   })
 
   it('bcp time', async function handler () {
@@ -130,7 +130,7 @@ describe('bcp', function () {
       })
       assert.deepStrictEqual(actual, expected)
     })
-    return await bcp.runner(rows)
+    await bcp.runner(rows)
   })
 
   it('bcp datetime timestamp - no null', async function handler () {
@@ -157,7 +157,7 @@ describe('bcp', function () {
         d2: new Date(testDate.getTime() - i * 60 * 60 * 1000)
       }
     }, dateTimeCompare)
-    return await bcp.runner()
+    await bcp.runner()
   })
 
   it('bcp 7 column mixed table ', async function handler () {
@@ -220,7 +220,7 @@ describe('bcp', function () {
         assert(Math.abs(lhs.n2 - rhs.n2) < 1e-5)
       }
     })
-    return await bcp.runner(1000)
+    await bcp.runner(1000)
   })
 
   it('bcp expect error null in non null column', async function handler () {
@@ -322,7 +322,7 @@ describe('bcp', function () {
         b1: i % 2 === 0 ? Buffer.from('5AE178', 'hex') : Buffer.from('58', 'hex')
       }
     })
-    return await bcp.runner()
+    await bcp.runner()
   })
 
   it('bcp small binary', async function handler () {
@@ -345,7 +345,7 @@ describe('bcp', function () {
           : Buffer.from('', 'hex')
       }
     })
-    return await bcp.runner()
+    await bcp.runner()
   })
 
   it('bcp bit bit', async function handler () {
@@ -371,7 +371,7 @@ describe('bcp', function () {
         b2: i % 3 === 0
       }
     })
-    return await bcp.runner()
+    await bcp.runner()
   })
 
   //  min: 'F01251E5-96A3-448D-981E-0F99D789110D',
@@ -398,7 +398,7 @@ describe('bcp', function () {
         s1: i % 2 === 0 ? g1 : g2
       }
     })
-    return await bcp.runner(rows)
+    await bcp.runner(rows)
   })
 
   it('bcp smallint', async function handler () {
@@ -421,7 +421,7 @@ describe('bcp', function () {
         n1: i % 2 === 0 ? Math.pow(2, 10) + i : -Math.pow(2, 10) - i
       }
     })
-    return await bcp.runner(rows)
+    await bcp.runner(rows)
   })
 
   it('bcp tinyint', async function handler () {
@@ -443,7 +443,7 @@ describe('bcp', function () {
         n1: i % 255
       }
     })
-    return await bcp.runner(rows)
+    await bcp.runner(rows)
   })
 
   function realCompare (actual, expected) {
@@ -481,7 +481,7 @@ describe('bcp', function () {
       }
     }, realCompare
     )
-    return await bcp.runner(rows)
+    await bcp.runner(rows)
   })
 
   it('bcp real', async function handler () {
@@ -508,7 +508,7 @@ describe('bcp', function () {
         r1: i % 2 === 0 ? get(i) : get(i) * 2
       }
     }, realCompare)
-    return await bcp.runner(rows)
+    await bcp.runner(rows)
   })
 
   it('bcp bigint with nulls', async function handler () {
@@ -531,7 +531,7 @@ describe('bcp', function () {
         n1: i % 2 === 0 ? null : Math.pow(2, 40) - i
       }
     })
-    return await bcp.runner(rows)
+    await bcp.runner(rows)
   })
 
   it('bcp bigint', async function handler () {
@@ -554,7 +554,7 @@ describe('bcp', function () {
         n1: i % 2 === 0 ? Math.pow(2, 40) + i : Math.pow(2, 40) - i
       }
     })
-    return await bcp.runner(rows)
+    await bcp.runner(rows)
   })
 
   function numberCompare (actual, expected) {
@@ -591,7 +591,7 @@ describe('bcp', function () {
         n1: i % 2 === 0 ? get(i) : get(i) * 16
       }
     }, numberCompare)
-    return await bcp.runner(rows)
+    await bcp.runner(rows)
   })
 
   function timeFactory (testDate, i) {
@@ -624,7 +624,7 @@ describe('bcp', function () {
         s1: `${b}`
       }
     })
-    return await bcp.runner(rows)
+    await bcp.runner(rows)
   })
 
   function dateTimeCompare (actual, expected) {
@@ -663,7 +663,7 @@ describe('bcp', function () {
         }]
     }, i => timeFactory(testDate, i)
     , dateTimeCompare)
-    return await bcp.runner()
+    await bcp.runner()
   })
 
   it('bcp datetimeoffset datetimeoffset', async function handler () {
@@ -690,7 +690,7 @@ describe('bcp', function () {
         d2: new Date(testDate.getTime() - i * 60 * 60 * 1000)
       }
     }, dateTimeCompare)
-    return await bcp.runner()
+    await bcp.runner()
   })
 
   it('bcp binary binary - mix with nulls', async function handler () {
@@ -716,7 +716,7 @@ describe('bcp', function () {
         b2: i % 3 === 0 ? null : Buffer.from('0102030405060708090a', 'hex')
       }
     })
-    return await bcp.runner()
+    await bcp.runner()
   })
 
   it('bcp binary binary', async function handler () {
@@ -742,7 +742,7 @@ describe('bcp', function () {
         b2: Buffer.from('0102030405060708090a', 'hex')
       }
     })
-    return await bcp.runner()
+    await bcp.runner()
   })
 
   it('bcp bit bit - mix with nulls', async function handler () {
@@ -768,7 +768,7 @@ describe('bcp', function () {
         b2: i % 3 === 0 ? null : i % 5 === 0
       }
     })
-    return await bcp.runner()
+    await bcp.runner()
   })
 
   it('bcp varchar varchar with nulls', async function handler () {
@@ -794,7 +794,7 @@ describe('bcp', function () {
         s2: `testing${i + 1}2Data`
       }
     })
-    return await bcp.runner()
+    await bcp.runner()
   })
 
   it('bcp varchar varchar', async function handler () {
@@ -820,7 +820,7 @@ describe('bcp', function () {
         s2: `testing${i + 1}2Data`
       }
     })
-    return await bcp.runner()
+    await bcp.runner()
   })
 
   it('bcp int, int column - with nulls', async function handler () {
@@ -842,7 +842,7 @@ describe('bcp', function () {
         val: i % 2 === 0 ? null : i * 2
       }
     })
-    return await bcp.runner()
+    await bcp.runner()
   })
 
   it('bcp int, int column', async function handler () {
@@ -864,6 +864,6 @@ describe('bcp', function () {
         val: i * 2
       }
     })
-    return await bcp.runner()
+    await bcp.runner()
   })
 })

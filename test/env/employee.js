@@ -86,7 +86,7 @@ class Employee {
     }
   }
 
-  dropCreate (name) {
+  async dropCreate (name) {
     return new Promise((resolve, reject) => {
       this.helper.dropCreateTable({
         tableName: name

@@ -32,11 +32,11 @@ describe('datatypes', function () {
   this.timeout(20000)
 
   this.beforeEach(done => {
-    env.open().then(() => done())
+    env.open().then(() => { done() })
   })
 
   this.afterEach(done => {
-    env.close().then(() => done())
+    env.close().then(() => { done() })
   })
 
   it('write / read an image column', async function handler () {
@@ -741,7 +741,7 @@ describe('datatypes', function () {
       null,
       testdata2Expected,
       testdata2Expected)
-    if (env.commonTestFns.SKIP_FAILING_HANGING_TEST_CASES === true) return
+    if (env.commonTestFns.SKIP_FAILING_HANGING_TEST_CASES) return
     await ParamsTester.runTestParams(testParams)
   })
 
@@ -766,7 +766,7 @@ describe('datatypes', function () {
 
     const tsql = 'SELECT * FROM types_table ORDER BY id'
     const expectedError = `[Microsoft][${driver}][SQL Server]Arithmetic overflow`
-    if (env.commonTestFns.SKIP_FAILING_HANGING_TEST_CASES === true) return
+    if (env.commonTestFns.SKIP_FAILING_HANGING_TEST_CASES) return
 
     const proxy = env.makeTestFnProxy(tablename, testcolumnname)
     await proxy.create(testcolumntype)
