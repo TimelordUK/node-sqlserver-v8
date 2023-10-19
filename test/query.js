@@ -32,11 +32,11 @@ describe('query', function () {
   this.timeout(30000)
 
   this.beforeEach(done => {
-    env.open().then(() => done())
+    env.open().then(() => { done() })
   })
 
   this.afterEach(done => {
-    env.close().then(() => done())
+    env.close().then(() => { done() })
   })
 
   it('simple query with a promise open-query-close-resolve var%', async function handler () {
@@ -311,7 +311,7 @@ describe('query', function () {
   })
 
   it('streaming test', async function handler () {
-    function f0 () {
+    async function f0 () {
       return new Promise((resolve, reject) => {
         const like = 'var%'
         let currentRow = 0
@@ -353,7 +353,7 @@ describe('query', function () {
         }
       })
 
-    function f0 () {
+    async function f0 () {
       return new Promise((resolve, reject) => {
         const results = []
         for (let i = 1; i <= 5; ++i) {
@@ -420,7 +420,7 @@ describe('query', function () {
       }
     ]
 
-    function f0 () {
+    async function f0 () {
       return new Promise((resolve, reject) => {
         const r = env.theConnection.queryRaw('SELECT 1 as X, \'ABC\', 0x0123456789abcdef; ' +
           'SELECT 2 AS Y, \'DEF\', 0xfedcba9876543210')
@@ -500,7 +500,7 @@ describe('query', function () {
           thrown = true
           assert.strictEqual(e.toString(), 'Error: [msnodesql] Invalid connection string passed to function open. Type should be string.', 'Improper error returned')
         }
-        assert(thrown === true)
+        assert(thrown)
         asyncDone()
       },
 
@@ -526,7 +526,7 @@ describe('query', function () {
           thrown = true
           assert.strictEqual(e.toString(), 'Error: [msnodesql] Invalid connection string passed to function queryRaw. Type should be string.', 'Improper error returned')
         }
-        assert(thrown === true)
+        assert(thrown)
         asyncDone()
       },
 
@@ -553,7 +553,7 @@ describe('query', function () {
           thrown = true
           assert.strictEqual(e.toString(), 'Error: [msnodesql] Invalid query string passed to function query. Type should be string.', 'Improper error returned')
         }
-        assert(thrown === true)
+        assert(thrown)
         asyncDone()
       },
 
@@ -565,7 +565,7 @@ describe('query', function () {
           thrown = true
           assert.strictEqual(e.toString(), 'Error: [msnodesql] Invalid query string passed to function queryRaw. Type should be string.', 'Improper error returned')
         }
-        assert(thrown === true)
+        assert(thrown)
         asyncDone()
       },
 
@@ -628,7 +628,7 @@ describe('query', function () {
           thrown = true
           assert.strictEqual(e.toString(), 'Error: [msnodesql] Invalid parameter(s) passed to function query or queryRaw.', 'Improper error returned')
         }
-        assert(thrown === true)
+        assert(thrown)
         asyncDone()
       },
 
@@ -641,7 +641,7 @@ describe('query', function () {
           thrown = true
           assert.strictEqual(e.toString(), 'Error: [msnodesql] Invalid parameter(s) passed to function query or queryRaw.', 'Improper error returned')
         }
-        assert(thrown === true)
+        assert(thrown)
         asyncDone()
       },
 
@@ -653,7 +653,7 @@ describe('query', function () {
           thrown = true
           assert.strictEqual(e.toString(), 'Error: [msnodesql] Invalid query string passed to function query. Type should be string.', 'Improper error returned')
         }
-        assert(thrown === true)
+        assert(thrown)
         asyncDone()
       },
 
@@ -668,7 +668,7 @@ describe('query', function () {
           assert.strictEqual(e.toString(), 'Error: [msnodesql] Invalid query string passed to function queryRaw. Type should be string.', 'Improper error returned')
           asyncDone()
         }
-        assert(thrown === true)
+        assert(thrown)
       }
     ]
 

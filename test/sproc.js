@@ -13,7 +13,7 @@ describe('sproc', function () {
   this.timeout(30000)
 
   this.beforeEach(done => {
-    env.open().then(() => done())
+    env.open().then(() => { done() })
   })
 
   this.afterEach(done => {
@@ -23,7 +23,7 @@ describe('sproc', function () {
   })
 
   // this will be either Pool or connection
-  function promisedCallProc (connectionProxy, spName, o) {
+  async function promisedCallProc (connectionProxy, spName, o) {
     return new Promise((resolve, reject) => {
       const allResults = []
       connectionProxy.callproc(spName, o, (err, results, output, more) => {
@@ -1234,7 +1234,7 @@ END
       }, [])
     }
 
-    function runner () {
+    async function runner () {
       return new Promise((resolve, reject) => {
         proc.call([], (err, results, output) => {
           if (err) {
@@ -1369,7 +1369,7 @@ END
     }
   }
 
-  function streamingPromise (connectionProxy, proc, params) {
+  async function streamingPromise (connectionProxy, proc, params) {
     return new Promise((resolve, reject) => {
       let submitted = false
       let meta = null

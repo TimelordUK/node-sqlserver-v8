@@ -1,4 +1,3 @@
-
 'use strict'
 
 /* globals describe it */

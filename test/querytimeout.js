@@ -1,5 +1,3 @@
-/* eslint-disable no-trailing-spaces */
-/* eslint-disable indent */
 'use strict'
 
 /* globals describe it */
@@ -14,14 +12,14 @@ describe('querytimeout', function () {
   this.timeout(30000)
 
   this.beforeEach(done => {
-    env.open().then(() => done())
+    env.open().then(() => { done() })
   })
 
   this.afterEach(done => {
-    env.close().then(() => done())
+    env.close().then(() => { done() })
   })
 
-const waitProcDef = `alter PROCEDURE <name> (
+  const waitProcDef = `alter PROCEDURE <name> (
     @timeout datetime
     )AS
     BEGIN
@@ -35,11 +33,11 @@ const waitProcDef = `alter PROCEDURE <name> (
     const spName = 'timeoutTest'
     const promises = env.theConnection.promises
     await env.promisedCreate(spName, waitProcDef)
-   try {
+    try {
       await promises.callProc(spName, {
         timeout: '00:10:00'
       }, { timeoutMs: 2000 })
-     throw new Error('expected exception')
+      throw new Error('expected exception')
     } catch (err) {
       assert(err)
       assert(err.message.includes('Query cancelled'))
@@ -72,43 +70,43 @@ const waitProcDef = `alter PROCEDURE <name> (
     })
   */
 
-    it('pool: sproc that completes with timeout - check pool', async function handler () {
-      const spName = 'timeoutTest'
-      const size = 4
-      const pool = env.pool(size)
-      const promises = pool.promises
-      await pool.promises.open()
-      await env.promisedCreate(spName, waitProcDef)
-      await promises.callProc(spName, {
-        timeout: '00:00:01'
-      }, { timeoutMs: 5000 })
-      const res2 = await promises.query('select 1 as n')
-      expect(res2.first[0].n).equals(1)
-      await pool.close()
-    })
+  it('pool: sproc that completes with timeout - check pool', async function handler () {
+    const spName = 'timeoutTest'
+    const size = 4
+    const pool = env.pool(size)
+    const promises = pool.promises
+    await pool.promises.open()
+    await env.promisedCreate(spName, waitProcDef)
+    await promises.callProc(spName, {
+      timeout: '00:00:01'
+    }, { timeoutMs: 5000 })
+    const res2 = await promises.query('select 1 as n')
+    expect(res2.first[0].n).equals(1)
+    await pool.close()
+  })
 
-    it('pool: sproc with timeout early terminates - check pool', async function handler () {
-      const spName = 'timeoutTest'
-      const size = 4
-      const pool = env.pool(size)
-      const promises = pool.promises
-      await promises.open()
-      await env.promisedCreate(spName, waitProcDef)
-      try {
-        await promises.callProc(spName, {
-          timeout: '00:10:00'
-        }, { timeoutMs: 2000 })
-          throw new Error('expected exception')
-      } catch (err) {
-        assert(err)
-        assert(err.message.includes('Query cancelled'))
-        const res = await promises.query('select 1 as n')
-        expect(res.first[0].n).equals(1)
-      } finally {
-        await pool.close()
-      }
-    })
-  
+  it('pool: sproc with timeout early terminates - check pool', async function handler () {
+    const spName = 'timeoutTest'
+    const size = 4
+    const pool = env.pool(size)
+    const promises = pool.promises
+    await promises.open()
+    await env.promisedCreate(spName, waitProcDef)
+    try {
+      await promises.callProc(spName, {
+        timeout: '00:10:00'
+      }, { timeoutMs: 2000 })
+      throw new Error('expected exception')
+    } catch (err) {
+      assert(err)
+      assert(err.message.includes('Query cancelled'))
+      const res = await promises.query('select 1 as n')
+      expect(res.first[0].n).equals(1)
+    } finally {
+      await pool.close()
+    }
+  })
+
   it('test timeout 2 secs on waitfor delay 10', testDone => {
     const queryObj = {
       query_str: 'waitfor delay \'00:00:10\';',

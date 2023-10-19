@@ -10,11 +10,11 @@ describe('concurrent', function () {
   this.timeout(10000)
 
   this.beforeEach(done => {
-    env.open().then(() => done())
+    env.open().then(() => { done() })
   })
 
   this.afterEach(done => {
-    env.close().then(() => done())
+    env.close().then(() => { done() })
   })
 
   function checkClean (connections, testDone) {
@@ -23,7 +23,7 @@ describe('concurrent', function () {
     const c2 = connections[2]
 
     const t1 = c0 === c1 && c1 === c2
-    assert(t1 === false)
+    assert(!t1)
     assert(c0.id !== c1.id)
     assert(c1.id !== c2.id)
 

@@ -1,4 +1,3 @@
-
 //  ---------------------------------------------------------------------------------------------------------------------------------
 // File: txn.js
 // Contents: test suite for transactions
@@ -31,11 +30,11 @@ describe('txn', function () {
   this.timeout(30000)
 
   this.beforeEach(done => {
-    env.open().then(() => done())
+    env.open().then(() => { done() })
   })
 
   this.afterEach(done => {
-    env.close().then(() => done())
+    env.close().then(() => { done() })
   })
 
   const txnTableDef = {
@@ -72,7 +71,7 @@ describe('txn', function () {
     await tester.create()
   })
 
-  function insertViolationRunner (helper) {
+  async function insertViolationRunner (helper) {
     return new Promise((resolve, reject) => {
       const q = env.theConnection.query(helper.insertParamsSql, [1, 'sprinting'])
       const errors = []

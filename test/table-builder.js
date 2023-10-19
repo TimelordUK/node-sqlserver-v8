@@ -13,11 +13,11 @@ describe('table-builder.js', function () {
   this.timeout(30000)
 
   this.beforeEach(done => {
-    env.open().then(() => done())
+    env.open().then(() => { done() })
   })
 
   this.afterEach(done => {
-    env.close().then(() => done())
+    env.close().then(() => { done() })
   })
 
   it('use table builder to bind to a table int, nvarchar(max)', async function handler () {
@@ -127,7 +127,7 @@ describe('table-builder.js', function () {
       await checker.check(makeOne, checkOne)
     }
 
-    await runLocal(builder => intVarCharBuilder(builder), makeOne)
+    await runLocal(builder => { intVarCharBuilder(builder) }, makeOne)
   })
 
   it('use table builder to bind to a table int, datetimeoffset', async function handler () {
@@ -522,6 +522,6 @@ describe('table-builder.js', function () {
       }
     }
 
-    await run(builder => intVarCharBuilder(builder), makeOne)
+    await run(builder => { intVarCharBuilder(builder) }, makeOne)
   })
 })

@@ -59,7 +59,7 @@ function errorComments (Message) {
 
 //   optional debugging information
 function debugComments (Message) {
-  if (writeDebugComments === true) {
+  if (writeDebugComments) {
     errorComments(Message)
   }
 }
@@ -128,7 +128,7 @@ test note createTable3_CommonTestFunctions.js ... returning
 
 //    insert test data via parameters
 const insertDataBP = (Connection, TableName, ColumnName, TestData, done) => {
-  if (SKIP_BINDPARAM_TEST_CASES === true) {
+  if (SKIP_BINDPARAM_TEST_CASES) {
     done()
   } else {
     const tsql = `INSERT INTO ${TableName} (${ColumnName}) VALUES (?)`
