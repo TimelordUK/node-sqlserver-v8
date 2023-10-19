@@ -32,7 +32,8 @@
     "encryption",
     "sequelize",
     "sybase",
-    "adaptive"
+    "adaptive",
+    "docker"
   ],
   "homepage": "https://github.com/TimelordUK/node-sqlserver-v8",
   "bugs": {
