@@ -13,6 +13,7 @@
     "inlineSources": true,
     "pretty": true,
     "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
     "outDir": "./dist"
   },
   "compileOnSave": true,
