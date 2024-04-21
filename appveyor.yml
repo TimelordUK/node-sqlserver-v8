@@ -11,7 +11,6 @@ environment:
   matrix:
     - nodejs_version: 20
     - nodejs_version: 18
-    - nodejs_version: 16
 
 test_script:
   - ps: Write-Host "msnodesqlv8 test script"
