@@ -1,4 +1,9 @@
 .idea/
+.vscode/
+.nyc_output/
+coverage/
+dist/
+mochawesome-report/
 build/
 prebuilds/
 samples/
