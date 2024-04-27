@@ -117,7 +117,7 @@ namespace mssql
 			const auto failure = (*_failures)[i];
 			const auto err = fact.error(failure->Message());
 			Nan::Set(err, Nan::New("sqlstate").ToLocalChecked(), Nan::New(failure->SqlState()).ToLocalChecked());
-			Nan::Set(err, Nan::New("code").ToLocalChecked(), Nan::New(failure->Code()));
+			Nan::Set(err, Nan::New("code").ToLocalChecked(), Nan::New(static_cast<int>(failure->Code())));
 			Nan::Set(err, Nan::New("severity").ToLocalChecked(), Nan::New(failure->Severity()));
 			Nan::Set(err, Nan::New("serverName").ToLocalChecked(), Nan::New(failure->ServerName()).ToLocalChecked());
 			Nan::Set(err, Nan::New("procName").ToLocalChecked(), Nan::New(failure->ProcName()).ToLocalChecked());
