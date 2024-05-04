@@ -1,4 +1,3 @@
-
 /* globals describe it */
 
 const chai = require('chai')
@@ -12,11 +11,11 @@ describe('connection-pool', function () {
   this.timeout(25000)
 
   this.beforeEach(done => {
-    env.open().then(() => done())
+    env.open().then(() => { done() })
   })
 
   this.afterEach(done => {
-    env.close().then(() => done())
+    env.close().then(() => { done() })
   })
 
   it('open close pool with promises', async function handler () {
@@ -30,7 +29,7 @@ describe('connection-pool', function () {
     await pool.promises.open()
     await pool.promises.close()
 
-    function tester () {
+    async function tester () {
       return new Promise((resolve, reject) => {
         let error = null
         const q = pool.query('select @@SPID as spid')
@@ -179,6 +178,22 @@ describe('connection-pool', function () {
     expect(set.size).to.be.equal(size)
     await pool.promises.close()
     return null
+  })
+
+  it('each pool connection to return number as string', async function handler () {
+    const num = '12345678.876'
+    const size = 4
+    const options = {
+      connectionString: env.connectionString,
+      ceiling: size,
+      useNumericString: true
+    }
+    const pool = new env.sql.Pool(options)
+    await pool.promises.open()
+    const q = `SELECT CAST(${num} AS numeric(11, 3)) as number`
+    const res = await pool.promises.query(q)
+    assert.deepStrictEqual(res.first[0].number, num)
+    await pool.close()
   })
 
   it('submit 10 queries with errors (no callback) to pool of 4', testDone => {
