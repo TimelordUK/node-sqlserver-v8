@@ -181,6 +181,21 @@ describe('connection-pool', function () {
     return null
   })
 
+  it('each pool connection to return number as string', async function handler () {
+    const num = '12345678.876'
+    const size = 4
+    const options = {
+      connectionString: env.connectionString,
+      ceiling: size,
+      useNumericString: true
+    }
+    const pool = new env.sql.Pool(options)
+    await pool.promises.open()
+    const q = `SELECT CAST(${num} AS numeric(11, 3)) as number`
+    const res = await pool.promises.query(q)
+    assert.deepStrictEqual(res.first[0].number, num)
+  })
+
   it('submit 10 queries with errors (no callback) to pool of 4', testDone => {
     const iterations = 10
     tester(iterations, 4, () => 'select a;', 2000, true, err => {
