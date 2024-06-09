@@ -8,7 +8,24 @@ WITH t_name_cte(id, full_name, table_name) AS
 		inner join <table_catalog>.sys.objects so
 		on so.name = sc.TABLE_NAME
   	WHERE object_id = OBJECT_ID('<table_catalog>.<table_schema>.<table_name>')
-)
+    ),
+    primary_keys AS
+    (SELECT COLUMN_NAME,
+    TABLE_NAME,
+    1 AS is_primary_key
+FROM
+        <table_catalog>.INFORMATION_SCHEMA.KEY_COLUMN_USAGE sk
+    join <table_catalog>.sys.objects so
+on sk.CONSTRAINT_NAME = so.name
+WHERE so.type = 'PK'),
+    foreign_keys AS
+    (SELECT COLUMN_NAME,
+    TABLE_NAME,
+    1 AS is_foreign_key
+FROM <table_catalog>.INFORMATION_SCHEMA.KEY_COLUMN_USAGE sk
+    join <table_catalog>.sys.objects so
+on sk.CONSTRAINT_NAME = so.name
+WHERE so.type = 'F')
 SELECT
   distinct
   sc.ordinal_position,
@@ -28,21 +45,8 @@ SELECT
   0 as generated_always_type,
   'NOT_APPLICABLE' as generated_always_type_desc,
   0 as is_hidden,
-  (
-  CASE
-  WHEN CONSTRAINT_NAME IN (SELECT NAME
-                           FROM <table_catalog>.sys.objects
-                           WHERE TYPE = 'PK')
-    THEN 1
-  ELSE 0
-  END) AS is_primary_key,
-  (CASE
-  WHEN CONSTRAINT_NAME IN (SELECT NAME
-                           FROM <table_catalog>.sys.objects
-                           WHERE TYPE = 'F')
-    THEN 1
-  ELSE 0
-  END) AS is_foreign_key
+    COALESCE(pk.is_primary_key, 0) AS is_primary_key,
+    COALESCE(fk.is_foreign_key, 0) AS is_foreign_key
 FROM <table_catalog>.INFORMATION_SCHEMA.TABLES st
   INNER JOIN <table_catalog>.INFORMATION_SCHEMA.COLUMNS sc
     ON sc.TABLE_CATALOG = st.TABLE_CATALOG
@@ -53,6 +57,12 @@ FROM <table_catalog>.INFORMATION_SCHEMA.TABLES st
        AND sc.TABLE_SCHEMA = u.TABLE_SCHEMA
        AND sc.TABLE_NAME = u.TABLE_NAME
        AND sc.COLUMN_NAME = u.COLUMN_NAME
+    LEFT JOIN primary_keys pk
+    ON sc.COLUMN_NAME = pk.COLUMN_NAME
+    AND sc.TABLE_NAME = pk.TABLE_NAME
+    LEFT JOIN foreign_keys fk
+    ON sc.COLUMN_NAME = fk.COLUMN_NAME
+    AND sc.TABLE_NAME = fk.TABLE_NAME
   cross join t_name_cte r
   INNER JOIN 
   <table_catalog>.sys.columns c ON c.name = sc.column_name
