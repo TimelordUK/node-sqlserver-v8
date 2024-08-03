@@ -4,6 +4,8 @@
 #include <QueryOperationParams.h>
 #include <ResultSet.h>
 
+#include <utility>
+
 namespace mssql
 {
 	BoundDatumSet::BoundDatumSet() :
@@ -18,7 +20,7 @@ namespace mssql
 	BoundDatumSet::BoundDatumSet(shared_ptr<QueryOperationParams> params) : 
 	BoundDatumSet()
 	{
-		_params = params;
+		_params = std::move(params);
 	}
 
 	bool BoundDatumSet::reserve(const shared_ptr<ResultSet>& set, const size_t row_count) const

@@ -822,7 +822,7 @@ namespace mssql
 
 		if (pars.size() > 0)
 		{
-			const auto &first = (*param_set).atIndex(0);
+			const auto &first = param_set->atIndex(0);
 			if (first->is_bcp)
 			{
 				return try_bcp(param_set, first->bcp_version);
