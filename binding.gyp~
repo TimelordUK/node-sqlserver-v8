@@ -9,13 +9,13 @@
               },
               'OS=="linux"', {
                 'variables': {
-                  "cflags_cpp" : "-std=c++20",
+                  "cflags_cpp" : "-std=c++17",
                   'arch%': '<!(uname -m)',
                 }
               },
               'OS=="win"', {
                 'variables': {
-                  "cflags_cpp" : "std:c++20",
+                  "cflags_cpp" : "/std:c++20",
                   'arch%': '<!(echo %PROCESSOR_ARCHITECTURE%)'
                 }
               }
