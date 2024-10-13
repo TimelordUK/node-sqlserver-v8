@@ -4,7 +4,7 @@
               'OS=="mac"', {
                 'variables': {
                     'arch%': '<!(uname -m)',
-                    "cflags_cpp" : "gnu++17",
+                    "cflags_cpp" : "gnu++20",
                 }
               },
               'OS=="linux"', {
