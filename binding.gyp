@@ -33,12 +33,15 @@
         "unixlocalodbc%": "-l/usr/local/odbc",
         "linuxodbc%": "-lodbc",
         "winodbc%": "odbc32",
-        # pick up libodbc from somwhere - note the ms driver is loaded dynamicaly via odbc, no
+        # pick up libodbc from somwhere - note the ms driver is loaded
+        # dynamicaly via odbc, no
         # link dependency is added
         "linkdir%": "/usr/local/lib /usr/local/ssl/lib64/ /opt/homebrew/lib /home/linuxbrew/.linuxbrew/lib/ /usr/lib /usr/lib64 .",
     },
     "targets": [
         {
+            # seems this is only way to add the cpp version flag
+            # on ms compiler - now needed for electron
             "msvs_settings": {
                 "VCCLCompilerTool": {
                     "ExceptionHandling": 1,
