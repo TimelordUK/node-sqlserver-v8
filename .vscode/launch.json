@@ -25,8 +25,9 @@
             "request": "launch",
             "program": "C:/Program Files/nodejs/node.exe",
             "args": [
-                "./node_modules/mocha/bin/mocha.js",
-               "test/sproc"
+                "samples/javascript/streaming.js"
+               // "./node_modules/mocha/bin/mocha.js",
+               // "test/sproc"
                // "test/table-builder"
                // "simple-demo"
                // "runtest", "-k", "linux", 
@@ -41,7 +42,7 @@
                // "-t", "multiple-errors", 
                // "-t", "geography",
                // "-t", "tvp",
-               // "-t", "warnings",
+               //"-t", "warnings",
                // "-t", "txn",
                // "-t", "datatypes",
                // "-t", "sproc"
@@ -62,10 +63,10 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/stephen/.nvm/versions/node/v15.12.0/bin/node",
+            "program": "C:/ProgramData/nvm/v22.5.1/node",
             "args": [
-                "runtest", "-k", "wsl",
-                "-t", "prepared", 
+                "samples/javascript/streaming.js",
+                // "-t", "prepared", 
                 // "-t", "warnings", 
                 // "-t", "bulk", 
                 // "-t", "querycancel",

@@ -41,7 +41,7 @@ namespace mssql
 		void read_errors(shared_ptr<vector<shared_ptr<OdbcError>>> & errors) const;
       
     private:
-
+        std::string trim(vector<SQLWCHAR>&v, SQLSMALLINT len) const;
         void operator=(const OdbcHandle& orig) 
         {
             assert(false);
