@@ -83,14 +83,20 @@ namespace mssql
 		return handle;
 	} 
 
+	std::string OdbcHandle::trim(vector<SQLWCHAR>&v, SQLSMALLINT len) const {
+		auto take = min(v.capacity(), (size_t)len);
+		auto c_msg = swcvec2str(v, take);
+		return c_msg;
+	}
+
 	void OdbcHandle::read_errors(shared_ptr<vector<shared_ptr<OdbcError>>> & errors) const
 	{
 		SQLSMALLINT msg_len = 0;
 		SQLRETURN      rc2;
 		SQLINTEGER    native_error = 0;
 		vector<SQLWCHAR> msg;
-		msg.reserve(2 * 1024);
-		msg.resize(2 * 1024);
+		msg.reserve(10 * 1024);
+		msg.resize(10 * 1024);
 		vector<SQLWCHAR> sql_state;
 		sql_state.reserve(6);
 		sql_state.resize(6);
@@ -112,15 +118,14 @@ namespace mssql
 			if (rc2 < 0) {
 				break;
 			}
-		
-			auto c_msg = swcvec2str(msg, msg_len);
+			auto c_msg = trim(msg, msg_len);
 			auto c_state = swcvec2str(sql_state, sql_state.size());
 			const auto m = string(c_msg);
 			SQLGetDiagField(HandleType, handle, i, SQL_DIAG_SS_SEVERITY, &severity, SQL_IS_INTEGER, nullptr);
 			SQLGetDiagField(HandleType, handle, i, SQL_DIAG_SS_SRVNAME, serverName.data(), serverName.capacity(), &serverName_len);
-			const string c_serverName = swcvec2str(serverName, serverName_len);
+			const string c_serverName = trim(serverName, serverName_len);
 			SQLGetDiagField(HandleType, handle, i, SQL_DIAG_SS_PROCNAME, procName.data(), procName.capacity(), &procName_len);
-			const string c_procName = swcvec2str(procName, procName_len);
+			const string c_procName = trim(procName, procName_len);
 			SQLGetDiagField(HandleType, handle, i, SQL_DIAG_SS_LINE, &lineNumber, SQL_IS_UINTEGER, nullptr);
 			if (received.find(m) == received.end()) {
 				const auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), native_error, severity, c_serverName.c_str(), c_procName.c_str(), lineNumber);
