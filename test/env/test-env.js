@@ -226,11 +226,6 @@ class TestEnv {
     await pool.close()
   }
 
-  async doesThrow (sql, message, connection) {
-    const proxy = connection || this.theConnection
-    await expect(proxy.promises.query(sql)).to.be.rejectedWith(message)
-  }
-
   /*
       {
 +     col_a: 0.2857142857142857,

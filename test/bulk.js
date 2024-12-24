@@ -1,15 +1,20 @@
 'use strict'
-/* globals describe it */
 
-const { TestEnv } = require('./env/test-env')
-const env = new TestEnv()
-const chai = require('chai')
-const expect = chai.expect
-const assert = chai.assert
+import { createRequire } from 'module'
+import chaiAsPromised from 'chai-as-promised'
+
+/* globals describe it */
 
 const totalObjectsForInsert = 10
 const test1BatchSize = 1
 const test2BatchSize = 10
+const require = createRequire(import.meta.url)
+const { TestEnv } = require('./env/test-env')
+const env = new TestEnv()
+const chai = require('chai')
+chai.use(chaiAsPromised)
+const expect = chai.expect
+const assert = chai.assert
 
 describe('bulk', function () {
   this.timeout(100000)
@@ -857,6 +862,11 @@ describe('bulk', function () {
     assert(table !== null)
   })
 
+  async function doesThrow (sql, message, connection) {
+    const proxy = connection || env.theConnection
+    await expect(proxy.promises.query(sql)).to.be.rejectedWith(message)
+  }
+
   it('bulk insert condition failure', async function handler () {
     const createTableSql = 'CREATE TABLE Persons (Name varchar(255) NOT NULL)'
     await env.theConnection.promises.query(env.dropTableSql('Persons'))
@@ -867,9 +877,9 @@ describe('bulk', function () {
     const nullJohn = 'INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (null), (N\'John\')'
     const error = 'Cannot insert the value NULL into column'
 
-    await env.doesThrow(johnNullSql, error)
-    await env.doesThrow(nullSql, error)
-    await env.doesThrow(nullJohn, error)
+    await doesThrow(johnNullSql, error)
+    await doesThrow(nullSql, error)
+    await doesThrow(nullJohn, error)
   })
 
   it('non null varchar write empty string', async function handler () {
