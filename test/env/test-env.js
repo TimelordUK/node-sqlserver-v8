@@ -18,8 +18,6 @@ const util = require('util')
 const fs = require('fs')
 const path = require('path')
 const chai = require('chai')
-const expect = chai.expect
-chai.use(require('chai-as-promised'))
 
 class CommonTestFnPromises {
   constructor () {
@@ -226,11 +224,6 @@ class TestEnv {
     await pool.open()
     await fn(pool)
     await pool.close()
-  }
-
-  async doesThrow (sql, message, connection) {
-    const proxy = connection || this.theConnection
-    await expect(proxy.promises.query(sql)).to.be.rejectedWith(message)
   }
 
   /*

@@ -22,7 +22,6 @@
 const chai = require('chai')
 const expect = chai.expect
 const assert = chai.assert
-chai.use(require('chai-as-promised'))
 
 /* globals describe it */
 
@@ -33,11 +32,17 @@ describe('multiple-error', function () {
   this.timeout(30000)
 
   this.beforeEach(done => {
-    env.open().then(() => done())
+    env.open().then(() => {
+      done()
+    }).catch(e => {
+      console.error(e)
+    })
   })
 
   this.afterEach(done => {
-    env.close().then(() => done())
+    env.close().then(() => { done() }).catch(e => {
+      console.error(e)
+    })
   })
 
   it('non trusted invalid user', done => {

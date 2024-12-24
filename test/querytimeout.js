@@ -12,11 +12,17 @@ describe('querytimeout', function () {
   this.timeout(30000)
 
   this.beforeEach(done => {
-    env.open().then(() => { done() })
+    env.open().then(() => {
+      done()
+    }).catch(e => {
+      console.error(e)
+    })
   })
 
   this.afterEach(done => {
-    env.close().then(() => { done() })
+    env.close().then(() => { done() }).catch(e => {
+      console.error(e)
+    })
   })
 
   const waitProcDef = `alter PROCEDURE <name> (

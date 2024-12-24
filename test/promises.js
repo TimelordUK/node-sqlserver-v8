@@ -3,22 +3,31 @@
 
 /* globals describe it */
 
+import { createRequire } from 'module'
+import chaiAsPromised from 'chai-as-promised'
+const require = createRequire(import.meta.url)
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 const chai = require('chai')
-const assert = chai.assert
+chai.use(chaiAsPromised)
 const expect = chai.expect
-chai.use(require('chai-as-promised'))
+const assert = chai.assert
 
 describe('promises', function () {
   this.timeout(30000)
 
   this.beforeEach(done => {
-    env.open().then(() => done())
+    env.open().then(() => {
+      done()
+    }).catch(e => {
+      console.error(e)
+    })
   })
 
   this.afterEach(done => {
-    env.close().then(() => done())
+    env.close().then(() => { done() }).catch(e => {
+      console.error(e)
+    })
   })
 
   it('calculate row receive rate from aggregator', async function handler () {

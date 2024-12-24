@@ -3,7 +3,6 @@
 
 const chai = require('chai')
 const expect = chai.expect
-chai.use(require('chai-as-promised'))
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 
@@ -11,11 +10,17 @@ describe('tvp', function () {
   this.timeout(30000)
 
   this.beforeEach(done => {
-    env.open().then(() => done())
+    env.open().then(() => {
+      done()
+    }).catch(e => {
+      console.error(e)
+    })
   })
 
   this.afterEach(done => {
-    env.close().then(() => done())
+    env.close().then(() => { done() }).catch(e => {
+      console.error(e)
+    })
   })
 
   async function checkTxt (tableName, vec) {
