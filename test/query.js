@@ -31,11 +31,17 @@ describe('query', function () {
   this.timeout(30000)
 
   this.beforeEach(done => {
-    env.open().then(() => { done() })
+    env.open().then(() => {
+      done()
+    }).catch(e => {
+      console.error(e)
+    })
   })
 
   this.afterEach(done => {
-    env.close().then(() => { done() })
+    env.close().then(() => { done() }).catch(e => {
+      console.error(e)
+    })
   })
 
   it('simple query with a promise open-query-close-resolve var%', async function handler () {

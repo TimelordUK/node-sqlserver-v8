@@ -32,12 +32,18 @@ const env = new TestEnv()
 describe('parsing', function () {
   this.timeout(60000)
 
-  this.beforeEach(async function handler () {
-    await env.open()
+  this.beforeEach(done => {
+    env.open().then(() => {
+      done()
+    }).catch(e => {
+      console.error(e)
+    })
   })
 
-  this.afterEach(async function handler () {
-    await env.close()
+  this.afterEach(done => {
+    env.close().then(() => { done() }).catch(e => {
+      console.error(e)
+    })
   })
 
   it('check decomposition of table name MyTable', function handler () {

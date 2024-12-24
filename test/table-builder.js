@@ -16,11 +16,17 @@ describe('table-builder.js', function () {
   this.timeout(30000)
 
   this.beforeEach(done => {
-    env.open().then(() => { done() })
+    env.open().then(() => {
+      done()
+    }).catch(e => {
+      console.error(e)
+    })
   })
 
   this.afterEach(done => {
-    env.close().then(() => { done() })
+    env.close().then(() => { done() }).catch(e => {
+      console.error(e)
+    })
   })
 
   it('use table builder to bind to a table int, nvarchar(max)', async function handler () {

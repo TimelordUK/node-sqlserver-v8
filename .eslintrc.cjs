@@ -28,6 +28,8 @@ module.exports = {
     "@typescript-eslint/consistent-type-imports":"off",
     "@typescript-eslint/ban-types":"off",
     "@typescript-eslint/prefer-ts-expect-error":"off",
-    "@typescript-eslint/explicit-function-return-type":"off"
+    "@typescript-eslint/explicit-function-return-type":"off",
+    "@typescript-eslint/no-unsafe-argument":"off",
+    "@typescript-eslint/unbound-method":" off"
   },
 };

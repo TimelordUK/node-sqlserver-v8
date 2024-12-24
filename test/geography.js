@@ -34,11 +34,15 @@ describe('geography', function () {
   this.beforeEach(done => {
     env.open().then(() => {
       done()
+    }).catch(e => {
+      console.error(e)
     })
   })
 
   this.afterEach(done => {
-    env.close().then(() => { done() })
+    env.close().then(() => { done() }).catch(e => {
+      console.error(e)
+    })
   })
 
   function getTVPTable (vec, table) {
