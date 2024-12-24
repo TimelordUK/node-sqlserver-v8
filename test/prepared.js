@@ -26,7 +26,6 @@ const env = new TestEnv()
 const chai = require('chai')
 const assert = chai.assert
 const expect = chai.expect
-chai.use(require('chai-as-promised'))
 
 describe('prepared', function () {
   const tableName = 'employee'

@@ -1,12 +1,16 @@
 'use strict'
-/* globals describe it */
 
+/* globals describe it */
+import { createRequire } from 'module'
+import chaiAsPromised from 'chai-as-promised'
+const require = createRequire(import.meta.url)
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 const chai = require('chai')
+chai.use(chaiAsPromised)
 const expect = chai.expect
 const assert = chai.assert
-chai.use(require('chai-as-promised'))
+
 describe('bcp', function () {
   this.timeout(100000)
 

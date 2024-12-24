@@ -5,7 +5,6 @@
 const chai = require('chai')
 const assert = chai.assert
 const expect = chai.expect
-chai.use(require('chai-as-promised'))
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 /*
@@ -39,7 +38,7 @@ describe('geography', function () {
   })
 
   this.afterEach(done => {
-    env.close().then(() => done())
+    env.close().then(() => { done() })
   })
 
   function getTVPTable (vec, table) {

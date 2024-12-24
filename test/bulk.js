@@ -6,7 +6,6 @@ const env = new TestEnv()
 const chai = require('chai')
 const expect = chai.expect
 const assert = chai.assert
-chai.use(require('chai-as-promised'))
 
 const totalObjectsForInsert = 10
 const test1BatchSize = 1
@@ -16,11 +15,11 @@ describe('bulk', function () {
   this.timeout(100000)
 
   this.beforeEach(done => {
-    env.open().then(() => done())
+    env.open().then(() => { done() })
   })
 
   this.afterEach(done => {
-    env.close().then(() => done())
+    env.close().then(() => { done() })
   })
 
   function getInsertVector (count) {

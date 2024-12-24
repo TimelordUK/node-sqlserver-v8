@@ -18,8 +18,6 @@ const util = require('util')
 const fs = require('fs')
 const path = require('path')
 const chai = require('chai')
-const expect = chai.expect
-chai.use(require('chai-as-promised'))
 
 class CommonTestFnPromises {
   constructor () {
