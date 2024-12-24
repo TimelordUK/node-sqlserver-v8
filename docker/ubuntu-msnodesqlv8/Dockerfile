@@ -34,6 +34,7 @@ RUN . ${HOME}/.nvm/nvm.sh && nvm install 22 && npm install -g yarn && npm instal
 USER apprunner
 RUN unset nvm
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+RUN export NVM_DIR="$HOME/.nvm" && . $HOME/.nvm/nvm.sh; nvm install 22
 # RUN . ${HOME}/.nvm/nvm.sh && nvm install 22 && npm install -g yarn && npm install -g npm-check-updates 
-RUN . ${HOME}/.nvm/nvm.sh && (mkdir -p $HOME/app; cd $HOME/app; git clone https://github.com/TimelordUK/msnodesqlv8_yarn_sample.git; cd msnodesqlv8_yarn_sample; yarn install)
-RUN . ${HOME}/.nvm/nvm.sh && (mkdir -p $HOME/app/driver/node_modules; cd $HOME/app/driver/node_modules; git clone https://github.com/TimelordUK/node-sqlserver-v8.git msnodesqlv8; cd msnodesqlv8; npm install)
+RUN . ${HOME}/.nvm/nvm.sh; (mkdir -p $HOME/app; cd $HOME/app; git clone https://github.com/TimelordUK/msnodesqlv8_yarn_sample.git; cd msnodesqlv8_yarn_sample; yarn install)
+RUN . ${HOME}/.nvm/nvm.sh; (mkdir -p $HOME/app/driver/node_modules; cd $HOME/app/driver/node_modules; git clone https://github.com/TimelordUK/node-sqlserver-v8.git msnodesqlv8; cd msnodesqlv8; npm install)
