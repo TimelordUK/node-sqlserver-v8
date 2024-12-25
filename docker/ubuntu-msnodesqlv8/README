@@ -37,7 +37,7 @@ exit <ret>
 
 list containers
 
-docker container ls
+docker container ls -a
 
 start a container
 
