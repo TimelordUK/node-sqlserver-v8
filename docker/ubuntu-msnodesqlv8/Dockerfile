@@ -27,10 +27,14 @@ RUN (cd /usr/local/ssl; mv certs certs.old; ln -s /etc/ssl/certs certs)
 RUN ldconfig -v
 RUN DEBIAN_FRONTEND=noninteractive \
   apt-get update \
-  && apt-get install -y nodejs iputils-ping
-RUN npm install --g yarn
-RUN npm install --g npm-check-updates
+  && apt-get install -y iputils-ping curl
 RUN useradd -ms /bin/bash apprunner
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+RUN . ${HOME}/.nvm/nvm.sh && nvm install 22 && npm install -g yarn && npm install -g npm-check-updates && chmod -R 755 ${HOME}
 USER apprunner
-RUN (mkdir -p $HOME/app; cd $HOME/app; git clone https://github.com/TimelordUK/msnodesqlv8_yarn_sample.git; cd msnodesqlv8_yarn_sample; yarn install)
-RUN (mkdir -p $HOME/app/driver/node_modules; cd $HOME/app/driver/node_modules; git clone https://github.com/TimelordUK/node-sqlserver-v8.git msnodesqlv8; cd msnodesqlv8; npm install)
+RUN unset nvm
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+RUN export NVM_DIR="$HOME/.nvm" && . $HOME/.nvm/nvm.sh; nvm install 22
+# RUN . ${HOME}/.nvm/nvm.sh && nvm install 22 && npm install -g yarn && npm install -g npm-check-updates 
+RUN . ${HOME}/.nvm/nvm.sh; (mkdir -p $HOME/app; cd $HOME/app; git clone https://github.com/TimelordUK/msnodesqlv8_yarn_sample.git; cd msnodesqlv8_yarn_sample; yarn install)
+RUN . ${HOME}/.nvm/nvm.sh; (mkdir -p $HOME/app/driver/node_modules; cd $HOME/app/driver/node_modules; git clone https://github.com/TimelordUK/node-sqlserver-v8.git msnodesqlv8; cd msnodesqlv8; npm install)

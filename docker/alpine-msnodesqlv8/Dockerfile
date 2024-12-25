@@ -1,4 +1,4 @@
-FROM alpine:3.18
+FROM alpine:3.21
 
 RUN apk update && \
 	apk add curl gcc libc-dev g++ libffi-dev libxml2 unixodbc unixodbc-dev openssl perl gnupg python3 git vim pingu nodejs make npm bash

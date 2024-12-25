@@ -1,7 +1,7 @@
 
 from this folder build image
 
-docker build . -t msnodesqlv8-ubuntu
+docker build . -t msnodesqlv8-alpine
 
 or with human readable log and clean rebuild
 
@@ -17,11 +17,11 @@ docker images msnodesql*
 
 REPOSITORY           TAG       IMAGE ID       CREATED        SIZE
 msnodesqlv8-alpine   latest    94aa468ed1b3   21 hours ago   1.25GB
-msnodesqlv8-ubuntu   latest    c1eee90b2e4d   26 hours ago   2.42GB
+msnodesqlv8-alpine   latest    c1eee90b2e4d   26 hours ago   2.42GB
 
 start an interactive shell in a new container
 
-docker run -it msnodesqlv8-ubuntu bash
+docker run -it msnodesqlv8-alpine bash
 
 go to driver folder git repo
 

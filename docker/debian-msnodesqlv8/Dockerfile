@@ -29,16 +29,29 @@ RUN ( cd $HOME/projects/openssl ; ./config --prefix=/usr/local/ssl --openssldir=
 RUN (cd /etc/ld.so.conf.d/; echo '/usr/local/ssl/lib64/' | tee openssl-3.2.0.1s.conf;)
 RUN (cd /usr/local/ssl; mv certs certs.old; ln -s /etc/ssl/certs certs)
 RUN ldconfig -v
-
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+RUN useradd -ms /bin/bash apprunner
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+RUN . ${HOME}/.nvm/nvm.sh && nvm install 22 && npm install -g yarn && npm install -g npm-check-updates && chmod -R 755 ${HOME}
 RUN DEBIAN_FRONTEND=noninteractive \
   apt-get update \
-  && apt-get install -y nodejs iputils-ping
-RUN npm install --g yarn
-RUN npm install --g npm-check-updates
-RUN useradd -ms /bin/bash apprunner
+  && apt-get install -y iputils-ping curl
 USER apprunner
-RUN (mkdir -p $HOME/app; cd $HOME/app; git clone https://github.com/TimelordUK/msnodesqlv8_yarn_sample.git; cd msnodesqlv8_yarn_sample; yarn install)
-RUN (mkdir -p $HOME/app/driver/node_modules; cd $HOME/app/driver/node_modules; git clone https://github.com/TimelordUK/node-sqlserver-v8.git msnodesqlv8; cd msnodesqlv8; npm install)
-RUN echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
+RUN unset nvm
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+RUN export NVM_DIR="$HOME/.nvm" && . $HOME/.nvm/nvm.sh; nvm install 22
+# RUN . ${HOME}/.nvm/nvm.sh && nvm install 22 && npm install -g yarn && npm install -g npm-check-updates 
+RUN . ${HOME}/.nvm/nvm.sh; (mkdir -p $HOME/app; cd $HOME/app; git clone https://github.com/TimelordUK/msnodesqlv8_yarn_sample.git; cd msnodesqlv8_yarn_sample; yarn install)
+RUN . ${HOME}/.nvm/nvm.sh; (mkdir -p $HOME/app/driver/node_modules; cd $HOME/app/driver/node_modules; git clone https://github.com/TimelordUK/node-sqlserver-v8.git msnodesqlv8; cd msnodesqlv8; npm install)
+
+#RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+#RUN DEBIAN_FRONTEND=noninteractive \
+#  apt-get update \
+#  && apt-get install -y nodejs iputils-ping
+#RUN npm install --g yarn
+#RUN npm install --g npm-check-updates
+#RUN useradd -ms /bin/bash apprunner
+#USER apprunner
+#RUN (mkdir -p $HOME/app; cd $HOME/app; git clone https://github.com/TimelordUK/msnodesqlv8_yarn_sample.git; cd msnodesqlv8_yarn_sample; yarn install)
+#RUN (mkdir -p $HOME/app/driver/node_modules; cd $HOME/app/driver/node_modules; git clone https://github.com/TimelordUK/node-sqlserver-v8.git msnodesqlv8; cd msnodesqlv8; npm install)
+#RUN echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
 

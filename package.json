@@ -82,7 +82,7 @@
     "mochawesome": "^7.1.3",
     "node-gyp": "^11.0.0",
     "nyc": "^17.1.0",
-    "prebuild": "^13.0.1",
+    "prebuild": "^3.0.3",
     "sequelize": "^6.37.5",
     "typescript": "^5.7.2"
   },
