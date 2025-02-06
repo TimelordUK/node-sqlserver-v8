@@ -315,6 +315,11 @@ declare namespace MsNodeSqlV8 {
      * @returns promise of bound proc to call.
      */
     getProc: (name: string) => Promise<ProcedureDefinition>
+
+    beginTransaction(): Promise<PoolDescription>
+    commitTransaction(description: PoolDescription): Promise<void>
+    rollbackTransaction(description: PoolDescription): Promise<void>
+    transaction(cb: (description: PoolDescription) => any): Promise<void>
   }
 
   export class Pool implements GetSetUTC, SubmitQuery {
@@ -332,6 +337,44 @@ declare namespace MsNodeSqlV8 {
     query (sqlOrQuery: sqlQueryType, paramsOrCb?: sqlQueryParamType[] | QueryCb, cb?: QueryCb): Query
     queryRaw (sqlOrQuery: sqlQueryType, paramsOrCb?: sqlQueryParamType[] | QueryRawCb, cb?: QueryRawCb): Query
     isClosed (): boolean
+    /**
+     * event subscription
+     * e.g. pool.on('debug', msg => { console.log(msg) })
+     * @param event one of
+     *
+     * 'debug' - a debug record showing internal state of the pool
+     *
+     * 'open' - event on the pool being opened and ready to work.
+     *
+     * 'error' - propagated from connection errors
+     *
+     * 'status' - information relating to latet operation
+     *
+     * 'submitted' - raised when query is submitted where previously was on a queue
+     *
+     * @param cb callback related to event subscribed
+     */
+    on (event: string, cb?: sqlPoolEventType): void
+    beginTransaction(cb: TransactionCb): Query
+    commitTransaction(description: PoolDescription, cb?: QueryRawCb): void
+    rollbackTransaction(description: PoolDescription, cb?: QueryRawCb): void
+  }
+
+  export interface PoolChunky {
+    params: sqlProcParamType[] | sqlQueryParamType[]
+    callback: QueryCb | QueryRawCb | CallProcedureCb | TransactionCb
+  }
+
+  export class PoolEventCaster {
+    isPaused (): boolean
+    getQueryObj (): Query
+    getQueryId (): Query | number
+    isPendingCancel (): boolean
+    cancelQuery (cb?: StatusCb): void
+    pauseQuery (): void
+    resumeQuery (): void
+    setQueryObj (q: Query, chunky: PoolChunky ): void
+    isPrepared (): false
     /**
      * event subscription
      * e.g. pool.on('debug', msg => { console.log(msg) })
@@ -926,6 +969,8 @@ declare namespace MsNodeSqlV8 {
   export type GetProcedureCb = (procedure?: ProcedureDefinition) => void
 
   export type GetProcCb = (err: Error, procedure?: ProcedureDefinition) => void
+
+  export type TransactionCb = (err?: Error, description?: PoolDescription) => void
 
   export interface BulkMgrSummary {
     insertSignature: string
@@ -1663,6 +1708,39 @@ declare namespace MsNodeSqlV8 {
     query (qid: number, queryObj: NativeQueryObj, params: NativeParam[], cb: NativeQueryCb): void
 
     callProcedure (qid: number, procedure: string, params: NativeParam[], cb: NativeQueryCb): void
+  }
+
+  export enum workTypeEnum {
+    QUERY = 10,
+    RAW = 11,
+    PROC = 12,
+    TRANSACTION = 13,
+    COMMITTING = 14,
+  }
+
+  export interface PoolWorkItem {
+    id: number
+    sql: string
+    paramsOrCallback: sqlQueryParamType[] | QueryCb | QueryRawCb | CallProcedureCb | TransactionCb,
+    callback: QueryCb | QueryRawCb | CallProcedureCb | TransactionCb
+    poolNotifier: PoolEventCaster
+    workType: workTypeEnum
+    chunky: PoolChunky
+  }
+
+  export interface PoolDescription {
+    id: number
+    pool: Pool
+    connection: Connection
+    heartbeatSqlResponse: any
+    lastActive: Date
+    work: PoolWorkItem
+    keepAliveCount: number
+    recreateCount: number
+    parkedCount: number
+    queriesSent: number
+    beganAt: null | Date
+    totalElapsedQueryMs: number
   }
 
   export interface SqlClient extends UserConversion {
