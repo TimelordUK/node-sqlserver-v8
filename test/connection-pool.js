@@ -161,7 +161,7 @@ describe('connection-pool', function () {
 
   it('use pool for insert in transaction', async function handler () {
     const pool = env.pool(4)
-    const tableName = 'rowsAffectedTest'
+    const tableName = 'poolTranTest'
     const pp = await pool.promises
     await pp.open()
     const t1 = await getDescription(pool, tableName)
@@ -170,12 +170,14 @@ describe('connection-pool', function () {
     const res = await pp.query(`select * from ${tableName}`)
     expect(res.first).to.not.be.null
     expect(res.first.length).to.equal(2)
+    const drop = env.dropTableSql(tableName)
+    await env.theConnection.promises.query(drop)
     await pp.close()
   })
 
   it('use pool for insert/rollback in transaction', async function handler () {
     const pool = env.pool(4)
-    const tableName = 'rowsAffectedTest'
+    const tableName = 'poolTranTest'
     const pp = await pool.promises
     await pp.open()
     const t1 = await getDescription(pool, tableName)
@@ -184,6 +186,8 @@ describe('connection-pool', function () {
     const res = await pp.query(`select * from ${tableName}`)
     expect(res.first).to.not.be.null
     expect(res.first.length).to.equal(1)
+    const drop = env.dropTableSql(tableName)
+    await env.theConnection.promises.query(drop)
     await pp.close()
   })
 
@@ -191,7 +195,7 @@ describe('connection-pool', function () {
     const pool = env.pool(4)
     const pp = await pool.promises
     await pp.open()
-    const tableName = 'rowsAffectedTest'
+    const tableName = 'poolTranTest'
     await pp.transaction(async function (description) {
       /* I'm inside a transaction */
       const drop = env.dropTableSql(tableName)
@@ -203,6 +207,8 @@ describe('connection-pool', function () {
     const res = await pp.query(`select * from ${tableName}`)
     expect(res.first).to.not.be.null
     expect(res.first.length).to.equal(1)
+    const drop = env.dropTableSql(tableName)
+    await env.theConnection.promises.query(drop)
     await pp.close()
   })
 
