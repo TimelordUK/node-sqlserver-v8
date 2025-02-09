@@ -150,6 +150,68 @@ describe('connection-pool', function () {
     await pool.promises.close()
   })
 
+  async function getDescription(pool, tableName) {
+    const pp = await pool.promises
+    const drop = env.dropTableSql(tableName)
+    await env.theConnection.promises.query(drop)
+    await pp.query(`create table ${tableName} (id int, val int)`)
+    await pp.query(`insert into ${tableName} values (1, 5)`)
+    return await pp.beginTransaction()
+  }
+
+  it('use pool for insert in transaction', async function handler () {
+    const pool = env.pool(4)
+    const tableName = 'poolTranTest'
+    const pp = await pool.promises
+    await pp.open()
+    const t1 = await getDescription(pool, tableName)
+    await t1.connection.promises.query(`insert into ${tableName} values (1, 5)`)
+    await pp.commitTransaction(t1);
+    const res = await pp.query(`select * from ${tableName}`)
+    expect(res.first).to.not.be.null
+    expect(res.first.length).to.equal(2)
+    const drop = env.dropTableSql(tableName)
+    await env.theConnection.promises.query(drop)
+    await pp.close()
+  })
+
+  it('use pool for insert/rollback in transaction', async function handler () {
+    const pool = env.pool(4)
+    const tableName = 'poolTranTest'
+    const pp = await pool.promises
+    await pp.open()
+    const t1 = await getDescription(pool, tableName)
+    await t1.connection.promises.query(`insert into ${tableName} values (1, 5)`)
+    await pp.rollbackTransaction(t1);
+    const res = await pp.query(`select * from ${tableName}`)
+    expect(res.first).to.not.be.null
+    expect(res.first.length).to.equal(1)
+    const drop = env.dropTableSql(tableName)
+    await env.theConnection.promises.query(drop)
+    await pp.close()
+  })
+
+  it('use pool for encapsulated transaction', async function handler () {
+    const pool = env.pool(4)
+    const pp = await pool.promises
+    await pp.open()
+    const tableName = 'poolTranTest'
+    await pp.transaction(async function (description) {
+      /* I'm inside a transaction */
+      const drop = env.dropTableSql(tableName)
+      const cp = description.connection.promises
+      await cp.query(drop)
+      await cp.query(`create table ${tableName} (id int, val int)`)
+      await cp.query(`insert into ${tableName} values (1, 5)`)
+    })
+    const res = await pp.query(`select * from ${tableName}`)
+    expect(res.first).to.not.be.null
+    expect(res.first.length).to.equal(1)
+    const drop = env.dropTableSql(tableName)
+    await env.theConnection.promises.query(drop)
+    await pp.close()
+  })
+
   it('submit error queries on pool with no on.error catch', async function handler () {
     const pool = env.pool(4)
     await pool.promises.open()
