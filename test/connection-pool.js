@@ -150,6 +150,24 @@ describe('connection-pool', function () {
     await pool.promises.close()
   })
 
+  it('use pool for insert in transaction', async function handler () {
+    const pool = env.pool(4)
+    await pool.promises.open()
+
+    const tableName = 'rowsAffectedTest'
+    const drop = env.dropTableSql(tableName)
+    await env.theConnection.promises.query(drop)
+    await pool.promises.query(`create table ${tableName} (id int, val int)`)
+    await pool.promises.query(`insert into ${tableName} values (1, 5)`)
+    const t1 = await pool.promises.beginTransaction()
+    await t1.connection.promises.query(`insert into ${tableName} values (1, 5)`)
+    await pool.promises.commitTransaction(t1);
+    const res = await pool.promises.query(`select * from ${tableName}`)
+    expect(res.first).to.not.be.null
+    expect(res.first.length).to.equal(2)
+    await pool.promises.close()
+  })
+
   it('submit error queries on pool with no on.error catch', async function handler () {
     const pool = env.pool(4)
     await pool.promises.open()

@@ -261,6 +261,7 @@ describe('params', function () {
     assert.deepStrictEqual(res.first[0].number, num)
   })
 
+
   it('query a bigint implicit - configure query to return as string', async function handler () {
     const num = '9223372036854775807'
     const q = `SELECT ${num} as number`
