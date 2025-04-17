@@ -49,6 +49,11 @@
                 }
             },
             "target_name": "sqlserverv8",
+            "defines": [
+                 "NAPI_DISABLE_CPP_EXCEPTIONS",
+                # Uncomment the next line to use Node-API instead of NAN
+                 "CONNECTION_USE_NODE_API",
+            ],
             "variables": {
                 # Set the target variable only if it is not passed in by prebuild
                 "target%": '<!(node -e "console.log(process.versions.node)")',
@@ -100,9 +105,13 @@
             "sources": ["<!@(node -p \"'<(fileset)'" ".split(' ')" ".join(' ')\")"],
             "include_dirs": [
                 "<!(node -e \"require('nan')\")",
+                "<!(node -e \"require('node-addon-api').include\")"
                 "src",
             ],
-            "defines": ["NODE_GYP_V4"],
+            "defines": [
+            "NODE_GYP_V4",
+
+            ],
             "actions": [
                 {
                     "action_name": "print_variables",
