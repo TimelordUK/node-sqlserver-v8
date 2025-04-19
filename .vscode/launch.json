@@ -23,10 +23,11 @@
             "name": "(Windows) Launch",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "C:/Program Files/nodejs/node.exe",
+            "program": "C:\\nvm4w\\nodejs\\node.exe",
             "args": [
-                "samples/javascript/streaming.js"
-               // "./node_modules/mocha/bin/mocha.js",
+                //"samples/javascript/streaming.js"
+               "./node_modules/mocha/bin/mocha.js",
+                "test/napi/open"
                // "test/sproc"
                // "test/table-builder"
                // "simple-demo"

@@ -1,5 +1,6 @@
 #pragma once
 #include <napi.h>
+#include <platform.h>
 #include <mutex>
 #include <string>
 #include <memory>

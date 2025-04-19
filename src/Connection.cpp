@@ -9,12 +9,18 @@ namespace mssql
     Napi::FunctionReference Connection::constructor;
 
     // Initialize the class and export it to the module
-    Napi::Object Connection::Init(Napi::Env env, Napi::Object exports) {
+    Napi::Object Connection::Init(Napi::Env env, Napi::Object exports)
+    {
+        // Initialize ODBC environment
+        if (!OdbcConnection::InitializeEnvironment())
+        {
+            Napi::Error::New(env, "Failed to initialize ODBC environment")
+                .ThrowAsJavaScriptException();
+            return exports;
+        }
+
         // Define class
-        Napi::Function func = DefineClass(env, "Connection", {
-            InstanceMethod("open", &Connection::Open),
-            InstanceMethod("close", &Connection::Close)
-            });
+        Napi::Function func = DefineClass(env, "Connection", { InstanceMethod("open", &Connection::Open), InstanceMethod("close", &Connection::Close) });
 
         // Create persistent reference to constructor
         constructor = Napi::Persistent(func);
@@ -27,7 +33,8 @@ namespace mssql
 
     // Constructor
     Connection::Connection(const Napi::CallbackInfo& info)
-        : Napi::ObjectWrap<Connection>(info) {
+        : Napi::ObjectWrap<Connection>(info)
+    {
         Napi::Env env = info.Env();
         Napi::HandleScope scope(env);
 
@@ -36,27 +43,31 @@ namespace mssql
     }
 
     // Destructor
-    Connection::~Connection() {
+    Connection::~Connection()
+    {
         // Make sure connection is closed
-        if (isConnected_) {
-            std::string errorMessage;
-            odbcConnection_->Close(errorMessage);
+        if (isConnected_)
+        {
+            odbcConnection_->Close();
         }
     }
 
     // Open connection method - supports both callback and Promise
-    Napi::Value Connection::Open(const Napi::CallbackInfo& info) {
+    Napi::Value Connection::Open(const Napi::CallbackInfo& info)
+    {
         Napi::Env env = info.Env();
         Napi::HandleScope scope(env);
 
         // Check if we already have a connection
-        if (isConnected_) {
+        if (isConnected_)
+        {
             Napi::Error::New(env, "Connection is already open").ThrowAsJavaScriptException();
             return env.Undefined();
         }
 
         // Get connection string
-        if (info.Length() < 1 || !info[0].IsString()) {
+        if (info.Length() < 1 || !info[0].IsString())
+        {
             Napi::TypeError::New(env, "Connection string expected").ThrowAsJavaScriptException();
             return env.Undefined();
         }
@@ -67,33 +78,34 @@ namespace mssql
         Napi::Function callback;
         bool usePromise = false;
 
-        if (info.Length() > 1 && info[info.Length() - 1].IsFunction()) {
+        if (info.Length() > 1 && info[info.Length() - 1].IsFunction())
+        {
             callback = info[info.Length() - 1].As<Napi::Function>();
         }
-        else {
+        else
+        {
             // No callback provided, we'll use a Promise
             usePromise = true;
             // Create a deferred Promise
             Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
 
             // Create a callback that resolves/rejects the promise
-            callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo& info) {
-                Napi::Env env = info.Env();
-                if (info[0].IsNull() || info[0].IsUndefined()) {
-                    deferred.Resolve(info[1]);
-                }
-                else {
-                    deferred.Reject(info[0]);
-                }
-                return env.Undefined();
-                });
+            callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo& info)
+                {
+                    Napi::Env env = info.Env();
+                    if (info[0].IsNull() || info[0].IsUndefined()) {
+                        deferred.Resolve(info[1]);
+                    }
+                    else {
+                        deferred.Reject(info[0]);
+                    }
+                    return env.Undefined(); });
 
             // Create and queue the worker
             auto worker = new ConnectionWorker(
                 callback,
                 odbcConnection_.get(),
-                connectionString
-            );
+                connectionString);
             worker->Queue();
 
             // Return the promise
@@ -104,20 +116,21 @@ namespace mssql
         auto worker = new ConnectionWorker(
             callback,
             odbcConnection_.get(),
-            connectionString
-        );
+            connectionString);
         worker->Queue();
 
         return env.Undefined();
     }
 
     // Close connection method
-    Napi::Value Connection::Close(const Napi::CallbackInfo& info) {
+    Napi::Value Connection::Close(const Napi::CallbackInfo& info)
+    {
         Napi::Env env = info.Env();
         Napi::HandleScope scope(env);
 
         // Check if we have a connection to close
-        if (!isConnected_) {
+        if (!isConnected_)
+        {
             Napi::Error::New(env, "Connection is not open").ThrowAsJavaScriptException();
             return env.Undefined();
         }
@@ -125,9 +138,10 @@ namespace mssql
         // For simplicity, we'll do a synchronous close
         // In a full implementation, you'd likely want this to be async too
         std::string errorMessage;
-        bool success = odbcConnection_->Close(errorMessage);
+        bool success = odbcConnection_->Close();
 
-        if (!success) {
+        if (!success)
+        {
             Napi::Error::New(env, errorMessage).ThrowAsJavaScriptException();
             return env.Undefined();
         }
@@ -136,31 +150,38 @@ namespace mssql
         return Napi::Boolean::New(env, true);
     }
 
-    // ConnectionWorker implementation
     ConnectionWorker::ConnectionWorker(Napi::Function& callback,
         OdbcConnection* connection,
         const std::string& connectionString)
         : Napi::AsyncWorker(callback),
         connection_(connection),
-        connectionString_(connectionString) {
+        connectionString_(connectionString)
+    {
     }
 
     // This runs on the worker thread
-    void ConnectionWorker::Execute() {
-        // Perform the actual connection operation
-        std::string errorMessage;
-
-        // For this skeleton, we'll simulate an async operation with a delay
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
-        // Attempt to open the connection
-        if (!connection_->Open(connectionString_, errorMessage)) {
-            SetError(errorMessage);
+    void ConnectionWorker::Execute()
+    {
+        // Attempt to open the connection to the database
+        if (!connection_->Open(connectionString_))
+        {
+            // If failed, get error information
+            const auto& errors = connection_->GetErrors();
+            if (!errors.empty())
+            {
+                std::string errorMessage = errors[0]->message;
+                SetError(errorMessage);
+            }
+            else
+            {
+                SetError("Unknown error occurred while opening connection");
+            }
         }
     }
 
     // This runs on the main JavaScript thread
-    void ConnectionWorker::OnOK() {
+    void ConnectionWorker::OnOK()
+    {
         Napi::Env env = Env();
         Napi::HandleScope scope(env);
 
