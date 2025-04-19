@@ -28,11 +28,12 @@
     #endif
 #endif
 
-#include <v8.h>
+
 #include <uv.h>
 #include <node.h>
 #include <node_buffer.h>
-#include <nan.h>
+#include <napi.h>
+
 #ifdef LINUX_BUILD
     #include <sqltypes.h>
     #include <sqlspi.h>
@@ -56,11 +57,6 @@
 #include <numeric>
 #include <memory>
 
-#include "Utility.h"
-#include "OdbcError.h"
-#include "OdbcHandle.h"
-
-// #define interface struct 	// for the COM interfaces in sqlncli.h and to avoid including extra files
 
 #ifdef WINDOWS_BUILD
     #include "sqlncli.h"	 	// SQL Server specific constants

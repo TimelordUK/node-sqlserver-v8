@@ -48,11 +48,12 @@
                     "AdditionalOptions": ["/std:c++20"],
                 }
             },
-            "target_name": "sqlserverv8",
+            "target_name": "sqlserver",
             "defines": [
                  "NAPI_DISABLE_CPP_EXCEPTIONS",
                 # Uncomment the next line to use Node-API instead of NAN
-                 "CONNECTION_USE_NODE_API",
+                # "CONNECTION_USE_NODE_API",
+                 "BOUNDDATUM_USE_NODE_API",
             ],
             "variables": {
                 # Set the target variable only if it is not passed in by prebuild
@@ -105,7 +106,7 @@
             "sources": ["<!@(node -p \"'<(fileset)'" ".split(' ')" ".join(' ')\")"],
             "include_dirs": [
                 "<!(node -e \"require('nan')\")",
-                "<!(node -e \"require('node-addon-api').include\")"
+                "<!(node -p \"require('node-addon-api').include_dir\")",
                 "src",
             ],
             "defines": [
@@ -154,6 +155,9 @@
                         "defines": [
                             "UNICODE=1",
                             "WINDOWS_BUILD",
+                            # "BOUNDDATUM_USE_NODE_API",
+                                # Uncomment the next line to use Node-API instead of NAN
+                            # "CONNECTION_USE_NODE_API",
                         ],
                     },
                 ],
