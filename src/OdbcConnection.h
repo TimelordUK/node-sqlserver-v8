@@ -95,13 +95,23 @@ namespace mssql
         OdbcError( const char* sqlstate, const char* message, SQLINTEGER code, 
                     const int severity, const char* serverName, const char* procName, const unsigned int lineNumber 
         )
-           : sqlstate( sqlstate ), message(message), code(code), 
-                severity(severity), serverName(serverName), procName(procName), lineNumber(lineNumber)
+           : sqlstate( sqlstate ), 
+            message(message), 
+            code(code), 
+            severity(severity), 
+            serverName(serverName), 
+            procName(procName), 
+            lineNumber(lineNumber)
         {
         }
 
         OdbcError(const std::string& message, const std::string& sqlstate, int code)
-        : message(message), sqlstate(sqlstate), code(code), severity(0), serverName(""), procName(""), lineNumber(0) {}
+        : sqlstate(sqlstate), 
+            message(message),
+            code(code), severity(0), 
+            serverName(""), 
+            procName(""), 
+            lineNumber(0) {}
 
         const char* Message( void ) const
         {

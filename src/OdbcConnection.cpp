@@ -116,7 +116,7 @@ namespace mssql {
     bool OdbcConnection::Open(const std::string& connectionString, int timeout)
     {
         SQL_LOG_INFO("Opening connection");
-        SQL_LOG_DEBUG_STREAM(true, "Connection string (partial): " << connectionString.substr(0, 30) << "...");
+        SQL_LOG_DEBUG_STREAM("Connection string (partial): " << connectionString.substr(0, 30) << "...");
 
         std::lock_guard<std::mutex> lock(_connectionMutex);
 
