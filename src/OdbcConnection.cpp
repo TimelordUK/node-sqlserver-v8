@@ -5,6 +5,8 @@
 #include "OdbcConnection.h"
 #include <codecvt>
 #include <locale>
+#include <Logger.h>
+#include <iostream>
 
 // For demonstration purposes, we'll define simplified versions of the supporting classes
 // In a real implementation, you would have proper implementations of these classes
@@ -113,16 +115,29 @@ namespace mssql {
     
     bool OdbcConnection::Open(const std::string& connectionString, int timeout)
     {
+        SQL_LOG_INFO("Opening connection");
+        SQL_LOG_DEBUG_STREAM(true, "Connection string (partial): " << connectionString.substr(0, 30) << "...");
+
         std::lock_guard<std::mutex> lock(_connectionMutex);
-        
+
         if (connectionState != ConnectionState::ConnectionClosed) {
+            SQL_LOG_WARNING("Connection already open");
             _errors->push_back(std::make_shared<OdbcError>(
                 "Connection is already open", "01000", 0));
             return false;
         }
-        
+
         auto wideConnStr = ConvertConnectionString(connectionString);
-        return try_open(wideConnStr, timeout);
+        bool result = try_open(wideConnStr, timeout);
+
+        if (result) {
+            SQL_LOG_INFO("Connection successfully opened");
+        }
+        else {
+            SQL_LOG_ERROR("Failed to open connection");
+        }
+
+        return result;
     }
     
     bool OdbcConnection::Close()
@@ -311,6 +326,10 @@ namespace mssql {
         const std::vector<std::shared_ptr<QueryParameter>>& parameters,
         std::shared_ptr<QueryResult>& result)
     {
+        SQL_LOG_INFO("Executing query");
+        SQL_LOG_DEBUG_STREAM(true, "SQL: " << sqlText);
+        SQL_LOG_DEBUG_STREAM("Parameter count: " << parameters.size());
+
         std::lock_guard<std::mutex> lock(_connectionMutex);
         
         if (connectionState != ConnectionState::ConnectionOpen) {

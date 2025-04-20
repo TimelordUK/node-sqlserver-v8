@@ -243,23 +243,29 @@ namespace mssql
         return env.Undefined();
     }
 
-    // This runs on the worker thread
     void ConnectionWorker::Execute()
     {
+        SQL_LOG_DEBUG("Executing ConnectionWorker");
+
         // Attempt to open the connection to the database
         if (!connection_->Open(connectionString_))
         {
             // If failed, get error information
-            const auto &errors = connection_->GetErrors();
+            const auto& errors = connection_->GetErrors();
             if (!errors.empty())
             {
                 std::string errorMessage = errors[0]->message;
+                SQL_LOG_ERROR("Connection error: " + errorMessage);
                 SetError(errorMessage);
             }
             else
             {
+                SQL_LOG_ERROR("Unknown connection error");
                 SetError("Unknown error occurred while opening connection");
             }
+        }
+        else {
+            SQL_LOG_DEBUG("Connection worker completed successfully");
         }
     }
 

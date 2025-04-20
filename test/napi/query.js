@@ -7,10 +7,9 @@ describe('query', function () {
     this.timeout(40000)
 
     let connection = null
-
+    const sql = require('msnodesqlv8')
     this.beforeEach(done => {
-        const sqlserver = require('../../build/Debug/sqlserver')
-        connection = new sqlserver.Connection()
+        connection = new sql.Connection()
         connection.open("Driver={ODBC Driver 17 for SQL Server};Server=localhost,1433;Database=node;UID=admin;PWD=Password_123#", (err, conn) => {
             done(err)
         })

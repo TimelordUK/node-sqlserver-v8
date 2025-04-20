@@ -23,6 +23,7 @@
 #include <atomic>
 #include <thread>
 #include <chrono>
+#include "Logger.h" 
 
 // Platform-specific headers
 #ifdef PLATFORM_WINDOWS

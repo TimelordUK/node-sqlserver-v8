@@ -40,7 +40,7 @@
     "url": "https://github.com/TimelordUK/node-sqlserver-v8/issues"
   },
   "license": "Apache-2.0",
-  "main": "./lib/sql.js",
+  "main": "lib/sqlserver.js",
   "typings": "./lib/index.d.ts",
   "repository": {
     "type": "git",

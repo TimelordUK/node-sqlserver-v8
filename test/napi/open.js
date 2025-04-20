@@ -10,9 +10,8 @@ describe('open', function () {
     })
 
     it('will call open on the cpp object', done => {
-        const fn = __dirname
-        const sqlserver = require('../../build/Debug/sqlserver')
-        const conn = new sqlserver.Connection()
+        const sql = require('msnodesqlv8')
+        const conn = new sql.Connection()
         conn.open("Driver={ODBC Driver 17 for SQL Server};Server=localhost,1433;Database=node;UID=admin;PWD=Password_123#", (err, conn) => {
             console.log("conn open")
             done(err)
