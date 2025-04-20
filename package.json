@@ -66,6 +66,7 @@
     "prebuild-install": "^7.1.3"
   },
   "devDependencies": {
+    "dotenv": "^16.5.0",
     "@types/chai": "^5.0.1",
     "@types/chai-as-promised": "^8.0.1",
     "@types/mocha": "^10.0.10",
@@ -75,7 +76,6 @@
     "chai-as-promised": "^8.0.1",
     "electron": "^34.1.1",
     "electron-rebuild": "^3.2.9",
-    "env-cmd": "^10.1.0",
     "eslint-config-standard-with-typescript": "^43.0.1",
     "minimist": "^1.2.8",
     "mocha": "^11.1.0",

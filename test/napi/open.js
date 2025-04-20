@@ -1,20 +1,34 @@
+// test/napi/open.js
+'use strict'
+
+const chai = require('chai')
+const assert = chai.assert
+const testConnection = require('../common/test-connection')
+const sql = require('../../')
+sql.setLogLevel(4); // Debug level
+sql.enableConsoleLogging(true);
+
 describe('open', function () {
-    this.timeout(40000)
-
-    this.beforeEach(done => {
-        done()
+  let connection = null
+  
+  this.beforeEach(done => {
+    testConnection.createConnection((err, conn) => {
+      connection = conn
+      done(err)
     })
+  })
 
-    this.afterEach(done => {
-        done()
-    })
+  this.afterEach(done => {
+    if (connection) {
+      connection.close(done)
+    } else {
+      done()
+    }
+  })
 
-    it('will call open on the cpp object', done => {
-        const sql = require('msnodesqlv8')
-        const conn = new sql.Connection()
-        conn.open("Driver={ODBC Driver 18 for SQL Server};Server=localhost,1433;Database=node;UID=admin;PWD=Password_123#;TrustServerCertificate=yes;", (err, conn) => {
-            console.log("conn open")
-            done(err)
-        })
-    })
+  it('will call open on the cpp object', done => {
+    console.log('conn open')
+    assert(connection !== null)
+    done()
+  })
 })

@@ -20,12 +20,10 @@ namespace mssql
         }
 
         // Define class
-        Napi::Function func = DefineClass(env, "Connection", 
-            {
-                InstanceMethod("open", &Connection::Open), 
-                InstanceMethod("close", &Connection::Close), 
-                InstanceMethod("query", &Connection::Query)
-            });
+        Napi::Function func = DefineClass(env, "Connection",
+                                          {InstanceMethod("open", &Connection::Open),
+                                           InstanceMethod("close", &Connection::Close),
+                                           InstanceMethod("query", &Connection::Query)});
 
         // Create persistent reference to constructor
         constructor = Napi::Persistent(func);
@@ -45,7 +43,7 @@ namespace mssql
         Napi::HandleScope scope(env);
 
         // Create internal ODBC connection
-        odbcConnection_ = std::make_unique<OdbcConnection>(); 
+        odbcConnection_ = std::make_unique<OdbcConnection>();
     }
 
     // Destructor
@@ -146,25 +144,42 @@ namespace mssql
             return env.Undefined();
         }
 
-        // For simplicity, we'll do a synchronous close
-        // In a full implementation, you'd likely want this to be async too
-        std::string errorMessage;
-        bool success = odbcConnection_->Close();
-
-        if (!success)
+        // Check for callback (last argument)
+        Napi::Function callback;
+        if (info.Length() > 0 && info[info.Length() - 1].IsFunction())
         {
-            Napi::Error::New(env, errorMessage).ThrowAsJavaScriptException();
-            return env.Undefined();
+            callback = info[info.Length() - 1].As<Napi::Function>();
+        }
+        else
+        {
+            // Synchronous close is still possible without a callback
+            std::string errorMessage;
+            bool success = odbcConnection_->Close();
+
+            if (!success)
+            {
+                Napi::Error::New(env, errorMessage).ThrowAsJavaScriptException();
+                return env.Undefined();
+            }
+
+            isConnected_ = false;
+            return Napi::Boolean::New(env, true);
         }
 
-        isConnected_ = false;
-        return Napi::Boolean::New(env, true);
+        // For callback approach, use an AsyncWorker like we do for open
+        auto worker = new ConnectionCloseWorker(
+            callback,
+            odbcConnection_.get(),
+            this);
+        worker->Queue();
+
+        return env.Undefined();
     }
 
     ConnectionWorker::ConnectionWorker(Napi::Function &callback,
                                        OdbcConnection *connection,
                                        const std::string &connectionString,
-                                       Connection* parent)
+                                       Connection *parent)
         : Napi::AsyncWorker(callback),
           connection_(connection),
           connectionString_(connectionString),
@@ -172,6 +187,14 @@ namespace mssql
     {
     }
 
+    ConnectionCloseWorker::ConnectionCloseWorker(Napi::Function &callback,
+                                                 OdbcConnection *connection,
+                                                 Connection *parent)
+        : Napi::AsyncWorker(callback),
+          connection_(connection),
+          parent_(parent)
+    {
+    }
 
     // Implement Query method
     Napi::Value Connection::Query(const Napi::CallbackInfo &info)
@@ -260,7 +283,7 @@ namespace mssql
         if (!connection_->Open(connectionString_))
         {
             // If failed, get error information
-            const auto& errors = connection_->GetErrors();
+            const auto &errors = connection_->GetErrors();
             if (!errors.empty())
             {
                 std::string errorMessage = errors[0]->message;
@@ -273,7 +296,8 @@ namespace mssql
                 SetError("Unknown error occurred while opening connection");
             }
         }
-        else {
+        else
+        {
             SQL_LOG_DEBUG("Connection worker completed successfully");
         }
     }
@@ -285,7 +309,8 @@ namespace mssql
         Napi::HandleScope scope(env);
 
         // Update connection state through method
-        if (parent_) {
+        if (parent_)
+        {
             parent_->SetConnected(true);
         }
 
@@ -297,54 +322,106 @@ namespace mssql
         Callback().Call({env.Null(), result});
     }
 
+    void ConnectionCloseWorker::Execute()
+    {
+        SQL_LOG_DEBUG("Executing ConnectionCloseWorker");
 
-    QueryWorker::QueryWorker(Napi::Function& callback,
-        OdbcConnection* connection,
-        const std::string& sqlText,
-        const Napi::Array& params)
+        // Attempt to open the connection to the database
+        if (!connection_->Close())
+        {
+            // If failed, get error information
+            const auto &errors = connection_->GetErrors();
+            if (!errors.empty())
+            {
+                std::string errorMessage = errors[0]->message;
+                SQL_LOG_ERROR("Connection error: " + errorMessage);
+                SetError(errorMessage);
+            }
+            else
+            {
+                SQL_LOG_ERROR("Unknown connection error");
+                SetError("Unknown error occurred while opening connection");
+            }
+        }
+        else
+        {
+            SQL_LOG_DEBUG("Connection worker completed successfully");
+        }
+    }
+
+    // This runs on the main JavaScript thread
+    void ConnectionCloseWorker::OnOK()
+    {
+        Napi::Env env = Env();
+        Napi::HandleScope scope(env);
+
+        // Update connection state through method
+        if (parent_)
+        {
+            parent_->SetConnected(false);
+        }
+
+        // Create a result object
+        Napi::Object result = Napi::Object::New(env);
+        result.Set("connected", Napi::Boolean::New(env, true));
+
+        // Call the callback with null error and result
+        Callback().Call({env.Null(), result});
+    }
+
+    QueryWorker::QueryWorker(Napi::Function &callback,
+                             OdbcConnection *connection,
+                             const std::string &sqlText,
+                             const Napi::Array &params)
         : Napi::AsyncWorker(callback),
-        connection_(connection),
-        sqlText_(sqlText)
+          connection_(connection),
+          sqlText_(sqlText)
     {
         // Convert JavaScript parameters to C++ parameters
         uint32_t length = params.Length();
         parameters_.reserve(length);
-        
-        for (uint32_t i = 0; i < length; i++) {
+
+        for (uint32_t i = 0; i < length; i++)
+        {
             Napi::Value value = params[i];
-            
-            if (value.IsString()) {
+
+            if (value.IsString())
+            {
                 parameters_.push_back(std::make_shared<QueryParameter>(
                     value.As<Napi::String>().Utf8Value()));
             }
-            else if (value.IsNumber()) {
+            else if (value.IsNumber())
+            {
                 parameters_.push_back(std::make_shared<QueryParameter>(
                     value.As<Napi::Number>().DoubleValue()));
             }
-            else if (value.IsBoolean()) {
+            else if (value.IsBoolean())
+            {
                 parameters_.push_back(std::make_shared<QueryParameter>(
                     value.As<Napi::Boolean>().Value()));
             }
-            else if (value.IsNull() || value.IsUndefined()) {
+            else if (value.IsNull() || value.IsUndefined())
+            {
                 parameters_.push_back(std::make_shared<QueryParameter>());
             }
             // Add other types as needed
         }
-        
+
         // Initialize result object
         result_ = std::make_shared<QueryResult>();
     }
-    
+
     void QueryWorker::Execute()
     {
 
-        try {
+        try
+        {
             SQL_LOG_DEBUG_STREAM("Executing QueryWorker " << sqlText_);
             // This will need to be implemented in OdbcConnection
             // Here's a placeholder showing what it might look like
             if (!connection_->ExecuteQuery(sqlText_, parameters_, result_))
             {
-                const auto& errors = connection_->GetErrors();
+                const auto &errors = connection_->GetErrors();
                 if (!errors.empty())
                 {
                     std::string errorMessage = errors[0]->message;
@@ -356,16 +433,18 @@ namespace mssql
                 }
             }
         }
-        catch (const std::exception& e) {
+        catch (const std::exception &e)
+        {
             SQL_LOG_ERROR("Exception in QueryWorker::Execute: " + std::string(e.what()));
             SetError("Exception occurred: " + std::string(e.what()));
         }
-        catch (...) {
+        catch (...)
+        {
             SQL_LOG_ERROR("Unknown exception in QueryWorker::Execute");
             SetError("Unknown exception occurred");
         }
     }
-    
+
     void QueryWorker::OnOK()
     {
         Napi::Env env = Env();
@@ -373,9 +452,9 @@ namespace mssql
         SQL_LOG_DEBUG("QueryWorker::OnOK");
         // Convert query result to JavaScript object
         Napi::Object resultObj = result_->toJSObject(env);
-    
+
         // Call the callback with null error and result
-        Callback().Call({ env.Null(), resultObj });
+        Callback().Call({env.Null(), resultObj});
     }
 
     Napi::Object mssql::QueryResult::toJSObject(Napi::Env env) const
@@ -384,7 +463,8 @@ namespace mssql
 
         // Create metadata object
         Napi::Array meta = Napi::Array::New(env, columns_.size());
-        for (size_t i = 0; i < columns_.size(); i++) {
+        for (size_t i = 0; i < columns_.size(); i++)
+        {
             Napi::Object colInfo = Napi::Object::New(env);
             colInfo.Set("name", Napi::String::New(env, columns_[i].name));
             colInfo.Set("sqlType", Napi::Number::New(env, columns_[i].sqlType));
@@ -394,9 +474,11 @@ namespace mssql
 
         // Create rows array
         Napi::Array rowsArray = Napi::Array::New(env, rows_.size());
-        for (size_t i = 0; i < rows_.size(); i++) {
+        for (size_t i = 0; i < rows_.size(); i++)
+        {
             Napi::Array row = Napi::Array::New(env, rows_[i].size());
-            for (size_t j = 0; j < rows_[i].size(); j++) {
+            for (size_t j = 0; j < rows_[i].size(); j++)
+            {
                 row[j] = Napi::String::New(env, rows_[i][j]);
             }
             rowsArray[i] = row;

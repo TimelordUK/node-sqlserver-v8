@@ -43,6 +43,26 @@ namespace mssql
         bool isConnected_ = false;
     };
 
+    class ConnectionCloseWorker : public Napi::AsyncWorker {
+        public:
+        ConnectionCloseWorker(Napi::Function& callback,
+                OdbcConnection* connection,
+                Connection* parent);
+    
+            // Runs on worker thread
+            void Execute() override;
+    
+            // Runs on main JavaScript thread
+            void OnOK() override;
+    
+        private:
+            Connection* parent_;
+            OdbcConnection* connection_;
+            std::string connectionString_;
+            // Any results or state to pass back to JavaScript
+        };
+
+
     // AsyncWorker for ODBC connection operations
     class ConnectionWorker : public Napi::AsyncWorker {
     public:
