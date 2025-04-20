@@ -20,7 +20,7 @@ namespace mssql
         }
 
         // Define class
-        Napi::Function func = DefineClass(env, "Connection",
+        const Napi::Function func = DefineClass(env, "Connection",
                                           {InstanceMethod("open", &Connection::Open),
                                            InstanceMethod("close", &Connection::Close),
                                            InstanceMethod("query", &Connection::Query)});
@@ -39,7 +39,7 @@ namespace mssql
         : Napi::ObjectWrap<Connection>(info)
     {
         SQL_LOG_DEBUG("Connection ctor");
-        Napi::Env env = info.Env();
+        const Napi::Env env = info.Env();
         Napi::HandleScope scope(env);
 
         // Create internal ODBC connection
@@ -61,7 +61,7 @@ namespace mssql
     Napi::Value Connection::Open(const Napi::CallbackInfo &info)
     {
         SQL_LOG_DEBUG("Connection::Open");
-        Napi::Env env = info.Env();
+        const Napi::Env env = info.Env();
         Napi::HandleScope scope(env);
 
         // Check if we already have a connection
@@ -78,11 +78,10 @@ namespace mssql
             return env.Undefined();
         }
 
-        std::string connectionString = info[0].As<Napi::String>().Utf8Value();
+        const std::string connectionString = info[0].As<Napi::String>().Utf8Value();
 
         // Check for callback (last argument)
         Napi::Function callback;
-        bool usePromise = false;
 
         if (info.Length() > 1 && info[info.Length() - 1].IsFunction())
         {
@@ -91,14 +90,13 @@ namespace mssql
         else
         {
             // No callback provided, we'll use a Promise
-            usePromise = true;
             // Create a deferred Promise
             Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
             SQL_LOG_DEBUG("Connection - use Promise");
             // Create a callback that resolves/rejects the promise
             callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo &info)
                                            {
-                    Napi::Env env = info.Env();
+                    const Napi::Env env = info.Env();
                     if (info[0].IsNull() || info[0].IsUndefined()) {
                         deferred.Resolve(info[1]);
                     }
@@ -108,7 +106,7 @@ namespace mssql
                     return env.Undefined(); });
 
             // Create and queue the worker
-            auto worker = new ConnectionWorker(
+            const auto worker = new ConnectionWorker(
                 callback,
                 odbcConnection_.get(),
                 connectionString,
@@ -120,7 +118,7 @@ namespace mssql
         }
         SQL_LOG_DEBUG("Connection - use ConnectionWorker");
         // If we got here, we're using a callback
-        auto worker = new ConnectionWorker(
+        const auto worker = new ConnectionWorker(
             callback,
             odbcConnection_.get(),
             connectionString,
@@ -134,7 +132,7 @@ namespace mssql
     Napi::Value Connection::Close(const Napi::CallbackInfo &info)
     {
         SQL_LOG_DEBUG("Connection::Close");
-        Napi::Env env = info.Env();
+        const Napi::Env env = info.Env();
         Napi::HandleScope scope(env);
 
         // Check if we have a connection to close
@@ -154,9 +152,8 @@ namespace mssql
         {
             // Synchronous close is still possible without a callback
             std::string errorMessage;
-            bool success = odbcConnection_->Close();
 
-            if (!success)
+            if (bool success = odbcConnection_->Close(); !success)
             {
                 Napi::Error::New(env, errorMessage).ThrowAsJavaScriptException();
                 return env.Undefined();
@@ -167,7 +164,7 @@ namespace mssql
         }
 
         // For callback approach, use an AsyncWorker like we do for open
-        auto worker = new ConnectionCloseWorker(
+        const auto worker = new ConnectionCloseWorker(
             callback,
             odbcConnection_.get(),
             this);
@@ -227,7 +224,7 @@ namespace mssql
 
         // Check for callback (last argument)
         Napi::Function callback;
-        bool usePromise = false;
+
 
         if (info.Length() > 1 && info[info.Length() - 1].IsFunction())
         {
@@ -236,14 +233,13 @@ namespace mssql
         else
         {
             // No callback provided, we'll use a Promise
-            usePromise = true;
             // Create a deferred Promise
             Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
 
             // Create a callback that resolves/rejects the promise
             callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo &info)
                                            {
-                Napi::Env env = info.Env();
+                const Napi::Env env = info.Env();
                 if (info[0].IsNull() || info[0].IsUndefined()) {
                     deferred.Resolve(info[1]);
                 }
