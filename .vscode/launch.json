@@ -27,7 +27,7 @@
             "args": [
                 //"samples/javascript/streaming.js"
                "./node_modules/mocha/bin/mocha.js",
-               "test/napi/query"
+               "test/napi/open"
                // "test/napi/open"
                // "test/sproc"
                // "test/table-builder"
