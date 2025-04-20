@@ -34,7 +34,7 @@ namespace mssql {
 
     class odbcstr {
         public:
-        static string swcvec2str(vector<SQLWCHAR> &v, const size_t l)
+        static string swcvec2str(const vector<SQLWCHAR> &v, const size_t l)
         {
             vector<char> c_str;
             c_str.reserve(l + 1);
@@ -49,6 +49,13 @@ namespace mssql {
                 c_str.resize(l - 1);
             string s(c_str.data());
             return s;
+        }
+
+        
+        static std::string trim(const vector<SQLWCHAR>&v, SQLSMALLINT len) {
+            auto take = min(v.capacity(), (size_t)len);
+            auto c_msg = odbcstr::swcvec2str(v, take);
+            return c_msg;
         }
 	};
 

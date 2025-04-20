@@ -205,10 +205,7 @@ namespace mssql {
         if (_connectionHandles) {
             auto connection = _connectionHandles->connectionHandle();
             if (connection) {
-                // In a real implementation, you would read errors from the connection
-                // Here we're just adding a placeholder error
-                _errors->push_back(std::make_shared<OdbcError>(
-                    "ODBC Error occurred", "HY000", 0));
+                connection->read_errors(_errors);
             }
         }
         
