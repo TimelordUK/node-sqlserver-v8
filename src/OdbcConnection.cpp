@@ -327,7 +327,7 @@ namespace mssql {
         std::shared_ptr<QueryResult>& result)
     {
         SQL_LOG_INFO("Executing query");
-        SQL_LOG_DEBUG_STREAM(true, "SQL: " << sqlText);
+        SQL_LOG_DEBUG_STREAM("SQL: " << sqlText);
         SQL_LOG_DEBUG_STREAM("Parameter count: " << parameters.size());
 
         std::lock_guard<std::mutex> lock(_connectionMutex);
