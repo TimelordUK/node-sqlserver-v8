@@ -7,8 +7,8 @@ sql.setLogLevel(4); // Debug level
 sql.enableConsoleLogging(true);
 const connectionConfig = require('../common/connection-config')
 
-describe('promise', function () {
-    it('use a promise to open a connection', async () => {
+describe('promise',  () => {
+    it('use a promise to open close a connection', async () => {
         const cs = connectionConfig.getConnectionString()
         const connection = new sql.Connection()
         const c = await connection.promises.open(cs)

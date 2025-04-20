@@ -1,7 +1,7 @@
 // test/common/test-connection.js
 'use strict'
 
-const sql = require('../../msnodesqlv8')  // Your driver module
+const sql = require('msnodesqlv8')  // Your driver module
 const connectionConfig = require('./connection-config')
 
 /**
