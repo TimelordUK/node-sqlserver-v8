@@ -181,9 +181,9 @@ namespace mssql
                                        const std::string &connectionString,
                                        Connection *parent)
         : Napi::AsyncWorker(callback),
+          parent_(parent),
           connection_(connection),
-          connectionString_(connectionString),
-          parent_(parent)
+          connectionString_(connectionString)
     {
     }
 
@@ -191,15 +191,15 @@ namespace mssql
                                                  OdbcConnection *connection,
                                                  Connection *parent)
         : Napi::AsyncWorker(callback),
-          connection_(connection),
-          parent_(parent)
+          parent_(parent),
+          connection_(connection)
     {
     }
 
     // Implement Query method
     Napi::Value Connection::Query(const Napi::CallbackInfo &info)
     {
-        Napi::Env env = info.Env();
+        const Napi::Env env = info.Env();
         Napi::HandleScope scope(env);
 
         // Check if we have a connection
@@ -253,7 +253,7 @@ namespace mssql
                 return env.Undefined(); });
 
             // Create and queue the worker
-            auto worker = new QueryWorker(
+            const auto worker = new QueryWorker(
                 callback,
                 odbcConnection_.get(),
                 sqlText,
@@ -265,7 +265,7 @@ namespace mssql
         }
 
         // If we got here, we're using a callback
-        auto worker = new QueryWorker(
+        const auto worker = new QueryWorker(
             callback,
             odbcConnection_.get(),
             sqlText,
@@ -305,7 +305,7 @@ namespace mssql
     // This runs on the main JavaScript thread
     void ConnectionWorker::OnOK()
     {
-        Napi::Env env = Env();
+        const Napi::Env env = Env();
         Napi::HandleScope scope(env);
 
         // Update connection state through method
@@ -352,7 +352,7 @@ namespace mssql
     // This runs on the main JavaScript thread
     void ConnectionCloseWorker::OnOK()
     {
-        Napi::Env env = Env();
+        const Napi::Env env = Env();
         Napi::HandleScope scope(env);
 
         // Update connection state through method
@@ -378,7 +378,7 @@ namespace mssql
           sqlText_(sqlText)
     {
         // Convert JavaScript parameters to C++ parameters
-        uint32_t length = params.Length();
+        const uint32_t length = params.Length();
         parameters_.reserve(length);
 
         for (uint32_t i = 0; i < length; i++)
@@ -424,7 +424,7 @@ namespace mssql
                 const auto &errors = connection_->GetErrors();
                 if (!errors.empty())
                 {
-                    std::string errorMessage = errors[0]->message;
+                    const std::string errorMessage = errors[0]->message;
                     SetError(errorMessage);
                 }
                 else
@@ -447,7 +447,7 @@ namespace mssql
 
     void QueryWorker::OnOK()
     {
-        Napi::Env env = Env();
+        const Napi::Env env = Env();
         Napi::HandleScope scope(env);
         SQL_LOG_DEBUG("QueryWorker::OnOK");
         // Convert query result to JavaScript object
@@ -459,7 +459,7 @@ namespace mssql
 
     Napi::Object mssql::QueryResult::toJSObject(Napi::Env env) const
     {
-        Napi::Object result = Napi::Object::New(env);
+        const Napi::Object result = Napi::Object::New(env);
 
         // Create metadata object
         Napi::Array meta = Napi::Array::New(env, columns_.size());

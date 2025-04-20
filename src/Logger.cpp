@@ -70,8 +70,8 @@ namespace mssql {
         std::ostringstream timestamp;
         timestamp << std::put_time(&tm_buf, "%Y-%m-%d %H:%M:%S");
 
-        std::string levelStr = LevelToString(level);
-        std::string formattedMessage =
+        const std::string levelStr = LevelToString(level);
+        const std::string formattedMessage =
             "[" + timestamp.str() + "] [" + levelStr + "] " + message;
 
         // Log to file if enabled
