@@ -40,16 +40,18 @@ namespace mssql
     Connection::Connection(const Napi::CallbackInfo &info)
         : Napi::ObjectWrap<Connection>(info)
     {
+        SQL_LOG_DEBUG("Connection ctor");
         Napi::Env env = info.Env();
         Napi::HandleScope scope(env);
 
         // Create internal ODBC connection
-        odbcConnection_ = std::make_unique<OdbcConnection>();
+        odbcConnection_ = std::make_unique<OdbcConnection>(); 
     }
 
     // Destructor
     Connection::~Connection()
     {
+        SQL_LOG_DEBUG("~Connection dtor");
         // Make sure connection is closed
         if (isConnected_)
         {
@@ -60,6 +62,7 @@ namespace mssql
     // Open connection method - supports both callback and Promise
     Napi::Value Connection::Open(const Napi::CallbackInfo &info)
     {
+        SQL_LOG_DEBUG("Connection::Open");
         Napi::Env env = info.Env();
         Napi::HandleScope scope(env);
 
@@ -93,7 +96,7 @@ namespace mssql
             usePromise = true;
             // Create a deferred Promise
             Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
-
+            SQL_LOG_DEBUG("Connection - use Promise");
             // Create a callback that resolves/rejects the promise
             callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo &info)
                                            {
@@ -117,7 +120,7 @@ namespace mssql
             // Return the promise
             return deferred.Promise();
         }
-
+        SQL_LOG_DEBUG("Connection - use ConnectionWorker");
         // If we got here, we're using a callback
         auto worker = new ConnectionWorker(
             callback,
@@ -132,6 +135,7 @@ namespace mssql
     // Close connection method
     Napi::Value Connection::Close(const Napi::CallbackInfo &info)
     {
+        SQL_LOG_DEBUG("Connection::Close");
         Napi::Env env = info.Env();
         Napi::HandleScope scope(env);
 
