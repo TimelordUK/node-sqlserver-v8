@@ -12,7 +12,7 @@ describe('query', function () {
     sql.enableConsoleLogging(true);
     this.beforeEach(done => {
         connection = new sql.Connection()
-        connection.open("Driver={ODBC Driver 17 for SQL Server};Server=localhost,1433;Database=node;UID=admin;PWD=Password_123#", (err, conn) => {
+        connection.open("Driver={ODBC Driver 18 for SQL Server};Server=localhost,1433;Database=node;UID=admin;PWD=Password_123#;TrustServerCertificate=yes;", (err, conn) => {
             done(err)
         })
     })
