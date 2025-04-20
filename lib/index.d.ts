@@ -49,6 +49,25 @@ declare module 'msnodesqlv8' {
     isPaused: () => boolean;
   }
 
+  export interface ConnectionPromises {
+    /**
+     * Open a connection to SQL Server
+     * @param connectionString ODBC connection string
+     * @returns Promise that resolves with the connection
+     */
+    open: (connectionString: string) => Promise<Connection>;
+
+    /**
+     * Close the active connection and release ODBC handle within
+     * native driver.
+     * @returns Promise to await for connection to close.
+     */
+    close: () => Promise<void>;
+
+
+  }
+
+
   /**
    * Connection to a SQL Server database
    */
@@ -66,6 +85,13 @@ declare module 'msnodesqlv8' {
      * @param callback Called when connection is closed
      */
     close: (callback: StatusCallback) => void;
+
+    /**
+     * Open a connection to SQL Server
+     * @param connectionString ODBC connection string
+     * @param callback Called when connection is open or with error
+     */
+    open(connectionString: string, callback: ConnectionCallback): void;
 
     /**
      * Begin a transaction
@@ -89,6 +115,11 @@ declare module 'msnodesqlv8' {
      * Check if the connection is closed
      */
     isClosed: () => boolean;
+
+    /**
+     * Promise-based interface for connection operations
+     */
+    promises: ConnectionPromises;
   }
 
   /**
@@ -96,13 +127,6 @@ declare module 'msnodesqlv8' {
    */
   export class Connection implements Connection {
     constructor();
-
-    /**
-     * Open a connection to SQL Server
-     * @param connectionString ODBC connection string
-     * @param callback Called when connection is open or with error
-     */
-    open(connectionString: string, callback: ConnectionCallback): void;
   }
 
   /**
