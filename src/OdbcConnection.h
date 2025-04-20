@@ -11,6 +11,8 @@ namespace mssql
     // Forward declarations
     class OdbcError;
     class OdbcStatementCache;
+    class QueryParameter;
+    class QueryResult;
  
     // This class encapsulates the actual ODBC functionality
     class OdbcConnection {
@@ -23,6 +25,11 @@ namespace mssql
         
         // Open a connection to the database
         bool Open(const std::string& connectionString, int timeout = 0);
+
+        bool ExecuteQuery(
+            const std::string& sqlText, 
+            const std::vector<std::shared_ptr<QueryParameter>>& parameters,
+            std::shared_ptr<QueryResult>& result);
         
         // Close the connection
         bool Close();

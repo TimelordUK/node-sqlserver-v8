@@ -20,7 +20,7 @@ namespace mssql
         }
 
         // Define class
-        Napi::Function func = DefineClass(env, "Connection", { InstanceMethod("open", &Connection::Open), InstanceMethod("close", &Connection::Close) });
+        Napi::Function func = DefineClass(env, "Connection", {InstanceMethod("open", &Connection::Open), InstanceMethod("close", &Connection::Close), InstanceMethod("query", &Connection::Query)});
 
         // Create persistent reference to constructor
         constructor = Napi::Persistent(func);
@@ -32,7 +32,7 @@ namespace mssql
     }
 
     // Constructor
-    Connection::Connection(const Napi::CallbackInfo& info)
+    Connection::Connection(const Napi::CallbackInfo &info)
         : Napi::ObjectWrap<Connection>(info)
     {
         Napi::Env env = info.Env();
@@ -53,7 +53,7 @@ namespace mssql
     }
 
     // Open connection method - supports both callback and Promise
-    Napi::Value Connection::Open(const Napi::CallbackInfo& info)
+    Napi::Value Connection::Open(const Napi::CallbackInfo &info)
     {
         Napi::Env env = info.Env();
         Napi::HandleScope scope(env);
@@ -90,8 +90,8 @@ namespace mssql
             Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
 
             // Create a callback that resolves/rejects the promise
-            callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo& info)
-                {
+            callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo &info)
+                                           {
                     Napi::Env env = info.Env();
                     if (info[0].IsNull() || info[0].IsUndefined()) {
                         deferred.Resolve(info[1]);
@@ -105,7 +105,8 @@ namespace mssql
             auto worker = new ConnectionWorker(
                 callback,
                 odbcConnection_.get(),
-                connectionString);
+                connectionString,
+                this);
             worker->Queue();
 
             // Return the promise
@@ -116,14 +117,15 @@ namespace mssql
         auto worker = new ConnectionWorker(
             callback,
             odbcConnection_.get(),
-            connectionString);
+            connectionString,
+            this);
         worker->Queue();
 
         return env.Undefined();
     }
 
     // Close connection method
-    Napi::Value Connection::Close(const Napi::CallbackInfo& info)
+    Napi::Value Connection::Close(const Napi::CallbackInfo &info)
     {
         Napi::Env env = info.Env();
         Napi::HandleScope scope(env);
@@ -150,13 +152,95 @@ namespace mssql
         return Napi::Boolean::New(env, true);
     }
 
-    ConnectionWorker::ConnectionWorker(Napi::Function& callback,
-        OdbcConnection* connection,
-        const std::string& connectionString)
+    ConnectionWorker::ConnectionWorker(Napi::Function &callback,
+                                       OdbcConnection *connection,
+                                       const std::string &connectionString,
+                                       Connection* parent)
         : Napi::AsyncWorker(callback),
-        connection_(connection),
-        connectionString_(connectionString)
+          connection_(connection),
+          connectionString_(connectionString),
+          parent_(parent)
     {
+    }
+
+
+    // Implement Query method
+    Napi::Value Connection::Query(const Napi::CallbackInfo &info)
+    {
+        Napi::Env env = info.Env();
+        Napi::HandleScope scope(env);
+
+        // Check if we have a connection
+        if (!isConnected_)
+        {
+            Napi::Error::New(env, "Connection is not open").ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
+
+        // Get SQL query text
+        if (info.Length() < 1 || !info[0].IsString())
+        {
+            Napi::TypeError::New(env, "SQL query text expected").ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
+
+        std::string sqlText = info[0].As<Napi::String>().Utf8Value();
+
+        // Get parameters array (optional)
+        Napi::Array params = Napi::Array::New(env, 0);
+        if (info.Length() > 1 && info[1].IsArray())
+        {
+            params = info[1].As<Napi::Array>();
+        }
+
+        // Check for callback (last argument)
+        Napi::Function callback;
+        bool usePromise = false;
+
+        if (info.Length() > 1 && info[info.Length() - 1].IsFunction())
+        {
+            callback = info[info.Length() - 1].As<Napi::Function>();
+        }
+        else
+        {
+            // No callback provided, we'll use a Promise
+            usePromise = true;
+            // Create a deferred Promise
+            Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
+
+            // Create a callback that resolves/rejects the promise
+            callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo &info)
+                                           {
+                Napi::Env env = info.Env();
+                if (info[0].IsNull() || info[0].IsUndefined()) {
+                    deferred.Resolve(info[1]);
+                }
+                else {
+                    deferred.Reject(info[0]);
+                }
+                return env.Undefined(); });
+
+            // Create and queue the worker
+            auto worker = new QueryWorker(
+                callback,
+                odbcConnection_.get(),
+                sqlText,
+                params);
+            worker->Queue();
+
+            // Return the promise
+            return deferred.Promise();
+        }
+
+        // If we got here, we're using a callback
+        auto worker = new QueryWorker(
+            callback,
+            odbcConnection_.get(),
+            sqlText,
+            params);
+        worker->Queue();
+
+        return env.Undefined();
     }
 
     // This runs on the worker thread
@@ -166,7 +250,7 @@ namespace mssql
         if (!connection_->Open(connectionString_))
         {
             // If failed, get error information
-            const auto& errors = connection_->GetErrors();
+            const auto &errors = connection_->GetErrors();
             if (!errors.empty())
             {
                 std::string errorMessage = errors[0]->message;
@@ -185,11 +269,114 @@ namespace mssql
         Napi::Env env = Env();
         Napi::HandleScope scope(env);
 
+        // Update connection state through method
+        if (parent_) {
+            parent_->SetConnected(true);
+        }
+
         // Create a result object
         Napi::Object result = Napi::Object::New(env);
         result.Set("connected", Napi::Boolean::New(env, true));
 
         // Call the callback with null error and result
-        Callback().Call({ env.Null(), result });
+        Callback().Call({env.Null(), result});
     }
+
+
+    QueryWorker::QueryWorker(Napi::Function& callback,
+        OdbcConnection* connection,
+        const std::string& sqlText,
+        const Napi::Array& params)
+        : Napi::AsyncWorker(callback),
+        connection_(connection),
+        sqlText_(sqlText)
+    {
+        // Convert JavaScript parameters to C++ parameters
+        uint32_t length = params.Length();
+        parameters_.reserve(length);
+        
+        for (uint32_t i = 0; i < length; i++) {
+            Napi::Value value = params[i];
+            
+            if (value.IsString()) {
+                parameters_.push_back(std::make_shared<QueryParameter>(
+                    value.As<Napi::String>().Utf8Value()));
+            }
+            else if (value.IsNumber()) {
+                parameters_.push_back(std::make_shared<QueryParameter>(
+                    value.As<Napi::Number>().DoubleValue()));
+            }
+            else if (value.IsBoolean()) {
+                parameters_.push_back(std::make_shared<QueryParameter>(
+                    value.As<Napi::Boolean>().Value()));
+            }
+            else if (value.IsNull() || value.IsUndefined()) {
+                parameters_.push_back(std::make_shared<QueryParameter>());
+            }
+            // Add other types as needed
+        }
+        
+        // Initialize result object
+        result_ = std::make_shared<QueryResult>();
+    }
+    
+    void QueryWorker::Execute()
+    {
+        // This will need to be implemented in OdbcConnection
+        // Here's a placeholder showing what it might look like
+        if (!connection_->ExecuteQuery(sqlText_, parameters_, result_))
+        {
+            const auto& errors = connection_->GetErrors();
+            if (!errors.empty())
+            {
+                std::string errorMessage = errors[0]->message;
+                SetError(errorMessage);
+            }
+            else
+            {
+                SetError("Unknown error occurred during query execution");
+            }
+        }
+    }
+    
+    void QueryWorker::OnOK()
+    {
+        Napi::Env env = Env();
+        Napi::HandleScope scope(env);
+    
+        // Convert query result to JavaScript object
+        Napi::Object resultObj = result_->toJSObject(env);
+    
+        // Call the callback with null error and result
+        Callback().Call({ env.Null(), resultObj });
+    }
+
+    Napi::Object mssql::QueryResult::toJSObject(Napi::Env env) const
+    {
+        Napi::Object result = Napi::Object::New(env);
+
+        // Create metadata object
+        Napi::Array meta = Napi::Array::New(env, columns_.size());
+        for (size_t i = 0; i < columns_.size(); i++) {
+            Napi::Object colInfo = Napi::Object::New(env);
+            colInfo.Set("name", Napi::String::New(env, columns_[i].name));
+            colInfo.Set("sqlType", Napi::Number::New(env, columns_[i].sqlType));
+            meta[i] = colInfo;
+        }
+        result.Set("meta", meta);
+
+        // Create rows array
+        Napi::Array rowsArray = Napi::Array::New(env, rows_.size());
+        for (size_t i = 0; i < rows_.size(); i++) {
+            Napi::Array row = Napi::Array::New(env, rows_[i].size());
+            for (size_t j = 0; j < rows_[i].size(); j++) {
+                row[j] = Napi::String::New(env, rows_[i][j]);
+            }
+            rowsArray[i] = row;
+        }
+        result.Set("rows", rowsArray);
+
+        return result;
+    }
+
 }

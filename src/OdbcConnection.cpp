@@ -1,6 +1,7 @@
 #include <platform.h>
 #include <odbc_common.h>
 #include <odbc_handles.h>
+#include "Connection.h"
 #include "OdbcConnection.h"
 #include <codecvt>
 #include <locale>
@@ -303,5 +304,97 @@ namespace mssql {
         auto* const acon = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_ON);
         ret = SQLSetConnectAttr(*connection, SQL_ATTR_AUTOCOMMIT, acon, SQL_IS_UINTEGER);
         return CheckOdbcError(ret);
+    }
+
+    bool OdbcConnection::ExecuteQuery(
+        const std::string& sqlText, 
+        const std::vector<std::shared_ptr<QueryParameter>>& parameters,
+        std::shared_ptr<QueryResult>& result)
+    {
+        std::lock_guard<std::mutex> lock(_connectionMutex);
+        
+        if (connectionState != ConnectionState::ConnectionOpen) {
+            _errors->push_back(std::make_shared<OdbcError>(
+                "Connection is not open", "01000", 0));
+            return false;
+        }
+        
+        // Create a statement
+        OdbcStatementHandle stmt;
+        if (!stmt.alloc(*_connectionHandles->connectionHandle())) {
+            return ReturnOdbcError();
+        }
+        
+        // Prepare the statement
+        auto wideQuery = ConvertConnectionString(sqlText); // Reuse your string conversion
+        auto ret = SQLPrepare(stmt, 
+            reinterpret_cast<SQLWCHAR*>(wideQuery->data()), 
+            static_cast<SQLINTEGER>(wideQuery->size()));
+        
+        if (!CheckOdbcError(ret)) return false;
+        
+        // Bind parameters
+        for (size_t i = 0; i < parameters.size(); i++) {
+            // Bind each parameter based on type
+            // This would be complex and depend on your parameter handling
+            // ...
+        }
+        
+        // Execute the query
+        ret = SQLExecute(stmt);
+        if (!CheckOdbcError(ret)) return false;
+        
+        // Process results
+        // Get column information
+        SQLSMALLINT numCols = 0;
+        SQLNumResultCols(stmt, &numCols);
+        
+        // For each column, get name and type
+        for (SQLSMALLINT i = 1; i <= numCols; i++) {
+            SQLWCHAR colName[256];
+            SQLSMALLINT colNameLen;
+            SQLSMALLINT dataType;
+            
+            SQLDescribeCol(stmt, i, colName, sizeof(colName)/sizeof(SQLWCHAR), 
+                &colNameLen, &dataType, NULL, NULL, NULL);
+                
+            // Convert to string using your conversion utilities
+            std::string colNameStr = odbcstr::swcvec2str(
+                std::vector<SQLWCHAR>(colName, colName + colNameLen),
+                colNameLen);
+                
+            result->addColumn(colNameStr, dataType);
+        }
+        
+        // Fetch rows
+        while (SQL_SUCCEEDED(SQLFetch(stmt))) {
+            std::vector<std::string> rowData;
+            
+            for (SQLSMALLINT i = 1; i <= numCols; i++) {
+                // Get data for each column
+                SQLWCHAR buffer[4096];
+                SQLLEN indicator;
+                
+                ret = SQLGetData(stmt, i, SQL_C_WCHAR, buffer, sizeof(buffer), &indicator);
+                
+                if (SQL_SUCCEEDED(ret)) {
+                    if (indicator == SQL_NULL_DATA) {
+                        rowData.push_back("NULL");
+                    } else {
+                        // Convert to string
+                        std::string value = odbcstr::swcvec2str(
+                            std::vector<SQLWCHAR>(buffer, buffer + (indicator/sizeof(SQLWCHAR))),
+                            indicator/sizeof(SQLWCHAR));
+                        rowData.push_back(value);
+                    }
+                } else {
+                    rowData.push_back("ERROR");
+                }
+            }
+            
+            result->addRow(rowData);
+        }
+        
+        return true;
     }
 }
