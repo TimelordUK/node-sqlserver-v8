@@ -8,6 +8,8 @@ describe('query', function () {
 
     let connection = null
     const sql = require('msnodesqlv8')
+    sql.setLogLevel(4); // Debug level
+    sql.enableConsoleLogging(true);
     this.beforeEach(done => {
         connection = new sql.Connection()
         connection.open("Driver={ODBC Driver 17 for SQL Server};Server=localhost,1433;Database=node;UID=admin;PWD=Password_123#", (err, conn) => {

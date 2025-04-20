@@ -20,7 +20,12 @@ namespace mssql
         }
 
         // Define class
-        Napi::Function func = DefineClass(env, "Connection", {InstanceMethod("open", &Connection::Open), InstanceMethod("close", &Connection::Close), InstanceMethod("query", &Connection::Query)});
+        Napi::Function func = DefineClass(env, "Connection", 
+            {
+                InstanceMethod("open", &Connection::Open), 
+                InstanceMethod("close", &Connection::Close), 
+                InstanceMethod("query", &Connection::Query)
+            });
 
         // Create persistent reference to constructor
         constructor = Napi::Persistent(func);
@@ -328,20 +333,32 @@ namespace mssql
     
     void QueryWorker::Execute()
     {
-        // This will need to be implemented in OdbcConnection
-        // Here's a placeholder showing what it might look like
-        if (!connection_->ExecuteQuery(sqlText_, parameters_, result_))
-        {
-            const auto& errors = connection_->GetErrors();
-            if (!errors.empty())
+
+        try {
+            SQL_LOG_DEBUG_STREAM("Executing QueryWorker " << sqlText_);
+            // This will need to be implemented in OdbcConnection
+            // Here's a placeholder showing what it might look like
+            if (!connection_->ExecuteQuery(sqlText_, parameters_, result_))
             {
-                std::string errorMessage = errors[0]->message;
-                SetError(errorMessage);
+                const auto& errors = connection_->GetErrors();
+                if (!errors.empty())
+                {
+                    std::string errorMessage = errors[0]->message;
+                    SetError(errorMessage);
+                }
+                else
+                {
+                    SetError("Unknown error occurred during query execution");
+                }
             }
-            else
-            {
-                SetError("Unknown error occurred during query execution");
-            }
+        }
+        catch (const std::exception& e) {
+            SQL_LOG_ERROR("Exception in QueryWorker::Execute: " + std::string(e.what()));
+            SetError("Exception occurred: " + std::string(e.what()));
+        }
+        catch (...) {
+            SQL_LOG_ERROR("Unknown exception in QueryWorker::Execute");
+            SetError("Unknown exception occurred");
         }
     }
     
@@ -349,7 +366,7 @@ namespace mssql
     {
         Napi::Env env = Env();
         Napi::HandleScope scope(env);
-    
+        SQL_LOG_DEBUG("QueryWorker::OnOK");
         // Convert query result to JavaScript object
         Napi::Object resultObj = result_->toJSObject(env);
     
