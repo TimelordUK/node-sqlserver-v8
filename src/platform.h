@@ -148,9 +148,7 @@
 // In platform.h
 #ifdef PLATFORM_WINDOWS
     // Use Unicode versions of ODBC functions on Windows
-    #define SQL_NOUNICODEMAP // Prevent ODBC header from mapping Unicode functions
-    #define ODBC_CHAR_TYPE SQLWCHAR
-    #define ODBC_DIAG_REC SQLGetDiagRecW
+
     
     // Helper function to convert SQL character types
     inline std::wstring SQLCharToString(SQLWCHAR* sqlStr, SQLSMALLINT length) {
@@ -166,11 +164,7 @@
     inline void DeleteSQLCharBuffer(SQLWCHAR* buffer) {
         delete[] buffer;
     }
-#else
-    // Use ANSI versions on other platforms
-    #define ODBC_CHAR_TYPE SQLCHAR
-    #define ODBC_DIAG_REC SQLGetDiagRec
-    
+#else    
     // Helper function to convert SQL character types
     inline std::string SQLCharToString(SQLCHAR* sqlStr, SQLSMALLINT length) {
         return std::string(reinterpret_cast<char*>(sqlStr), length);

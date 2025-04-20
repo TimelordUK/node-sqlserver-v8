@@ -11,7 +11,7 @@
             'OS=="linux"',
             {
                 "variables": {
-                    "cflags_cpp": "-std=c++20",
+                    "cflags_cpp": "-std=c++20 -fexceptions",
                     "arch%": "<!(uname -m)",
                 }
             },
@@ -170,7 +170,7 @@
                                 "<(linuxodbc)",
                             ],
                         },
-                        "defines": ["LINUX_BUILD", "UNICODE"],
+                        "defines": ["LINUX_BUILD", "UNICODE","NAPI_CPP_EXCEPTIONS"],
                         "cflags_cc": ["<(cflags_cpp)"],
                         "include_dirs": [
                             "<!@(node -p \"'<(msodbc_include_folders)'.split(' ').join(' ')\")",

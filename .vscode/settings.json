@@ -84,7 +84,14 @@
         "concepts": "cpp",
         "format": "cpp",
         "forward_list": "cpp",
-        "iomanip": "cpp"
+        "iomanip": "cpp",
+        "expected": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "span": "cpp",
+        "text_encoding": "cpp",
+        "cinttypes": "cpp",
+        "variant": "cpp"
     },
     "cmake.configureOnOpen": false
 }

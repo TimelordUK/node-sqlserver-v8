@@ -80,14 +80,67 @@ namespace mssql
         std::shared_ptr<std::vector<uint16_t>> ConvertConnectionString(const std::string& connectionString);
     };
     
-    // Simple class to hold ODBC error information
-    class OdbcError {
+
+    class OdbcError
+    {
     public:
-        OdbcError(const std::string& message, const std::string& state, int code)
-            : message(message), state(state), code(code) {}
-            
-        std::string message;
-        std::string state;
-        int code;
+
+        OdbcError( const char* sqlstate, const char* message, SQLINTEGER code, 
+                    const int severity, const char* serverName, const char* procName, const unsigned int lineNumber 
+        )
+           : sqlstate( sqlstate ), message(message), code(code), 
+                severity(severity), serverName(serverName), procName(procName), lineNumber(lineNumber)
+        {
+        }
+
+        OdbcError(const std::string& message, const std::string& sqlstate, int code)
+        : message(message), sqlstate(sqlstate), code(code), severity(0), serverName(""), procName(""), lineNumber(0) {}
+
+        const char* Message( void ) const
+        {
+            return message.c_str();
+        }
+
+        const char* SqlState( void ) const
+        {
+            return sqlstate.c_str();
+        }
+
+        SQLINTEGER Code( void ) const
+        {
+            return code;
+        }
+        
+        int Severity( void ) const
+        {
+            return severity;
+        }
+
+        const char* ServerName( void ) const
+        {
+            return serverName.c_str();
+        }
+
+        const char* ProcName( void ) const
+        {
+            return procName.c_str();
+        }
+
+        unsigned int LineNumber( void ) const
+        {
+            return lineNumber;
+        }
+
+        // list of msnodesql specific errors
+        static OdbcError NODE_SQL_NO_DATA;
+
+        string sqlstate;
+        string message; 
+        SQLINTEGER code;
+        int severity;
+        string serverName;
+        string procName;
+        unsigned int lineNumber;
     };
+
 }

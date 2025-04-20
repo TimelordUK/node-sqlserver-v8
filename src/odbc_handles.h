@@ -3,11 +3,12 @@
 #include "platform.h"
 #include "odbc_common.h"
 #include <vector>
+#include <set>
 #include <memory>
 
 namespace mssql
 {
-
+    using namespace std;
     // Forward declarations
     class OdbcError;
 
@@ -39,51 +40,57 @@ namespace mssql
             }
         }
 
-        // Get errors from this handle
-        // In the read_errors method of OdbcBaseHandle
-        void read_errors(std::shared_ptr<std::vector<std::shared_ptr<OdbcError>>> errors)
+        std::string trim(vector<SQLWCHAR>&v, SQLSMALLINT len) const {
+            auto take = min(v.capacity(), (size_t)len);
+            auto c_msg = odbcstr::swcvec2str(v, take);
+            return c_msg;
+        }
+    
+
+        void read_errors(shared_ptr<vector<shared_ptr<OdbcError>>> & errors) const
         {
-            ODBC_CHAR_TYPE sqlstate[SQL_SQLSTATE_SIZE + 1] = {0};
-            ODBC_CHAR_TYPE message[SQL_MAX_MESSAGE_LENGTH + 1] = {0};
-            SQLINTEGER native_error;
-            SQLSMALLINT len;
-
-            // Get all diagnostic records
-            for (SQLSMALLINT i = 1;; i++)
-            {
-                SQLRETURN ret = ODBC_DIAG_REC(
-                    HandleType,
-                    handle_,
-                    i,
-                    sqlstate,
-                    &native_error,
-                    message,
-                    SQL_MAX_MESSAGE_LENGTH,
-                    &len);
-
-                if (!SQL_SUCCEEDED(ret))
-                {
+            SQLSMALLINT msg_len = 0;
+            SQLRETURN      rc2;
+            SQLINTEGER    native_error = 0;
+            std::vector<SQLWCHAR> msg;
+            msg.reserve(10 * 1024);
+            msg.resize(10 * 1024);
+            vector<SQLWCHAR> sql_state;
+            sql_state.reserve(6);
+            sql_state.resize(6);
+            set<string> received;
+            int severity = 0;
+            SQLSMALLINT serverName_len = 0;
+            vector<SQLWCHAR> serverName;
+            serverName.reserve(SQL_MAX_SQLSERVERNAME);
+            serverName.resize(SQL_MAX_SQLSERVERNAME);
+            SQLSMALLINT procName_len = 0;
+            std::vector<SQLWCHAR> procName;
+            procName.reserve(128);
+            procName.resize(128);
+            unsigned int lineNumber = 0;
+            // Get the status records.  
+            SQLSMALLINT i = 1;
+            errors->clear();
+            while ((rc2 = SQLGetDiagRec(HandleType, handle_, i,  sql_state.data(), &native_error, msg.data(), msg.capacity(), &msg_len)) != SQL_NO_DATA) {
+                if (rc2 < 0) {
                     break;
                 }
-
-// Convert the SQL character types to C++ strings
-#ifdef PLATFORM_WINDOWS
-                std::wstring wState = SQLCharToString(sqlstate, SQL_SQLSTATE_SIZE);
-                std::wstring wMessage = SQLCharToString(message, len);
-
-                // Convert wide strings to UTF-8
-                std::string state = ConvertToUTF8(wState);
-                std::string messageStr = ConvertToUTF8(wMessage);
-#else
-                std::string state = SQLCharToString(sqlstate, SQL_SQLSTATE_SIZE);
-                std::string messageStr = SQLCharToString(message, len);
-#endif
-
-                // Add error to the collection
-                errors->push_back(std::make_shared<OdbcError>(
-                    messageStr,
-                    state,
-                    native_error));
+                auto c_msg = trim(msg, msg_len);
+                auto c_state = odbcstr::swcvec2str(sql_state, sql_state.size());
+                const auto m = string(c_msg);
+                SQLGetDiagField(HandleType, handle_, i, SQL_DIAG_SS_SEVERITY, &severity, SQL_IS_INTEGER, nullptr);
+                SQLGetDiagField(HandleType, handle_, i, SQL_DIAG_SS_SRVNAME, serverName.data(), serverName.capacity(), &serverName_len);
+                const string c_serverName = trim(serverName, serverName_len);
+                SQLGetDiagField(HandleType, handle_, i, SQL_DIAG_SS_PROCNAME, procName.data(), procName.capacity(), &procName_len);
+                const string c_procName = trim(procName, procName_len);
+                SQLGetDiagField(HandleType, handle_, i, SQL_DIAG_SS_LINE, &lineNumber, SQL_IS_UINTEGER, nullptr);
+                if (received.find(m) == received.end()) {
+                    const auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), native_error, severity, c_serverName.c_str(), c_procName.c_str(), lineNumber);
+                    errors->push_back(last);
+                    received.insert(m);
+                }
+                i++;
             }
         }
 
