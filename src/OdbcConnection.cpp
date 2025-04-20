@@ -50,7 +50,7 @@ namespace mssql {
             std::lock_guard<std::mutex> lock(mutex_);
 
             if (!environment_) {
-                auto env = std::make_shared<OdbcEnvironmentHandle>();
+                const auto env = std::make_shared<OdbcEnvironmentHandle>();
                 if (!env->alloc()) {
                     return nullptr;
                 }
@@ -127,8 +127,8 @@ namespace mssql {
             return false;
         }
 
-        auto wideConnStr = ConvertConnectionString(connectionString);
-        bool result = try_open(wideConnStr, timeout);
+        const auto wideConnStr = ConvertConnectionString(connectionString);
+        const bool result = try_open(wideConnStr, timeout);
 
         if (result) {
             SQL_LOG_INFO("Connection successfully opened");
@@ -201,7 +201,7 @@ namespace mssql {
             }
             
             if (_connectionHandles) {
-                auto connection = _connectionHandles->connectionHandle();
+                const auto connection = _connectionHandles->connectionHandle();
                 if (connection) {
                     SQLDisconnect(*connection);
                 }
@@ -219,7 +219,7 @@ namespace mssql {
         _errors->clear();
         
         if (_connectionHandles) {
-            auto connection = _connectionHandles->connectionHandle();
+            const auto connection = _connectionHandles->connectionHandle();
             if (connection) {
                 connection->read_errors(_errors);
             }
@@ -242,7 +242,7 @@ namespace mssql {
     {
         if (timeout > 0)
         {
-            auto connection = _connectionHandles->connectionHandle();
+            const auto connection = _connectionHandles->connectionHandle();
             if (!connection) return SQL_ERROR;
             
             auto* const to = reinterpret_cast<SQLPOINTER>(static_cast<long long>(timeout));
@@ -266,7 +266,7 @@ namespace mssql {
         this->_connectionHandles = std::make_shared<ConnectionHandles>(environment);
 
         // Get a pointer to the connection handle instead of trying to copy it
-        auto connection = _connectionHandles->connectionHandle();
+        const auto connection = _connectionHandles->connectionHandle();
         if (connection == nullptr)
         {
             _errors->clear();
@@ -291,24 +291,24 @@ namespace mssql {
             SQL_DRIVER_NOPROMPT);
 
         if (!CheckOdbcError(ret)) return false;
-        connectionState = ConnectionState::ConnectionOpen;
+        connectionState = ConnectionOpen;
         return true;
     }
     
     bool OdbcConnection::try_begin_tran()
     {
         // Turn off autocommit
-        auto connection = _connectionHandles->connectionHandle();
+        const auto connection = _connectionHandles->connectionHandle();
         if (!connection) return false;
         
         auto* const acoff = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_OFF);
-        auto ret = SQLSetConnectAttr(*connection, SQL_ATTR_AUTOCOMMIT, acoff, SQL_IS_UINTEGER);
+        const auto ret = SQLSetConnectAttr(*connection, SQL_ATTR_AUTOCOMMIT, acoff, SQL_IS_UINTEGER);
         return CheckOdbcError(ret);
     }
     
     bool OdbcConnection::try_end_tran(const SQLSMALLINT completion_type)
     {
-        auto connection = _connectionHandles->connectionHandle();
+        const auto connection = _connectionHandles->connectionHandle();
         if (!connection) return false;
         
         // End the transaction
@@ -332,7 +332,7 @@ namespace mssql {
 
         std::lock_guard<std::mutex> lock(_connectionMutex);
         
-        if (connectionState != ConnectionState::ConnectionOpen) {
+        if (connectionState != ConnectionOpen) {
             _errors->push_back(std::make_shared<OdbcError>(
                 "Connection is not open", "01000", 0));
             return false;
@@ -398,7 +398,7 @@ namespace mssql {
                 
                 if (SQL_SUCCEEDED(ret)) {
                     if (indicator == SQL_NULL_DATA) {
-                        rowData.push_back("NULL");
+                        rowData.emplace_back("NULL");
                     } else {
                         // Convert to string
                         std::string value = odbcstr::swcvec2str(
@@ -407,7 +407,7 @@ namespace mssql {
                         rowData.push_back(value);
                     }
                 } else {
-                    rowData.push_back("ERROR");
+                    rowData.emplace_back("ERROR");
                 }
             }
             

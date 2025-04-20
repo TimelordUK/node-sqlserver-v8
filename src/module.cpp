@@ -1,11 +1,9 @@
 #include <napi.h>
-#include <precompiled.h>
 #include "Connection.h"
 
 
-
-Napi::Value SetLogLevel(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
+static Napi::Value SetLogLevel(const Napi::CallbackInfo& info) {
+    const Napi::Env env = info.Env();
     
     if (info.Length() < 1 || !info[0].IsNumber()) {
         Napi::TypeError::New(env, "Number expected for log level").ThrowAsJavaScriptException();
@@ -22,28 +20,28 @@ Napi::Value SetLogLevel(const Napi::CallbackInfo& info) {
     return env.Undefined();
 }
 
-Napi::Value EnableConsoleLogging(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
+static Napi::Value EnableConsoleLogging(const Napi::CallbackInfo& info) {
+    const Napi::Env env = info.Env();
     
     if (info.Length() < 1 || !info[0].IsBoolean()) {
         Napi::TypeError::New(env, "Boolean expected").ThrowAsJavaScriptException();
         return env.Undefined();
     }
-    
-    bool enabled = info[0].As<Napi::Boolean>().Value();
+
+    const bool enabled = info[0].As<Napi::Boolean>().Value();
     mssql::Logger::GetInstance().SetLogToConsole(enabled);
     return env.Undefined();
 }
 
-Napi::Value SetLogFile(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
+static Napi::Value SetLogFile(const Napi::CallbackInfo& info) {
+    const Napi::Env env = info.Env();
     
     if (info.Length() < 1 || !info[0].IsString()) {
         Napi::TypeError::New(env, "String expected for log file path").ThrowAsJavaScriptException();
         return env.Undefined();
     }
-    
-    std::string filePath = info[0].As<Napi::String>().Utf8Value();
+
+    const std::string filePath = info[0].As<Napi::String>().Utf8Value();
     mssql::Logger::GetInstance().SetLogToFile(filePath);
     return env.Undefined();
 }
