@@ -11,6 +11,7 @@ namespace mssql
     class OdbcConnection;
     class QueryParameter;
     class QueryResult;
+    class ParameterSet;
 
     // Main Node-API wrapper class
     class Connection : public Napi::ObjectWrap<Connection> {
@@ -43,10 +44,8 @@ namespace mssql
         bool isConnected_ = false;
     };
 
-    
-
     // In Connection.h after ConnectionWorker class
-class QueryWorker : public Napi::AsyncWorker {
+	class QueryWorker : public Napi::AsyncWorker {
     public:
         QueryWorker(Napi::Function& callback,
             OdbcConnection* connection,
@@ -62,12 +61,11 @@ class QueryWorker : public Napi::AsyncWorker {
     private:
         OdbcConnection* connection_;
         std::string sqlText_;
-        std::vector<std::shared_ptr<QueryParameter>> parameters_;
+        std::shared_ptr<ParameterSet> parameters_;
         std::shared_ptr<QueryResult> result_;
     };
     
-   
-    
+
     // Helper class to store query results
     class QueryResult {
     public:

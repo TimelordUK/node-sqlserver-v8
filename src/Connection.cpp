@@ -1,6 +1,8 @@
 #include "Connection.h"
 #include "OdbcConnection.h"
 #include "QueryParameter.h"
+#include "ParameterSet.h"
+#include "ParameterFactory.h"
 #include <thread>
 #include <chrono>
 
@@ -362,37 +364,12 @@ namespace mssql
           connection_(connection),
           sqlText_(sqlText)
     {
+        
         // Convert JavaScript parameters to C++ parameters
         const uint32_t length = params.Length();
-        parameters_.reserve(length);
+        parameters_ = std::make_shared<ParameterSet>();
+        ParameterFactory::populateParameterSet(params, parameters_);
 
-        for (uint32_t i = 0; i < length; i++)
-        {
-            Napi::Value value = params[i];
-
-            if (value.IsString())
-            {
-                parameters_.push_back(std::make_shared<QueryParameter>(
-                    value.As<Napi::String>().Utf8Value()));
-            }
-            else if (value.IsNumber())
-            {
-                parameters_.push_back(std::make_shared<QueryParameter>(
-                    value.As<Napi::Number>().DoubleValue()));
-            }
-            else if (value.IsBoolean())
-            {
-                parameters_.push_back(std::make_shared<QueryParameter>(
-                    value.As<Napi::Boolean>().Value()));
-            }
-            else if (value.IsNull() || value.IsUndefined())
-            {
-                parameters_.push_back(std::make_shared<QueryParameter>());
-            }
-            // Add other types as needed
-        }
-
-        // Initialize result object
         result_ = std::make_shared<QueryResult>();
     }
 
@@ -404,7 +381,7 @@ namespace mssql
             SQL_LOG_DEBUG_STREAM("Executing QueryWorker " << sqlText_);
             // This will need to be implemented in OdbcConnection
             // Here's a placeholder showing what it might look like
-            if (!connection_->ExecuteQuery(sqlText_, parameters_, result_))
+            if (!connection_->ExecuteQuery(sqlText_, parameters_->getParams(), result_))
             {
                 const auto &errors = connection_->GetErrors();
                 if (!errors.empty())
