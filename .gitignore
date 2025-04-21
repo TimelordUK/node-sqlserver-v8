@@ -64,6 +64,7 @@ dist/
 # Prebuilds
 prebuilds/
 build/
+build-test/
 
 # Mac
 .DS_Store
