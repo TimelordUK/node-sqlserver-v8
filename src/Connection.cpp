@@ -1,5 +1,6 @@
 #include "Connection.h"
 #include "OdbcConnection.h"
+#include "QueryParameter.h"
 #include <thread>
 #include <chrono>
 
@@ -57,6 +58,87 @@ namespace mssql
         }
     }
 
+    template <typename ConnectionOp, typename SuccessCallback = std::function<void()>>
+    class ConnectionWorkerBase : public Napi::AsyncWorker {
+    public:
+        ConnectionWorkerBase(
+            Napi::Function& callback,
+            OdbcConnection* connection,
+            Connection* parent,
+            ConnectionOp operation,
+            SuccessCallback onSuccess = [](){})  // Add a success callback
+            : Napi::AsyncWorker(callback),
+              parent_(parent),
+              connection_(connection),
+              operation_(std::move(operation)),
+              onSuccess_(std::move(onSuccess)) {
+        }  
+        void Execute() override {
+            SQL_LOG_DEBUG("Executing ConnectionWorker");
+            
+            try {
+                // Call the operation
+                result_ = operation_(connection_);
+                
+                if (!result_) {
+                    // If failed, get error information
+                    const auto& errors = connection_->GetErrors();
+                    if (!errors.empty()) {
+                        std::string errorMessage = errors[0]->message;
+                        SQL_LOG_ERROR("Connection operation error: " + errorMessage);
+                        SetError(errorMessage);
+                    }
+                    else {
+                        SQL_LOG_ERROR("Unknown connection operation error");
+                        SetError("Unknown error occurred during operation");
+                    }
+                }
+                else {
+                    SQL_LOG_DEBUG("Connection worker completed successfully");
+                }
+            }
+            catch (const std::exception& e) {
+                SetError(e.what());
+            }
+        }
+    
+        void OnOK() override {
+            Napi::Env env = Env();
+            Napi::HandleScope scope(env);
+    
+            // Call the success callback
+            onSuccess_();  // This will update the connection state
+    
+            // Create a result object
+            Napi::Object result = Napi::Object::New(env);
+            result.Set("success", Napi::Boolean::New(env, result_));
+            SQL_LOG_DEBUG("ConnectionWorkerBase::OnOK invoke cb");
+            // Call the callback with null error and result
+            Callback().Call({env.Null(), result});
+        }
+    
+    private:
+        Connection* parent_;
+        OdbcConnection* connection_;
+        ConnectionOp operation_;
+        bool result_ = false;
+        SuccessCallback onSuccess_;
+    };
+    
+    template <typename ConnectionOp, typename SuccessCallback = std::function<void()>>
+    auto MakeConnectionWorker(
+        Napi::Function& callback,
+        OdbcConnection* connection,
+        Connection* parent,
+        ConnectionOp operation,
+        SuccessCallback onSuccess = [](){}) {
+        return new ConnectionWorkerBase<ConnectionOp, SuccessCallback>(
+            callback, connection, parent, std::move(operation), std::move(onSuccess));
+    }
+
+
+
+
     // Open connection method - supports both callback and Promise
     Napi::Value Connection::Open(const Napi::CallbackInfo &info)
     {
@@ -105,24 +187,38 @@ namespace mssql
                     }
                     return env.Undefined(); });
 
-            // Create and queue the worker
-            const auto worker = new ConnectionWorker(
-                callback,
-                odbcConnection_.get(),
-                connectionString,
-                this);
-            worker->Queue();
+                    auto worker = MakeConnectionWorker(
+                        callback,
+                        odbcConnection_.get(),
+                        this,
+                        [connectionString](OdbcConnection* conn) {
+                            SQL_LOG_DEBUG("Connection::Open - invoking native open");
+                            return conn->Open(connectionString);
+                        },
+                        [this]() {
+                            // This will be called on success in the OnOK method
+                            SQL_LOG_DEBUG("Connection::Open - setting connection state to open");
+                            this->SetConnected(true);
+                        });
+                    worker->Queue();
 
             // Return the promise
             return deferred.Promise();
         }
         SQL_LOG_DEBUG("Connection - use ConnectionWorker");
-        // If we got here, we're using a callback
-        const auto worker = new ConnectionWorker(
+        auto worker = MakeConnectionWorker(
             callback,
             odbcConnection_.get(),
-            connectionString,
-            this);
+            this,
+            [connectionString](OdbcConnection* conn) {
+                SQL_LOG_DEBUG("Connection::Open - invoking native open");
+                return conn->Open(connectionString);
+            },
+            [this]() {
+                // This will be called on success in the OnOK method
+                SQL_LOG_DEBUG("Connection::Open - setting connection state to open");
+                this->SetConnected(true);
+            });
         worker->Queue();
 
         return env.Undefined();
@@ -163,34 +259,21 @@ namespace mssql
             return Napi::Boolean::New(env, true);
         }
 
-        // For callback approach, use an AsyncWorker like we do for open
-        const auto worker = new ConnectionCloseWorker(
+        auto worker = MakeConnectionWorker(
             callback,
             odbcConnection_.get(),
-            this);
+            this,
+            [](OdbcConnection* conn) {
+                SQL_LOG_DEBUG("Connection::Close - invoking native close");
+                return conn->Close();
+            },
+            [this]() {
+                SQL_LOG_DEBUG("Connection::Close - setting connection state to closed");
+                this->SetConnected(false);
+            });
         worker->Queue();
 
         return env.Undefined();
-    }
-
-    ConnectionWorker::ConnectionWorker(Napi::Function &callback,
-                                       OdbcConnection *connection,
-                                       const std::string &connectionString,
-                                       Connection *parent)
-        : Napi::AsyncWorker(callback),
-          parent_(parent),
-          connection_(connection),
-          connectionString_(connectionString)
-    {
-    }
-
-    ConnectionCloseWorker::ConnectionCloseWorker(Napi::Function &callback,
-                                                 OdbcConnection *connection,
-                                                 Connection *parent)
-        : Napi::AsyncWorker(callback),
-          parent_(parent),
-          connection_(connection)
-    {
     }
 
     // Implement Query method
@@ -269,100 +352,6 @@ namespace mssql
         worker->Queue();
 
         return env.Undefined();
-    }
-
-    void ConnectionWorker::Execute()
-    {
-        SQL_LOG_DEBUG("Executing ConnectionWorker");
-
-        // Attempt to open the connection to the database
-        if (!connection_->Open(connectionString_))
-        {
-            // If failed, get error information
-            const auto &errors = connection_->GetErrors();
-            if (!errors.empty())
-            {
-                std::string errorMessage = errors[0]->message;
-                SQL_LOG_ERROR("Connection error: " + errorMessage);
-                SetError(errorMessage);
-            }
-            else
-            {
-                SQL_LOG_ERROR("Unknown connection error");
-                SetError("Unknown error occurred while opening connection");
-            }
-        }
-        else
-        {
-            SQL_LOG_DEBUG("Connection worker completed successfully");
-        }
-    }
-
-    // This runs on the main JavaScript thread
-    void ConnectionWorker::OnOK()
-    {
-        const Napi::Env env = Env();
-        Napi::HandleScope scope(env);
-
-        // Update connection state through method
-        if (parent_)
-        {
-            parent_->SetConnected(true);
-        }
-
-        // Create a result object
-        Napi::Object result = Napi::Object::New(env);
-        result.Set("connected", Napi::Boolean::New(env, true));
-
-        // Call the callback with null error and result
-        Callback().Call({env.Null(), result});
-    }
-
-    void ConnectionCloseWorker::Execute()
-    {
-        SQL_LOG_DEBUG("Executing ConnectionCloseWorker");
-
-        // Attempt to open the connection to the database
-        if (!connection_->Close())
-        {
-            // If failed, get error information
-            const auto &errors = connection_->GetErrors();
-            if (!errors.empty())
-            {
-                std::string errorMessage = errors[0]->message;
-                SQL_LOG_ERROR("Connection error: " + errorMessage);
-                SetError(errorMessage);
-            }
-            else
-            {
-                SQL_LOG_ERROR("Unknown connection error");
-                SetError("Unknown error occurred while opening connection");
-            }
-        }
-        else
-        {
-            SQL_LOG_DEBUG("Connection worker completed successfully");
-        }
-    }
-
-    // This runs on the main JavaScript thread
-    void ConnectionCloseWorker::OnOK()
-    {
-        const Napi::Env env = Env();
-        Napi::HandleScope scope(env);
-
-        // Update connection state through method
-        if (parent_)
-        {
-            parent_->SetConnected(false);
-        }
-
-        // Create a result object
-        Napi::Object result = Napi::Object::New(env);
-        result.Set("connected", Napi::Boolean::New(env, true));
-
-        // Call the callback with null error and result
-        Callback().Call({env.Null(), result});
     }
 
     QueryWorker::QueryWorker(Napi::Function &callback,

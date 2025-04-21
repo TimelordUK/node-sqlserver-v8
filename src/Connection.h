@@ -43,46 +43,7 @@ namespace mssql
         bool isConnected_ = false;
     };
 
-    class ConnectionCloseWorker : public Napi::AsyncWorker {
-        public:
-        ConnectionCloseWorker(Napi::Function& callback,
-                OdbcConnection* connection,
-                Connection* parent);
     
-            // Runs on worker thread
-            void Execute() override;
-    
-            // Runs on main JavaScript thread
-            void OnOK() override;
-    
-        private:
-            Connection* parent_;
-            OdbcConnection* connection_;
-            std::string connectionString_;
-            // Any results or state to pass back to JavaScript
-        };
-
-
-    // AsyncWorker for ODBC connection operations
-    class ConnectionWorker : public Napi::AsyncWorker {
-    public:
-        ConnectionWorker(Napi::Function& callback,
-            OdbcConnection* connection,
-            const std::string& connectionString,
-            Connection* parent);
-
-        // Runs on worker thread
-        void Execute() override;
-
-        // Runs on main JavaScript thread
-        void OnOK() override;
-
-    private:
-        Connection* parent_;
-        OdbcConnection* connection_;
-        std::string connectionString_;
-        // Any results or state to pass back to JavaScript
-    };
 
     // In Connection.h after ConnectionWorker class
 class QueryWorker : public Napi::AsyncWorker {
@@ -105,33 +66,7 @@ class QueryWorker : public Napi::AsyncWorker {
         std::shared_ptr<QueryResult> result_;
     };
     
-    // Helper class to store query parameters
-    class QueryParameter {
-    public:
-        // Different constructor overloads for different parameter types
-        explicit QueryParameter(const std::string& value) : stringValue_(value), type_(Type::String) {}
-        explicit QueryParameter(double value) : numberValue_(value), type_(Type::Number) {}
-        explicit QueryParameter(bool value) : boolValue_(value), type_(Type::Boolean) {}
-        explicit QueryParameter() : type_(Type::Null) {} // For NULL values
-    
-        enum class Type {
-            String,
-            Number,
-            Boolean,
-            Null
-        };
-    
-        Type getType() const { return type_; }
-        const std::string& getStringValue() const { return stringValue_; }
-        double getNumberValue() const { return numberValue_; }
-        bool getBoolValue() const { return boolValue_; }
-    
-    private:
-        std::string stringValue_;
-        double numberValue_ = 0.0;
-        bool boolValue_ = false;
-        Type type_;
-    };
+   
     
     // Helper class to store query results
     class QueryResult {
