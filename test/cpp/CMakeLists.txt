@@ -152,6 +152,10 @@ endif()
 
 # Enable CTest
 include(GoogleTest)
-# gtest_discover_tests(cpp_tests)
+include(GoogleTest)
+gtest_discover_tests(cpp_tests 
+    DISCOVERY_MODE PRE_TEST
+    PROPERTIES TIMEOUT 120
+)
 
-add_test(NAME cpp_tests COMMAND cpp_tests)
+# add_test(NAME cpp_tests COMMAND cpp_tests)
