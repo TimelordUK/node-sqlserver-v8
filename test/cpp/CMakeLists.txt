@@ -37,7 +37,16 @@ else()
 endif()
 
 # Find Node.js headers (same ones used by node-gyp)
-set(NODE_VERSION "22.14.0")  # Match your Node.js version
+# Dynamically determine Node.js version
+execute_process(
+    COMMAND node --version
+    OUTPUT_VARIABLE NODE_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+# Remove the 'v' prefix from version number
+string(REGEX REPLACE "^v" "" NODE_VERSION "${NODE_VERSION}")
+
+message(STATUS "Detected Node.js version: ${NODE_VERSION}")
 set(NODE_HEADERS_DIR "$ENV{USERPROFILE}/AppData/Local/node-gyp/Cache/${NODE_VERSION}")
 
 if(NOT EXISTS "${NODE_HEADERS_DIR}")
