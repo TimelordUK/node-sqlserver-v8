@@ -49,7 +49,7 @@ else()
 endif()
 
 # Find Node.js headers (same ones used by node-gyp)
-set(NODE_VERSION "22.13.0")  # Match your Node.js version
+set(NODE_VERSION "22.14.0")  # Match your Node.js version
 set(NODE_HEADERS_DIR "$ENV{USERPROFILE}/AppData/Local/node-gyp/Cache/${NODE_VERSION}")
 
 if(NOT EXISTS "${NODE_HEADERS_DIR}")
@@ -59,8 +59,8 @@ endif()
 message(STATUS "Using Node.js headers from: ${NODE_HEADERS_DIR}")
 
 # Find node-addon-api
-# set(NODE_ADDON_API_DIR "${CMAKE_CURRENT_SOURCE_DIR}../../node_modules/node-addon-api")
-set(NODE_ADDON_API_DIR "C:\\Users\\sjame\\dev\\sql\\v8\\node_modules\\msnodesqlv8\\node_modules\\node-addon-api") 
+# Find node-addon-api - use relative path from test/cpp to project root
+set(NODE_ADDON_API_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../node_modules/node-addon-api") 
 # Find ODBC
 if(WIN32)
     # Windows uses odbc32.lib
