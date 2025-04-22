@@ -1,5 +1,5 @@
-#include <QueryParameter.h>
-#include <ParameterSet.h>
+#include <query_parameter.h>
+#include <parameter_set.h>
 
 namespace mssql
 {

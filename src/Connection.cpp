@@ -1,8 +1,8 @@
-#include "Connection.h"
-#include "OdbcConnection.h"
-#include "QueryParameter.h"
-#include "ParameterSet.h"
-#include "ParameterFactory.h"
+#include "connection.h"
+#include "odbc_connection.h"
+#include "query_parameter.h"
+#include "parameter_set.h"
+#include "parameter_factory.h"
 #include <thread>
 #include <chrono>
 

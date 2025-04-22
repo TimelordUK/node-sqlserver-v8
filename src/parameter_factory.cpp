@@ -1,8 +1,8 @@
 #include <platform.h>
-#include <DatumStorage.h>
-#include <QueryParameter.h>
-#include <ParameterSet.h>
-#include <ParameterFactory.h>
+#include <datum_storage.h>
+#include <query_parameter.h>
+#include <parameter_set.h>
+#include <parameter_factory.h>
 
 namespace mssql
 {
