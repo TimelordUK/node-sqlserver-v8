@@ -9,13 +9,39 @@ namespace mssql
 {
     class QueryParameter;
 
+ /**
+     * @brief Collection of parameters for a query
+     */
     class ParameterSet {   
-        typedef std::vector<std::shared_ptr<QueryParameter>> qp_vec_t;
         public:
+            typedef std::vector<std::shared_ptr<QueryParameter>> qp_vec_t;
+            
+            /**
+             * @brief Default constructor
+             */
             ParameterSet();
+            
+            /**
+             * @brief Add a parameter to the set
+             * @param qp Parameter to add
+             */
             void add(std::shared_ptr<QueryParameter> qp);
-            const std::vector<std::shared_ptr<QueryParameter>> getParams() { return parameters_; }
+            
+            /**
+             * @brief Get all parameters
+             * @return Vector of parameters
+             */
+            const qp_vec_t& getParams() const { return parameters_; }
+            
+            /**
+             * @brief Create a parameter set from a JavaScript array of values
+             * @param env NAPI environment
+             * @param array JavaScript array of parameters
+             * @return Shared pointer to ParameterSet instance
+             */
+            static std::shared_ptr<ParameterSet> createFromJsArray(const Napi::Env& env, const Napi::Array& array);
+            
         private:
-            std::vector<std::shared_ptr<QueryParameter>> parameters_;
-    };
+            qp_vec_t parameters_;
+        };
 }
