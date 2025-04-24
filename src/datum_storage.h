@@ -16,6 +16,13 @@
 
 namespace mssql {
 
+    enum class DataType {
+        Int8, Int16, Int32, Uint32, Int64, Double, BigInt,
+        TimestampOffset, Time2Struct, TimestampStruct, DateStruct, NumericStruct,
+        Char, Uint16, Uint16Vec, CharVec, 
+        // Add any other types you need
+    };
+
     class DataStorage {
     public:
         typedef long long int bigint_t; 
@@ -30,28 +37,111 @@ namespace mssql {
         typedef std::vector<int64_t> int64_vec_t;
         typedef std::vector<double> double_vec_t;
         typedef std::vector<bigint_t> bigint_vec_t;
-       // typedef std::vector<SQL_SS_TIMESTAMPOFFSET_STRUCT> timestamp_offset_vec_t;
-       // typedef std::vector<SQL_SS_TIME2_STRUCT> time2_struct_vec_t;
+        typedef std::vector<SQL_SS_TIMESTAMPOFFSET_STRUCT> timestamp_offset_vec_t;
+        typedef std::vector<SQL_SS_TIME2_STRUCT> time2_struct_vec_t;
         typedef std::vector<SQL_TIMESTAMP_STRUCT> timestamp_struct_vec_t;
         typedef std::vector<SQL_DATE_STRUCT> date_struct_vec_t;
         typedef std::vector<SQL_NUMERIC_STRUCT> numeric_struct_vec_t;
 
+        // Constructor
+        DataStorage() = default;
+            
+        // Destructor - explicit for clarity
+        ~DataStorage() = default;
+
+        // Disable copy to prevent accidental copies of large data
+        DataStorage(const DataStorage&) = delete;
+
+        // But allow move semantics
+        DataStorage(DataStorage&&) = default;
+        DataStorage& operator=(DataStorage&&) = default;
+
+        DataStorage& operator=(const DataStorage&) = delete;
+
+        // Improved reserve method
         template<typename T>
         std::shared_ptr<std::vector<T>> reserve(size_t size) {
             auto& storage = getStorage<T>();
             if (!storage) {
-                storage = std::make_shared<std::vector<T>>(size);
+                storage = std::make_shared<std::vector<T>>();
+                storage->reserve(size);
             } else if (size > storage->capacity()) {
                 storage->reserve(size);
             }
             return storage;
         }
+            
+        template<typename T>
+        void addValue(const T& value) {
+            auto& storage = getStorage<T>();
+            if (!storage) {
+                storage = std::make_shared<std::vector<T>>();
+            }
+            storage->push_back(value);
+        }
         
+        template<typename T>
+        T getValue(size_t index) {
+            auto& storage = getStorage<T>();
+            if (!storage || index >= storage->size()) {
+                throw std::out_of_range("Index out of range or storage not initialized");
+            }
+            return (*storage)[index];
+        }
+
+        template<typename T>
+        size_t size() const {
+            const auto& storage = const_cast<DataStorage*>(this)->getStorage<T>();
+            return storage ? storage->size() : 0;
+        }
+
         // Primary template declaration - no implementation here
         template<typename T>
         std::shared_ptr<std::vector<T>>& getStorage();
 
+        template<typename T>
+        std::shared_ptr<std::vector<T>> extractStorage() {
+            auto& storage = getStorage<T>();
+            auto result = storage;
+            storage = nullptr;  // Transfer ownership
+            return result;
+        }
+
+        template<typename T>
+        void addValues(const std::vector<T>& values) {
+            auto& storage = getStorage<T>();
+            if (!storage) {
+                storage = std::make_shared<std::vector<T>>(values);
+            } else {
+                storage->insert(storage->end(), values.begin(), values.end());
+            }
+        }
+
+        template<typename T>
+        bool hasStorage() const {
+            const auto& storage = const_cast<DataStorage*>(this)->getStorage<T>();
+            return storage != nullptr && !storage->empty();
+        }
+
         // No specializations inside the class definition
+
+        void reset() {
+            int8vec_ptr = nullptr;
+            int16vec_ptr = nullptr;
+            int32vec_ptr = nullptr;
+            int64vec_ptr = nullptr;
+            doublevec_ptr = nullptr;
+            timestampoffsetvec_ptr = nullptr;
+            time2vec_ptr = nullptr;
+            timestampvec_ptr = nullptr;
+            datevec_ptr = nullptr;
+            numeric_ptr = nullptr;
+            charvec_ptr = nullptr;
+            uint16vec_ptr = nullptr;
+            uint16_vec_vec_ptr = nullptr;
+            char_vec_vec_ptr = nullptr;
+            bigint_vec_ptr = nullptr;
+        }
 
     private:
         // Storage for different types
@@ -61,8 +151,8 @@ namespace mssql {
         std::shared_ptr<uint32_vec_t> uint32vec_ptr;
         std::shared_ptr<int64_vec_t> int64vec_ptr;
         std::shared_ptr<double_vec_t> doublevec_ptr;
-        // std::shared_ptr<timestamp_offset_vec_t> timestampoffsetvec_ptr;
-        // std::shared_ptr<time2_struct_vec_t> time2vec_ptr;
+        std::shared_ptr<timestamp_offset_vec_t> timestampoffsetvec_ptr;
+        std::shared_ptr<time2_struct_vec_t> time2vec_ptr;
         std::shared_ptr<timestamp_struct_vec_t> timestampvec_ptr;
         std::shared_ptr<date_struct_vec_t> datevec_ptr;
         std::shared_ptr<numeric_struct_vec_t> numeric_ptr;
