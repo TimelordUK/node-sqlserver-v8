@@ -25,7 +25,6 @@ namespace mssql {
     class JSParam {
     public:
         static std::shared_ptr<JSParam> createFromJs(const Napi::Env& env, const Napi::Value& value, int paramIndex);
-    private:
-        std::shared_ptr<DataStorage> _data;
+  
     };
 }

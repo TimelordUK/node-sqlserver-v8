@@ -16,15 +16,18 @@
 
 namespace mssql {
 
-    enum class DataType {
-        Int8, Int16, Int32, Uint32, Int64, Double, BigInt,
-        TimestampOffset, Time2Struct, TimestampStruct, DateStruct, NumericStruct,
-        Char, Uint16, Uint16Vec, CharVec, 
-        // Add any other types you need
-    };
-
     class DataStorage {
     public:
+
+    enum class SqlType {
+        Unknown,
+        TinyInt, SmallInt, Integer, BigInt, UnsignedInt,
+        Real, Float, Double, Decimal, Numeric,
+        Char, VarChar, Text, NChar, NVarChar, NText, Binary, VarBinary,
+        Date, Time, DateTime, DateTime2, DateTimeOffset,
+        Bit, Variant
+        // Add other SQL types as needed
+    };
         typedef long long int bigint_t; 
         typedef std::vector<uint16_t> uint16_t_vec_t;
         typedef std::vector<std::shared_ptr<uint16_t_vec_t>> uint16_vec_t_vec_t;
@@ -42,6 +45,19 @@ namespace mssql {
         typedef std::vector<SQL_TIMESTAMP_STRUCT> timestamp_struct_vec_t;
         typedef std::vector<SQL_DATE_STRUCT> date_struct_vec_t;
         typedef std::vector<SQL_NUMERIC_STRUCT> numeric_struct_vec_t;
+
+          // Constructor that takes the SQL type
+        explicit DataStorage(SqlType type = SqlType::Unknown) : sqlType(type) {}
+    
+        // Get the SQL type of this column storage
+        SqlType getType() const { 
+            return sqlType; 
+        }
+        
+        // Set the SQL type (in case it wasn't known at construction)
+        void setType(SqlType type) {
+            sqlType = type;
+        }
 
         // Constructor
         DataStorage() = default;
@@ -89,10 +105,30 @@ namespace mssql {
             return (*storage)[index];
         }
 
-        template<typename T>
+        // Helper to get column size (number of values in this column)
         size_t size() const {
-            const auto& storage = const_cast<DataStorage*>(this)->getStorage<T>();
-            return storage ? storage->size() : 0;
+            switch (sqlType) {
+                case SqlType::TinyInt:
+                    return int8vec_ptr ? int8vec_ptr->size() : 0;
+                case SqlType::SmallInt:
+                    return int16vec_ptr ? int16vec_ptr->size() : 0;
+                case SqlType::Integer:
+                    return int32vec_ptr ? int32vec_ptr->size() : 0;
+                case SqlType::BigInt:
+                    return int64vec_ptr ? int64vec_ptr->size() : 0;
+                case SqlType::UnsignedInt:
+                    return uint32vec_ptr ? uint32vec_ptr->size() : 0; 
+                case SqlType::Real:
+                case SqlType::Float:
+                case SqlType:: Double:
+                    return doublevec_ptr ? doublevec_ptr->size() : 0; 
+                case SqlType::Numeric:
+                    return numeric_ptr ? numeric_ptr->size() : 0; 
+                                                              
+                // ... handle other types
+                default:
+                    return 0;
+            }
         }
 
         // Primary template declaration - no implementation here
@@ -123,6 +159,12 @@ namespace mssql {
             return storage != nullptr && !storage->empty();
         }
 
+        template<typename T>
+        std::vector<T>* getRawStorage() {
+            auto& storage = getStorage<T>();
+            return storage ? storage.get() : nullptr;
+        }
+
         // No specializations inside the class definition
 
         void reset() {
@@ -141,6 +183,7 @@ namespace mssql {
             uint16_vec_vec_ptr = nullptr;
             char_vec_vec_ptr = nullptr;
             bigint_vec_ptr = nullptr;
+            sqlType = SqlType::Unknown;
         }
 
     private:
@@ -161,6 +204,9 @@ namespace mssql {
         std::shared_ptr<uint16_vec_t_vec_t> uint16_vec_vec_ptr;
         std::shared_ptr<char_vec_t_vec_t> char_vec_vec_ptr;
         std::shared_ptr<bigint_vec_t> bigint_vec_ptr;
+        // Store the SQL type this instance represents
+        SqlType sqlType = SqlType::Unknown;
+    
     };
 
     template<>
@@ -182,6 +228,7 @@ namespace mssql {
     std::shared_ptr<DataStorage::uint32_vec_t>& DataStorage::getStorage<uint32_t>() {
         return uint32vec_ptr;
     }
+
 
 // And so on for all your types...
 
