@@ -4,27 +4,28 @@
 
 using namespace mssql;
 
-//TEST(DataStorageTest, Initialization) {
-//    DatumStorage storage(DatumStorage::SqlType::Integer);
-//    EXPECT_EQ(storage.getType(), DatumStorage::SqlType::Integer);
-//    EXPECT_EQ(storage.size(), 0);
-//    EXPECT_TRUE(storage.empty());
-//}
-//
-//TEST(DataStorageTest, IntegerStorage) {
-//    DatumStorage storage(DatumStorage::SqlType::Integer);
-//    
-//    // Test adding values
-//    storage.addValue<int32_t>(42);
-//    storage.addValue<int32_t>(100);
-//    
-//    EXPECT_EQ(storage.size(), 2);
-//    EXPECT_EQ(storage.getValue<int32_t>(0), 42);
-//    EXPECT_EQ(storage.getValue<int32_t>(1), 100);
-//    
-//    // Test type safety
-//    EXPECT_THROW(storage.addValue<double>(3.14), std::runtime_error);
-//}
+TEST(DataStorageTest, Initialization) {
+    DatumStorage storage(DatumStorage::SqlType::Integer);
+    EXPECT_EQ(storage.getType(), DatumStorage::SqlType::Integer);
+    EXPECT_EQ(storage.size(), 0);
+    EXPECT_TRUE(storage.empty());
+}
+
+
+TEST(DataStorageTest, IntegerStorage) {
+    DatumStorage storage(DatumStorage::SqlType::Integer);
+    
+    // Test adding values
+    storage.addValue<int32_t>(42);
+    storage.addValue<int32_t>(100);
+    
+    EXPECT_EQ(storage.size(), 2);
+    EXPECT_EQ(storage.getValue<int32_t>(0), 42);
+    EXPECT_EQ(storage.getValue<int32_t>(1), 100);
+    
+    // Test type safety
+    EXPECT_THROW(storage.addValue<double>(3.14), std::runtime_error);
+}
 
 
 TEST(DatumStorageTest, BasicTypeHandling) {
