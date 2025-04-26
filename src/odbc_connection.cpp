@@ -1,11 +1,11 @@
 #include <platform.h>
 #include <odbc_common.h>
 #include <odbc_handles.h>
-#include "connection.h"
+#include "Connection.h"
 #include "odbc_connection.h"
 #include <codecvt>
 #include <locale>
-#include <logger.h>
+#include <Logger.h>
 #include <iostream>
 
 // For demonstration purposes, we'll define simplified versions of the supporting classes

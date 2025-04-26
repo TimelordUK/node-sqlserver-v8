@@ -1,5 +1,5 @@
 #include <napi.h>
-#include "connection.h"
+#include "Connection.h"
 
 
 static Napi::Value SetLogLevel(const Napi::CallbackInfo& info) {

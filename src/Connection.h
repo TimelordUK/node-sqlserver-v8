@@ -79,7 +79,7 @@ namespace mssql
         }
     
         // Method to convert to JavaScript object
-        Napi::Object toJSObject(Napi::Env env) const;
+        Napi::Object toJSObject(Napi::Env env);
     
     private:
         struct Column {

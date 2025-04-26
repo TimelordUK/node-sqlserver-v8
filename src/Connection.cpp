@@ -1,4 +1,4 @@
-#include "connection.h"
+#include "Connection.h"
 #include "odbc_connection.h"
 #include "query_parameter.h"
 #include "parameter_set.h"
@@ -419,9 +419,9 @@ namespace mssql
         Callback().Call({env.Null(), resultObj});
     }
 
-    Napi::Object mssql::QueryResult::toJSObject(Napi::Env env) const
+    Napi::Object mssql::QueryResult::toJSObject(Napi::Env env) 
     {
-        const Napi::Object result = Napi::Object::New(env);
+        Napi::Object result = Napi::Object::New(env);
 
         // Create metadata object
         Napi::Array meta = Napi::Array::New(env, columns_.size());
