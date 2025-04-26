@@ -17,3 +17,4 @@ namespace mssql {
     // Initialize with the default implementation
     inline napi_status (*NapiWrapper::GetDateValueImpl)(napi_env env, napi_value value, double* result) = NapiWrapper::GetDateValue;
 }
+

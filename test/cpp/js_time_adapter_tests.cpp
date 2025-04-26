@@ -21,16 +21,17 @@ TEST_F(JSTimeAdapterTest, DateBinding) {
     // Store the original implementation
     auto original = NapiWrapper::GetDateValueImpl;
     
-    // Set up test date (January 15, 2023)
-    const double testDate = 1673740800000.0;
+    // Set up test date (January 15, 2023) as a static variable
+    static double g_testDate = 1673740800000.0;
     
     // Override with a test implementation that returns our test date
+    // No need for capture as we're using a static variable
     NapiWrapper::GetDateValueImpl = [](napi_env env, napi_value value, double* result) -> napi_status {
-        *result = testDate;
+        *result = g_testDate;
         return napi_ok;
     };
     
-    // Run your test...
+    // Rest of your test remains the same...
     DatumStorage storage(DatumStorage::SqlType::Date);
     bool success = JSTimeAdapter::bindJsDateToDateStorage(
         reinterpret_cast<napi_env>(1), // Dummy env
