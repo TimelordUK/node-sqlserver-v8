@@ -60,11 +60,14 @@ TEST(DatumStorageTest, BasicTypeHandling) {
 
 TEST(DatumStorageTest, DebugPrint) {
     DatumStorage storage(DatumStorage::SqlType::Integer);
-
+    Logger::GetInstance().SetLogLevel(LogLevel::Debug);
+    Logger::GetInstance().SetLogToConsole(true);
     // Add some values
     storage.addValue<int32_t>(42);
     storage.addValue<int32_t>(100);
     storage.addValue<int32_t>(-5);
+
+    storage.logDebug();
 
     // Print debug info
     std::cout << "Debug info:\n" << storage.getDebugString() << std::endl;

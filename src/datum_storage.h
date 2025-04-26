@@ -13,6 +13,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <Logger.h>
 
 #ifdef LINUX_BUILD
 #include <cmath>
@@ -52,6 +53,33 @@ namespace mssql {
 		typedef std::vector<SQL_DATE_STRUCT> date_struct_vec_t;
 		typedef std::vector<SQL_NUMERIC_STRUCT> numeric_struct_vec_t;
 
+
+		// Add these methods to DatumStorage class
+		void logDebug(LogLevel level = LogLevel::Debug, bool showValues = true, size_t maxValues = 5) const {
+			// Get the debug string in compact format for logs
+			std::string debugStr = getDebugString(showValues, maxValues, true);
+
+			// Log it using the Logger singleton
+			Logger::GetInstance().Log(level, debugStr);
+		}
+
+		// Convenience methods for different log levels
+		void logError(bool showValues = true, size_t maxValues = 5) const {
+			logDebug(LogLevel::Error, showValues, maxValues);
+		}
+
+		void logWarning(bool showValues = true, size_t maxValues = 5) const {
+			logDebug(LogLevel::Warning, showValues, maxValues);
+		}
+
+		void logInfo(bool showValues = true, size_t maxValues = 5) const {
+			logDebug(LogLevel::Info, showValues, maxValues);
+		}
+
+		void logTrace(bool showValues = true, size_t maxValues = 5) const {
+			logDebug(LogLevel::Trace, showValues, maxValues);
+		}
+
 		// Constructor with optional SQL type
 		explicit DatumStorage(SqlType type = SqlType::Unknown) : sqlType(type) {}
 
@@ -73,6 +101,10 @@ namespace mssql {
 			}
 		}
 
+		SqlType getType() const {
+			return sqlType;
+		}
+
 
 		size_t size() {
 			auto storage = getStorage();
@@ -84,9 +116,9 @@ namespace mssql {
 		bool empty() {
 			auto storage = getStorage();
 			if (storage) {
-				storage->empty();  // This doesn't return anything
+				return storage->empty();
 			}
-			return true;  // Always returns true regardless of whether the vector is empty
+			return true;
 		}
 		void clear() {
 			auto storage = getStorage();
@@ -580,10 +612,59 @@ namespace mssql {
 			}
 		}
 
-		// Helper method that returns the debug string
-		std::string getDebugString(bool showValues = true, size_t maxValues = 5) const {
+		std::string getDebugString(bool showValues = true, size_t maxValues = 5, bool compactFormat = false) const {
 			std::ostringstream oss;
-			debugPrint(oss, showValues, maxValues);
+
+			if (compactFormat) {
+				oss << "DatumStorage[Type=" << getTypeName();
+
+				auto storage = const_cast<DatumStorage*>(this)->getStorage();
+				if (!storage) {
+					oss << ", Storage=nullptr]";
+					return oss.str();
+				}
+
+				oss << ", Size=" << storage->size()
+					<< ", Capacity=" << storage->capacity()
+					<< ", ElemSize=" << storage->element_size()
+					<< ", Empty=" << (storage->empty() ? "true" : "false");
+
+				if (showValues && storage->size() > 0) {
+					oss << ", Values=[";
+
+					size_t valuesToShow = std::min(storage->size(), maxValues);
+
+					// Type-specific compact value printing
+					switch (sqlType) {
+					case SqlType::TinyInt: {
+						auto& vec = *const_cast<DatumStorage*>(this)->getTypedVector<int8_t>();
+						for (size_t i = 0; i < valuesToShow; ++i) {
+							if (i > 0) oss << ", ";
+							oss << static_cast<int>(vec[i]);
+						}
+						break;
+					}
+										 // Similar cases for other types...
+
+					default:
+						oss << "...";
+						break;
+					}
+
+					if (storage->size() > maxValues) {
+						oss << ", ..." << (storage->size() - maxValues) << " more";
+					}
+
+					oss << "]";
+				}
+
+				oss << "]";
+			}
+			else {
+				// Original formatting for debug console output
+				debugPrint(oss, showValues, maxValues);
+			}
+
 			return oss.str();
 		}
 
