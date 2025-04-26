@@ -102,6 +102,7 @@ list(FILTER SOURCE_FILES EXCLUDE REGEX ".*module\\.cpp$")
 # Setup test source files
 set(TEST_SOURCE_FILES
     parameter_test.cpp
+    datum_storage_test.cpp
     test_main.cpp
     # Add other test files here as needed
 )

@@ -1,6 +1,5 @@
 #pragma once
 // undo these tokens to use numeric_limits below
-
 #undef min
 #undef max
 #include <platform.h>
@@ -8,6 +7,12 @@
 #include <vector>
 #include <string.h>
 #include <memory>
+#include <stdexcept>
+#include <type_traits>
+#include <string>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
 
 #ifdef LINUX_BUILD
 #include <cmath>
@@ -16,220 +21,581 @@
 
 namespace mssql {
 
-    class DataStorage {
-    public:
 
-    enum class SqlType {
-        Unknown,
-        TinyInt, SmallInt, Integer, BigInt, UnsignedInt,
-        Real, Float, Double, Decimal, Numeric,
-        Char, VarChar, Text, NChar, NVarChar, NText, Binary, VarBinary,
-        Date, Time, DateTime, DateTime2, DateTimeOffset,
-        Bit, Variant
-        // Add other SQL types as needed
-    };
-        typedef long long int bigint_t; 
-        typedef std::vector<uint16_t> uint16_t_vec_t;
-        typedef std::vector<std::shared_ptr<uint16_t_vec_t>> uint16_vec_t_vec_t;
-        typedef std::vector<char> char_vec_t;
-        typedef std::vector<std::shared_ptr<char_vec_t>> char_vec_t_vec_t;
-        typedef std::vector<int8_t> int8_vec_t;
-        typedef std::vector<int16_t> int16_vec_t;
-        typedef std::vector<int32_t> int32_vec_t;
-        typedef std::vector<uint32_t> uint32_vec_t;
-        typedef std::vector<int64_t> int64_vec_t;
-        typedef std::vector<double> double_vec_t;
-        typedef std::vector<bigint_t> bigint_vec_t;
-        typedef std::vector<SQL_SS_TIMESTAMPOFFSET_STRUCT> timestamp_offset_vec_t;
-        typedef std::vector<SQL_SS_TIME2_STRUCT> time2_struct_vec_t;
-        typedef std::vector<SQL_TIMESTAMP_STRUCT> timestamp_struct_vec_t;
-        typedef std::vector<SQL_DATE_STRUCT> date_struct_vec_t;
-        typedef std::vector<SQL_NUMERIC_STRUCT> numeric_struct_vec_t;
+	class DatumStorage
+	{
+	public:
+		enum class SqlType {
+			Unknown,
+			TinyInt, SmallInt, Integer, UnsignedInt, BigInt,
+			Real, Float, Double, Decimal, Numeric,
+			Char, VarChar, Text, NChar, NVarChar, NText, Binary, VarBinary,
+			Date, Time, DateTime, DateTime2, DateTimeOffset,
+			Bit, Variant
+		};
 
-          // Constructor that takes the SQL type
-        explicit DataStorage(SqlType type = SqlType::Unknown) : sqlType(type) {}
-    
-        // Get the SQL type of this column storage
-        SqlType getType() const { 
-            return sqlType; 
-        }
-        
-        // Set the SQL type (in case it wasn't known at construction)
-        void setType(SqlType type) {
-            sqlType = type;
-        }
+		typedef long long int bigint_t;
+		typedef std::vector<uint16_t> uint16_t_vec_t;
+		typedef std::vector<std::shared_ptr<uint16_t_vec_t>> uint16_vec_t_vec_t;
+		typedef std::vector<char> char_vec_t;
+		typedef std::vector<std::shared_ptr<char_vec_t>> char_vec_t_vec_t;
+		typedef std::vector<int8_t> int8_vec_t;
+		typedef std::vector<int16_t> int16_vec_t;
+		typedef std::vector<int32_t> int32_vec_t;
+		typedef std::vector<uint32_t> uint32_vec_t;
+		typedef std::vector<int64_t> int64_vec_t;
+		typedef std::vector<double> double_vec_t;
+		typedef std::vector<bigint_t> bigint_vec_t;
+		typedef std::vector<SQL_SS_TIMESTAMPOFFSET_STRUCT> timestamp_offset_vec_t;
+		typedef std::vector<SQL_SS_TIME2_STRUCT> time2_struct_vec_t;
+		typedef std::vector<SQL_TIMESTAMP_STRUCT> timestamp_struct_vec_t;
+		typedef std::vector<SQL_DATE_STRUCT> date_struct_vec_t;
+		typedef std::vector<SQL_NUMERIC_STRUCT> numeric_struct_vec_t;
 
-        // Constructor
-        DataStorage() = default;
-            
-        // Destructor - explicit for clarity
-        ~DataStorage() = default;
+		// Constructor with optional SQL type
+		explicit DatumStorage(SqlType type = SqlType::Unknown) : sqlType(type) {}
 
-        // Disable copy to prevent accidental copies of large data
-        DataStorage(const DataStorage&) = delete;
+		// Copy constructor - deleted to prevent accidental copies
+		DatumStorage(const DatumStorage&) = delete;
+		DatumStorage& operator=(const DatumStorage&) = delete;
 
-        // But allow move semantics
-        DataStorage(DataStorage&&) = default;
-        DataStorage& operator=(DataStorage&&) = default;
+		// Move constructor and assignment
+		DatumStorage(DatumStorage&& other) noexcept = default;
+		DatumStorage& operator=(DatumStorage&& other) noexcept = default;
 
-        DataStorage& operator=(const DataStorage&) = delete;
+		// Destructor
+		~DatumStorage() = default;
 
-        // Improved reserve method
-        template<typename T>
-        std::shared_ptr<std::vector<T>> reserve(size_t size) {
-            auto& storage = getStorage<T>();
-            if (!storage) {
-                storage = std::make_shared<std::vector<T>>();
-                storage->reserve(size);
-            } else if (size > storage->capacity()) {
-                storage->reserve(size);
-            }
-            return storage;
-        }
-            
-        template<typename T>
-        void addValue(const T& value) {
-            auto& storage = getStorage<T>();
-            if (!storage) {
-                storage = std::make_shared<std::vector<T>>();
-            }
-            storage->push_back(value);
-        }
-        
-        template<typename T>
-        T getValue(size_t index) {
-            auto& storage = getStorage<T>();
-            if (!storage || index >= storage->size()) {
-                throw std::out_of_range("Index out of range or storage not initialized");
-            }
-            return (*storage)[index];
-        }
-
-        // Helper to get column size (number of values in this column)
-        size_t size() const {
-            switch (sqlType) {
-                case SqlType::TinyInt:
-                    return int8vec_ptr ? int8vec_ptr->size() : 0;
-                case SqlType::SmallInt:
-                    return int16vec_ptr ? int16vec_ptr->size() : 0;
-                case SqlType::Integer:
-                    return int32vec_ptr ? int32vec_ptr->size() : 0;
-                case SqlType::BigInt:
-                    return int64vec_ptr ? int64vec_ptr->size() : 0;
-                case SqlType::UnsignedInt:
-                    return uint32vec_ptr ? uint32vec_ptr->size() : 0; 
-                case SqlType::Real:
-                case SqlType::Float:
-                case SqlType:: Double:
-                    return doublevec_ptr ? doublevec_ptr->size() : 0; 
-                case SqlType::Numeric:
-                    return numeric_ptr ? numeric_ptr->size() : 0; 
-                                                              
-                // ... handle other types
-                default:
-                    return 0;
-            }
-        }
-
-        // Primary template declaration - no implementation here
-        template<typename T>
-        std::shared_ptr<std::vector<T>>& getStorage();
-
-        template<typename T>
-        std::shared_ptr<std::vector<T>> extractStorage() {
-            auto& storage = getStorage<T>();
-            auto result = storage;
-            storage = nullptr;  // Transfer ownership
-            return result;
-        }
-
-        template<typename T>
-        void addValues(const std::vector<T>& values) {
-            auto& storage = getStorage<T>();
-            if (!storage) {
-                storage = std::make_shared<std::vector<T>>(values);
-            } else {
-                storage->insert(storage->end(), values.begin(), values.end());
-            }
-        }
-
-        template<typename T>
-        bool hasStorage() const {
-            const auto& storage = const_cast<DataStorage*>(this)->getStorage<T>();
-            return storage != nullptr && !storage->empty();
-        }
-
-        template<typename T>
-        std::vector<T>* getRawStorage() {
-            auto& storage = getStorage<T>();
-            return storage ? storage.get() : nullptr;
-        }
-
-        // No specializations inside the class definition
-
-        void reset() {
-            int8vec_ptr = nullptr;
-            int16vec_ptr = nullptr;
-            int32vec_ptr = nullptr;
-            int64vec_ptr = nullptr;
-            doublevec_ptr = nullptr;
-            timestampoffsetvec_ptr = nullptr;
-            time2vec_ptr = nullptr;
-            timestampvec_ptr = nullptr;
-            datevec_ptr = nullptr;
-            numeric_ptr = nullptr;
-            charvec_ptr = nullptr;
-            uint16vec_ptr = nullptr;
-            uint16_vec_vec_ptr = nullptr;
-            char_vec_vec_ptr = nullptr;
-            bigint_vec_ptr = nullptr;
-            sqlType = SqlType::Unknown;
-        }
-
-    private:
-        // Storage for different types
-        std::shared_ptr<int8_vec_t> int8vec_ptr;
-        std::shared_ptr<int16_vec_t> int16vec_ptr;
-        std::shared_ptr<int32_vec_t> int32vec_ptr;
-        std::shared_ptr<uint32_vec_t> uint32vec_ptr;
-        std::shared_ptr<int64_vec_t> int64vec_ptr;
-        std::shared_ptr<double_vec_t> doublevec_ptr;
-        std::shared_ptr<timestamp_offset_vec_t> timestampoffsetvec_ptr;
-        std::shared_ptr<time2_struct_vec_t> time2vec_ptr;
-        std::shared_ptr<timestamp_struct_vec_t> timestampvec_ptr;
-        std::shared_ptr<date_struct_vec_t> datevec_ptr;
-        std::shared_ptr<numeric_struct_vec_t> numeric_ptr;
-        std::shared_ptr<char_vec_t> charvec_ptr;
-        std::shared_ptr<uint16_t_vec_t> uint16vec_ptr;
-        std::shared_ptr<uint16_vec_t_vec_t> uint16_vec_vec_ptr;
-        std::shared_ptr<char_vec_t_vec_t> char_vec_vec_ptr;
-        std::shared_ptr<bigint_vec_t> bigint_vec_ptr;
-        // Store the SQL type this instance represents
-        SqlType sqlType = SqlType::Unknown;
-    
-    };
-
-    template<>
-    std::shared_ptr<DataStorage::int8_vec_t>& DataStorage::getStorage<int8_t>() { 
-        return int8vec_ptr; 
-    }
-
-    template<>
-    std::shared_ptr<DataStorage::int16_vec_t>& DataStorage::getStorage<int16_t>() { 
-        return int16vec_ptr; 
-    }
-
-    template<>
-    std::shared_ptr<DataStorage::int32_vec_t>& DataStorage::getStorage<int32_t>() {
-        return int32vec_ptr;
-    }
-
-    template<>
-    std::shared_ptr<DataStorage::uint32_vec_t>& DataStorage::getStorage<uint32_t>() {
-        return uint32vec_ptr;
-    }
+		void setType(SqlType type) {
+			if (type != sqlType) {
+				sqlType = type;
+				vectorData = nullptr; // Clear the vector when type changes
+			}
+		}
 
 
-// And so on for all your types...
+		size_t size() {
+			auto storage = getStorage();
+			if (storage) {
+				return storage->size();
+			}
+			return 0;
+		}
+		bool empty() {
+			auto storage = getStorage();
+			if (storage) {
+				storage->empty();  // This doesn't return anything
+			}
+			return true;  // Always returns true regardless of whether the vector is empty
+		}
+		void clear() {
+			auto storage = getStorage();
+			if (storage) {
+				storage->clear();
+			}
+		}
+		void resize(size_t s) {
+			auto storage = getStorage();
+			if (storage) {
+				storage->resize(s);
+			}
+		}
+		size_t capacity() {
+			auto storage = getStorage();
+			if (storage) {
+				return storage->capacity();
+			}
+			return 0;
+		}
+
+		std::string getTypeName() const {
+			switch (sqlType) {
+			case SqlType::TinyInt: return "TinyInt";
+			case SqlType::SmallInt: return "SmallInt";
+			case SqlType::Integer: return "Integer";
+			case SqlType::UnsignedInt: return "UnsignedInt";
+			case SqlType::BigInt: return "BigInt";
+			case SqlType::Real: return "Real";
+			case SqlType::Float: return "Float";
+			case SqlType::Double: return "Double";
+			case SqlType::Decimal: return "Decimal";
+			case SqlType::Numeric: return "Numeric";
+			case SqlType::Char: return "Char";
+			case SqlType::VarChar: return "VarChar";
+			case SqlType::Text: return "Text";
+			case SqlType::NChar: return "NChar";
+			case SqlType::NVarChar: return "NVarChar";
+			case SqlType::NText: return "NText";
+			case SqlType::Binary: return "Binary";
+			case SqlType::VarBinary: return "VarBinary";
+			case SqlType::Date: return "Date";
+			case SqlType::Time: return "Time";
+			case SqlType::DateTime: return "DateTime";
+			case SqlType::DateTime2: return "DateTime2";
+			case SqlType::DateTimeOffset: return "DateTimeOffset";
+			case SqlType::Bit: return "Bit";
+			case SqlType::Variant: return "Variant";
+			default: return "Unknown";
+			}
+		}
+
+
+		// Base interface for vector operations
+		class VectorBase {
+		public:
+			virtual ~VectorBase() = default;
+			virtual size_t size() const = 0;
+			virtual size_t capacity() const = 0;
+			virtual void reserve(size_t size) = 0;
+			virtual void resize(size_t size) = 0;
+			virtual void clear() = 0;
+			virtual void* data() = 0;
+			virtual const void* data() const = 0;
+			virtual size_t element_size() const = 0;
+			virtual bool empty() const = 0;
+		};
+
+		// Templated implementation of the interface
+		template<typename T>
+		class VectorImpl : public VectorBase {
+		public:
+			VectorImpl(std::shared_ptr<std::vector<T>> vec) : vector(vec) {
+				if (!vector) vector = std::make_shared<std::vector<T>>();
+			}
+
+			size_t size() const override { return vector->size(); }
+			size_t capacity() const override { return vector->capacity(); }
+			void reserve(size_t size) override { vector->reserve(size); }
+			void resize(size_t size) override { vector->resize(size); }
+			void clear() override { vector->clear(); }
+			void* data() override { return vector->data(); }
+			const void* data() const override { return vector->data(); }
+			size_t element_size() const override { return sizeof(T); }
+			bool empty() const override { return vector->empty(); }
+
+			std::shared_ptr<std::vector<T>> vector;
+		};
+
+		void reserve(size_t size) {
+			auto storage = getStorage();
+			if (storage) {
+				storage->reserve(size);
+			}
+		}
+
+		// Get the storage - creates it lazily if needed
+		std::shared_ptr<VectorBase> getStorage() {
+			if (!vectorData) {
+				createVectorForCurrentType();
+			}
+			return vectorData;
+		}
+
+		template<typename  T>
+		inline std::shared_ptr<std::vector<T>> reserve_vec(std::shared_ptr<std::vector<T>> existing, size_t size)
+		{
+			if (existing == nullptr) {
+				existing = std::make_shared<std::vector<T>>(size);
+			}
+			else
+			{
+				if (size > existing->capacity()) {
+					existing->reserve(size);
+				}
+			}
+			return existing;
+		}
+
+		// Type-specific operations need adjustment
+		template<typename T>
+		void addValue(const T& value) {
+			if (!isCompatibleType<T>()) {
+				throw std::runtime_error("Type mismatch - attempting to add incompatible value type");
+			}
+
+			auto typedVector = getTypedVector<T>();
+			typedVector->push_back(value);
+		}
+
+		template<typename T>
+		T getValue(size_t index) const {
+			if (!isCompatibleType<T>()) {
+				throw std::runtime_error("Type mismatch - attempting to get incompatible value type");
+			}
+
+			auto typedVector = const_cast<DatumStorage*>(this)->getTypedVector<T>();
+			if (index >= typedVector->size()) {
+				throw std::out_of_range("Index out of range");
+			}
+			return (*typedVector)[index];
+		}
+
+		template<typename T>
+		std::shared_ptr<std::vector<T>> getTypedVector() {
+			if (!vectorData) {
+				createVectorForCurrentType();
+			}
+
+			if (!vectorData) {
+				throw std::runtime_error("Failed to create vector for SQL type");
+			}
+
+			// Use a simpler approach based on the SQL type
+			if (isCompatibleType<T>()) {
+				switch (sqlType) {
+				case SqlType::TinyInt:
+					if constexpr (std::is_same_v<T, int8_t>)
+						return static_cast<VectorImpl<int8_t>*>(vectorData.get())->vector;
+					break;
+
+				case SqlType::SmallInt:
+					if constexpr (std::is_same_v<T, int16_t>)
+						return static_cast<VectorImpl<int16_t>*>(vectorData.get())->vector;
+					break;
+
+				case SqlType::Integer:
+					if constexpr (std::is_same_v<T, int32_t> || std::is_same_v<T, int>)
+						return static_cast<VectorImpl<int32_t>*>(vectorData.get())->vector;
+					break;
+
+				case SqlType::UnsignedInt:
+					if constexpr (std::is_same_v<T, uint32_t> || std::is_same_v<T, unsigned int>)
+						return static_cast<VectorImpl<uint32_t>*>(vectorData.get())->vector;
+					break;
+
+				case SqlType::BigInt:
+					if constexpr (std::is_same_v<T, int64_t> || std::is_same_v<T, bigint_t>)
+						return static_cast<VectorImpl<int64_t>*>(vectorData.get())->vector;
+					break;
+
+				case SqlType::Real:
+				case SqlType::Float:
+				case SqlType::Double:
+					if constexpr (std::is_same_v<T, double> || std::is_same_v<T, float>)
+						return static_cast<VectorImpl<double>*>(vectorData.get())->vector;
+					break;
+
+				case SqlType::Decimal:
+				case SqlType::Numeric:
+					if constexpr (std::is_same_v<T, SQL_NUMERIC_STRUCT>)
+						return static_cast<VectorImpl<SQL_NUMERIC_STRUCT>*>(vectorData.get())->vector;
+					break;
+
+				case SqlType::Char:
+				case SqlType::VarChar:
+				case SqlType::Text:
+				case SqlType::Binary:
+				case SqlType::VarBinary:
+					if constexpr (std::is_same_v<T, char>)
+						return static_cast<VectorImpl<char>*>(vectorData.get())->vector;
+					break;
+
+				case SqlType::NChar:
+				case SqlType::NVarChar:
+				case SqlType::NText:
+					if constexpr (std::is_same_v<T, uint16_t> || std::is_same_v<T, wchar_t>)
+						return static_cast<VectorImpl<uint16_t>*>(vectorData.get())->vector;
+					break;
+
+				case SqlType::Date:
+					if constexpr (std::is_same_v<T, SQL_DATE_STRUCT>)
+						return static_cast<VectorImpl<SQL_DATE_STRUCT>*>(vectorData.get())->vector;
+					break;
+
+				case SqlType::Time:
+					if constexpr (std::is_same_v<T, SQL_SS_TIME2_STRUCT>)
+						return static_cast<VectorImpl<SQL_SS_TIME2_STRUCT>*>(vectorData.get())->vector;
+					break;
+
+				case SqlType::DateTime:
+				case SqlType::DateTime2:
+					if constexpr (std::is_same_v<T, SQL_TIMESTAMP_STRUCT>)
+						return static_cast<VectorImpl<SQL_TIMESTAMP_STRUCT>*>(vectorData.get())->vector;
+					break;
+
+				case SqlType::DateTimeOffset:
+					if constexpr (std::is_same_v<T, SQL_SS_TIMESTAMPOFFSET_STRUCT>)
+						return static_cast<VectorImpl<SQL_SS_TIMESTAMPOFFSET_STRUCT>*>(vectorData.get())->vector;
+					break;
+
+				case SqlType::Bit:
+					if constexpr (std::is_same_v<T, bool> || std::is_same_v<T, int8_t>)
+						return static_cast<VectorImpl<int8_t>*>(vectorData.get())->vector;
+					break;
+
+				case SqlType::Variant:
+					// Handle variant type - this depends on your implementation
+					// You might need additional logic here depending on how you represent variants
+					break;
+
+				default:
+					throw std::runtime_error("Unsupported SQL type");
+				}
+			}
+
+			throw std::runtime_error("Type mismatch - vector has different type than requested");
+		}
+
+		void reset() {
+			vectorData = nullptr;
+			sqlType = SqlType::Unknown;
+		}
+		template<typename T>
+		bool isCompatibleType() const {
+			if constexpr (std::is_same_v<T, int8_t>)
+				return sqlType == SqlType::TinyInt;
+			else if constexpr (std::is_same_v<T, int16_t>)
+				return sqlType == SqlType::SmallInt;
+			else if constexpr (std::is_same_v<T, int32_t>)
+				return sqlType == SqlType::Integer;
+			else if constexpr (std::is_same_v<T, uint32_t>)
+				return sqlType == SqlType::UnsignedInt;
+			else if constexpr (std::is_same_v<T, int64_t>)
+				return sqlType == SqlType::BigInt;
+			else if constexpr (std::is_same_v<T, double>)
+				return sqlType == SqlType::Real || sqlType == SqlType::Float || sqlType == SqlType::Double;
+			else if constexpr (std::is_same_v<T, SQL_NUMERIC_STRUCT>)
+				return sqlType == SqlType::Decimal || sqlType == SqlType::Numeric;
+			else if constexpr (std::is_same_v<T, char>)
+				return sqlType == SqlType::Char || sqlType == SqlType::VarChar ||
+				sqlType == SqlType::Text || sqlType == SqlType::Binary ||
+				sqlType == SqlType::VarBinary;
+			else if constexpr (std::is_same_v<T, uint16_t>)
+				return sqlType == SqlType::NChar || sqlType == SqlType::NVarChar ||
+				sqlType == SqlType::NText;
+			else if constexpr (std::is_same_v<T, SQL_DATE_STRUCT>)
+				return sqlType == SqlType::Date;
+			else if constexpr (std::is_same_v<T, SQL_SS_TIME2_STRUCT>)
+				return sqlType == SqlType::Time;
+			else if constexpr (std::is_same_v<T, SQL_TIMESTAMP_STRUCT>)
+				return sqlType == SqlType::DateTime || sqlType == SqlType::DateTime2;
+			else if constexpr (std::is_same_v<T, SQL_SS_TIMESTAMPOFFSET_STRUCT>)
+				return sqlType == SqlType::DateTimeOffset;
+			else if constexpr (std::is_same_v<T, bigint_t>)
+				return sqlType == SqlType::BigInt;
+			else if constexpr (std::is_same_v<T, std::shared_ptr<uint16_t_vec_t>>)
+				return true; // Vector of Unicode strings
+			else if constexpr (std::is_same_v<T, std::shared_ptr<char_vec_t>>)
+				return true; // Vector of ASCII strings
+			return false;
+		}
+
+
+		void createVectorForCurrentType() {
+			switch (sqlType) {
+			case SqlType::TinyInt:
+				vectorData = std::make_shared<VectorImpl<int8_t>>(std::make_shared<std::vector<int8_t>>());
+				break;
+			case SqlType::SmallInt:
+				vectorData = std::make_shared<VectorImpl<int16_t>>(std::make_shared<std::vector<int16_t>>());
+				break;
+			case SqlType::Integer:
+				vectorData = std::make_shared<VectorImpl<int32_t>>(std::make_shared<std::vector<int32_t>>());
+				break;
+			case SqlType::UnsignedInt:
+				vectorData = std::make_shared<VectorImpl<uint32_t>>(std::make_shared<std::vector<uint32_t>>());
+				break;
+			case SqlType::BigInt:
+				vectorData = std::make_shared<VectorImpl<int64_t>>(std::make_shared<std::vector<int64_t>>());
+				break;
+			case SqlType::Real:
+			case SqlType::Float:
+			case SqlType::Double:
+				vectorData = std::make_shared<VectorImpl<double>>(std::make_shared<std::vector<double>>());
+				break;
+			case SqlType::Decimal:
+			case SqlType::Numeric:
+				vectorData = std::make_shared<VectorImpl<SQL_NUMERIC_STRUCT>>(std::make_shared<std::vector<SQL_NUMERIC_STRUCT>>());
+				break;
+			case SqlType::Char:
+			case SqlType::VarChar:
+			case SqlType::Text:
+			case SqlType::Binary:
+			case SqlType::VarBinary:
+				vectorData = std::make_shared<VectorImpl<char>>(std::make_shared<std::vector<char>>());
+				break;
+			case SqlType::NChar:
+			case SqlType::NVarChar:
+			case SqlType::NText:
+				vectorData = std::make_shared<VectorImpl<uint16_t>>(std::make_shared<std::vector<uint16_t>>());
+				break;
+			case SqlType::Date:
+				vectorData = std::make_shared<VectorImpl<SQL_DATE_STRUCT>>(std::make_shared<std::vector<SQL_DATE_STRUCT>>());
+				break;
+			case SqlType::Time:
+				vectorData = std::make_shared<VectorImpl<SQL_SS_TIME2_STRUCT>>(std::make_shared<std::vector<SQL_SS_TIME2_STRUCT>>());
+				break;
+			case SqlType::DateTime:
+			case SqlType::DateTime2:
+				vectorData = std::make_shared<VectorImpl<SQL_TIMESTAMP_STRUCT>>(std::make_shared<std::vector<SQL_TIMESTAMP_STRUCT>>());
+				break;
+			case SqlType::DateTimeOffset:
+				vectorData = std::make_shared<VectorImpl<SQL_SS_TIMESTAMPOFFSET_STRUCT>>(std::make_shared<std::vector<SQL_SS_TIMESTAMPOFFSET_STRUCT>>());
+				break;
+			default:
+				// Leave as nullptr for unknown type
+				break;
+			}
+		}
+
+		void debugPrint(std::ostream& os = std::cout, bool showValues = true, size_t maxValues = 5) const {
+			os << "DatumStorage:" << std::endl;
+			os << "  SQL Type: " << getTypeName() << std::endl;
+
+			auto storage = const_cast<DatumStorage*>(this)->getStorage();
+			if (!storage) {
+				os << "  Storage: nullptr (not initialized)" << std::endl;
+				return;
+			}
+
+			os << "  Size: " << storage->size() << std::endl;
+			os << "  Capacity: " << storage->capacity() << std::endl;
+			os << "  Element size: " << storage->element_size() << " bytes" << std::endl;
+			os << "  Empty: " << (storage->empty() ? "true" : "false") << std::endl;
+
+			if (showValues && storage->size() > 0) {
+				os << "  Values (up to " << maxValues << "):" << std::endl;
+
+				size_t valuesToShow = std::min(storage->size(), maxValues);
+
+				// Type-specific value printing
+				switch (sqlType) {
+				case SqlType::TinyInt: {
+					auto& vec = *const_cast<DatumStorage*>(this)->getTypedVector<int8_t>();
+					for (size_t i = 0; i < valuesToShow; ++i) {
+						os << "    [" << i << "]: " << static_cast<int>(vec[i]) << std::endl;
+					}
+					break;
+				}
+				case SqlType::SmallInt: {
+					auto& vec = *const_cast<DatumStorage*>(this)->getTypedVector<int16_t>();
+					for (size_t i = 0; i < valuesToShow; ++i) {
+						os << "    [" << i << "]: " << vec[i] << std::endl;
+					}
+					break;
+				}
+				case SqlType::Integer: {
+					auto& vec = *const_cast<DatumStorage*>(this)->getTypedVector<int32_t>();
+					for (size_t i = 0; i < valuesToShow; ++i) {
+						os << "    [" << i << "]: " << vec[i] << std::endl;
+					}
+					break;
+				}
+				case SqlType::UnsignedInt: {
+					auto& vec = *const_cast<DatumStorage*>(this)->getTypedVector<uint32_t>();
+					for (size_t i = 0; i < valuesToShow; ++i) {
+						os << "    [" << i << "]: " << vec[i] << std::endl;
+					}
+					break;
+				}
+				case SqlType::BigInt: {
+					auto& vec = *const_cast<DatumStorage*>(this)->getTypedVector<int64_t>();
+					for (size_t i = 0; i < valuesToShow; ++i) {
+						os << "    [" << i << "]: " << vec[i] << std::endl;
+					}
+					break;
+				}
+				case SqlType::Real:
+				case SqlType::Float:
+				case SqlType::Double: {
+					auto& vec = *const_cast<DatumStorage*>(this)->getTypedVector<double>();
+					for (size_t i = 0; i < valuesToShow; ++i) {
+						os << "    [" << i << "]: " << vec[i] << std::endl;
+					}
+					break;
+				}
+				case SqlType::Char:
+				case SqlType::VarChar:
+				case SqlType::Text:
+				case SqlType::Binary:
+				case SqlType::VarBinary: {
+					auto& vec = *const_cast<DatumStorage*>(this)->getTypedVector<char>();
+					os << "    Raw bytes: ";
+					for (size_t i = 0; i < std::min(valuesToShow * 4, vec.size()); ++i) {
+						os << "0x" << std::hex << std::setw(2) << std::setfill('0')
+							<< static_cast<int>(static_cast<unsigned char>(vec[i])) << " ";
+					}
+					os << std::dec << std::endl;
+					break;
+				}
+				case SqlType::NChar:
+				case SqlType::NVarChar:
+				case SqlType::NText: {
+					auto& vec = *const_cast<DatumStorage*>(this)->getTypedVector<uint16_t>();
+					os << "    Unicode: ";
+					// Just print the raw values, converting to proper Unicode would require more code
+					for (size_t i = 0; i < std::min(valuesToShow * 2, vec.size()); ++i) {
+						if (vec[i] >= 32 && vec[i] <= 126) { // ASCII printable
+							os << static_cast<char>(vec[i]);
+						}
+						else {
+							os << "\\u" << std::hex << std::setw(4) << std::setfill('0') << vec[i];
+						}
+					}
+					os << std::dec << std::endl;
+					break;
+				}
+				case SqlType::Date: {
+					auto& vec = *const_cast<DatumStorage*>(this)->getTypedVector<SQL_DATE_STRUCT>();
+					for (size_t i = 0; i < valuesToShow; ++i) {
+						os << "    [" << i << "]: " << vec[i].year << "-"
+							<< std::setw(2) << std::setfill('0') << vec[i].month << "-"
+							<< std::setw(2) << std::setfill('0') << vec[i].day << std::endl;
+					}
+					break;
+				}
+				case SqlType::Time: {
+					auto& vec = *const_cast<DatumStorage*>(this)->getTypedVector<SQL_SS_TIME2_STRUCT>();
+					for (size_t i = 0; i < valuesToShow; ++i) {
+						os << "    [" << i << "]: "
+							<< std::setw(2) << std::setfill('0') << vec[i].hour << ":"
+							<< std::setw(2) << std::setfill('0') << vec[i].minute << ":"
+							<< std::setw(2) << std::setfill('0') << vec[i].second << "."
+							<< vec[i].fraction << std::endl;
+					}
+					break;
+				}
+				case SqlType::DateTime:
+				case SqlType::DateTime2: {
+					auto& vec = *const_cast<DatumStorage*>(this)->getTypedVector<SQL_TIMESTAMP_STRUCT>();
+					for (size_t i = 0; i < valuesToShow; ++i) {
+						os << "    [" << i << "]: " << vec[i].year << "-"
+							<< std::setw(2) << std::setfill('0') << vec[i].month << "-"
+							<< std::setw(2) << std::setfill('0') << vec[i].day << " "
+							<< std::setw(2) << std::setfill('0') << vec[i].hour << ":"
+							<< std::setw(2) << std::setfill('0') << vec[i].minute << ":"
+							<< std::setw(2) << std::setfill('0') << vec[i].second << "."
+							<< vec[i].fraction << std::endl;
+					}
+					break;
+				}
+				default:
+					os << "    [Debug printing not implemented for this type]" << std::endl;
+					break;
+				}
+
+				if (storage->size() > maxValues) {
+					os << "    ... and " << (storage->size() - maxValues) << " more items" << std::endl;
+				}
+			}
+		}
+
+		// Helper method that returns the debug string
+		std::string getDebugString(bool showValues = true, size_t maxValues = 5) const {
+			std::ostringstream oss;
+			debugPrint(oss, showValues, maxValues);
+			return oss.str();
+		}
+
+
+	private:
+
+		std::wstring schema;
+		std::wstring table;
+
+		SqlType sqlType = SqlType::Unknown;
+		// Single cached vector wrapper
+		std::shared_ptr<VectorBase> vectorData;
+	};
 
 } // namespace mssql

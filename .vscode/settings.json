@@ -92,7 +92,8 @@
         "text_encoding": "cpp",
         "cinttypes": "cpp",
         "variant": "cpp",
-        "any": "cpp"
+        "any": "cpp",
+        "csignal": "cpp"
     },
     "cmake.configureOnOpen": false
 }
