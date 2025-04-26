@@ -367,6 +367,9 @@ namespace mssql
         
         // Convert JavaScript parameters to C++ parameters
         const uint32_t length = params.Length();
+
+        // Or use it somewhere, perhaps in a logging statement:
+        SQL_LOG_DEBUG_STREAM("Processing " << length << " parameters");
         parameters_ = std::make_shared<ParameterSet>();
         // ParameterFactory::populateParameterSet(params, parameters_);
 

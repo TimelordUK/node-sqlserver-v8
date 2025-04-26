@@ -1,4 +1,3 @@
-#pragma once
 #include <platform.h>
 #include "datum_storage.h"
 #include "napi_wrapper.h"
