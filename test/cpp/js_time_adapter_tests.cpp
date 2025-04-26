@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "datum_storage.h"
 #include "time_utils.h"
-#include "mock_napi.h"
+#include "napi_wrapper.h"
 #include "js_time_adapter.h"
 
 using namespace mssql;

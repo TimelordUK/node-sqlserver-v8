@@ -1,14 +1,12 @@
 #pragma once
 #include <platform.h>
 #include "datum_storage.h"
-#include "mock_napi.h"
+#include "napi_wrapper.h"
 #include "js_time_adapter.h"
 #include "time_utils.h"
 
 namespace mssql {
 
-    // A testable version of JSTimeAdapter that's easier to unit test
-    
          bool JSTimeAdapter::bindJsDateToDateStorage(napi_env env, napi_value jsDate, DatumStorage& storage, int32_t offset) {
             if (storage.getType() != DatumStorage::SqlType::Date) {
                 storage.setType(DatumStorage::SqlType::Date);
