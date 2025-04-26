@@ -14,6 +14,8 @@
 #include <sstream>
 #include <iomanip>
 #include <Logger.h>
+#include <algorithm>
+
 
 #ifdef LINUX_BUILD
 #include <cmath>

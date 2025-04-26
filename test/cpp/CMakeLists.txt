@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Platform-specific settings
 if(WIN32)
+    add_compile_definitions(NOMINMAX)
     # Windows settings (as you already have)
     # ...
 else()
