@@ -25,6 +25,7 @@ if(WIN32)
         -DNOMINMAX
         -D_HAS_EXCEPTIONS=0
         -DNODE_GYP_V4
+        -DTESTING_MODE
     )
     # Windows uses odbc32.lib
     set(ODBC_LIBRARIES odbc32)
@@ -105,6 +106,7 @@ set(TEST_SOURCE_FILES
     datum_storage_test.cpp
     datum_storage_test.cpp
     time_util_tests.cpp
+    js_time_adapter_tests.cpp
     test_main.cpp
     # Add other test files here as needed
 )
