@@ -35,18 +35,12 @@
       "email": "sjames8888@gmail.com"
     }
   ],
-  "eslintConfig": {
-    "env": {
-      "node": true
-    }
-  },
   "dependencies": {
     "node-abi": "^3.74.0",
     "node-addon-api": "^8.3.1",
     "prebuild-install": "^7.1.3"
   },
   "devDependencies": {
-    "@eslint/js": "^9.25.1",
     "@types/chai": "^5.0.1",
     "@types/chai-as-promised": "^8.0.1",
     "@types/mocha": "^10.0.10",
@@ -55,13 +49,13 @@
     "@types/sequelize": "^4.28.20",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
+    "eslint-config-standard-with-typescript": "^43.0.1",
     "chai-as-promised": "^8.0.1",
     "dotenv": "^16.5.0",
     "electron": "^34.1.1",
     "electron-rebuild": "^3.2.9",
     "eslint": "^8.57.1",
     "eslint-config-standard": "^17.1.0",
-    "eslint-config-standard-with-typescript": "^43.0.1",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-n": "^16.5.0",
     "eslint-plugin-promise": "^6.1.1",
@@ -74,8 +68,7 @@
     "sequelize": "^6.37.5",
     "source-map-support": "^0.5.21",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3",
-    "typescript-eslint": "^8.31.0"
+    "typescript": "^5.8.3"
   },
   "os": [
     "win32",
@@ -98,7 +91,9 @@
     "build:cpp-tests": "cmake --build test/cpp/build --config Release -j 8",
     "test:cpp": "npm run configure:cpp-tests && npm run build:cpp-tests && cd test/cpp/build && ctest -C Release -V",
     "test:cpp:debug": "npm run configure:cpp-tests && cmake --build test/cpp/build --config Debug -j 8 && cd test/cpp/build && ctest -C Debug -V",
-    "test:cpp:debug:exe": "test/cpp/build/Debug/cpp_tests.exe"
+    "test:cpp:debug:exe": "test/cpp/build/Debug/cpp_tests.exe",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" --fix"
   },
   "directories": {}
 }

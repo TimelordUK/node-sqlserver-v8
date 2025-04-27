@@ -1,6 +1,6 @@
 // test/napi/sql-parameter.test.ts
 import { expect } from 'chai';
-import { SqlParameter, fromValue } from '../../src/sql-parameter';
+import { SqlParameter, fromValue } from '../../src';
 
 describe('SqlParameter', function() {
     it('should create a parameter with string type for string values', function() {

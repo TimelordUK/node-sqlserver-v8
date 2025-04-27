@@ -1,14 +1,9 @@
 // src/sql-parameter.ts
 // TypeScript will recognize BufferEncoding from @types/node
 
-export type SqlScalarValue = string | number | boolean | Date | null | undefined;
-export type SqlArrayValue = Array<SqlScalarValue>;
-export type SqlValue = SqlScalarValue | SqlArrayValue | object;
-// src/sql-parameter.ts
-// TypeScript will recognize BufferEncoding from @types/node
-// src/sql-parameter.ts
-// TypeScript will recognize BufferEncoding from @types/node
-
+export type SqlScalarValue = string | number | boolean | Date | null | undefined
+export type SqlArrayValue = SqlScalarValue[]
+export type SqlValue = SqlScalarValue | SqlArrayValue | object
 // src/sql-parameter.ts
 // TypeScript will recognize BufferEncoding from @types/node
 
@@ -16,25 +11,25 @@ export type SqlValue = SqlScalarValue | SqlArrayValue | object;
  * Parameter options interface
  */
 export interface SqlParameterOptions {
-  encoding?: BufferEncoding;
-  isBcp?: boolean;
-  [key: string]: any;
+  encoding?: BufferEncoding
+  isBcp?: boolean
+  [key: string]: any
 }
 
 /**
  * Interface for binding objects with type specifications
  */
 export interface BindingSpecification {
-  type: string;
-  value: SqlValue;
-  elementType?: string;
-  precision?: number;
-  scale?: number;
-  paramSize?: number | string;
-  sqlType?: string;
-  cType?: string;
-  encoding?: BufferEncoding;
-  isBcp?: boolean;
+  type: string
+  value: SqlValue
+  elementType?: string
+  precision?: number
+  scale?: number
+  paramSize?: number | string
+  sqlType?: string
+  cType?: string
+  encoding?: BufferEncoding
+  isBcp?: boolean
 }
 
 /**
@@ -42,59 +37,59 @@ export interface BindingSpecification {
  */
 export class SqlParameter {
   // Common properties for all parameter types
-  type: string | null = null;          // Generic type category
-  sqlType: string | null = null;       // SQL type (e.g., 'SQL_WVARCHAR')
-  jsType: string | null = null;        // JS type representation
-  cType: string | null = null;         // C type for binding
-  precision: number = 0;               // Type precision
-  scale: number = 0;                   // Type scale (for numeric types)
-  value: SqlValue = null;              // Original JS value
-  paramSize: number | string = 0;      // Size parameter for binding
-  bufferLen: number = 0;               // Buffer length for binding
-  encoding: BufferEncoding;            // Character encoding
-  bytes?: Buffer;                      // Pre-encoded bytes
+  type: string | null = null // Generic type category
+  sqlType: string | null = null // SQL type (e.g., 'SQL_WVARCHAR')
+  jsType: string | null = null // JS type representation
+  cType: string | null = null // C type for binding
+  precision: number = 0 // Type precision
+  scale: number = 0 // Type scale (for numeric types)
+  value: SqlValue = null // Original JS value
+  paramSize: number | string = 0 // Size parameter for binding
+  bufferLen: number = 0 // Buffer length for binding
+  encoding: BufferEncoding // Character encoding
+  bytes?: Buffer // Pre-encoded bytes
 
   /**
    * Create a SQL parameter
    * @param options Parameter options
    */
-  constructor(options: SqlParameterOptions = {}) {
-    this.encoding = options.encoding || 'ucs2';
+  constructor (options: SqlParameterOptions = {}) {
+    this.encoding = options.encoding || 'ucs2'
 
     // Apply any provided options
-    Object.assign(this, options);
+    Object.assign(this, options)
   }
 
   /**
    * Get string representation of parameter
    */
-  toString(): string {
-    const valuePreview = this.formatValuePreview();
-    return `SqlParameter(type=${this.type}, sqlType=${this.sqlType}, value=${valuePreview})`;
+  toString (): string {
+    const valuePreview = this.formatValuePreview()
+    return `SqlParameter(type=${this.type}, sqlType=${this.sqlType}, jsType = ${this.jsType} value=${valuePreview})`
   }
 
   /**
    * Format a preview of the parameter value
    */
-  formatValuePreview(): string {
-    if (this.value === null || this.value === undefined) return 'null';
+  formatValuePreview (): string {
+    if (this.value === null || this.value === undefined) return 'null'
 
     if (typeof this.value === 'string') {
       // Truncate long strings
       return this.value.length > 20
-          ? `"${this.value.substring(0, 17)}..."`
-          : `"${this.value}"`;
+        ? `"${this.value.substring(0, 17)}..."`
+        : `"${this.value}"`
     }
 
     if (Array.isArray(this.value)) {
-      return `[Array(${this.value.length})]`;
+      return `[Array(${this.value.length})]`
     }
 
     if (this.value instanceof Date) {
-      return `Date(${this.value.toISOString()})`;
+      return `Date(${this.value.toISOString()})`
     }
 
-    return String(this.value);
+    return String(this.value)
   }
 
   /**
@@ -102,17 +97,17 @@ export class SqlParameter {
    * @param value Parameter value
    * @param options Parameter options
    */
-  static fromValue(value: SqlValue, options: SqlParameterOptions = {}): SqlParameter {
+  static fromValue (value: SqlValue, options: SqlParameterOptions = {}): SqlParameter {
     if (value === null || value === undefined) {
-      return new NullParameter();
+      return new NullParameter()
     }
 
     if (typeof value !== 'object' || value instanceof Date) {
-      return SqlParameter.fromScalarValue(value as SqlScalarValue, options);
+      return SqlParameter.fromScalarValue(value as SqlScalarValue, options)
     }
 
     if (Array.isArray(value)) {
-      return SqlParameter.fromArrayValue(value as SqlArrayValue, options);
+      return SqlParameter.fromArrayValue(value as SqlArrayValue, options)
     }
 
     // Handle TVP - special case for Table-Valued Parameters
@@ -120,7 +115,7 @@ export class SqlParameter {
         'name' in value &&
         'columns' in value &&
         'rows' in value) {
-      return new TVPParameter(value as TableValuedParameter, options);
+      return new TVPParameter(value as TableValuedParameter, options)
     }
 
     // Handle objects - may already be a parameter specification
@@ -131,16 +126,16 @@ export class SqlParameter {
         typeof value.type === 'string') {
       // Use a type guard to ensure we have a BindingSpecification
       const bindingObj = value as {
-        type: string;
-        value: SqlValue;
-        elementType?: string;
-        [key: string]: any;
-      };
-      return SqlParameter.normalizeBindingObject(bindingObj, options);
+        type: string
+        value: SqlValue
+        elementType?: string
+        [key: string]: any
+      }
+      return SqlParameter.normalizeBindingObject(bindingObj, options)
     }
 
     // Default - treat as generic object
-    return new ObjectParameter(value, options);
+    return new ObjectParameter(value, options)
   }
 
   /**
@@ -148,24 +143,24 @@ export class SqlParameter {
    * @param value Scalar value
    * @param options Parameter options
    */
-  private static fromScalarValue(value: SqlScalarValue, options: SqlParameterOptions): SqlParameter {
+  private static fromScalarValue (value: SqlScalarValue, options: SqlParameterOptions): SqlParameter {
     if (typeof value === 'string') {
-      return new StringParameter(value, options);
+      return new StringParameter(value, options)
     }
     if (typeof value === 'number') {
       return Number.isInteger(value)
-          ? new IntegerParameter(value, options)
-          : new FloatParameter(value, options);
+        ? new IntegerParameter(value, options)
+        : new FloatParameter(value, options)
     }
     if (typeof value === 'boolean') {
-      return new BooleanParameter(value, options);
+      return new BooleanParameter(value, options)
     }
     if (value instanceof Date) {
-      return new DateTimeParameter(value, options);
+      return new DateTimeParameter(value, options)
     }
 
     // Default case - convert to string (handles undefined/null with default behavior)
-    return new StringParameter(String(value), options);
+    return new StringParameter(String(value), options)
   }
 
   /**
@@ -173,38 +168,38 @@ export class SqlParameter {
    * @param array Array value
    * @param options Parameter options
    */
-  private static fromArrayValue(array: SqlArrayValue, options: SqlParameterOptions): ArrayParameter {
+  private static fromArrayValue (array: SqlArrayValue, options: SqlParameterOptions): ArrayParameter {
     if (array.length === 0) {
-      return new ArrayParameter(array, 'UNKNOWN', options);
+      return new ArrayParameter(array, 'UNKNOWN', options)
     }
 
     // Infer element type from first non-null element
-    const firstNonNull = array.find(item => item !== null && item !== undefined);
+    const firstNonNull = array.find(item => item !== null && item !== undefined)
     if (!firstNonNull) {
       // All nulls, default to string array
-      return new ArrayParameter(array, 'STRING', options);
+      return new ArrayParameter(array, 'STRING', options)
     }
 
     // Create appropriate array parameter based on element type
     if (typeof firstNonNull === 'string') {
-      return new StringArrayParameter(array as (string | null | undefined)[], options);
+      return new StringArrayParameter(array as Array<string | null | undefined>, options)
     }
     if (typeof firstNonNull === 'number') {
       return Number.isInteger(firstNonNull)
-          ? new IntegerArrayParameter(array as (number | null | undefined)[], options)
-          : new FloatArrayParameter(array as (number | null | undefined)[], options);
+        ? new IntegerArrayParameter(array as Array<number | null | undefined>, options)
+        : new FloatArrayParameter(array as Array<number | null | undefined>, options)
     }
     if (typeof firstNonNull === 'boolean') {
-      return new BooleanArrayParameter(array as (boolean | null | undefined)[], options);
+      return new BooleanArrayParameter(array as Array<boolean | null | undefined>, options)
     }
     if (firstNonNull instanceof Date) {
-      return new DateTimeArrayParameter(array as (Date | null | undefined)[], options);
+      return new DateTimeArrayParameter(array as Array<Date | null | undefined>, options)
     }
 
     // Default - convert all to strings
     return new StringArrayParameter(array.map(item =>
-        item === null || item === undefined ? null : String(item)
-    ) as (string | null | undefined)[], options);
+      item === null || item === undefined ? null : String(item)
+    ) as Array<string | null | undefined>, options)
   }
 
   /**
@@ -212,51 +207,50 @@ export class SqlParameter {
    * @param spec Parameter specification
    * @param options Parameter options
    */
-  private static normalizeBindingObject(spec: BindingSpecification, options: SqlParameterOptions): SqlParameter {
+  private static normalizeBindingObject (spec: BindingSpecification, options: SqlParameterOptions): SqlParameter {
     // Create appropriate parameter type based on the spec
-    const type = spec.type.toUpperCase();
-    const elementType = spec.elementType?.toUpperCase() || '';
-    const arrayValue = spec.value as SqlArrayValue;
+    const type = spec.type.toUpperCase()
+    const elementType = spec.elementType?.toUpperCase() || ''
+    const arrayValue = spec.value as SqlArrayValue
 
     switch (type) {
       case 'STRING':
-        return new StringParameter(spec.value as string, { ...options, ...spec });
+        return new StringParameter(spec.value as string, { ...options, ...spec })
       case 'INTEGER':
-        return new IntegerParameter(spec.value as number, { ...options, ...spec });
+        return new IntegerParameter(spec.value as number, { ...options, ...spec })
       case 'FLOAT':
-        return new FloatParameter(spec.value as number, { ...options, ...spec });
+        return new FloatParameter(spec.value as number, { ...options, ...spec })
       case 'BIT':
       case 'BOOLEAN':
-        return new BooleanParameter(spec.value as boolean, { ...options, ...spec });
+        return new BooleanParameter(spec.value as boolean, { ...options, ...spec })
       case 'DATETIME':
-        return new DateTimeParameter(spec.value as Date | string | number, { ...options, ...spec });
+        return new DateTimeParameter(spec.value as Date | string | number, { ...options, ...spec })
       case 'ARRAY':
-        // Handle array types based on elementType
-
+      // Handle array types based on elementType
 
         switch (elementType) {
           case 'STRING':
-            return new StringArrayParameter(arrayValue as (string | null | undefined)[],
-                { ...options, ...spec });
+            return new StringArrayParameter(arrayValue as Array<string | null | undefined>,
+              { ...options, ...spec })
           case 'INTEGER':
-            return new IntegerArrayParameter(arrayValue as (number | null | undefined)[],
-                { ...options, ...spec });
+            return new IntegerArrayParameter(arrayValue as Array<number | null | undefined>,
+              { ...options, ...spec })
           case 'FLOAT':
-            return new FloatArrayParameter(arrayValue as (number | null | undefined)[],
-                { ...options, ...spec });
+            return new FloatArrayParameter(arrayValue as Array<number | null | undefined>,
+              { ...options, ...spec })
           case 'BIT':
           case 'BOOLEAN':
-            return new BooleanArrayParameter(arrayValue as (boolean | null | undefined)[],
-                { ...options, ...spec });
+            return new BooleanArrayParameter(arrayValue as Array<boolean | null | undefined>,
+              { ...options, ...spec })
           case 'DATETIME':
-            return new DateTimeArrayParameter(arrayValue as (Date | string | number | null | undefined)[],
-                { ...options, ...spec });
+            return new DateTimeArrayParameter(arrayValue as Array<Date | string | number | null | undefined>,
+              { ...options, ...spec })
           default:
-            return new ArrayParameter(arrayValue, elementType, { ...options, ...spec });
+            return new ArrayParameter(arrayValue, elementType, { ...options, ...spec })
         }
       default:
-        // For custom types, create generic parameter
-        return new SqlParameter({ ...spec, ...options });
+      // For custom types, create generic parameter
+        return new SqlParameter({ ...spec, ...options })
     }
   }
 }
@@ -265,12 +259,12 @@ export class SqlParameter {
  * Parameter for null values
  */
 export class NullParameter extends SqlParameter {
-  constructor(options: SqlParameterOptions = {}) {
-    super(options);
-    this.type = 'NULL';
-    this.sqlType = 'SQL_NULL_DATA';
-    this.jsType = 'JS_NULL';
-    this.value = null;
+  constructor (options: SqlParameterOptions = {}) {
+    super(options)
+    this.type = 'NULL'
+    this.sqlType = 'SQL_NULL_DATA'
+    this.jsType = 'JS_NULL'
+    this.value = null
   }
 }
 
@@ -278,33 +272,33 @@ export class NullParameter extends SqlParameter {
  * Parameter for string values
  */
 export class StringParameter extends SqlParameter {
-  constructor(value: string | null | undefined, options: SqlParameterOptions = {}) {
-    super(options);
-    const strValue = value === null || value === undefined ? '' : String(value);
+  constructor (value: string | null | undefined, options: SqlParameterOptions = {}) {
+    super(options)
+    const strValue = value === null || value === undefined ? '' : String(value)
 
-    this.type = 'STRING';
-    this.jsType = 'JS_STRING';
-    this.value = strValue;
-    this.cType = 'SQL_C_WCHAR';
+    this.type = 'STRING'
+    this.jsType = 'JS_STRING'
+    this.value = strValue
+    this.cType = 'SQL_C_WCHAR'
 
     // Calculate string properties
-    const charLength = strValue.length;
-    const byteLength = Buffer.byteLength(strValue, this.encoding);
+    const charLength = strValue.length
+    const byteLength = Buffer.byteLength(strValue, this.encoding)
 
     // Set SQL type based on length
     if (charLength > 2000 && charLength < 4000) {
-      this.sqlType = 'SQL_WLONGVARCHAR';
+      this.sqlType = 'SQL_WLONGVARCHAR'
     } else {
-      this.sqlType = 'SQL_WVARCHAR';
+      this.sqlType = 'SQL_WVARCHAR'
     }
 
     // For very large strings, use 0 for paramSize
-    this.precision = charLength;
-    this.paramSize = charLength >= 4000 ? 0 : charLength;
-    this.bufferLen = byteLength + 2; // +2 for null terminator
+    this.precision = charLength
+    this.paramSize = charLength >= 4000 ? 0 : charLength
+    this.bufferLen = byteLength + 2 // +2 for null terminator
 
     // Pre-encode for C++ convenience
-    this.bytes = Buffer.from(strValue, this.encoding);
+    this.bytes = Buffer.from(strValue, this.encoding)
   }
 }
 
@@ -312,30 +306,30 @@ export class StringParameter extends SqlParameter {
  * Parameter for integer values
  */
 export class IntegerParameter extends SqlParameter {
-  constructor(value: number, options: SqlParameterOptions = {}) {
-    super(options);
-    this.type = 'INTEGER';
-    this.jsType = 'JS_NUMBER';
-    this.value = Number(value);
-    this.cType = 'SQL_C_SBIGINT';
+  constructor (value: number, options: SqlParameterOptions = {}) {
+    super(options)
+    this.type = 'INTEGER'
+    this.jsType = 'JS_NUMBER'
+    this.value = Number(value)
+    this.cType = 'SQL_C_SBIGINT'
 
     // Determine size based on value range
     if (this.value >= -128 && this.value <= 127) {
-      this.sqlType = 'SQL_TINYINT';
-      this.precision = 1;
+      this.sqlType = 'SQL_TINYINT'
+      this.precision = 1
     } else if (this.value >= -32768 && this.value <= 32767) {
-      this.sqlType = 'SQL_SMALLINT';
-      this.precision = 2;
+      this.sqlType = 'SQL_SMALLINT'
+      this.precision = 2
     } else if (this.value >= -2147483648 && this.value <= 2147483647) {
-      this.sqlType = 'SQL_INTEGER';
-      this.precision = 4;
+      this.sqlType = 'SQL_INTEGER'
+      this.precision = 4
     } else {
-      this.sqlType = 'SQL_BIGINT';
-      this.precision = 8;
+      this.sqlType = 'SQL_BIGINT'
+      this.precision = 8
     }
 
-    this.paramSize = this.precision;
-    this.bufferLen = this.precision;
+    this.paramSize = this.precision
+    this.bufferLen = this.precision
   }
 }
 
@@ -343,26 +337,26 @@ export class IntegerParameter extends SqlParameter {
  * Parameter for floating point values
  */
 export class FloatParameter extends SqlParameter {
-  constructor(value: number, options: SqlParameterOptions = {}) {
-    super(options);
-    this.type = 'FLOAT';
-    this.jsType = 'JS_NUMBER';
-    this.value = Number(value);
+  constructor (value: number, options: SqlParameterOptions = {}) {
+    super(options)
+    this.type = 'FLOAT'
+    this.jsType = 'JS_NUMBER'
+    this.value = Number(value)
 
     // Determine precision
-    const absValue = Math.abs(this.value);
+    const absValue = Math.abs(this.value)
     if (absValue > 3.4e38 || (absValue < 1.2e-38 && absValue !== 0)) {
-      this.sqlType = 'SQL_DOUBLE';
-      this.cType = 'SQL_C_DOUBLE';
-      this.precision = 8;
+      this.sqlType = 'SQL_DOUBLE'
+      this.cType = 'SQL_C_DOUBLE'
+      this.precision = 8
     } else {
-      this.sqlType = 'SQL_REAL';
-      this.cType = 'SQL_C_FLOAT';
-      this.precision = 4;
+      this.sqlType = 'SQL_REAL'
+      this.cType = 'SQL_C_FLOAT'
+      this.precision = 4
     }
 
-    this.paramSize = this.precision;
-    this.bufferLen = this.precision;
+    this.paramSize = this.precision
+    this.bufferLen = this.precision
   }
 }
 
@@ -370,16 +364,16 @@ export class FloatParameter extends SqlParameter {
  * Parameter for boolean values
  */
 export class BooleanParameter extends SqlParameter {
-  constructor(value: boolean, options: SqlParameterOptions = {}) {
-    super(options);
-    this.type = 'BIT';
-    this.jsType = 'JS_BOOLEAN';
-    this.sqlType = 'SQL_BIT';
-    this.cType = 'SQL_C_BIT';
-    this.value = Boolean(value);
-    this.precision = 1;
-    this.paramSize = 1;
-    this.bufferLen = 1;
+  constructor (value: boolean, options: SqlParameterOptions = {}) {
+    super(options)
+    this.type = 'BIT'
+    this.jsType = 'JS_BOOLEAN'
+    this.sqlType = 'SQL_BIT'
+    this.cType = 'SQL_C_BIT'
+    this.value = Boolean(value)
+    this.precision = 1
+    this.paramSize = 1
+    this.bufferLen = 1
   }
 }
 
@@ -387,17 +381,17 @@ export class BooleanParameter extends SqlParameter {
  * Parameter for DateTime values
  */
 export class DateTimeParameter extends SqlParameter {
-  constructor(value: Date | string | number, options: SqlParameterOptions = {}) {
-    super(options);
-    this.type = 'DATETIME';
-    this.jsType = 'JS_DATE';
-    this.sqlType = 'SQL_TYPE_TIMESTAMP';
-    this.cType = 'SQL_C_TYPE_TIMESTAMP';
-    this.value = value instanceof Date ? value : new Date(value);
-    this.precision = 23;
-    this.scale = 3; // Milliseconds
-    this.paramSize = this.precision;
-    this.bufferLen = 16; // sizeof(SQL_TIMESTAMP_STRUCT)
+  constructor (value: Date | string | number, options: SqlParameterOptions = {}) {
+    super(options)
+    this.type = 'DATETIME'
+    this.jsType = 'JS_DATE'
+    this.sqlType = 'SQL_TYPE_TIMESTAMP'
+    this.cType = 'SQL_C_TYPE_TIMESTAMP'
+    this.value = value instanceof Date ? value : new Date(value)
+    this.precision = 23
+    this.scale = 3 // Milliseconds
+    this.paramSize = this.precision
+    this.bufferLen = 16 // sizeof(SQL_TIMESTAMP_STRUCT)
   }
 }
 
@@ -405,24 +399,24 @@ export class DateTimeParameter extends SqlParameter {
  * Parameter for Object values
  */
 export class ObjectParameter extends SqlParameter {
-  serializedValue: string;
+  serializedValue: string
 
-  constructor(value: object, options: SqlParameterOptions = {}) {
-    super(options);
-    this.type = 'VARCHAR';
-    this.jsType = 'JS_OBJECT';
-    this.sqlType = 'SQL_VARCHAR';
-    this.cType = 'SQL_C_CHAR';
+  constructor (value: object, options: SqlParameterOptions = {}) {
+    super(options)
+    this.type = 'VARCHAR'
+    this.jsType = 'JS_OBJECT'
+    this.sqlType = 'SQL_VARCHAR'
+    this.cType = 'SQL_C_CHAR'
 
     // Serialize the object to JSON
-    const jsonStr = JSON.stringify(value);
-    this.value = value;
-    this.serializedValue = jsonStr;
+    const jsonStr = JSON.stringify(value)
+    this.value = value
+    this.serializedValue = jsonStr
 
-    this.precision = jsonStr.length;
-    this.paramSize = jsonStr.length;
-    this.bufferLen = Buffer.byteLength(jsonStr, 'utf8') + 1; // +1 for null terminator
-    this.bytes = Buffer.from(jsonStr, 'utf8');
+    this.precision = jsonStr.length
+    this.paramSize = jsonStr.length
+    this.bufferLen = Buffer.byteLength(jsonStr, 'utf8') + 1 // +1 for null terminator
+    this.bytes = Buffer.from(jsonStr, 'utf8')
   }
 }
 
@@ -430,21 +424,21 @@ export class ObjectParameter extends SqlParameter {
  * Base class for array parameters
  */
 export class ArrayParameter extends SqlParameter {
-  elementType: string;
-  jsType: string;
-  nullMap: boolean[];
-  hasNulls: boolean;
+  elementType: string
+  jsType: string
+  nullMap: boolean[]
+  hasNulls: boolean
 
-  constructor(array: SqlArrayValue, elementType: string, options: SqlParameterOptions = {}) {
-    super(options);
-    this.type = 'ARRAY';
-    this.elementType = elementType || 'UNKNOWN';
-    this.jsType = 'JS_ARRAY';
-    this.value = array;
+  constructor (array: SqlArrayValue, elementType: string, options: SqlParameterOptions = {}) {
+    super(options)
+    this.type = 'ARRAY'
+    this.elementType = elementType || 'UNKNOWN'
+    this.jsType = 'JS_ARRAY'
+    this.value = array
 
     // Build null map
-    this.nullMap = array.map(item => item === null || item === undefined);
-    this.hasNulls = this.nullMap.some(isNull => isNull);
+    this.nullMap = array.map(item => item === null || item === undefined)
+    this.hasNulls = this.nullMap.some(isNull => isNull)
   }
 }
 
@@ -452,46 +446,46 @@ export class ArrayParameter extends SqlParameter {
  * Parameter for string arrays
  */
 export class StringArrayParameter extends ArrayParameter {
-  maxStrLength: number;
-  encodedValues: (Buffer | null)[];
-  isBcp?: boolean;
+  maxStrLength: number
+  encodedValues: Array<Buffer | null>
+  isBcp?: boolean
 
-  constructor(array: (string | null | undefined)[], options: SqlParameterOptions = {}) {
-    super(array, 'STRING', options);
+  constructor (array: Array<string | null | undefined>, options: SqlParameterOptions = {}) {
+    super(array, 'STRING', options)
 
     // Calculate max string length in the array
-    this.maxStrLength = 0;
-    this.encodedValues = [];
+    this.maxStrLength = 0
+    this.encodedValues = []
 
     for (let i = 0; i < array.length; i++) {
       if (this.nullMap[i]) {
-        this.encodedValues[i] = null;
+        this.encodedValues[i] = null
       } else {
-        const strValue = String(array[i]);
-        this.maxStrLength = Math.max(this.maxStrLength, strValue.length);
-        this.encodedValues[i] = Buffer.from(strValue, this.encoding);
+        const strValue = String(array[i])
+        this.maxStrLength = Math.max(this.maxStrLength, strValue.length)
+        this.encodedValues[i] = Buffer.from(strValue, this.encoding)
       }
     }
 
     // Ensure minimum size of 1
-    this.maxStrLength = Math.max(1, this.maxStrLength);
+    this.maxStrLength = Math.max(1, this.maxStrLength)
 
     // Set up type information
-    this.cType = 'SQL_C_WCHAR';
-    this.precision = this.maxStrLength;
+    this.cType = 'SQL_C_WCHAR'
+    this.precision = this.maxStrLength
 
     // BCP handling vs. regular array
     if (options.isBcp) {
-      this.sqlType = 'SQLNCHAR';
-      this.isBcp = true;
-      this.paramSize = 'SQL_VARLEN_DATA';
-      this.bufferLen = this.maxStrLength + 1;
+      this.sqlType = 'SQLNCHAR'
+      this.isBcp = true
+      this.paramSize = 'SQL_VARLEN_DATA'
+      this.bufferLen = this.maxStrLength + 1
     } else {
       this.sqlType = this.maxStrLength > 2000 && this.maxStrLength < 4000
-          ? 'SQL_WLONGVARCHAR'
-          : 'SQL_WVARCHAR';
-      this.paramSize = this.maxStrLength >= 4000 ? 0 : this.maxStrLength;
-      this.bufferLen = this.maxStrLength * 2; // For UCS2, each char is 2 bytes
+        ? 'SQL_WLONGVARCHAR'
+        : 'SQL_WVARCHAR'
+      this.paramSize = this.maxStrLength >= 4000 ? 0 : this.maxStrLength
+      this.bufferLen = this.maxStrLength * 2 // For UCS2, each char is 2 bytes
     }
   }
 }
@@ -500,16 +494,16 @@ export class StringArrayParameter extends ArrayParameter {
  * Parameter for integer arrays
  */
 export class IntegerArrayParameter extends ArrayParameter {
-  constructor(array: (number | null | undefined)[], options: SqlParameterOptions = {}) {
-    super(array, 'INTEGER', options);
+  constructor (array: Array<number | null | undefined>, options: SqlParameterOptions = {}) {
+    super(array, 'INTEGER', options)
     // Implementation similar to StringArrayParameter
     // For this example, adding a placeholder implementation
 
-    this.cType = 'SQL_C_SBIGINT';
-    this.sqlType = 'SQL_BIGINT';
-    this.precision = 8; // Size of bigint
-    this.paramSize = this.precision;
-    this.bufferLen = this.precision;
+    this.cType = 'SQL_C_SBIGINT'
+    this.sqlType = 'SQL_BIGINT'
+    this.precision = 8 // Size of bigint
+    this.paramSize = this.precision
+    this.bufferLen = this.precision
   }
 }
 
@@ -517,15 +511,15 @@ export class IntegerArrayParameter extends ArrayParameter {
  * Parameter for float arrays
  */
 export class FloatArrayParameter extends ArrayParameter {
-  constructor(array: (number | null | undefined)[], options: SqlParameterOptions = {}) {
-    super(array, 'FLOAT', options);
+  constructor (array: Array<number | null | undefined>, options: SqlParameterOptions = {}) {
+    super(array, 'FLOAT', options)
     // Float array implementation
 
-    this.cType = 'SQL_C_DOUBLE';
-    this.sqlType = 'SQL_DOUBLE';
-    this.precision = 8; // Size of double
-    this.paramSize = this.precision;
-    this.bufferLen = this.precision;
+    this.cType = 'SQL_C_DOUBLE'
+    this.sqlType = 'SQL_DOUBLE'
+    this.precision = 8 // Size of double
+    this.paramSize = this.precision
+    this.bufferLen = this.precision
   }
 }
 
@@ -533,15 +527,15 @@ export class FloatArrayParameter extends ArrayParameter {
  * Parameter for boolean arrays
  */
 export class BooleanArrayParameter extends ArrayParameter {
-  constructor(array: (boolean | null | undefined)[], options: SqlParameterOptions = {}) {
-    super(array, 'BIT', options);
+  constructor (array: Array<boolean | null | undefined>, options: SqlParameterOptions = {}) {
+    super(array, 'BIT', options)
     // Boolean array implementation
 
-    this.cType = 'SQL_C_BIT';
-    this.sqlType = 'SQL_BIT';
-    this.precision = 1;
-    this.paramSize = 1;
-    this.bufferLen = 1;
+    this.cType = 'SQL_C_BIT'
+    this.sqlType = 'SQL_BIT'
+    this.precision = 1
+    this.paramSize = 1
+    this.bufferLen = 1
   }
 }
 
@@ -549,30 +543,30 @@ export class BooleanArrayParameter extends ArrayParameter {
  * Parameter for DateTime arrays
  */
 export class DateTimeArrayParameter extends ArrayParameter {
-  constructor(array: (Date | string | number | null | undefined)[], options: SqlParameterOptions = {}) {
-    super(array, 'DATETIME', options);
+  constructor (array: Array<Date | string | number | null | undefined>, options: SqlParameterOptions = {}) {
+    super(array, 'DATETIME', options)
     // DateTime array implementation
 
-    this.cType = 'SQL_C_TYPE_TIMESTAMP';
-    this.sqlType = 'SQL_TYPE_TIMESTAMP';
-    this.precision = 23;
-    this.scale = 3; // Milliseconds
-    this.paramSize = this.precision;
-    this.bufferLen = 16; // sizeof(SQL_TIMESTAMP_STRUCT)
+    this.cType = 'SQL_C_TYPE_TIMESTAMP'
+    this.sqlType = 'SQL_TYPE_TIMESTAMP'
+    this.precision = 23
+    this.scale = 3 // Milliseconds
+    this.paramSize = this.precision
+    this.bufferLen = 16 // sizeof(SQL_TIMESTAMP_STRUCT)
   }
 }
 
 // Add placeholder for TVP type
 export interface TableValuedParameter {
-  name: string;
-  columns: TableColumn[];
-  rows: SqlArrayValue[];
+  name: string
+  columns: TableColumn[]
+  rows: SqlArrayValue[]
 }
 
 export interface TableColumn {
-  name: string;
-  type: string;
-  nullable?: boolean;
+  name: string
+  type: string
+  nullable?: boolean
 }
 
 /**
@@ -580,26 +574,26 @@ export interface TableColumn {
  * This is a placeholder implementation that can be expanded later
  */
 export class TVPParameter extends SqlParameter {
-  tableName: string;
-  columns: TableColumn[];
-  rows: SqlValue[][];
+  tableName: string
+  columns: TableColumn[]
+  rows: SqlValue[][]
 
-  constructor(tvpDef: TableValuedParameter, options: SqlParameterOptions = {}) {
-    super(options);
-    this.type = 'TVP';
-    this.jsType = 'JS_TABLE';
-    this.sqlType = 'SQL_SS_TABLE';
-    this.cType = 'SQL_C_DEFAULT';
+  constructor (tvpDef: TableValuedParameter, options: SqlParameterOptions = {}) {
+    super(options)
+    this.type = 'TVP'
+    this.jsType = 'JS_TABLE'
+    this.sqlType = 'SQL_SS_TABLE'
+    this.cType = 'SQL_C_DEFAULT'
 
-    this.tableName = tvpDef.name;
-    this.columns = tvpDef.columns;
-    this.rows = tvpDef.rows;
-    this.value = tvpDef;
+    this.tableName = tvpDef.name
+    this.columns = tvpDef.columns
+    this.rows = tvpDef.rows
+    this.value = tvpDef
 
     // These values would need to be properly calculated for actual implementation
-    this.precision = 0;
-    this.paramSize = 0;
-    this.bufferLen = 0;
+    this.precision = 0
+    this.paramSize = 0
+    this.bufferLen = 0
   }
 }
 
@@ -609,6 +603,6 @@ export class TVPParameter extends SqlParameter {
  * @param options Additional parameter options
  * @returns A new SqlParameter instance
  */
-export function fromValue(value: SqlValue, options: SqlParameterOptions = {}): SqlParameter {
-  return SqlParameter.fromValue(value, options);
+export function fromValue (value: SqlValue, options: SqlParameterOptions = {}): SqlParameter {
+  return SqlParameter.fromValue(value, options)
 }
