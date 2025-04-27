@@ -5,6 +5,7 @@ tmp.txt
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
 
 # Runtime data
 pids
@@ -17,6 +18,7 @@ lib-cov
 
 # Coverage directory used by tools like istanbul
 coverage
+*.lcov
 
 # nyc test coverage
 .nyc_output
@@ -32,19 +34,38 @@ bower_components
 
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 build/Release
+build/Debug
+build/
+build-test/
+prebuilds/
+
+# TypeScript output directories
+lib/
+dist/
+out/
+*.tsbuildinfo
 
 # Dependency directories
 node_modules/
 jspm_packages/
 
-# Typescript v1 declaration files
-typings/
+# TypeScript cache
+*.tsbuildinfo
 
 # Optional npm cache directory
 .npm
 
 # Optional eslint cache
 .eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
 
 # Optional REPL history
 .node_repl_history
@@ -55,25 +76,54 @@ typings/
 # Yarn Integrity file
 .yarn-integrity
 
-# next.js build output
+# dotenv environment variable files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
 .next
+out
 
-# compiled javascript
-dist/
+# Compiled JavaScript files
+**/*.js
+**/*.js.map
+**/*.d.ts
+# Exception for JS config files
+!*.config.js
+!jest.config.js
+!.eslintrc.js
+!.mocharc.js
 
-# Prebuilds
-prebuilds/
-build/
-build-test/
-
-# Mac
+# Editor directories and files
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 .DS_Store
 tags
 tags.lock
 tags.temp
+
+# Test output
+/mochawesome-report/
+test-results/
 runtest-linux
-.gitignore
 runtest-win.exe
 runtest-macos
-/mochawesome-report/
-.idea/
+
+# Local build scripts
+.gitignore

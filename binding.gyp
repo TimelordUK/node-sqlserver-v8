@@ -96,9 +96,9 @@
                 "fileset%": [
                     '<!@(node -p "'
                     "require('fs')"
-                    ".readdirSync('./src')"
+                    ".readdirSync('./cpp')"
                     ".filter(x => x.endsWith('<(ext)'))"
-                    ".map(f => 'src/'+f)"
+                    ".map(f => 'cpp/'+f)"
                     ".join(' ')"
                     '")'
                 ],
@@ -106,7 +106,7 @@
             "sources": ["<!@(node -p \"'<(fileset)'" ".split(' ')" ".join(' ')\")"],
             "include_dirs": [
                 "<!(node -p \"require('node-addon-api').include_dir\")",
-                "src",
+                "cpp",
             ],
             "defines": [
             "NODE_GYP_V4",

@@ -102,6 +102,15 @@
             "outFiles": [
                 "${workspaceFolder}/samples/typescript/dist/**/*.js"
             ]
-        }
+        },
+        
+            {
+              "type": "node",
+              "request": "launch",
+              "name": "Run TS Tests",
+              "program": "${workspaceFolder}/run-tests.js",
+              "skipFiles": ["<node_internals>/**"]
+            }
+         
     ]
 }
