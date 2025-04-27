@@ -5,30 +5,24 @@ const chai = require('chai')
 const assert = chai.assert
 const testConnection = require('../common/test-connection')
 const sql = require('msnodesqlv8')
-sql.setLogLevel(4); // Debug level
-sql.enableConsoleLogging(true);
+sql.setLogLevel(4) // Debug level
+sql.enableConsoleLogging(true)
 
 describe('open', function () {
   let connection = null
-  
-  this.beforeEach(done => {
-    testConnection.createConnection((err, conn) => {
-      connection = conn
-      done(err)
-    })
+
+  this.beforeEach(async () => {
+    connection = await testConnection.createConnection()
   })
 
-  this.afterEach(done => {
+  this.afterEach(async function () {
     if (connection) {
-      connection.close(done)
-    } else {
-      done()
+      await connection.promises.close()
     }
   })
 
-  it('will call open on the cpp object', done => {
+  it('will call open on the cpp object', async () => {
     console.log('conn open')
     assert(connection !== null)
-    done()
   })
 })

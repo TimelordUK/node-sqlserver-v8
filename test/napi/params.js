@@ -22,8 +22,8 @@ const chai = require('chai')
 const assert = chai.assert
 const testConnection = require('../common/test-connection')
 const sql = require('msnodesqlv8')
-sql.setLogLevel(4); // Debug level
-sql.enableConsoleLogging(true);
+sql.setLogLevel(4) // Debug level
+sql.enableConsoleLogging(true)
 
 /* globals describe it */
 
@@ -73,12 +73,12 @@ describe('NAPI Parameter Binding', function () {
         await env.theConnection.promises.query(`
           INSERT INTO primitive_types_test (int_val, float_val, string_val, bit_val) 
           VALUES (?, ?, ?, ?)`,
-          [
-            42,                  // int
-            3.14159,             // float
-            'Hello, World!',     // string
-            true                 // boolean
-          ]
+        [
+          42, // int
+          3.14159, // float
+          'Hello, World!', // string
+          true // boolean
+        ]
         )
       },
       async function () {
@@ -105,12 +105,12 @@ describe('NAPI Parameter Binding', function () {
         await env.theConnection.promises.query(`
           INSERT INTO null_values_test (int_val, float_val, string_val, bit_val) 
           VALUES (?, ?, ?, ?)`,
-          [
-            null,  // int
-            null,  // float
-            null,  // string
-            null   // boolean
-          ]
+        [
+          null, // int
+          null, // float
+          null, // string
+          null // boolean
+        ]
         )
       },
       async function () {
@@ -142,10 +142,10 @@ describe('NAPI Parameter Binding', function () {
         await env.theConnection.promises.query(`
           INSERT INTO array_params_test (int_val, string_val) 
           VALUES (?, ?)`,
-          [
-            [1, 2, 3, 4, 5],                           // array of ints
-            ['one', 'two', 'three', 'four', 'five']    // array of strings
-          ]
+        [
+          [1, 2, 3, 4, 5], // array of ints
+          ['one', 'two', 'three', 'four', 'five'] // array of strings
+        ]
         )
       },
       async function () {
@@ -170,7 +170,7 @@ describe('NAPI Parameter Binding', function () {
         // Create a parameter with metadata
         const param = {
           name: 'param1',
-          type_id: env.sql.Types.Int,  // Replace with your SQL type constant
+          type_id: env.sql.Types.Int, // Replace with your SQL type constant
           is_output: false,
           precision: 10,
           scale: 0,
@@ -180,7 +180,7 @@ describe('NAPI Parameter Binding', function () {
         await env.theConnection.promises.query(`
           INSERT INTO object_params_test (value_col) 
           VALUES (?)`,
-          [param]
+        [param]
         )
       },
       async function () {
@@ -202,7 +202,7 @@ describe('NAPI Parameter Binding', function () {
         await env.theConnection.promises.query(`
           INSERT INTO binary_params_test (binary_col) 
           VALUES (?)`,
-          [binaryData]
+        [binaryData]
         )
       },
       async function () {
@@ -226,7 +226,7 @@ describe('NAPI Parameter Binding', function () {
         await env.theConnection.promises.query(`
           INSERT INTO datetime_params_test (date_col, datetime_col, datetimeoffset_col) 
           VALUES (?, ?, ?)`,
-          [testDate, testDate, testDate]
+        [testDate, testDate, testDate]
         )
       },
       async function () {
@@ -235,11 +235,11 @@ describe('NAPI Parameter Binding', function () {
         assert.ok(result.first[0].date_col instanceof Date)
         assert.ok(result.first[0].datetime_col instanceof Date)
         assert.ok(result.first[0].datetimeoffset_col instanceof Date)
-        
+
         // Check date portion only for date_col
         const dateCol = result.first[0].date_col
         assert.strictEqual(dateCol.getUTCFullYear(), 2023)
-        assert.strictEqual(dateCol.getUTCMonth(), 4)  // 0-based month
+        assert.strictEqual(dateCol.getUTCMonth(), 4) // 0-based month
         assert.strictEqual(dateCol.getUTCDate(), 15)
       }
     )
@@ -250,11 +250,11 @@ describe('NAPI Parameter Binding', function () {
     // Create a parameter with output flag
     const outputParam = {
       name: 'output_param',
-      type_id: env.sql.Types.Int,  // Replace with your SQL type constant
+      type_id: env.sql.Types.Int, // Replace with your SQL type constant
       is_output: true,
       precision: 10,
       scale: 0,
-      value: 0  // Initial value
+      value: 0 // Initial value
     }
 
     const result = await env.theConnection.promises.query(`
@@ -284,7 +284,7 @@ describe('NAPI Parameter Binding', function () {
         await env.theConnection.promises.query(`
           INSERT INTO large_string_test (large_text) 
           VALUES (?)`,
-          [largeString]
+        [largeString]
         )
       },
       async function () {
@@ -307,11 +307,11 @@ describe('NAPI Parameter Binding', function () {
         await env.theConnection.promises.query(`
           INSERT INTO extreme_nums_test (int_col, bigint_col, float_col) 
           VALUES (?, ?, ?)`,
-          [
-            2147483647,           // Max int32
-            9007199254740991,     // Max safe integer in JavaScript
-            1.7976931348623157e+308  // Very large float
-          ]
+        [
+          2147483647, // Max int32
+          9007199254740991, // Max safe integer in JavaScript
+          1.7976931348623157e+308 // Very large float
+        ]
         )
       },
       async function () {
@@ -344,16 +344,16 @@ describe('NAPI Parameter Binding', function () {
       async function () {
         const testDate = new Date('2023-05-15T12:30:45.123Z')
         const binaryData = Buffer.from([0x01, 0x02, 0x03, 0x04, 0x05])
-        
+
         await env.theConnection.promises.query(`
           INSERT INTO mixed_params_test (int_col, string_col, binary_col, date_col) 
           VALUES (?, ?, ?, ?)`,
-          [
-            42,                // int
-            'Mixed Test',      // string
-            binaryData,        // binary
-            testDate           // date
-          ]
+        [
+          42, // int
+          'Mixed Test', // string
+          binaryData, // binary
+          testDate // date
+        ]
         )
       },
       async function () {
