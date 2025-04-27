@@ -4,21 +4,31 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-    {
-        "name": "Node Cmd Test",
-        "program": "${workspaceFolder}/unit.tests/cmd-test.js",
-        "args": [
-            "-t", 
-            "memory"
-        ],
-        "request": "launch",
-        "skipFiles": [
-            "<node_internals>/**"
-        ],
-        "cwd": "${workspaceFolder}",
-        "type": "pwa-node"
-    },
-        
+        {
+            "name": "Node Cmd Test",
+            "program": "${workspaceFolder}/unit.tests/cmd-test.js",
+            "args": [
+                "-t",
+                "memory"
+            ],
+            "request": "launch",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "cwd": "${workspaceFolder}",
+            "type": "pwa-node"
+        },
+        {
+            "name": "Debug C++ Tests",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/test/cpp/build/Debug/cpp_tests.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "integratedTerminal"
+        },
         {
             "name": "(Windows) Launch",
             "type": "cppvsdbg",
@@ -26,41 +36,40 @@
             "program": "C:\\nvm4w\\nodejs\\node.exe",
             "args": [
                 //"samples/javascript/streaming.js"
-               "./node_modules/mocha/bin/mocha.js",
-               "test/napi/query"
-               // "test/napi/open"
-               // "test/sproc"
-               // "test/table-builder"
-               // "simple-demo"
-               // "runtest", "-k", "linux", 
-               // "runtest", "-k", "linux",
-               // "runtest",
-               // "-t", "table-builder.js",
-               // "-t", "querycancel",
-               // "-t", "pause"
-               // "-t", "prepared",
-               // "-t", "compoundqueries",
-               // "-t", "query",
-               // "-t", "multiple-errors", 
-               // "-t", "geography",
-               // "-t", "tvp",
-               //"-t", "warnings",
-               // "-t", "txn",
-               // "-t", "datatypes",
-               // "-t", "sproc"
-               //"-t", "params"
-               // "-t", "bulk",
-               // "-t", "bcp"
-               // "-t", "json"
-               // "-t", "promises" 
+                "./node_modules/mocha/bin/mocha.js",
+                "test/napi/query"
+                // "test/napi/open"
+                // "test/sproc"
+                // "test/table-builder"
+                // "simple-demo"
+                // "runtest", "-k", "linux", 
+                // "runtest", "-k", "linux",
+                // "runtest",
+                // "-t", "table-builder.js",
+                // "-t", "querycancel",
+                // "-t", "pause"
+                // "-t", "prepared",
+                // "-t", "compoundqueries",
+                // "-t", "query",
+                // "-t", "multiple-errors", 
+                // "-t", "geography",
+                // "-t", "tvp",
+                //"-t", "warnings",
+                // "-t", "txn",
+                // "-t", "datatypes",
+                // "-t", "sproc"
+                //"-t", "params"
+                // "-t", "bulk",
+                // "-t", "bcp"
+                // "-t", "json"
+                // "-t", "promises" 
             ],
             "stopAtEntry": false,
-           // "cwd": "${workspaceFolder}/samples/javascript",
-             "cwd": "${workspaceFolder}",
+            // "cwd": "${workspaceFolder}/samples/javascript",
+            "cwd": "${workspaceFolder}",
             "environment": [],
             "console": "integratedTerminal"
         },
-       
         {
             "name": "(gdb) Launch",
             "type": "cppdbg",
@@ -83,7 +92,6 @@
                 }
             ]
         },
-        
         {
             "cwd": "${workspaceFolder}/samples/typescript",
             "type": "node",
@@ -91,7 +99,9 @@
             "name": "Launch Node TS",
             "program": "dist/promises.js",
             // "preLaunchTask": "tsc: build tsconfig.json",
-            "outFiles": ["${workspaceFolder}/samples/typescript/dist/**/*.js"]
-          }
+            "outFiles": [
+                "${workspaceFolder}/samples/typescript/dist/**/*.js"
+            ]
+        }
     ]
 }

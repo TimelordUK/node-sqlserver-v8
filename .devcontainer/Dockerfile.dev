@@ -1,0 +1,46 @@
+FROM node:20-bullseye
+
+# Install basic dev tools
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    curl \
+    wget \
+    unixodbc \
+    unixodbc-dev \
+    apt-transport-https \
+    gnupg \
+    lsb-release \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install SQL Server ODBC Driver
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+    && curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql18 \
+    && apt-get install -y mssql-tools18 \
+    && echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
+
+# Install OpenSSL to avoid SSL issues
+RUN apt-get update && apt-get install -y \
+    libssl-dev \
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user
+RUN useradd -m -s /bin/bash node \
+    && mkdir -p /workspace \
+    && chown -R node:node /workspace
+
+# Set the working directory
+WORKDIR /workspace
+
+# Switch to the non-root user
+USER node
+
+# Install global node dependencies
+RUN npm install -g node-gyp cmake-js
+
+# Keep container running
+CMD ["tail", "-f", "/dev/null"]
