@@ -166,7 +166,7 @@ set(TEST_SOURCE_FILES
     time_util_tests.cpp
     js_time_adapter_tests.cpp
     test_main.cpp
-#    mock_napi.cpp
+    mock_napi.cpp
     # Add other test files here as needed
 )
 
@@ -218,9 +218,9 @@ if(WIN32)
     set_target_properties(cpp_tests PROPERTIES LINK_FLAGS "/NODEFAULTLIB:msvcrt.lib")
 
     # Add Node.js library if found
-    if(EXISTS "${NODE_LIBRARIES}")
-        target_link_libraries(cpp_tests "${NODE_LIBRARIES}")
-    endif()
+#    if(EXISTS "${NODE_LIBRARIES}")
+#        target_link_libraries(cpp_tests "${NODE_LIBRARIES}")
+#    endif()
 else()
     # Linux needs to link with the Node.js shared library
 
@@ -254,9 +254,9 @@ if(WIN32)
     set_target_properties(cpp_tests PROPERTIES LINK_FLAGS "/NODEFAULTLIB:msvcrt.lib")
 
     # Add Node.js library if found
-    if(EXISTS "${NODE_LIBRARIES}")
-        target_link_libraries(cpp_tests "${NODE_LIBRARIES}")
-    endif()
+ #   if(EXISTS "${NODE_LIBRARIES}")
+ #       target_link_libraries(cpp_tests "${NODE_LIBRARIES}")
+ #   endif()
 else()
     # Linux might need pthread for GoogleTest
     target_link_libraries(cpp_tests pthread)

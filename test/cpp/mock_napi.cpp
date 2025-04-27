@@ -400,4 +400,11 @@ extern "C" {
     napi_status napi_close_callback_scope(napi_env env, napi_callback_scope scope) {
         return napi_ok;
     }
+
+    napi_status napi_define_properties(napi_env env,
+      napi_value object,
+      size_t property_count,
+      const napi_property_descriptor* properties) {
+        return napi_ok;
+      } 
 }
