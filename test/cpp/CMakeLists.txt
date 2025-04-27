@@ -165,6 +165,7 @@ set(TEST_SOURCE_FILES
     datum_storage_test.cpp
     time_util_tests.cpp
     js_time_adapter_tests.cpp
+    object_properties_test.cpp
     test_main.cpp
     mock_napi.cpp
     # Add other test files here as needed
