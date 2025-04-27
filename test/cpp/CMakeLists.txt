@@ -7,7 +7,28 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Platform-specific settings
 if(WIN32)
-    add_compile_definitions(NOMINMAX)
+   # Make sure we're using MSVC
+    if(NOT MSVC)
+        message(FATAL_ERROR "On Windows, please use the Visual Studio generator (e.g., -G \"Visual Studio 17 2022\")")
+    endif()
+    
+    # Add MSVC-specific flags
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /GF /Gm- /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR- /FC /std:c++20")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Ox /Ob2 /Oi /Ot /Oy /GL /MT")
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    
+    # Add Windows-specific definitions
+    add_definitions(
+        -DWINDOWS_BUILD 
+        -DUNICODE=1
+        -DBUILDING_NODE_EXTENSION
+        -DNOMINMAX
+        -D_HAS_EXCEPTIONS=0
+        -DNODE_GYP_V4
+        -DTESTING_MODE
+    )
+    # Windows uses odbc32.lib
+    set(ODBC_LIBRARIES odbc32)
     # Windows settings (as you already have)
     # ...
 else()
@@ -23,6 +44,10 @@ else()
         message(FATAL_ERROR "ODBC library not found. Please install unixODBC development package.")
     endif()
 endif()
+
+
+
+
 
 # Find Node.js headers
 execute_process(
@@ -59,10 +84,21 @@ endif()
 
 message(STATUS "Using node-addon-api from: ${NODE_ADDON_API_DIR}")
 
-# Set up Node.js library paths (Windows-specific)
+# Set up Node.js library paths
 if(WIN32)
-    # Existing Windows library setup
-    # ...
+    set(NODE_LIBRARIES "${NODE_HEADERS_DIR}/x64/node.lib")
+    if(NOT EXISTS "${NODE_LIBRARIES}")
+        message(STATUS "Node.js library not found at ${NODE_LIBRARIES}, trying Release directory")
+        set(NODE_LIBRARIES "${NODE_HEADERS_DIR}/Release/node.lib")
+        if(NOT EXISTS "${NODE_LIBRARIES}")
+            message(STATUS "Node.js library not found at ${NODE_LIBRARIES}, trying Debug directory")
+            set(NODE_LIBRARIES "${NODE_HEADERS_DIR}/Debug/node.lib")
+            if(NOT EXISTS "${NODE_LIBRARIES}")
+                message(WARNING "Node.js library not found. Will use mock implementations instead.")
+                set(NODE_LIBRARIES "")
+            endif()
+        endif()
+    endif()
 endif()
 
 # Set up Google Test
@@ -89,7 +125,7 @@ set(TEST_SOURCE_FILES
     time_util_tests.cpp
     js_time_adapter_tests.cpp
     test_main.cpp
-    mock_napi.cpp
+#    mock_napi.cpp
     # Add other test files here as needed
 )
 

@@ -285,7 +285,7 @@ namespace mssql {
             reinterpret_cast<SQLPOINTER>(SQL_BCP_ON), SQL_IS_INTEGER);
         if (!CheckOdbcError(ret)) return false;
 
-        ret = SQLDriverConnect(*connection, nullptr,
+        ret = SQLDriverConnectW(*connection, nullptr,
             reinterpret_cast<SQLWCHAR*>(connection_string->data()),
             connection_string->size(), nullptr, 0, nullptr,
             SQL_DRIVER_NOPROMPT);
@@ -346,7 +346,7 @@ namespace mssql {
         
         // Prepare the statement
         auto wideQuery = ConvertConnectionString(sqlText); // Reuse your string conversion
-        auto ret = SQLPrepare(stmt, 
+        auto ret = SQLPrepareW(stmt, 
             reinterpret_cast<SQLWCHAR*>(wideQuery->data()), 
             static_cast<SQLINTEGER>(wideQuery->size()));
         
@@ -374,7 +374,7 @@ namespace mssql {
             SQLSMALLINT colNameLen;
             SQLSMALLINT dataType;
             
-            SQLDescribeCol(stmt, i, colName, sizeof(colName)/sizeof(SQLWCHAR), 
+            SQLDescribeColW(stmt, i, colName, sizeof(colName)/sizeof(SQLWCHAR), 
                 &colNameLen, &dataType, NULL, NULL, NULL);
                 
             // Convert to string using your conversion utilities
