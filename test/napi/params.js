@@ -20,7 +20,7 @@
 
 const chai = require('chai')
 const assert = chai.assert
-const testConnection = require('../common/test-connection')
+const testConnection = require('../common/test-connection-factory')
 const sql = require('msnodesqlv8')
 sql.setLogLevel(4) // Debug level
 sql.enableConsoleLogging(true)

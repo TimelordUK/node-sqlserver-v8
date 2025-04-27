@@ -1,7 +1,15 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": "."
+    "outDir": "../dist/test",
+    "rootDir": "./",
+    "types": ["node", "mocha", "chai"],
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*", "test/**/*"]
+  "include": [
+    "./**/*.ts"
+  ],
+  "references": [
+    { "path": "../src" }
+  ]
 }
