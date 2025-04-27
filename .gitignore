@@ -127,3 +127,4 @@ runtest-macos
 
 # Local build scripts
 .gitignore
+lib/index.d.ts
