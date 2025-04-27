@@ -13,7 +13,23 @@ export type SqlValue = SqlScalarValue | SqlArrayValue | object
 export interface SqlParameterOptions {
   encoding?: BufferEncoding
   isBcp?: boolean
-  [key: string]: any
+  precision?: number
+  scale?: number
+  paramSize?: number | string
+  sqlType?: string
+  cType?: string
+  type?: string
+  jsType?: string
+  elementType?: string
+  // For TVP parameters
+  tableName?: string
+  columns?: TableColumn[]
+  rows?: SqlValue[][]
+  // For length specifications
+  length?: number
+  bufferLen?: number
+  // For serialization options
+  serializeOptions?: Record<string, any>
 }
 
 /**
@@ -38,9 +54,9 @@ export interface BindingSpecification {
 export class SqlParameter {
   // Common properties for all parameter types
   type: string | null = null // Generic type category
-  sqlType: string | null = null // SQL type (e.g., 'SQL_WVARCHAR')
+  sqlType: string | null | undefined = null // SQL type (e.g., 'SQL_WVARCHAR')
   jsType: string | null = null // JS type representation
-  cType: string | null = null // C type for binding
+  cType: string | null | undefined = null // C type for binding
   precision: number = 0 // Type precision
   scale: number = 0 // Type scale (for numeric types)
   value: SqlValue = null // Original JS value
@@ -54,7 +70,7 @@ export class SqlParameter {
    * @param options Parameter options
    */
   constructor (options: SqlParameterOptions = {}) {
-    this.encoding = options.encoding || 'ucs2'
+    this.encoding = options.encoding ?? 'ucs2'
 
     // Apply any provided options
     Object.assign(this, options)
@@ -65,12 +81,45 @@ export class SqlParameter {
    */
   toString (): string {
     const valuePreview = this.formatValuePreview()
-    return `SqlParameter(type=${this.type}, sqlType=${this.sqlType}, jsType = ${this.jsType} value=${valuePreview})`
+    let result = `SqlParameter(type=${this.type}, sqlType=${this.sqlType}, jsType=${this.jsType}, value=${valuePreview})`
+
+    // Add precision and scale for numeric types
+    if (this.type === 'INTEGER' || this.type === 'FLOAT') {
+      result += `, precision=${this.precision}`
+      if (this.scale > 0) {
+        result += `, scale=${this.scale}`
+      }
+    }
+
+    // Add length info for string types
+    if (this.type === 'STRING') {
+      result += `, length=${this.precision}, bufferLen=${this.bufferLen}`
+    }
+
+    // Add array specific info
+    if (this.type === 'ARRAY') {
+      const arrayParam = this as unknown as ArrayParameter
+      result += `, elementType=${arrayParam.elementType}, items=${(this.value as SqlArrayValue).length}`
+      if (arrayParam.hasNulls) {
+        result += ' (contains nulls)'
+      }
+    }
+
+    // Add TVP specific info
+    if (this.type === 'TVP') {
+      const tvpParam = this as unknown as TVPParameter
+      result += `, tableName=${tvpParam.tableName}, columns=${tvpParam.columns.length}, rows=${tvpParam.rows.length}`
+    }
+
+    // Add encoding info when present
+    if (this.encoding && this.encoding !== 'ucs2') {
+      result += `, encoding=${this.encoding}`
+    }
+
+    return result
   }
 
-  /**
-   * Format a preview of the parameter value
-   */
+  // 3. Improved formatValuePreview method for better debug output
   formatValuePreview (): string {
     if (this.value === null || this.value === undefined) return 'null'
 
@@ -82,6 +131,15 @@ export class SqlParameter {
     }
 
     if (Array.isArray(this.value)) {
+      // For small arrays, show actual values
+      if (this.value.length <= 3) {
+        const items = this.value.map(item => {
+          if (item === null || item === undefined) return 'null'
+          if (typeof item === 'string') return `"${item.length > 10 ? item.substring(0, 7) + '...' : item}"`
+          return String(item)
+        }).join(', ')
+        return `[${items}]`
+      }
       return `[Array(${this.value.length})]`
     }
 
@@ -89,6 +147,17 @@ export class SqlParameter {
       return `Date(${this.value.toISOString()})`
     }
 
+    if (typeof this.value === 'object') {
+      try {
+        // For objects, show a brief JSON representation
+        const jsonStr = JSON.stringify(this.value)
+        return jsonStr.length > 30 ? `${jsonStr.substring(0, 27)}...}` : jsonStr
+      } catch (e) {
+        return '[Object]'
+      }
+    }
+
+    // For other values, convert to string
     return String(this.value)
   }
 
@@ -210,47 +279,60 @@ export class SqlParameter {
   private static normalizeBindingObject (spec: BindingSpecification, options: SqlParameterOptions): SqlParameter {
     // Create appropriate parameter type based on the spec
     const type = spec.type.toUpperCase()
-    const elementType = spec.elementType?.toUpperCase() || ''
+    const elementType = spec.elementType?.toUpperCase() ?? ''
     const arrayValue = spec.value as SqlArrayValue
+
+    // Extract precision and other properties from the spec
+    const mergedOptions = {
+      ...options,
+      type: spec.type, // <-- Add this line to include the original type
+      precision: spec.precision,
+      scale: spec.scale,
+      paramSize: spec.paramSize,
+      sqlType: spec.sqlType,
+      cType: spec.cType,
+      encoding: spec.encoding,
+      isBcp: spec.isBcp
+    }
 
     switch (type) {
       case 'STRING':
-        return new StringParameter(spec.value as string, { ...options, ...spec })
+        return new StringParameter(spec.value as string, mergedOptions)
       case 'INTEGER':
-        return new IntegerParameter(spec.value as number, { ...options, ...spec })
+        return new IntegerParameter(spec.value as number, mergedOptions)
       case 'FLOAT':
-        return new FloatParameter(spec.value as number, { ...options, ...spec })
+        return new FloatParameter(spec.value as number, mergedOptions)
       case 'BIT':
       case 'BOOLEAN':
-        return new BooleanParameter(spec.value as boolean, { ...options, ...spec })
+        return new BooleanParameter(spec.value as boolean, mergedOptions)
       case 'DATETIME':
-        return new DateTimeParameter(spec.value as Date | string | number, { ...options, ...spec })
+        return new DateTimeParameter(spec.value as Date | string | number, mergedOptions)
       case 'ARRAY':
       // Handle array types based on elementType
-
         switch (elementType) {
           case 'STRING':
-            return new StringArrayParameter(arrayValue as Array<string | null | undefined>,
-              { ...options, ...spec })
+            return new StringArrayParameter(arrayValue as Array<string | null | undefined>, mergedOptions)
           case 'INTEGER':
-            return new IntegerArrayParameter(arrayValue as Array<number | null | undefined>,
-              { ...options, ...spec })
+            return new IntegerArrayParameter(arrayValue as Array<number | null | undefined>, mergedOptions)
           case 'FLOAT':
-            return new FloatArrayParameter(arrayValue as Array<number | null | undefined>,
-              { ...options, ...spec })
+            return new FloatArrayParameter(arrayValue as Array<number | null | undefined>, mergedOptions)
           case 'BIT':
           case 'BOOLEAN':
-            return new BooleanArrayParameter(arrayValue as Array<boolean | null | undefined>,
-              { ...options, ...spec })
+            return new BooleanArrayParameter(arrayValue as Array<boolean | null | undefined>, mergedOptions)
           case 'DATETIME':
-            return new DateTimeArrayParameter(arrayValue as Array<Date | string | number | null | undefined>,
-              { ...options, ...spec })
+            return new DateTimeArrayParameter(arrayValue as Array<Date | string | number | null | undefined>, mergedOptions)
           default:
-            return new ArrayParameter(arrayValue, elementType, { ...options, ...spec })
+            return new ArrayParameter(arrayValue, elementType, mergedOptions)
         }
-      default:
-      // For custom types, create generic parameter
-        return new SqlParameter({ ...spec, ...options })
+      default: {
+        // For custom types, create a parameter with the custom type info
+        const param = new SqlParameter(mergedOptions)
+        param.type = spec.type // <-- Ensure we set the type properly
+        param.value = spec.value
+        param.sqlType = spec.sqlType
+        param.cType = spec.cType
+        return param
+      }
     }
   }
 }
@@ -286,19 +368,30 @@ export class StringParameter extends SqlParameter {
     const byteLength = Buffer.byteLength(strValue, this.encoding)
 
     // Set SQL type based on length
-    if (charLength > 2000 && charLength < 4000) {
+    if (options.sqlType) {
+      this.sqlType = options.sqlType
+    } else if (charLength > 2000 && charLength < 4000) {
       this.sqlType = 'SQL_WLONGVARCHAR'
     } else {
       this.sqlType = 'SQL_WVARCHAR'
     }
 
-    // For very large strings, use 0 for paramSize
-    this.precision = charLength
-    this.paramSize = charLength >= 4000 ? 0 : charLength
-    this.bufferLen = byteLength + 2 // +2 for null terminator
+    // Use provided precision if available, otherwise use the character length
+    this.precision = options.precision ?? charLength
+
+    // For very large strings, use 0 for paramSize unless explicitly provided
+    this.paramSize = options.paramSize ?? charLength >= 4000 ? 0 : charLength
+
+    this.bufferLen = options.bufferLen ?? byteLength + 2 // +2 for null terminator
 
     // Pre-encode for C++ convenience
     this.bytes = Buffer.from(strValue, this.encoding)
+  }
+
+  // Add a specialized toString method for string parameters
+  toString (): string {
+    const valuePreview = this.formatValuePreview()
+    return `StringParameter(${valuePreview}, length=${this.precision}, sqlType=${this.sqlType})`
   }
 }
 
@@ -311,10 +404,13 @@ export class IntegerParameter extends SqlParameter {
     this.type = 'INTEGER'
     this.jsType = 'JS_NUMBER'
     this.value = Number(value)
-    this.cType = 'SQL_C_SBIGINT'
+    this.cType = options.cType ?? 'SQL_C_SBIGINT'
 
-    // Determine size based on value range
-    if (this.value >= -128 && this.value <= 127) {
+    // Determine size based on value range, unless explicitly provided
+    if (options.sqlType) {
+      this.sqlType = options.sqlType
+      this.precision = options.precision ?? 8 // Default to largest size if custom type
+    } else if (this.value >= -128 && this.value <= 127) {
       this.sqlType = 'SQL_TINYINT'
       this.precision = 1
     } else if (this.value >= -32768 && this.value <= 32767) {
@@ -328,8 +424,13 @@ export class IntegerParameter extends SqlParameter {
       this.precision = 8
     }
 
-    this.paramSize = this.precision
-    this.bufferLen = this.precision
+    // Override with provided precision if available
+    if (options.precision !== undefined) {
+      this.precision = options.precision
+    }
+
+    this.paramSize = options.paramSize ?? this.precision
+    this.bufferLen = options.bufferLen ?? this.precision
   }
 }
 
@@ -345,7 +446,12 @@ export class FloatParameter extends SqlParameter {
 
     // Determine precision
     const absValue = Math.abs(this.value)
-    if (absValue > 3.4e38 || (absValue < 1.2e-38 && absValue !== 0)) {
+
+    if (options.sqlType) {
+      this.sqlType = options.sqlType
+      this.cType = options.cType ?? 'SQL_C_DOUBLE'
+      this.precision = options.precision ?? 8 // Default to double precision if custom type
+    } else if (absValue > 3.4e38 || (absValue < 1.2e-38 && absValue !== 0)) {
       this.sqlType = 'SQL_DOUBLE'
       this.cType = 'SQL_C_DOUBLE'
       this.precision = 8
@@ -355,8 +461,16 @@ export class FloatParameter extends SqlParameter {
       this.precision = 4
     }
 
-    this.paramSize = this.precision
-    this.bufferLen = this.precision
+    // Override with provided precision if available
+    if (options.precision !== undefined) {
+      this.precision = options.precision
+    }
+
+    // Set scale for decimal places if specified
+    this.scale = options.scale ?? 0
+
+    this.paramSize = options.paramSize ?? this.precision
+    this.bufferLen = options.bufferLen ?? this.precision
   }
 }
 
@@ -368,12 +482,12 @@ export class BooleanParameter extends SqlParameter {
     super(options)
     this.type = 'BIT'
     this.jsType = 'JS_BOOLEAN'
-    this.sqlType = 'SQL_BIT'
-    this.cType = 'SQL_C_BIT'
+    this.sqlType = options.sqlType ?? 'SQL_BIT'
+    this.cType = options.cType ?? 'SQL_C_BIT'
     this.value = Boolean(value)
-    this.precision = 1
-    this.paramSize = 1
-    this.bufferLen = 1
+    this.precision = options.precision ?? 1
+    this.paramSize = options.paramSize ?? 1
+    this.bufferLen = options.bufferLen ?? 1
   }
 }
 
@@ -385,13 +499,13 @@ export class DateTimeParameter extends SqlParameter {
     super(options)
     this.type = 'DATETIME'
     this.jsType = 'JS_DATE'
-    this.sqlType = 'SQL_TYPE_TIMESTAMP'
-    this.cType = 'SQL_C_TYPE_TIMESTAMP'
+    this.sqlType = options.sqlType ?? 'SQL_TYPE_TIMESTAMP'
+    this.cType = options.cType ?? 'SQL_C_TYPE_TIMESTAMP'
     this.value = value instanceof Date ? value : new Date(value)
-    this.precision = 23
-    this.scale = 3 // Milliseconds
-    this.paramSize = this.precision
-    this.bufferLen = 16 // sizeof(SQL_TIMESTAMP_STRUCT)
+    this.precision = options.precision ?? 23
+    this.scale = options.scale ?? 3 // Milliseconds by default
+    this.paramSize = options.paramSize ?? this.precision
+    this.bufferLen = options.bufferLen ?? 16 // sizeof(SQL_TIMESTAMP_STRUCT)
   }
 }
 
@@ -408,8 +522,11 @@ export class ObjectParameter extends SqlParameter {
     this.sqlType = 'SQL_VARCHAR'
     this.cType = 'SQL_C_CHAR'
 
+    // Use serialization options if provided
+    const serializeOptions = options.serializeOptions ?? undefined
+
     // Serialize the object to JSON
-    const jsonStr = JSON.stringify(value)
+    const jsonStr = JSON.stringify(value, serializeOptions?.replacer, serializeOptions?.space)
     this.value = value
     this.serializedValue = jsonStr
 
@@ -417,6 +534,11 @@ export class ObjectParameter extends SqlParameter {
     this.paramSize = jsonStr.length
     this.bufferLen = Buffer.byteLength(jsonStr, 'utf8') + 1 // +1 for null terminator
     this.bytes = Buffer.from(jsonStr, 'utf8')
+  }
+
+  // Add a specialized toString method for object parameters
+  toString (): string {
+    return `ObjectParameter(keys=${Object.keys(this.value as object).length}, serializedLength=${this.serializedValue.length})`
   }
 }
 

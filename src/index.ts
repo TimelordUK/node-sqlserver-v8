@@ -1,7 +1,31 @@
 // src/index.ts
 import { loadNativeModule } from './native-module'
 import { Connection } from './connection'
-import { SqlParameter, fromValue } from './sql-parameter'
+import {
+  SqlParameter,
+  fromValue,
+  StringParameter,
+  FloatParameter,
+  IntegerParameter,
+  BooleanParameter,
+  DateTimeParameter,
+  NullParameter,
+  ArrayParameter,
+  StringArrayParameter,
+  IntegerArrayParameter,
+  FloatArrayParameter,
+  BooleanArrayParameter,
+  DateTimeArrayParameter,
+  ObjectParameter,
+  TVPParameter,
+  SqlParameterOptions,
+  SqlValue,
+  SqlScalarValue,
+  SqlArrayValue,
+  BindingSpecification,
+  TableValuedParameter,
+  TableColumn
+} from './sql-parameter'
 
 // Load the native module
 const nativeModule = loadNativeModule()
@@ -18,7 +42,32 @@ function createConnection (): Connection {
 export {
   // Core classes
   Connection,
+
+  // Parameter types
   SqlParameter,
+  StringParameter,
+  IntegerParameter,
+  FloatParameter,
+  BooleanParameter,
+  DateTimeParameter,
+  NullParameter,
+  ArrayParameter,
+  StringArrayParameter,
+  IntegerArrayParameter,
+  FloatArrayParameter,
+  BooleanArrayParameter,
+  DateTimeArrayParameter,
+  ObjectParameter,
+  TVPParameter,
+
+  // Type interfaces
+  type SqlParameterOptions,
+  type SqlValue,
+  type SqlScalarValue,
+  type SqlArrayValue,
+  type BindingSpecification,
+  type TableValuedParameter,
+  type TableColumn,
 
   // Factory functions
   createConnection,
@@ -34,6 +83,20 @@ export const setLogFile = nativeModule.setLogFile
 export default {
   Connection,
   SqlParameter,
+  StringParameter,
+  IntegerParameter,
+  FloatParameter,
+  BooleanParameter,
+  DateTimeParameter,
+  NullParameter,
+  ArrayParameter,
+  StringArrayParameter,
+  IntegerArrayParameter,
+  FloatArrayParameter,
+  BooleanArrayParameter,
+  DateTimeArrayParameter,
+  ObjectParameter,
+  TVPParameter,
   createConnection,
   fromValue,
   setLogLevel: nativeModule.setLogLevel,
