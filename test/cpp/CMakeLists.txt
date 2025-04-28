@@ -1,51 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 project(msnodesqlv8_tests CXX)
 
-# Import unified configuration
-execute_process(
-    COMMAND node ${CMAKE_CURRENT_SOURCE_DIR}/../../build-config.js
-    OUTPUT_VARIABLE CONFIG_OUTPUT
-)
-
-# Parse the output into CMake variables
-string(REGEX REPLACE ";" "\\\\;" CONFIG_OUTPUT "${CONFIG_OUTPUT}")
-string(REGEX REPLACE "\n" ";" CONFIG_OUTPUT "${CONFIG_OUTPUT}")
-foreach(LINE ${CONFIG_OUTPUT})
-    if(LINE MATCHES "^set\\(([^;]*)\\)")
-        string(REGEX REPLACE "^set\\(([^;]*)\\)" "\\1" VAR_LINE "${LINE}")
-        string(REGEX MATCH "^([^;]*)[ \t]*\"([^\"]*)\"" UNUSED_OUT "${VAR_LINE}")
-        set(${CMAKE_MATCH_1} "${CMAKE_MATCH_2}")
-    endif()
-endforeach()
-
-# Set C++ standard from unified config
-set(CMAKE_CXX_STANDARD 20)  # Or use value from config
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# Use platform-specific defines from config
-foreach(DEFINE ${PLATFORM_DEFINES})
-    add_definitions(-D${DEFINE})
-endforeach()
-
-# Platform-specific adjustments that can't be fully unified
-if(WIN32)
-    # Keep only Windows-specific settings that can't be unified
-    if(NOT MSVC)
-        message(FATAL_ERROR "On Windows, please use the Visual Studio generator")
-    endif()
-    
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-else()
-    # Keep only Linux-specific settings that can't be unified
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")
-endif()
-
-# Use ODBC library from config
-set(ODBC_LIBRARIES ${ODBC_LIB})
-
-cmake_minimum_required(VERSION 3.14)
-project(msnodesqlv8_tests CXX)
-
 # Set C++ standard (match node-gyp)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -74,8 +29,6 @@ if(WIN32)
     )
     # Windows uses odbc32.lib
     set(ODBC_LIBRARIES odbc32)
-    # Windows settings (as you already have)
-    # ...
 else()
     # Linux/Mac settings
     add_definitions(-DLINUX_BUILD -DUNICODE -DBUILDING_NODE_EXTENSION -DNAPI_DISABLE_CPP_EXCEPTIONS)
@@ -159,17 +112,17 @@ file(GLOB_RECURSE SOURCE_FILES
 )
 list(FILTER SOURCE_FILES EXCLUDE REGEX ".*module\\.cpp$")
 
-# Setup test source files
-set(TEST_SOURCE_FILES
-    parameter_test.cpp
-    datum_storage_test.cpp
-    time_util_tests.cpp
-    js_time_adapter_tests.cpp
-    object_properties_test.cpp
-    test_main.cpp
-    mock_napi.cpp
-    # Add other test files here as needed
+# Automatically detect test source files instead of hardcoding them
+file(GLOB TEST_SOURCE_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
 )
+
+# Print detected test files for verification
+message(STATUS "Detected test files:")
+foreach(TEST_FILE ${TEST_SOURCE_FILES})
+    get_filename_component(TEST_FILENAME ${TEST_FILE} NAME)
+    message(STATUS "  - ${TEST_FILENAME}")
+endforeach()
 
 # Add required include directories
 include_directories(
@@ -199,11 +152,6 @@ if(NOT WIN32)
     endif()
 endif()
 
-# Debug output
-message(STATUS "SOURCE_FILES: ${SOURCE_FILES}")
-message(STATUS "TEST_SOURCE_FILES: ${TEST_SOURCE_FILES}")
-message(STATUS "Current directory: ${CMAKE_CURRENT_SOURCE_DIR}")
-
 # Add test executable
 add_executable(cpp_tests ${SOURCE_FILES} ${TEST_SOURCE_FILES})
 
@@ -217,14 +165,8 @@ target_compile_definitions(cpp_tests PRIVATE
 if(WIN32)
     # Windows-specific linker flags and libraries
     set_target_properties(cpp_tests PROPERTIES LINK_FLAGS "/NODEFAULTLIB:msvcrt.lib")
-
-    # Add Node.js library if found
-#    if(EXISTS "${NODE_LIBRARIES}")
-#        target_link_libraries(cpp_tests "${NODE_LIBRARIES}")
-#    endif()
 else()
     # Linux needs to link with the Node.js shared library
-
     # Method 1: Try to find node library in standard locations
     find_library(NODE_LIB NAMES node nodejs
                 PATHS /usr/lib /usr/local/lib /usr/lib64 /usr/local/lib64
@@ -237,30 +179,12 @@ else()
         target_link_libraries(cpp_tests ${NODE_LIB})
     else()
         message(STATUS "Node.js library not found, trying to mock N-API functions")
-
-        # Method 2: Mock the N-API functions
         # Add a define to indicate we're mocking
         add_definitions(-DMOCK_NAPI)
-
-
     endif()
 
     # Linux might need pthread for GoogleTest
     target_link_libraries(cpp_tests pthread dl)
-endif()
-
-# Platform-specific link libraries
-if(WIN32)
-    # Windows-specific linker flags
-    set_target_properties(cpp_tests PROPERTIES LINK_FLAGS "/NODEFAULTLIB:msvcrt.lib")
-
-    # Add Node.js library if found
- #   if(EXISTS "${NODE_LIBRARIES}")
- #       target_link_libraries(cpp_tests "${NODE_LIBRARIES}")
- #   endif()
-else()
-    # Linux might need pthread for GoogleTest
-    target_link_libraries(cpp_tests pthread)
 endif()
 
 # Common libraries to link
