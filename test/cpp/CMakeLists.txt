@@ -117,6 +117,11 @@ file(GLOB TEST_SOURCE_FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
 )
 
+# Remove duplicate test implementations
+# Only include one of mock_js_object_mapper.cpp or mock_js_object_wrapper.cpp
+# since they have the same test implementations
+list(FILTER TEST_SOURCE_FILES EXCLUDE REGEX "mock_js_object_wrapper\\.cpp$")
+
 # Print detected test files for verification
 message(STATUS "Detected test files:")
 foreach(TEST_FILE ${TEST_SOURCE_FILES})
@@ -192,6 +197,8 @@ target_link_libraries(cpp_tests
     ${ODBC_LIBRARIES}
     GTest::gtest
     GTest::gtest_main
+    GTest::gmock
+    GTest::gmock_main
 )
 
 # Enable CTest

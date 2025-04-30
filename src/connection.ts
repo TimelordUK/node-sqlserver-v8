@@ -110,7 +110,7 @@ export class Connection {
       cb = paramsOrCallback
     } else {
       cb = callback
-      params = paramsOrCallback || []
+      params = paramsOrCallback ?? []
     }
 
     const queryObj: { nativeQuery?: NativeQuery } = {}

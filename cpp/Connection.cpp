@@ -1,8 +1,11 @@
 #include "Connection.h"
 #include "odbc_connection.h"
+#include "odbc_environment.h"
+#include "odbc_error.h"
 #include "query_parameter.h"
+#include "query_result.h"
 #include "parameter_set.h"
-#include "parameter_factory.h"
+#include "odbc_error.h"
 #include <thread>
 #include <chrono>
 
@@ -45,7 +48,7 @@ namespace mssql
         const Napi::Env env = info.Env();
         Napi::HandleScope scope(env);
 
-        // Create internal ODBC connection
+        // Create internal ODBC connection - uses the shared environment
         odbcConnection_ = std::make_unique<OdbcConnection>();
     }
 
@@ -137,9 +140,6 @@ namespace mssql
         return new ConnectionWorkerBase<ConnectionOp, SuccessCallback>(
             callback, connection, parent, std::move(operation), std::move(onSuccess));
     }
-
-
-
 
     // Open connection method - supports both callback and Promise
     Napi::Value Connection::Open(const Napi::CallbackInfo &info)
@@ -421,36 +421,4 @@ namespace mssql
         // Call the callback with null error and result
         Callback().Call({env.Null(), resultObj});
     }
-
-    Napi::Object mssql::QueryResult::toJSObject(Napi::Env env) 
-    {
-        Napi::Object result = Napi::Object::New(env);
-
-        // Create metadata object
-        Napi::Array meta = Napi::Array::New(env, columns_.size());
-        for (size_t i = 0; i < columns_.size(); i++)
-        {
-            Napi::Object colInfo = Napi::Object::New(env);
-            colInfo.Set("name", Napi::String::New(env, columns_[i].name));
-            colInfo.Set("sqlType", Napi::Number::New(env, columns_[i].sqlType));
-            meta[i] = colInfo;
-        }
-        result.Set("meta", meta);
-
-        // Create rows array
-        Napi::Array rowsArray = Napi::Array::New(env, rows_.size());
-        for (size_t i = 0; i < rows_.size(); i++)
-        {
-            Napi::Array row = Napi::Array::New(env, rows_[i].size());
-            for (size_t j = 0; j < rows_[i].size(); j++)
-            {
-                row[j] = Napi::String::New(env, rows_[i][j]);
-            }
-            rowsArray[i] = row;
-        }
-        result.Set("rows", rowsArray);
-
-        return result;
-    }
-
 }
