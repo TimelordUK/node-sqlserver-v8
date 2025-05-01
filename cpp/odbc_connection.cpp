@@ -177,6 +177,7 @@ namespace mssql
 
   bool OdbcConnection::TryClose()
   {
+    SQL_LOG_DEBUG("TryClose");
     if (connectionState != ConnectionClosed)
     {
       if (_statements)
@@ -189,6 +190,7 @@ namespace mssql
         const auto connection = _connectionHandles->connectionHandle();
         if (connection)
         {
+          SQL_LOG_DEBUG("SQLDisconnect");
           SQLDisconnect(connection->get_handle());
         }
         _connectionHandles->clear();
@@ -232,19 +234,28 @@ namespace mssql
     {
       const auto connection = _connectionHandles->connectionHandle();
       if (!connection)
+      {
+        SQL_LOG_ERROR("Connection handle is null");
         return SQL_ERROR;
+      }
 
       auto *const to = reinterpret_cast<SQLPOINTER>(static_cast<long long>(timeout));
 
       // Set connection timeout
       auto ret = SQLSetConnectAttr(connection->get_handle(), SQL_ATTR_CONNECTION_TIMEOUT, to, 0);
       if (!SQL_SUCCEEDED(ret))
+      {
+        SQL_LOG_ERROR("Failed to set connection timeout SQL_ATTR_CONNECTION_TIMEOUT");
         return ret;
+      }
 
       // Set login timeout
       ret = SQLSetConnectAttr(connection->get_handle(), SQL_ATTR_LOGIN_TIMEOUT, to, 0);
       if (!SQL_SUCCEEDED(ret))
+      {
+        SQL_LOG_ERROR("Failed to set connection timeout SQL_ATTR_LOGIN_TIMEOUT");
         return ret;
+      }
     }
     return SQL_SUCCESS;
   }
@@ -268,13 +279,19 @@ namespace mssql
     _statements = std::make_shared<OdbcStatementCache>(_connectionHandles);
     auto ret = open_timeout(timeout);
     if (!CheckOdbcError(ret))
+    {
+      SQL_LOG_ERROR("Failed to open connection with timeout");
       return false;
+    }
 
     // Use get_handle() to access the ODBC handle
     ret = SQLSetConnectAttr(connection->get_handle(), SQL_COPT_SS_BCP,
                             reinterpret_cast<SQLPOINTER>(SQL_BCP_ON), SQL_IS_INTEGER);
     if (!CheckOdbcError(ret))
+    {
+      SQL_LOG_ERROR("Failed to set BCP option");
       return false;
+    }
 
     ret = SQLDriverConnect(connection->get_handle(), nullptr,
                            reinterpret_cast<SQLWCHAR *>(connection_string->data()),
@@ -282,7 +299,10 @@ namespace mssql
                            SQL_DRIVER_NOPROMPT);
 
     if (!CheckOdbcError(ret))
+    {
+      SQL_LOG_ERROR("SQLDriverConnect failed");
       return false;
+    }
     connectionState = ConnectionOpen;
     return true;
   }
@@ -308,7 +328,10 @@ namespace mssql
     // End the transaction
     auto ret = SQLEndTran(SQL_HANDLE_DBC, connection->get_handle(), completion_type);
     if (!CheckOdbcError(ret))
+    {
+      SQL_LOG_ERROR("SQLEndTran failed");
       return false;
+    }
 
     // Put the connection back into auto commit mode
     auto *const acon = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_ON);
@@ -338,6 +361,7 @@ namespace mssql
     auto stmt = create_statement_handle();
     if (!stmt->alloc(_connectionHandles->connectionHandle()->get_handle()))
     {
+      SQL_LOG_ERROR("unable to allocate statement handle");
       return ReturnOdbcError();
     }
 
@@ -348,7 +372,10 @@ namespace mssql
                           static_cast<SQLINTEGER>(wideQuery->size()));
 
     if (!CheckOdbcError(ret))
+    {
+      SQL_LOG_ERROR("SQLPrepare failed");
       return false;
+    }
 
     // Bind parameters
     for (size_t i = 0; i < parameters.size(); i++)
@@ -361,7 +388,10 @@ namespace mssql
     // Execute the query
     ret = SQLExecute(stmt->get_handle());
     if (!CheckOdbcError(ret))
+    {
+      SQL_LOG_ERROR("SQLExecute failed");
       return false;
+    }
 
     // Process results
     // Get column information
