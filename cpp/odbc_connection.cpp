@@ -1,3 +1,4 @@
+// ReSharper disable CppInconsistentNaming
 #include "odbc_connection.h"
 #include "odbc_environment.h"
 #include "odbc_statement_cache.h"
@@ -53,7 +54,7 @@ namespace mssql
     if (!sharedEnvironment_)
     {
       static std::mutex envMutex;
-      std::lock_guard<std::mutex> lock(envMutex);
+      std::lock_guard lock(envMutex);
 
       if (!sharedEnvironment_)
       {
@@ -86,9 +87,9 @@ namespace mssql
     SQL_LOG_INFO("Opening connection");
     SQL_LOG_DEBUG_STREAM("Connection string (partial): " << connectionString.substr(0, 30) << "...");
 
-    std::lock_guard<std::mutex> lock(_connectionMutex);
+    std::lock_guard lock(_connectionMutex);
 
-    if (connectionState != ConnectionState::ConnectionClosed)
+    if (connectionState != ConnectionClosed)
     {
       SQL_LOG_WARNING("Connection already open");
       _errors->push_back(std::make_shared<OdbcError>(
@@ -121,19 +122,19 @@ namespace mssql
 
   bool OdbcConnection::Close()
   {
-    std::lock_guard<std::mutex> lock(_connectionMutex);
+    std::lock_guard lock(_connectionMutex);
     return TryClose();
   }
 
   bool OdbcConnection::IsConnected() const
   {
-    return connectionState == ConnectionState::ConnectionOpen;
+    return connectionState == ConnectionOpen;
   }
 
   bool OdbcConnection::BeginTransaction()
   {
-    std::lock_guard<std::mutex> lock(_connectionMutex);
-    if (connectionState != ConnectionState::ConnectionOpen)
+    std::lock_guard lock(_connectionMutex);
+    if (connectionState != ConnectionOpen)
     {
       _errors->push_back(std::make_shared<OdbcError>(
           "Connection is not open", "01000", 0));
@@ -145,8 +146,8 @@ namespace mssql
 
   bool OdbcConnection::CommitTransaction()
   {
-    std::lock_guard<std::mutex> lock(_connectionMutex);
-    if (connectionState != ConnectionState::ConnectionOpen)
+    std::lock_guard lock(_connectionMutex);
+    if (connectionState != ConnectionOpen)
     {
       _errors->push_back(std::make_shared<OdbcError>(
           "Connection is not open", "01000", 0));
@@ -158,8 +159,8 @@ namespace mssql
 
   bool OdbcConnection::RollbackTransaction()
   {
-    std::lock_guard<std::mutex> lock(_connectionMutex);
-    if (connectionState != ConnectionState::ConnectionOpen)
+    std::lock_guard lock(_connectionMutex);
+    if (connectionState != ConnectionOpen)
     {
       _errors->push_back(std::make_shared<OdbcError>(
           "Connection is not open", "01000", 0));
@@ -176,7 +177,7 @@ namespace mssql
 
   bool OdbcConnection::TryClose()
   {
-    if (connectionState != ConnectionState::ConnectionClosed)
+    if (connectionState != ConnectionClosed)
     {
       if (_statements)
       {
@@ -193,7 +194,7 @@ namespace mssql
         _connectionHandles->clear();
       }
 
-      connectionState = ConnectionState::ConnectionClosed;
+      connectionState = ConnectionClosed;
     }
 
     return true;
@@ -282,7 +283,7 @@ namespace mssql
 
     if (!CheckOdbcError(ret))
       return false;
-    connectionState = ConnectionState::ConnectionOpen;
+    connectionState = ConnectionOpen;
     return true;
   }
 
@@ -324,9 +325,9 @@ namespace mssql
     SQL_LOG_DEBUG_STREAM("SQL: " << sqlText);
     SQL_LOG_DEBUG_STREAM("Parameter count: " << parameters.size());
 
-    std::lock_guard<std::mutex> lock(_connectionMutex);
+    std::lock_guard lock(_connectionMutex);
 
-    if (connectionState != ConnectionState::ConnectionOpen)
+    if (connectionState != ConnectionOpen)
     {
       _errors->push_back(std::make_shared<OdbcError>(
           "Connection is not open", "01000", 0));
