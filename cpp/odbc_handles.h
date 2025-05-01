@@ -9,39 +9,54 @@
 namespace mssql
 {
     using namespace std;
+    
     // Forward declarations
     class OdbcError;
 
-    // Base class for ODBC handles with RAII semantics
-    template <SQLSMALLINT HandleType>
-    class OdbcBaseHandle
-    {
+    // Interface for all ODBC handles
+    class IOdbcHandle {
     public:
-        OdbcBaseHandle() : handle_(SQL_NULL_HANDLE) {}
+        virtual ~IOdbcHandle() = default;
+        
+        // Core handle operations
+        virtual bool alloc(SQLHANDLE parent = SQL_NULL_HANDLE) = 0;
+        virtual void free() = 0;
+        virtual void read_errors(shared_ptr<vector<shared_ptr<OdbcError>>> & errors) const = 0;
+        
+        // Get underlying handle
+        virtual SQLHANDLE get_handle() const = 0;
+    };
 
-        ~OdbcBaseHandle()
-        {
+    // Specialized handle interfaces
+    class IOdbcEnvironmentHandle : public IOdbcHandle {};
+    class IOdbcConnectionHandle : public IOdbcHandle {};
+    class IOdbcStatementHandle : public IOdbcHandle {};
+    class IOdbcDescriptorHandle : public IOdbcHandle {};
+
+    // Concrete implementation of ODBC handles
+    template <SQLSMALLINT HandleType, typename InterfaceType>
+    class OdbcHandleImpl : public InterfaceType {
+    public:
+        OdbcHandleImpl() : handle_(SQL_NULL_HANDLE) {}
+
+        ~OdbcHandleImpl() override {
             free();
         }
 
-        bool alloc(SQLHANDLE parent = SQL_NULL_HANDLE)
-        {
+        bool alloc(SQLHANDLE parent = SQL_NULL_HANDLE) override {
             free();
             SQLRETURN ret = SQLAllocHandle(HandleType, parent, &handle_);
             return SQL_SUCCEEDED(ret);
         }
 
-        void free()
-        {
-            if (handle_ != SQL_NULL_HANDLE)
-            {
+        void free() override {
+            if (handle_ != SQL_NULL_HANDLE) {
                 SQLFreeHandle(HandleType, handle_);
                 handle_ = SQL_NULL_HANDLE;
             }
         }
 
-        void read_errors(shared_ptr<vector<shared_ptr<OdbcError>>> & errors) const
-        {
+        void read_errors(shared_ptr<vector<shared_ptr<OdbcError>>> & errors) const override {
             SQLSMALLINT msg_len = 0;
             SQLRETURN      rc2;
             SQLINTEGER    native_error = 0;
@@ -87,78 +102,68 @@ namespace mssql
             }
         }
 
-        // Implicit conversion to SQLHANDLE
-        operator SQLHANDLE() const { return handle_; }
+        SQLHANDLE get_handle() const override {
+            return handle_;
+        }
 
     protected:
         SQLHANDLE handle_;
 
     private:
         // Prevent copying
-        OdbcBaseHandle(const OdbcBaseHandle &) = delete;
-        OdbcBaseHandle &operator=(const OdbcBaseHandle &) = delete;
+        OdbcHandleImpl(const OdbcHandleImpl &) = delete;
+        OdbcHandleImpl &operator=(const OdbcHandleImpl &) = delete;
     };
 
-    // Specialized handle types
-    using OdbcEnvironmentHandle = OdbcBaseHandle<SQL_HANDLE_ENV>;
-    using OdbcConnectionHandle = OdbcBaseHandle<SQL_HANDLE_DBC>;
-    using OdbcStatementHandle = OdbcBaseHandle<SQL_HANDLE_STMT>;
-    using OdbcDescriptorHandle = OdbcBaseHandle<SQL_HANDLE_DESC>;
+    // Type definitions for concrete implementations
+    using OdbcEnvironmentHandleImpl = OdbcHandleImpl<SQL_HANDLE_ENV, IOdbcEnvironmentHandle>;
+    using OdbcConnectionHandleImpl = OdbcHandleImpl<SQL_HANDLE_DBC, IOdbcConnectionHandle>;
+    using OdbcStatementHandleImpl = OdbcHandleImpl<SQL_HANDLE_STMT, IOdbcStatementHandle>;
+    using OdbcDescriptorHandleImpl = OdbcHandleImpl<SQL_HANDLE_DESC, IOdbcDescriptorHandle>;
 
+    // Factory methods to create concrete handles
+    inline shared_ptr<IOdbcEnvironmentHandle> create_environment_handle() {
+        return make_shared<OdbcEnvironmentHandleImpl>();
+    }
 
+    inline shared_ptr<IOdbcConnectionHandle> create_connection_handle() {
+        return make_shared<OdbcConnectionHandleImpl>();
+    }
 
-    class ConnectionHandles_ {
-    public:
-        // Constructor accepting raw SQLHENV
-        ConnectionHandles_(SQLHENV env) : envHandle(env) {
-            SQLAllocHandle(SQL_HANDLE_DBC, env, &conHandle);
-        }
+    inline shared_ptr<IOdbcStatementHandle> create_statement_handle() {
+        return make_shared<OdbcStatementHandleImpl>();
+    }
 
-        // Constructor accepting OdbcEnvironmentHandle reference
-        ConnectionHandles_(const OdbcEnvironmentHandle& env)
-            : envHandle(static_cast<SQLHENV>(env)) {
-            SQLAllocHandle(SQL_HANDLE_DBC, envHandle, &conHandle);
-        }
+    inline shared_ptr<IOdbcDescriptorHandle> create_descriptor_handle() {
+        return make_shared<OdbcDescriptorHandleImpl>();
+    }
 
-        // Constructor accepting shared_ptr to OdbcEnvironmentHandle
-        ConnectionHandles_(const std::shared_ptr<OdbcEnvironmentHandle>& env)
-            : envHandle(env ? static_cast<SQLHENV>(*env) : SQL_NULL_HANDLE) {
-            if (envHandle != SQL_NULL_HANDLE) {
-                SQLAllocHandle(SQL_HANDLE_DBC, envHandle, &conHandle);
-            }
-        }
-
-        // Rest of the class...
-
-    private:
-        SQLHENV envHandle;
-        SQLHDBC conHandle = SQL_NULL_HANDLE;
-    };
-
-
-
-    // Class to manage connection handles
-    class ConnectionHandles {
-    public:
-        ConnectionHandles(SQLHENV env) : envHandle_(env) {
-            connectionHandle_.alloc(env);
-        }
-
-        ~ConnectionHandles() {
-            clear();
-        }
-
-        void clear() {
-            connectionHandle_.free();
-        }
-
-        // Return a pointer to the connection handle instead of making a copy
-        OdbcConnectionHandle* connectionHandle() {
-            return &connectionHandle_;
-        }
-
-    private:
-        SQLHENV envHandle_;
-        OdbcConnectionHandle connectionHandle_;
-    };
+   // Updated ConnectionHandles class
+class ConnectionHandles {
+  public:
+      ConnectionHandles(std::shared_ptr<IOdbcEnvironmentHandle> env) 
+          : envHandle_(env),
+            connectionHandle_(create_connection_handle()) {
+          connectionHandle_->alloc(env->get_handle());
+      }
+  
+      ~ConnectionHandles() {
+          clear();
+      }
+  
+      void clear() {
+          if (connectionHandle_) {
+              connectionHandle_->free();
+          }
+      }
+  
+      // Return the interface pointer
+      std::shared_ptr<IOdbcConnectionHandle> connectionHandle() {
+          return connectionHandle_;
+      }
+  
+  private:
+      std::shared_ptr<IOdbcEnvironmentHandle> envHandle_;
+      std::shared_ptr<IOdbcConnectionHandle> connectionHandle_;
+  };
 }
