@@ -3,9 +3,12 @@
 #include <vector>
 #include <memory>
 #include <mutex>
-#include <odbc_handles.h>
-#include <odbc_common.h>
+#include "odbc_handles.h"
+#include "odbc_common.h"
 #include "odbc_environment.h"
+#include "odbc_transaction_manager.h"
+#include "odbc_error_handler.h"
+#include "odbc_query_executor.h"
 
 namespace mssql
 {
@@ -42,35 +45,35 @@ namespace mssql
   public:
     // Constructor now takes an environment parameter
     explicit OdbcConnection(std::shared_ptr<IOdbcEnvironment> environment = nullptr);
-    ~OdbcConnection();
+    ~OdbcConnection() override;
 
     // Static method to initialize a shared ODBC environment (legacy compatibility)
     static bool InitializeEnvironment();
 
     // Open a connection to the database
-    bool Open(const std::string &connectionString, int timeout = 0);
+    bool Open(const std::string &connectionString, int timeout = 0) override;
     bool ExecuteQuery(
         const std::string &sqlText,
         const std::vector<std::shared_ptr<QueryParameter>> &parameters,
-        std::shared_ptr<QueryResult> &result);
+        std::shared_ptr<QueryResult> &result) override;
 
     // Close the connection
-    bool Close();
+    bool Close() override;
 
     // Check if the connection is open
-    bool IsConnected() const;
+    bool IsConnected() const override;
 
     // Begin a transaction
-    bool BeginTransaction();
+    bool BeginTransaction() override;
 
     // Commit a transaction
-    bool CommitTransaction();
+    bool CommitTransaction() override;
 
     // Rollback a transaction
-    bool RollbackTransaction();
+    bool RollbackTransaction() override;
 
     // Get connection errors
-    const std::vector<std::shared_ptr<OdbcError>> &GetErrors() const;
+    const std::vector<std::shared_ptr<OdbcError>> &GetErrors() const override;
 
   private:
     // Connection state enum
@@ -94,6 +97,15 @@ namespace mssql
 
     // Statement cache
     std::shared_ptr<OdbcStatementCache> _statements;
+
+    // Transaction manager
+    std::shared_ptr<OdbcTransactionManager> _transactionManager;
+
+    // Error handler
+    std::shared_ptr<OdbcErrorHandler> _errorHandler;
+
+    // Query executor
+    std::shared_ptr<OdbcQueryExecutor> _queryExecutor;
 
     // Error collection
     std::shared_ptr<std::vector<std::shared_ptr<OdbcError>>> _errors;
