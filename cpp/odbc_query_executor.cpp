@@ -1,5 +1,6 @@
 #include "odbc_query_executor.h"
-#include <Windows.h>
+#include "platform.h"
+#include "string_utils.h"
 #include <Logger.h>
 
 namespace mssql
@@ -64,44 +65,7 @@ namespace mssql
   std::shared_ptr<std::vector<uint16_t>> OdbcQueryExecutor::ConvertToWideString(
       const std::string &text)
   {
-    // First convert UTF-8 to UTF-16 using Windows API
-    int wideLength = MultiByteToWideChar(
-        CP_UTF8,      // Source encoding (UTF-8)
-        0,            // Conversion flags
-        text.c_str(), // Source string
-        -1,           // Source length (-1 for null-terminated)
-        nullptr,      // Output buffer (nullptr for length calculation)
-        0             // Output buffer size (0 for length calculation)
-    );
-
-    if (wideLength == 0)
-    {
-      SQL_LOG_ERROR("Failed to calculate required buffer size for string conversion");
-      return std::make_shared<std::vector<uint16_t>>();
-    }
-
-    // Allocate buffer for wide string
-    std::vector<wchar_t> wideBuffer(wideLength);
-
-    // Perform the actual conversion
-    if (MultiByteToWideChar(
-            CP_UTF8,
-            0,
-            text.c_str(),
-            -1,
-            wideBuffer.data(),
-            wideLength) == 0)
-    {
-      SQL_LOG_ERROR("Failed to convert string to UTF-16");
-      return std::make_shared<std::vector<uint16_t>>();
-    }
-
-    // Create the final uint16_t vector (excluding null terminator)
-    auto result = std::make_shared<std::vector<uint16_t>>(
-        reinterpret_cast<uint16_t *>(wideBuffer.data()),
-        reinterpret_cast<uint16_t *>(wideBuffer.data() + wideLength - 1));
-
-    return result;
+    return StringUtils::Utf8ToUtf16(text);
   }
 
   bool OdbcQueryExecutor::BindParameters(
