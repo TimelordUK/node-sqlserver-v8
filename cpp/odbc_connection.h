@@ -9,6 +9,7 @@
 #include "odbc_transaction_manager.h"
 #include "odbc_error_handler.h"
 #include "odbc_query_executor.h"
+#include "odbc_error.h"
 
 namespace mssql
 {
@@ -17,6 +18,7 @@ namespace mssql
   class OdbcStatementCache;
   class QueryParameter;
   class QueryResult;
+  class IOdbcApi;
 
   class IOdbcConnection
   {
@@ -44,7 +46,9 @@ namespace mssql
   {
   public:
     // Constructor now takes an environment parameter
-    explicit OdbcConnection(std::shared_ptr<IOdbcEnvironment> environment = nullptr);
+    explicit OdbcConnection(
+        std::shared_ptr<IOdbcEnvironment> environment = nullptr,
+        std::shared_ptr<IOdbcApi> odbcApi = nullptr);
     ~OdbcConnection() override;
 
     // Static method to initialize a shared ODBC environment (legacy compatibility)
@@ -112,6 +116,9 @@ namespace mssql
 
     // Critical section for thread safety
     std::mutex _connectionMutex;
+
+    // Additional member
+    std::shared_ptr<IOdbcApi> _odbcApi;
 
     // Helper methods
     bool TryClose();

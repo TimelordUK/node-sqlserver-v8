@@ -5,6 +5,7 @@
 #include "odbc_handles.h"
 #include "query_result.h"
 #include "string_utils.h"
+#include "iodbc_api.h"
 #include <Logger.h>
 #include <iostream>
 
@@ -15,8 +16,11 @@ namespace mssql
   std::shared_ptr<IOdbcEnvironment> OdbcConnection::sharedEnvironment_;
 
   // OdbcConnection implementation
-  OdbcConnection::OdbcConnection(std::shared_ptr<IOdbcEnvironment> environment)
-      : connectionState(ConnectionState::ConnectionClosed)
+  OdbcConnection::OdbcConnection(
+      std::shared_ptr<IOdbcEnvironment> environment,
+      std::shared_ptr<IOdbcApi> odbcApi)
+      : connectionState(ConnectionState::ConnectionClosed),
+        _odbcApi(odbcApi ? odbcApi : std::make_shared<RealOdbcApi>())
   {
     // Set up environment
     if (environment)
@@ -176,7 +180,7 @@ namespace mssql
         if (connection)
         {
           SQL_LOG_DEBUG("SQLDisconnect");
-          SQLDisconnect(connection->get_handle());
+          _odbcApi->SQLDisconnect(connection->get_handle());
         }
         _connectionHandles->clear();
       }
@@ -205,7 +209,7 @@ namespace mssql
       auto *const to = reinterpret_cast<SQLPOINTER>(static_cast<long long>(timeout));
 
       // Set connection timeout
-      auto ret = SQLSetConnectAttr(connection->get_handle(), SQL_ATTR_CONNECTION_TIMEOUT, to, 0);
+      auto ret = _odbcApi->SQLSetConnectAttr(connection->get_handle(), SQL_ATTR_CONNECTION_TIMEOUT, to, 0);
       if (!SQL_SUCCEEDED(ret))
       {
         SQL_LOG_ERROR("Failed to set connection timeout SQL_ATTR_CONNECTION_TIMEOUT");
@@ -213,7 +217,7 @@ namespace mssql
       }
 
       // Set login timeout
-      ret = SQLSetConnectAttr(connection->get_handle(), SQL_ATTR_LOGIN_TIMEOUT, to, 0);
+      ret = _odbcApi->SQLSetConnectAttr(connection->get_handle(), SQL_ATTR_LOGIN_TIMEOUT, to, 0);
       if (!SQL_SUCCEEDED(ret))
       {
         SQL_LOG_ERROR("Failed to set connection timeout SQL_ATTR_LOGIN_TIMEOUT");
@@ -246,18 +250,18 @@ namespace mssql
       return false;
     }
 
-    ret = SQLSetConnectAttr(connection->get_handle(), SQL_COPT_SS_BCP,
-                            reinterpret_cast<SQLPOINTER>(SQL_BCP_ON), SQL_IS_INTEGER);
+    ret = _odbcApi->SQLSetConnectAttr(connection->get_handle(), SQL_COPT_SS_BCP,
+                                      reinterpret_cast<SQLPOINTER>(SQL_BCP_ON), SQL_IS_INTEGER);
     if (!_errorHandler->CheckOdbcError(ret))
     {
       SQL_LOG_ERROR("Failed to set BCP option");
       return false;
     }
 
-    ret = SQLDriverConnect(connection->get_handle(), nullptr,
-                           reinterpret_cast<SQLWCHAR *>(connection_string->data()),
-                           connection_string->size(), nullptr, 0, nullptr,
-                           SQL_DRIVER_NOPROMPT);
+    ret = _odbcApi->SQLDriverConnect(connection->get_handle(), nullptr,
+                                     reinterpret_cast<SQLWCHAR *>(connection_string->data()),
+                                     connection_string->size(), nullptr, 0, nullptr,
+                                     SQL_DRIVER_NOPROMPT);
 
     if (!_errorHandler->CheckOdbcError(ret))
     {
