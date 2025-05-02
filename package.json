@@ -68,7 +68,8 @@
     "sequelize": "^6.37.5",
     "source-map-support": "^0.5.21",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "rimraf": "^5.0.5"
   },
   "os": [
     "win32",
@@ -93,7 +94,9 @@
     "test:cpp:debug": "npm run configure:cpp-tests && cmake --build test/cpp/build --config Debug -j 8 && cd test/cpp/build && ctest -C Debug -V",
     "test:cpp:debug:exe": "test/cpp/build/Debug/cpp_tests.exe",
     "lint": "eslint \"src/**/*.ts\"",
-    "lint:fix": "eslint \"src/**/*.ts\" --fix"
+    "lint:fix": "eslint \"src/**/*.ts\" --fix",
+    "test:cpp:clean": "rimraf test/cpp/build && npm run configure:cpp-tests && cmake --build test/cpp/build --config Debug -j 8",
+    "test:cpp:clean:vs": "rimraf test/cpp/build && npm run configure:cpp-tests:vs && cmake --build test/cpp/build --config Debug -j 8"
   },
   "directories": {}
 }
