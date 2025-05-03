@@ -96,7 +96,12 @@
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
     "test:cpp:clean": "rimraf test/cpp/build && npm run configure:cpp-tests && cmake --build test/cpp/build --config Debug -j 8",
-    "test:cpp:clean:vs": "rimraf test/cpp/build && npm run configure:cpp-tests:vs && cmake --build test/cpp/build --config Debug -j 8"
+    "test:cpp:clean:vs": "rimraf test/cpp/build && npm run configure:cpp-tests:vs && cmake --build test/cpp/build --config Debug -j 8",
+    "build:debug": "node-gyp rebuild --debug --verbose",
+    "build:debug:verbose": "node-gyp rebuild --debug --verbose --loglevel=verbose",
+    "build:release": "node-gyp rebuild --release --verbose",
+    "build:release:verbose": "node-gyp rebuild --release --verbose --loglevel=verbose",
+    "build:clean": "node-gyp clean && node-gyp configure && node-gyp rebuild"
   },
   "directories": {}
 }

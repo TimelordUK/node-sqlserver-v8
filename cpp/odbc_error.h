@@ -2,7 +2,6 @@
 
 #include <platform.h>
 #include <odbc_common.h>
-#include <odbc_handles.h>
 #include <memory>
 #include <mutex>
 #include <vector>

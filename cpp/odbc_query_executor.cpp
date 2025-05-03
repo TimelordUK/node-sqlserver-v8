@@ -1,6 +1,7 @@
 #include "odbc_query_executor.h"
 #include "platform.h"
 #include "string_utils.h"
+#include "odbc_statement_factory.h"
 #include <Logger.h>
 
 namespace mssql
@@ -25,7 +26,7 @@ namespace mssql
     SQL_LOG_DEBUG_STREAM("Parameter count: " << parameters.size());
 
     // Create a statement using our factory method
-    auto stmt = create_statement_handle();
+    auto stmt = OdbcStatementFactory::createStatement();
     if (!stmt->alloc(_connectionHandles->connectionHandle()->get_handle()))
     {
       SQL_LOG_ERROR("unable to allocate statement handle");
@@ -72,11 +73,16 @@ namespace mssql
       IOdbcStatementHandle *stmt,
       const std::vector<std::shared_ptr<QueryParameter>> &parameters)
   {
-
     for (size_t i = 0; i < parameters.size(); i++)
     {
-      // TODO: Implement parameter binding based on type
-      // This would be complex and depend on your parameter handling
+      const auto &param = parameters[i];
+      auto ret = param->bind(stmt->get_handle());
+
+      if (!_errorHandler->CheckOdbcError(ret))
+      {
+        SQL_LOG_ERROR("Parameter binding failed");
+        return false;
+      }
     }
     return true;
   }
@@ -85,10 +91,14 @@ namespace mssql
       IOdbcStatementHandle *stmt,
       std::shared_ptr<QueryResult> &result)
   {
-
     // Get column information
     SQLSMALLINT numCols = 0;
-    SQLNumResultCols(stmt->get_handle(), &numCols);
+    auto ret = SQLNumResultCols(stmt->get_handle(), &numCols);
+    if (!_errorHandler->CheckOdbcError(ret))
+    {
+      SQL_LOG_ERROR("SQLNumResultCols failed");
+      return false;
+    }
 
     // For each column, get name and type
     for (SQLSMALLINT i = 1; i <= numCols; i++)
@@ -96,54 +106,219 @@ namespace mssql
       SQLWCHAR colName[256];
       SQLSMALLINT colNameLen;
       SQLSMALLINT dataType;
+      SQLULEN columnSize;
+      SQLSMALLINT decimalDigits;
+      SQLSMALLINT nullable;
 
-      SQLDescribeCol(stmt->get_handle(), i, colName, sizeof(colName) / sizeof(SQLWCHAR),
-                     &colNameLen, &dataType, NULL, NULL, NULL);
+      ret = SQLDescribeCol(stmt->get_handle(), i, colName, sizeof(colName) / sizeof(SQLWCHAR),
+                           &colNameLen, &dataType, &columnSize, &decimalDigits, &nullable);
 
-      // Convert to string using your conversion utilities
-      std::string colNameStr = odbcstr::swcvec2str(
-          std::vector<SQLWCHAR>(colName, colName + colNameLen),
-          colNameLen);
+      if (!_errorHandler->CheckOdbcError(ret))
+      {
+        SQL_LOG_ERROR("SQLDescribeCol failed");
+        return false;
+      }
 
+      // Convert column name to string using StringUtils
+      std::string colNameStr = StringUtils::WideToUtf8(colName, colNameLen);
       result->addColumn(colNameStr, dataType);
     }
 
-    // Fetch rows
-    while (SQL_SUCCEEDED(SQLFetch(stmt->get_handle())))
+    // Create DatumStorage instances for each column
+    std::vector<std::shared_ptr<DatumStorage>> columnStorage;
+    columnStorage.reserve(numCols);
+
+    for (SQLSMALLINT i = 1; i <= numCols; i++)
     {
+      auto storage = std::make_shared<DatumStorage>();
+      // Set type based on SQL type
+      storage->setType(MapSqlTypeToDatumType(result->getColumnType(i - 1)));
+      columnStorage.push_back(storage);
+    }
+
+    // Fetch rows
+    while (true)
+    {
+      ret = SQLFetch(stmt->get_handle());
+      if (ret == SQL_NO_DATA)
+        break;
+
+      if (!_errorHandler->CheckOdbcError(ret))
+      {
+        SQL_LOG_ERROR("SQLFetch failed");
+        return false;
+      }
+
       std::vector<std::string> rowData;
+      rowData.reserve(numCols);
 
       for (SQLSMALLINT i = 1; i <= numCols; i++)
       {
-        SQLWCHAR buffer[4096];
         SQLLEN indicator;
+        auto &storage = columnStorage[i - 1];
 
-        auto ret = SQLGetData(stmt->get_handle(), i, SQL_C_WCHAR, buffer, sizeof(buffer), &indicator);
+        // Get data based on type
+        ret = GetColumnData(stmt->get_handle(), i, storage.get(), &indicator);
 
-        if (SQL_SUCCEEDED(ret))
+        if (!_errorHandler->CheckOdbcError(ret))
         {
-          if (indicator == SQL_NULL_DATA)
-          {
-            rowData.emplace_back("NULL");
-          }
-          else
-          {
-            // Convert to string
-            std::string value = odbcstr::swcvec2str(
-                std::vector<SQLWCHAR>(buffer, buffer + (indicator / sizeof(SQLWCHAR))),
-                indicator / sizeof(SQLWCHAR));
-            rowData.push_back(value);
-          }
+          SQL_LOG_ERROR("GetColumnData failed");
+          return false;
+        }
+
+        if (indicator == SQL_NULL_DATA)
+        {
+          rowData.emplace_back("NULL");
         }
         else
         {
-          rowData.emplace_back("ERROR");
+          // Convert data to string representation
+          rowData.push_back(storage->getDebugString(true, 1, true));
         }
       }
 
       result->addRow(rowData);
     }
+
     return true;
+  }
+
+  // Helper method to map SQL types to DatumStorage types
+  DatumStorage::SqlType OdbcQueryExecutor::MapSqlTypeToDatumType(SQLSMALLINT sqlType)
+  {
+    switch (sqlType)
+    {
+    case SQL_CHAR:
+    case SQL_VARCHAR:
+    case SQL_LONGVARCHAR:
+      return DatumStorage::SqlType::VarChar;
+
+    case SQL_WCHAR:
+    case SQL_WVARCHAR:
+    case SQL_WLONGVARCHAR:
+      return DatumStorage::SqlType::NVarChar;
+
+    case SQL_DECIMAL:
+    case SQL_NUMERIC:
+      return DatumStorage::SqlType::Decimal;
+
+    case SQL_INTEGER:
+      return DatumStorage::SqlType::Integer;
+
+    case SQL_SMALLINT:
+      return DatumStorage::SqlType::SmallInt;
+
+    case SQL_FLOAT:
+    case SQL_REAL:
+    case SQL_DOUBLE:
+      return DatumStorage::SqlType::Double;
+
+    case SQL_BIT:
+      return DatumStorage::SqlType::Bit;
+
+    case SQL_TINYINT:
+      return DatumStorage::SqlType::TinyInt;
+
+    case SQL_BIGINT:
+      return DatumStorage::SqlType::BigInt;
+
+    case SQL_BINARY:
+    case SQL_VARBINARY:
+    case SQL_LONGVARBINARY:
+      return DatumStorage::SqlType::Binary;
+
+    case SQL_TYPE_DATE:
+      return DatumStorage::SqlType::Date;
+
+    case SQL_TYPE_TIME:
+      return DatumStorage::SqlType::Time;
+
+    case SQL_TYPE_TIMESTAMP:
+      return DatumStorage::SqlType::DateTime;
+
+    default:
+      return DatumStorage::SqlType::VarChar;
+    }
+  }
+
+  // Helper method to get column data into DatumStorage
+  SQLRETURN OdbcQueryExecutor::GetColumnData(SQLHSTMT hStmt, SQLSMALLINT colNum,
+                                             DatumStorage *storage, SQLLEN *indicator)
+  {
+    switch (storage->getType())
+    {
+    case DatumStorage::SqlType::Integer:
+    {
+      SQLINTEGER value;
+      return SQLGetData(hStmt, colNum, SQL_C_SLONG, &value, sizeof(value), indicator);
+    }
+
+    case DatumStorage::SqlType::SmallInt:
+    {
+      SQLSMALLINT value;
+      return SQLGetData(hStmt, colNum, SQL_C_SSHORT, &value, sizeof(value), indicator);
+    }
+
+    case DatumStorage::SqlType::TinyInt:
+    {
+      SQLCHAR value;
+      return SQLGetData(hStmt, colNum, SQL_C_TINYINT, &value, sizeof(value), indicator);
+    }
+
+    case DatumStorage::SqlType::BigInt:
+    {
+      SQLBIGINT value;
+      return SQLGetData(hStmt, colNum, SQL_C_SBIGINT, &value, sizeof(value), indicator);
+    }
+
+    case DatumStorage::SqlType::Double:
+    {
+      SQLDOUBLE value;
+      return SQLGetData(hStmt, colNum, SQL_C_DOUBLE, &value, sizeof(value), indicator);
+    }
+
+    case DatumStorage::SqlType::Bit:
+    {
+      SQLCHAR value;
+      return SQLGetData(hStmt, colNum, SQL_C_BIT, &value, sizeof(value), indicator);
+    }
+
+    case DatumStorage::SqlType::VarChar:
+    case DatumStorage::SqlType::NVarChar:
+    {
+      SQLWCHAR buffer[4096];
+      return SQLGetData(hStmt, colNum, SQL_C_WCHAR, buffer, sizeof(buffer), indicator);
+    }
+
+    case DatumStorage::SqlType::Binary:
+    {
+      SQLCHAR buffer[4096];
+      return SQLGetData(hStmt, colNum, SQL_C_BINARY, buffer, sizeof(buffer), indicator);
+    }
+
+    case DatumStorage::SqlType::Date:
+    {
+      SQL_DATE_STRUCT value;
+      return SQLGetData(hStmt, colNum, SQL_C_DATE, &value, sizeof(value), indicator);
+    }
+
+    case DatumStorage::SqlType::Time:
+    {
+      SQL_TIME_STRUCT value;
+      return SQLGetData(hStmt, colNum, SQL_C_TIME, &value, sizeof(value), indicator);
+    }
+
+    case DatumStorage::SqlType::DateTime:
+    {
+      SQL_TIMESTAMP_STRUCT value;
+      return SQLGetData(hStmt, colNum, SQL_C_TIMESTAMP, &value, sizeof(value), indicator);
+    }
+
+    default:
+      // Default to string for unknown types
+      SQLWCHAR buffer[4096];
+      return SQLGetData(hStmt, colNum, SQL_C_WCHAR, buffer, sizeof(buffer), indicator);
+    }
   }
 
 } // namespace mssql

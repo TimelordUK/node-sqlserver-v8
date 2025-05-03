@@ -1,4 +1,11 @@
 // ReSharper disable CppInconsistentNaming
+#include <thread>
+#include <chrono>
+#include <functional>
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "Connection.h"
 #include "odbc_connection.h"
 #include "odbc_environment.h"
@@ -6,9 +13,6 @@
 #include "query_parameter.h"
 #include "query_result.h"
 #include "parameter_set.h"
-#include "odbc_error.h"
-#include <thread>
-#include <chrono>
 
 namespace mssql
 {
@@ -73,7 +77,7 @@ namespace mssql
         IOdbcConnection *connection,
         Connection *parent,
         ConnectionOp operation,
-        SuccessCallback onSuccess = []() {}) // Add a success callback
+        SuccessCallback onSuccess = []() {})
         : AsyncWorker(callback),
           parent_(parent),
           connection_(connection),
@@ -81,18 +85,17 @@ namespace mssql
           onSuccess_(std::move(onSuccess))
     {
     }
+
     void Execute() override
     {
       SQL_LOG_DEBUG("Executing ConnectionWorker");
 
       try
       {
-        // Call the operation
         result_ = operation_(connection_);
 
         if (!result_)
         {
-          // If failed, get error information
           const auto &errors = connection_->GetErrors();
           if (!errors.empty())
           {
@@ -114,6 +117,10 @@ namespace mssql
       catch (const std::exception &e)
       {
         SetError(e.what());
+      }
+      catch (...)
+      {
+        SetError("Unknown error occurred");
       }
     }
 

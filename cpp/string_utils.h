@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <sql.h>
+#include <sqlext.h>
 
 namespace mssql
 {
@@ -11,6 +13,9 @@ namespace mssql
   public:
     // Convert UTF-8 string to UTF-16 vector
     static std::shared_ptr<std::vector<uint16_t>> Utf8ToUtf16(const std::string &utf8Str);
+
+    // Convert SQLWCHAR array to UTF-8 string
+    static std::string WideToUtf8(const SQLWCHAR *wideStr, SQLSMALLINT length);
 
   private:
     // Helper functions for UTF-8 to UTF-16 conversion

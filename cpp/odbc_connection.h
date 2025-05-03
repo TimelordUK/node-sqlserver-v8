@@ -1,15 +1,20 @@
 #pragma once
+
+// Standard library includes
 #include <string>
 #include <vector>
 #include <memory>
 #include <mutex>
-#include "odbc_handles.h"
-#include "odbc_common.h"
-#include "odbc_environment.h"
-#include "odbc_transaction_manager.h"
-#include "odbc_error_handler.h"
-#include "odbc_query_executor.h"
+#include <unordered_map>
+
+// ODBC headers
+#include <sql.h>
+#include <sqlext.h>
+
+// Project includes
+#include "odbc_statement.h"
 #include "odbc_error.h"
+#include "odbc_query_executor.h"
 
 namespace mssql
 {
@@ -19,6 +24,15 @@ namespace mssql
   class QueryParameter;
   class QueryResult;
   class IOdbcApi;
+  class OdbcQueryExecutor;
+  class IOdbcEnvironmentHandle;
+  class IOdbcConnectionHandle;
+  class IOdbcStatementHandle;
+  class ConnectionHandles;
+  class OdbcErrorHandler;
+  class OdbcStatement;
+  class IOdbcEnvironment;
+  class OdbcTransactionManager;
 
   class IOdbcConnection
   {
@@ -33,6 +47,19 @@ namespace mssql
     virtual bool CommitTransaction() = 0;
     virtual bool RollbackTransaction() = 0;
 
+    // Statement management
+    virtual std::shared_ptr<OdbcStatement> CreateStatement(
+        OdbcStatement::Type type,
+        const std::string &query,
+        const std::string &tvpType = "") = 0;
+
+    virtual std::shared_ptr<OdbcStatement> GetPreparedStatement(
+        const std::string &statementId) = 0;
+
+    virtual bool ReleasePreparedStatement(
+        const std::string &statementId) = 0;
+
+    // Legacy ExecuteQuery for backward compatibility
     virtual bool ExecuteQuery(
         const std::string &sqlText,
         const std::vector<std::shared_ptr<QueryParameter>> &parameters,
@@ -56,15 +83,7 @@ namespace mssql
 
     // Open a connection to the database
     bool Open(const std::string &connectionString, int timeout = 0) override;
-    bool ExecuteQuery(
-        const std::string &sqlText,
-        const std::vector<std::shared_ptr<QueryParameter>> &parameters,
-        std::shared_ptr<QueryResult> &result) override;
-
-    // Close the connection
     bool Close() override;
-
-    // Check if the connection is open
     bool IsConnected() const override;
 
     // Begin a transaction
@@ -75,6 +94,24 @@ namespace mssql
 
     // Rollback a transaction
     bool RollbackTransaction() override;
+
+    // Statement management
+    std::shared_ptr<OdbcStatement> CreateStatement(
+        OdbcStatement::Type type,
+        const std::string &query,
+        const std::string &tvpType = "") override;
+
+    std::shared_ptr<OdbcStatement> GetPreparedStatement(
+        const std::string &statementId) override;
+
+    bool ReleasePreparedStatement(
+        const std::string &statementId) override;
+
+    // Legacy ExecuteQuery implementation
+    bool ExecuteQuery(
+        const std::string &sqlText,
+        const std::vector<std::shared_ptr<QueryParameter>> &parameters,
+        std::shared_ptr<QueryResult> &result) override;
 
     // Get connection errors
     const std::vector<std::shared_ptr<OdbcError>> &GetErrors() const override;
@@ -99,9 +136,6 @@ namespace mssql
     // Connection handles
     std::shared_ptr<ConnectionHandles> _connectionHandles;
 
-    // Statement cache
-    std::shared_ptr<OdbcStatementCache> _statements;
-
     // Transaction manager
     std::shared_ptr<OdbcTransactionManager> _transactionManager;
 
@@ -119,6 +153,10 @@ namespace mssql
 
     // Additional member
     std::shared_ptr<IOdbcApi> _odbcApi;
+
+    // Statement management
+    std::unordered_map<std::string, std::shared_ptr<OdbcStatement>> _preparedStatements;
+    std::mutex _statementMutex;
 
     // Helper methods
     bool TryClose();

@@ -11,11 +11,12 @@ namespace mssql
   {
   public:
     explicit OdbcErrorHandler(std::shared_ptr<ConnectionHandles> connectionHandles);
+    virtual ~OdbcErrorHandler() = default;
 
-    bool CheckOdbcError(SQLRETURN ret);
-    bool ReturnOdbcError();
-    const std::vector<std::shared_ptr<OdbcError>> &GetErrors() const;
-    void ClearErrors();
+    virtual bool CheckOdbcError(SQLRETURN ret);
+    virtual bool ReturnOdbcError();
+    virtual const std::vector<std::shared_ptr<OdbcError>> &GetErrors() const;
+    virtual void ClearErrors();
 
   private:
     std::shared_ptr<ConnectionHandles> _connectionHandles;

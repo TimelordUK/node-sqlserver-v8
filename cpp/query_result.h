@@ -5,6 +5,7 @@
 #include <mutex>
 #include <string>
 #include <memory>
+#include <vector>
 
 namespace mssql
 {
@@ -21,6 +22,16 @@ namespace mssql
     void addRow(const std::vector<std::string> &rowData)
     {
       rows_.push_back(rowData);
+    }
+
+    // Get column type by index
+    int getColumnType(size_t index) const
+    {
+      if (index < columns_.size())
+      {
+        return columns_[index].sqlType;
+      }
+      throw std::out_of_range("Column index out of range");
     }
 
     // Method to convert to JavaScript object

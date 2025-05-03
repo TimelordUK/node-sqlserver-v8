@@ -20,7 +20,6 @@
 #include <numeric>
 #include <memory>
 #include <mutex>
-#include <atomic>
 #include <thread>
 #include <chrono>
 #include "Logger.h"
