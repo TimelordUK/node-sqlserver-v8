@@ -262,7 +262,7 @@ namespace mssql
 
     // Set connection timeout
     auto ret = _odbcApi->SQLSetConnectAttr(connection->get_handle(), SQL_ATTR_CONNECTION_TIMEOUT,
-                                           reinterpret_cast<SQLPOINTER>(timeout), SQL_IS_INTEGER);
+                                           reinterpret_cast<SQLPOINTER>(static_cast<intptr_t>(timeout)), SQL_IS_INTEGER);
     if (!_errorHandler->CheckOdbcError(ret))
     {
       SQL_LOG_ERROR("Failed to set connection timeout");
@@ -271,7 +271,7 @@ namespace mssql
 
     // Set login timeout
     ret = _odbcApi->SQLSetConnectAttr(connection->get_handle(), SQL_ATTR_LOGIN_TIMEOUT,
-                                      reinterpret_cast<SQLPOINTER>(timeout), SQL_IS_INTEGER);
+                                      reinterpret_cast<SQLPOINTER>(static_cast<intptr_t>(timeout)), SQL_IS_INTEGER);
     if (!_errorHandler->CheckOdbcError(ret))
     {
       SQL_LOG_ERROR("Failed to set login timeout");
@@ -289,7 +289,9 @@ namespace mssql
 
     ret = _odbcApi->SQLDriverConnect(connection->get_handle(), nullptr,
                                      reinterpret_cast<SQLWCHAR *>(connection_string->data()),
-                                     connection_string->size(), nullptr, 0, nullptr,
+                                     static_cast<SQLSMALLINT>(std::min(connection_string->size(),
+                                                                       static_cast<size_t>(SQL_MAX_SQLSERVERNAME))),
+                                     nullptr, 0, nullptr,
                                      SQL_DRIVER_NOPROMPT);
 
     if (!_errorHandler->CheckOdbcError(ret))

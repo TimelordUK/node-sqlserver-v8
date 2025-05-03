@@ -107,7 +107,10 @@ namespace mssql
         auto c_state = odbcstr::swcvec2str(sql_state, sql_state.size());
         const auto m = string(c_msg);
         SQLGetDiagField(HandleType, handle_, i, SQL_DIAG_SS_SEVERITY, &severity, SQL_IS_INTEGER, nullptr);
-        SQLGetDiagField(HandleType, handle_, i, SQL_DIAG_SS_SRVNAME, serverName.data(), serverName.capacity(), &serverName_len);
+        SQLGetDiagField(HandleType, handle_, i, SQL_DIAG_SS_SRVNAME, serverName.data(),
+                        static_cast<SQLSMALLINT>(std::min(serverName.capacity(),
+                                                          static_cast<size_t>(SQL_MAX_SQLSERVERNAME))),
+                        &serverName_len);
         const string c_serverName = odbcstr::trim(serverName, serverName_len);
         SQLGetDiagField(HandleType, handle_, i, SQL_DIAG_SS_PROCNAME, procName.data(), procName.capacity(), &procName_len);
         const string c_procName = odbcstr::trim(procName, procName_len);
