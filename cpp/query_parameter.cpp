@@ -2,6 +2,7 @@
 #include <platform.h>
 #include "query_parameter.h"
 #include <Logger.h>
+#include "iodbc_api.h"
 
 namespace mssql
 {
@@ -20,7 +21,7 @@ namespace mssql
     }
   }
 
-  SQLRETURN QueryParameter::bind(SQLHSTMT hstmt)
+  SQLRETURN QueryParameter::bind(SQLHSTMT hstmt, std::shared_ptr<IOdbcApi> api)
   {
     if (!storage_)
     {
@@ -39,7 +40,7 @@ namespace mssql
     indicators_[0] = storage_->getIndicator();
 
     // Bind the parameter
-    return SQLBindParameter(
+    return api->SQLBindParameter(
         hstmt,             // Statement handle
         index_,            // Parameter number
         param_type_,       // Input/Output type

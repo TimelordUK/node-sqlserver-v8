@@ -6,28 +6,67 @@
 namespace mssql
 {
 
-  class MockOdbcApi : public IOdbcApi
-  {
-  public:
-    MOCK_METHOD(SQLRETURN, SQLDisconnect, (SQLHDBC ConnectionHandle), (override));
+    class MockOdbcApi : public IOdbcApi
+    {
+    public:
+        // Connection methods
+        MOCK_METHOD(SQLRETURN, SQLDisconnect, (SQLHDBC ConnectionHandle), (override));
+        MOCK_METHOD(SQLRETURN, SQLSetConnectAttr,
+            (SQLHDBC ConnectionHandle,
+                SQLINTEGER Attribute,
+                SQLPOINTER Value,
+                SQLINTEGER StringLength),
+            (override));
+        MOCK_METHOD(SQLRETURN, SQLDriverConnect,
+            (SQLHDBC ConnectionHandle,
+                SQLHWND WindowHandle,
+                SQLWCHAR* InConnectionString,
+                SQLSMALLINT StringLength1,
+                SQLWCHAR* OutConnectionString,
+                SQLSMALLINT BufferLength,
+                SQLSMALLINT* StringLength2Ptr,
+                SQLUSMALLINT DriverCompletion),
+            (override));
 
-    MOCK_METHOD(SQLRETURN, SQLSetConnectAttr,
-                (SQLHDBC ConnectionHandle,
-                 SQLINTEGER Attribute,
-                 SQLPOINTER Value,
-                 SQLINTEGER StringLength),
-                (override));
-
-    MOCK_METHOD(SQLRETURN, SQLDriverConnect,
-                (SQLHDBC ConnectionHandle,
-                 SQLHWND WindowHandle,
-                 SQLWCHAR *InConnectionString,
-                 SQLSMALLINT StringLength1,
-                 SQLWCHAR *OutConnectionString,
-                 SQLSMALLINT BufferLength,
-                 SQLSMALLINT *StringLength2Ptr,
-                 SQLUSMALLINT DriverCompletion),
-                (override));
-  };
-
+        // Statement methods - always using 'W' versions where applicable
+        MOCK_METHOD(SQLRETURN, SQLExecute, (SQLHSTMT StatementHandle), (override));
+        MOCK_METHOD(SQLRETURN, SQLNumResultCols, (SQLHSTMT StatementHandle, SQLSMALLINT* ColumnCount), (override));
+        MOCK_METHOD(SQLRETURN, SQLPrepareW,
+            (SQLHSTMT StatementHandle,
+                SQLWCHAR* StatementText,
+                SQLINTEGER TextLength),
+            (override));
+        MOCK_METHOD(SQLRETURN, SQLDescribeColW,
+            (SQLHSTMT StatementHandle,
+                SQLUSMALLINT ColumnNumber,
+                SQLWCHAR* ColumnName,
+                SQLSMALLINT BufferLength,
+                SQLSMALLINT* NameLength,
+                SQLSMALLINT* DataType,
+                SQLULEN* ColumnSize,
+                SQLSMALLINT* DecimalDigits,
+                SQLSMALLINT* Nullable),
+            (override));
+        MOCK_METHOD(SQLRETURN, SQLFetch, (SQLHSTMT StatementHandle), (override));
+        MOCK_METHOD(SQLRETURN, SQLGetData,
+            (SQLHSTMT StatementHandle,
+                SQLUSMALLINT ColumnNumber,
+                SQLSMALLINT TargetType,
+                SQLPOINTER TargetValue,
+                SQLLEN BufferLength,
+                SQLLEN* StrLen_or_Ind),
+            (override));
+        MOCK_METHOD(SQLRETURN, SQLBindParameter,
+            (SQLHSTMT hstmt,
+                SQLUSMALLINT ipar,
+                SQLSMALLINT fParamType,
+                SQLSMALLINT fCType,
+                SQLSMALLINT fSqlType,
+                SQLULEN cbColDef,
+                SQLSMALLINT ibScale,
+                SQLPOINTER rgbValue,
+                SQLLEN cbValueMax,
+                SQLLEN* pcbValue),
+            (override));
+    };
 }

@@ -10,6 +10,7 @@
 
 namespace mssql
 {
+    class IOdbcApi;
   /**
    * @brief Represents a parameter value that can be bound to an ODBC statement.
    * The actual parameter data is stored in DatumStorage and binding to ODBC is handled here.
@@ -24,7 +25,7 @@ namespace mssql
      * @param hstmt ODBC statement handle
      * @return SQL_SUCCESS if binding was successful, error code otherwise
      */
-    SQLRETURN bind(SQLHSTMT hstmt);
+    SQLRETURN bind(SQLHSTMT hstmt, std::shared_ptr<IOdbcApi> api);
 
     /**
      * @brief Get the parameter index (1-based as per ODBC)

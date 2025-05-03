@@ -2,15 +2,18 @@
 #include "odbc_query_executor.h"
 #include "string_utils.h"
 #include "odbc_statement_factory.h"
+#include "iodbc_api.h"
 #include <Logger.h>
 
 namespace mssql
 {
 
-  OdbcQueryExecutor::OdbcQueryExecutor(
+  OdbcQueryExecutor::OdbcQueryExecutor(std::shared_ptr<IOdbcApi> api,
       std::shared_ptr<ConnectionHandles> connectionHandles,
       std::shared_ptr<OdbcErrorHandler> errorHandler)
-      : _connectionHandles(connectionHandles),
+      :
+		_api(api),
+		_connectionHandles(connectionHandles),
         _errorHandler(errorHandler)
   {
   }
@@ -76,7 +79,7 @@ namespace mssql
     for (size_t i = 0; i < parameters.size(); i++)
     {
       const auto &param = parameters[i];
-      auto ret = param->bind(stmt->get_handle());
+      auto ret = param->bind(stmt->get_handle(), _api);
 
       if (!_errorHandler->CheckOdbcError(ret))
       {

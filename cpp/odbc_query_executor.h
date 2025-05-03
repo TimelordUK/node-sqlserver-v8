@@ -21,12 +21,14 @@ namespace mssql
 {
   // Forward declarations
   class IOdbcStatementHandle;
+  class IOdbcApi;
 
   class OdbcQueryExecutor
   {
   public:
-    OdbcQueryExecutor(std::shared_ptr<ConnectionHandles> connectionHandles,
-                      std::shared_ptr<OdbcErrorHandler> errorHandler);
+    OdbcQueryExecutor(std::shared_ptr<IOdbcApi> api,
+        std::shared_ptr<ConnectionHandles> connectionHandles,
+        std::shared_ptr<OdbcErrorHandler> errorHandler);
 
     bool ExecuteQuery(const std::string &sqlText,
                       const std::vector<std::shared_ptr<QueryParameter>> &parameters,
@@ -43,6 +45,7 @@ namespace mssql
 
     std::shared_ptr<ConnectionHandles> _connectionHandles;
     std::shared_ptr<OdbcErrorHandler> _errorHandler;
+    std::shared_ptr<IOdbcApi> _api;
   };
 
 } // namespace mssql

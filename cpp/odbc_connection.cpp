@@ -205,7 +205,7 @@ namespace mssql
     }
 
     // Create the statement using the factory
-    return StatementFactory::CreateStatement(
+    return StatementFactory::CreateStatement(_odbcApi,
         type, handle, _errorHandler, query, tvpType);
   }
 
