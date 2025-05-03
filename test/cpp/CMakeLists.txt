@@ -157,6 +157,10 @@ if(NOT WIN32)
     endif()
 endif()
 
+# Enable CTest and test discovery first
+enable_testing()
+include(GoogleTest)
+
 # Add test executable
 add_executable(cpp_tests ${SOURCE_FILES} ${TEST_SOURCE_FILES})
 
@@ -201,9 +205,11 @@ target_link_libraries(cpp_tests
     GTest::gmock_main
 )
 
-# Enable CTest
-include(GoogleTest)
+# Configure test discovery
 gtest_discover_tests(cpp_tests
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DISCOVERY_MODE PRE_TEST
-    PROPERTIES TIMEOUT 120
+    PROPERTIES 
+        TIMEOUT 120
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )

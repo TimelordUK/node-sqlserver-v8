@@ -92,7 +92,7 @@
     "build:cpp-tests": "cmake --build test/cpp/build --config Release -j 8",
     "test:cpp": "npm run configure:cpp-tests && npm run build:cpp-tests && cd test/cpp/build && ctest -C Release -V",
     "test:cpp:debug": "npm run configure:cpp-tests && cmake --build test/cpp/build --config Debug -j 8 && cd test/cpp/build && ctest -C Debug -V",
-    "test:cpp:debug:exe": "test/cpp/build/Debug/cpp_tests.exe",
+    "test:cpp:debug:exe": "test/cpp/build/cpp_tests --gtest_filter=\"*\"",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
     "test:cpp:clean": "rimraf test/cpp/build && npm run configure:cpp-tests && cmake --build test/cpp/build --config Debug -j 8",

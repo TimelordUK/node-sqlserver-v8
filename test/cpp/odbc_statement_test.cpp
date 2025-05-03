@@ -5,8 +5,10 @@
 
 using ::testing::_;
 using ::testing::AtLeast;
+using ::testing::DoAll;
 using ::testing::NiceMock;
 using ::testing::Return;
+using ::testing::SetArgReferee;
 
 namespace mssql
 {
@@ -25,6 +27,8 @@ namespace mssql
           .WillByDefault(Return(true));
       ON_CALL(*mockErrorHandler, CheckOdbcError(_))
           .WillByDefault(Return(true));
+      ON_CALL(*mockErrorHandler, ReturnOdbcError())
+          .WillByDefault(Return(false));
     }
 
     std::shared_ptr<MockOdbcStatementHandle> mockStmtHandle;
@@ -40,12 +44,15 @@ namespace mssql
     auto params = std::vector<std::shared_ptr<QueryParameter>>();
     auto result = std::make_shared<QueryResult>();
 
-    // Expect SQLPrepare and SQLExecute to be called
+    // Set up mock expectations
     EXPECT_CALL(*mockStmtHandle, get_handle())
         .Times(AtLeast(1));
     EXPECT_CALL(*mockErrorHandler, CheckOdbcError(_))
-        .Times(AtLeast(2)) // Once for prepare, once for execute
+        .Times(AtLeast(2))
         .WillRepeatedly(Return(true));
+    EXPECT_CALL(*mockErrorHandler, ReturnOdbcError())
+        .Times(AtLeast(0))
+        .WillRepeatedly(Return(false));
 
     // Act
     bool success = stmt.Execute(params, result);
@@ -63,12 +70,15 @@ namespace mssql
     auto params = std::vector<std::shared_ptr<QueryParameter>>();
     auto result = std::make_shared<QueryResult>();
 
-    // Expect SQLPrepare to be called during Prepare()
+    // Set up mock expectations
     EXPECT_CALL(*mockStmtHandle, get_handle())
         .Times(AtLeast(1));
     EXPECT_CALL(*mockErrorHandler, CheckOdbcError(_))
-        .Times(AtLeast(2)) // Once for prepare, once for execute
+        .Times(AtLeast(2))
         .WillRepeatedly(Return(true));
+    EXPECT_CALL(*mockErrorHandler, ReturnOdbcError())
+        .Times(AtLeast(0))
+        .WillRepeatedly(Return(false));
 
     // Act
     bool prepareSuccess = stmt.Prepare();
@@ -86,18 +96,23 @@ namespace mssql
     const std::string query = "INSERT INTO TestTable (id, name) VALUES (?, ?)";
     PreparedStatement stmt(mockStmtHandle, mockErrorHandler, query);
 
-    // Create parameters
-    auto param1 = std::make_shared<QueryParameter>(1, std::make_shared<DatumStorage>());
-    auto param2 = std::make_shared<QueryParameter>(2, std::make_shared<DatumStorage>());
+    // Create properly initialized parameters
+    auto storage1 = std::make_shared<DatumStorage>(DatumStorage::SqlType::Integer);
+    auto storage2 = std::make_shared<DatumStorage>(DatumStorage::SqlType::VarChar);
+    auto param1 = std::make_shared<QueryParameter>(1, storage1);
+    auto param2 = std::make_shared<QueryParameter>(2, storage2);
     std::vector<std::shared_ptr<QueryParameter>> params = {param1, param2};
     auto result = std::make_shared<QueryResult>();
 
-    // Expect multiple calls for prepare and parameter binding
+    // Set up mock expectations
     EXPECT_CALL(*mockStmtHandle, get_handle())
-        .Times(AtLeast(3)); // Prepare + 2 parameter bindings
+        .Times(AtLeast(3));
     EXPECT_CALL(*mockErrorHandler, CheckOdbcError(_))
-        .Times(AtLeast(4)) // Prepare + 2 bindings + execute
+        .Times(AtLeast(4))
         .WillRepeatedly(Return(true));
+    EXPECT_CALL(*mockErrorHandler, ReturnOdbcError())
+        .Times(AtLeast(0))
+        .WillRepeatedly(Return(false));
 
     // Act
     bool prepareSuccess = stmt.Prepare();
@@ -115,9 +130,11 @@ namespace mssql
     const std::string query = "INVALID SQL QUERY";
     PreparedStatement stmt(mockStmtHandle, mockErrorHandler, query);
 
-    // Expect SQLPrepare to fail
+    // Set up mock expectations
     EXPECT_CALL(*mockErrorHandler, CheckOdbcError(_))
         .WillOnce(Return(false));
+    EXPECT_CALL(*mockErrorHandler, ReturnOdbcError())
+        .WillOnce(Return(true));
 
     // Act
     bool success = stmt.Prepare();
@@ -135,10 +152,12 @@ namespace mssql
     auto params = std::vector<std::shared_ptr<QueryParameter>>();
     auto result = std::make_shared<QueryResult>();
 
-    // Expect SQLExecute to fail
+    // Set up mock expectations
     EXPECT_CALL(*mockErrorHandler, CheckOdbcError(_))
         .WillOnce(Return(true))   // Prepare succeeds
         .WillOnce(Return(false)); // Execute fails
+    EXPECT_CALL(*mockErrorHandler, ReturnOdbcError())
+        .WillOnce(Return(true));
 
     // Act
     bool success = stmt.Execute(params, result);
