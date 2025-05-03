@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include "platform.h"
+#include "odbc_common.h"
 #include "odbc_connection.h"
 #include "mock_odbc_api.h"
 

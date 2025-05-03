@@ -2,7 +2,14 @@
 // undo these tokens to use numeric_limits below
 #undef min
 #undef max
+
+// Include platform.h first to ensure Windows types are defined
 #include <platform.h>
+
+// Then include ODBC headers which need the Windows types
+#include <odbc_common.h>
+
+// Standard library includes
 #include <limits>
 #include <vector>
 #include <string.h>
@@ -15,8 +22,6 @@
 #include <iomanip>
 #include <Logger.h>
 #include <algorithm>
-#include <sql.h>
-#include <sqlext.h>
 
 #ifdef LINUX_BUILD
 #include <cmath>
