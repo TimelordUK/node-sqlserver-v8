@@ -346,9 +346,9 @@ namespace mssql
     sanitizedConnStr.push_back(0);
 
     SQL_LOG_DEBUG_STREAM("Connection string (sanitized): " << logConnStr);
-
+    
     // Clear any previous diagnostics
-    dynamic_cast<RealOdbcApi *>(_odbcApi.get())->ClearDiagnostics();
+    _odbcApi.get()->ClearDiagnostics();
 
     // Attempt the connection
     ret = _odbcApi->SQLDriverConnect(
@@ -366,7 +366,8 @@ namespace mssql
       SQL_LOG_ERROR("SQLDriverConnect failed");
 
       // Get ODBC diagnostic records
-      auto diagnostics = dynamic_cast<RealOdbcApi *>(_odbcApi.get())->GetDiagnostics();
+
+      auto diagnostics = _odbcApi->GetDiagnostics();
 
       // Create error objects and add them to the error handler
       if (!diagnostics.empty())

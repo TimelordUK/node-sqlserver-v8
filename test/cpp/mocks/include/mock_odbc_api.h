@@ -1,11 +1,9 @@
 #pragma once
-
 #include "iodbc_api.h"
 #include <gmock/gmock.h>
 
 namespace mssql
 {
-
     class MockOdbcApi : public IOdbcApi
     {
     public:
@@ -27,7 +25,6 @@ namespace mssql
                 SQLSMALLINT* StringLength2Ptr,
                 SQLUSMALLINT DriverCompletion),
             (override));
-
         // Statement methods - always using 'W' versions where applicable
         MOCK_METHOD(SQLRETURN, SQLExecute, (SQLHSTMT StatementHandle), (override));
         MOCK_METHOD(SQLRETURN, SQLNumResultCols, (SQLHSTMT StatementHandle, SQLSMALLINT* ColumnCount), (override));
@@ -68,5 +65,40 @@ namespace mssql
                 SQLLEN cbValueMax,
                 SQLLEN* pcbValue),
             (override));
+
+        // New methods for diagnostics handling
+        MOCK_METHOD(std::vector<DiagnosticInfo>, GetDiagnostics, (), (const, override));
+        MOCK_METHOD(void, ClearDiagnostics, (), (override));
+
+        // Helper methods to make setting up expectations easier
+        void SetupSuccessfulConnection() {
+            EXPECT_CALL(*this, SQLSetConnectAttr(testing::_, testing::_, testing::_, testing::_))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(testing::Return(SQL_SUCCESS));
+
+            EXPECT_CALL(*this, SQLDriverConnect(testing::_, testing::_, testing::_, testing::_,
+                testing::_, testing::_, testing::_, testing::_))
+                .WillOnce(testing::Return(SQL_SUCCESS));
+
+            EXPECT_CALL(*this, GetDiagnostics())
+                .WillRepeatedly(testing::Return(std::vector<DiagnosticInfo>()));
+        }
+
+        void SetupFailedConnection(const std::string& sqlState, const std::string& message, int nativeError) {
+            EXPECT_CALL(*this, SQLSetConnectAttr(testing::_, testing::_, testing::_, testing::_))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(testing::Return(SQL_SUCCESS));
+
+            EXPECT_CALL(*this, SQLDriverConnect(testing::_, testing::_, testing::_, testing::_,
+                testing::_, testing::_, testing::_, testing::_))
+                .WillOnce(testing::Return(SQL_ERROR));
+
+            std::vector<DiagnosticInfo> diags = {
+                {sqlState, nativeError, message}
+            };
+
+            EXPECT_CALL(*this, GetDiagnostics())
+                .WillRepeatedly(testing::Return(diags));
+        }
     };
 }

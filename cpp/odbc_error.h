@@ -9,7 +9,6 @@
 
 namespace mssql
 {
-
   class OdbcError
   {
   public:
@@ -25,7 +24,7 @@ namespace mssql
     {
     }
 
-    OdbcError(const std::string &message, const std::string &sqlstate, int code)
+    OdbcError(const std::string& sqlstate, const std::string &message, int code)
         : sqlstate(sqlstate),
           message(message),
           code(code), severity(0),
