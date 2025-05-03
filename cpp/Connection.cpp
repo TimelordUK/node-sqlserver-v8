@@ -1,4 +1,5 @@
 // ReSharper disable CppInconsistentNaming
+#include "platform.h"
 #include <thread>
 #include <chrono>
 #include <functional>

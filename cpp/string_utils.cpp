@@ -1,3 +1,4 @@
+#include "platform.h"
 #include "string_utils.h"
 #include <Logger.h>
 #include <stdexcept>

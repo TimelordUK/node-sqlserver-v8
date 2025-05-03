@@ -1,5 +1,5 @@
-#include "odbc_query_executor.h"
 #include "platform.h"
+#include "odbc_query_executor.h"
 #include "string_utils.h"
 #include "odbc_statement_factory.h"
 #include <Logger.h>

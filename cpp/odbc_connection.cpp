@@ -1,4 +1,6 @@
 // ReSharper disable CppInconsistentNaming
+
+#include "platform.h"
 #include "odbc_connection.h"
 #include "odbc_environment.h"
 #include "odbc_handles.h"
