@@ -6,7 +6,7 @@ import { TestConnectionFactory } from '../common/test-connection-factory'
 
 
 // Set logging options
-nativeModule.setLogLevel(4); // Debug level
+nativeModule.setLogLevel(5); // Debug level
 nativeModule.enableConsoleLogging(true);
 
 describe('open', function() {

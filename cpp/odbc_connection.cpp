@@ -206,7 +206,7 @@ namespace mssql
 
     // Create the statement using the factory
     return StatementFactory::CreateStatement(_odbcApi,
-        type, handle, _errorHandler, query, tvpType);
+                                             type, handle, _errorHandler, query, tvpType);
   }
 
   std::shared_ptr<OdbcStatement> OdbcConnection::GetPreparedStatement(
@@ -275,28 +275,125 @@ namespace mssql
     if (!_errorHandler->CheckOdbcError(ret))
     {
       SQL_LOG_ERROR("Failed to set login timeout");
+      auto errors = std::make_shared<std::vector<std::shared_ptr<OdbcError>>>();
+      environment_->ReadErrors(errors);
       return false;
     }
 
-    // Set BCP option
+    // Set BCP option (SQL Server specific)
     ret = _odbcApi->SQLSetConnectAttr(connection->get_handle(), SQL_COPT_SS_BCP,
                                       reinterpret_cast<SQLPOINTER>(SQL_BCP_ON), SQL_IS_INTEGER);
     if (!_errorHandler->CheckOdbcError(ret))
     {
-      SQL_LOG_ERROR("Failed to set BCP option");
-      return false;
+      SQL_LOG_WARNING("Failed to set BCP option - this might be expected for non-SQL Server drivers");
     }
 
-    ret = _odbcApi->SQLDriverConnect(connection->get_handle(), nullptr,
-                                     reinterpret_cast<SQLWCHAR *>(connection_string->data()),
-                                     static_cast<SQLSMALLINT>(std::min(connection_string->size(),
-                                                                       static_cast<size_t>(SQL_MAX_SQLSERVERNAME))),
-                                     nullptr, 0, nullptr,
-                                     SQL_DRIVER_NOPROMPT);
+    // Properly sanitize the connection string
+    std::vector<SQLWCHAR> sanitizedConnStr;
+    sanitizedConnStr.reserve(connection_string->size() + 1); // +1 for null terminator
 
-    if (!_errorHandler->CheckOdbcError(ret))
+    // Copy valid characters and log any problematic ones
+    std::string logConnStr; // For logging (sanitized)
+    for (size_t i = 0; i < connection_string->size(); ++i)
+    {
+      uint16_t c = (*connection_string)[i];
+
+      // Only include valid characters
+      if ((c >= 32 && c <= 126) || (c >= 0x0080 && c <= 0x00FF))
+      {
+        sanitizedConnStr.push_back(static_cast<SQLWCHAR>(c));
+
+        // For logging, mask password
+        if (i >= 4 &&
+            logConnStr.length() >= 4 &&
+            logConnStr.substr(logConnStr.length() - 4) == "PWD=")
+        {
+          if (c == ';')
+          {
+            logConnStr += "********;";
+          }
+          // Don't add the actual password character
+        }
+        else
+        {
+          // Add normal character to log string
+          if (c <= 127)
+          {
+            logConnStr.push_back(static_cast<char>(c));
+          }
+          else
+          {
+            logConnStr.push_back('?');
+          }
+        }
+      }
+      else
+      {
+        // Log invalid character
+        SQL_LOG_WARNING_STREAM("Skipping invalid character in connection string at position "
+                               << i << ", code: 0x" << std::hex << c << std::dec);
+      }
+    }
+
+    // Ensure the string is properly terminated with a semicolon if not already
+    if (!sanitizedConnStr.empty() && sanitizedConnStr.back() != L';')
+    {
+      sanitizedConnStr.push_back(L';');
+      logConnStr += ';';
+    }
+
+    // Null-terminate the string
+    sanitizedConnStr.push_back(0);
+
+    SQL_LOG_DEBUG_STREAM("Connection string (sanitized): " << logConnStr);
+
+    // Clear any previous diagnostics
+    dynamic_cast<RealOdbcApi *>(_odbcApi.get())->ClearDiagnostics();
+
+    // Attempt the connection
+    ret = _odbcApi->SQLDriverConnect(
+        connection->get_handle(),
+        nullptr, // Use SQL_NULL_HWND instead of SQL_NULL_WINDOW_HANDLE
+        sanitizedConnStr.data(),
+        static_cast<SQLSMALLINT>(sanitizedConnStr.size() - 1), // -1 for null terminator
+        nullptr,
+        0,
+        nullptr,
+        SQL_DRIVER_NOPROMPT);
+
+    if (!SQL_SUCCEEDED(ret))
     {
       SQL_LOG_ERROR("SQLDriverConnect failed");
+
+      // Get ODBC diagnostic records
+      auto diagnostics = dynamic_cast<RealOdbcApi *>(_odbcApi.get())->GetDiagnostics();
+
+      // Create error objects and add them to the error handler
+      if (!diagnostics.empty())
+      {
+        for (const auto &diag : diagnostics)
+        {
+          std::shared_ptr<OdbcError> error = std::make_shared<OdbcError>(
+              diag.sqlState,
+              diag.message,
+              diag.nativeError);
+          _errorHandler->AddError(error);
+
+          SQL_LOG_ERROR_STREAM("ODBC Error: SQLSTATE=" << diag.sqlState
+                                                       << ", Native Error=" << diag.nativeError
+                                                       << ", Message=" << diag.message);
+        }
+      }
+      else
+      {
+        // No diagnostics available, create a generic error
+        std::shared_ptr<OdbcError> error = std::make_shared<OdbcError>(
+            "08001", // General connection error
+            "Failed to connect to the database server with no diagnostic information",
+            0);
+        _errorHandler->AddError(error);
+      }
+
       return false;
     }
 

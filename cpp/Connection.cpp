@@ -100,6 +100,10 @@ namespace mssql
           const auto &errors = connection_->GetErrors();
           if (!errors.empty())
           {
+            // Store all errors for later use in OnError
+            errorDetails_ = errors;
+
+            // Just use the first error message for the main error
             const std::string errorMessage = errors[0]->message;
             SQL_LOG_ERROR("Connection operation error: " + errorMessage);
             SetError(errorMessage);
@@ -141,12 +145,48 @@ namespace mssql
       Callback().Call({env.Null(), result});
     }
 
+    // Add a new method to handle error details
+    void OnError(const Napi::Error &error) override
+    {
+      const Napi::Env env = Env();
+      Napi::HandleScope scope(env);
+
+      // Create a detailed error object with ODBC specifics
+      Napi::Object errorObj = Napi::Object::New(env);
+      errorObj.Set("message", error.Message());
+
+      if (!errorDetails_.empty())
+      {
+        // Add SQLSTATE and native error code from the first error
+        errorObj.Set("sqlState", Napi::String::New(env, errorDetails_[0]->sqlstate));
+        errorObj.Set("code", Napi::Number::New(env, errorDetails_[0]->code));
+
+        // Add all errors as an array of details
+        Napi::Array details = Napi::Array::New(env);
+        for (size_t i = 0; i < errorDetails_.size(); i++)
+        {
+          const auto &err = errorDetails_[i];
+          Napi::Object detail = Napi::Object::New(env);
+          detail.Set("sqlState", Napi::String::New(env, err->sqlstate));
+          detail.Set("message", Napi::String::New(env, err->message));
+          detail.Set("code", Napi::Number::New(env, err->code));
+          details.Set(i, detail);
+        }
+        errorObj.Set("details", details);
+      }
+
+      // Call the callback with the enhanced error object and null result
+      Callback().Call({errorObj, env.Null()});
+    }
+
   private:
     Connection *parent_;
     IOdbcConnection *connection_;
     ConnectionOp operation_;
     bool result_ = false;
     SuccessCallback onSuccess_;
+    // Add this to store error details
+    std::vector<std::shared_ptr<OdbcError>> errorDetails_;
   };
 
   template <typename ConnectionOp, typename SuccessCallback = std::function<void()>>
@@ -198,17 +238,17 @@ namespace mssql
       Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
       SQL_LOG_DEBUG("Connection - use Promise");
       // Create a callback that resolves/rejects the promise
-      callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo &info)
-                                     {
-                    const Napi::Env env = info.Env();
-                    if (info[0].IsNull() || info[0].IsUndefined()) {
-                        deferred.Resolve(info[1]);
-                    }
-                    else {
-                        deferred.Reject(info[0]);
-                    }
-                    return env.Undefined(); });
-
+      const Napi::Env env = info.Env();
+      if (info[0].IsNull() || info[0].IsUndefined())
+      {
+        deferred.Resolve(info[1]);
+      }
+      else
+      {
+        // The error object might be enhanced with ODBC details
+        deferred.Reject(info[0]);
+      }
+      return env.Undefined();
       const auto worker = MakeConnectionWorker(
           callback,
           odbcConnection_.get(),

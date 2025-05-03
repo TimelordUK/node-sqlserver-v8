@@ -1,156 +1,137 @@
+// OdbcApi.h
 #pragma once
 
 #include <sql.h>
 #include <sqlext.h>
 #include <memory>
 #include <vector>
+#include <string>
+#include "Logger.h"
 
 namespace mssql
 {
+  // Helper function to convert ODBC return codes to readable strings
+  std::string GetSqlReturnCodeString(SQLRETURN returnCode);
 
-    class IOdbcApi
-    {
-    public:
-        virtual ~IOdbcApi() = default;
+  // Convert wide string to regular string for logging
+  std::string WideToUtf8(const SQLWCHAR *wstr, int length = -1);
 
-        // Connection methods
-        virtual SQLRETURN SQLDisconnect(SQLHDBC ConnectionHandle) = 0;
+  // Helper to log ODBC errors from a handle
+  void LogOdbcError(SQLSMALLINT handleType, SQLHANDLE handle, const std::string &context);
 
-        virtual SQLRETURN SQLSetConnectAttr(
-            SQLHDBC ConnectionHandle,
-            SQLINTEGER Attribute,
-            SQLPOINTER Value,
-            SQLINTEGER StringLength) = 0;
+  // Structure to store diagnostic information
+  struct DiagnosticInfo
+  {
+    std::string sqlState;
+    int nativeError;
+    std::string message;
+  };
 
-        virtual SQLRETURN SQLDriverConnect(
-            SQLHDBC ConnectionHandle,
-            SQLHWND WindowHandle,
-            SQLWCHAR* InConnectionString,
-            SQLSMALLINT StringLength1,
-            SQLWCHAR* OutConnectionString,
-            SQLSMALLINT BufferLength,
-            SQLSMALLINT* StringLength2Ptr,
-            SQLUSMALLINT DriverCompletion) = 0;
+  class IOdbcApi
+  {
+  public:
+    virtual ~IOdbcApi() = default;
 
-        // Statement methods - always use the 'W' versions
-        virtual SQLRETURN SQLExecute(SQLHSTMT StatementHandle) = 0;
-        virtual SQLRETURN SQLNumResultCols(SQLHSTMT StatementHandle, SQLSMALLINT* ColumnCount) = 0;
-        virtual SQLRETURN SQLPrepareW(SQLHSTMT StatementHandle, SQLWCHAR* StatementText, SQLINTEGER TextLength) = 0;
-        virtual SQLRETURN SQLDescribeColW(SQLHSTMT StatementHandle,
-            SQLUSMALLINT ColumnNumber,
-            SQLWCHAR* ColumnName,
-            SQLSMALLINT BufferLength,
-            SQLSMALLINT* NameLength,
-            SQLSMALLINT* DataType,
-            SQLULEN* ColumnSize,
-            SQLSMALLINT* DecimalDigits,
-            SQLSMALLINT* Nullable) = 0;
-        virtual SQLRETURN SQLFetch(SQLHSTMT StatementHandle) = 0;
-        virtual SQLRETURN SQLGetData(SQLHSTMT StatementHandle,
-            SQLUSMALLINT ColumnNumber,
-            SQLSMALLINT TargetType,
-            SQLPOINTER TargetValue,
-            SQLLEN BufferLength,
-            SQLLEN* StrLen_or_Ind) = 0;
+    // Connection methods
+    virtual SQLRETURN SQLDisconnect(SQLHDBC ConnectionHandle) = 0;
 
-        virtual SQLRETURN SQLBindParameter(
-            SQLHSTMT           hstmt,
-            SQLUSMALLINT       ipar,
-            SQLSMALLINT        fParamType,
-            SQLSMALLINT        fCType,
-            SQLSMALLINT        fSqlType,
-            SQLULEN            cbColDef,
-            SQLSMALLINT        ibScale,
-            SQLPOINTER         rgbValue,
-            SQLLEN             cbValueMax,
-            SQLLEN* pcbValue) = 0;
-    };
+    virtual SQLRETURN SQLSetConnectAttr(
+        SQLHDBC ConnectionHandle,
+        SQLINTEGER Attribute,
+        SQLPOINTER Value,
+        SQLINTEGER StringLength) = 0;
 
-  // Concrete implementation that forwards to actual ODBC
-    class RealOdbcApi : public IOdbcApi
-    {
-    public:
-        // Connection methods
-        SQLRETURN SQLDisconnect(SQLHDBC ConnectionHandle) override
-        {
-            return ::SQLDisconnect(ConnectionHandle);
-        }
+    virtual SQLRETURN SQLDriverConnect(
+        SQLHDBC ConnectionHandle,
+        SQLHWND WindowHandle,
+        SQLWCHAR *InConnectionString,
+        SQLSMALLINT StringLength1,
+        SQLWCHAR *OutConnectionString,
+        SQLSMALLINT BufferLength,
+        SQLSMALLINT *StringLength2Ptr,
+        SQLUSMALLINT DriverCompletion) = 0;
 
-        SQLRETURN SQLSetConnectAttr(
-            SQLHDBC ConnectionHandle,
-            SQLINTEGER Attribute,
-            SQLPOINTER Value,
-            SQLINTEGER StringLength) override
-        {
-            return ::SQLSetConnectAttr(ConnectionHandle, Attribute, Value, StringLength);
-        }
+    // Statement methods - always use the 'W' versions
+    virtual SQLRETURN SQLExecute(SQLHSTMT StatementHandle) = 0;
+    virtual SQLRETURN SQLNumResultCols(SQLHSTMT StatementHandle, SQLSMALLINT *ColumnCount) = 0;
+    virtual SQLRETURN SQLPrepareW(SQLHSTMT StatementHandle, SQLWCHAR *StatementText, SQLINTEGER TextLength) = 0;
+    virtual SQLRETURN SQLDescribeColW(SQLHSTMT StatementHandle,
+                                      SQLUSMALLINT ColumnNumber,
+                                      SQLWCHAR *ColumnName,
+                                      SQLSMALLINT BufferLength,
+                                      SQLSMALLINT *NameLength,
+                                      SQLSMALLINT *DataType,
+                                      SQLULEN *ColumnSize,
+                                      SQLSMALLINT *DecimalDigits,
+                                      SQLSMALLINT *Nullable) = 0;
+    virtual SQLRETURN SQLFetch(SQLHSTMT StatementHandle) = 0;
+    virtual SQLRETURN SQLGetData(SQLHSTMT StatementHandle,
+                                 SQLUSMALLINT ColumnNumber,
+                                 SQLSMALLINT TargetType,
+                                 SQLPOINTER TargetValue,
+                                 SQLLEN BufferLength,
+                                 SQLLEN *StrLen_or_Ind) = 0;
 
-        SQLRETURN SQLDriverConnect(
-            SQLHDBC ConnectionHandle,
-            SQLHWND WindowHandle,
-            SQLWCHAR* InConnectionString,
-            SQLSMALLINT StringLength1,
-            SQLWCHAR* OutConnectionString,
-            SQLSMALLINT BufferLength,
-            SQLSMALLINT* StringLength2Ptr,
-            SQLUSMALLINT DriverCompletion) override
-        {
-            return ::SQLDriverConnect(
-                ConnectionHandle,
-                WindowHandle,
-                InConnectionString,
-                StringLength1,
-                OutConnectionString,
-                BufferLength,
-                StringLength2Ptr,
-                DriverCompletion);
-        }
+    virtual SQLRETURN SQLBindParameter(
+        SQLHSTMT hstmt,
+        SQLUSMALLINT ipar,
+        SQLSMALLINT fParamType,
+        SQLSMALLINT fCType,
+        SQLSMALLINT fSqlType,
+        SQLULEN cbColDef,
+        SQLSMALLINT ibScale,
+        SQLPOINTER rgbValue,
+        SQLLEN cbValueMax,
+        SQLLEN *pcbValue) = 0;
 
-        // Statement methods
-        SQLRETURN SQLExecute(SQLHSTMT StatementHandle) override {
-            return ::SQLExecute(StatementHandle);
-        }
+    // Method to retrieve diagnostic information
+    virtual std::vector<DiagnosticInfo> GetDiagnostics() const = 0;
 
-        SQLRETURN SQLNumResultCols(SQLHSTMT StatementHandle, SQLSMALLINT* ColumnCount) override {
-            return ::SQLNumResultCols(StatementHandle, ColumnCount);
-        }
+    // Method to clear diagnostic information
+    virtual void ClearDiagnostics() = 0;
+  };
 
-        SQLRETURN SQLPrepareW(SQLHSTMT StatementHandle, SQLWCHAR* StatementText, SQLINTEGER TextLength) override
-        {
-            return ::SQLPrepareW(StatementHandle, StatementText, TextLength);
-        }
+  // Declaration of RealOdbcApi - implementation in separate file
+  class RealOdbcApi : public IOdbcApi
+  {
+  public:
+    RealOdbcApi();
+    ~RealOdbcApi();
 
-        SQLRETURN SQLDescribeColW(SQLHSTMT StatementHandle, SQLUSMALLINT ColumnNumber, SQLWCHAR* ColumnName,
-            SQLSMALLINT BufferLength, SQLSMALLINT* NameLength, SQLSMALLINT* DataType,
-            SQLULEN* ColumnSize, SQLSMALLINT* DecimalDigits, SQLSMALLINT* Nullable) override
-        {
-            return ::SQLDescribeColW(StatementHandle, ColumnNumber, ColumnName, BufferLength, NameLength,
-                DataType, ColumnSize, DecimalDigits, Nullable);
-        }
+    // Connection methods
+    SQLRETURN SQLDisconnect(SQLHDBC ConnectionHandle) override;
+    SQLRETURN SQLSetConnectAttr(SQLHDBC ConnectionHandle, SQLINTEGER Attribute, SQLPOINTER Value, SQLINTEGER StringLength) override;
+    SQLRETURN SQLDriverConnect(SQLHDBC ConnectionHandle, SQLHWND WindowHandle, SQLWCHAR *InConnectionString, SQLSMALLINT StringLength1,
+                               SQLWCHAR *OutConnectionString, SQLSMALLINT BufferLength, SQLSMALLINT *StringLength2Ptr, SQLUSMALLINT DriverCompletion) override;
 
-        SQLRETURN SQLFetch(SQLHSTMT StatementHandle) override {
-            return ::SQLFetch(StatementHandle);
-        }
+    // Statement methods
+    SQLRETURN SQLExecute(SQLHSTMT StatementHandle) override;
+    SQLRETURN SQLNumResultCols(SQLHSTMT StatementHandle, SQLSMALLINT *ColumnCount) override;
+    SQLRETURN SQLPrepareW(SQLHSTMT StatementHandle, SQLWCHAR *StatementText, SQLINTEGER TextLength) override;
+    SQLRETURN SQLDescribeColW(SQLHSTMT StatementHandle, SQLUSMALLINT ColumnNumber, SQLWCHAR *ColumnName,
+                              SQLSMALLINT BufferLength, SQLSMALLINT *NameLength, SQLSMALLINT *DataType,
+                              SQLULEN *ColumnSize, SQLSMALLINT *DecimalDigits, SQLSMALLINT *Nullable) override;
+    SQLRETURN SQLFetch(SQLHSTMT StatementHandle) override;
+    SQLRETURN SQLGetData(SQLHSTMT StatementHandle, SQLUSMALLINT ColumnNumber, SQLSMALLINT TargetType,
+                         SQLPOINTER TargetValue, SQLLEN BufferLength, SQLLEN *StrLen_or_Ind) override;
+    SQLRETURN SQLBindParameter(SQLHSTMT hstmt, SQLUSMALLINT ipar, SQLSMALLINT fParamType, SQLSMALLINT fCType,
+                               SQLSMALLINT fSqlType, SQLULEN cbColDef, SQLSMALLINT ibScale, SQLPOINTER rgbValue,
+                               SQLLEN cbValueMax, SQLLEN *pcbValue) override;
 
-        SQLRETURN SQLGetData(SQLHSTMT StatementHandle, SQLUSMALLINT ColumnNumber, SQLSMALLINT TargetType,
-            SQLPOINTER TargetValue, SQLLEN BufferLength, SQLLEN* StrLen_or_Ind) override {
-            return ::SQLGetData(StatementHandle, ColumnNumber, TargetType, TargetValue, BufferLength, StrLen_or_Ind);
-        }
+    // Diagnostic methods
+    std::vector<DiagnosticInfo> GetDiagnostics() const override;
+    void ClearDiagnostics() override;
 
-        SQLRETURN SQLBindParameter(
-            SQLHSTMT           hstmt,
-            SQLUSMALLINT       ipar,
-            SQLSMALLINT        fParamType,
-            SQLSMALLINT        fCType,
-            SQLSMALLINT        fSqlType,
-            SQLULEN            cbColDef,
-            SQLSMALLINT        ibScale,
-            SQLPOINTER         rgbValue,
-            SQLLEN             cbValueMax,
-            SQLLEN* pcbValue) override
-        {
-            return ::SQLBindParameter(hstmt, ipar, fParamType, fCType, fSqlType, cbColDef, ibScale, rgbValue, cbValueMax, pcbValue);
-        }
-    };
+  private:
+    // Helper methods for connection diagnostics
+    std::string GetDriverInfoFromConnectionString(const std::string &connStr);
+    std::string GetServerFromConnectionString(const std::string &connStr);
+    bool IsDriverInstalled(const std::string &driverName);
+    bool IsServerReachable(const std::string &server);
+    std::wstring SanitizeConnectionString(const std::wstring &connectionString);
+    void DiagnoseConnectionString(const std::wstring &connectionString);
 
-}
+    // Storage for diagnostic information
+    std::vector<DiagnosticInfo> diagInfoList;
+  };
+} // namespace mssql
