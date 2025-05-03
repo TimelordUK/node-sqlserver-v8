@@ -1,3 +1,5 @@
+#ifdef MOCK_NAPI
+
 #include <node_api.h>
 #include <cstring>
 #include <cstdlib>
@@ -10,6 +12,17 @@
 #include <functional>
 #include <iostream>
 #include <stdexcept>
+
+// Add this at the top of the file after the includes:
+#ifdef _WIN32
+#ifdef BUILDING_MOCK_NAPI
+#define NAPI_MOCK_EXTERN __declspec(dllexport)
+#else
+#define NAPI_MOCK_EXTERN __declspec(dllimport)
+#endif
+#else
+#define NAPI_MOCK_EXTERN __attribute__((visibility("default")))
+#endif
 
 // Forward declarations
 struct JSValue;
@@ -269,21 +282,21 @@ napi_value getNapiValue(JSValuePtr value)
 extern "C"
 {
   // Core object creation functions
-  napi_status napi_create_object(napi_env env, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_create_object(napi_env env, napi_value *result)
   {
     auto jsValue = g_env.createValue(JSType::OBJECT);
     *result = getNapiValue(jsValue);
     return napi_ok;
   }
 
-  napi_status napi_create_array(napi_env env, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_create_array(napi_env env, napi_value *result)
   {
     auto jsValue = g_env.createValue(JSType::ARRAY);
     *result = getNapiValue(jsValue);
     return napi_ok;
   }
 
-  napi_status napi_create_array_with_length(napi_env env, size_t length, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_create_array_with_length(napi_env env, size_t length, napi_value *result)
   {
     auto jsValue = g_env.createValue(JSType::ARRAY);
     auto &array = std::get<std::vector<JSValuePtr>>(jsValue->data);
@@ -293,7 +306,7 @@ extern "C"
   }
 
   // Array operations
-  napi_status napi_get_array_length(napi_env env, napi_value value, uint32_t *result)
+  NAPI_MOCK_EXTERN napi_status napi_get_array_length(napi_env env, napi_value value, uint32_t *result)
   {
     auto jsValue = getJSValue(value);
     if (jsValue->type != JSType::ARRAY)
@@ -307,7 +320,7 @@ extern "C"
   }
 
   // Object property operations
-  napi_status napi_set_property(napi_env env, napi_value object, napi_value key, napi_value value)
+  NAPI_MOCK_EXTERN napi_status napi_set_property(napi_env env, napi_value object, napi_value key, napi_value value)
   {
     auto jsObject = getJSValue(object);
     auto jsKey = getJSValue(key);
@@ -328,7 +341,7 @@ extern "C"
     return napi_ok;
   }
 
-  napi_status napi_get_property(napi_env env, napi_value object, napi_value key, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_get_property(napi_env env, napi_value object, napi_value key, napi_value *result)
   {
     auto jsObject = getJSValue(object);
     auto jsKey = getJSValue(key);
@@ -360,7 +373,7 @@ extern "C"
     return napi_ok;
   }
 
-  napi_status napi_has_property(napi_env env, napi_value object, napi_value key, bool *result)
+  NAPI_MOCK_EXTERN napi_status napi_has_property(napi_env env, napi_value object, napi_value key, bool *result)
   {
     auto jsObject = getJSValue(object);
     auto jsKey = getJSValue(key);
@@ -381,7 +394,7 @@ extern "C"
   }
 
   // Named property operations (the ones you specifically asked about)
-  napi_status napi_set_named_property(napi_env env, napi_value object, const char *name, napi_value value)
+  NAPI_MOCK_EXTERN napi_status napi_set_named_property(napi_env env, napi_value object, const char *name, napi_value value)
   {
     auto jsObject = getJSValue(object);
     auto jsValue = getJSValue(value);
@@ -395,7 +408,7 @@ extern "C"
     return napi_ok;
   }
 
-  napi_status napi_get_named_property(napi_env env, napi_value object, const char *name, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_get_named_property(napi_env env, napi_value object, const char *name, napi_value *result)
   {
     auto jsObject = getJSValue(object);
 
@@ -420,7 +433,7 @@ extern "C"
     return napi_ok;
   }
 
-  napi_status napi_has_named_property(napi_env env, napi_value object, const char *name, bool *result)
+  NAPI_MOCK_EXTERN napi_status napi_has_named_property(napi_env env, napi_value object, const char *name, bool *result)
   {
     auto jsObject = getJSValue(object);
 
@@ -434,7 +447,7 @@ extern "C"
   }
 
   // Element operations
-  napi_status napi_set_element(napi_env env, napi_value object, uint32_t index, napi_value value)
+  NAPI_MOCK_EXTERN napi_status napi_set_element(napi_env env, napi_value object, uint32_t index, napi_value value)
   {
     auto jsObject = getJSValue(object);
     auto jsValue = getJSValue(value);
@@ -448,7 +461,7 @@ extern "C"
     return napi_ok;
   }
 
-  napi_status napi_get_element(napi_env env, napi_value object, uint32_t index, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_get_element(napi_env env, napi_value object, uint32_t index, napi_value *result)
   {
     auto jsObject = getJSValue(object);
 
@@ -473,7 +486,7 @@ extern "C"
     return napi_ok;
   }
 
-  napi_status napi_has_element(napi_env env, napi_value object, uint32_t index, bool *result)
+  NAPI_MOCK_EXTERN napi_status napi_has_element(napi_env env, napi_value object, uint32_t index, bool *result)
   {
     auto jsObject = getJSValue(object);
 
@@ -487,7 +500,7 @@ extern "C"
   }
 
   // Value creation functions
-  napi_status napi_create_string_utf8(napi_env env, const char *str, size_t length, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_create_string_utf8(napi_env env, const char *str, size_t length, napi_value *result)
   {
     auto jsString = g_env.createValue(JSType::STRING);
 
@@ -498,7 +511,7 @@ extern "C"
     return napi_ok;
   }
 
-  napi_status napi_create_double(napi_env env, double value, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_create_double(napi_env env, double value, napi_value *result)
   {
     auto jsNumber = g_env.createValue(JSType::NUMBER);
     std::get<double>(jsNumber->data) = value;
@@ -506,7 +519,7 @@ extern "C"
     return napi_ok;
   }
 
-  napi_status napi_get_boolean(napi_env env, bool value, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_get_boolean(napi_env env, bool value, napi_value *result)
   {
     auto jsBoolean = g_env.createValue(JSType::BOOLEAN);
     std::get<bool>(jsBoolean->data) = value;
@@ -514,14 +527,7 @@ extern "C"
     return napi_ok;
   }
 
-  napi_status napi_get_undefined(napi_env env, napi_value *result)
-  {
-    auto jsUndefined = g_env.createValue(JSType::UNDEFINED);
-    *result = getNapiValue(jsUndefined);
-    return napi_ok;
-  }
-
-  napi_status napi_get_null(napi_env env, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_get_null(napi_env env, napi_value *result)
   {
     auto jsNull = g_env.createValue(JSType::NULL_TYPE);
     *result = getNapiValue(jsNull);
@@ -529,7 +535,7 @@ extern "C"
   }
 
   // Value extraction functions
-  napi_status napi_get_value_string_utf8(napi_env env, napi_value value, char *buf, size_t bufsize, size_t *result)
+  NAPI_MOCK_EXTERN napi_status napi_get_value_string_utf8(napi_env env, napi_value value, char *buf, size_t bufsize, size_t *result)
   {
     auto jsValue = getJSValue(value);
 
@@ -555,7 +561,7 @@ extern "C"
     return napi_ok;
   }
 
-  napi_status napi_get_value_double(napi_env env, napi_value value, double *result)
+  NAPI_MOCK_EXTERN napi_status napi_get_value_double(napi_env env, napi_value value, double *result)
   {
     auto jsValue = getJSValue(value);
 
@@ -568,7 +574,7 @@ extern "C"
     return napi_ok;
   }
 
-  napi_status napi_get_value_bool(napi_env env, napi_value value, bool *result)
+  NAPI_MOCK_EXTERN napi_status napi_get_value_bool(napi_env env, napi_value value, bool *result)
   {
     auto jsValue = getJSValue(value);
 
@@ -582,7 +588,7 @@ extern "C"
   }
 
   // Type checking
-  napi_status napi_typeof(napi_env env, napi_value value, napi_valuetype *result)
+  NAPI_MOCK_EXTERN napi_status napi_typeof(napi_env env, napi_value value, napi_valuetype *result)
   {
     auto jsValue = getJSValue(value);
 
@@ -620,7 +626,7 @@ extern "C"
     return napi_ok;
   }
 
-  napi_status napi_is_array(napi_env env, napi_value value, bool *result)
+  NAPI_MOCK_EXTERN napi_status napi_is_array(napi_env env, napi_value value, bool *result)
   {
     auto jsValue = getJSValue(value);
     *result = (jsValue->type == JSType::ARRAY);
@@ -628,7 +634,7 @@ extern "C"
   }
 
   // Function creation and invocation
-  napi_status napi_create_function(napi_env env, const char *utf8name, size_t length, napi_callback cb, void *data, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_create_function(napi_env env, const char *utf8name, size_t length, napi_callback cb, void *data, napi_value *result)
   {
     auto jsFunction = g_env.createValue(JSType::FUNCTION);
 
@@ -652,7 +658,7 @@ extern "C"
   }
 
   // Wrap/unwrap
-  napi_status napi_wrap(napi_env env, napi_value js_object, void *native_object, napi_finalize finalize_cb, void *finalize_hint, napi_ref *result)
+  NAPI_MOCK_EXTERN napi_status napi_wrap(napi_env env, napi_value js_object, void *native_object, napi_finalize finalize_cb, void *finalize_hint, napi_ref *result)
   {
     auto jsObject = getJSValue(js_object);
 
@@ -674,7 +680,7 @@ extern "C"
     return napi_ok;
   }
 
-  napi_status napi_unwrap(napi_env env, napi_value js_object, void **result)
+  NAPI_MOCK_EXTERN napi_status napi_unwrap(napi_env env, napi_value js_object, void **result)
   {
     auto jsObject = getJSValue(js_object);
 
@@ -696,20 +702,20 @@ extern "C"
 
   // Reference management methods use the already defined napi_ref__ structure
 
-  napi_status napi_create_reference(napi_env env, napi_value value, uint32_t initial_refcount, napi_ref *result)
+  NAPI_MOCK_EXTERN napi_status napi_create_reference(napi_env env, napi_value value, uint32_t initial_refcount, napi_ref *result)
   {
     *result = reinterpret_cast<napi_ref>(new napi_ref__(value));
     reinterpret_cast<napi_ref__ *>(*result)->refcount = initial_refcount;
     return napi_ok;
   }
 
-  napi_status napi_delete_reference(napi_env env, napi_ref ref)
+  NAPI_MOCK_EXTERN napi_status napi_delete_reference(napi_env env, napi_ref ref)
   {
     delete reinterpret_cast<napi_ref__ *>(ref);
     return napi_ok;
   }
 
-  napi_status napi_reference_ref(napi_env env, napi_ref ref, uint32_t *result)
+  NAPI_MOCK_EXTERN napi_status napi_reference_ref(napi_env env, napi_ref ref, uint32_t *result)
   {
     auto reference = reinterpret_cast<napi_ref__ *>(ref);
     reference->refcount++;
@@ -720,7 +726,7 @@ extern "C"
     return napi_ok;
   }
 
-  napi_status napi_reference_unref(napi_env env, napi_ref ref, uint32_t *result)
+  NAPI_MOCK_EXTERN napi_status napi_reference_unref(napi_env env, napi_ref ref, uint32_t *result)
   {
     auto reference = reinterpret_cast<napi_ref__ *>(ref);
     if (reference->refcount > 0)
@@ -734,14 +740,14 @@ extern "C"
     return napi_ok;
   }
 
-  napi_status napi_get_reference_value(napi_env env, napi_ref ref, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_get_reference_value(napi_env env, napi_ref ref, napi_value *result)
   {
     auto reference = reinterpret_cast<napi_ref__ *>(ref);
     *result = reference->value;
     return napi_ok;
   }
 
-  napi_status napi_call_function(napi_env env, napi_value recv, napi_value func, size_t argc, const napi_value *argv, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_call_function(napi_env env, napi_value recv, napi_value func, size_t argc, const napi_value *argv, napi_value *result)
   {
     if (result)
       *result = (napi_value)malloc(1);
@@ -749,7 +755,7 @@ extern "C"
   }
 
   // Promise operations
-  napi_status napi_create_promise(napi_env env, napi_deferred *deferred, napi_value *promise)
+  NAPI_MOCK_EXTERN napi_status napi_create_promise(napi_env env, napi_deferred *deferred, napi_value *promise)
   {
     if (deferred)
       *deferred = (napi_deferred)malloc(1);
@@ -758,50 +764,52 @@ extern "C"
     return napi_ok;
   }
 
-  napi_status napi_resolve_deferred(napi_env env, napi_deferred deferred, napi_value resolution)
+  NAPI_MOCK_EXTERN napi_status napi_resolve_deferred(napi_env env, napi_deferred deferred, napi_value resolution)
   {
     return napi_ok;
   }
 
-  napi_status napi_reject_deferred(napi_env env, napi_deferred deferred, napi_value rejection)
+  NAPI_MOCK_EXTERN napi_status napi_reject_deferred(napi_env env, napi_deferred deferred, napi_value rejection)
   {
     return napi_ok;
   }
 
-  // Error operations
-  napi_status napi_get_last_error_info(napi_env env, const napi_extended_error_info **result)
+  // Implementation for napi_get_last_error_info
+  NAPI_MOCK_EXTERN napi_status napi_get_last_error_info(napi_env env, const napi_extended_error_info **result)
   {
-    static napi_extended_error_info info = {0};
+    static napi_extended_error_info errorInfo = {0};
     if (result)
-      *result = &info;
+    {
+      *result = &errorInfo;
+    }
     return napi_ok;
   }
 
-  napi_status napi_create_error(napi_env env, napi_value code, napi_value msg, napi_value *result)
-  {
-    if (result)
-      *result = (napi_value)malloc(1);
-    return napi_ok;
-  }
-
-  napi_status napi_create_type_error(napi_env env, napi_value code, napi_value msg, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_create_error(napi_env env, napi_value code, napi_value msg, napi_value *result)
   {
     if (result)
       *result = (napi_value)malloc(1);
     return napi_ok;
   }
 
-  napi_status napi_throw(napi_env env, napi_value error)
+  NAPI_MOCK_EXTERN napi_status napi_create_type_error(napi_env env, napi_value code, napi_value msg, napi_value *result)
+  {
+    if (result)
+      *result = (napi_value)malloc(1);
+    return napi_ok;
+  }
+
+  NAPI_MOCK_EXTERN napi_status napi_throw(napi_env env, napi_value error)
   {
     return napi_ok;
   }
 
-  napi_status napi_throw_error(napi_env env, const char *code, const char *msg)
+  NAPI_MOCK_EXTERN napi_status napi_throw_error(napi_env env, const char *code, const char *msg)
   {
     return napi_ok;
   }
 
-  napi_status napi_throw_type_error(napi_env env, const char *code, const char *msg)
+  NAPI_MOCK_EXTERN napi_status napi_throw_type_error(napi_env env, const char *code, const char *msg)
   {
     return napi_ok;
   }
@@ -813,7 +821,7 @@ extern "C"
     throw std::runtime_error("NAPI Fatal Error");
   }
 
-  napi_status napi_get_cb_info(napi_env env, napi_callback_info cbinfo, size_t *argc, napi_value *argv, napi_value *this_arg, void **data)
+  NAPI_MOCK_EXTERN napi_status napi_get_cb_info(napi_env env, napi_callback_info cbinfo, size_t *argc, napi_value *argv, napi_value *this_arg, void **data)
   {
     if (argc)
       *argc = 0;
@@ -824,105 +832,105 @@ extern "C"
     return napi_ok;
   }
 
-  napi_status napi_open_handle_scope(napi_env env, napi_handle_scope *result)
+  NAPI_MOCK_EXTERN napi_status napi_open_handle_scope(napi_env env, napi_handle_scope *result)
   {
     if (result)
       *result = (napi_handle_scope)malloc(1);
     return napi_ok;
   }
 
-  napi_status napi_close_handle_scope(napi_env env, napi_handle_scope scope)
+  NAPI_MOCK_EXTERN napi_status napi_close_handle_scope(napi_env env, napi_handle_scope scope)
   {
     if (scope)
       free(scope);
     return napi_ok;
   }
 
-  napi_status napi_open_escapable_handle_scope(napi_env env, napi_escapable_handle_scope *result)
+  NAPI_MOCK_EXTERN napi_status napi_open_escapable_handle_scope(napi_env env, napi_escapable_handle_scope *result)
   {
     if (result)
       *result = (napi_escapable_handle_scope)malloc(1);
     return napi_ok;
   }
 
-  napi_status napi_close_escapable_handle_scope(napi_env env, napi_escapable_handle_scope scope)
+  NAPI_MOCK_EXTERN napi_status napi_close_escapable_handle_scope(napi_env env, napi_escapable_handle_scope scope)
   {
     if (scope)
       free(scope);
     return napi_ok;
   }
 
-  napi_status napi_escape_handle(napi_env env, napi_escapable_handle_scope scope, napi_value escapee, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_escape_handle(napi_env env, napi_escapable_handle_scope scope, napi_value escapee, napi_value *result)
   {
     if (result)
       *result = escapee;
     return napi_ok;
   }
 
-  napi_status napi_new_instance(napi_env env, napi_value constructor, size_t argc, const napi_value *argv, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_new_instance(napi_env env, napi_value constructor, size_t argc, const napi_value *argv, napi_value *result)
   {
     if (result)
       *result = (napi_value)malloc(1);
     return napi_ok;
   }
 
-  napi_status napi_is_buffer(napi_env env, napi_value value, bool *result)
+  NAPI_MOCK_EXTERN napi_status napi_is_buffer(napi_env env, napi_value value, bool *result)
   {
     if (result)
       *result = false;
     return napi_ok;
   }
 
-  napi_status napi_is_date(napi_env env, napi_value value, bool *result)
+  NAPI_MOCK_EXTERN napi_status napi_is_date(napi_env env, napi_value value, bool *result)
   {
     if (result)
       *result = false;
     return napi_ok;
   }
 
-  napi_status napi_is_error(napi_env env, napi_value value, bool *result)
+  NAPI_MOCK_EXTERN napi_status napi_is_error(napi_env env, napi_value value, bool *result)
   {
     if (result)
       *result = false;
     return napi_ok;
   }
 
-  napi_status napi_is_typedarray(napi_env env, napi_value value, bool *result)
+  NAPI_MOCK_EXTERN napi_status napi_is_typedarray(napi_env env, napi_value value, bool *result)
   {
     if (result)
       *result = false;
     return napi_ok;
   }
 
-  napi_status napi_create_string_latin1(napi_env env, const char *str, size_t length, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_create_string_latin1(napi_env env, const char *str, size_t length, napi_value *result)
   {
     if (result)
       *result = (napi_value)malloc(1);
     return napi_ok;
   }
 
-  napi_status napi_get_value_int32(napi_env env, napi_value value, int32_t *result)
+  NAPI_MOCK_EXTERN napi_status napi_get_value_int32(napi_env env, napi_value value, int32_t *result)
   {
     if (result)
       *result = 0;
     return napi_ok;
   }
 
-  napi_status napi_get_value_int64(napi_env env, napi_value value, int64_t *result)
+  NAPI_MOCK_EXTERN napi_status napi_get_value_int64(napi_env env, napi_value value, int64_t *result)
   {
     if (result)
       *result = 0;
     return napi_ok;
   }
 
-  napi_status napi_get_value_uint32(napi_env env, napi_value value, uint32_t *result)
+  NAPI_MOCK_EXTERN napi_status napi_get_value_uint32(napi_env env, napi_value value, uint32_t *result)
   {
     if (result)
       *result = 0;
     return napi_ok;
   }
 
-  napi_status napi_get_date_value(napi_env env, napi_value value, double *result)
+  NAPI_MOCK_EXTERN napi_status napi_get_date_value(napi_env env, napi_value value, double *result)
   {
     if (result)
       *result = 0;
@@ -930,21 +938,21 @@ extern "C"
   }
 
   // ObjectWrap operations
-  napi_status napi_define_class(napi_env env, const char *utf8name, size_t length, napi_callback constructor, void *data, size_t property_count, const napi_property_descriptor *properties, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_define_class(napi_env env, const char *utf8name, size_t length, napi_callback constructor, void *data, size_t property_count, const napi_property_descriptor *properties, napi_value *result)
   {
     if (result)
       *result = (napi_value)malloc(1);
     return napi_ok;
   }
 
-  napi_status napi_remove_wrap(napi_env env, napi_value js_object, void **result)
+  NAPI_MOCK_EXTERN napi_status napi_remove_wrap(napi_env env, napi_value js_object, void **result)
   {
     if (result)
       *result = nullptr;
     return napi_ok;
   }
 
-  napi_status napi_add_finalizer(napi_env env, napi_value js_object, void *native_object, napi_finalize finalize_cb, void *finalize_hint, napi_ref *result)
+  NAPI_MOCK_EXTERN napi_status napi_add_finalizer(napi_env env, napi_value js_object, void *native_object, napi_finalize finalize_cb, void *finalize_hint, napi_ref *result)
   {
     if (result)
       *result = (napi_ref)malloc(1);
@@ -952,32 +960,32 @@ extern "C"
   }
 
   // Async work
-  napi_status napi_create_async_work(napi_env env, napi_value async_resource, napi_value async_resource_name, napi_async_execute_callback execute, napi_async_complete_callback complete, void *data, napi_async_work *result)
+  NAPI_MOCK_EXTERN napi_status napi_create_async_work(napi_env env, napi_value async_resource, napi_value async_resource_name, napi_async_execute_callback execute, napi_async_complete_callback complete, void *data, napi_async_work *result)
   {
     if (result)
       *result = (napi_async_work)malloc(1);
     return napi_ok;
   }
 
-  napi_status napi_delete_async_work(napi_env env, napi_async_work work)
+  NAPI_MOCK_EXTERN napi_status napi_delete_async_work(napi_env env, napi_async_work work)
   {
     if (work)
       free(work);
     return napi_ok;
   }
 
-  napi_status napi_queue_async_work(napi_env env, napi_async_work work)
+  NAPI_MOCK_EXTERN napi_status napi_queue_async_work(napi_env env, napi_async_work work)
   {
     return napi_ok;
   }
 
-  napi_status napi_async_destroy(napi_env env, napi_async_context async_context)
+  NAPI_MOCK_EXTERN napi_status napi_async_destroy(napi_env env, napi_async_context async_context)
   {
     return napi_ok;
   }
 
   // Buffer operations
-  napi_status napi_create_buffer(napi_env env, size_t size, void **data, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_create_buffer(napi_env env, size_t size, void **data, napi_value *result)
   {
     if (data)
       *data = malloc(size);
@@ -986,7 +994,7 @@ extern "C"
     return napi_ok;
   }
 
-  napi_status napi_create_buffer_copy(napi_env env, size_t size, const void *data, void **result_data, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_create_buffer_copy(napi_env env, size_t size, const void *data, void **result_data, napi_value *result)
   {
     if (result_data)
     {
@@ -999,7 +1007,7 @@ extern "C"
     return napi_ok;
   }
 
-  napi_status napi_get_buffer_info(napi_env env, napi_value value, void **data, size_t *length)
+  NAPI_MOCK_EXTERN napi_status napi_get_buffer_info(napi_env env, napi_value value, void **data, size_t *length)
   {
     if (data)
       *data = nullptr;
@@ -1009,7 +1017,7 @@ extern "C"
   }
 
   // TypedArray operations
-  napi_status napi_get_typedarray_info(napi_env env, napi_value typedarray, napi_typedarray_type *type, size_t *length, void **data, napi_value *arraybuffer, size_t *byte_offset)
+  NAPI_MOCK_EXTERN napi_status napi_get_typedarray_info(napi_env env, napi_value typedarray, napi_typedarray_type *type, size_t *length, void **data, napi_value *arraybuffer, size_t *byte_offset)
   {
     if (type)
       *type = napi_uint8_array;
@@ -1025,7 +1033,7 @@ extern "C"
   }
 
   // String operations
-  napi_status napi_coerce_to_string(napi_env env, napi_value value, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_coerce_to_string(napi_env env, napi_value value, napi_value *result)
   {
     if (result)
       *result = (napi_value)malloc(1);
@@ -1033,7 +1041,7 @@ extern "C"
   }
 
   // Instance checking
-  napi_status napi_get_new_target(napi_env env, napi_callback_info cbinfo, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_get_new_target(napi_env env, napi_callback_info cbinfo, napi_value *result)
   {
     if (result)
       *result = (napi_value)malloc(1);
@@ -1041,14 +1049,14 @@ extern "C"
   }
 
   // Exception handling
-  napi_status napi_is_exception_pending(napi_env env, bool *result)
+  NAPI_MOCK_EXTERN napi_status napi_is_exception_pending(napi_env env, bool *result)
   {
     if (result)
       *result = false;
     return napi_ok;
   }
 
-  napi_status napi_get_and_clear_last_exception(napi_env env, napi_value *result)
+  NAPI_MOCK_EXTERN napi_status napi_get_and_clear_last_exception(napi_env env, napi_value *result)
   {
     if (result)
       *result = (napi_value)malloc(1);
@@ -1056,16 +1064,28 @@ extern "C"
   }
 
   // Callback scope
-  napi_status napi_close_callback_scope(napi_env env, napi_callback_scope scope)
+  NAPI_MOCK_EXTERN napi_status napi_close_callback_scope(napi_env env, napi_callback_scope scope)
   {
     return napi_ok;
   }
 
-  napi_status napi_define_properties(napi_env env,
-                                     napi_value object,
-                                     size_t property_count,
-                                     const napi_property_descriptor *properties)
+  NAPI_MOCK_EXTERN napi_status napi_define_properties(napi_env env,
+                                                      napi_value object,
+                                                      size_t property_count,
+                                                      const napi_property_descriptor *properties)
   {
+    return napi_ok;
+  }
+
+  // Add this with the other NAPI function implementations
+  NAPI_MOCK_EXTERN napi_status napi_get_undefined(napi_env env, napi_value *result)
+  {
+    if (!result)
+    {
+      return napi_invalid_arg;
+    }
+    auto jsUndefined = g_env.createValue(JSType::UNDEFINED);
+    *result = getNapiValue(jsUndefined);
     return napi_ok;
   }
 
@@ -1074,3 +1094,8 @@ extern "C"
   // Add stubs for remaining N-API functions to ensure compilation
   // These can be expanded with real implementations as needed
 }
+
+#else
+// If we're using the real NAPI, we should only define functions that aren't in the real implementation
+// For example, helper functions that aren't part of the NAPI interface
+#endif

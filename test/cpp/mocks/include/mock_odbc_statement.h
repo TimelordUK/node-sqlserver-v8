@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gmock/gmock.h>
+#include "mock_odbc_api.h"
 #include "odbc_statement.h"
 #include "odbc_handles.h"
 #include "odbc_error_handler.h"
@@ -32,15 +33,15 @@ namespace mssql
   class MockOdbcStatement : public OdbcStatement
   {
   public:
-    MockOdbcStatement(
-        Type type,
-        std::shared_ptr<IOdbcStatementHandle> statement,
-        std::shared_ptr<OdbcErrorHandler> errorHandler)
-        : OdbcStatement(type, statement, errorHandler)
-    {
-    }
-
-    MOCK_METHOD(bool, Execute, (const std::vector<std::shared_ptr<QueryParameter>> &parameters, std::shared_ptr<QueryResult> &result), (override));
+      MockOdbcStatement(
+          Type type,
+          std::shared_ptr<IOdbcStatementHandle> statement,
+          std::shared_ptr<OdbcErrorHandler> errorHandler,
+          std::shared_ptr<IOdbcApi> odbcApi = nullptr)
+          : OdbcStatement(type, statement, errorHandler, odbcApi ? odbcApi : std::make_shared<MockOdbcApi>())
+      {
+      }
+      MOCK_METHOD(bool, Execute, (const std::vector<std::shared_ptr<QueryParameter>>& parameters, std::shared_ptr<QueryResult>& result), (override));
   };
 
   // Mock statement factory for testing
