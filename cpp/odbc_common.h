@@ -25,7 +25,7 @@
 #include <sqltypes.h>
 #include <sqlspi.h>
 #include <sqlucode.h>
-#include <msodbcsql.h>
+#include <msodbcsql.h> // This already defines the SQL Server structs we need
 #include <sqlncli-linux.h>
 
 // Restore GTest macros if they were saved
@@ -57,10 +57,10 @@
 #define SQL_SS_TIMESTAMPOFFSET (-155)
 #endif
 
-// Only define these structs if they're not already defined
-// This handles platforms where sqlncli.h or equivalent might not provide them
-#if !defined(_WIN32) && !defined(SQL_SS_TIME2_STRUCT_DEFINED)
+// Only define these structs for non-Linux platforms where they might not be provided
+#if !defined(__linux__) && !defined(SQL_SS_TIME2_STRUCT) && !defined(SQL_SS_TIME2_STRUCT_DEFINED)
 #define SQL_SS_TIME2_STRUCT_DEFINED
+#define SQL_SS_TIME2_STRUCT
 typedef struct tagSS_TIME2_STRUCT
 {
   SQLUSMALLINT hour;
@@ -70,8 +70,9 @@ typedef struct tagSS_TIME2_STRUCT
 } SQL_SS_TIME2_STRUCT;
 #endif
 
-#if !defined(_WIN32) && !defined(SQL_SS_TIMESTAMPOFFSET_STRUCT_DEFINED)
+#if !defined(__linux__) && !defined(SQL_SS_TIMESTAMPOFFSET_STRUCT) && !defined(SQL_SS_TIMESTAMPOFFSET_STRUCT_DEFINED)
 #define SQL_SS_TIMESTAMPOFFSET_STRUCT_DEFINED
+#define SQL_SS_TIMESTAMPOFFSET_STRUCT
 typedef struct tagSS_TIMESTAMPOFFSET_STRUCT
 {
   SQLSMALLINT year;
