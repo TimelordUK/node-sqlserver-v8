@@ -7,6 +7,7 @@
 #include "odbc_common.h"
 #include "odbc_transaction_manager.h"
 #include "odbc_error_handler.h"
+#include "odbc_statement_factory.h"
 #include "string_utils.h"
 #include "iodbc_api.h"
 #include <Logger.h>
@@ -21,9 +22,12 @@ namespace mssql
   // OdbcConnection implementation
   OdbcConnection::OdbcConnection(
       std::shared_ptr<IOdbcEnvironment> environment,
-      std::shared_ptr<IOdbcApi> odbcApi)
+      std::shared_ptr<IOdbcApi> odbcApi,
+      int connectionId)
       : connectionState(ConnectionState::ConnectionClosed),
-        _odbcApi(odbcApi ? odbcApi : std::make_shared<RealOdbcApi>())
+        _odbcApi(odbcApi ? odbcApi : std::make_shared<RealOdbcApi>()),
+        _connectionId(connectionId),
+		_statementFactory(std::make_shared< OdbcStatementFactory>(connectionId))
   {
     // Set up environment
     if (environment)
@@ -205,8 +209,7 @@ namespace mssql
     }
 
     // Create the statement using the factory
-    return StatementFactory::CreateStatement(_odbcApi,
-                                             type, handle, _errorHandler, query, tvpType);
+    return _statementFactory->CreateStatement(_odbcApi, type, handle, _errorHandler, query, tvpType);
   }
 
   std::shared_ptr<OdbcStatement> OdbcConnection::GetPreparedStatement(
@@ -346,7 +349,7 @@ namespace mssql
     sanitizedConnStr.push_back(0);
 
     SQL_LOG_DEBUG_STREAM("Connection string (sanitized): " << logConnStr);
-    
+
     // Clear any previous diagnostics
     _odbcApi.get()->ClearDiagnostics();
 

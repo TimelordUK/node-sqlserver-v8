@@ -1,6 +1,8 @@
 #pragma once
 #include <napi.h>
 #include <memory>
+#include <atomic>
+#include <mutex>
 
 namespace mssql
 {
@@ -30,6 +32,9 @@ namespace mssql
     Napi::Value Open(const Napi::CallbackInfo &info);
     Napi::Value Close(const Napi::CallbackInfo &info);
     Napi::Value Query(const Napi::CallbackInfo &info);
+    Napi::Value FetchRows(const Napi::CallbackInfo& info);
+    Napi::Value NextResultSet(const Napi::CallbackInfo& info);
+    Napi::Value CancelStatement(const Napi::CallbackInfo& info);
 
     // Internal state
     std::shared_ptr<IOdbcConnection> odbcConnection_;

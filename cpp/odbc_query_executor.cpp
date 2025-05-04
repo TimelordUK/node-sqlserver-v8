@@ -31,7 +31,7 @@ namespace mssql
     SQL_LOG_DEBUG_STREAM("Parameter count: " << parameters.size());
 
     // Create a statement using our factory method
-    auto stmt = OdbcStatementFactory::createStatement();
+    auto stmt = OdbcStatementHandleFactory::createStatement();
     if (!stmt->alloc(_connectionHandles->connectionHandle()->get_handle()))
     {
       SQL_LOG_ERROR("unable to allocate statement handle");
@@ -108,50 +108,50 @@ namespace mssql
     // For each column, get name and type
     for (SQLSMALLINT i = 1; i <= numCols; i++)
     {
-        // Create a column definition
-        ColumnDefinition colDef;
-        colDef.colNameLen = 0;
+      // Create a column definition
+      ColumnDefinition colDef;
+      colDef.colNameLen = 0;
 
-        // Let ODBC write directly to our struct members
-        ret = SQLDescribeCol(
-            stmt->get_handle(),
-            i,
-            colDef.colName,
-            sizeof(colDef.colName) / sizeof(SQLWCHAR),
-            &colDef.colNameLen,
-            &colDef.dataType,
-            &colDef.columnSize,
-            &colDef.decimalDigits,
-            &colDef.nullable);
+      // Let ODBC write directly to our struct members
+      ret = SQLDescribeCol(
+          stmt->get_handle(),
+          i,
+          colDef.colName,
+          sizeof(colDef.colName) / sizeof(SQLWCHAR),
+          &colDef.colNameLen,
+          &colDef.dataType,
+          &colDef.columnSize,
+          &colDef.decimalDigits,
+          &colDef.nullable);
 
-        if (!_errorHandler->CheckOdbcError(ret))
-        {
-            SQL_LOG_ERROR("SQLDescribeCol failed");
-            return false;
-        }
+      if (!_errorHandler->CheckOdbcError(ret))
+      {
+        SQL_LOG_ERROR("SQLDescribeCol failed");
+        return false;
+      }
 
-        // Add the column definition directly to the result
-        result->addColumn(colDef);
+      // Add the column definition directly to the result
+      result->addColumn(colDef);
     }
 
     //// Create DatumStorage instances for each column
-    //std::vector<std::shared_ptr<DatumStorage>> columnStorage;
-    //columnStorage.reserve(numCols);
+    // std::vector<std::shared_ptr<DatumStorage>> columnStorage;
+    // columnStorage.reserve(numCols);
 
-    //for (SQLSMALLINT i = 1; i <= numCols; i++)
+    // for (SQLSMALLINT i = 1; i <= numCols; i++)
     //{
-    //  auto storage = std::make_shared<DatumStorage>();
-    //  // Set type based on SQL type
-    //  storage->setType(MapSqlTypeToDatumType(result->getColumnType(i - 1)));
-    //  columnStorage.push_back(storage);
-    //}
+    //   auto storage = std::make_shared<DatumStorage>();
+    //   // Set type based on SQL type
+    //   storage->setType(MapSqlTypeToDatumType(result->getColumnType(i - 1)));
+    //   columnStorage.push_back(storage);
+    // }
 
     //// Fetch rows
-    //while (true)
+    // while (true)
     //{
-    //  ret = SQLFetch(stmt->get_handle());
-    //  if (ret == SQL_NO_DATA)
-    //    break;
+    //   ret = SQLFetch(stmt->get_handle());
+    //   if (ret == SQL_NO_DATA)
+    //     break;
 
     //  if (!_errorHandler->CheckOdbcError(ret))
     //  {

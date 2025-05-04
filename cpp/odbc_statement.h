@@ -54,13 +54,16 @@ namespace mssql
      */
     SQLHSTMT getHandle() const { return statement_->get_handle(); }
 
+    StatementHandle getStatementHandle() { return handle_; }
+
   protected:
     OdbcStatement(
         Type type,
         std::shared_ptr<IOdbcStatementHandle> statement,
         std::shared_ptr<OdbcErrorHandler> errorHandler,
-        std::shared_ptr<IOdbcApi> odbcApi)
-        : type_(type), statement_(statement), errorHandler_(errorHandler), odbcApi_(odbcApi)
+        std::shared_ptr<IOdbcApi> odbcApi,
+        StatementHandle handle)
+        : type_(type), statement_(statement), errorHandler_(errorHandler), odbcApi_(odbcApi), handle_(handle)
     {
     }
 
@@ -75,6 +78,7 @@ namespace mssql
     std::shared_ptr<IOdbcStatementHandle> statement_;
     std::shared_ptr<OdbcErrorHandler> errorHandler_;
     std::shared_ptr<IOdbcApi> odbcApi_; // Added IOdbcApi reference
+    StatementHandle handle_;
   };
 
   /**
@@ -87,8 +91,9 @@ namespace mssql
         std::shared_ptr<IOdbcStatementHandle> statement,
         std::shared_ptr<OdbcErrorHandler> errorHandler,
         const std::string &query,
-        std::shared_ptr<IOdbcApi> odbcApi)
-        : OdbcStatement(Type::Transient, statement, errorHandler, odbcApi),
+        std::shared_ptr<IOdbcApi> odbcApi,
+        StatementHandle handle)
+        : OdbcStatement(Type::Transient, statement, errorHandler, odbcApi, handle),
           query_(query),
           state_(State::STMT_NO_MORE_RESULTS),
           hasMoreResults_(false),
@@ -128,8 +133,9 @@ namespace mssql
         std::shared_ptr<IOdbcStatementHandle> statement,
         std::shared_ptr<OdbcErrorHandler> errorHandler,
         const std::string &query,
-        std::shared_ptr<IOdbcApi> odbcApi)
-        : OdbcStatement(Type::Prepared, statement, errorHandler, odbcApi), query_(query)
+        std::shared_ptr<IOdbcApi> odbcApi,
+        StatementHandle handle)
+        : OdbcStatement(Type::Prepared, statement, errorHandler, odbcApi, handle), query_(query)
     {
     }
 
@@ -158,8 +164,10 @@ namespace mssql
         std::shared_ptr<OdbcErrorHandler> errorHandler,
         const std::string &query,
         const std::string &tvpType,
-        std::shared_ptr<IOdbcApi> odbcApi)
-        : OdbcStatement(Type::Transient, statement, errorHandler, odbcApi), query_(query)
+        std::shared_ptr<IOdbcApi> odbcApi,
+        StatementHandle handle
+        )
+        : OdbcStatement(Type::Transient, statement, errorHandler, odbcApi, handle), query_(query)
     {
     }
 
@@ -178,19 +186,6 @@ namespace mssql
     bool isColumnsBound_ = false;
   };
 
-  /**
-   * @brief Factory for creating statements
-   */
-  class StatementFactory
-  {
-  public:
-    static std::shared_ptr<OdbcStatement> CreateStatement(
-        std::shared_ptr<IOdbcApi> odbcApi,
-        OdbcStatement::Type type,
-        std::shared_ptr<IOdbcStatementHandle> handle,
-        std::shared_ptr<OdbcErrorHandler> errorHandler,
-        const std::string &query,
-        const std::string &tvpType = "");
-  };
+  
 
 }

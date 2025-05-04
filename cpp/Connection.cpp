@@ -16,6 +16,7 @@
 #include "query_result.h"
 #include "parameter_set.h"
 #include "js_object_mapper.h"
+#include "odbc_connection_factory.h"
 
 namespace mssql
 {
@@ -35,9 +36,14 @@ namespace mssql
 
     // Define class
     const Napi::Function func = DefineClass(env, "Connection",
-                                            {InstanceMethod("open", &Connection::Open),
-                                             InstanceMethod("close", &Connection::Close),
-                                             InstanceMethod("query", &Connection::Query)});
+                                            {
+                                            	InstanceMethod("open", &Connection::Open),
+                                            	InstanceMethod("close", &Connection::Close),
+                                            	InstanceMethod("query", &Connection::Query),
+                                            	InstanceMethod("fetchRows", &Connection::FetchRows),
+                                                InstanceMethod("NextResultSet", &Connection::NextResultSet),
+                                                InstanceMethod("CancelStatement", &Connection::CancelStatement),
+                                            });
 
     // Create persistent reference to constructor
     constructor = Napi::Persistent(func);
@@ -346,6 +352,37 @@ namespace mssql
     return env.Undefined();
   }
 
+
+  Napi::Value Stubbed(const Napi::CallbackInfo& info)
+  {
+      const Napi::Env env = info.Env();
+
+      if (info.Length() > 1 && info[info.Length() - 1].IsFunction())
+      {
+          const auto callback = info[info.Length() - 1].As<Napi::Function>();
+          Napi::Object rows = Napi::Object::New(env);
+          callback.Call({ env.Null(), rows });
+      }
+
+      return  env.Undefined();
+  }
+
+
+  Napi::Value Connection::FetchRows(const Napi::CallbackInfo& info)
+  {
+      return  Stubbed(info);
+  }
+
+  Napi::Value Connection::NextResultSet(const Napi::CallbackInfo& info)
+  {
+      return  Stubbed(info);
+  }
+
+  Napi::Value Connection::CancelStatement(const Napi::CallbackInfo& info)
+  {
+      return  Stubbed(info);
+  }
+
   // Implement Query method
   Napi::Value Connection::Query(const Napi::CallbackInfo &info)
   {
@@ -445,7 +482,6 @@ namespace mssql
 
   void QueryWorker::Execute()
   {
-
     try
     {
       SQL_LOG_DEBUG_STREAM("Executing QueryWorker " << sqlText_);
@@ -496,7 +532,9 @@ namespace mssql
 
         // Create a metadata object to return
         Napi::Object metadata = Napi::Object::New(env);
+        Napi::Object handle = JsObjectMapper::fromStatementHandle(env, result_->getHandle());
         metadata.Set("meta", columns);
+        metadata.Set("handle", handle);
         Callback().Call({ env.Null(), metadata });
     }
     catch (const std::exception& e) {

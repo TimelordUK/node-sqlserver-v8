@@ -20,6 +20,8 @@ namespace mssql
     // Convert query to wide string
     auto wideQuery = StringUtils::Utf8ToUtf16(query_);
 
+    result->setHandle(this->getStatementHandle());
+
     // Make sure it's null-terminated
     if (wideQuery->size() > 0 && (*wideQuery)[wideQuery->size() - 1] != L'\0')
     {
@@ -394,31 +396,5 @@ namespace mssql
     return true;
   }
 
-  // StatementFactory implementation
-  std::shared_ptr<OdbcStatement> StatementFactory::CreateStatement(
-      std::shared_ptr<IOdbcApi> odbcApi,
-      OdbcStatement::Type type,
-      std::shared_ptr<IOdbcStatementHandle> handle,
-      std::shared_ptr<OdbcErrorHandler> errorHandler,
-      const std::string &query,
-      const std::string &tvpType)
-  {
-    switch (type)
-    {
-    case OdbcStatement::Type::Transient:
-      return std::make_shared<TransientStatement>(
-          handle, errorHandler, query, odbcApi);
 
-    case OdbcStatement::Type::Prepared:
-      return std::make_shared<PreparedStatement>(
-          handle, errorHandler, query, odbcApi);
-
-    case OdbcStatement::Type::TVP:
-      return std::make_shared<TvpStatement>(
-          handle, errorHandler, query, tvpType, odbcApi);
-
-    default:
-      return nullptr;
-    }
-  }
 }

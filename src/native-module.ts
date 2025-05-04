@@ -10,21 +10,25 @@ export interface NativeModule {
   setLogFile: (path: string) => void
 }
 
-// Interface for the native Connection class
 export interface NativeConnection {
   open: (connectionString: string, callback: (err: Error | null, conn?: any) => void) => void
   close: (callback: (err: Error | null) => void) => void
-  query: (
-    sql: string,
-    params: any[],
-    callback: (err: Error | null, rows?: any[], more?: boolean) => void
-  ) => NativeQuery
+  executeQuery: (sql: string, params: any[], callback: (err: Error | null, statementId?: number, metadata?: any) => void) => void
+  fetchRows: (statementId: number, batchSize: number, callback: (err: Error | null, rows?: any[], hasMore?: boolean) => void) => void
+  nextResultSet: (statementId: number, callback: (err: Error | null, hasMore?: boolean, metadata?: any) => void) => void
+  cancelStatement: (statementId: number, callback: (err: Error | null) => void) => void
 }
 
-// Interface for the native Query class
 export interface NativeQuery {
   on: (event: string, handler: Function) => void
   cancelQuery: (callback?: Function) => void
+}
+
+export interface NativeStatement {
+  getMetadata: (callback: (err: Error | null, metadata?: any) => void) => void
+  fetchRows: (batchSize: number, callback: (err: Error | null, rows?: any[], hasMore?: boolean) => void) => void
+  nextResultSet: (callback: (err: Error | null, hasMore?: boolean, metadata?: any) => void) => void
+  cancel: (callback: (err: Error | null) => void) => void
 }
 
 /**

@@ -6,6 +6,8 @@
 #include <memory>
 #include <mutex>
 #include <unordered_map>
+#include <atomic>
+#include <utility>
 
 // ODBC headers
 #include <sql.h>
@@ -33,6 +35,7 @@ namespace mssql
   class OdbcStatement;
   class IOdbcEnvironment;
   class OdbcTransactionManager;
+  class OdbcStatementFactory;
 
   class IOdbcConnection
   {
@@ -75,7 +78,8 @@ namespace mssql
     // Constructor now takes an environment parameter
     explicit OdbcConnection(
         std::shared_ptr<IOdbcEnvironment> environment = nullptr,
-        std::shared_ptr<IOdbcApi> odbcApi = nullptr);
+        std::shared_ptr<IOdbcApi> odbcApi = nullptr,
+        int connectionId = -1);
     ~OdbcConnection() override;
 
     // Static method to initialize a shared ODBC environment (legacy compatibility)
@@ -154,6 +158,10 @@ namespace mssql
     // Additional member
     std::shared_ptr<IOdbcApi> _odbcApi;
 
+    std::shared_ptr<OdbcStatementFactory> _statementFactory;
+
+    int _connectionId;
+
     // Statement management
     std::unordered_map<std::string, std::shared_ptr<OdbcStatement>> _preparedStatements;
     std::mutex _statementMutex;
@@ -169,15 +177,5 @@ namespace mssql
 
     // Convert UTF-8 connection string to UTF-16
     std::shared_ptr<std::vector<uint16_t>> ConvertConnectionString(const std::string &connectionString);
-  };
-
-  class OdbcConnectionFactory
-  {
-  public:
-    static std::shared_ptr<IOdbcConnection> CreateConnection(
-        std::shared_ptr<IOdbcEnvironment> environment = nullptr)
-    {
-      return std::make_shared<OdbcConnection>(environment);
-    }
   };
 }
