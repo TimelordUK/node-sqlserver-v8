@@ -11,7 +11,7 @@ export class TestConnectionFactory {
 
     // Create and open the connection
     const connection = createConnection();
-    await connection.promises.open(connectionString);
+    await connection.open(connectionString);
     return connection;
   }
 
@@ -26,7 +26,7 @@ export class TestConnectionFactory {
 
     // Create and open the connection
     const connection = createConnection();
-    await connection.promises.open(connectionString);
+    await connection.open(connectionString);
     return connection;
   }
 

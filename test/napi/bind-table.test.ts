@@ -21,7 +21,7 @@ describe('bind', function() {
 
   afterEach(async function() {
     if (connection) {
-      await connection.promises.close()
+      await connection.close()
     }
   })
 
@@ -36,5 +36,7 @@ describe('bind', function() {
     expect(connection).not.to.be.null
     if (connection === null) return
     const res = await connection.query(sql)
+    console.log(res)
+
   })
 })

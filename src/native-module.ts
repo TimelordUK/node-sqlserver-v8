@@ -13,7 +13,7 @@ export interface NativeModule {
 export interface NativeConnection {
   open: (connectionString: string, callback: (err: Error | null, conn?: any) => void) => void
   close: (callback: (err: Error | null) => void) => void
-  executeQuery: (sql: string, params: any[], callback: (err: Error | null, statementId?: number, metadata?: any) => void) => void
+  query: (sql: string, params: any[], callback: (err: Error | null, statementId?: number, metadata?: any) => void) => void
   fetchRows: (statementId: number, batchSize: number, callback: (err: Error | null, rows?: any[], hasMore?: boolean) => void) => void
   nextResultSet: (statementId: number, callback: (err: Error | null, hasMore?: boolean, metadata?: any) => void) => void
   cancelStatement: (statementId: number, callback: (err: Error | null) => void) => void

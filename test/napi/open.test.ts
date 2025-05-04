@@ -20,7 +20,7 @@ describe('open', function() {
 
   afterEach(async function() {
     if (connection) {
-      await connection.promises.close();
+      await connection.close();
     }
   });
 
@@ -39,7 +39,7 @@ describe('open', function() {
 
       // Close the existing connection first
       if (connection) {
-        await connection.promises.close();
+        await connection.close();
       }
 
       // Create a new connection with the specific key
