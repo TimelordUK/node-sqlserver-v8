@@ -147,6 +147,39 @@ namespace mssql
         return result;
     }
 
+    Napi::Object JsObjectMapper::fromColumnDefinition(const Napi::Env& env, const ColumnDefinition& colDef)
+    {
+        Napi::Object result = Napi::Object::New(env);
+
+        // Convert SQLWCHAR array to std::string
+        std::wstring wColName(colDef.colName);
+        std::string colName(wColName.begin(), wColName.end());
+
+        // Set properties on the JavaScript object
+        result.Set("name", Napi::String::New(env, colName));
+        result.Set("nameLength", Napi::Number::New(env, colDef.colNameLen));
+        result.Set("dataType", Napi::Number::New(env, colDef.dataType));
+        result.Set("columnSize", Napi::Number::New(env, colDef.columnSize));
+        result.Set("decimalDigits", Napi::Number::New(env, colDef.decimalDigits));
+        result.Set("nullable", Napi::Boolean::New(env, colDef.nullable != 0));
+
+        return result;
+    }
+
+    Napi::Array JsObjectMapper::fromQueryResult(const Napi::Env& env, const QueryResult& result)
+    {
+        Napi::Array columns = Napi::Array::New(env, result.size());
+
+        for (size_t i = 0; i < result.size(); i++)
+        {
+            ColumnDefinition colDef = result.get(i);
+            columns[i] = fromColumnDefinition(env, colDef);
+        }
+
+        return columns;
+    }
+
+
     Napi::Value JsObjectMapper::fromSqlParamValue(const Napi::Env &env, const SqlParamValue &value)
     {
         if (std::holds_alternative<std::nullptr_t>(value))

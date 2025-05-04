@@ -16,6 +16,7 @@ namespace mssql
 
     // Convert SQLWCHAR array to UTF-8 string
     static std::string WideToUtf8(const SQLWCHAR *wideStr, SQLSMALLINT length);
+    static std::string SafeWideToUtf8ForLogging(const SQLWCHAR *wstr, size_t maxLen = 1000);
 
   private:
     // Helper functions for UTF-8 to UTF-16 conversion

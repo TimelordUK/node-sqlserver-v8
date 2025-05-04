@@ -1164,7 +1164,33 @@ namespace mssql
       }
     }
 
-  private:
+    bool getBool() const
+    {
+      return getValueAs<int8_t>() != 0;
+    }
+
+    int32_t getInt32() const
+    {
+      return getValueAs<int32_t>();
+    }
+
+    int64_t getInt64() const
+    {
+      return getValueAs<int64_t>();
+    }
+
+    double getDouble() const
+    {
+      return getValueAs<double>();
+    }
+
+    std::string getString() const
+    {
+      // Implementation depends on how strings are stored internally
+      return std::string(reinterpret_cast<const char *>(data_.data()), data_.size());
+    }
+
+    private:
     std::wstring schema;
     std::wstring table;
 
@@ -1173,6 +1199,16 @@ namespace mssql
     std::shared_ptr<VectorBase> vectorData;
     bool isNull_ = false;
     size_t dataSize_ = 0; // Size of the actual data
+
+    template <typename T>
+    T getValueAs() const
+    {
+      if (data_.size() < sizeof(T))
+        throw std::runtime_error("Invalid data size for type");
+      return *reinterpret_cast<const T *>(data_.data());
+    }
+
+    std::vector<uint8_t> data_; // Raw data storage
   };
 
 } // namespace mssql

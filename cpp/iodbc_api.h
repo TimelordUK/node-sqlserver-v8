@@ -35,6 +35,7 @@ namespace mssql
     // Connection methods
     virtual SQLRETURN SQLDisconnect(SQLHDBC ConnectionHandle) = 0;
 
+
     virtual SQLRETURN SQLSetConnectAttr(
         SQLHDBC ConnectionHandle,
         SQLINTEGER Attribute,
@@ -70,6 +71,7 @@ namespace mssql
                                       SQLSMALLINT *DecimalDigits,
                                       SQLSMALLINT *Nullable) = 0;
     virtual SQLRETURN SQLFetch(SQLHSTMT StatementHandle) = 0;
+
     virtual SQLRETURN SQLGetData(SQLHSTMT StatementHandle,
                                  SQLUSMALLINT ColumnNumber,
                                  SQLSMALLINT TargetType,
@@ -88,6 +90,22 @@ namespace mssql
         SQLPOINTER rgbValue,
         SQLLEN cbValueMax,
         SQLLEN *pcbValue) = 0;
+
+    // Add SQLFetchScroll to the interface
+    virtual SQLRETURN SQLFetchScroll(
+        SQLHSTMT StatementHandle,
+        SQLSMALLINT FetchOrientation,
+        SQLLEN FetchOffset) = 0;
+
+    // Add SQLSetStmtAttr if not already present
+    virtual SQLRETURN SQLSetStmtAttr(
+        SQLHSTMT StatementHandle,
+        SQLINTEGER Attribute,
+        SQLPOINTER Value,
+        SQLINTEGER StringLength) = 0;
+
+    // Add SQLMoreResults to the interface
+    virtual SQLRETURN SQLMoreResults(SQLHSTMT StatementHandle) = 0;
 
     // Method to retrieve diagnostic information
     virtual std::vector<DiagnosticInfo> GetDiagnostics() const = 0;
@@ -123,6 +141,10 @@ namespace mssql
     SQLRETURN SQLBindParameter(SQLHSTMT hstmt, SQLUSMALLINT ipar, SQLSMALLINT fParamType, SQLSMALLINT fCType,
                                SQLSMALLINT fSqlType, SQLULEN cbColDef, SQLSMALLINT ibScale, SQLPOINTER rgbValue,
                                SQLLEN cbValueMax, SQLLEN *pcbValue) override;
+    SQLRETURN SQLFetchScroll(SQLHSTMT StatementHandle, SQLSMALLINT FetchOrientation, SQLLEN FetchOffset) override;
+    SQLRETURN SQLSetStmtAttrW(SQLHSTMT StatementHandle, SQLINTEGER Attribute, SQLPOINTER Value, SQLINTEGER StringLength) override;
+    SQLRETURN SQLMoreResults(SQLHSTMT StatementHandle) override;
+
 
     // Diagnostic methods
     std::vector<DiagnosticInfo> GetDiagnostics() const override;

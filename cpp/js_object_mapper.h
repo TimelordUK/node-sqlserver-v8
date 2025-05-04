@@ -5,6 +5,7 @@
 
 namespace mssql
 {
+
     class JsObjectMapper
     {
     public:
@@ -14,6 +15,9 @@ namespace mssql
         // static UserDefinedType toUserDefinedType(const Napi::Object &jsObject);
         // static DatabaseConnection toDatabaseConnection(const Napi::Object &jsObject);
 
+    	// New methods for working with QueryResult and ColumnDefinition
+        static Napi::Object fromColumnDefinition(const Napi::Env& env, const ColumnDefinition& colDef);
+        static Napi::Array fromQueryResult(const Napi::Env& env, const QueryResult& result);
         // Reverse mapping (C++ to JS)
         static Napi::Object fromProcedureParamMeta(const Napi::Env &env, const ProcedureParamMeta &param);
         static Napi::Object fromNativeParam(const Napi::Env &env, const NativeParam &param);

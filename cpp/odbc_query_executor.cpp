@@ -4,16 +4,18 @@
 #include "odbc_statement_factory.h"
 #include "iodbc_api.h"
 #include <Logger.h>
+#include "column_buffer.h"
+#include "result_buffer.h"
+#include "odbc_driver_types.h"
 
 namespace mssql
 {
 
   OdbcQueryExecutor::OdbcQueryExecutor(std::shared_ptr<IOdbcApi> api,
-      std::shared_ptr<ConnectionHandles> connectionHandles,
-      std::shared_ptr<OdbcErrorHandler> errorHandler)
-      :
-		_api(api),
-		_connectionHandles(connectionHandles),
+                                       std::shared_ptr<ConnectionHandles> connectionHandles,
+                                       std::shared_ptr<OdbcErrorHandler> errorHandler)
+      : _api(api),
+        _connectionHandles(connectionHandles),
         _errorHandler(errorHandler)
   {
   }
@@ -106,82 +108,87 @@ namespace mssql
     // For each column, get name and type
     for (SQLSMALLINT i = 1; i <= numCols; i++)
     {
-      SQLWCHAR colName[256];
-      SQLSMALLINT colNameLen;
-      SQLSMALLINT dataType;
-      SQLULEN columnSize;
-      SQLSMALLINT decimalDigits;
-      SQLSMALLINT nullable;
+        // Create a column definition
+        ColumnDefinition colDef;
+        colDef.colNameLen = 0;
 
-      ret = SQLDescribeCol(stmt->get_handle(), i, colName, sizeof(colName) / sizeof(SQLWCHAR),
-                           &colNameLen, &dataType, &columnSize, &decimalDigits, &nullable);
-
-      if (!_errorHandler->CheckOdbcError(ret))
-      {
-        SQL_LOG_ERROR("SQLDescribeCol failed");
-        return false;
-      }
-
-      // Convert column name to string using StringUtils
-      std::string colNameStr = StringUtils::WideToUtf8(colName, colNameLen);
-      result->addColumn(colNameStr, dataType);
-    }
-
-    // Create DatumStorage instances for each column
-    std::vector<std::shared_ptr<DatumStorage>> columnStorage;
-    columnStorage.reserve(numCols);
-
-    for (SQLSMALLINT i = 1; i <= numCols; i++)
-    {
-      auto storage = std::make_shared<DatumStorage>();
-      // Set type based on SQL type
-      storage->setType(MapSqlTypeToDatumType(result->getColumnType(i - 1)));
-      columnStorage.push_back(storage);
-    }
-
-    // Fetch rows
-    while (true)
-    {
-      ret = SQLFetch(stmt->get_handle());
-      if (ret == SQL_NO_DATA)
-        break;
-
-      if (!_errorHandler->CheckOdbcError(ret))
-      {
-        SQL_LOG_ERROR("SQLFetch failed");
-        return false;
-      }
-
-      std::vector<std::string> rowData;
-      rowData.reserve(numCols);
-
-      for (SQLSMALLINT i = 1; i <= numCols; i++)
-      {
-        SQLLEN indicator;
-        auto &storage = columnStorage[i - 1];
-
-        // Get data based on type
-        ret = GetColumnData(stmt->get_handle(), i, storage.get(), &indicator);
+        // Let ODBC write directly to our struct members
+        ret = SQLDescribeCol(
+            stmt->get_handle(),
+            i,
+            colDef.colName,
+            sizeof(colDef.colName) / sizeof(SQLWCHAR),
+            &colDef.colNameLen,
+            &colDef.dataType,
+            &colDef.columnSize,
+            &colDef.decimalDigits,
+            &colDef.nullable);
 
         if (!_errorHandler->CheckOdbcError(ret))
         {
-          SQL_LOG_ERROR("GetColumnData failed");
-          return false;
+            SQL_LOG_ERROR("SQLDescribeCol failed");
+            return false;
         }
 
-        if (indicator == SQL_NULL_DATA)
-        {
-          rowData.emplace_back("NULL");
-        }
-        else
-        {
-          // Convert data to string representation
-          rowData.push_back(storage->getDebugString(true, 1, true));
-        }
-      }
-
-      result->addRow(rowData);
+        // Add the column definition directly to the result
+        result->addColumn(colDef);
     }
+
+    //// Create DatumStorage instances for each column
+    //std::vector<std::shared_ptr<DatumStorage>> columnStorage;
+    //columnStorage.reserve(numCols);
+
+    //for (SQLSMALLINT i = 1; i <= numCols; i++)
+    //{
+    //  auto storage = std::make_shared<DatumStorage>();
+    //  // Set type based on SQL type
+    //  storage->setType(MapSqlTypeToDatumType(result->getColumnType(i - 1)));
+    //  columnStorage.push_back(storage);
+    //}
+
+    //// Fetch rows
+    //while (true)
+    //{
+    //  ret = SQLFetch(stmt->get_handle());
+    //  if (ret == SQL_NO_DATA)
+    //    break;
+
+    //  if (!_errorHandler->CheckOdbcError(ret))
+    //  {
+    //    SQL_LOG_ERROR("SQLFetch failed");
+    //    return false;
+    //  }
+
+    //  std::vector<std::string> rowData;
+    //  rowData.reserve(numCols);
+
+    //  for (SQLSMALLINT i = 1; i <= numCols; i++)
+    //  {
+    //    SQLLEN indicator;
+    //    auto &storage = columnStorage[i - 1];
+
+    //    // Get data based on type
+    //    ret = GetColumnData(stmt->get_handle(), i, storage.get(), &indicator);
+
+    //    if (!_errorHandler->CheckOdbcError(ret))
+    //    {
+    //      SQL_LOG_ERROR("GetColumnData failed");
+    //      return false;
+    //    }
+
+    //    if (indicator == SQL_NULL_DATA)
+    //    {
+    //      rowData.emplace_back("NULL");
+    //    }
+    //    else
+    //    {
+    //      // Convert data to string representation
+    //      rowData.push_back(storage->getDebugString(true, 1, true));
+    //    }
+    //  }
+
+    //  result->addRow(rowData);
+    //}
 
     return true;
   }

@@ -106,5 +106,22 @@ namespace mssql
       EXPECT_CALL(*this, GetDiagnostics())
           .WillRepeatedly(testing::Return(diags));
     }
+
+    MOCK_METHOD(SQLRETURN, SQLFetchScroll,
+                (SQLHSTMT StatementHandle,
+                 SQLSMALLINT FetchOrientation,
+                 SQLLEN FetchOffset),
+                (override));
+
+    MOCK_METHOD(SQLRETURN, SQLSetStmtAttr,
+                (SQLHSTMT StatementHandle,
+                 SQLINTEGER Attribute,
+                 SQLPOINTER Value,
+                 SQLINTEGER StringLength),
+                (override));
+
+    MOCK_METHOD(SQLRETURN, SQLMoreResults,
+                (SQLHSTMT StatementHandle),
+                (override));
   };
 }

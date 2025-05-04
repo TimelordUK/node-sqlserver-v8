@@ -911,4 +911,58 @@ namespace mssql
     return ret;
   }
 
+  SQLRETURN RealOdbcApi::SQLFetchScroll(
+      SQLHSTMT StatementHandle,
+      SQLSMALLINT FetchOrientation,
+      SQLLEN FetchOffset)
+  {
+    SQL_LOG_TRACE_STREAM("SQLFetchScroll called - Handle: " << StatementHandle
+                                                            << ", FetchOrientation: " << FetchOrientation
+                                                            << ", FetchOffset: " << FetchOffset);
+
+    SQLRETURN ret = ::SQLFetchScroll(StatementHandle, FetchOrientation, FetchOffset);
+    SQL_LOG_TRACE_STREAM("SQLFetchScroll returned: " << GetSqlReturnCodeString(ret));
+
+    if (!SQL_SUCCEEDED(ret) && ret != SQL_NO_DATA)
+    {
+      LogOdbcError(SQL_HANDLE_STMT, StatementHandle, "SQLFetchScroll failed");
+    }
+
+    return ret;
+  }
+
+  SQLRETURN RealOdbcApi::SQLMoreResults(SQLHSTMT StatementHandle)
+  {
+    SQL_LOG_TRACE_STREAM("SQLMoreResults called - Handle: " << StatementHandle);
+
+    SQLRETURN ret = ::SQLMoreResults(StatementHandle);
+    SQL_LOG_TRACE_STREAM("SQLMoreResults returned: " << GetSqlReturnCodeString(ret));
+
+    if (!SQL_SUCCEEDED(ret) && ret != SQL_NO_DATA)
+    {
+      LogOdbcError(SQL_HANDLE_STMT, StatementHandle, "SQLMoreResults failed");
+    }
+
+    return ret;
+  }
+
+  SQLRETURN RealOdbcApi::SQLSetStmtAttrW(
+      SQLHSTMT           hstmt,
+      SQLINTEGER         Attribute,
+      SQLPOINTER         Value,
+      SQLINTEGER         StringLength)
+  {
+      SQL_LOG_TRACE_STREAM("SQLSetStmtAttrW called - Handle: " << hstmt);
+
+      SQLRETURN ret = ::SQLSetStmtAttr(hstmt, Attribute, Value, StringLength);
+      SQL_LOG_TRACE_STREAM("SQLMoreResults returned: " << GetSqlReturnCodeString(ret));
+
+      if (!SQL_SUCCEEDED(ret) && ret != SQL_NO_DATA)
+      {
+          LogOdbcError(SQL_HANDLE_STMT, hstmt, "SQLSetStmtAttrW failed");
+      }
+
+      return ret;
+  }
+
 } // namespace mssql

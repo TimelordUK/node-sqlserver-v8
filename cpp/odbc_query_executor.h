@@ -22,6 +22,7 @@ namespace mssql
   // Forward declarations
   class IOdbcStatementHandle;
   class IOdbcApi;
+  class QueryResult;
 
   class OdbcQueryExecutor
   {

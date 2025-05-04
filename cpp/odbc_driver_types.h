@@ -3,6 +3,7 @@
 #pragma once
 
 #include "platform.h"
+#include "odbc_common.h"
 #include <iostream>
 #include <ostream>
 #include <variant>
@@ -11,6 +12,33 @@
 // Common ODBC utility functions and constants
 namespace mssql
 {
+    struct ColumnDefinition
+    {
+        SQLWCHAR colName[256];
+        SQLSMALLINT colNameLen;
+        SQLSMALLINT dataType;
+        SQLULEN columnSize;
+        SQLSMALLINT decimalDigits;
+        SQLSMALLINT nullable;
+    };
+
+    class QueryResult
+    {
+    public:
+        // Methods to add columns and rows
+        void addColumn(ColumnDefinition d)
+        {
+            columns_.push_back(d);
+        }
+
+        // Use "inline" correctly and make these methods const since they don't modify the object
+        inline size_t size() const { return columns_.size(); }
+        inline ColumnDefinition get(size_t i) const { return columns_[i]; }
+
+    private:
+        std::vector<ColumnDefinition> columns_;
+    };
+
     // Existing structure
     struct ProcedureParamMeta
     {

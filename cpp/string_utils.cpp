@@ -144,4 +144,19 @@ namespace mssql
     return result;
   }
 
+  std::string StringUtils::SafeWideToUtf8ForLogging(const SQLWCHAR *wstr, size_t maxLen)
+  {
+    if (!wstr)
+      return "(null)";
+
+    // Find actual length (up to maxLen) by looking for null terminator
+    size_t len = 0;
+    while (len < maxLen && wstr[len] != L'\0')
+    {
+      len++;
+    }
+
+    return WideToUtf8(wstr, static_cast<SQLSMALLINT>(len));
+  }
+
 } // namespace mssql

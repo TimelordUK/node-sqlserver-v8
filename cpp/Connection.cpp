@@ -1,4 +1,4 @@
-// ReSharper disable CppInconsistentNaming
+
 #include "platform.h"
 #include <thread>
 #include <chrono>
@@ -9,11 +9,13 @@
 
 #include "Connection.h"
 #include "odbc_connection.h"
+#include "odbc_driver_types.h"
 #include "odbc_environment.h"
 #include "odbc_error.h"
 #include "query_parameter.h"
 #include "query_result.h"
 #include "parameter_set.h"
+#include "js_object_mapper.h"
 
 namespace mssql
 {
@@ -480,10 +482,26 @@ namespace mssql
     const Napi::Env env = Env();
     Napi::HandleScope scope(env);
     SQL_LOG_DEBUG("QueryWorker::OnOK");
-    // Convert query result to JavaScript object
-    Napi::Object resultObj = result_->toJSObject(env);
+    // Validate that we have a callback function as the last argument
 
-    // Call the callback with null error and result
-    Callback().Call({env.Null(), resultObj});
+    try {
+        // Create a JavaScript array of column definitions
+        Napi::Array columns = Napi::Array::New(env);
+
+        // Populate the array with column metadata
+        for (size_t i = 0; i < result_->size(); i++) {
+            ColumnDefinition colDef = result_->get(i);
+            columns[i] = JsObjectMapper::fromColumnDefinition(env, colDef);
+        }
+
+        // Create a metadata object to return
+        Napi::Object metadata = Napi::Object::New(env);
+        metadata.Set("meta", columns);
+        Callback().Call({ env.Null(), metadata });
+    }
+    catch (const std::exception& e) {
+        // Call the callback with an error
+        Callback().Call({Napi::Error::New(env, e.what()).Value(), env.Null()});
+    }
   }
 }

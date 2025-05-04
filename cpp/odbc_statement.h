@@ -5,7 +5,7 @@
 #include <vector>
 #include "odbc_handles.h"
 #include "query_parameter.h"
-#include "query_result.h"
+#include "odbc_driver_types.h"
 
 namespace mssql
 {
@@ -23,6 +23,16 @@ namespace mssql
       Transient, // One-off query execution
       Prepared,  // Prepared statement that can be reused
       TVP        // Table-valued parameter statement
+    };
+
+    enum class State
+    {
+      STMT_NO_MORE_RESULTS, // No more result sets available
+      STMT_METADATA_READY,  // Metadata for current result set is ready
+      STMT_EXECUTING,       // Statement is executing
+      STMT_FETCHING_ROWS,   // Currently fetching rows
+      STMT_FETCH_COMPLETE,  // All rows in current result set have been fetched
+      STMT_ERROR            // An error occurred
     };
 
     virtual ~OdbcStatement() = default;
@@ -45,14 +55,14 @@ namespace mssql
     SQLHSTMT getHandle() const { return statement_->get_handle(); }
 
   protected:
-      OdbcStatement(
-          Type type,
-          std::shared_ptr<IOdbcStatementHandle> statement,
-          std::shared_ptr<OdbcErrorHandler> errorHandler,
-          std::shared_ptr<IOdbcApi> odbcApi)
-          : type_(type), statement_(statement), errorHandler_(errorHandler), odbcApi_(odbcApi)
-      {
-      }
+    OdbcStatement(
+        Type type,
+        std::shared_ptr<IOdbcStatementHandle> statement,
+        std::shared_ptr<OdbcErrorHandler> errorHandler,
+        std::shared_ptr<IOdbcApi> odbcApi)
+        : type_(type), statement_(statement), errorHandler_(errorHandler), odbcApi_(odbcApi)
+    {
+    }
 
     /**
      * @brief Process results from an executed statement
@@ -73,21 +83,39 @@ namespace mssql
   class TransientStatement : public OdbcStatement
   {
   public:
-      TransientStatement(
-          std::shared_ptr<IOdbcStatementHandle> statement,
-          std::shared_ptr<OdbcErrorHandler> errorHandler,
-          const std::string& query,
-          std::shared_ptr<IOdbcApi> odbcApi)
-          : OdbcStatement(Type::Transient, statement, errorHandler, odbcApi), query_(query)
-      {
-      }
+    TransientStatement(
+        std::shared_ptr<IOdbcStatementHandle> statement,
+        std::shared_ptr<OdbcErrorHandler> errorHandler,
+        const std::string &query,
+        std::shared_ptr<IOdbcApi> odbcApi)
+        : OdbcStatement(Type::Transient, statement, errorHandler, odbcApi),
+          query_(query),
+          state_(State::STMT_NO_MORE_RESULTS),
+          hasMoreResults_(false),
+          endOfRows_(true)
+    {
+    }
 
-      bool Execute(
-          const std::vector<std::shared_ptr<QueryParameter>>& parameters,
-          std::shared_ptr<QueryResult>& result) override;
+    // Core operations only
+    bool Execute(
+        const std::vector<std::shared_ptr<QueryParameter>> &parameters,
+        std::shared_ptr<QueryResult> &result) override;
+
+    bool FetchNextBatch(size_t batchSize);
+    bool NextResultSet();
+    bool HasMoreResults() const;
+    bool EndOfRows() const;
+    State GetState() const;
+
+  protected:
+    bool GetMetadata(std::shared_ptr<QueryResult> &result);
+    bool InitializeResultSet(std::shared_ptr<QueryResult> &result);
 
   private:
-      std::string query_;
+    std::string query_;
+    State state_;
+    bool hasMoreResults_;
+    bool endOfRows_;
   };
 
   /**
@@ -164,4 +192,5 @@ namespace mssql
         const std::string &query,
         const std::string &tvpType = "");
   };
+
 }

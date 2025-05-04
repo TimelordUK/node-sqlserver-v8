@@ -30,7 +30,7 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "(Windows) Launch",
+            "name": "(Windows) typescript tests",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "C:\\nvm4w\\nodejs\\node.exe",
