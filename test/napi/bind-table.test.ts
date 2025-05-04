@@ -1,13 +1,15 @@
-
-import { expect } from 'chai';
-import { Connection } from 'msnodesqlv8/src';
+import {expect} from 'chai';
+import {Connection} from 'msnodesqlv8/src';
 import * as nativeModule from 'msnodesqlv8';
-import { TestConnectionFactory } from 'msnodesqlv8/test/common/test-connection-factory'
-import { QueryBuilder } from 'msnodesqlv8/src/query-builder';
+import {TestConnectionFactory} from 'msnodesqlv8/test/common/test-connection-factory'
+import {QueryBuilder} from 'msnodesqlv8/src/query-builder'
+import {Logger, LogLevel} from '../../lib/logger'
 
 // Set logging options
 nativeModule.setLogLevel(5); // Debug level
 nativeModule.enableConsoleLogging(true)
+Logger.getInstance().setMinLevel(LogLevel.DEBUG)
+
 
 describe('bind', function() {
   this.timeout(0)

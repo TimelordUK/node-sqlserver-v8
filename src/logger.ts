@@ -1,11 +1,11 @@
 // src/logger.ts
 export enum LogLevel {
-  TRACE = 0,
-  DEBUG = 1,
-  INFO = 2,
-  WARN = 3,
-  ERROR = 4,
-  NONE = 5
+  SILENT = 0,
+  ERROR = 1,
+  WARNING = 2,
+  INFO = 3,
+  DEBUG = 4,
+  TRACE = 5
 }
 
 export interface LogAppender {
@@ -14,6 +14,7 @@ export interface LogAppender {
 
 export class ConsoleAppender implements LogAppender {
   log (level: LogLevel, message: string, context?: Record<string, any>): void {
+    // Keep the ISO timestamp format with milliseconds
     const timestamp = new Date().toISOString()
     const levelStr = LogLevel[level]
     const contextStr = context ? ` [${this.formatContext(context)}]` : ''
@@ -27,7 +28,6 @@ export class ConsoleAppender implements LogAppender {
       .join(', ')
   }
 }
-
 export class FileAppender implements LogAppender {
   private readonly filePath: string
 
@@ -88,7 +88,7 @@ export class Logger {
   }
 
   public warn (message: string, context?: Record<string, any>): void {
-    this.log(LogLevel.WARN, message, context)
+    this.log(LogLevel.WARNING, message, context)
   }
 
   public error (message: string, context?: Record<string, any>): void {

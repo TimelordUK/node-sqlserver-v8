@@ -1,7 +1,7 @@
 // src/connection.ts
 import { NativeConnection } from './native-module'
 import { EventEmitter } from 'events'
-import { Logger } from './logger'
+import { Logger, LogLevel } from './logger' // Corrected import
 import {StatementState} from "./statement";
 
 /**
@@ -111,10 +111,12 @@ export class Connection extends EventEmitter {
   private readonly _queue: AsyncQueue = new AsyncQueue()
   private _closed = false
   public readonly _connectionId = 1
+  private readonly _logger: Logger = Logger.getInstance()
 
   constructor (nativeConnection: NativeConnection) {
     super()
     this._native = nativeConnection
+    this._logger.setContextProvider(() => this._getLogContext())
     // Create the promise-based API
   }
 
@@ -153,6 +155,7 @@ export class Connection extends EventEmitter {
     if (!callback) {
       task.promise = new Promise((resolve, reject) => {
         task.execute = (done) => {
+          this._logger.debug('Opening database connection', { connectionString })
           this._native.open(connectionString, (err, conn) => {
             if (err) reject(err)
             else resolve(conn)
