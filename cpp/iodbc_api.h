@@ -51,6 +51,11 @@ namespace mssql
         SQLSMALLINT *StringLength2Ptr,
         SQLUSMALLINT DriverCompletion) = 0;
 
+    virtual SQLRETURN SQLExecDirectW(
+        SQLHSTMT hstmt,
+        SQLWCHAR *szSqlStr,
+        SQLINTEGER TextLength) = 0;
+
     // Statement methods - always use the 'W' versions
     virtual SQLRETURN SQLExecute(SQLHSTMT StatementHandle) = 0;
     virtual SQLRETURN SQLNumResultCols(SQLHSTMT StatementHandle, SQLSMALLINT *ColumnCount) = 0;
@@ -106,6 +111,7 @@ namespace mssql
 
     // Statement methods
     SQLRETURN SQLExecute(SQLHSTMT StatementHandle) override;
+    SQLRETURN SQLExecDirectW(SQLHSTMT hstmt, SQLWCHAR *szSqlStr, SQLINTEGER TextLength) override;
     SQLRETURN SQLNumResultCols(SQLHSTMT StatementHandle, SQLSMALLINT *ColumnCount) override;
     SQLRETURN SQLPrepareW(SQLHSTMT StatementHandle, SQLWCHAR *StatementText, SQLINTEGER TextLength) override;
     SQLRETURN SQLDescribeColW(SQLHSTMT StatementHandle, SQLUSMALLINT ColumnNumber, SQLWCHAR *ColumnName,

@@ -1,4 +1,3 @@
-// test/napi/open.ts
 import { expect } from 'chai';
 import { Connection } from '../../src';
 import * as nativeModule from 'msnodesqlv8';

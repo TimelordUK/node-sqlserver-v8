@@ -12,6 +12,6 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "lib/query-builder.ts"],
   "exclude": ["node_modules", "build", "test"]
 }

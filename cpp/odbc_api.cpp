@@ -554,6 +554,25 @@ namespace mssql
     return true; // Just a placeholder for the diagnostic function
   }
 
+  SQLRETURN RealOdbcApi::SQLExecDirectW(
+      SQLHSTMT hstmt,
+      SQLWCHAR *szSqlStr,
+      SQLINTEGER TextLength)
+  {
+    SQL_LOG_TRACE_STREAM("SQLExecDirectW called for handle: " << hstmt
+                                                              << ", SQL: " << WideToUtf8(szSqlStr)
+                                                              << ", TextLength: " << TextLength);
+
+    SQLRETURN ret = ::SQLExecDirectW(hstmt, szSqlStr, TextLength);
+    SQL_LOG_TRACE_STREAM("SQLExecDirectW returned: " << GetSqlReturnCodeString(ret));
+
+    if (!SQL_SUCCEEDED(ret))
+    {
+      LogOdbcError(SQL_HANDLE_STMT, hstmt, "SQLExecDirectW failed");
+    }
+    return ret;
+  }
+
   SQLRETURN RealOdbcApi::SQLExecute(SQLHSTMT StatementHandle)
   {
     SQL_LOG_TRACE_STREAM("SQLExecute called for handle: " << StatementHandle);
