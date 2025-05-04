@@ -32,40 +32,6 @@ namespace mssql
           procName(""),
           lineNumber(0) {}
 
-    const char *Message(void) const
-    {
-      return message.c_str();
-    }
-
-    const char *SqlState(void) const
-    {
-      return sqlstate.c_str();
-    }
-
-    SQLINTEGER Code(void) const
-    {
-      return code;
-    }
-
-    int Severity(void) const
-    {
-      return severity;
-    }
-
-    const char *ServerName(void) const
-    {
-      return serverName.c_str();
-    }
-
-    const char *ProcName(void) const
-    {
-      return procName.c_str();
-    }
-
-    unsigned int LineNumber(void) const
-    {
-      return lineNumber;
-    }
 
     // list of msnodesql specific errors
     static OdbcError NODE_SQL_NO_DATA;
