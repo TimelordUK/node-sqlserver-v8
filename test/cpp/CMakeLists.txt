@@ -4,6 +4,7 @@ project(msnodesqlv8_tests CXX)
 # Set C++ standard (match node-gyp)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_definitions(-DMOCK_NAPI)
 add_compile_definitions(MOCK_NAPI)
 
@@ -36,7 +37,8 @@ else()
     add_definitions(-DLINUX_BUILD -DUNICODE -DBUILDING_NODE_EXTENSION -DNAPI_DISABLE_CPP_EXCEPTIONS)
 
     # Add C++20 flag (we'll keep it since your node-gyp is also using C++20)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -fexceptions")
+    # Add -fPIC explicitly and use a better C++20 flag setup for GCC
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -fPIC -fexceptions")
 
     # Linux/Mac use -lodbc
     find_library(ODBC_LIBRARIES NAMES odbc)
@@ -106,6 +108,12 @@ FetchContent_Declare(
 )
 # For Windows, prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+# Force shared libraries for GoogleTest on Linux to avoid PIC issues
+if(NOT WIN32)
+    set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries" FORCE)
+endif()
+
 FetchContent_MakeAvailable(googletest)
 
 # Get all source files except module.cpp
@@ -431,10 +439,8 @@ target_include_directories(cpp_tests PRIVATE
 if(WIN32)
     set_target_properties(cpp_tests PROPERTIES LINK_FLAGS "/NODEFAULTLIB:msvcrt.lib")
 else()
-    if(NODE_LIB)
-        target_link_libraries(cpp_tests PRIVATE ${NODE_LIB})
-    endif()
-    target_link_libraries(cpp_tests PRIVATE pthread dl)
+    # On Linux, link against pthread, dl and rt (common system libraries needed)
+    target_link_libraries(cpp_tests PRIVATE pthread dl rt)
 endif()
 
 # Link all required libraries

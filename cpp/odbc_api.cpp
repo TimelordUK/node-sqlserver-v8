@@ -285,29 +285,10 @@ namespace mssql
 
     // Log the original connection string (sanitized for password)
     std::wstring originalConnStr;
-    if (InConnectionString != nullptr)
+    if (InConnectionString)
     {
-      // First determine the string length
-      SQLSMALLINT inputLength = StringLength1;
-      if (inputLength == SQL_NTS)
-      { // SQL_NTS = -3, means null-terminated string
-        const SQLWCHAR *p = InConnectionString;
-        inputLength = 0;
-        while (*p != 0)
-        {
-          inputLength++;
-          p++;
-        }
-      }
-      if (inputLength > 0)
-      {
-        originalConnStr = std::wstring(static_cast<const wchar_t *>(InConnectionString),
-                                       static_cast<size_t>(inputLength));
-      }
-    }
-    else
-    {
-      originalConnStr = L"";
+      // Proper way to convert SQLWCHAR* to std::wstring
+      originalConnStr = std::wstring(reinterpret_cast<wchar_t *>(InConnectionString));
     }
     std::string safeConnStr = WideToUtf8(InConnectionString);
 
