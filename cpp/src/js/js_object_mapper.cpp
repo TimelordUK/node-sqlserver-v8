@@ -96,8 +96,8 @@ namespace mssql
     return result;
   }
 
-  // Create from Napi::Object sent from JavaScript
-  StatementHandle toStatementHandle(const Napi::Object &jsObject)
+  // Move this inside the JsObjectMapper class implementation
+  StatementHandle JsObjectMapper::toStatementHandle(const Napi::Object &jsObject)
   {
     int conn_id = jsObject.Get("connectionId").As<Napi::Number>().Int32Value();
     int stmt_id = jsObject.Get("statementId").As<Napi::Number>().Int32Value();
@@ -174,8 +174,9 @@ namespace mssql
     // In Linux, SQLWCHAR is unsigned short (16-bit), but wchar_t is 32-bit
     // So we need to use proper conversion
     std::string colName;
-    if (colDef.colNameLen > 0) {
-        colName = StringUtils::WideToUtf8(colDef.colName, colDef.colNameLen);
+    if (colDef.colNameLen > 0)
+    {
+      colName = StringUtils::WideToUtf8(colDef.colName, colDef.colNameLen);
     }
 
     // Set properties on the JavaScript object
