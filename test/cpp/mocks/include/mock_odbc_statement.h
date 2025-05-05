@@ -76,8 +76,8 @@ namespace mssql
     void ConfigureForSuccessfulQuery(const std::vector<ColumnDefinition>& columns, size_t rowCount = 10) 
     {
       // Configure Execute to succeed and setup the result
-      EXPECT_CALL(*this, Execute(testing::_, testing::_))
-          .WillOnce(testing::DoAll(
+      ON_CALL(*this, Execute(testing::_, testing::_))
+          .WillByDefault(testing::DoAll(
               testing::Invoke([columns, rowCount](auto&, std::shared_ptr<QueryResult>& result) {
                   // Setup columns
                   for (const auto& col : columns) {
@@ -91,22 +91,24 @@ namespace mssql
               }), 
               testing::Return(true)));
       
-      // Configure HasMoreResults to return true initially, then false after NextResultSet
-      EXPECT_CALL(*this, HasMoreResults())
-          .WillRepeatedly(testing::Return(false));
+      // Configure HasMoreResults and EndOfRows behavior
+      ON_CALL(*this, HasMoreResults())
+          .WillByDefault(testing::Return(false));
       
-      // Configure EndOfRows to return false initially, then true after rows are "fetched"
-      testing::InSequence seq;
-      EXPECT_CALL(*this, EndOfRows())
-          .Times(testing::AtMost(5))
-          .WillRepeatedly(testing::Return(false));
-      
-      EXPECT_CALL(*this, EndOfRows())
-          .WillRepeatedly(testing::Return(true));
+      // First call to EndOfRows returns false, subsequent calls return true
+      bool endOfRowsCalled = false;
+      ON_CALL(*this, EndOfRows())
+          .WillByDefault(testing::Invoke([&endOfRowsCalled]() {
+              if (!endOfRowsCalled) {
+                  endOfRowsCalled = true;
+                  return false;
+              }
+              return true;
+          }));
       
       // Configure TryReadRows to succeed
-      EXPECT_CALL(*this, TryReadRows(testing::_, testing::_))
-          .WillRepeatedly(testing::DoAll(
+      ON_CALL(*this, TryReadRows(testing::_, testing::_))
+          .WillByDefault(testing::DoAll(
               testing::Invoke([rowCount](std::shared_ptr<QueryResult> result, size_t) {
                   // Mark as end of rows after reading
                   result->set_end_of_rows(true);

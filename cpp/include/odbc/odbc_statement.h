@@ -294,6 +294,9 @@ namespace mssql
     bool Execute(
         const std::vector<std::shared_ptr<QueryParameter>> &parameters,
         std::shared_ptr<QueryResult> &result) override;
+    
+    bool FetchNextBatch(size_t batchSize) override;
+    bool NextResultSet() override;
 
     /**
      * @brief Prepare the statement
@@ -326,6 +329,9 @@ namespace mssql
     bool Execute(
         const std::vector<std::shared_ptr<QueryParameter>> &parameters,
         std::shared_ptr<QueryResult> &result) override;
+        
+    bool FetchNextBatch(size_t batchSize) override;
+    bool NextResultSet() override;
 
     /**
      * @brief Bind TVP columns

@@ -55,6 +55,30 @@ TEST_F(MockOdbcStatementTest, MockIOdbcStatementUsage) {
     // Configure the mock for a successful query
     mockStatement->ConfigureForSuccessfulQuery(columns, 5);
     
+    // Set up explicit expectations for the sequence we want to test
+    EXPECT_CALL(*mockStatement, Execute(_, _))
+        .WillOnce(testing::Invoke([columns](auto&, std::shared_ptr<QueryResult>& result) {
+            for (const auto& col : columns) {
+                result->addColumn(col);
+            }
+            result->set_row_count(5);
+            result->set_end_of_rows(false);
+            return true;
+        }));
+    
+    EXPECT_CALL(*mockStatement, EndOfRows())
+        .WillOnce(Return(false))
+        .WillRepeatedly(Return(true));
+    
+    EXPECT_CALL(*mockStatement, TryReadRows(_, _))
+        .WillOnce(testing::Invoke([](std::shared_ptr<QueryResult> result, size_t) {
+            result->set_end_of_rows(true);
+            return true;
+        }));
+        
+    EXPECT_CALL(*mockStatement, HasMoreResults())
+        .WillRepeatedly(Return(false));
+    
     // Create a result object to receive the query results
     auto result = std::make_shared<QueryResult>();
     
@@ -71,9 +95,10 @@ TEST_F(MockOdbcStatementTest, MockIOdbcStatementUsage) {
     ASSERT_TRUE(mockStatement->EndOfRows()); // Now at end
     
     // Verify the column definitions
-    ASSERT_EQ("id", std::string(result->get(0).colNameLen, ' '));
+    std::string expected = "id";
+    ASSERT_EQ(expected.length(), result->get(0).colNameLen);
     for (int i = 0; i < result->get(0).colNameLen; i++) {
-        ASSERT_EQ('i', static_cast<char>(result->get(0).colName[i]));
+        ASSERT_EQ(expected[i], static_cast<char>(result->get(0).colName[i]));
     }
     ASSERT_EQ(SQL_INTEGER, result->get(0).dataType);
     

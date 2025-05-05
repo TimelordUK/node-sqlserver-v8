@@ -22,6 +22,7 @@ namespace mssql
 
   void FetchRowsWorker::Execute()
   {
+
     try
     {
       SQL_LOG_DEBUG_STREAM("Executing FetchRowsWorker for statement: " << statementHandle_.toString());
