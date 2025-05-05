@@ -242,7 +242,8 @@ export class Statement extends EventEmitter {
                 return
               }
 
-              const fetchedRows = rows ?? []
+              const fetchedRows = rows ??
+                []
               const moreRows = !!hasMore
 
               // Process rows
