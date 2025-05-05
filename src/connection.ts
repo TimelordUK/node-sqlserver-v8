@@ -4,10 +4,9 @@ import {
   NativeConnection,
   OpenConnectionCallback,
   QueryResult,
-  QueryUserCallback
+  QueryUserCallback, StatementHandle
 } from './native-module'
 import { EventEmitter } from 'events'
-import { StatementState } from './statement'
 import { AsyncQueue, QueueTask } from './async-queue'
 import { ClassLogger } from './class-logger'
 
@@ -16,28 +15,18 @@ import { ClassLogger } from './class-logger'
  */
 
 class ConnectionPromises {
-  constructor(public readonly connection: Connection) {
+  constructor (public readonly connection: Connection) {
   }
 
-  open(connectionString: string): Promise<QueryResult> {
-    return new Promise<QueryResult>((resolve, reject) => {
-      this.connection.open(connectionString, (err, result) => {
-        if (err) reject(err)
-        else resolve(result)
-      })
-    })
+  async open (connectionString: string): Promise<QueryResult | undefined> {
+    return this.connection.open(connectionString)
   }
 
-  close(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      this.connection.close((err) => {
-        if (err) reject(err)
-        else resolve()
-      })
-    })
+  async close (): Promise<void> {
+    return this.connection.close()
   }
 
-  query(sql: string, params: any[]): Promise<QueryResult> {
+  async query (sql: string, params?: any[]): Promise<QueryResult> {
     return new Promise<QueryResult>((resolve, reject) => {
       this.connection.query(sql, params, (err, result) => {
         if (err) reject(err)
@@ -46,7 +35,6 @@ class ConnectionPromises {
     })
   }
 }
-
 
 // Define callback types with more flexibility
 type NativeCallback<T> = (err: Error | null, result?: T, ...args: any[]) => void
@@ -60,7 +48,7 @@ export class Connection extends EventEmitter {
   private readonly _logger: ClassLogger
   public readonly promises: ConnectionPromises
 
-  constructor(nativeConnection: NativeConnection) {
+  constructor (nativeConnection: NativeConnection) {
     super()
     this._native = nativeConnection
     this._logger = new ClassLogger('Connection', { connectionId: this._connectionId })
@@ -130,7 +118,7 @@ export class Connection extends EventEmitter {
   /**
    * Open a connection to the database
    */
-  open(connectionString: string, callback?: OpenConnectionCallback): Promise<QueryResult> | undefined {
+  open (connectionString: string, callback?: OpenConnectionCallback): Promise<QueryResult> | undefined {
     return this.executeOperation<QueryResult>(
       (cb) => { this._native.open(connectionString, cb) },
       callback,
@@ -139,10 +127,18 @@ export class Connection extends EventEmitter {
     )
   }
 
+  fetchRows (handle: StatementHandle, batchSize: number, callback?: OpenConnectionCallback): Promise<QueryResult> | undefined {
+    return this.executeOperation<QueryResult>(
+      (cb) => { this._native.fetchRows(handle, batchSize, cb) },
+      callback,
+      'FetchRows'
+    )
+  }
+
   /**
    * Close the database connection
    */
-  close(callback?: CloseConnectionCallback): Promise<void> | undefined {
+  close (callback?: CloseConnectionCallback): Promise<void> | undefined {
     return this.executeOperation(
       (cb) => {
         this._native.close((err) => {
@@ -157,7 +153,7 @@ export class Connection extends EventEmitter {
   /**
    * Simplified query method - just creates a statement and starts execution
    */
-  query(
+  query (
     sql: string,
     paramsOrCallback?: any[] | QueryUserCallback,
     callback?: QueryUserCallback
@@ -174,7 +170,7 @@ export class Connection extends EventEmitter {
     }
 
     // For query, we need a specialized implementation of executeOperation that handles
-    // the specific callback signature with rows and more parameters
+
     const task: QueueTask = {
       execute: (done) => {
         this._logger.debug('Executing query', { sql, params })

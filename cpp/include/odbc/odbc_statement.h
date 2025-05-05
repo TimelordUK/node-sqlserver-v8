@@ -239,6 +239,7 @@ namespace mssql
     State state_;
     bool hasMoreResults_;
     bool endOfRows_;
+    std::shared_ptr<QueryResult> metaData_;
   };
 
   /**
@@ -326,7 +327,7 @@ namespace mssql
         const std::vector<std::shared_ptr<QueryParameter>> &parameters,
         std::shared_ptr<QueryResult> &result) override;
 
-     /**
+    /**
      * @brief Bind TVP columns
      */
     bool BindTvpColumns(const std::vector<std::string> &columnNames);

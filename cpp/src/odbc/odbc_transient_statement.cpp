@@ -68,7 +68,9 @@ namespace mssql
 
     state_ = State::STMT_METADATA_READY;
     SQL_LOG_TRACE("Getting metadata for result set");
-    return InitializeResultSet(result);
+    auto res = InitializeResultSet(result);
+    this->metaData_ = result;
+    return res;
   }
 
   bool TransientStatement::InitializeResultSet(std::shared_ptr<QueryResult> &result)

@@ -18,6 +18,7 @@ export interface StatementHandle {
 export interface QueryResult {
   readonly meta: any
   readonly handle: StatementHandle
+  readonly rows?: any[]
 }
 
 export type QueryUserCallback = (err: Error | null, result?: QueryResult) => void
@@ -28,21 +29,9 @@ export interface NativeConnection {
   open: (connectionString: string, callback: OpenConnectionCallback) => void
   close: (callback: CloseConnectionCallback) => void
   query: (sql: string, params: any[], callback: QueryUserCallback) => void
-  fetchRows: (statementId: number, batchSize: number, callback: (err: Error | null, rows?: any[], hasMore?: boolean) => void) => void
+  fetchRows: (handle: StatementHandle, batchSize: number, callback: QueryUserCallback) => void
   nextResultSet: (statementId: number, callback: (err: Error | null, hasMore?: boolean, metadata?: any) => void) => void
   cancelStatement: (statementId: number, callback: (err: Error | null) => void) => void
-}
-
-export interface NativeQuery {
-  on: (event: string, handler: Function) => void
-  cancelQuery: (callback?: Function) => void
-}
-
-export interface NativeStatement {
-  getMetadata: (callback: (err: Error | null, metadata?: any) => void) => void
-  fetchRows: (batchSize: number, callback: (err: Error | null, rows?: any[], hasMore?: boolean) => void) => void
-  nextResultSet: (callback: (err: Error | null, hasMore?: boolean, metadata?: any) => void) => void
-  cancel: (callback: (err: Error | null) => void) => void
 }
 
 /**
