@@ -124,6 +124,11 @@ namespace mssql::test
           .WillOnce(::testing::Return(true));
 		EXPECT_CALL(*mockConHandle, get_handle())
           .WillRepeatedly(::testing::Return(reinterpret_cast<SQLHANDLE>(0x87654321)));
+		// Expect free() to be called when ConnectionHandles is destroyed
+		// We use Times(::testing::AtLeast(1)) because the handle might be freed multiple times
+		// if there are multiple ConnectionHandles objects created with this mock
+		EXPECT_CALL(*mockConHandle, free())
+          .Times(::testing::AtLeast(1));
 
 		// Replace the factory function for this test
 		auto originalFactory = mssql::create_connection_handle;

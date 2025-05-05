@@ -157,10 +157,10 @@ namespace mssql
 
     // Additional member
     std::shared_ptr<IOdbcApi> _odbcApi;
+    
+    int _connectionId;
 
     std::shared_ptr<OdbcStatementFactory> _statementFactory;
-
-    int _connectionId;
 
     // Statement management
     std::unordered_map<std::string, std::shared_ptr<OdbcStatement>> _preparedStatements;

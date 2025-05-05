@@ -3,8 +3,7 @@
 #include "odbc_connection.h"
 #include "odbc_connection_factory.h"
 #include "iodbc_api.h"
-
-#pragma once
+// Removed unnecessary #pragma once which should only be used in header files
 
 namespace mssql
 {

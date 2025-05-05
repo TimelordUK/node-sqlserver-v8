@@ -44,9 +44,9 @@ namespace mssql
     SQLRETURN GetColumnData(SQLHSTMT hStmt, SQLSMALLINT colNum,
                             DatumStorage *storage, SQLLEN *indicator);
 
+    std::shared_ptr<IOdbcApi> _api;
     std::shared_ptr<ConnectionHandles> _connectionHandles;
     std::shared_ptr<OdbcErrorHandler> _errorHandler;
-    std::shared_ptr<IOdbcApi> _api;
   };
 
 } // namespace mssql

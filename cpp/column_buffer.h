@@ -138,7 +138,7 @@ namespace mssql
           if (dataType_ == SQL_WCHAR || dataType_ == SQL_WVARCHAR)
           {
             // Handle wide character strings
-            auto wstr = reinterpret_cast<SQLWCHAR *>(buffer_.data() + offset);
+            // Removed unused variable 'wstr'
             storage_->setType(DatumStorage::SqlType::NVarChar);
             // Convert to UTF-8 and store
             // You'll need to implement string conversion here
@@ -146,7 +146,7 @@ namespace mssql
           else
           {
             // Handle regular strings and binary data
-            auto str = reinterpret_cast<char *>(buffer_.data() + offset);
+            // Removed unused variable 'str'
             storage_->setType(dataType_ == SQL_BINARY || dataType_ == SQL_VARBINARY ? DatumStorage::SqlType::Binary : DatumStorage::SqlType::VarChar);
             // Store the string/binary data
             // You'll need to implement data copying here
