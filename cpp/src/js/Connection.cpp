@@ -1,4 +1,3 @@
-
 #include "platform.h"
 #include <thread>
 #include <chrono>
@@ -118,19 +117,21 @@ namespace mssql
       // Create a deferred Promise
       Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
       SQL_LOG_DEBUG("Connection - use Promise");
+      
       // Create a callback that resolves/rejects the promise
-      const Napi::Env env = info.Env();
-      if (info[0].IsNull() || info[0].IsUndefined())
-      {
-        deferred.Resolve(info[1]);
-      }
-      else
-      {
-        // The error object might be enhanced with ODBC details
-        deferred.Reject(info[0]);
-      }
-      return env.Undefined();
-      const auto worker = MakeConnectionWorker(
+      callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo &info) {
+        const Napi::Env env = info.Env();
+        if (info[0].IsNull() || info[0].IsUndefined()) {
+          deferred.Resolve(info[1]);
+        }
+        else {
+          // The error object might be enhanced with ODBC details
+          deferred.Reject(info[0]);
+        }
+        return env.Undefined();
+      });
+
+      auto worker = MakeConnectionWorker(
           callback,
           odbcConnection_.get(),
           this,
@@ -150,6 +151,7 @@ namespace mssql
       // Return the promise
       return deferred.Promise();
     }
+    
     SQL_LOG_DEBUG("Connection - use ConnectionWorker");
     auto worker = MakeConnectionWorker(
         callback,
@@ -239,9 +241,88 @@ namespace mssql
     return env.Undefined();
   }
 
-  Napi::Value Connection::FetchRows(const Napi::CallbackInfo &info)
+  Napi::Value Connection::FetchRows(const Napi::CallbackInfo& info)
   {
-    return Stubbed(info);
+    const Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    // Check if we have a connection
+    if (!isConnected_)
+    {
+      Napi::Error::New(env, "Connection is not open").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    // Validate statement handle
+    if (info.Length() < 1 || !info[0].IsObject())
+    {
+      Napi::TypeError::New(env, "Statement handle expected").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    // Get the statement handle from the first parameter
+    Napi::Object handleObj = info[0].As<Napi::Object>();
+    StatementHandle statementHandle = JsObjectMapper::toStatementHandle(handleObj);
+
+    if (!statementHandle.isValid())
+    {
+      Napi::Error::New(env, "Invalid statement handle").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    // Get the number of rows to fetch (optional, default to 1000)
+    size_t rowCount = 1000;
+    if (info.Length() > 1 && info[1].IsNumber())
+    {
+      rowCount = info[1].As<Napi::Number>().Uint32Value();
+    }
+
+    // Check for callback (last argument)
+    Napi::Function callback;
+
+    if (info.Length() > 1 && info[info.Length() - 1].IsFunction())
+    {
+      callback = info[info.Length() - 1].As<Napi::Function>();
+    }
+    else
+    {
+      // No callback provided, we'll use a Promise
+      // Create a deferred Promise
+      Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
+
+      // Create a callback that resolves/rejects the promise
+      callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo &info)
+                                     {
+                const Napi::Env env = info.Env();
+                if (info[0].IsNull() || info[0].IsUndefined()) {
+                    deferred.Resolve(info[1]);
+                }
+                else {
+                    deferred.Reject(info[0]);
+                }
+                return env.Undefined(); });
+
+      // Create and queue the worker
+      auto worker = new FetchRowsWorker(
+          callback,
+          odbcConnection_.get(),
+          statementHandle,
+          rowCount);
+      worker->Queue();
+
+      // Return the promise
+      return deferred.Promise();
+    }
+
+    // If we got here, we're using a callback
+    auto worker = new FetchRowsWorker(
+        callback,
+        odbcConnection_.get(),
+        statementHandle,
+        rowCount);
+    worker->Queue();
+
+    return env.Undefined();
   }
 
   Napi::Value Connection::NextResultSet(const Napi::CallbackInfo &info)
@@ -331,89 +412,5 @@ namespace mssql
     return env.Undefined();
   }
 
-  QueryWorker::QueryWorker(Napi::Function &callback,
-                           IOdbcConnection *connection,
-                           const std::string &sqlText,
-                           const Napi::Array &params)
-      : Napi::AsyncWorker(callback),
-        connection_(connection),
-        sqlText_(sqlText)
-  {
-
-    // Convert JavaScript parameters to C++ parameters
-    const uint32_t length = params.Length();
-
-    // Or use it somewhere, perhaps in a logging statement:
-    SQL_LOG_DEBUG_STREAM("Processing " << length << " parameters");
-    parameters_ = std::make_shared<ParameterSet>();
-    // ParameterFactory::populateParameterSet(params, parameters_);
-
-    result_ = std::make_shared<QueryResult>();
-  }
-
-  void QueryWorker::Execute()
-  {
-    try
-    {
-      SQL_LOG_DEBUG_STREAM("Executing QueryWorker " << sqlText_);
-      // This will need to be implemented in OdbcConnection
-      // Here's a placeholder showing what it might look like
-      if (!connection_->ExecuteQuery(sqlText_, parameters_->getParams(), result_))
-      {
-        const auto &errors = connection_->GetErrors();
-        if (!errors.empty())
-        {
-          const std::string errorMessage = errors[0]->message;
-          SetError(errorMessage);
-        }
-        else
-        {
-          SetError("Unknown error occurred during query execution");
-        }
-      }
-    }
-    catch (const std::exception &e)
-    {
-      SQL_LOG_ERROR("Exception in QueryWorker::Execute: " + std::string(e.what()));
-      SetError("Exception occurred: " + std::string(e.what()));
-    }
-    catch (...)
-    {
-      SQL_LOG_ERROR("Unknown exception in QueryWorker::Execute");
-      SetError("Unknown exception occurred");
-    }
-  }
-
-  void QueryWorker::OnOK()
-  {
-    const Napi::Env env = Env();
-    Napi::HandleScope scope(env);
-    SQL_LOG_DEBUG("QueryWorker::OnOK");
-    // Validate that we have a callback function as the last argument
-
-    try
-    {
-      // Create a JavaScript array of column definitions
-      Napi::Array columns = Napi::Array::New(env);
-
-      // Populate the array with column metadata
-      for (size_t i = 0; i < result_->size(); i++)
-      {
-        ColumnDefinition colDef = result_->get(i);
-        columns[i] = JsObjectMapper::fromColumnDefinition(env, colDef);
-      }
-
-      // Create a metadata object to return
-      Napi::Object metadata = Napi::Object::New(env);
-      Napi::Object handle = JsObjectMapper::fromStatementHandle(env, result_->getHandle());
-      metadata.Set("meta", columns);
-      metadata.Set("handle", handle);
-      Callback().Call({env.Null(), metadata});
-    }
-    catch (const std::exception &e)
-    {
-      // Call the callback with an error
-      Callback().Call({Napi::Error::New(env, e.what()).Value(), env.Null()});
-    }
-  }
+  // QueryWorker implementation has been moved to query_worker.cpp
 }
