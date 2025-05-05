@@ -39,6 +39,22 @@ build/
 build-test/
 prebuilds/
 
+# CMake build directories
+**/CMakeFiles/
+**/cmake-build*/
+**/build/
+**/test/cpp/build/
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/install_manifest.txt
+**/compile_commands.json
+**/*.cmake
+**/Makefile
+!**/CMakeLists.txt
+**/*.cbp
+**/.cmake/
+**/_CPack_Packages/
+
 # TypeScript output directories
 lib/
 dist/
@@ -125,8 +141,64 @@ runtest-linux
 runtest-win.exe
 runtest-macos
 
+# C++ object files and libraries
+**/*.o
+**/*.obj
+**/*.a
+**/*.lib
+**/*.so
+**/*.so.*
+**/*.dylib
+**/*.dll
+**/*.exe
+**/*.out
+**/*.app
+**/*.node
+**/.deps/
+**/.libs/
+
+# Generated test binaries
+**/cpp_tests
+**/cpp_tests.exe
+**/test_*/
+**/test/cpp/**/Testing/
+**/GoogleTest*
+**/_deps/
+
 # Local build scripts
 .gitignore
 lib/index.d.ts
+
+# IDE specific files
+**/.vs/
+**/.vscode/ipch/
+**/.vscode/c_cpp_properties.json.bak
+**/ipch/
+**/*.ipch
+**/*.VC.db
+**/*.VC.VC.opendb
+**/*.sdf
+**/*.opensdf
+**/*.aps
+**/*.ncb
+**/*.psess
+**/*.vsp
+**/*.vspx
+**/*.vsps
+**/*.qbs.user
+**/*.user
+**/*.userprefs
+**/*CMakeSettings.json
+**/.idea/workspace.xml
+**/.idea/tasks.xml
+**/.idea/usage.statistics.xml
+**/.idea/shelf/
+**/.kate-swp
+**/.kdev4/
+**/*.kdev4
+**/*.clangd
+**/*.cache/
+**/*.clangd/
+**/*.ccls-cache/
 
 **/.claude/settings.local.json
