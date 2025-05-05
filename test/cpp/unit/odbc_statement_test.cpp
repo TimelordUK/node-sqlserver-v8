@@ -29,7 +29,7 @@ namespace mssql {
             const std::string query = "SELECT * FROM Employees WHERE id = ?";
 
             // Create the statement with our mock API
-            PreparedStatement stmt(mockStmtHandle, mockErrorHandler, query, mockOdbcApi);
+            PreparedStatement stmt(mockStmtHandle, mockErrorHandler, query, mockOdbcApi, StatementHandle());
 
             auto params = std::vector<std::shared_ptr<QueryParameter>>();
             auto result = std::make_shared<QueryResult>();
@@ -57,7 +57,7 @@ namespace mssql {
             // Similar structure but using createProductTestData()
             const std::string query = "SELECT * FROM Products WHERE product_id = ?";
 
-            PreparedStatement stmt(mockStmtHandle, mockErrorHandler, query, mockOdbcApi);
+            PreparedStatement stmt(mockStmtHandle, mockErrorHandler, query, mockOdbcApi, StatementHandle());
 
             auto params = std::vector<std::shared_ptr<QueryParameter>>();
             auto result = std::make_shared<QueryResult>();

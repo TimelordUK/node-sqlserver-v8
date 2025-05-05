@@ -38,7 +38,7 @@ namespace mssql
           std::shared_ptr<IOdbcStatementHandle> statement,
           std::shared_ptr<OdbcErrorHandler> errorHandler,
           std::shared_ptr<IOdbcApi> odbcApi = nullptr)
-          : OdbcStatement(type, statement, errorHandler, odbcApi ? odbcApi : std::make_shared<MockOdbcApi>())
+          : OdbcStatement(type, statement, errorHandler, odbcApi ? odbcApi : std::make_shared<MockOdbcApi>(), StatementHandle())
       {
       }
       MOCK_METHOD(bool, Execute, (const std::vector<std::shared_ptr<QueryParameter>>& parameters, std::shared_ptr<QueryResult>& result), (override));

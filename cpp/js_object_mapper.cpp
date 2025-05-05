@@ -1,5 +1,6 @@
 // In js_object_mapper.cpp
 #include "js_object_mapper.h"
+#include "string_utils.h"
 
 namespace mssql
 {
@@ -169,9 +170,13 @@ namespace mssql
   {
     Napi::Object result = Napi::Object::New(env);
 
-    // Convert SQLWCHAR array to std::string
-    std::wstring wColName(colDef.colName);
-    std::string colName(wColName.begin(), wColName.end());
+    // Convert SQLWCHAR array to std::string using our utility functions
+    // In Linux, SQLWCHAR is unsigned short (16-bit), but wchar_t is 32-bit
+    // So we need to use proper conversion
+    std::string colName;
+    if (colDef.colNameLen > 0) {
+        colName = StringUtils::WideToUtf8(colDef.colName, colDef.colNameLen);
+    }
 
     // Set properties on the JavaScript object
     result.Set("name", Napi::String::New(env, colName));
