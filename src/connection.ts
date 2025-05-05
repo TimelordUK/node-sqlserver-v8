@@ -1,7 +1,6 @@
 // src/connection.ts
-import { NativeConnection } from './native-module'
+import { NativeConnection, QueryResult, QueryUserCallback } from './native-module'
 import { EventEmitter } from 'events'
-import { Logger, LogLevel } from './logger' // Corrected import
 import { StatementState } from './statement'
 import { AsyncQueue, QueueTask } from './async-queue'
 import { ClassLogger } from './class-logger'
@@ -10,8 +9,9 @@ import { ClassLogger } from './class-logger'
  * Wrapper for the native Connection class that enforces operation queuing
  */
 
-class QueryResult {
-}
+// Define callback types with more flexibility
+type NativeCallback<T> = (err: Error | null, result?: T, ...args: any[]) => void
+type UserCallback<T> = (err: Error | null, result?: T, ...args: any[]) => void
 
 export class Connection extends EventEmitter {
   private readonly _native: NativeConnection
@@ -28,57 +28,27 @@ export class Connection extends EventEmitter {
   }
 
   /**
-   * Allows statements to enqueue tasks on this connection
-   * This maintains the single-threaded queue while moving logic to Statement
+   * Creates and enqueues a task with proper promise/callback handling
+   * @param operation - Function that performs the actual native operation
+   * @param callback - Optional user-provided callback
+   * @param logMessage - Optional log message with context
+   * @param logContext - Optional logging context
+   * @returns Promise if no callback provided, undefined otherwise
    */
-  async enqueueTask<T>(task: QueueTask): Promise<T> {
-    return this._queue.enqueueTask(task)
-  }
-
-  /**
-   * Open a connection to the database
-   */
-  open (connectionString: string, callback?: (err: Error | null, conn?: any) => void): Promise<QueryResult> | undefined {
-    const that = this
+  private executeOperation<T>(
+    operation: (callback: NativeCallback<T>) => void,
+    callback?: UserCallback<T>,
+    logMessage?: string,
+    logContext?: object
+  ): Promise<T> | undefined {
     const task: QueueTask = {
       execute: (done) => {
-        this._native.open(connectionString, (err, conn) => {
-          if (callback) callback(err, conn)
-          done()
-        })
-      },
-      fail: (err) => {
-        if (callback) callback(err)
-      }
-    }
-
-    // Add promise if no callback provided
-    if (!callback) {
-      task.promise = new Promise((resolve, reject) => {
-        task.execute = (done) => {
-          this._logger.debug('Opening database connection', { connectionString })
-          this._native.open(connectionString, (err, conn) => {
-            if (err) reject(err)
-            else resolve(conn)
-            done()
-          })
+        if (logMessage && logContext) {
+          this._logger.debug(logMessage, logContext)
         }
-        task.fail = (err) => { reject(err) }
-      })
-    }
 
-    return that.enqueueTask(task)
-  }
-
-  /**
-   * Close the database connection
-   */
-  close (callback?: (err: Error | null) => void): Promise<void> | undefined {
-    const task: QueueTask = {
-      execute: (done) => {
-        this._native.close((err) => {
-          this._closed = true
-          if (callback) callback(err)
+        operation((err, result, ...args) => {
+          if (callback) callback(err, result, ...args)
           done()
         })
       },
@@ -89,12 +59,15 @@ export class Connection extends EventEmitter {
 
     // Add promise if no callback provided
     if (!callback) {
-      task.promise = new Promise<void>((resolve, reject) => {
+      task.promise = new Promise<T>((resolve, reject) => {
         task.execute = (done) => {
-          this._native.close((err) => {
-            this._closed = true
+          if (logMessage && logContext) {
+            this._logger.debug(logMessage, logContext)
+          }
+
+          operation((err, result) => {
             if (err) reject(err)
-            else resolve()
+            else resolve(result as T)
             done()
           })
         }
@@ -106,16 +79,51 @@ export class Connection extends EventEmitter {
   }
 
   /**
+   * Allows statements to enqueue tasks on this connection
+   * This maintains the single-threaded queue while moving logic to Statement
+   */
+  async enqueueTask<T>(task: QueueTask): Promise<T> {
+    return this._queue.enqueueTask(task)
+  }
+
+  /**
+   * Open a connection to the database
+   */
+  open (connectionString: string, callback?: (err: Error | null, conn?: any) => void): Promise<QueryResult> | undefined {
+    return this.executeOperation<QueryResult>(
+      (cb) => { this._native.open(connectionString, cb) },
+      callback,
+      'Opening database connection',
+      { connectionString }
+    )
+  }
+
+  /**
+   * Close the database connection
+   */
+  close (callback?: (err: Error | null) => void): Promise<void> | undefined {
+    return this.executeOperation(
+      (cb) => {
+        this._native.close((err) => {
+          this._closed = true
+          cb(err)
+        })
+      },
+      callback
+    )
+  }
+
+  /**
    * Simplified query method - just creates a statement and starts execution
    */
   query (
     sql: string,
-    paramsOrCallback?: any[] | ((err: Error | null, rows?: any[], more?: boolean) => void),
-    callback?: (err: Error | null, rows?: any[], more?: boolean) => void
+    paramsOrCallback?: any[] | QueryUserCallback,
+    callback?: QueryUserCallback
   ): any {
     // Parse parameters
     let params: any[] = []
-    let cb: ((err: Error | null, rows?: any[], more?: boolean) => void) | undefined
+    let cb: QueryUserCallback | undefined
 
     if (typeof paramsOrCallback === 'function') {
       cb = paramsOrCallback
@@ -124,35 +132,35 @@ export class Connection extends EventEmitter {
       params = paramsOrCallback ?? []
     }
 
+    // For query, we need a specialized implementation of executeOperation that handles
+    // the specific callback signature with rows and more parameters
     const task: QueueTask = {
       execute: (done) => {
-        // Get the native connection from our connection object
-        const native = this._native
-        native.query(sql, params, (err: Error | null, metadata?: QueryResult) => {
-          if (err) {
-            if (callback) callback(err)
-            done()
-          }
+        this._logger.debug('Executing query', { sql, params })
+        this._native.query(sql, params, (err, result) => {
+          if (cb) cb(err, result)
+          done()
         })
       },
       fail: (err) => {
-        if (callback) callback(err)
+        if (cb) cb(err, null)
       }
     }
 
-    if (!callback) {
-      task.promise = new Promise((resolve, reject) => {
+    // Add promise if no callback provided
+    if (!cb) {
+      task.promise = new Promise<QueryResult | null>((resolve, reject) => {
         task.execute = (done) => {
-          this._native.query(sql, params, (err: Error | null, metadata?: QueryResult) => {
+          this._logger.debug('Executing query', { sql, params })
+          this._native.query(sql, params, (err, result) => {
             if (err) reject(err)
-            else resolve(metadata)
+            else resolve(result)
             done()
           })
         }
         task.fail = (err) => { reject(err) }
       })
     }
-    // Add promise if no callback provided
 
     return this.enqueueTask(task)
   }
