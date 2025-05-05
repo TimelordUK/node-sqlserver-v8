@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "odbc_handles.h"
+#include "odbc_common.h"
 #include "query_parameter.h"
 #include "odbc_driver_types.h"
 
@@ -56,6 +57,8 @@ namespace mssql
 
     StatementHandle getStatementHandle() { return handle_; }
 
+    bool isNumericStringEnabled() const { return numericStringEnabled_; }
+
   protected:
     OdbcStatement(
         Type type,
@@ -74,15 +77,28 @@ namespace mssql
      */
     bool ProcessResults(std::shared_ptr<QueryResult> &result);
 
-    bool try_read_rows(const size_t number_rows);
+    bool try_read_rows(std::shared_ptr<QueryResult> result, const size_t number_rows);
 
-    bool fetch_read(const size_t number_rows);
+    bool fetch_read(std::shared_ptr<QueryResult>, const size_t number_rows);
+    bool check_odbc_error(const SQLRETURN ret);
+    bool dispatch(const SQLSMALLINT t, const size_t row_id, const size_t column);
+    bool get_data_long(const size_t row_id, const size_t column);
+    bool get_data_big_int(const size_t row_id, const size_t column);
+    bool get_data_decimal(const size_t row_id, const size_t column);
+    bool get_data_bit(const size_t row_id, const size_t column);
+    bool d_variant(const size_t row_id, const size_t column);
+    bool try_read_string(const bool is_variant, const size_t row_id, const size_t column);
+    bool get_data_binary(const size_t row_id, const size_t column);
+    bool get_data_timestamp_offset(const size_t row_id, const size_t column);
+    bool d_time(const size_t row_id, const size_t column);
+    bool get_data_timestamp(const size_t row_id, const size_t column);
 
     Type type_;
     std::shared_ptr<IOdbcStatementHandle> statement_;
     std::shared_ptr<OdbcErrorHandler> errorHandler_;
     std::shared_ptr<IOdbcApi> odbcApi_; // Added IOdbcApi reference
     StatementHandle handle_;
+    bool numericStringEnabled_ = false;
   };
 
   /**

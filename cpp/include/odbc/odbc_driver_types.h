@@ -117,34 +117,35 @@ namespace mssql
 
     inline bool is_end_of_rows() const
     {
-      return _end_of_rows;
+      return end_of_rows_;
     }
 
     inline void set_end_of_rows(bool end_of_rows)
     {
-      _end_of_rows = end_of_rows;
+      end_of_rows_ = end_of_rows;
     }
 
     inline size_t get_row_count() const
     {
-      return _row_count;
+      return row_count_;
     }
 
     inline void set_row_count(size_t row_count)
     {
-      _row_count = row_count;
+      row_count_ = row_count;
     }
 
     // Use "inline" correctly and make these methods const since they don't modify the object
     inline size_t size() const { return columns_.size(); }
+    inline size_t get_column_count() const { return columns_.size(); }
     inline ColumnDefinition get(size_t i) const { return columns_[i]; }
     inline StatementHandle getHandle() const { return handle_; }
 
   private:
     std::vector<ColumnDefinition> columns_;
     std::vector<t_row> rows_;
-    bool _end_of_rows;
-    size_t _row_count;
+    bool end_of_rows_;
+    size_t row_count_;
     StatementHandle handle_;
   };
 
