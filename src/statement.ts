@@ -83,7 +83,7 @@ export class Statement extends EventEmitter {
 
   /**
    * Execute the statement with given SQL and parameters
-   * 
+   *
    * @param sql The SQL query to execute
    * @param params Optional parameters for the query
    * @param callback Optional callback for backward compatibility
@@ -141,7 +141,7 @@ export class Statement extends EventEmitter {
               // Start fetching rows if there's metadata
               if (metadata?.columns && metadata.columns.length > 0) {
                 this._hasMoreRows = true
-                
+
                 // Create a one-time batch callback to capture the first batch
                 const batchCallback = (batchErr: Error | null, rows?: any[], more?: boolean) => {
                   if (batchErr) {
@@ -150,20 +150,20 @@ export class Statement extends EventEmitter {
                     reject(batchErr)
                     return
                   }
-                  
+
                   // Store the rows for the promise result
-                  firstBatchRows = rows || []
-                  
+                  firstBatchRows = rows ?? []
+
                   // Call the original callback if provided
                   if (callback) callback(null, rows, more)
-                  
+
                   // Resolve the main promise with both metadata and the first batch of rows
                   resolve({
                     metadata: metadataResult,
                     rows: firstBatchRows
                   })
                 }
-                
+
                 // Fetch the first batch of rows
                 this.fetchBatch(batchCallback, done)
               } else {
@@ -171,13 +171,13 @@ export class Statement extends EventEmitter {
                 this._state = StatementState.COMPLETED
                 this.emit('done')
                 if (callback) callback(null, [], false)
-                
+
                 // Resolve with metadata but no rows
                 resolve({
                   metadata: metadataResult,
                   rows: []
                 })
-                
+
                 done()
               }
             })
@@ -205,7 +205,7 @@ export class Statement extends EventEmitter {
 
   /**
    * Fetch a batch of rows from the result set
-   * 
+   *
    * @param callback Optional callback for backward compatibility
    * @param initialDone Optional callback for internal use to signal completion of the first batch
    * @returns A Promise that resolves with the fetched rows and a flag indicating if more rows are available
@@ -242,14 +242,14 @@ export class Statement extends EventEmitter {
                 return
               }
 
-              const fetchedRows = rows || []
+              const fetchedRows = rows ?? []
               const moreRows = !!hasMore
 
               // Process rows
               if (fetchedRows.length > 0) {
                 this.emit('batch', fetchedRows)
                 fetchedRows.forEach(row => this.emit('row', row))
-                
+
                 // Call legacy callback if provided
                 if (callback) callback(null, fetchedRows, moreRows)
               } else if (callback) {
@@ -269,7 +269,7 @@ export class Statement extends EventEmitter {
 
                 // Resolve the promise with the rows and moreRows flag
                 resolve({ rows: fetchedRows, hasMore: true })
-                
+
                 // We'll fetch the next batch on next call to fetchBatch
                 done()
               } else {
@@ -279,16 +279,16 @@ export class Statement extends EventEmitter {
                 // Since the Promise can only resolve once, we'll resolve here with the current rows
                 // and the consumer can check for more result sets separately
                 resolve({ rows: fetchedRows, hasMore: false })
-                
+
                 // For callback-based API, we'll continue with the checkMoreResults pattern
                 if (callback) {
                   this.checkMoreResults(callback, done, initialDone)
-                      .catch(nextErr => {
-                        // We've already resolved the Promise, so we just need to handle the error for the callback API
-                        if (callback) callback(nextErr)
-                        if (initialDone) initialDone()
-                        done()
-                      })
+                    .catch(nextErr => {
+                      // We've already resolved the Promise, so we just need to handle the error for the callback API
+                      if (callback) callback(nextErr)
+                      if (initialDone) initialDone()
+                      done()
+                    })
                 } else {
                   done()
                 }
@@ -321,7 +321,7 @@ export class Statement extends EventEmitter {
 
   /**
    * Check for additional result sets
-   * 
+   *
    * @param callback Optional callback for backward compatibility
    * @param done Optional callback for internal use to signal completion of the operation
    * @param initialDone Optional callback for internal use to signal completion of the first check
@@ -381,17 +381,17 @@ export class Statement extends EventEmitter {
                       if (callback) callback(fetchErr)
                     })
                 }
-                
+
                 nextDone()
               } else {
                 // All done
                 this._state = StatementState.COMPLETED
                 this.emit('done')
-                
+
                 if (callback) callback(null, [], false)
                 if (done) done()
                 if (initialDone) initialDone()
-                
+
                 resolve({ hasMore: false })
                 nextDone()
               }
@@ -426,7 +426,7 @@ export class Statement extends EventEmitter {
 
   /**
    * Cancel the current query
-   * 
+   *
    * @param callback Optional callback for backward compatibility
    * @returns A Promise that resolves when the statement has been canceled
    */

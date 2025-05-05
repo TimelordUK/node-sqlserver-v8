@@ -37,7 +37,13 @@ namespace mssql
       // 1. Get the statement from a statement cache
       // 2. Call methods to fetch rows
       // 3. Process the result set
-
+      auto statement = connection_->GetStatement(statementHandle_.getStatementId());
+      if (!statement)
+      {
+        SetError("Statement not found");
+        return;
+      }
+      statement->try_read_rows(result_, rowCount_);
       // For now, just set endOfRows_ to true to simulate end of result set
       endOfRows_ = true;
     }

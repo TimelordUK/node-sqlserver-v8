@@ -27,7 +27,7 @@ namespace mssql
       : connectionState(ConnectionState::ConnectionClosed),
         _odbcApi(odbcApi ? odbcApi : std::make_shared<RealOdbcApi>()),
         _connectionId(connectionId),
-		_statementFactory(std::make_shared< OdbcStatementFactory>(connectionId))
+        _statementFactory(std::make_shared<OdbcStatementFactory>(connectionId))
   {
     // Set up environment
     if (environment)
@@ -246,6 +246,11 @@ namespace mssql
   const std::vector<std::shared_ptr<OdbcError>> &OdbcConnection::GetErrors() const
   {
     return _errorHandler->GetErrors();
+  }
+
+  std::shared_ptr<OdbcStatement> OdbcConnection::GetStatement(int statementId) const
+  {
+    return _statementFactory->GetStatement(statementId);
   }
 
   bool OdbcConnection::try_open(std::shared_ptr<std::vector<uint16_t>> connection_string, const int timeout)

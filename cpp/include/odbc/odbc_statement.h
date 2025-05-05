@@ -63,6 +63,8 @@ namespace mssql
 
     bool isNumericStringEnabled() const { return numericStringEnabled_; }
 
+    bool try_read_rows(std::shared_ptr<QueryResult> result, const size_t number_rows);
+
   protected:
     OdbcStatement(
         Type type,
@@ -80,8 +82,6 @@ namespace mssql
      * @return true if successful, false otherwise
      */
     bool ProcessResults(std::shared_ptr<QueryResult> &result);
-
-    bool try_read_rows(std::shared_ptr<QueryResult> result, const size_t number_rows);
 
     bool fetch_read(std::shared_ptr<QueryResult>, const size_t number_rows);
     bool check_odbc_error(const SQLRETURN ret);

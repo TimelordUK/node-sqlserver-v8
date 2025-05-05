@@ -62,6 +62,8 @@ namespace mssql
     virtual bool ReleasePreparedStatement(
         const std::string &statementId) = 0;
 
+    virtual std::shared_ptr<OdbcStatement> GetStatement(int statementId) const = 0;
+
     // Legacy ExecuteQuery for backward compatibility
     virtual bool ExecuteQuery(
         const std::string &sqlText,
@@ -98,6 +100,9 @@ namespace mssql
 
     // Rollback a transaction
     bool RollbackTransaction() override;
+
+    // Get the statement factory
+    std::shared_ptr<OdbcStatement> GetStatement(int statementId) const override;
 
     // Statement management
     std::shared_ptr<OdbcStatement> CreateStatement(
@@ -157,7 +162,7 @@ namespace mssql
 
     // Additional member
     std::shared_ptr<IOdbcApi> _odbcApi;
-    
+
     int _connectionId;
 
     std::shared_ptr<OdbcStatementFactory> _statementFactory;
