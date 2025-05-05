@@ -43,7 +43,7 @@ namespace mssql
         SetError("Statement not found");
         return;
       }
-      statement->try_read_rows(result_, rowCount_);
+      statement->TryReadRows(result_, rowCount_);
       // For now, just set endOfRows_ to true to simulate end of result set
       endOfRows_ = true;
     }

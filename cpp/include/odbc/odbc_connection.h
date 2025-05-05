@@ -51,18 +51,21 @@ namespace mssql
     virtual bool RollbackTransaction() = 0;
 
     // Statement management
-    virtual std::shared_ptr<OdbcStatement> CreateStatement(
-        OdbcStatement::Type type,
+    virtual std::shared_ptr<IOdbcStatement> CreateStatement(
+        StatementType type,
         const std::string &query,
         const std::string &tvpType = "") = 0;
 
-    virtual std::shared_ptr<OdbcStatement> GetPreparedStatement(
+    virtual std::shared_ptr<IOdbcStatement> GetPreparedStatement(
         const std::string &statementId) = 0;
+
+    virtual std::shared_ptr<IOdbcStatement> GetStatement(
+        const StatementHandle &handle) = 0;
+
+    virtual std::shared_ptr<IOdbcStatement> GetStatement(int statementId) const = 0;
 
     virtual bool ReleasePreparedStatement(
         const std::string &statementId) = 0;
-
-    virtual std::shared_ptr<OdbcStatement> GetStatement(int statementId) const = 0;
 
     // Legacy ExecuteQuery for backward compatibility
     virtual bool ExecuteQuery(
@@ -100,18 +103,20 @@ namespace mssql
 
     // Rollback a transaction
     bool RollbackTransaction() override;
-
+    std::shared_ptr<IOdbcStatement> GetStatement(int statementId) const override;
     // Get the statement factory
-    std::shared_ptr<OdbcStatement> GetStatement(int statementId) const override;
 
     // Statement management
-    std::shared_ptr<OdbcStatement> CreateStatement(
-        OdbcStatement::Type type,
+    std::shared_ptr<IOdbcStatement> CreateStatement(
+        StatementType type,
         const std::string &query,
         const std::string &tvpType = "") override;
 
-    std::shared_ptr<OdbcStatement> GetPreparedStatement(
+    std::shared_ptr<IOdbcStatement> GetPreparedStatement(
         const std::string &statementId) override;
+
+    std::shared_ptr<IOdbcStatement> GetStatement(
+        const StatementHandle &handle) override;
 
     bool ReleasePreparedStatement(
         const std::string &statementId) override;
@@ -168,7 +173,7 @@ namespace mssql
     std::shared_ptr<OdbcStatementFactory> _statementFactory;
 
     // Statement management
-    std::unordered_map<std::string, std::shared_ptr<OdbcStatement>> _preparedStatements;
+    std::unordered_map<std::string, std::shared_ptr<IOdbcStatement>> _preparedStatements;
     std::mutex _statementMutex;
 
     // Helper methods

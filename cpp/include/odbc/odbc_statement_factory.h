@@ -26,28 +26,30 @@ namespace mssql
     OdbcStatementFactory(int connectionId) : connectionId_(connectionId)
     {
     }
-    std::shared_ptr<OdbcStatement> CreateStatement(
+
+    std::shared_ptr<IOdbcStatement> CreateStatement(
         std::shared_ptr<IOdbcApi> odbcApi,
-        OdbcStatement::Type type,
+        StatementType type,
         std::shared_ptr<IOdbcStatementHandle> handle,
         std::shared_ptr<OdbcErrorHandler> errorHandler,
         const std::string &query,
         const std::string &tvpType = "");
-    std::shared_ptr<OdbcStatement> MakeStatement(
-        std::shared_ptr<IOdbcApi> odbcApi,
-        OdbcStatement::Type type,
-        std::shared_ptr<IOdbcStatementHandle> handle,
-        std::shared_ptr<OdbcErrorHandler> errorHandler,
-        const std::string &query,
-        const std::string &tvpType = "");
-
-    void RemoveStatement(int statementId);
-    std::shared_ptr<OdbcStatement> GetStatement(int statementId);
-
-  private:
     IdFactory factory_;
     int connectionId_;
-    std::map<int, std::shared_ptr<OdbcStatement>> statements_;
+    std::map<int, std::shared_ptr<IOdbcStatement>> statements_;
+
+    void RemoveStatement(int statementId);
+
+    std::shared_ptr<IOdbcStatement> GetStatement(int statementId);
+
+  private:
+    std::shared_ptr<IOdbcStatement> MakeStatement(
+        std::shared_ptr<IOdbcApi> odbcApi,
+        OdbcStatement::Type type,
+        std::shared_ptr<IOdbcStatementHandle> handle,
+        std::shared_ptr<OdbcErrorHandler> errorHandler,
+        const std::string &query,
+        const std::string &tvpType = "");
   };
 
 } // namespace mssql

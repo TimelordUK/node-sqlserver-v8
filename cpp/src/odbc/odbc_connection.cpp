@@ -189,8 +189,8 @@ namespace mssql
     return _transactionManager->RollbackTransaction();
   }
 
-  std::shared_ptr<OdbcStatement> OdbcConnection::CreateStatement(
-      OdbcStatement::Type type,
+  std::shared_ptr<IOdbcStatement> OdbcConnection::CreateStatement(
+      StatementType type,
       const std::string &query,
       const std::string &tvpType)
   {
@@ -212,12 +212,30 @@ namespace mssql
     return _statementFactory->CreateStatement(_odbcApi, type, handle, _errorHandler, query, tvpType);
   }
 
-  std::shared_ptr<OdbcStatement> OdbcConnection::GetPreparedStatement(
+  std::shared_ptr<IOdbcStatement> OdbcConnection::GetPreparedStatement(
       const std::string &statementId)
   {
     std::lock_guard lock(_statementMutex);
     auto it = _preparedStatements.find(statementId);
     return it != _preparedStatements.end() ? it->second : nullptr;
+  }
+
+  std::shared_ptr<IOdbcStatement> OdbcConnection::GetStatement(
+      const StatementHandle &handle)
+  {
+    std::lock_guard lock(_statementMutex);
+
+    // Find statement by handle
+    for (const auto &pair : _preparedStatements)
+    {
+      if (pair.second->GetStatementHandle() == handle)
+      {
+        return pair.second;
+      }
+    }
+
+    // Statement not found
+    return nullptr;
   }
 
   bool OdbcConnection::ReleasePreparedStatement(
@@ -248,7 +266,7 @@ namespace mssql
     return _errorHandler->GetErrors();
   }
 
-  std::shared_ptr<OdbcStatement> OdbcConnection::GetStatement(int statementId) const
+  std::shared_ptr<IOdbcStatement> OdbcConnection::GetStatement(int statementId) const
   {
     return _statementFactory->GetStatement(statementId);
   }

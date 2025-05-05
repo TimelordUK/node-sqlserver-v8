@@ -5,7 +5,6 @@
 #include "odbc/odbc_error_handler.h"
 #include "common/string_utils.h"
 #include "utils/Logger.h"
-#include "odbc_statement.h"
 
 namespace mssql
 {
@@ -18,7 +17,8 @@ namespace mssql
     Error
   };
 
-  bool OdbcStatement::try_read_rows(std::shared_ptr<QueryResult> result, const size_t number_rows)
+  // Implementation of TryReadRows from the Interface
+  bool OdbcStatement::TryReadRows(std::shared_ptr<QueryResult> result, const size_t number_rows)
   {
     if (number_rows == 0)
     {
@@ -27,9 +27,27 @@ namespace mssql
 
     result->start_results();
     return fetch_read(result, number_rows);
+  }
 
-    // Implementation stub for build
-    return true;
+  // Legacy method for backward compatibility
+  bool OdbcStatement::try_read_rows(std::shared_ptr<QueryResult> result, const size_t number_rows)
+  {
+    // Just delegate to the new method
+    return TryReadRows(result, number_rows);
+  }
+
+  // Default implementation - derived classes should override as needed
+  bool OdbcStatement::FetchNextBatch(size_t batchSize) 
+  {
+    SQL_LOG_TRACE("OdbcStatement::FetchNextBatch - Default implementation called, should be overridden");
+    return false;
+  }
+
+  // Default implementation - derived classes should override as needed
+  bool OdbcStatement::NextResultSet() 
+  {
+    SQL_LOG_TRACE("OdbcStatement::NextResultSet - Default implementation called, should be overridden");
+    return false;
   }
 
   bool OdbcStatement::check_odbc_error(const SQLRETURN ret)
@@ -120,7 +138,7 @@ namespace mssql
     case SQL_C_ULONG:
     case SQL_C_USHORT:
     case SQL_C_UTINYINT:
-      if (isNumericStringEnabled())
+      if (IsNumericStringEnabled())
       {
         res = try_read_string(false, row_id, column);
       }
@@ -133,7 +151,7 @@ namespace mssql
     case SQL_C_SBIGINT:
     case SQL_C_UBIGINT:
     case SQL_BIGINT:
-      if (isNumericStringEnabled())
+      if (IsNumericStringEnabled())
       {
         res = try_read_string(false, row_id, column);
       }
@@ -144,7 +162,7 @@ namespace mssql
       break;
 
     case SQL_NUMERIC:
-      if (isNumericStringEnabled())
+      if (IsNumericStringEnabled())
       {
         res = try_read_string(false, row_id, column);
       }

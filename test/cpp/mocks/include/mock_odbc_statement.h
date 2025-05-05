@@ -29,7 +29,94 @@ namespace mssql
     MOCK_METHOD(const std::vector<std::shared_ptr<OdbcError>> &, GetErrors, (), (const, override));
   };
 
-  // Mock statement for testing
+  /**
+   * @brief Mock implementation of IOdbcStatement for testing
+   * This is a complete mock that implements the IOdbcStatement interface directly,
+   * making it suitable for testing components that use the interface.
+   */
+  class MockIOdbcStatement : public IOdbcStatement
+  {
+  public:
+    MockIOdbcStatement() 
+    {
+      // Default configuration for a mock statement
+      ON_CALL(*this, GetStatementHandle)
+          .WillByDefault(testing::Return(StatementHandle(1, 1)));
+      
+      ON_CALL(*this, GetType)
+          .WillByDefault(testing::Return(StatementType::Transient));
+      
+      ON_CALL(*this, GetState)
+          .WillByDefault(testing::Return(StatementState::STMT_INITIAL));
+      
+      ON_CALL(*this, IsNumericStringEnabled)
+          .WillByDefault(testing::Return(false));
+      
+      ON_CALL(*this, HasMoreResults)
+          .WillByDefault(testing::Return(false));
+      
+      ON_CALL(*this, EndOfRows)
+          .WillByDefault(testing::Return(true));
+    }
+    
+    // Required interface methods
+    MOCK_METHOD(bool, Execute, (const std::vector<std::shared_ptr<QueryParameter>>& parameters, std::shared_ptr<QueryResult>& result), (override));
+    MOCK_METHOD(StatementType, GetType, (), (const, override));
+    MOCK_METHOD(SQLHSTMT, GetHandle, (), (const, override));
+    MOCK_METHOD(StatementHandle, GetStatementHandle, (), (const, override));
+    MOCK_METHOD(bool, IsNumericStringEnabled, (), (const, override));
+    MOCK_METHOD(bool, FetchNextBatch, (size_t batchSize), (override));
+    MOCK_METHOD(bool, NextResultSet, (), (override));
+    MOCK_METHOD(bool, HasMoreResults, (), (const, override));
+    MOCK_METHOD(bool, EndOfRows, (), (const, override));
+    MOCK_METHOD(StatementState, GetState, (), (const, override));
+    MOCK_METHOD(bool, TryReadRows, (std::shared_ptr<QueryResult> result, const size_t number_rows), (override));
+    
+    // Utility method to configure common expectations
+    void ConfigureForSuccessfulQuery(const std::vector<ColumnDefinition>& columns, size_t rowCount = 10) 
+    {
+      // Configure Execute to succeed and setup the result
+      EXPECT_CALL(*this, Execute(testing::_, testing::_))
+          .WillOnce(testing::DoAll(
+              testing::Invoke([columns, rowCount](auto&, std::shared_ptr<QueryResult>& result) {
+                  // Setup columns
+                  for (const auto& col : columns) {
+                      result->addColumn(col);
+                  }
+                  // Set row count
+                  result->set_row_count(rowCount);
+                  // Set end_of_rows to false initially
+                  result->set_end_of_rows(false);
+                  return true;
+              }), 
+              testing::Return(true)));
+      
+      // Configure HasMoreResults to return true initially, then false after NextResultSet
+      EXPECT_CALL(*this, HasMoreResults())
+          .WillRepeatedly(testing::Return(false));
+      
+      // Configure EndOfRows to return false initially, then true after rows are "fetched"
+      testing::InSequence seq;
+      EXPECT_CALL(*this, EndOfRows())
+          .Times(testing::AtMost(5))
+          .WillRepeatedly(testing::Return(false));
+      
+      EXPECT_CALL(*this, EndOfRows())
+          .WillRepeatedly(testing::Return(true));
+      
+      // Configure TryReadRows to succeed
+      EXPECT_CALL(*this, TryReadRows(testing::_, testing::_))
+          .WillRepeatedly(testing::DoAll(
+              testing::Invoke([rowCount](std::shared_ptr<QueryResult> result, size_t) {
+                  // Mark as end of rows after reading
+                  result->set_end_of_rows(true);
+                  return true;
+              }),
+              testing::Return(true)));
+    }
+  };
+
+  // Existing mock that inherits from OdbcStatement (backwards compatibility)
   class MockOdbcStatement : public OdbcStatement
   {
   public:
@@ -42,14 +129,18 @@ namespace mssql
       {
       }
       MOCK_METHOD(bool, Execute, (const std::vector<std::shared_ptr<QueryParameter>>& parameters, std::shared_ptr<QueryResult>& result), (override));
+      // Add missing overrides from IOdbcStatement interface
+      MOCK_METHOD(bool, FetchNextBatch, (size_t batchSize), (override));
+      MOCK_METHOD(bool, NextResultSet, (), (override)); 
+      MOCK_METHOD(bool, TryReadRows, (std::shared_ptr<QueryResult> result, const size_t number_rows), (override));
   };
 
-  // Mock statement factory for testing
+  // Mock statement factory for testing (updated to use IOdbcStatement)
   class MockStatementFactory
   {
   public:
-    MOCK_METHOD(std::shared_ptr<OdbcStatement>, CreateStatement,
-                (OdbcStatement::Type type,
+    MOCK_METHOD(std::shared_ptr<IOdbcStatement>, CreateStatement,
+                (StatementType type,
                  std::shared_ptr<IOdbcStatementHandle> handle,
                  std::shared_ptr<OdbcErrorHandler> errorHandler,
                  const std::string &query,

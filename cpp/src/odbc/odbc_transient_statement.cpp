@@ -20,7 +20,7 @@ namespace mssql
     // Convert query to wide string
     auto wideQuery = StringUtils::Utf8ToUtf16(query_);
 
-    result->setHandle(this->getStatementHandle());
+    result->setHandle(this->GetStatementHandle());
 
     // Make sure it's null-terminated
     if (wideQuery->size() > 0 && (*wideQuery)[wideQuery->size() - 1] != L'\0')
@@ -195,10 +195,6 @@ namespace mssql
     return true;
   }
 
-  bool TransientStatement::HasMoreResults() const { return hasMoreResults_; }
-
-  bool TransientStatement::EndOfRows() const { return endOfRows_; }
-
-  OdbcStatement::State TransientStatement::GetState() const { return state_; }
+  // The HasMoreResults, EndOfRows, and GetState methods are inherited from OdbcStatement
 
 }

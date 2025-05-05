@@ -11,9 +11,9 @@ namespace mssql
     return std::make_shared<OdbcStatementHandleImpl>();
   }
 
-  std::shared_ptr<OdbcStatement> OdbcStatementFactory::MakeStatement(
+  std::shared_ptr<IOdbcStatement> OdbcStatementFactory::MakeStatement(
       std::shared_ptr<IOdbcApi> odbcApi,
-      OdbcStatement::Type type,
+      StatementType type,
       std::shared_ptr<IOdbcStatementHandle> handle,
       std::shared_ptr<OdbcErrorHandler> errorHandler,
       const std::string &query,
@@ -24,15 +24,15 @@ namespace mssql
 
     switch (type)
     {
-    case OdbcStatement::Type::Transient:
+    case StatementType::Transient:
       return std::make_shared<TransientStatement>(
           handle, errorHandler, query, odbcApi, statementHandle);
 
-    case OdbcStatement::Type::Prepared:
+    case StatementType::Prepared:
       return std::make_shared<PreparedStatement>(
           handle, errorHandler, query, odbcApi, statementHandle);
 
-    case OdbcStatement::Type::TVP:
+    case StatementType::TVP:
       return std::make_shared<TvpStatement>(
           handle, errorHandler, query, tvpType, odbcApi, statementHandle);
 
@@ -46,7 +46,7 @@ namespace mssql
     statements_.erase(statementId);
   }
 
-  std::shared_ptr<OdbcStatement> OdbcStatementFactory::GetStatement(int statementId)
+  std::shared_ptr<IOdbcStatement> OdbcStatementFactory::GetStatement(int statementId)
   {
     auto it = statements_.find(statementId);
     if (it != statements_.end())
@@ -57,7 +57,7 @@ namespace mssql
     return nullptr;
   }
 
-  std::shared_ptr<OdbcStatement> OdbcStatementFactory::CreateStatement(
+  std::shared_ptr<IOdbcStatement> OdbcStatementFactory::CreateStatement(
       std::shared_ptr<IOdbcApi> odbcApi,
       OdbcStatement::Type type,
       std::shared_ptr<IOdbcStatementHandle> handle,
@@ -70,7 +70,8 @@ namespace mssql
     auto statement = MakeStatement(odbcApi, type, handle, errorHandler, query, tvpType);
     if (statement)
     {
-      statements_[statement->getStatementHandle().getStatementId()] = statement;
+      auto statementId = statement->GetStatementHandle().getStatementId();
+      statements_[statementId] = statement;
     }
     else
     {
