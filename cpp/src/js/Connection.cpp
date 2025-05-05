@@ -37,10 +37,10 @@ namespace mssql
     // Define class
     const Napi::Function func = DefineClass(env, "Connection",
                                             {
-                                            	InstanceMethod("open", &Connection::Open),
-                                            	InstanceMethod("close", &Connection::Close),
-                                            	InstanceMethod("query", &Connection::Query),
-                                            	InstanceMethod("fetchRows", &Connection::FetchRows),
+                                                InstanceMethod("open", &Connection::Open),
+                                                InstanceMethod("close", &Connection::Close),
+                                                InstanceMethod("query", &Connection::Query),
+                                                InstanceMethod("fetchRows", &Connection::FetchRows),
                                                 InstanceMethod("NextResultSet", &Connection::NextResultSet),
                                                 InstanceMethod("CancelStatement", &Connection::CancelStatement),
                                             });
@@ -352,35 +352,33 @@ namespace mssql
     return env.Undefined();
   }
 
-
-  Napi::Value Stubbed(const Napi::CallbackInfo& info)
+  Napi::Value Stubbed(const Napi::CallbackInfo &info)
   {
-      const Napi::Env env = info.Env();
+    const Napi::Env env = info.Env();
 
-      if (info.Length() > 1 && info[info.Length() - 1].IsFunction())
-      {
-          const auto callback = info[info.Length() - 1].As<Napi::Function>();
-          Napi::Object rows = Napi::Object::New(env);
-          callback.Call({ env.Null(), rows });
-      }
+    if (info.Length() > 1 && info[info.Length() - 1].IsFunction())
+    {
+      const auto callback = info[info.Length() - 1].As<Napi::Function>();
+      Napi::Object rows = Napi::Object::New(env);
+      callback.Call({env.Null(), rows});
+    }
 
-      return  env.Undefined();
+    return env.Undefined();
   }
 
-
-  Napi::Value Connection::FetchRows(const Napi::CallbackInfo& info)
+  Napi::Value Connection::FetchRows(const Napi::CallbackInfo &info)
   {
-      return  Stubbed(info);
+    return Stubbed(info);
   }
 
-  Napi::Value Connection::NextResultSet(const Napi::CallbackInfo& info)
+  Napi::Value Connection::NextResultSet(const Napi::CallbackInfo &info)
   {
-      return  Stubbed(info);
+    return Stubbed(info);
   }
 
-  Napi::Value Connection::CancelStatement(const Napi::CallbackInfo& info)
+  Napi::Value Connection::CancelStatement(const Napi::CallbackInfo &info)
   {
-      return  Stubbed(info);
+    return Stubbed(info);
   }
 
   // Implement Query method
@@ -520,26 +518,29 @@ namespace mssql
     SQL_LOG_DEBUG("QueryWorker::OnOK");
     // Validate that we have a callback function as the last argument
 
-    try {
-        // Create a JavaScript array of column definitions
-        Napi::Array columns = Napi::Array::New(env);
+    try
+    {
+      // Create a JavaScript array of column definitions
+      Napi::Array columns = Napi::Array::New(env);
 
-        // Populate the array with column metadata
-        for (size_t i = 0; i < result_->size(); i++) {
-            ColumnDefinition colDef = result_->get(i);
-            columns[i] = JsObjectMapper::fromColumnDefinition(env, colDef);
-        }
+      // Populate the array with column metadata
+      for (size_t i = 0; i < result_->size(); i++)
+      {
+        ColumnDefinition colDef = result_->get(i);
+        columns[i] = JsObjectMapper::fromColumnDefinition(env, colDef);
+      }
 
-        // Create a metadata object to return
-        Napi::Object metadata = Napi::Object::New(env);
-        Napi::Object handle = JsObjectMapper::fromStatementHandle(env, result_->getHandle());
-        metadata.Set("meta", columns);
-        metadata.Set("handle", handle);
-        Callback().Call({ env.Null(), metadata });
+      // Create a metadata object to return
+      Napi::Object metadata = Napi::Object::New(env);
+      Napi::Object handle = JsObjectMapper::fromStatementHandle(env, result_->getHandle());
+      metadata.Set("meta", columns);
+      metadata.Set("handle", handle);
+      Callback().Call({env.Null(), metadata});
     }
-    catch (const std::exception& e) {
-        // Call the callback with an error
-        Callback().Call({Napi::Error::New(env, e.what()).Value(), env.Null()});
+    catch (const std::exception &e)
+    {
+      // Call the callback with an error
+      Callback().Call({Napi::Error::New(env, e.what()).Value(), env.Null()});
     }
   }
 }

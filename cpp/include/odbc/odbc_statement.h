@@ -28,6 +28,10 @@ namespace mssql
 
     enum class State
     {
+      STMT_INITIAL,
+      STMT_PREPARED,
+      STMT_SUBMITTED,
+      STMT_READING,
       STMT_NO_MORE_RESULTS, // No more result sets available
       STMT_METADATA_READY,  // Metadata for current result set is ready
       STMT_EXECUTING,       // Statement is executing
@@ -66,7 +70,7 @@ namespace mssql
         std::shared_ptr<OdbcErrorHandler> errorHandler,
         std::shared_ptr<IOdbcApi> odbcApi,
         StatementHandle handle)
-        : type_(type), statement_(statement), errorHandler_(errorHandler), odbcApi_(odbcApi), handle_(handle)
+        : type_(type), statement_(statement), errorHandler_(errorHandler), odbcApi_(odbcApi), handle_(handle), state_(State::STMT_INITIAL), hasMoreResults_(false), endOfRows_(true)
     {
     }
 
@@ -99,6 +103,9 @@ namespace mssql
     std::shared_ptr<IOdbcApi> odbcApi_; // Added IOdbcApi reference
     StatementHandle handle_;
     bool numericStringEnabled_ = false;
+    State state_;
+    bool hasMoreResults_;
+    bool endOfRows_;
   };
 
   /**
@@ -114,10 +121,7 @@ namespace mssql
         std::shared_ptr<IOdbcApi> odbcApi,
         StatementHandle handle)
         : OdbcStatement(Type::Transient, statement, errorHandler, odbcApi, handle),
-          query_(query),
-          state_(State::STMT_NO_MORE_RESULTS),
-          hasMoreResults_(false),
-          endOfRows_(true)
+          query_(query)
     {
     }
 
@@ -138,9 +142,6 @@ namespace mssql
 
   private:
     std::string query_;
-    State state_;
-    bool hasMoreResults_;
-    bool endOfRows_;
   };
 
   /**

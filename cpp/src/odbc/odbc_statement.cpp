@@ -43,6 +43,7 @@ namespace mssql
 
   bool OdbcStatement::fetch_read(std::shared_ptr<QueryResult> result, const size_t number_rows)
   {
+    SQL_LOG_TRACE_STREAM("fetch_read: number_rows " << number_rows);
     auto res = false;
     for (size_t row_id = 0; row_id < number_rows; ++row_id)
     {
@@ -193,51 +194,61 @@ namespace mssql
 
   bool OdbcStatement::get_data_long(const size_t row_id, const size_t column)
   {
+    SQL_LOG_TRACE_STREAM("get_data_long: row_id " << row_id << " column " << column);
     return true;
   }
 
   bool OdbcStatement::get_data_big_int(const size_t row_id, const size_t column)
   {
+    SQL_LOG_TRACE_STREAM("get_data_big_int: row_id " << row_id << " column " << column);
     return true;
   }
 
   bool OdbcStatement::get_data_decimal(const size_t row_id, const size_t column)
   {
+    SQL_LOG_TRACE_STREAM("get_data_decimal: row_id " << row_id << " column " << column);
     return true;
   }
 
   bool OdbcStatement::get_data_bit(const size_t row_id, const size_t column)
   {
+    SQL_LOG_TRACE_STREAM("get_data_bit: row_id " << row_id << " column " << column);
     return true;
   }
 
   bool OdbcStatement::d_variant(const size_t row_id, const size_t column)
   {
+    SQL_LOG_TRACE_STREAM("d_variant: row_id " << row_id << " column " << column);
     return true;
   }
 
   bool OdbcStatement::try_read_string(const bool is_variant, const size_t row_id, const size_t column)
   {
+    SQL_LOG_TRACE_STREAM("try_read_string: is_variant " << is_variant << " row_id " << row_id << " column " << column);
     return true;
   }
 
   bool OdbcStatement::get_data_binary(const size_t row_id, const size_t column)
   {
+    SQL_LOG_TRACE_STREAM("get_data_binary: row_id " << row_id << " column " << column);
     return true;
   }
 
   bool OdbcStatement::get_data_timestamp_offset(const size_t row_id, const size_t column)
   {
+    SQL_LOG_TRACE_STREAM("get_data_timestamp_offset: row_id " << row_id << " column " << column);
     return true;
   }
 
   bool OdbcStatement::d_time(const size_t row_id, const size_t column)
   {
+    SQL_LOG_TRACE_STREAM("d_time: row_id " << row_id << " column " << column);
     return true;
   }
 
   bool OdbcStatement::get_data_timestamp(const size_t row_id, const size_t column)
   {
+    SQL_LOG_TRACE_STREAM("get_data_timestamp: row_id " << row_id << " column " << column);
     return true;
   }
 
