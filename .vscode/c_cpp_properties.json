@@ -5,6 +5,12 @@
             "includePath": [
                 "${workspaceFolder}/node_modules/nan",
                 "${workspaceFolder}/**",
+                "${workspaceFolder}/cpp/include",
+                "${workspaceFolder}/cpp/include/common",
+                "${workspaceFolder}/cpp/include/core",
+                "${workspaceFolder}/cpp/include/js",
+                "${workspaceFolder}/cpp/include/odbc",
+                "${workspaceFolder}/cpp/include/utils",
                 "/usr/include/**",
                 "/opt/microsoft/msodbcsql17/include/**"
             ],
@@ -23,7 +29,13 @@
                 "${LocalAppData}/node-gyp/Cache/18.12.0/include/node/",
                 "${workspaceFolder}/node_modules/nan",
                 "${workspaceFolder}/src",
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/cpp/include",
+                "${workspaceFolder}/cpp/include/common",
+                "${workspaceFolder}/cpp/include/core",
+                "${workspaceFolder}/cpp/include/js",
+                "${workspaceFolder}/cpp/include/odbc",
+                "${workspaceFolder}/cpp/include/utils"
             ],
             "defines": [
                 "_DEBUG",

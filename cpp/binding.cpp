@@ -1,6 +1,6 @@
 #include <napi.h>
-#include "Logger.h"
-#include "Connection.h"
+#include "include/utils/Logger.h"
+#include "include/js/Connection.h"
 
 static Napi::Value SetLogLevel(const Napi::CallbackInfo &info)
 {

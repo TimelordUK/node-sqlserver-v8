@@ -95,10 +95,15 @@
                 # enumerate the cpp src files rather than name them.
                 "fileset%": [
                     '<!@(node -p "'
-                    "require('fs')"
-                    ".readdirSync('./cpp')"
+                    "['cpp/binding.cpp']"
+                    ".concat("
+                    "require('fs').readdirSync('./cpp/src/common').map(f => 'cpp/src/common/'+f),"
+                    "require('fs').readdirSync('./cpp/src/core').map(f => 'cpp/src/core/'+f),"
+                    "require('fs').readdirSync('./cpp/src/js').map(f => 'cpp/src/js/'+f),"
+                    "require('fs').readdirSync('./cpp/src/odbc').map(f => 'cpp/src/odbc/'+f),"
+                    "require('fs').readdirSync('./cpp/src/utils').map(f => 'cpp/src/utils/'+f)"
+                    ")"
                     ".filter(x => x.endsWith('<(ext)'))"
-                    ".map(f => 'cpp/'+f)"
                     ".join(' ')"
                     '")'
                 ],
@@ -107,6 +112,12 @@
             "include_dirs": [
                 "<!(node -p \"require('node-addon-api').include_dir\")",
                 "cpp",
+                "cpp/include",
+                "cpp/include/common",
+                "cpp/include/core",
+                "cpp/include/js",
+                "cpp/include/odbc",
+                "cpp/include/utils",
             ],
             "defines": [
             "NODE_GYP_V4",

@@ -4,10 +4,10 @@
 #include <napi.h>
 
 // Include platform and ODBC common headers
-#include "platform.h"
-#include "odbc_common.h"
-#include "odbc_handles.h"
-#include "OdbcError.h"
+#include "include/common/platform.h"
+#include "include/common/odbc_common.h"
+#include "include/odbc/odbc_handles.h"
+#include "include/odbc/OdbcError.h"
 
 // Include any other headers needed by most files
 // Add your project-specific headers here

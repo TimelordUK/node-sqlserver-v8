@@ -1,7 +1,7 @@
 // TimeUtils.h
 #pragma once
-#include <platform.h>
-#include <odbc_common.h>
+#include <common/platform.h>
+#include <common/odbc_common.h>
 #include <cstdint>
 #include <cassert>
 #include <cmath>

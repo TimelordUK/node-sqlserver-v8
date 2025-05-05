@@ -36,6 +36,7 @@
     }
   ],
   "dependencies": {
+    "golang": "^0.1.5-stable",
     "node-abi": "^3.74.0",
     "node-addon-api": "^8.3.1",
     "prebuild-install": "^7.1.3"
@@ -65,11 +66,11 @@
     "node-gyp": "^11.0.0",
     "nyc": "^17.1.0",
     "prebuild": "^13.0.1",
+    "rimraf": "^5.0.5",
     "sequelize": "^6.37.5",
     "source-map-support": "^0.5.21",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3",
-    "rimraf": "^5.0.5"
+    "typescript": "^5.8.3"
   },
   "os": [
     "win32",

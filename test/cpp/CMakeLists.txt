@@ -116,11 +116,34 @@ endif()
 
 FetchContent_MakeAvailable(googletest)
 
-# Get all source files except module.cpp
-file(GLOB_RECURSE SOURCE_FILES
-    "../../cpp/*.cpp"
+# Get all source files with our new directory structure
+file(GLOB_RECURSE SOURCE_FILES_COMMON
+    "../../cpp/src/common/*.cpp"
 )
-list(FILTER SOURCE_FILES EXCLUDE REGEX ".*module\\.cpp$")
+file(GLOB_RECURSE SOURCE_FILES_CORE
+    "../../cpp/src/core/*.cpp"
+)
+file(GLOB_RECURSE SOURCE_FILES_JS
+    "../../cpp/src/js/*.cpp"
+)
+file(GLOB_RECURSE SOURCE_FILES_ODBC
+    "../../cpp/src/odbc/*.cpp"
+)
+file(GLOB_RECURSE SOURCE_FILES_UTILS
+    "../../cpp/src/utils/*.cpp"
+)
+
+# Combine all source files
+set(SOURCE_FILES
+    ${SOURCE_FILES_COMMON}
+    ${SOURCE_FILES_CORE}
+    ${SOURCE_FILES_JS}
+    ${SOURCE_FILES_ODBC}
+    ${SOURCE_FILES_UTILS}
+)
+
+# Exclude binding.cpp (formerly module.cpp)
+list(FILTER SOURCE_FILES EXCLUDE REGEX ".*binding\\.cpp$")
 
 # Enable CTest and test discovery
 enable_testing()
@@ -255,6 +278,12 @@ include_directories(
     "${NODE_HEADERS_DIR}/deps/v8/include"
     "${NODE_ADDON_API_DIR}"
     "../../cpp"
+    "../../cpp/include"
+    "../../cpp/include/common"
+    "../../cpp/include/core"
+    "../../cpp/include/js"
+    "../../cpp/include/odbc"
+    "../../cpp/include/utils"
     "${CMAKE_CURRENT_SOURCE_DIR}/mocks/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/helpers/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/include"
@@ -277,10 +306,10 @@ endif()
 
 # Create helper library if files exist
 if(HELPER_SOURCES)
-    # Add string_utils.cpp to helper sources
+    # Add string_utils.cpp to helper sources with new path
     set(HELPER_WITH_UTILS
         ${HELPER_SOURCES}
-        "../../cpp/string_utils.cpp"
+        "../../cpp/src/common/string_utils.cpp"
     )
 
     add_library(test_helpers SHARED ${HELPER_WITH_UTILS})
@@ -309,6 +338,12 @@ if(HELPER_SOURCES)
         ${GTEST_INCLUDE_DIRS}
         ${GMOCK_INCLUDE_DIRS}
         "../../cpp"
+        "../../cpp/include"
+        "../../cpp/include/common"
+        "../../cpp/include/core"
+        "../../cpp/include/js"
+        "../../cpp/include/odbc"
+        "../../cpp/include/utils"
     )
     
     target_link_libraries(test_helpers PUBLIC
@@ -349,6 +384,12 @@ if(MOCK_SOURCES)
         ${GTEST_INCLUDE_DIRS}
         ${GMOCK_INCLUDE_DIRS}
         "../../cpp"
+        "../../cpp/include"
+        "../../cpp/include/common"
+        "../../cpp/include/core"
+        "../../cpp/include/js"
+        "../../cpp/include/odbc"
+        "../../cpp/include/utils"
         "${NODE_HEADERS_DIR}/include/node"
     )
     
@@ -382,6 +423,12 @@ if(FIXTURE_SOURCES)
         ${GTEST_INCLUDE_DIRS}
         ${GMOCK_INCLUDE_DIRS}
         "../../cpp"
+        "../../cpp/include"
+        "../../cpp/include/common"
+        "../../cpp/include/core"
+        "../../cpp/include/js"
+        "../../cpp/include/odbc"
+        "../../cpp/include/utils"
         "${NODE_HEADERS_DIR}/include/node"
     )
 
@@ -430,6 +477,12 @@ target_include_directories(cpp_tests PRIVATE
     "${NODE_HEADERS_DIR}/deps/v8/include"
     "${NODE_ADDON_API_DIR}"
     "../../cpp"
+    "../../cpp/include"
+    "../../cpp/include/common"
+    "../../cpp/include/core"
+    "../../cpp/include/js"
+    "../../cpp/include/odbc"
+    "../../cpp/include/utils"
     "${CMAKE_CURRENT_SOURCE_DIR}/mocks/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/helpers/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/include"
