@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "platform.h"
-#include "odbc_common.h"
+#include "common/platform.h"
+#include "common/odbc_common.h"
 #include <iostream>
 #include <ostream>
 #include <variant>
@@ -12,84 +12,141 @@
 // Common ODBC utility functions and constants
 namespace mssql
 {
-    class StatementHandle
+  class DatumStorage;
+  class StatementHandle
+  {
+  private:
+    int connection_id;
+    int statement_id;
+
+  public:
+    // Add a default constructor
+    StatementHandle() : connection_id(-1), statement_id(-1) {}
+
+    StatementHandle(int conn_id, int stmt_id)
+        : connection_id(conn_id), statement_id(stmt_id)
     {
-    private:
-        int connection_id;
-        int statement_id;
-    public:
-        // Add a default constructor
-        StatementHandle() : connection_id(-1), statement_id(-1) {}
+    }
 
-        StatementHandle(int conn_id, int stmt_id)
-            : connection_id(conn_id), statement_id(stmt_id) {
-        }
+    int getConnectionId() const { return connection_id; }
+    int getStatementId() const { return statement_id; }
 
-        int getConnectionId() const { return connection_id; }
-        int getStatementId() const { return statement_id; }
-
-        // For comparisons
-        bool operator==(const StatementHandle& other) const
-        {
-            return connection_id == other.connection_id &&
-                statement_id == other.statement_id;
-        }
-
-        // String representation for debugging
-        std::string toString() const
-        {
-            return "Connection: " + std::to_string(connection_id) +
-                ", Statement: " + std::to_string(statement_id);
-        }
-
-        // Add a method to check if the handle is valid
-        bool isValid() const
-        {
-            return connection_id >= 0 && statement_id >= 0;
-        }
-    };
-
-    struct ColumnDefinition
+    // For comparisons
+    bool operator==(const StatementHandle &other) const
     {
-        SQLWCHAR colName[256];
-        SQLSMALLINT colNameLen;
-        SQLSMALLINT dataType;
-        SQLULEN columnSize;
-        SQLSMALLINT decimalDigits;
-        SQLSMALLINT nullable;
-    };
+      return connection_id == other.connection_id &&
+             statement_id == other.statement_id;
+    }
 
-    class QueryResult
+    // String representation for debugging
+    std::string toString() const
     {
-    public:
-        // Default constructor
-        QueryResult() : handle_(-1, -1) {}
+      return "Connection: " + std::to_string(connection_id) +
+             ", Statement: " + std::to_string(statement_id);
+    }
 
-        // Constructor with handle
-        QueryResult(StatementHandle handle) : handle_(handle) {}
+    // Add a method to check if the handle is valid
+    bool isValid() const
+    {
+      return connection_id >= 0 && statement_id >= 0;
+    }
+  };
 
-        // Methods to add columns and rows
-        void addColumn(ColumnDefinition d)
-        {
-            columns_.push_back(d);
-        }
+  struct ColumnDefinition
+  {
+    SQLWCHAR colName[256];
+    SQLSMALLINT colNameLen;
+    SQLSMALLINT dataType;
+    SQLULEN columnSize;
+    SQLSMALLINT decimalDigits;
+    SQLSMALLINT nullable;
 
-        void setHandle(StatementHandle handle)
-        {
-            handle_ = handle;
-        }
+    // String representation for debugging
+    std::string toString() const
+    {
+      std::string result = "Column: ";
 
-        // Use "inline" correctly and make these methods const since they don't modify the object
-        inline size_t size() const { return columns_.size(); }
-        inline ColumnDefinition get(size_t i) const { return columns_[i]; }
-        inline StatementHandle getHandle() const { return handle_; }
+      // Convert wide string to regular string for display
+      std::string name(colNameLen, ' ');
+      for (int i = 0; i < colNameLen; i++)
+      {
+        name[i] = static_cast<char>(colName[i]);
+      }
 
-    private:
-        std::vector<ColumnDefinition> columns_;
-        StatementHandle handle_;
-    };
+      result += name;
+      result += ", Type: " + std::to_string(dataType);
+      result += ", Size: " + std::to_string(columnSize);
+      result += ", Decimal digits: " + std::to_string(decimalDigits);
+      result += ", Nullable: " + std::string(nullable ? "Yes" : "No");
 
- 
+      return result;
+    }
+  };
+
+  typedef vector<shared_ptr<DatumStorage>> t_row;
+
+  class QueryResult
+  {
+  public:
+    // Default constructor
+    QueryResult() : handle_(-1, -1) {}
+
+    // Constructor with handle
+    QueryResult(StatementHandle handle) : handle_(handle) {}
+
+    // Methods to add columns and rows
+    void addColumn(ColumnDefinition d)
+    {
+      columns_.push_back(d);
+    }
+
+    void setHandle(StatementHandle handle)
+    {
+      handle_ = handle;
+    }
+
+    inline void start_results()
+    {
+      rows_.clear();
+    }
+
+    inline size_t get_result_count() const
+    {
+      return rows_.size();
+    }
+
+    inline bool is_end_of_rows() const
+    {
+      return _end_of_rows;
+    }
+
+    inline void set_end_of_rows(bool end_of_rows)
+    {
+      _end_of_rows = end_of_rows;
+    }
+
+    inline size_t get_row_count() const
+    {
+      return _row_count;
+    }
+
+    inline void set_row_count(size_t row_count)
+    {
+      _row_count = row_count;
+    }
+
+    // Use "inline" correctly and make these methods const since they don't modify the object
+    inline size_t size() const { return columns_.size(); }
+    inline ColumnDefinition get(size_t i) const { return columns_[i]; }
+    inline StatementHandle getHandle() const { return handle_; }
+
+  private:
+    std::vector<ColumnDefinition> columns_;
+    std::vector<t_row> rows_;
+    bool _end_of_rows;
+    size_t _row_count;
+    StatementHandle handle_;
+  };
 
   // Existing structure
   struct ProcedureParamMeta

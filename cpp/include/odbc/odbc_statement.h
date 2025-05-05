@@ -74,6 +74,10 @@ namespace mssql
      */
     bool ProcessResults(std::shared_ptr<QueryResult> &result);
 
+    bool try_read_rows(const size_t number_rows);
+
+    bool fetch_read(const size_t number_rows);
+
     Type type_;
     std::shared_ptr<IOdbcStatementHandle> statement_;
     std::shared_ptr<OdbcErrorHandler> errorHandler_;
@@ -165,8 +169,7 @@ namespace mssql
         const std::string &query,
         const std::string &tvpType,
         std::shared_ptr<IOdbcApi> odbcApi,
-        StatementHandle handle
-        )
+        StatementHandle handle)
         : OdbcStatement(Type::Transient, statement, errorHandler, odbcApi, handle), query_(query)
     {
     }
@@ -185,7 +188,5 @@ namespace mssql
     std::string tvpType_;
     bool isColumnsBound_ = false;
   };
-
-  
 
 }

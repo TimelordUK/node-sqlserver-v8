@@ -1,17 +1,15 @@
 // In parameter_factory.cpp
-#include "napi.h"
-#include <platform.h>
-#include "parameter_set.h"
-#include "parameter_factory.h"
-#include "js_object_mapper.h"
+#include <napi.h>
+#include "common/platform.h"
+#include "odbc/parameter_set.h"
+#include "odbc/parameter_factory.h"
+#include "js/js_object_mapper.h"
 #include <iostream>
 
 namespace mssql
 {
   std::shared_ptr<ParameterSet> ParameterFactory::createParameterSet(const Napi::CallbackInfo &info)
   {
-    Napi::Env env = info.Env();
-
     return std::make_shared<ParameterSet>();
   }
 
