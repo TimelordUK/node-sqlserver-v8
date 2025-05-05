@@ -1,5 +1,11 @@
 // src/connection.ts
-import { NativeConnection, QueryResult, QueryUserCallback } from './native-module'
+import {
+  CloseConnectionCallback,
+  NativeConnection,
+  OpenConnectionCallback,
+  QueryResult,
+  QueryUserCallback
+} from './native-module'
 import { EventEmitter } from 'events'
 import { StatementState } from './statement'
 import { AsyncQueue, QueueTask } from './async-queue'
@@ -89,7 +95,7 @@ export class Connection extends EventEmitter {
   /**
    * Open a connection to the database
    */
-  open (connectionString: string, callback?: (err: Error | null, conn?: any) => void): Promise<QueryResult> | undefined {
+  open (connectionString: string, callback?: OpenConnectionCallback): Promise<QueryResult> | undefined {
     return this.executeOperation<QueryResult>(
       (cb) => { this._native.open(connectionString, cb) },
       callback,
@@ -101,7 +107,7 @@ export class Connection extends EventEmitter {
   /**
    * Close the database connection
    */
-  close (callback?: (err: Error | null) => void): Promise<void> | undefined {
+  close (callback?: CloseConnectionCallback): Promise<void> | undefined {
     return this.executeOperation(
       (cb) => {
         this._native.close((err) => {

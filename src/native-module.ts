@@ -21,10 +21,12 @@ export interface QueryResult {
 }
 
 export type QueryUserCallback = (err: Error | null, result: QueryResult | null) => void
+export type CloseConnectionCallback = (err: Error | null) => void
+export type OpenConnectionCallback = (err: Error | null, conn?: any) => void
 
 export interface NativeConnection {
-  open: (connectionString: string, callback: (err: Error | null, conn?: any) => void) => void
-  close: (callback: (err: Error | null) => void) => void
+  open: (connectionString: string, callback: OpenConnectionCallback) => void
+  close: (callback: CloseConnectionCallback) => void
   query: (sql: string, params: any[], callback: QueryUserCallback) => void
   fetchRows: (statementId: number, batchSize: number, callback: (err: Error | null, rows?: any[], hasMore?: boolean) => void) => void
   nextResultSet: (statementId: number, callback: (err: Error | null, hasMore?: boolean, metadata?: any) => void) => void

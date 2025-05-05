@@ -34,7 +34,6 @@ describe('bind', function() {
       table: 'Employee',
     })
     const sql = query.sql
-    console.log(sql)
     expect(connection).not.to.be.null
     if (connection === null) return
     const res = await connection.query(sql)
