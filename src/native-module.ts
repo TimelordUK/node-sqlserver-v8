@@ -20,7 +20,7 @@ export interface QueryResult {
   readonly handle: StatementHandle
 }
 
-export type QueryUserCallback = (err: Error | null, result: QueryResult | null) => void
+export type QueryUserCallback = (err: Error | null, result?: QueryResult) => void
 export type CloseConnectionCallback = (err: Error | null) => void
 export type OpenConnectionCallback = (err: Error | null, conn?: any) => void
 

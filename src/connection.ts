@@ -15,6 +15,39 @@ import { ClassLogger } from './class-logger'
  * Wrapper for the native Connection class that enforces operation queuing
  */
 
+class ConnectionPromises {
+  constructor(public readonly connection: Connection) {
+  }
+
+  open(connectionString: string): Promise<QueryResult> {
+    return new Promise<QueryResult>((resolve, reject) => {
+      this.connection.open(connectionString, (err, result) => {
+        if (err) reject(err)
+        else resolve(result)
+      })
+    })
+  }
+
+  close(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      this.connection.close((err) => {
+        if (err) reject(err)
+        else resolve()
+      })
+    })
+  }
+
+  query(sql: string, params: any[]): Promise<QueryResult> {
+    return new Promise<QueryResult>((resolve, reject) => {
+      this.connection.query(sql, params, (err, result) => {
+        if (err) reject(err)
+        else resolve(result ?? {} as QueryResult)
+      })
+    })
+  }
+}
+
+
 // Define callback types with more flexibility
 type NativeCallback<T> = (err: Error | null, result?: T, ...args: any[]) => void
 type UserCallback<T> = (err: Error | null, result?: T, ...args: any[]) => void
@@ -25,12 +58,14 @@ export class Connection extends EventEmitter {
   private _closed = false
   public readonly _connectionId = 1
   private readonly _logger: ClassLogger
+  public readonly promises: ConnectionPromises
 
-  constructor (nativeConnection: NativeConnection) {
+  constructor(nativeConnection: NativeConnection) {
     super()
     this._native = nativeConnection
     this._logger = new ClassLogger('Connection', { connectionId: this._connectionId })
     this._logger.debug('Connection ctor')
+    this.promises = new ConnectionPromises(this)
   }
 
   /**
@@ -95,7 +130,7 @@ export class Connection extends EventEmitter {
   /**
    * Open a connection to the database
    */
-  open (connectionString: string, callback?: OpenConnectionCallback): Promise<QueryResult> | undefined {
+  open(connectionString: string, callback?: OpenConnectionCallback): Promise<QueryResult> | undefined {
     return this.executeOperation<QueryResult>(
       (cb) => { this._native.open(connectionString, cb) },
       callback,
@@ -107,7 +142,7 @@ export class Connection extends EventEmitter {
   /**
    * Close the database connection
    */
-  close (callback?: CloseConnectionCallback): Promise<void> | undefined {
+  close(callback?: CloseConnectionCallback): Promise<void> | undefined {
     return this.executeOperation(
       (cb) => {
         this._native.close((err) => {
@@ -122,7 +157,7 @@ export class Connection extends EventEmitter {
   /**
    * Simplified query method - just creates a statement and starts execution
    */
-  query (
+  query(
     sql: string,
     paramsOrCallback?: any[] | QueryUserCallback,
     callback?: QueryUserCallback
@@ -149,18 +184,18 @@ export class Connection extends EventEmitter {
         })
       },
       fail: (err) => {
-        if (cb) cb(err, null)
+        if (cb) cb(err)
       }
     }
 
     // Add promise if no callback provided
     if (!cb) {
-      task.promise = new Promise<QueryResult | null>((resolve, reject) => {
+      task.promise = new Promise<QueryResult>((resolve, reject) => {
         task.execute = (done) => {
           this._logger.debug('Executing query', { sql, params })
           this._native.query(sql, params, (err, result) => {
             if (err) reject(err)
-            else resolve(result)
+            else resolve(result ?? {} as QueryResult)
             done()
           })
         }

@@ -5,6 +5,7 @@ import { TestConnectionFactory } from 'msnodesqlv8/test/common/test-connection-f
 import { QueryBuilder } from 'msnodesqlv8/src/query-builder'
 import { Logger, LogLevel } from '../../lib/logger'
 
+
 // Set logging options
 nativeModule.setLogLevel(5) // Debug level
 nativeModule.enableConsoleLogging(true)
