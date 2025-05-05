@@ -44,22 +44,5 @@ namespace mssql
     inline void SetConnected(bool connected) { isConnected_ = connected; }
   };
 
-  // Worker for executing queries asynchronously
-  class QueryWorker : public Napi::AsyncWorker
-  {
-  public:
-    QueryWorker(Napi::Function &callback,
-                IOdbcConnection *connection,
-                const std::string &sqlText,
-                const Napi::Array &params);
-
-    void Execute() override;
-    void OnOK() override;
-
-  private:
-    IOdbcConnection *connection_;
-    std::string sqlText_;
-    std::shared_ptr<ParameterSet> parameters_;
-    std::shared_ptr<QueryResult> result_;
-  };
+  // QueryWorker class has been moved to query_worker.h
 }

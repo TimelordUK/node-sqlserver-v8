@@ -1,6 +1,7 @@
 // src/statement.ts
 import { EventEmitter } from 'events'
-import { Connection, QueueTask } from './connection'
+import { Connection } from './connection'
+import { QueueTask } from './async-queue'
 import logger from './logger'
 
 export enum StatementState {
@@ -95,9 +96,12 @@ export class Statement extends EventEmitter {
       return
     }
 
-    const queryTask: QueueTask = {
-
-    }
+    // Skip this for now as it's not fully implemented
+    // We'll implement this properly later
+    // const queryTask: QueueTask = {
+    //   execute: (done) => {},
+    //   fail: (err) => {}
+    // }
 
     this._state = StatementState.EXECUTING
     logger.debug('Executing statement', {
