@@ -11,13 +11,13 @@ export interface NativeModule {
 }
 
 export interface StatementHandle {
-  connectionId: number
-  statementId: number
+  readonly connectionId: number
+  readonly statementId: number
 }
 
 export interface QueryResult {
-  meta: any
-  handle: StatementHandle
+  readonly meta: any
+  readonly handle: StatementHandle
 }
 
 export type QueryUserCallback = (err: Error | null, result: QueryResult | null) => void
