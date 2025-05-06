@@ -37,7 +37,7 @@
             "args": [
                 //"samples/javascript/streaming.js"
                 "./node_modules/mocha/bin/mocha.js",
-                "test/napi/bind"
+                "test/napi/bind-table.tests"
                 // "test/napi/open"
                 // "test/sproc"
                 // "test/table-builder"

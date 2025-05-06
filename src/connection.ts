@@ -4,16 +4,37 @@ import {
   NativeConnection,
   OpenConnectionCallback,
   QueryResult,
-  QueryUserCallback
+  QueryUserCallback, StatementHandle
 } from './native-module'
 import { EventEmitter } from 'events'
-import { StatementState } from './statement'
 import { AsyncQueue, QueueTask } from './async-queue'
 import { ClassLogger } from './class-logger'
 
 /**
  * Wrapper for the native Connection class that enforces operation queuing
  */
+
+class ConnectionPromises {
+  constructor (public readonly connection: Connection) {
+  }
+
+  async open (connectionString: string): Promise<QueryResult | undefined> {
+    return this.connection.open(connectionString)
+  }
+
+  async close (): Promise<void> {
+    return this.connection.close()
+  }
+
+  async query (sql: string, params?: any[]): Promise<QueryResult> {
+    return new Promise<QueryResult>((resolve, reject) => {
+      this.connection.query(sql, params, (err, result) => {
+        if (err) reject(err)
+        else resolve(result ?? {} as QueryResult)
+      })
+    })
+  }
+}
 
 // Define callback types with more flexibility
 type NativeCallback<T> = (err: Error | null, result?: T, ...args: any[]) => void
@@ -25,12 +46,14 @@ export class Connection extends EventEmitter {
   private _closed = false
   public readonly _connectionId = 1
   private readonly _logger: ClassLogger
+  public readonly promises: ConnectionPromises
 
   constructor (nativeConnection: NativeConnection) {
     super()
     this._native = nativeConnection
     this._logger = new ClassLogger('Connection', { connectionId: this._connectionId })
     this._logger.debug('Connection ctor')
+    this.promises = new ConnectionPromises(this)
   }
 
   /**
@@ -104,6 +127,14 @@ export class Connection extends EventEmitter {
     )
   }
 
+  fetchRows (handle: StatementHandle, batchSize: number, callback?: OpenConnectionCallback): Promise<QueryResult> | undefined {
+    return this.executeOperation<QueryResult>(
+      (cb) => { this._native.fetchRows(handle, batchSize, cb) },
+      callback,
+      'FetchRows'
+    )
+  }
+
   /**
    * Close the database connection
    */
@@ -139,7 +170,7 @@ export class Connection extends EventEmitter {
     }
 
     // For query, we need a specialized implementation of executeOperation that handles
-    // the specific callback signature with rows and more parameters
+
     const task: QueueTask = {
       execute: (done) => {
         this._logger.debug('Executing query', { sql, params })
@@ -149,18 +180,18 @@ export class Connection extends EventEmitter {
         })
       },
       fail: (err) => {
-        if (cb) cb(err, null)
+        if (cb) cb(err)
       }
     }
 
     // Add promise if no callback provided
     if (!cb) {
-      task.promise = new Promise<QueryResult | null>((resolve, reject) => {
+      task.promise = new Promise<QueryResult>((resolve, reject) => {
         task.execute = (done) => {
           this._logger.debug('Executing query', { sql, params })
           this._native.query(sql, params, (err, result) => {
             if (err) reject(err)
-            else resolve(result)
+            else resolve(result ?? {} as QueryResult)
             done()
           })
         }

@@ -74,15 +74,16 @@ namespace mssql
       }
       if (!check_odbc_error(ret))
       {
-        // fprintf(stderr, "fetch_read check_odbc_error\n");
+        SQL_LOG_TRACE_STREAM("fetch_read: error in  SQLFetch" << number_rows);
         return false;
       }
       result->set_end_of_rows(false);
       res = true;
-      const auto column_count = static_cast<int>(result->get_column_count());
+      const auto column_count = static_cast<int>(metaData_->get_column_count());
+      SQL_LOG_TRACE_STREAM("fetch_read: column_count " << column_count);
       for (auto c = 0; c < column_count; ++c)
       {
-        const auto &definition = result->get(c);
+        const auto &definition = metaData_->get(c);
         res = dispatch(definition.dataType, row_id, c);
         if (!res)
         {

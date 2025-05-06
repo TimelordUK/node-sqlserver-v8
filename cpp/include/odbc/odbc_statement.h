@@ -240,6 +240,7 @@ namespace mssql
     State state_;
     bool hasMoreResults_;
     bool endOfRows_;
+    std::shared_ptr<QueryResult> metaData_;
     bool lob(const size_t row_id, size_t column);
     bool check_more_read(SQLRETURN r, bool &status);
   };
@@ -297,6 +298,9 @@ namespace mssql
         const std::vector<std::shared_ptr<QueryParameter>> &parameters,
         std::shared_ptr<QueryResult> &result) override;
 
+    bool FetchNextBatch(size_t batchSize) override;
+    bool NextResultSet() override;
+
     /**
      * @brief Prepare the statement
      */
@@ -328,6 +332,9 @@ namespace mssql
     bool Execute(
         const std::vector<std::shared_ptr<QueryParameter>> &parameters,
         std::shared_ptr<QueryResult> &result) override;
+
+    bool FetchNextBatch(size_t batchSize) override;
+    bool NextResultSet() override;
 
     /**
      * @brief Bind TVP columns

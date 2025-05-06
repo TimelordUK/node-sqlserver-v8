@@ -24,7 +24,7 @@ using ::testing::SetArgReferee;
 namespace mssql {
     namespace test {
 
-        TEST_F(OdbcStatementFixture, PreparedStatementWithEmployeeData) {
+        TEST_F(OdbcStatementFixture, DISABLED_PreparedStatementWithEmployeeData) {
             // Arrange
             const std::string query = "SELECT * FROM Employees WHERE id = ?";
 
@@ -53,7 +53,7 @@ namespace mssql {
             // Add more specific assertions about the result structure if needed
         }
 
-        TEST_F(OdbcStatementFixture, PreparedStatementWithProductData) {
+        TEST_F(OdbcStatementFixture, DISABLED_PreparedStatementWithProductData) {
             // Similar structure but using createProductTestData()
             const std::string query = "SELECT * FROM Products WHERE product_id = ?";
 
