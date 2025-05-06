@@ -13,6 +13,7 @@ namespace mssql
   class OdbcErrorHandler;
   class IOdbcApi;
   class QueryResult;
+  class IOdbcRow;
 
   /**
    * @brief Common statement types for OdbcStatement
@@ -239,6 +240,8 @@ namespace mssql
     State state_;
     bool hasMoreResults_;
     bool endOfRows_;
+    bool lob(const size_t row_id, size_t column);
+    bool check_more_read(SQLRETURN r, bool &status);
   };
 
   /**
@@ -326,7 +329,7 @@ namespace mssql
         const std::vector<std::shared_ptr<QueryParameter>> &parameters,
         std::shared_ptr<QueryResult> &result) override;
 
-     /**
+    /**
      * @brief Bind TVP columns
      */
     bool BindTvpColumns(const std::vector<std::string> &columnNames);
@@ -335,6 +338,7 @@ namespace mssql
     std::string query_;
     std::string tvpType_;
     bool isColumnsBound_ = false;
+    std::vector<std::shared_ptr<IOdbcRow>> rows_;
   };
 
 }

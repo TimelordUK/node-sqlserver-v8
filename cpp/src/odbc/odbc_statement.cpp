@@ -37,14 +37,14 @@ namespace mssql
   }
 
   // Default implementation - derived classes should override as needed
-  bool OdbcStatement::FetchNextBatch(size_t batchSize) 
+  bool OdbcStatement::FetchNextBatch(size_t batchSize)
   {
     SQL_LOG_TRACE("OdbcStatement::FetchNextBatch - Default implementation called, should be overridden");
     return false;
   }
 
   // Default implementation - derived classes should override as needed
-  bool OdbcStatement::NextResultSet() 
+  bool OdbcStatement::NextResultSet()
   {
     SQL_LOG_TRACE("OdbcStatement::NextResultSet - Default implementation called, should be overridden");
     return false;
@@ -90,6 +90,153 @@ namespace mssql
         }
       }
     }
+    return res;
+  }
+
+  struct lob_capture
+  {
+    lob_capture() : total_bytes_to_read(atomic_read_bytes)
+    {
+      // storage.ReserveUint16(atomic_read_bytes / item_size + 1);
+      // src_data = storage.uint16vec_ptr;
+      write_ptr = src_data->data();
+      maxvarchar = false;
+    }
+
+    void trim() const
+    {
+      if (maxvarchar)
+      {
+        auto last = src_data->size() - 1;
+        if (maxvarchar)
+        {
+          while ((*src_data)[last] == 0)
+          {
+            --last;
+          }
+          if (last < src_data->size() - 1)
+          {
+            src_data->resize(last + 1);
+          }
+        }
+      }
+    }
+
+    void on_next_read()
+    {
+      ++reads;
+      if (total_bytes_to_read < 0)
+      {
+        const auto previous = src_data->size();
+        total_bytes_to_read = bytes_to_read * (reads + 1);
+        n_items = total_bytes_to_read / item_size;
+        src_data->reserve(n_items + 1);
+        src_data->resize(n_items);
+        write_ptr = src_data->data() + previous;
+        memset(write_ptr, 0, src_data->data() + src_data->size() - write_ptr);
+      }
+      else
+      {
+        write_ptr += bytes_to_read / item_size;
+      }
+    }
+
+    void on_first_read(const int factor = 2)
+    {
+      maxvarchar = total_bytes_to_read < 0;
+      if (maxvarchar)
+      {
+        total_bytes_to_read = bytes_to_read * factor;
+      }
+      n_items = total_bytes_to_read / item_size;
+      src_data->reserve(n_items + 1);
+      src_data->resize(n_items);
+
+      if (total_bytes_to_read > bytes_to_read)
+      {
+        total_bytes_to_read -= bytes_to_read;
+      }
+      write_ptr = src_data->data();
+      write_ptr += bytes_to_read / item_size;
+    }
+
+    SQLLEN reads = 1;
+    size_t n_items = 0;
+    bool maxvarchar;
+    const size_t item_size = sizeof(uint16_t);
+    shared_ptr<vector<uint16_t>> src_data{};
+    unsigned short *write_ptr{};
+    const SQLLEN atomic_read_bytes = 24 * 1024;
+    SQLLEN bytes_to_read = atomic_read_bytes;
+    DatumStorage storage;
+    SQLLEN total_bytes_to_read;
+  };
+
+  bool OdbcStatement::lob(const size_t row_id, size_t column)
+  {
+    // cerr << "lob ..... " << endl;
+    const auto &statement = statement_->get_handle();
+    lob_capture capture;
+    auto r = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
+    if (capture.total_bytes_to_read == SQL_NULL_DATA)
+    {
+      // cerr << "lob NullColumn " << endl;
+      //_resultset->add_column(row_id, make_shared<NullColumn>(column));
+      return true;
+    }
+    if (!check_odbc_error(r))
+      return false;
+    auto status = false;
+    auto more = check_more_read(r, status);
+    if (!status)
+    {
+      // cerr << "lob check_more_read " << endl;
+      return false;
+    }
+    capture.on_first_read();
+    while (more)
+    {
+      capture.bytes_to_read = min(capture.atomic_read_bytes, capture.total_bytes_to_read);
+      r = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
+      capture.on_next_read();
+      if (!check_odbc_error(r))
+      {
+        // cerr << "lob error " << endl;
+        return false;
+      }
+      more = check_more_read(r, status);
+      if (!status)
+      {
+        // cerr << "lob status " << endl;
+        return false;
+      }
+    }
+    capture.trim();
+    // cerr << "lob add StringColumn column " << endl;
+    //_resultset->add_column(row_id, make_shared<StringColumn>(column, capture.src_data, capture.src_data->size()));
+    return true;
+  }
+
+  bool OdbcStatement::check_more_read(SQLRETURN r, bool &status)
+  {
+    const auto &statement = statement_->get_handle();
+    vector<SQLWCHAR> sql_state(6);
+    SQLINTEGER native_error = 0;
+    SQLSMALLINT text_length = 0;
+    auto res = false;
+    if (r == SQL_SUCCESS_WITH_INFO)
+    {
+      r = SQLGetDiagRec(SQL_HANDLE_STMT, statement, 1, sql_state.data(), &native_error, nullptr, 0, &text_length);
+      if (!check_odbc_error(r))
+      {
+        status = false;
+        return false;
+      }
+      // onst auto state = swcvec2str(sql_state, sql_state.size());
+      // cerr << "check_more_read " << status << endl;
+      // res = state == "01004";
+    }
+    status = true;
     return res;
   }
 
