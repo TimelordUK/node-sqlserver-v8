@@ -225,6 +225,7 @@ namespace mssql
     bool get_data_decimal(const size_t row_id, const size_t column);
     bool get_data_bit(const size_t row_id, const size_t column);
     bool d_variant(const size_t row_id, const size_t column);
+    bool bounded_string(const size_t display_size, const size_t row_id, const size_t column);
     bool try_read_string(const bool is_variant, const size_t row_id, const size_t column);
     bool get_data_binary(const size_t row_id, const size_t column);
     bool get_data_timestamp_offset(const size_t row_id, const size_t column);
@@ -243,6 +244,7 @@ namespace mssql
     std::shared_ptr<QueryResult> metaData_;
     bool lob(const size_t row_id, size_t column);
     bool check_more_read(SQLRETURN r, bool &status);
+    std::vector<std::shared_ptr<IOdbcRow>> rows_;
   };
 
   /**
@@ -345,7 +347,6 @@ namespace mssql
     std::string query_;
     std::string tvpType_;
     bool isColumnsBound_ = false;
-    std::vector<std::shared_ptr<IOdbcRow>> rows_;
   };
 
 }

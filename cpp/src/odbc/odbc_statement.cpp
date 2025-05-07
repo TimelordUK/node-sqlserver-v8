@@ -1,10 +1,17 @@
 #include "common/platform.h"
 #include "common/odbc_common.h"
 #include "odbc/iodbc_api.h"
+#include "odbc/odbc_row.h"
 #include "odbc/odbc_statement.h"
 #include "odbc/odbc_error_handler.h"
 #include "common/string_utils.h"
 #include "utils/Logger.h"
+#include "odbc_statement.h"
+
+const int SQL_SERVER_MAX_STRING_SIZE = 8000;
+
+// default size to retrieve from a LOB field and we don't know the size
+const int LOB_PACKET_SIZE = 8192;
 
 namespace mssql
 {
@@ -24,7 +31,9 @@ namespace mssql
     {
       return false;
     }
-
+    SQL_LOG_TRACE_STREAM("TryReadRows: number_rows " << number_rows);
+    rows_.clear();
+    rows_.reserve(number_rows);
     result->start_results();
     return fetch_read(result, number_rows);
   }
@@ -81,6 +90,8 @@ namespace mssql
       res = true;
       const auto column_count = static_cast<int>(metaData_->get_column_count());
       SQL_LOG_TRACE_STREAM("fetch_read: column_count " << column_count);
+      std::shared_ptr<IOdbcRow> row = std::make_shared<OdbcRow>(*metaData_);
+      rows_.push_back(row);
       for (auto c = 0; c < column_count; ++c)
       {
         const auto &definition = metaData_->get(c);
@@ -96,10 +107,10 @@ namespace mssql
 
   struct lob_capture
   {
-    lob_capture() : total_bytes_to_read(atomic_read_bytes)
+    lob_capture(mssql::DatumStorage &storage) : total_bytes_to_read(atomic_read_bytes), storage(storage)
     {
-      // storage.ReserveUint16(atomic_read_bytes / item_size + 1);
-      // src_data = storage.uint16vec_ptr;
+      storage.reserve(atomic_read_bytes / item_size + 1);
+      src_data = storage.getTypedVector<uint16_t>();
       write_ptr = src_data->data();
       maxvarchar = false;
     }
@@ -109,16 +120,13 @@ namespace mssql
       if (maxvarchar)
       {
         auto last = src_data->size() - 1;
-        if (maxvarchar)
+        while ((*src_data)[last] == 0)
         {
-          while ((*src_data)[last] == 0)
-          {
-            --last;
-          }
-          if (last < src_data->size() - 1)
-          {
-            src_data->resize(last + 1);
-          }
+          --last;
+        }
+        if (last < src_data->size() - 1)
+        {
+          src_data->resize(last + 1);
         }
       }
     }
@@ -169,7 +177,7 @@ namespace mssql
     unsigned short *write_ptr{};
     const SQLLEN atomic_read_bytes = 24 * 1024;
     SQLLEN bytes_to_read = atomic_read_bytes;
-    DatumStorage storage;
+    DatumStorage &storage;
     SQLLEN total_bytes_to_read;
   };
 
@@ -177,12 +185,13 @@ namespace mssql
   {
     // cerr << "lob ..... " << endl;
     const auto &statement = statement_->get_handle();
-    lob_capture capture;
+    auto row = rows_[row_id];
+    auto &column_data = row->getColumn(column);
+    lob_capture capture(column_data);
     auto r = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
     if (capture.total_bytes_to_read == SQL_NULL_DATA)
     {
-      // cerr << "lob NullColumn " << endl;
-      //_resultset->add_column(row_id, make_shared<NullColumn>(column));
+      column_data.setNull();
       return true;
     }
     if (!check_odbc_error(r))
@@ -191,6 +200,7 @@ namespace mssql
     auto more = check_more_read(r, status);
     if (!status)
     {
+      SQL_LOG_TRACE_STREAM("lob check_more_read " << status);
       // cerr << "lob check_more_read " << endl;
       return false;
     }
@@ -202,19 +212,18 @@ namespace mssql
       capture.on_next_read();
       if (!check_odbc_error(r))
       {
-        // cerr << "lob error " << endl;
+        SQL_LOG_TRACE_STREAM("lob error " << r);
         return false;
       }
       more = check_more_read(r, status);
       if (!status)
       {
-        // cerr << "lob status " << endl;
+        SQL_LOG_TRACE_STREAM("lob status " << status);
         return false;
       }
     }
     capture.trim();
-    // cerr << "lob add StringColumn column " << endl;
-    //_resultset->add_column(row_id, make_shared<StringColumn>(column, capture.src_data, capture.src_data->size()));
+
     return true;
   }
 
@@ -233,9 +242,9 @@ namespace mssql
         status = false;
         return false;
       }
-      // onst auto state = swcvec2str(sql_state, sql_state.size());
-      // cerr << "check_more_read " << status << endl;
-      // res = state == "01004";
+      const auto state = mssql::StringUtils::WideToUtf8(sql_state.data(), sql_state.size());
+      SQL_LOG_DEBUG_STREAM("check_more_read " << state);
+      res = state == "01004";
     }
     status = true;
     return res;
@@ -388,9 +397,64 @@ namespace mssql
     return true;
   }
 
+  bool OdbcStatement::bounded_string(size_t display_size, const size_t row_id, const size_t column)
+  {
+    SQL_LOG_TRACE_STREAM("bounded_string: display_size " << display_size << " row_id " << row_id << " column " << column);
+    // cerr << "bounded_string ... " << endl;
+
+    auto row = rows_[row_id];
+    auto &column_data = row->getColumn(column);
+
+    constexpr auto size = sizeof(uint16_t);
+    SQLLEN value_len = 0;
+
+    display_size++;
+    column_data.reserve(display_size);
+    column_data.resize(display_size); // increment for null terminator
+    auto src_data = column_data.getTypedVector<uint16_t>()->data();
+    const auto r = SQLGetData(statement_->get_handle(), static_cast<SQLSMALLINT>(column + 1), SQL_C_WCHAR, src_data, display_size * size,
+                              &value_len);
+
+    if (r != SQL_NO_DATA && !check_odbc_error(r))
+      return false;
+
+    if (r == SQL_NO_DATA || value_len == SQL_NULL_DATA)
+    {
+      column_data.setNull();
+      return true;
+    }
+
+    value_len /= size;
+    column_data.resize(value_len);
+    // assert(value_len >= 0 && value_len <= display_size - 1);
+    SQL_LOG_TRACE_STREAM("datum: " << column_data.getDebugString());
+
+    return true;
+  }
+
   bool OdbcStatement::try_read_string(const bool is_variant, const size_t row_id, const size_t column)
   {
     SQL_LOG_TRACE_STREAM("try_read_string: is_variant " << is_variant << " row_id " << row_id << " column " << column);
+
+    SQLLEN display_size = 0;
+    // cerr << " try_read_string row_id = " << row_id << " column = " << column;
+    const auto r = SQLColAttribute(statement_->get_handle(), column + 1, SQL_DESC_DISPLAY_SIZE, nullptr, 0, nullptr, &display_size);
+    if (!check_odbc_error(r))
+      return false;
+
+    // when a field type is LOB, we read a packet at time and pass that back.
+    if (display_size == 0 || display_size == numeric_limits<int>::max() ||
+        display_size == numeric_limits<int>::max() >> 1 ||
+        static_cast<unsigned long>(display_size) == numeric_limits<unsigned long>::max() - 1)
+    {
+      return lob(row_id, column);
+    }
+
+    if (display_size >= 1 && display_size <= SQL_SERVER_MAX_STRING_SIZE)
+    {
+      return bounded_string(display_size, row_id, column);
+    }
+
     return true;
   }
 
