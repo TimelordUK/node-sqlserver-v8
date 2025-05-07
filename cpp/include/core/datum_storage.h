@@ -575,7 +575,7 @@ namespace mssql
     /**
      * @brief Set this storage as containing a null value
      */
-    void setNull() { isNull_ = true; }
+    void setNull(bool isNull = true) { isNull_ = isNull; }
 
     /**
      * @brief Check if this storage contains a null value

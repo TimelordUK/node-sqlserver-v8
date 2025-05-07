@@ -223,7 +223,7 @@ namespace mssql
       }
     }
     capture.trim();
-
+    column_data.setNull(false);
     return true;
   }
 
@@ -262,7 +262,10 @@ namespace mssql
     {
       return false;
     }
-
+    SQL_LOG_TRACE_STREAM("dispatch: t " << t << " row_id " << row_id << " column " << column);
+    auto row = rows_[row_id];
+    auto &column_data = row->getColumn(column);
+    column_data.setNull();
     // cerr << " dispatch row = " << row_id << endl;
     bool res;
     switch (t)
@@ -428,7 +431,7 @@ namespace mssql
     column_data.resize(value_len);
     // assert(value_len >= 0 && value_len <= display_size - 1);
     SQL_LOG_TRACE_STREAM("datum: " << column_data.getDebugString());
-
+    column_data.setNull(false);
     return true;
   }
 

@@ -109,6 +109,9 @@ namespace mssql
      */
     virtual StatementState GetState() const = 0;
 
+    virtual std::vector<std::shared_ptr<IOdbcRow>> &GetRows() = 0;
+    virtual std::shared_ptr<QueryResult> GetMetaData() = 0;
+
     /**
      * @brief Try to read rows from the result set
      * @param result Result object to store row data
@@ -194,6 +197,9 @@ namespace mssql
      * @return true if successful, false otherwise
      */
     virtual bool TryReadRows(std::shared_ptr<QueryResult> result, const size_t number_rows) override;
+
+    virtual std::vector<std::shared_ptr<IOdbcRow>> &GetRows() override { return rows_; }
+    virtual std::shared_ptr<QueryResult> GetMetaData() override { return metaData_; }
 
   protected:
     OdbcStatement(
