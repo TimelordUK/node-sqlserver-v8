@@ -558,6 +558,9 @@ namespace mssql
       case SqlType::DateTimeOffset:
         vectorData = std::make_shared<VectorImpl<SQL_SS_TIMESTAMPOFFSET_STRUCT>>(std::make_shared<std::vector<SQL_SS_TIMESTAMPOFFSET_STRUCT>>());
         break;
+      case SqlType::Bit:
+        vectorData = std::make_shared<VectorImpl<int8_t>>(std::make_shared<std::vector<int8_t>>());
+        break;
       default:
         // Leave as nullptr for unknown type
         break;
