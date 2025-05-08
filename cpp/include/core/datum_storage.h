@@ -468,7 +468,7 @@ namespace mssql
     bool isCompatibleType() const
     {
       if constexpr (std::is_same_v<T, int8_t>)
-        return sqlType == SqlType::TinyInt;
+        return sqlType == SqlType::TinyInt || sqlType == SqlType::Bit;
       else if constexpr (std::is_same_v<T, int16_t>)
         return sqlType == SqlType::SmallInt;
       else if constexpr (std::is_same_v<T, int32_t>)
@@ -498,6 +498,8 @@ namespace mssql
         return sqlType == SqlType::DateTimeOffset;
       else if constexpr (std::is_same_v<T, bigint_t>)
         return sqlType == SqlType::BigInt;
+      else if constexpr (std::is_same_v<T, bool>)
+        return sqlType == SqlType::Bit;
       else if constexpr (std::is_same_v<T, std::shared_ptr<uint16_t_vec_t>>)
         return true; // Vector of Unicode strings
       else if constexpr (std::is_same_v<T, std::shared_ptr<char_vec_t>>)
