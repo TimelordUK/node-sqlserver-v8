@@ -113,7 +113,7 @@ namespace mssql
             }
             else
             {
-              jsRow.Set(colName, Napi::String::New(env, ""));
+              jsRow.Set(colName, env.Null());
             }
             break;
           }
@@ -136,7 +136,7 @@ namespace mssql
             }
             else
             {
-              jsRow.Set(colName, Napi::String::New(env, ""));
+              jsRow.Set(colName, jsRow.Set(colName, env.Null()));
             }
             break;
           }

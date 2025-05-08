@@ -379,6 +379,30 @@ namespace mssql
   bool OdbcStatement::get_data_big_int(const size_t row_id, const size_t column)
   {
     SQL_LOG_TRACE_STREAM("get_data_big_int: row_id " << row_id << " column " << column);
+    const auto &statement = statement_->get_handle();
+    DatumStorage::bigint_t v = 0;
+    SQLLEN str_len_or_ind_ptr = 0;
+    const auto row = rows_[row_id];
+    auto &column_data = row->getColumn(column);
+    const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SBIGINT, &v, sizeof(DatumStorage::bigint_t),
+                                &str_len_or_ind_ptr);
+    if (!check_odbc_error(ret))
+      return false;
+    if (str_len_or_ind_ptr == SQL_NULL_DATA)
+    {
+      column_data.setNull();
+      return true;
+    }
+    if (IsNumericStringEnabled())
+    {
+      auto str = to_wstring(v);
+      column_data.addValue(str);
+      column_data.setType(DatumStorage::SqlType::NVarChar);
+    }
+    else
+    {
+      column_data.addValue(v);
+    }
     return true;
   }
 
