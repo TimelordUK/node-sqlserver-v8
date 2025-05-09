@@ -38,6 +38,7 @@ extern "C"
 
   // Value creation
   NAPI_MOCK_EXTERN napi_status napi_create_string_utf8(napi_env env, const char *str, size_t length, napi_value *result);
+  NAPI_MOCK_EXTERN napi_status napi_create_string_utf16(napi_env env, const char16_t *str, size_t length, napi_value *result);
   NAPI_MOCK_EXTERN napi_status napi_create_double(napi_env env, double value, napi_value *result);
   NAPI_MOCK_EXTERN napi_status napi_get_boolean(napi_env env, bool value, napi_value *result);
   NAPI_MOCK_EXTERN napi_status napi_get_undefined(napi_env env, napi_value *result);
