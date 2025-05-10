@@ -1,5 +1,7 @@
 // In js_object_mapper.cpp
 #include "js_object_mapper.h"
+#include "odbc_row.h"
+#include "odbc_driver_types.h"
 #include "string_utils.h"
 
 namespace mssql
@@ -257,5 +259,124 @@ namespace mssql
     result.Set("value", fromSqlParamValue(env, param.value));
 
     return result;
+  }
+
+  Napi::Object JsObjectMapper::fromOdbcRow(const Napi::Env &env, const std::shared_ptr<IOdbcRow> &row, const QueryResult &columnDefs)
+  {
+    Napi::Object jsRow = Napi::Object::New(env);
+
+    // Iterate through each column in the row
+    for (size_t colIdx = 0; colIdx < row->columnCount(); ++colIdx)
+    {
+      const auto &column = row->getColumn(colIdx);
+      const auto &colDef = columnDefs.get(colIdx);
+      const auto colName = colDef.colNameUtf8();
+
+      // Check for NULL
+      if (column.isNull())
+      {
+        jsRow.Set(colName, env.Null());
+        continue;
+      }
+      const auto colType = column.getType();
+      // Handle different data types based on column.getType()
+      switch (colType)
+      {
+      case mssql::DatumStorage::SqlType::NChar:
+      case mssql::DatumStorage::SqlType::NVarChar:
+      case mssql::DatumStorage::SqlType::NText:
+      {
+        // Handle Unicode strings (SQLWCHAR)
+        auto wcharVec = const_cast<mssql::DatumStorage &>(column).getTypedVector<uint16_t>();
+        if (wcharVec && !wcharVec->empty())
+        {
+          jsRow.Set(colName, Napi::String::New(
+                                 env,
+                                 reinterpret_cast<const char16_t *>(wcharVec->data()),
+                                 wcharVec->size()));
+        }
+        else
+        {
+          jsRow.Set(colName, env.Null());
+        }
+        break;
+      }
+
+      case mssql::DatumStorage::SqlType::Char:
+      case mssql::DatumStorage::SqlType::VarChar:
+      case mssql::DatumStorage::SqlType::Text:
+      {
+        // Handle ASCII strings
+        auto charVec = const_cast<mssql::DatumStorage &>(column).getTypedVector<char>();
+        if (charVec && !charVec->empty())
+        {
+          std::string str(charVec->data(), charVec->size());
+          // Remove null terminator if present
+          if (!str.empty() && str.back() == '\0')
+          {
+            str.pop_back();
+          }
+          jsRow.Set(colName, Napi::String::New(env, str));
+        }
+        else
+        {
+          jsRow.Set(colName, env.Null());
+        }
+        break;
+      }
+
+      case mssql::DatumStorage::SqlType::Integer:
+      {
+        auto intVec = const_cast<mssql::DatumStorage &>(column).getTypedVector<int32_t>();
+        if (intVec && !intVec->empty())
+        {
+          jsRow.Set(colName, Napi::Number::New(env, (*intVec)[0]));
+        }
+        break;
+      }
+
+      case mssql::DatumStorage::SqlType::BigInt:
+      {
+        auto bigintVec = const_cast<mssql::DatumStorage &>(column).getTypedVector<int64_t>();
+        if (bigintVec && !bigintVec->empty())
+        {
+          // For BigInt, depending on the value, you might need to use BigInt in JS
+          // For now, we'll use Number, but be cautious about precision loss
+          const auto bigintValue = (*bigintVec)[0];
+          jsRow.Set(colName, Napi::Number::New(env, static_cast<double>(bigintValue)));
+        }
+        break;
+      }
+
+      case mssql::DatumStorage::SqlType::Double:
+      case mssql::DatumStorage::SqlType::Float:
+      case mssql::DatumStorage::SqlType::Real:
+      {
+        auto doubleVec = const_cast<mssql::DatumStorage &>(column).getTypedVector<double>();
+        if (doubleVec && !doubleVec->empty())
+        {
+          jsRow.Set(colName, Napi::Number::New(env, (*doubleVec)[0]));
+        }
+        break;
+      }
+
+      case mssql::DatumStorage::SqlType::Bit:
+      {
+        auto bitVec = const_cast<mssql::DatumStorage &>(column).getTypedVector<int8_t>();
+        if (bitVec && !bitVec->empty())
+        {
+          jsRow.Set(colName, Napi::Boolean::New(env, (*bitVec)[0] != 0));
+        }
+        break;
+      }
+
+      default:
+        // For unsupported types, convert to string representation
+        jsRow.Set(colName, Napi::String::New(env, "[Unsupported type]"));
+        break;
+      }
+    }
+
+    return jsRow;
   }
 }

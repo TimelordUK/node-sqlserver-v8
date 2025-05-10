@@ -6,6 +6,7 @@
 namespace mssql
 {
 
+  class IOdbcRow;
   class JsObjectMapper
   {
   public:
@@ -27,6 +28,10 @@ namespace mssql
 
     static SqlParamValue safeGetValue(const Napi::Object &obj, const std::string &prop);
     static Napi::Value fromSqlParamValue(const Napi::Env &env, const SqlParamValue &value);
+
+    // New method to convert an OdbcRow to a JavaScript object
+
+    static Napi::Object fromOdbcRow(const Napi::Env &env, const std::shared_ptr<IOdbcRow> &row, const QueryResult &columnDefs);
 
   private:
     // Helper methods to reduce boilerplate

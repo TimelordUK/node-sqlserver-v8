@@ -8,6 +8,7 @@
 #include <ostream>
 #include <variant>
 #include <vector>
+#include "common/string_utils.h"
 
 // Common ODBC utility functions and constants
 namespace mssql
@@ -61,6 +62,11 @@ namespace mssql
     SQLSMALLINT decimalDigits;
     SQLSMALLINT nullable;
 
+    std::string colNameUtf8() const
+    {
+      return StringUtils::WideToUtf8(colName, colNameLen);
+    }
+
     // String representation for debugging
     std::string toString() const
     {
@@ -82,8 +88,6 @@ namespace mssql
       return result;
     }
   };
-
-  typedef vector<shared_ptr<DatumStorage>> t_row;
 
   class QueryResult
   {
