@@ -71,6 +71,8 @@ namespace mssql
     MOCK_METHOD(bool, EndOfRows, (), (const, override));
     MOCK_METHOD(StatementState, GetState, (), (const, override));
     MOCK_METHOD(bool, TryReadRows, (std::shared_ptr<QueryResult> result, const size_t number_rows), (override));
+    MOCK_METHOD(std::vector<std::shared_ptr<IOdbcRow>>&, GetRows, (), (override));
+    MOCK_METHOD(std::shared_ptr<QueryResult>, GetMetaData, (), (override));
     
     // Utility method to configure common expectations
     void ConfigureForSuccessfulQuery(const std::vector<ColumnDefinition>& columns, size_t rowCount = 10) 
