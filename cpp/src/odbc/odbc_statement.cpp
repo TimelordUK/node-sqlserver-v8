@@ -308,8 +308,18 @@ namespace mssql
       res = get_data_bit(row_id, column);
       break;
 
-    case SQL_SMALLINT:
     case SQL_TINYINT:
+      if (IsNumericStringEnabled())
+      {
+        res = try_read_string(false, row_id, column);
+      }
+      else
+      {
+        res = get_data_tiny(row_id, column);
+      }
+      break;
+
+    case SQL_SMALLINT:
     case SQL_INTEGER:
     case SQL_C_SLONG:
     case SQL_C_SSHORT:
@@ -391,6 +401,33 @@ namespace mssql
     return res;
   }
 
+  bool OdbcStatement::get_data_tiny(const size_t row_id, const size_t column)
+  {
+    SQL_LOG_TRACE_STREAM("get_data_tiny: row_id " << row_id << " column " << column);
+    const auto &statement = statement_->get_handle();
+    long v = 0;
+    SQLLEN str_len_or_ind_ptr = 0;
+    const auto row = rows_[row_id];
+    auto &column_data = row->getColumn(column);
+
+    const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SLONG, &v, sizeof(long),
+                                &str_len_or_ind_ptr);
+    if (!check_odbc_error(ret))
+      return false;
+
+    if (str_len_or_ind_ptr == SQL_NULL_DATA)
+    {
+      column_data.setNull();
+      return true;
+    }
+
+    column_data.setType(DatumStorage::SqlType::TinyInt);
+    const int8_t v8 = static_cast<int8_t>(v);
+    column_data.addValue(v8);
+
+    return true;
+  }
+
   bool OdbcStatement::get_data_long(const size_t row_id, const size_t column)
   {
     SQL_LOG_TRACE_STREAM("get_data_long: row_id " << row_id << " column " << column);
@@ -429,14 +466,6 @@ namespace mssql
       DatumStorage::SqlType datumType;
       switch (originalSqlType)
       {
-      case SQL_TINYINT:
-      {
-        datumType = DatumStorage::SqlType::TinyInt;
-        column_data.setType(datumType);
-        const int8_t v8 = static_cast<int8_t>(v);
-        column_data.addValue(v8);
-      }
-      break;
 
       case SQL_SMALLINT:
       {
@@ -640,11 +669,6 @@ namespace mssql
 
     auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
-
-    if (column == 24)
-    {
-      int x = 0;
-    }
 
     constexpr auto size = sizeof(uint16_t);
     SQLLEN value_len = 0;
