@@ -10,7 +10,7 @@
 namespace mssql
 {
   // Forward declarations
-  class ColumnDefinition;
+  struct ColumnDefinition;
   class QueryResult;
 
   /**

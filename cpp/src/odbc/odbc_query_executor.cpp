@@ -134,62 +134,6 @@ namespace mssql
       result->addColumn(colDef);
     }
 
-    //// Create DatumStorage instances for each column
-    // std::vector<std::shared_ptr<DatumStorage>> columnStorage;
-    // columnStorage.reserve(numCols);
-
-    // for (SQLSMALLINT i = 1; i <= numCols; i++)
-    //{
-    //   auto storage = std::make_shared<DatumStorage>();
-    //   // Set type based on SQL type
-    //   storage->setType(MapSqlTypeToDatumType(result->getColumnType(i - 1)));
-    //   columnStorage.push_back(storage);
-    // }
-
-    //// Fetch rows
-    // while (true)
-    //{
-    //   ret = SQLFetch(stmt->get_handle());
-    //   if (ret == SQL_NO_DATA)
-    //     break;
-
-    //  if (!_errorHandler->CheckOdbcError(ret))
-    //  {
-    //    SQL_LOG_ERROR("SQLFetch failed");
-    //    return false;
-    //  }
-
-    //  std::vector<std::string> rowData;
-    //  rowData.reserve(numCols);
-
-    //  for (SQLSMALLINT i = 1; i <= numCols; i++)
-    //  {
-    //    SQLLEN indicator;
-    //    auto &storage = columnStorage[i - 1];
-
-    //    // Get data based on type
-    //    ret = GetColumnData(stmt->get_handle(), i, storage.get(), &indicator);
-
-    //    if (!_errorHandler->CheckOdbcError(ret))
-    //    {
-    //      SQL_LOG_ERROR("GetColumnData failed");
-    //      return false;
-    //    }
-
-    //    if (indicator == SQL_NULL_DATA)
-    //    {
-    //      rowData.emplace_back("NULL");
-    //    }
-    //    else
-    //    {
-    //      // Convert data to string representation
-    //      rowData.push_back(storage->getDebugString(true, 1, true));
-    //    }
-    //  }
-
-    //  result->addRow(rowData);
-    //}
-
     return true;
   }
 

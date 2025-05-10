@@ -105,16 +105,6 @@ namespace mssql
       handle_ = handle;
     }
 
-    inline void start_results()
-    {
-      rows_.clear();
-    }
-
-    inline size_t get_result_count() const
-    {
-      return rows_.size();
-    }
-
     inline bool is_end_of_rows() const
     {
       return end_of_rows_;
@@ -143,7 +133,6 @@ namespace mssql
 
   private:
     std::vector<ColumnDefinition> columns_;
-    std::vector<t_row> rows_;
     bool end_of_rows_;
     size_t row_count_;
     StatementHandle handle_;

@@ -33,7 +33,6 @@ namespace mssql
     SQL_LOG_TRACE_STREAM("TryReadRows: number_rows " << number_rows);
     rows_.clear();
     rows_.reserve(number_rows);
-    result->start_results();
     return fetch_read(result, number_rows);
   }
 
