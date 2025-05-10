@@ -691,6 +691,7 @@ namespace mssql
         }
         catch (...)
         {
+          jsRow.Set(colName, env.Null());
         }
 
         try
@@ -709,6 +710,7 @@ namespace mssql
         }
         catch (...)
         {
+          jsRow.Set(colName, env.Null());
         }
 
         try
@@ -728,6 +730,7 @@ namespace mssql
         }
         catch (...)
         {
+          jsRow.Set(colName, env.Null());
         }
 
         try
@@ -749,6 +752,7 @@ namespace mssql
         }
         catch (...)
         {
+          jsRow.Set(colName, env.Null());
         }
 
         // If all fails, return as string
@@ -797,6 +801,7 @@ namespace mssql
         }
         catch (...)
         {
+          jsRow.Set(colName, env.Null());
         }
 
         // Last resort: return a string representation
