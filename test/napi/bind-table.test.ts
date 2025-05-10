@@ -29,7 +29,7 @@ describe('bind', function () {
   })
 
   it('query syscolumns', async function () {
-    const sql = 'select * from syscolumns'
+    const sql = 'select * from node.sys.syscolumns'
     if (connection === null) return
     const res = await connection.promises.query(sql)
     const reader = new QueryReader(connection, res)
