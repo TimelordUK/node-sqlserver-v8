@@ -26,6 +26,10 @@ class ConnectionPromises {
     return this.connection.close()
   }
 
+  async fetchRows (handle: StatementHandle, batchSize: number): Promise<QueryResult | undefined> {
+    return this.connection.fetchRows(handle, batchSize)
+  }
+
   async query (sql: string, params?: any[]): Promise<QueryResult> {
     return new Promise<QueryResult>((resolve, reject) => {
       this.connection.query(sql, params, (err, result) => {

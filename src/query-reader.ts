@@ -22,6 +22,7 @@ export class QueryReader extends EventEmitter {
 
   async begin () {
     const batchSize = 50
+    const handle = this.result.handle
     let total = 0
     let allRows: OdbcRow[] = [] // If you need to collect all rows
     const options = this.options ?? {
@@ -36,11 +37,11 @@ export class QueryReader extends EventEmitter {
     try {
       let endOfRows = false
       while (!endOfRows) {
-        const next = await this.connection.fetchRows(this.result.handle, batchSize)
+        const next = await this.connection.promises.fetchRows(handle, batchSize)
         if (!next) break
         const rows = next.rows ?? []
         logger.debug(`
-  statementId = ${this.result.handle.statementId}
+  statementId = ${handle.statementId}
   rows read = ${rows.length}
   requested = ${batchSize}
   end of rows = ${endOfRows}
