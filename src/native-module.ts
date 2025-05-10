@@ -15,10 +15,31 @@ export interface StatementHandle {
   readonly statementId: number
 }
 
+export interface ColumnDefinition {
+  colName: string
+  colNameLength: number
+  dataType: number
+  columnSize: number
+  decimalDigits: number
+  nullable?: number
+}
+
+export type OdbcScalarValue =
+    | string
+    | number
+    | boolean
+    | Date
+    | bigint
+    | Buffer // For binary data
+    | null // For NULL values
+
+export type OdbcRow = Record<string, OdbcScalarValue>
+
 export interface QueryResult {
-  readonly meta: any
+  readonly meta: ColumnDefinition[]
   readonly handle: StatementHandle
-  readonly rows?: any[]
+  readonly rows?: OdbcRow[]
+  readonly endOfRows: boolean
 }
 
 export type QueryUserCallback = (err: Error | null, result?: QueryResult) => void

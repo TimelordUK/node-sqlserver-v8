@@ -28,6 +28,16 @@ describe('bind', function () {
     }
   })
 
+  it('query syscolumns', async function () {
+    const sql = 'select * from syscolumns'
+    if (connection === null) return
+    const res = await connection.promises.query(sql)
+    const reader = new QueryReader(connection, res)
+    const top = await reader.begin()
+    logger.info(JSON.stringify(top))
+    console.log(res)
+  })
+
   it('obtain the schema for a given table', async function () {
     const query = QueryBuilder.buildQuery({
       catalog: 'node',
