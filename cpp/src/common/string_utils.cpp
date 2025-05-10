@@ -2,6 +2,8 @@
 #include "string_utils.h"
 #include <Logger.h>
 #include <stdexcept>
+#include <codecvt>
+#include <locale>
 
 namespace mssql
 {
@@ -88,6 +90,121 @@ namespace mssql
     }
 
     return result;
+  }
+
+  std::u16string StringUtils::Utf8ToU16String(const std::string &utf8Str)
+  {
+    try {
+      // Use standard C++11 conversion
+      std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
+      return converter.from_bytes(utf8Str);
+    } catch (const std::exception &e) {
+      // Fallback to manual conversion for invalid UTF-8
+      std::u16string result;
+      result.reserve(utf8Str.size());  // Reserve at least as many chars as the UTF-8 string
+
+      const char *str = utf8Str.c_str();
+      size_t len = utf8Str.length();
+      size_t i = 0;
+
+      while (i < len) {
+        // For ASCII characters (most common in SQL), fast path
+        if ((unsigned char)str[i] <= 0x7F) {
+          result.push_back(static_cast<char16_t>(str[i]));
+          i++;
+          continue;
+        }
+
+        try {
+          int seqLen = GetUtf8SequenceLength(str[i]);
+          if (seqLen == 0 || i + seqLen > len) {
+            // Invalid sequence, just add a replacement character
+            result.push_back(u'\uFFFD');
+            i++;
+            continue;
+          }
+
+          uint32_t codePoint = DecodeUtf8Sequence(str + i, seqLen);
+
+          // For BMP characters (U+0000 to U+FFFF)
+          if (codePoint <= 0xFFFF) {
+            result.push_back(static_cast<char16_t>(codePoint));
+          }
+          // For supplementary characters (U+10000 to U+10FFFF)
+          else if (codePoint <= 0x10FFFF) {
+            // Encode as surrogate pair
+            codePoint -= 0x10000;
+            result.push_back(static_cast<char16_t>(0xD800 + (codePoint >> 10)));
+            result.push_back(static_cast<char16_t>(0xDC00 + (codePoint & 0x3FF)));
+          }
+          else {
+            // Invalid code point, add replacement character
+            result.push_back(u'\uFFFD');
+          }
+
+          i += seqLen;
+        }
+        catch (const std::exception&) {
+          // Handle any exceptions during decoding
+          result.push_back(u'\uFFFD');
+          i++;
+        }
+      }
+
+      return result;
+    }
+  }
+
+  std::string StringUtils::U16StringToUtf8(const std::u16string &u16Str)
+  {
+    try {
+      // Use standard C++11 conversion
+      std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
+      return converter.to_bytes(u16Str);
+    } catch (const std::exception &e) {
+      // Fallback implementation for errors
+      std::string result;
+      result.reserve(u16Str.size() * 3);  // Reserve space for worst case (3 bytes per char)
+
+      for (size_t i = 0; i < u16Str.size(); i++) {
+        char16_t c = u16Str[i];
+
+        // Handle surrogate pairs
+        if (c >= 0xD800 && c <= 0xDBFF && i + 1 < u16Str.size()) {
+          char16_t c2 = u16Str[i + 1];
+          if (c2 >= 0xDC00 && c2 <= 0xDFFF) {
+            // Valid surrogate pair, decode to code point
+            uint32_t codePoint = 0x10000 + (((c - 0xD800) << 10) | (c2 - 0xDC00));
+
+            // 4-byte UTF-8 sequence
+            result.push_back(static_cast<char>(0xF0 | (codePoint >> 18)));
+            result.push_back(static_cast<char>(0x80 | ((codePoint >> 12) & 0x3F)));
+            result.push_back(static_cast<char>(0x80 | ((codePoint >> 6) & 0x3F)));
+            result.push_back(static_cast<char>(0x80 | (codePoint & 0x3F)));
+
+            i++;  // Skip the second surrogate
+            continue;
+          }
+        }
+
+        // BMP characters
+        if (c <= 0x7F) {
+          // ASCII character
+          result.push_back(static_cast<char>(c));
+        } else if (c <= 0x7FF) {
+          // 2-byte sequence
+          result.push_back(static_cast<char>(0xC0 | (c >> 6)));
+          result.push_back(static_cast<char>(0x80 | (c & 0x3F)));
+        } else {
+          // 3-byte sequence
+          result.push_back(static_cast<char>(0xE0 | (c >> 12)));
+          result.push_back(static_cast<char>(0x80 | ((c >> 6) & 0x3F)));
+          result.push_back(static_cast<char>(0x80 | (c & 0x3F)));
+        }
+      }
+
+      return result;
+    }
   }
 
   std::string StringUtils::WideToUtf8(const SQLWCHAR *wideStr, SQLSMALLINT length)

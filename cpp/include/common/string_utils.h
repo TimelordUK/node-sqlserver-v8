@@ -14,6 +14,10 @@ namespace mssql
     // Convert UTF-8 string to UTF-16 vector
     static std::shared_ptr<std::vector<uint16_t>> Utf8ToUtf16(const std::string &utf8Str);
 
+    // Convert between UTF-8 and std::u16string (proper C++11 Unicode strings)
+    static std::u16string Utf8ToU16String(const std::string &utf8Str);
+    static std::string U16StringToUtf8(const std::u16string &u16Str);
+
     // Convert SQLWCHAR array to UTF-8 string
     static std::string WideToUtf8(const SQLWCHAR *wideStr, SQLSMALLINT length);
     static std::string SafeWideToUtf8ForLogging(const SQLWCHAR *wstr, size_t maxLen = 1000);

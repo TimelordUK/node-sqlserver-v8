@@ -53,8 +53,8 @@ namespace mssql
     // Statement management
     virtual std::shared_ptr<IOdbcStatement> CreateStatement(
         StatementType type,
-        const std::string &query,
-        const std::string &tvpType = "") = 0;
+        const std::u16string &query,
+        const std::u16string &tvpType = u"") = 0;
 
     virtual std::shared_ptr<IOdbcStatement> GetPreparedStatement(
         const std::string &statementId) = 0;
@@ -69,7 +69,7 @@ namespace mssql
 
     // Legacy ExecuteQuery for backward compatibility
     virtual bool ExecuteQuery(
-        const std::string &sqlText,
+        const std::u16string &sqlText,
         const std::vector<std::shared_ptr<QueryParameter>> &parameters,
         std::shared_ptr<QueryResult> &result) = 0;
 
@@ -109,8 +109,8 @@ namespace mssql
     // Statement management
     std::shared_ptr<IOdbcStatement> CreateStatement(
         StatementType type,
-        const std::string &query,
-        const std::string &tvpType = "") override;
+        const std::u16string &query,
+        const std::u16string &tvpType = u"") override;
 
     std::shared_ptr<IOdbcStatement> GetPreparedStatement(
         const std::string &statementId) override;
@@ -123,7 +123,7 @@ namespace mssql
 
     // Legacy ExecuteQuery implementation
     bool ExecuteQuery(
-        const std::string &sqlText,
+        const std::u16string &sqlText,
         const std::vector<std::shared_ptr<QueryParameter>> &parameters,
         std::shared_ptr<QueryResult> &result) override;
 

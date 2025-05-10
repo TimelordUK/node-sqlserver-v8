@@ -218,8 +218,8 @@ namespace mssql
 
   std::shared_ptr<IOdbcStatement> OdbcConnection::CreateStatement(
       StatementType type,
-      const std::string &query,
-      const std::string &tvpType)
+      const std::u16string &query,
+      const std::u16string &tvpType)
   {
     if (connectionState != ConnectionOpen)
     {
@@ -235,8 +235,12 @@ namespace mssql
       return nullptr;
     }
 
+    // Convert from std::u16string to std::string using our proper conversion utility
+    std::string utf8Query = StringUtils::U16StringToUtf8(query);
+    std::string utf8TvpType = StringUtils::U16StringToUtf8(tvpType);
+
     // Create the statement using the factory
-    return _statementFactory->CreateStatement(_odbcApi, type, handle, _errorHandler, query, tvpType);
+    return _statementFactory->CreateStatement(_odbcApi, type, handle, _errorHandler, utf8Query, utf8TvpType);
   }
 
   std::shared_ptr<IOdbcStatement> OdbcConnection::GetPreparedStatement(
@@ -273,7 +277,7 @@ namespace mssql
   }
 
   bool OdbcConnection::ExecuteQuery(
-      const std::string &sqlText,
+      const std::u16string &sqlText,
       const std::vector<std::shared_ptr<QueryParameter>> &parameters,
       std::shared_ptr<QueryResult> &result)
   {

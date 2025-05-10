@@ -4,6 +4,7 @@
 #include "parameter_set.h"
 #include "js_object_mapper.h"
 #include "Logger.h"
+#include "string_utils.h"
 
 namespace mssql
 {
@@ -14,7 +15,7 @@ namespace mssql
                            const Napi::Array &params)
       : Napi::AsyncWorker(callback),
         connection_(connection),
-        sqlText_(sqlText)
+        sqlText_(StringUtils::Utf8ToU16String(sqlText))
   {
     // Convert JavaScript parameters to C++ parameters
     const uint32_t length = params.Length();
@@ -31,7 +32,7 @@ namespace mssql
   {
     try
     {
-      SQL_LOG_DEBUG_STREAM("Executing QueryWorker " << sqlText_);
+      SQL_LOG_DEBUG_STREAM("Executing QueryWorker " << StringUtils::U16StringToUtf8(sqlText_));
       // This will need to be implemented in OdbcConnection
       // Here's a placeholder showing what it might look like
       if (!connection_->ExecuteQuery(sqlText_, parameters_->getParams(), result_))

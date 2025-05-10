@@ -25,7 +25,7 @@ public:
 
 private:
   IOdbcConnection *connection_;
-  std::string sqlText_;
+  std::u16string sqlText_;
   std::shared_ptr<ParameterSet> parameters_;
   std::shared_ptr<QueryResult> result_;
 };
