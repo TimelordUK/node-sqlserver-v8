@@ -210,7 +210,10 @@ namespace mssql
       return true;
     }
     if (!check_odbc_error(r))
+    {
+      column_data.setNull();
       return false;
+    }
     auto status = false;
     auto more = check_more_read(r, status);
     if (!status)
@@ -435,7 +438,10 @@ namespace mssql
     const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SLONG, &v, sizeof(long),
                                 &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
+    {
+      column_data.setNull();
       return false;
+    }
 
     if (str_len_or_ind_ptr == SQL_NULL_DATA)
     {
@@ -454,15 +460,18 @@ namespace mssql
   {
     SQL_LOG_TRACE_STREAM("get_data_small_int: row_id " << row_id << " column " << column);
     const auto &statement = statement_->get_handle();
-    long v = 0;
+    int16_t v = 0;
     SQLLEN str_len_or_ind_ptr = 0;
     const auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
 
-    const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SLONG, &v, sizeof(long),
+    const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SHORT, &v, sizeof(int16_t),
                                 &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
+    {
+      column_data.setNull();
       return false;
+    }
 
     if (str_len_or_ind_ptr == SQL_NULL_DATA)
     {
@@ -472,8 +481,7 @@ namespace mssql
 
     auto datumType = DatumStorage::SqlType::SmallInt;
     column_data.setType(datumType);
-    const int16_t v16 = static_cast<int16_t>(v);
-    column_data.addValue(v16);
+    column_data.addValue(v);
 
     return true;
   }
@@ -496,7 +504,10 @@ namespace mssql
     const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_INTEGER, &v, sizeof(int32_t),
                                 &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
+    {
+      column_data.setNull();
       return false;
+    }
 
     if (str_len_or_ind_ptr == SQL_NULL_DATA)
     {
@@ -531,7 +542,10 @@ namespace mssql
     const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SLONG, &v, sizeof(long),
                                 &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
+    {
+      column_data.setNull();
       return false;
+    }
 
     if (str_len_or_ind_ptr == SQL_NULL_DATA)
     {
@@ -539,22 +553,13 @@ namespace mssql
       return true;
     }
 
-    if (IsNumericStringEnabled())
-    {
-      auto str = std::to_wstring(v);
-      column_data.addValue(str);
-      column_data.setType(DatumStorage::SqlType::NVarChar);
-    }
-    else
-    {
-      // Set the correct type based on the original SQL type
-      // For any other case, use BigInt as the default
-      auto datumType = DatumStorage::SqlType::BigInt;
-      column_data.setType(datumType);
-      column_data.addValue(static_cast<int64_t>(v));
+    // Set the correct type based on the original SQL type
+    // For any other case, use BigInt as the default
+    auto datumType = DatumStorage::SqlType::BigInt;
+    column_data.setType(datumType);
+    column_data.addValue(static_cast<int64_t>(v));
 
-      SQL_LOG_DEBUG_STREAM("get_data_long: Mapped to DatumStorage type: " << static_cast<int>(datumType));
-    }
+    SQL_LOG_DEBUG_STREAM("get_data_long: Mapped to DatumStorage type: " << static_cast<int>(datumType));
 
     return true;
   }
@@ -570,7 +575,10 @@ namespace mssql
     const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SBIGINT, &v, sizeof(DatumStorage::bigint_t),
                                 &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
+    {
+      column_data.setNull();
       return false;
+    }
     if (str_len_or_ind_ptr == SQL_NULL_DATA)
     {
       column_data.setNull();
@@ -611,7 +619,10 @@ namespace mssql
     const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_DOUBLE, &v, sizeof(double),
                                 &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
+    {
+      column_data.setNull();
       return false;
+    }
 
     if (str_len_or_ind_ptr == SQL_NULL_DATA)
     {
@@ -668,7 +679,10 @@ namespace mssql
     const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BIT, &v, sizeof(char),
                                 &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
+    {
+      column_data.setNull();
       return false;
+    }
 
     if (str_len_or_ind_ptr == SQL_NULL_DATA)
     {
@@ -685,6 +699,8 @@ namespace mssql
   {
     SQL_LOG_TRACE_STREAM("d_variant: row_id " << row_id << " column " << column);
     const auto &statement = statement_->get_handle();
+    const auto row = rows_[row_id];
+    auto &column_data = row->getColumn(column);
     SQLLEN variant_type = 0;
     SQLLEN iv = 0;
     char b = 0;
@@ -692,19 +708,23 @@ namespace mssql
     // Figure out the length
     auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY, &b, 0, &iv);
     if (!check_odbc_error(ret))
+    {
+      column_data.setNull();
       return false;
+    }
 
     // Figure out the type
     ret = SQLColAttribute(statement, column + 1, SQL_CA_SS_VARIANT_TYPE, nullptr, 0, nullptr, &variant_type);
     if (!check_odbc_error(ret))
+    {
+      column_data.setNull();
       return false;
+    }
 
     // Add more logging to help diagnose variant type issues
     SQL_LOG_DEBUG_STREAM("d_variant: Variant type detected: " << variant_type);
 
     // Get the column data and mark it explicitly as Variant type
-    const auto row = rows_[row_id];
-    auto &column_data = row->getColumn(column);
 
     // Set the type to Variant for special handling in JsObjectMapper
     column_data.setType(DatumStorage::SqlType::Variant);
@@ -737,7 +757,10 @@ namespace mssql
                               &value_len);
 
     if (r != SQL_NO_DATA && !check_odbc_error(r))
+    {
+      column_data.setNull();
       return false;
+    }
 
     if (r == SQL_NO_DATA || value_len == SQL_NULL_DATA)
     {
@@ -758,10 +781,15 @@ namespace mssql
     SQL_LOG_TRACE_STREAM("try_read_string: is_variant " << is_variant << " row_id " << row_id << " column " << column);
 
     SQLLEN display_size = 0;
+    auto row = rows_[row_id];
+    auto &column_data = row->getColumn(column);
     // cerr << " try_read_string row_id = " << row_id << " column = " << column;
     const auto r = SQLColAttribute(statement_->get_handle(), column + 1, SQL_DESC_DISPLAY_SIZE, nullptr, 0, nullptr, &display_size);
     if (!check_odbc_error(r))
+    {
+      column_data.setNull();
       return false;
+    }
 
     // when a field type is LOB, we read a packet at time and pass that back.
     if (display_size == 0 || display_size == std::numeric_limits<int>::max() ||
@@ -966,7 +994,10 @@ namespace mssql
     const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_DEFAULT, &ts_offset,
                                 sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT), &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
+    {
+      column_data.setNull();
       return false;
+    }
 
     if (str_len_or_ind_ptr == SQL_NULL_DATA)
     {
@@ -992,15 +1023,24 @@ namespace mssql
 
     const auto ret2 = SQLColAttribute(statement, column + 1, SQL_COLUMN_PRECISION, nullptr, 0, nullptr, &precision);
     if (!check_odbc_error(ret2))
+    {
+      column_data.setNull();
       return false;
+    }
 
     const auto ret3 = SQLColAttribute(statement, column + 1, SQL_COLUMN_SCALE, nullptr, 0, nullptr, &colscale);
     if (!check_odbc_error(ret3))
+    {
+      column_data.setNull();
       return false;
+    }
 
     const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY, &time, sizeof(time), &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
+    {
+      column_data.setNull();
       return false;
+    }
 
     if (str_len_or_ind_ptr == SQL_NULL_DATA)
     {
@@ -1035,7 +1075,10 @@ namespace mssql
     const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_TIMESTAMP, &ts,
                                 sizeof(TIMESTAMP_STRUCT), &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
+    {
+      column_data.setNull();
       return false;
+    }
 
     if (str_len_or_ind_ptr == SQL_NULL_DATA)
     {
