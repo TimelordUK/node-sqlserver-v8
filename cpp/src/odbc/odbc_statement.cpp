@@ -990,14 +990,4 @@ namespace mssql
     column_data.addValue(ts);
     return true;
   }
-
-  bool OdbcStatement::ProcessResults(std::shared_ptr<QueryResult> &result)
-  {
-    // Implementation stub for build
-    return true;
-  }
-
-  // Note: All TransientStatement, PreparedStatement, and TvpStatement methods
-  // are implemented in their respective files which are already being compiled.
-  // We removed the stub implementations here to avoid duplicate symbols.
 }

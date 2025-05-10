@@ -221,13 +221,6 @@ namespace mssql
     {
     }
 
-    /**
-     * @brief Process results from an executed statement
-     * @param result The QueryResult object to store the results in
-     * @return true if successful, false otherwise
-     */
-    bool ProcessResults(std::shared_ptr<QueryResult> &result);
-
     // Legacy method for backward compatibility - delegates to TryReadRows
     bool try_read_rows(std::shared_ptr<QueryResult> result, const size_t number_rows);
 
