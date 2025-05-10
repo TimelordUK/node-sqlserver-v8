@@ -309,6 +309,8 @@ namespace mssql
       break;
 
     case SQL_TINYINT:
+    case SQL_C_STINYINT:
+    case SQL_C_UTINYINT:
       if (IsNumericStringEnabled())
       {
         res = try_read_string(false, row_id, column);
@@ -320,13 +322,18 @@ namespace mssql
       break;
 
     case SQL_SMALLINT:
-    case SQL_INTEGER:
-    case SQL_C_SLONG:
-    case SQL_C_SSHORT:
-    case SQL_C_STINYINT:
-    case SQL_C_ULONG:
     case SQL_C_USHORT:
-    case SQL_C_UTINYINT:
+      if (IsNumericStringEnabled())
+      {
+        res = try_read_string(false, row_id, column);
+      }
+      else
+      {
+        res = get_data_small_int(row_id, column);
+      }
+      break;
+
+    case SQL_INTEGER:
       if (IsNumericStringEnabled())
       {
         res = try_read_string(false, row_id, column);
@@ -335,6 +342,21 @@ namespace mssql
       {
         // Log the exact SQL type for debugging
         SQL_LOG_DEBUG_STREAM("dispatch: Processing integer type: " << t);
+        res = get_data_int(row_id, column);
+      }
+
+      break;
+
+    case SQL_C_SLONG:
+    case SQL_C_ULONG:
+      if (IsNumericStringEnabled())
+      {
+        res = try_read_string(false, row_id, column);
+      }
+      else
+      {
+        // Log the exact SQL type for debugging
+        SQL_LOG_DEBUG_STREAM("dispatch: Processing long type: " << t);
         res = get_data_long(row_id, column);
       }
       break;
@@ -428,6 +450,69 @@ namespace mssql
     return true;
   }
 
+  bool OdbcStatement::get_data_small_int(const size_t row_id, const size_t column)
+  {
+    SQL_LOG_TRACE_STREAM("get_data_small_int: row_id " << row_id << " column " << column);
+    const auto &statement = statement_->get_handle();
+    long v = 0;
+    SQLLEN str_len_or_ind_ptr = 0;
+    const auto row = rows_[row_id];
+    auto &column_data = row->getColumn(column);
+
+    const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SLONG, &v, sizeof(long),
+                                &str_len_or_ind_ptr);
+    if (!check_odbc_error(ret))
+      return false;
+
+    if (str_len_or_ind_ptr == SQL_NULL_DATA)
+    {
+      column_data.setNull();
+      return true;
+    }
+
+    auto datumType = DatumStorage::SqlType::SmallInt;
+    column_data.setType(datumType);
+    const int16_t v16 = static_cast<int16_t>(v);
+    column_data.addValue(v16);
+
+    return true;
+  }
+
+  bool OdbcStatement::get_data_int(const size_t row_id, const size_t column)
+  {
+    SQL_LOG_TRACE_STREAM("get_data_int: row_id " << row_id << " column " << column);
+    const auto &statement = statement_->get_handle();
+    int32_t v = 0;
+    SQLLEN str_len_or_ind_ptr = 0;
+    const auto row = rows_[row_id];
+    auto &column_data = row->getColumn(column);
+
+    // Get the original column definition to determine the correct SQL type
+    const auto &colDef = metaData_->get(static_cast<int>(column));
+    const SQLSMALLINT originalSqlType = colDef.dataType;
+
+    SQL_LOG_DEBUG_STREAM("get_data_int: originalSqlType SQL type: " << originalSqlType);
+
+    const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_INTEGER, &v, sizeof(int32_t),
+                                &str_len_or_ind_ptr);
+    if (!check_odbc_error(ret))
+      return false;
+
+    if (str_len_or_ind_ptr == SQL_NULL_DATA)
+    {
+      column_data.setNull();
+      return true;
+    }
+
+    auto datumType = DatumStorage::SqlType::Integer;
+    column_data.setType(datumType);
+    column_data.addValue(static_cast<int32_t>(v));
+
+    SQL_LOG_DEBUG_STREAM("get_data_int: Mapped to DatumStorage type: " << static_cast<int>(datumType));
+
+    return true;
+  }
+
   bool OdbcStatement::get_data_long(const size_t row_id, const size_t column)
   {
     SQL_LOG_TRACE_STREAM("get_data_long: row_id " << row_id << " column " << column);
@@ -463,38 +548,10 @@ namespace mssql
     else
     {
       // Set the correct type based on the original SQL type
-      DatumStorage::SqlType datumType;
-      switch (originalSqlType)
-      {
-
-      case SQL_SMALLINT:
-      {
-        datumType = DatumStorage::SqlType::SmallInt;
-        column_data.setType(datumType);
-        const int16_t v16 = static_cast<int16_t>(v);
-        column_data.addValue(v16);
-      }
-      break;
-
-      case SQL_INTEGER:
-      case SQL_C_SLONG:
-      case SQL_C_ULONG:
-      {
-        datumType = DatumStorage::SqlType::Integer;
-        column_data.setType(datumType);
-        column_data.addValue(static_cast<int32_t>(v));
-      }
-      break;
-
-      default:
-      {
-        // For any other case, use BigInt as the default
-        datumType = DatumStorage::SqlType::BigInt;
-        column_data.setType(datumType);
-        column_data.addValue(static_cast<int64_t>(v));
-      }
-      break;
-      }
+      // For any other case, use BigInt as the default
+      auto datumType = DatumStorage::SqlType::BigInt;
+      column_data.setType(datumType);
+      column_data.addValue(static_cast<int64_t>(v));
 
       SQL_LOG_DEBUG_STREAM("get_data_long: Mapped to DatumStorage type: " << static_cast<int>(datumType));
     }

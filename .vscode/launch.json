@@ -78,7 +78,7 @@
             "program": "/home/me/.nvm/versions/node/v22.15.0/bin/node",
             "args": [
                 "./node_modules/mocha/bin/mocha.js",
-                "test/napi/open",
+                "test/napi/bind-table.test",
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

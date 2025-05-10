@@ -421,7 +421,8 @@ namespace mssql
           auto intVec = const_cast<mssql::DatumStorage &>(column).getTypedVector<int32_t>();
           if (intVec && !intVec->empty())
           {
-            jsRow.Set(colName, Napi::Number::New(env, (*intVec)[0]));
+            const auto val = (*intVec)[0];
+            jsRow.Set(colName, Napi::Number::New(env, val));
           }
           else
           {

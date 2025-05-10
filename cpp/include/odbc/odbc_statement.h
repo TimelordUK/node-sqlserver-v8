@@ -228,6 +228,8 @@ namespace mssql
     bool check_odbc_error(const SQLRETURN ret);
     bool dispatch(const SQLSMALLINT t, const size_t row_id, const size_t column);
     bool get_data_long(const size_t row_id, const size_t column);
+    bool get_data_small_int(const size_t row_id, const size_t column);
+    bool get_data_int(const size_t row_id, const size_t column);
     bool get_data_tiny(const size_t row_id, const size_t column);
     bool get_data_big_int(const size_t row_id, const size_t column);
     bool get_data_decimal(const size_t row_id, const size_t column);
