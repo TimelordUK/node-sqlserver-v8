@@ -45,7 +45,10 @@
             "msvs_settings": {
                 "VCCLCompilerTool": {
                     "ExceptionHandling": 1,
-                    "AdditionalOptions": ["/std:c++20"],
+                    "AdditionalOptions": [
+                        "/std:c++20",
+                        "/D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS"
+                    ],
                 }
             },
             "target_name": "sqlserver",
@@ -167,6 +170,7 @@
                         "defines": [
                             "UNICODE=1",
                             "WINDOWS_BUILD",
+                            "_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS",
                             # "BOUNDDATUM_USE_NODE_API",
                                 # Uncomment the next line to use Node-API instead of NAN
                             # "CONNECTION_USE_NODE_API",
