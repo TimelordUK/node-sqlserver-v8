@@ -2,7 +2,7 @@
 import { EventEmitter } from 'events'
 import { Connection } from './connection'
 import logger from './logger'
-import { QueryResult, OdbcRow, ColumnDefinition } from './native-module'
+import { QueryResult, OdbcRow } from './native-module'
 
 export enum ResultFormat {
   ARRAY = 'array', // Return rows as arrays of values

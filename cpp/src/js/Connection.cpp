@@ -6,16 +6,16 @@
 #include <string>
 #include <vector>
 
-#include "Connection.h"
-#include "odbc_connection.h"
-#include "odbc_driver_types.h"
-#include "odbc_environment.h"
-#include "odbc_error.h"
+#include "js/Connection.h"
+#include "odbc/odbc_connection.h"
+#include "odbc/odbc_driver_types.h"
+#include "odbc/odbc_environment.h"
+#include "odbc/odbc_error.h"
 #include "query_parameter.h"
 #include "query_result.h"
 #include "parameter_set.h"
-#include "js_object_mapper.h"
-#include "odbc_connection_factory.h"
+#include "js/js_object_mapper.h"
+#include "odbc/odbc_connection_factory.h"
 #include "workers/worker_base.h"
 #include "workers/query_worker.h"
 #include "workers/fetch_rows_worker.h"

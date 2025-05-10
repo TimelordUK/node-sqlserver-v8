@@ -387,8 +387,45 @@ namespace mssql
           break;
 
         case SqlType::BigInt:
-          if constexpr (std::is_same_v<T, int64_t> || std::is_same_v<T, bigint_t>)
-            return static_cast<VectorImpl<int64_t> *>(vectorData.get())->vector;
+          // Determine at compile time which exact type is used
+          if constexpr (std::is_same_v<T, int64_t>)
+          {
+            auto impl = static_cast<VectorImpl<int64_t> *>(vectorData.get());
+            if (!impl)
+            {
+              Logger::GetInstance().Log(LogLevel::Error, "DatumStorage::getTypedVector: nullptr VectorImpl for int64_t BigInt");
+              throw std::runtime_error("nullptr VectorImpl for int64_t BigInt");
+            }
+            return impl->vector;
+          }
+          else if constexpr (std::is_same_v<T, bigint_t>)
+          {
+            // We need to consider if bigint_t is actually different from int64_t on this platform
+            if constexpr (std::is_same_v<bigint_t, int64_t>)
+            {
+              auto impl = static_cast<VectorImpl<int64_t> *>(vectorData.get());
+              if (!impl)
+              {
+                Logger::GetInstance().Log(LogLevel::Error, "DatumStorage::getTypedVector: nullptr VectorImpl for bigint_t BigInt");
+                throw std::runtime_error("nullptr VectorImpl for bigint_t BigInt");
+              }
+              return impl->vector;
+            }
+            else
+            {
+              // If they're different types (unlikely), use a proper reinterpret_cast
+              auto impl = static_cast<VectorImpl<int64_t> *>(vectorData.get());
+              if (!impl)
+              {
+                Logger::GetInstance().Log(LogLevel::Error, "DatumStorage::getTypedVector: nullptr VectorImpl for bigint_t BigInt");
+                throw std::runtime_error("nullptr VectorImpl for bigint_t BigInt");
+              }
+              // This is a bit of a hack but should work - we're telling the compiler to treat
+              // the vector<int64_t> as vector<bigint_t> which is safe if they're the same size
+              return std::static_pointer_cast<std::vector<bigint_t>>(
+                  std::shared_ptr<void>(impl->vector, impl->vector.get()));
+            }
+          }
           break;
 
         case SqlType::Real:
@@ -405,7 +442,6 @@ namespace mssql
           break;
 
         case SqlType::Char:
-        case SqlType::VarChar:
         case SqlType::Text:
         case SqlType::Binary:
         case SqlType::VarBinary:
@@ -415,6 +451,7 @@ namespace mssql
 
         case SqlType::NChar:
         case SqlType::NVarChar:
+        case SqlType::VarChar:
         case SqlType::NText:
           if constexpr (std::is_same_v<T, uint16_t> || std::is_same_v<T, wchar_t>)
             return static_cast<VectorImpl<uint16_t> *>(vectorData.get())->vector;
@@ -475,18 +512,18 @@ namespace mssql
         return sqlType == SqlType::Integer;
       else if constexpr (std::is_same_v<T, uint32_t>)
         return sqlType == SqlType::UnsignedInt;
-      else if constexpr (std::is_same_v<T, int64_t>)
+      else if constexpr (std::is_same_v<T, int64_t> || std::is_same_v<T, bigint_t>)
         return sqlType == SqlType::BigInt;
       else if constexpr (std::is_same_v<T, double>)
         return sqlType == SqlType::Real || sqlType == SqlType::Float || sqlType == SqlType::Double;
       else if constexpr (std::is_same_v<T, SQL_NUMERIC_STRUCT>)
         return sqlType == SqlType::Decimal || sqlType == SqlType::Numeric;
       else if constexpr (std::is_same_v<T, char>)
-        return sqlType == SqlType::Char || sqlType == SqlType::VarChar ||
+        return sqlType == SqlType::Char ||
                sqlType == SqlType::Text || sqlType == SqlType::Binary ||
                sqlType == SqlType::VarBinary;
       else if constexpr (std::is_same_v<T, uint16_t>)
-        return sqlType == SqlType::NChar || sqlType == SqlType::NVarChar ||
+        return sqlType == SqlType::NChar || sqlType == SqlType::NVarChar || sqlType == SqlType::VarChar ||
                sqlType == SqlType::NText;
       else if constexpr (std::is_same_v<T, SQL_DATE_STRUCT>)
         return sqlType == SqlType::Date;
@@ -496,8 +533,6 @@ namespace mssql
         return sqlType == SqlType::DateTime || sqlType == SqlType::DateTime2;
       else if constexpr (std::is_same_v<T, SQL_SS_TIMESTAMPOFFSET_STRUCT>)
         return sqlType == SqlType::DateTimeOffset;
-      else if constexpr (std::is_same_v<T, bigint_t>)
-        return sqlType == SqlType::BigInt;
       else if constexpr (std::is_same_v<T, bool>)
         return sqlType == SqlType::Bit;
       else if constexpr (std::is_same_v<T, std::shared_ptr<uint16_t_vec_t>>)
@@ -632,6 +667,11 @@ namespace mssql
       return getValueAs<int8_t>() != 0;
     }
 
+    int16_t getInt16() const
+    {
+      return getValueAs<int16_t>();
+    }
+
     int32_t getInt32() const
     {
       return getValueAs<int32_t>();
@@ -666,7 +706,7 @@ namespace mssql
     template <typename T>
     T getValueAs() const
     {
-      if (data_.size() < sizeof(T))
+      if (data_.size() == 0)
         throw std::runtime_error("Invalid data size for type");
       return *reinterpret_cast<const T *>(data_.data());
     }

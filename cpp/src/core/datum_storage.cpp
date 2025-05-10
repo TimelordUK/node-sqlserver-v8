@@ -378,7 +378,7 @@ namespace mssql
           break;
         }
         case SqlType::Char:
-        case SqlType::VarChar:
+
         case SqlType::Text:
         case SqlType::Binary:
         case SqlType::VarBinary:
@@ -419,6 +419,7 @@ namespace mssql
           break;
         }
         case SqlType::NChar:
+        case SqlType::VarChar:
         case SqlType::NVarChar:
         case SqlType::NText:
         {

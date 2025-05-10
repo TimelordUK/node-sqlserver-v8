@@ -6,6 +6,7 @@
 #include "odbc/odbc_error_handler.h"
 #include "common/string_utils.h"
 #include "utils/Logger.h"
+#include <cstring> // For std::memcpy
 
 const int SQL_SERVER_MAX_STRING_SIZE = 8000;
 
@@ -59,10 +60,17 @@ namespace mssql
 
   bool OdbcStatement::check_odbc_error(const SQLRETURN ret)
   {
-    if (!errorHandler_->CheckOdbcError(ret))
+    statement_->read_errors(errors_);
+    if (errors_->size() > 0)
     {
+      SQL_LOG_TRACE_STREAM("check_odbc_error: error in statement " << errors_->size());
+      for (const auto &error : *errors_)
+      {
+        SQL_LOG_ERROR_STREAM("check_odbc_error: " << error->message);
+      }
       return false;
     }
+
     return true;
   }
 
@@ -96,6 +104,7 @@ namespace mssql
         res = dispatch(definition.dataType, row_id, c);
         if (!res)
         {
+          SQL_LOG_DEBUG_STREAM("terminating early : fetch_read column " << c);
           break;
         }
       }
@@ -270,10 +279,14 @@ namespace mssql
     }
     SQL_LOG_TRACE_STREAM("dispatch: t " << t << " row_id " << row_id << " column " << column);
     auto row = rows_[row_id];
-    auto &column_data = row->getColumn(column);
+
+    // Reference column but don't use directly to silence compiler warning
+    // The called methods will access it through the row
+    row->getColumn(column);
 
     // cerr << " dispatch row = " << row_id << endl;
     bool res;
+
     switch (t)
     {
     case SQL_SS_VARIANT:
@@ -310,6 +323,8 @@ namespace mssql
       }
       else
       {
+        // Log the exact SQL type for debugging
+        SQL_LOG_DEBUG_STREAM("dispatch: Processing integer type: " << t);
         res = get_data_long(row_id, column);
       }
       break;
@@ -385,6 +400,12 @@ namespace mssql
     const auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
 
+    // Get the original column definition to determine the correct SQL type
+    const auto &colDef = metaData_->get(static_cast<int>(column));
+    const SQLSMALLINT originalSqlType = colDef.dataType;
+
+    SQL_LOG_DEBUG_STREAM("get_data_long: originalSqlType SQL type: " << originalSqlType);
+
     const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SLONG, &v, sizeof(long),
                                 &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
@@ -404,8 +425,49 @@ namespace mssql
     }
     else
     {
-      column_data.setType(DatumStorage::SqlType::BigInt);
-      column_data.addValue(static_cast<int64_t>(v));
+      // Set the correct type based on the original SQL type
+      DatumStorage::SqlType datumType;
+      switch (originalSqlType)
+      {
+      case SQL_TINYINT:
+      {
+        datumType = DatumStorage::SqlType::TinyInt;
+        column_data.setType(datumType);
+        const int8_t v8 = static_cast<int8_t>(v);
+        column_data.addValue(v8);
+      }
+      break;
+
+      case SQL_SMALLINT:
+      {
+        datumType = DatumStorage::SqlType::SmallInt;
+        column_data.setType(datumType);
+        const int16_t v16 = static_cast<int16_t>(v);
+        column_data.addValue(v16);
+      }
+      break;
+
+      case SQL_INTEGER:
+      case SQL_C_SLONG:
+      case SQL_C_ULONG:
+      {
+        datumType = DatumStorage::SqlType::Integer;
+        column_data.setType(datumType);
+        column_data.addValue(static_cast<int32_t>(v));
+      }
+      break;
+
+      default:
+      {
+        // For any other case, use BigInt as the default
+        datumType = DatumStorage::SqlType::BigInt;
+        column_data.setType(datumType);
+        column_data.addValue(static_cast<int64_t>(v));
+      }
+      break;
+      }
+
+      SQL_LOG_DEBUG_STREAM("get_data_long: Mapped to DatumStorage type: " << static_cast<int>(datumType));
     }
 
     return true;
@@ -436,9 +498,16 @@ namespace mssql
     }
     else
     {
-      // Since DatumStorage::bigint_t is a typedef for long long int
-      // we need to explicitly set the type to BigInt first
+      // Logging to help diagnose any issues with BigInt handling
+      SQL_LOG_DEBUG_STREAM("get_data_big_int: Setting BigInt value " << v);
+      SQL_LOG_DEBUG_STREAM("get_data_big_int: bigint_t size = " << sizeof(DatumStorage::bigint_t)
+                                                                << ", int64_t size = " << sizeof(int64_t));
+
+      // Set the type to BigInt first, then add the value
+      // This ensures consistent storage type
       column_data.setType(DatumStorage::SqlType::BigInt);
+
+      // Explicitly store as int64_t to ensure consistent type usage
       column_data.addValue(static_cast<int64_t>(v));
     }
     return true;
@@ -479,6 +548,7 @@ namespace mssql
       else
       {
         column_data.setType(DatumStorage::SqlType::BigInt);
+        // Explicitly convert to int64_t for consistent storage
         column_data.addValue(static_cast<int64_t>(bi));
       }
     }
@@ -543,11 +613,22 @@ namespace mssql
     if (!check_odbc_error(ret))
       return false;
 
+    // Add more logging to help diagnose variant type issues
+    SQL_LOG_DEBUG_STREAM("d_variant: Variant type detected: " << variant_type);
+
+    // Get the column data and mark it explicitly as Variant type
+    const auto row = rows_[row_id];
+    auto &column_data = row->getColumn(column);
+
+    // Set the type to Variant for special handling in JsObjectMapper
+    column_data.setType(DatumStorage::SqlType::Variant);
+
     // Create a copy of the definition and modify it
     auto definition = metaData_->get(static_cast<int>(column));
     definition.dataType = static_cast<SQLSMALLINT>(variant_type);
 
     // Dispatch to the correct handler based on the variant's actual type
+    // but mark the result explicitly as a variant for special handling
     const auto res = dispatch(definition.dataType, row_id, column);
     return res;
   }
@@ -560,9 +641,13 @@ namespace mssql
     auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
 
+    if (column == 24)
+    {
+      int x = 0;
+    }
+
     constexpr auto size = sizeof(uint16_t);
     SQLLEN value_len = 0;
-
     display_size++;
     column_data.reserve(display_size);
     column_data.resize(display_size); // increment for null terminator
@@ -622,51 +707,166 @@ namespace mssql
 
     constexpr SQLLEN atomic_read = 24 * 1024;
     auto bytes_to_read = atomic_read;
-    column_data.reserve(bytes_to_read + 1);
+
+    // First set the type before reserving space
     column_data.setType(DatumStorage::SqlType::Binary);
 
-    auto char_data = column_data.getTypedVector<char>();
-    auto *write_ptr = char_data->data();
-    SQLLEN total_bytes_to_read = 0;
-
-    auto r = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY, write_ptr, bytes_to_read, &total_bytes_to_read);
-    if (!check_odbc_error(r))
+    // Create a buffer for the first read
+    std::vector<char> buffer(bytes_to_read);
+    char *write_ptr = buffer.data();
+    if (!write_ptr)
+    {
+      SQL_LOG_ERROR("get_data_binary: Failed to allocate temporary buffer");
+      column_data.setNull();
       return false;
+    }
 
+    // Read the first chunk
+    SQLLEN total_bytes_to_read = 0;
+    auto r = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY,
+                        write_ptr, bytes_to_read, &total_bytes_to_read);
+
+    // Check for any SQL errors
+    if (!check_odbc_error(r))
+    {
+      SQL_LOG_ERROR("get_data_binary: SQL error in first chunk read");
+      column_data.setNull();
+      return false;
+    }
+
+    // Handle NULL data
     if (total_bytes_to_read == SQL_NULL_DATA)
     {
       column_data.setNull();
       return true;
     }
 
+    // Now we know how much data we're going to get, so reserve space in the vector
+    SQL_LOG_DEBUG_STREAM("get_data_binary: total_bytes_to_read = " << total_bytes_to_read);
+
+    // Check for more data flag
     auto status = false;
     auto more = check_more_read(r, status);
     if (!status)
-      return false;
-
-    column_data.resize(total_bytes_to_read);
-
-    if (total_bytes_to_read > bytes_to_read)
-      total_bytes_to_read -= bytes_to_read;
-
-    write_ptr = char_data->data();
-    write_ptr += bytes_to_read;
-
-    while (more)
     {
-      bytes_to_read = std::min(static_cast<SQLLEN>(atomic_read), total_bytes_to_read);
-      r = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY, write_ptr, bytes_to_read, &total_bytes_to_read);
-      if (!check_odbc_error(r))
-        return false;
-
-      more = check_more_read(r, status);
-      if (!status)
-        return false;
-
-      write_ptr += bytes_to_read;
+      SQL_LOG_ERROR("get_data_binary: Error checking for more data");
+      column_data.setNull();
+      return false;
     }
 
-    column_data.setNull(false);
+    // Special case for empty data
+    if (total_bytes_to_read == 0)
+    {
+      // Create empty binary data (not null)
+      auto char_data = column_data.getTypedVector<char>();
+      if (!char_data)
+      {
+        SQL_LOG_ERROR("get_data_binary: Failed to create vector for empty binary data");
+        column_data.setNull();
+        return false;
+      }
+      char_data->clear();
+      column_data.setNull(false);
+      return true;
+    }
+
+    try
+    {
+      // Create the vector only after we've determined the size
+      column_data.reserve(total_bytes_to_read + 1); // +1 for safety
+      auto char_data = column_data.getTypedVector<char>();
+      if (!char_data)
+      {
+        SQL_LOG_ERROR("get_data_binary: Failed to create vector for binary data");
+        column_data.setNull();
+        return false;
+      }
+
+      // Resize to accommodate the data we're expecting
+      char_data->resize(total_bytes_to_read);
+
+      // Copy the first chunk of data
+      size_t bytes_read = 0;
+      if (total_bytes_to_read > 0)
+      {
+        bytes_read = std::min(static_cast<size_t>(bytes_to_read),
+                              static_cast<size_t>(total_bytes_to_read));
+        SQL_LOG_DEBUG_STREAM("get_data_binary: Copying first chunk, bytes_read = " << bytes_read);
+
+        if (char_data->empty() || !char_data->data())
+        {
+          SQL_LOG_ERROR("get_data_binary: Target vector is empty or has null data pointer");
+          column_data.setNull();
+          return false;
+        }
+
+        std::memcpy(char_data->data(), buffer.data(), bytes_read);
+      }
+
+      // Handle reading more data if needed
+      if (more)
+      {
+        if (char_data->size() <= bytes_read)
+        {
+          SQL_LOG_ERROR("get_data_binary: Vector size too small for remaining data");
+          column_data.setNull();
+          return false;
+        }
+
+        write_ptr = char_data->data() + bytes_read;
+        SQLLEN remaining = total_bytes_to_read - bytes_read;
+
+        SQL_LOG_DEBUG_STREAM("get_data_binary: Reading more data, remaining = " << remaining);
+
+        while (more && remaining > 0)
+        {
+          bytes_to_read = std::min(static_cast<SQLLEN>(atomic_read), remaining);
+          r = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY,
+                         write_ptr, bytes_to_read, &total_bytes_to_read);
+
+          if (!check_odbc_error(r))
+          {
+            SQL_LOG_ERROR("get_data_binary: SQL error in subsequent chunk read");
+            column_data.setNull();
+            return false;
+          }
+
+          more = check_more_read(r, status);
+          if (!status)
+          {
+            SQL_LOG_ERROR("get_data_binary: Error checking for more data during chunked read");
+            column_data.setNull();
+            return false;
+          }
+
+          // Calculate actual bytes read in this chunk for pointer advancement
+          SQLLEN actual_chunk_bytes = (total_bytes_to_read == SQL_NULL_DATA) ? 0 : std::min(bytes_to_read, total_bytes_to_read);
+
+          // Move pointer forward
+          write_ptr += actual_chunk_bytes;
+          remaining -= actual_chunk_bytes;
+
+          SQL_LOG_DEBUG_STREAM("get_data_binary: After chunk read, remaining = " << remaining);
+        }
+      }
+
+      // For empty binary data, we preserve empty data rather than null
+      if (char_data->empty())
+      {
+        column_data.setNull(false); // Empty binary is not null
+      }
+      else
+      {
+        column_data.setNull(false);
+      }
+    }
+    catch (const std::exception &e)
+    {
+      SQL_LOG_ERROR_STREAM("get_data_binary: Exception - " << e.what());
+      column_data.setNull();
+      return false;
+    }
+
     return true;
   }
 

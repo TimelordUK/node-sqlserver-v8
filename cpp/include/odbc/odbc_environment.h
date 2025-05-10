@@ -1,8 +1,8 @@
 #pragma once
 #include <memory>
 #include <vector>
-#include <odbc_handles.h>
-#include <odbc_error.h>
+#include <odbc/odbc_handles.h>
+#include <odbc/odbc_error.h>
 
 namespace mssql
 {

@@ -208,8 +208,16 @@ namespace mssql
         std::shared_ptr<OdbcErrorHandler> errorHandler,
         std::shared_ptr<IOdbcApi> odbcApi,
         StatementHandle handle)
-        : type_(type), statement_(statement), errorHandler_(errorHandler), odbcApi_(odbcApi), handle_(handle),
-          numericStringEnabled_(false), state_(State::STMT_INITIAL), hasMoreResults_(false), endOfRows_(true)
+        : type_(type),
+          statement_(statement),
+          errorHandler_(errorHandler),
+          odbcApi_(odbcApi),
+          handle_(handle),
+          numericStringEnabled_(false),
+          state_(State::STMT_INITIAL),
+          hasMoreResults_(false),
+          endOfRows_(true),
+          errors_(new std::vector<std::shared_ptr<OdbcError>>())
     {
     }
 
@@ -251,6 +259,7 @@ namespace mssql
     bool lob(const size_t row_id, size_t column);
     bool check_more_read(SQLRETURN r, bool &status);
     std::vector<std::shared_ptr<IOdbcRow>> rows_;
+    std::shared_ptr<std::vector<shared_ptr<OdbcError>>> errors_;
   };
 
   /**
