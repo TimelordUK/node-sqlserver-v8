@@ -1093,35 +1093,80 @@ extern "C"
 
   // Add stubs for remaining N-API functions to ensure compilation
   // These can be expanded with real implementations as needed
-  
+
   // Implementation for napi_create_string_utf16
   NAPI_MOCK_EXTERN napi_status napi_create_string_utf16(napi_env env, const char16_t *str, size_t length, napi_value *result)
   {
     // Create a string value (we'll use regular string for our mock)
     auto jsString = g_env.createValue(JSType::STRING);
-    
+
     // For simplified mocking, we'll just convert the utf16 to a regular string
     // In a real implementation, this would preserve the UTF-16 encoding
     size_t actualLength = (length == NAPI_AUTO_LENGTH) ? 0 : length;
     std::string utf8String;
-    
+
     // If length is auto, find the actual length
-    if (length == NAPI_AUTO_LENGTH) {
-      const char16_t* s = str;
-      while (*s) {
+    if (length == NAPI_AUTO_LENGTH)
+    {
+      const char16_t *s = str;
+      while (*s)
+      {
         actualLength++;
         s++;
       }
     }
-    
+
     // Simple conversion from UTF-16 to ASCII/UTF-8 for mocking purposes
-    for (size_t i = 0; i < actualLength; i++) {
+    for (size_t i = 0; i < actualLength; i++)
+    {
       // Just take the lower byte for simplicity in this mock
       utf8String.push_back(static_cast<char>(str[i] & 0xFF));
     }
-    
+
     std::get<std::string>(jsString->data) = utf8String;
     *result = getNapiValue(jsString);
+    return napi_ok;
+  }
+
+  // Add these functions before the end of the file
+  NAPI_MOCK_EXTERN napi_status napi_get_value_string_utf16(napi_env env, napi_value value, char16_t *buf, size_t bufsize, size_t *result)
+  {
+    auto jsValue = getJSValue(value);
+    if (!jsValue || jsValue->type != JSType::STRING)
+    {
+      return napi_string_expected;
+    }
+
+    auto &str = std::get<std::string>(jsValue->data);
+    if (buf == nullptr)
+    {
+      *result = str.length();
+      return napi_ok;
+    }
+
+    size_t len = std::min(str.length(), bufsize - 1);
+    for (size_t i = 0; i < len; i++)
+    {
+      buf[i] = static_cast<char16_t>(str[i]);
+    }
+    buf[len] = 0;
+    *result = len;
+    return napi_ok;
+  }
+
+  NAPI_MOCK_EXTERN napi_status napi_create_bigint_int64(napi_env env, int64_t value, napi_value *result)
+  {
+    auto jsValue = g_env.createValue(JSType::NUMBER);
+    jsValue->data = static_cast<double>(value);
+    *result = getNapiValue(jsValue);
+    return napi_ok;
+  }
+
+  NAPI_MOCK_EXTERN napi_status napi_create_date(napi_env env, double value, napi_value *result)
+  {
+    auto jsValue = g_env.createValue(JSType::NUMBER);
+    jsValue->data = value;
+    *result = getNapiValue(jsValue);
     return napi_ok;
   }
 }
