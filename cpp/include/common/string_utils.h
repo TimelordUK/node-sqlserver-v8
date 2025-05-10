@@ -18,6 +18,9 @@ namespace mssql
     static std::string WideToUtf8(const SQLWCHAR *wideStr, SQLSMALLINT length);
     static std::string SafeWideToUtf8ForLogging(const SQLWCHAR *wstr, size_t maxLen = 1000);
 
+    // Sanitize connection string for logging (masks passwords)
+    static std::string SanitizeConnectionString(const std::string& connStr);
+
   private:
     // Helper functions for UTF-8 to UTF-16 conversion
     static bool IsUtf8ContinuationByte(unsigned char byte);

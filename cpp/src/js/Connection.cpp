@@ -102,7 +102,7 @@ namespace mssql
       return env.Undefined();
     }
 
-    const std::string connectionString = info[0].As<Napi::String>().Utf8Value();
+    const auto connectionString = info[0].As<Napi::String>().Utf16Value();
 
     // Check for callback (last argument)
     Napi::Function callback;
@@ -117,9 +117,10 @@ namespace mssql
       // Create a deferred Promise
       Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
       SQL_LOG_DEBUG("Connection - use Promise");
-      
+
       // Create a callback that resolves/rejects the promise
-      callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo &info) {
+      callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo &info)
+                                     {
         const Napi::Env env = info.Env();
         if (info[0].IsNull() || info[0].IsUndefined()) {
           deferred.Resolve(info[1]);
@@ -128,8 +129,7 @@ namespace mssql
           // The error object might be enhanced with ODBC details
           deferred.Reject(info[0]);
         }
-        return env.Undefined();
-      });
+        return env.Undefined(); });
 
       auto worker = MakeConnectionWorker(
           callback,
@@ -151,7 +151,7 @@ namespace mssql
       // Return the promise
       return deferred.Promise();
     }
-    
+
     SQL_LOG_DEBUG("Connection - use ConnectionWorker");
     auto worker = MakeConnectionWorker(
         callback,
@@ -241,7 +241,7 @@ namespace mssql
     return env.Undefined();
   }
 
-  Napi::Value Connection::FetchRows(const Napi::CallbackInfo& info)
+  Napi::Value Connection::FetchRows(const Napi::CallbackInfo &info)
   {
     const Napi::Env env = info.Env();
     Napi::HandleScope scope(env);

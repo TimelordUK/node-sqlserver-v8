@@ -159,4 +159,82 @@ namespace mssql
     return WideToUtf8(wstr, static_cast<SQLSMALLINT>(len));
   }
 
+  std::string StringUtils::SanitizeConnectionString(const std::string& connStr)
+  {
+    // Handle empty string case
+    if (connStr.empty()) {
+      return "(empty connection string)";
+    }
+
+    std::string result;
+    result.reserve(connStr.size());
+
+    size_t i = 0;
+
+    // Process the string, redacting passwords
+    while (i < connStr.size())
+    {
+      // Case-insensitive check for "pwd=" or "password="
+      bool isPwdField = false;
+
+      // Check for "PWD=" (case insensitive)
+      if (i + 4 <= connStr.size()) {
+        std::string pwdKey = connStr.substr(i, 4);
+        for (auto& c : pwdKey) c = std::toupper(c);
+        isPwdField = (pwdKey == "PWD=");
+      }
+
+      // Check for "Password=" (case insensitive)
+      if (!isPwdField && i + 9 <= connStr.size()) {
+        std::string passKey = connStr.substr(i, 9);
+        for (auto& c : passKey) c = std::toupper(c);
+        isPwdField = (passKey == "PASSWORD=");
+      }
+
+      if (isPwdField)
+      {
+        // Find the key's equals sign
+        size_t equalsPos = connStr.find('=', i);
+        if (equalsPos == std::string::npos) {
+          // Malformed connection string - just append the rest and break
+          result.append(connStr.substr(i));
+          break;
+        }
+
+        // Add the key with equals sign
+        result.append(connStr.substr(i, equalsPos - i + 1));
+        i = equalsPos + 1; // Move past the equals sign
+
+        // Add asterisks instead of actual password
+        result.append("********");
+
+        // Skip until next semicolon or end of string
+        while (i < connStr.size() && connStr[i] != ';')
+        {
+          i++;
+        }
+
+        // Add the semicolon if found
+        if (i < connStr.size() && connStr[i] == ';')
+        {
+          result.push_back(';');
+          i++;
+        }
+      }
+      else
+      {
+        // Copy character as is
+        result.push_back(connStr[i]);
+        i++;
+      }
+    }
+
+    // Log if we produced an empty result when we shouldn't have
+    if (result.empty() && !connStr.empty()) {
+      return "(sanitizing error - produced empty string)";
+    }
+
+    return result;
+  }
+
 } // namespace mssql

@@ -46,8 +46,6 @@ namespace mssql
         return;
       }
       statement->TryReadRows(result_, rowCount_);
-      // For now, just set endOfRows_ to true to simulate end of result set
-      endOfRows_ = true;
     }
     catch (const std::exception &e)
     {
@@ -72,8 +70,8 @@ namespace mssql
       // Create a JavaScript array of rows
       Napi::Array rows = Napi::Array::New(env);
       const auto &statement = GetStatement();
-      auto &nativeData = statement->GetRows();
-      auto &columnDefs = *statement->GetMetaData();
+      const auto &nativeData = statement->GetRows();
+      const auto &columnDefs = *statement->GetMetaData();
 
       // Convert each row to a JavaScript object
       for (size_t i = 0; i < nativeData.size(); ++i)
@@ -86,7 +84,7 @@ namespace mssql
       // Create a result object
       Napi::Object result = Napi::Object::New(env);
       result.Set("rows", rows);
-      result.Set("endOfRows", Napi::Boolean::New(env, endOfRows_));
+      result.Set("endOfRows", Napi::Boolean::New(env, result_->is_end_of_rows()));
 
       // Call the callback with the result
       Callback().Call({env.Null(), result});

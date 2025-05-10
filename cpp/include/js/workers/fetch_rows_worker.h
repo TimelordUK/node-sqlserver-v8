@@ -37,7 +37,6 @@ namespace mssql
     size_t rowCount_;
     std::shared_ptr<QueryResult> result_;
     std::vector<std::shared_ptr<OdbcError>> errorDetails_;
-    bool endOfRows_ = false;
   };
 
 } // namespace mssql

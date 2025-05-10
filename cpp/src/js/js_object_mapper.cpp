@@ -3,6 +3,7 @@
 #include "odbc_row.h"
 #include "odbc_driver_types.h"
 #include "string_utils.h"
+#include "js_time_adapter.h"
 
 namespace mssql
 {
@@ -376,26 +377,7 @@ namespace mssql
         if (dateVec && !dateVec->empty())
         {
           const auto &date = (*dateVec)[0];
-          
-          // Create a JS Date object
-          napi_value jsDate;
-          
-          // Create a date with local timezone
-          struct tm timeinfo = {};
-          timeinfo.tm_year = date.year - 1900; // tm_year is years since 1900
-          timeinfo.tm_mon = date.month - 1;    // tm_mon is 0-based
-          timeinfo.tm_mday = date.day;
-          timeinfo.tm_hour = 0;
-          timeinfo.tm_min = 0;
-          timeinfo.tm_sec = 0;
-
-          // Convert to time_t (seconds since epoch)
-          time_t rawtime = mktime(&timeinfo);
-          
-          // Convert to milliseconds
-          double ms = static_cast<double>(rawtime) * 1000.0;
-          
-          napi_create_date(env, ms, &jsDate);
+          napi_value jsDate = JSTimeAdapter::createJsDateFromDate(env, date);
           jsRow.Set(colName, Napi::Value(env, jsDate));
         }
         break;
@@ -407,25 +389,7 @@ namespace mssql
         if (timeVec && !timeVec->empty())
         {
           const auto &time = (*timeVec)[0];
-          
-          // Create a JS Date using today's date with this time
-          napi_value jsDate;
-          
-          // Get current date (for the base date)
-          time_t now = std::time(nullptr);
-          struct tm *tm_now = std::localtime(&now);
-          tm_now->tm_hour = time.hour;
-          tm_now->tm_min = time.minute;
-          tm_now->tm_sec = time.second;
-          
-          // Convert to time_t (seconds since epoch)
-          time_t time_with_today = mktime(tm_now);
-          
-          // Convert to milliseconds and add the fraction part
-          double ms = static_cast<double>(time_with_today) * 1000.0 + 
-                     static_cast<double>(time.fraction) / 1000000.0;
-          
-          napi_create_date(env, ms, &jsDate);
+          napi_value jsDate = JSTimeAdapter::createJsDateFromTime(env, time);
           jsRow.Set(colName, Napi::Value(env, jsDate));
         }
         break;
@@ -438,27 +402,7 @@ namespace mssql
         if (timestampVec && !timestampVec->empty())
         {
           const auto &timestamp = (*timestampVec)[0];
-          
-          // Create a JS Date
-          napi_value jsDate;
-          
-          // Create date with local timezone
-          struct tm timeinfo = {};
-          timeinfo.tm_year = timestamp.year - 1900; // tm_year is years since 1900
-          timeinfo.tm_mon = timestamp.month - 1;    // tm_mon is 0-based
-          timeinfo.tm_mday = timestamp.day;
-          timeinfo.tm_hour = timestamp.hour;
-          timeinfo.tm_min = timestamp.minute;
-          timeinfo.tm_sec = timestamp.second;
-          
-          // Convert to time_t (seconds since epoch)
-          time_t rawtime = mktime(&timeinfo);
-          
-          // Convert to milliseconds and add the fraction part
-          double ms = static_cast<double>(rawtime) * 1000.0 + 
-                    static_cast<double>(timestamp.fraction) / 1000000.0;
-          
-          napi_create_date(env, ms, &jsDate);
+          napi_value jsDate = JSTimeAdapter::createJsDateFromTimestamp(env, timestamp);
           jsRow.Set(colName, Napi::Value(env, jsDate));
         }
         break;
@@ -470,39 +414,7 @@ namespace mssql
         if (offsetVec && !offsetVec->empty())
         {
           const auto &offset = (*offsetVec)[0];
-          
-          // Create a JS Date with UTC time adjusted by offset
-          napi_value jsDate;
-          
-          // Create date in UTC
-          struct tm timeinfo = {};
-          timeinfo.tm_year = offset.year - 1900;
-          timeinfo.tm_mon = offset.month - 1;
-          timeinfo.tm_mday = offset.day;
-          timeinfo.tm_hour = offset.hour;
-          timeinfo.tm_min = offset.minute;
-          timeinfo.tm_sec = offset.second;
-          
-          // Apply timezone offset
-          timeinfo.tm_hour -= offset.timezone_hour;
-          timeinfo.tm_min -= offset.timezone_minute;
-          
-          // Convert to time_t with GMT timezone
-          time_t rawtime;
-#ifdef _WIN32
-          // Windows doesn't have timegm, use _mkgmtime
-          rawtime = _mkgmtime(&timeinfo);
-#else
-          // Use timegm for UTC time on Linux/Unix
-          timeinfo.tm_isdst = 0; // No DST adjustment for UTC time
-          rawtime = timegm(&timeinfo);
-#endif
-          
-          // Convert to milliseconds and add the fraction part
-          double ms = static_cast<double>(rawtime) * 1000.0 + 
-                    static_cast<double>(offset.fraction) / 1000000.0;
-          
-          napi_create_date(env, ms, &jsDate);
+          napi_value jsDate = JSTimeAdapter::createJsDateFromTimestampOffset(env, offset);
           jsRow.Set(colName, Napi::Value(env, jsDate));
         }
         break;

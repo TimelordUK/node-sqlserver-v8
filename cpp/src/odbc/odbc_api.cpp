@@ -283,74 +283,42 @@ namespace mssql
     // Clear previous diagnostics
     ClearDiagnostics();
 
-    // Log the original connection string (sanitized for password)
-    std::wstring originalConnStr;
-    if (InConnectionString)
-    {
-      // Proper way to convert SQLWCHAR* to std::wstring
-      originalConnStr = std::wstring(reinterpret_cast<wchar_t *>(InConnectionString));
-    }
-    std::string safeConnStr = WideToUtf8(InConnectionString);
+    // Create a sanitized version for logging only - does not affect the actual connection string
+    std::string safeConnStr;
 
-    // Sanitize for password logging
-    size_t pwdStart = safeConnStr.find("PWD=");
-    if (pwdStart != std::string::npos)
-    {
-      size_t pwdEnd = safeConnStr.find(";", pwdStart);
-      if (pwdEnd != std::string::npos)
-      {
-        safeConnStr.replace(pwdStart, pwdEnd - pwdStart, "PWD=********");
+    if (InConnectionString) {
+      // Extract ASCII characters for logging
+      for (int i = 0; i < StringLength1 && InConnectionString[i] != 0; i++) {
+        char c = static_cast<char>(InConnectionString[i] & 0xFF);
+        if (c >= 32 && c <= 126) { // Only include printable ASCII
+          safeConnStr.push_back(c);
+        }
       }
-      else
-      {
-        safeConnStr.replace(pwdStart, safeConnStr.length() - pwdStart, "PWD=********");
-      }
-    }
 
-    SQL_LOG_DEBUG_STREAM("SQLDriverConnect called - Handle: " << ConnectionHandle
+      // Mask password in the log
+      size_t pwdStart = safeConnStr.find("PWD=");
+      if (pwdStart != std::string::npos) {
+        size_t pwdEnd = safeConnStr.find(";", pwdStart);
+        if (pwdEnd != std::string::npos) {
+          safeConnStr.replace(pwdStart, pwdEnd - pwdStart, "PWD=********");
+        } else {
+          safeConnStr.replace(pwdStart, safeConnStr.length() - pwdStart, "PWD=********");
+        }
+      }
+
+      SQL_LOG_DEBUG_STREAM("SQLDriverConnect called - Handle: " << ConnectionHandle
                                                               << ", Connection String: " << safeConnStr
                                                               << ", StringLength1: " << StringLength1
                                                               << ", BufferLength: " << BufferLength
                                                               << ", DriverCompletion: " << DriverCompletion);
-
-    // Diagnose connection string to detect invalid characters
-    DiagnoseConnectionString(originalConnStr);
-
-    // Sanitize the connection string to remove invalid characters
-    std::wstring cleanConnStr = SanitizeConnectionString(originalConnStr);
-
-    // Log any difference in length
-    if (cleanConnStr.length() != originalConnStr.length())
-    {
-      SQL_LOG_WARNING_STREAM("Connection string was sanitized - original length: "
-                             << originalConnStr.length() << ", new length: " << cleanConnStr.length());
     }
 
-    // Create a new connection string buffer from our sanitized string
-    std::vector<SQLWCHAR> cleanConnBuffer(cleanConnStr.begin(), cleanConnStr.end());
-    cleanConnBuffer.push_back(0); // Ensure null termination
-
-    // Check for malformed connection string
-    SQL_LOG_DEBUG("Validating connection string format...");
-
-    // Log if there are non-printing characters in the connection string
-    for (size_t i = 0; i < safeConnStr.length(); i++)
-    {
-      unsigned char c = safeConnStr[i];
-      if (c < 32 || c > 126)
-      {
-        SQL_LOG_ERROR_STREAM("Invalid character found in connection string at position "
-                             << i << ": ASCII " << static_cast<int>(c)
-                             << " (hex: 0x" << std::hex << static_cast<int>(c) << std::dec << ")");
-      }
-    }
-
-    // Use the cleaned connection string for the actual call
+    // Direct pass-through to ODBC with no connection string modification
     SQLRETURN ret = ::SQLDriverConnect(
         ConnectionHandle,
         WindowHandle,
-        cleanConnBuffer.data(),
-        static_cast<SQLSMALLINT>(cleanConnStr.length()),
+        InConnectionString,  // Use the original connection string
+        StringLength1,       // Use the original length
         OutConnectionString,
         BufferLength,
         StringLength2Ptr,
@@ -400,8 +368,12 @@ namespace mssql
     if (!SQL_SUCCEEDED(ret) && recNumber == 1)
     {
       SQL_LOG_ERROR("No diagnostic information available from driver despite error return");
-      SQL_LOG_ERROR_STREAM("Driver: " << GetDriverInfoFromConnectionString(safeConnStr));
-      SQL_LOG_ERROR_STREAM("Server: " << GetServerFromConnectionString(safeConnStr));
+
+      // Only use GetDriverInfoFromConnectionString if we extracted a connection string
+      if (!safeConnStr.empty()) {
+        SQL_LOG_ERROR_STREAM("Driver: " << GetDriverInfoFromConnectionString(safeConnStr));
+        SQL_LOG_ERROR_STREAM("Server: " << GetServerFromConnectionString(safeConnStr));
+      }
 
       // Add a generic diagnostic for error reporting
       DiagnosticInfo diag;
@@ -412,7 +384,7 @@ namespace mssql
     }
 
     // Additional specific checks for common issues
-    if (!SQL_SUCCEEDED(ret))
+    if (!SQL_SUCCEEDED(ret) && !safeConnStr.empty())
     {
       SQL_LOG_DEBUG("Checking for common connection issues...");
 

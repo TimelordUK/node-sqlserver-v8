@@ -75,5 +75,98 @@ namespace mssql {
             storage.addValue<SQL_SS_TIMESTAMPOFFSET_STRUCT>(timestampOffset);
             return true;
         }
+        
+        // Implementation for the new date conversion functions
+        
+        napi_value JSTimeAdapter::createJsDateFromDate(napi_env env, const SQL_DATE_STRUCT& date) {
+            struct tm timeinfo = {};
+            timeinfo.tm_year = date.year - 1900; // tm_year is years since 1900
+            timeinfo.tm_mon = date.month - 1;    // tm_mon is 0-based
+            timeinfo.tm_mday = date.day;
+            timeinfo.tm_hour = 0;
+            timeinfo.tm_min = 0;
+            timeinfo.tm_sec = 0;
+            
+            // Convert to time_t (seconds since epoch)
+            time_t rawtime = mktime(&timeinfo);
+            
+            // Convert to milliseconds
+            double ms = static_cast<double>(rawtime) * 1000.0;
+            
+            napi_value jsDate;
+            napi_create_date(env, ms, &jsDate);
+            return jsDate;
+        }
+        
+        napi_value JSTimeAdapter::createJsDateFromTime(napi_env env, const SQL_SS_TIME2_STRUCT& time) {
+            // Create a date representing today with this time
+            time_t now = std::time(nullptr);
+            struct tm *tm_now = std::localtime(&now);
+            tm_now->tm_hour = time.hour;
+            tm_now->tm_min = time.minute;
+            tm_now->tm_sec = time.second;
+            
+            // Convert to time_t (seconds since epoch)
+            time_t time_with_today = mktime(tm_now);
+            
+            // Convert to milliseconds and add the fraction part
+            double ms = static_cast<double>(time_with_today) * 1000.0 + 
+                       static_cast<double>(time.fraction) / 1000000.0;
+            
+            napi_value jsDate;
+            napi_create_date(env, ms, &jsDate);
+            return jsDate;
+        }
+        
+        napi_value JSTimeAdapter::createJsDateFromTimestamp(napi_env env, const SQL_TIMESTAMP_STRUCT& timestamp) {
+            struct tm timeinfo = {};
+            timeinfo.tm_year = timestamp.year - 1900; // tm_year is years since 1900
+            timeinfo.tm_mon = timestamp.month - 1;    // tm_mon is 0-based
+            timeinfo.tm_mday = timestamp.day;
+            timeinfo.tm_hour = timestamp.hour;
+            timeinfo.tm_min = timestamp.minute;
+            timeinfo.tm_sec = timestamp.second;
+            
+            // Convert to time_t (seconds since epoch)
+            time_t rawtime = mktime(&timeinfo);
+            
+            // Convert to milliseconds and add the fraction part
+            double ms = static_cast<double>(rawtime) * 1000.0 + 
+                      static_cast<double>(timestamp.fraction) / 1000000.0;
+            
+            napi_value jsDate;
+            napi_create_date(env, ms, &jsDate);
+            return jsDate;
+        }
+        
+        napi_value JSTimeAdapter::createJsDateFromTimestampOffset(napi_env env, const SQL_SS_TIMESTAMPOFFSET_STRUCT& offset) {
+            struct tm timeinfo = {};
+            timeinfo.tm_year = offset.year - 1900;
+            timeinfo.tm_mon = offset.month - 1;
+            timeinfo.tm_mday = offset.day;
+            timeinfo.tm_hour = offset.hour;
+            timeinfo.tm_min = offset.minute;
+            timeinfo.tm_sec = offset.second;
+            
+            // Apply the timezone offset in the opposite direction to get UTC
+            timeinfo.tm_hour -= offset.timezone_hour;
+            timeinfo.tm_min -= offset.timezone_minute;
+            
+            // Convert to UTC time_t
+#ifdef _WIN32
+            time_t rawtime = _mkgmtime(&timeinfo);
+#else
+            timeinfo.tm_isdst = 0; // No DST for UTC time
+            time_t rawtime = timegm(&timeinfo);
+#endif
+            
+            // Convert to milliseconds and add the fraction part
+            double ms = static_cast<double>(rawtime) * 1000.0 + 
+                      static_cast<double>(offset.fraction) / 1000000.0;
+            
+            napi_value jsDate;
+            napi_create_date(env, ms, &jsDate);
+            return jsDate;
+        }
 
 } // namespace mssql

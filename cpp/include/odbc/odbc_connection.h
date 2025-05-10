@@ -42,7 +42,7 @@ namespace mssql
   public:
     virtual ~IOdbcConnection() = default;
 
-    virtual bool Open(const std::string &connectionString, int timeout) = 0;
+    virtual bool Open(const std::u16string &connectionString, int timeout) = 0;
     virtual bool Close() = 0;
     virtual bool IsConnected() const = 0;
 
@@ -91,7 +91,7 @@ namespace mssql
     static bool InitializeEnvironment();
 
     // Open a connection to the database
-    bool Open(const std::string &connectionString, int timeout = 0) override;
+    bool Open(const std::u16string &connectionString, int timeout = 0) override;
     bool Close() override;
     bool IsConnected() const override;
 
@@ -181,11 +181,11 @@ namespace mssql
     bool ReturnOdbcError();
     bool CheckOdbcError(SQLRETURN ret);
     SQLRETURN open_timeout(int timeout);
-    bool try_open(std::shared_ptr<std::vector<uint16_t>> connection_string, int timeout);
+    bool try_open(const std::u16string &connection_string, int timeout);
     bool try_begin_tran();
     bool try_end_tran(SQLSMALLINT completion_type);
 
-    // Convert UTF-8 connection string to UTF-16
-    std::shared_ptr<std::vector<uint16_t>> ConvertConnectionString(const std::string &connectionString);
+    // Convert UTF-8 connection string to std::u16string
+    std::u16string ConvertConnectionString(const std::string &connectionString);
   };
 }

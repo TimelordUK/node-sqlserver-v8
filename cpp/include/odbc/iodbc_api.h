@@ -98,7 +98,7 @@ namespace mssql
         SQLLEN FetchOffset) = 0;
 
     // Add SQLSetStmtAttr if not already present
-    virtual SQLRETURN SQLSetStmtAttr(
+    virtual SQLRETURN SQLSetStmtAttrW(
         SQLHSTMT StatementHandle,
         SQLINTEGER Attribute,
         SQLPOINTER Value,

@@ -11,6 +11,8 @@ export class TestConnectionFactory {
 
     // Create and open the connection
     const connection = createConnection();
+
+    console.log(connectionString);
     await connection.open(connectionString);
     return connection;
   }

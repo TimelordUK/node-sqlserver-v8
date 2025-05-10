@@ -12,6 +12,7 @@
 #include "iodbc_api.h"
 #include <Logger.h>
 #include <iostream>
+#include <iomanip> // For std::setw, std::setfill, std::hex
 
 namespace mssql
 {
@@ -79,16 +80,43 @@ namespace mssql
     return true;
   }
 
-  std::shared_ptr<std::vector<uint16_t>> OdbcConnection::ConvertConnectionString(
+  std::u16string OdbcConnection::ConvertConnectionString(
       const std::string &connectionString)
   {
-    return StringUtils::Utf8ToUtf16(connectionString);
+    // Simple direct conversion to UCS2/UTF-16
+    // This matches the approach used in the legacy driver
+    std::u16string result;
+    size_t len = connectionString.length();
+
+    // Reserve space to hold the characters
+    result.reserve(len);
+
+    // Copy each ASCII/UTF-8 character directly to UTF-16
+    // This is simplistic but works for common connection string characters
+    for (size_t i = 0; i < len; i++)
+    {
+      result.push_back(static_cast<char16_t>(connectionString[i] & 0xFF));
+    }
+
+    return result;
   }
 
-  bool OdbcConnection::Open(const std::string &connectionString, int timeout)
+  bool OdbcConnection::Open(const std::u16string &connectionString, int timeout)
   {
     SQL_LOG_INFO("Opening connection");
-    SQL_LOG_DEBUG_STREAM("Connection string (partial): " << connectionString.substr(0, 30) << "...");
+
+    // Create a simple ASCII representation of the connection string for logging
+    std::string logStr;
+    logStr.reserve(30);
+    for (size_t i = 0; i < std::min(connectionString.size(), static_cast<size_t>(30)); i++)
+    {
+      char c = static_cast<char>(connectionString[i] & 0xFF);
+      if (c >= 32 && c <= 126)
+      {
+        logStr.push_back(c);
+      }
+    }
+    SQL_LOG_DEBUG_STREAM("Connection string (partial): " << logStr << "...");
 
     std::lock_guard lock(_connectionMutex);
 
@@ -107,8 +135,7 @@ namespace mssql
       return false;
     }
 
-    const auto wideConnStr = ConvertConnectionString(connectionString);
-    const bool result = try_open(wideConnStr, timeout);
+    const bool result = try_open(connectionString, timeout);
 
     if (result)
     {
@@ -271,9 +298,31 @@ namespace mssql
     return _statementFactory->GetStatement(statementId);
   }
 
-  bool OdbcConnection::try_open(std::shared_ptr<std::vector<uint16_t>> connection_string, const int timeout)
+  bool OdbcConnection::try_open(const std::u16string &connection_string, const int timeout)
   {
     _errorHandler->ClearErrors();
+
+    // Simple logging for connection attempt
+    SQL_LOG_DEBUG_STREAM("Opening connection with " << connection_string.size() << " UTF-16 characters");
+
+    // Create a sanitized version for logging
+    // std::string sanitizedStr;
+    // sanitizedStr.reserve(connection_string.size());
+
+    // for (const auto &c : connection_string)
+    // {
+    //   char ascii = static_cast<char>(c & 0xFF);
+    //   if (ascii >= 32 && ascii <= 126)
+    //   {
+    //     sanitizedStr.push_back(ascii);
+    //   }
+    // }
+
+    // Log a sanitized version with passwords masked
+    // if (!sanitizedStr.empty()) {
+    //   SQL_LOG_DEBUG_STREAM("Connection string (sanitized): "
+    //                       << StringUtils::SanitizeConnectionString(sanitizedStr));
+    // }
 
     this->_connectionHandles = std::make_shared<ConnectionHandles>(environment_->GetEnvironmentHandle());
 
@@ -301,8 +350,6 @@ namespace mssql
     if (!_errorHandler->CheckOdbcError(ret))
     {
       SQL_LOG_ERROR("Failed to set login timeout");
-      auto errors = std::make_shared<std::vector<std::shared_ptr<OdbcError>>>();
-      environment_->ReadErrors(errors);
       return false;
     }
 
@@ -314,74 +361,15 @@ namespace mssql
       SQL_LOG_WARNING("Failed to set BCP option - this might be expected for non-SQL Server drivers");
     }
 
-    // Properly sanitize the connection string
-    std::vector<SQLWCHAR> sanitizedConnStr;
-    sanitizedConnStr.reserve(connection_string->size() + 1); // +1 for null terminator
+    // Already added sanitized connection string logging above
 
-    // Copy valid characters and log any problematic ones
-    std::string logConnStr; // For logging (sanitized)
-    for (size_t i = 0; i < connection_string->size(); ++i)
-    {
-      uint16_t c = (*connection_string)[i];
-
-      // Only include valid characters
-      if ((c >= 32 && c <= 126) || (c >= 0x0080 && c <= 0x00FF))
-      {
-        sanitizedConnStr.push_back(static_cast<SQLWCHAR>(c));
-
-        // For logging, mask password
-        if (i >= 4 &&
-            logConnStr.length() >= 4 &&
-            logConnStr.substr(logConnStr.length() - 4) == "PWD=")
-        {
-          if (c == ';')
-          {
-            logConnStr += "********;";
-          }
-          // Don't add the actual password character
-        }
-        else
-        {
-          // Add normal character to log string
-          if (c <= 127)
-          {
-            logConnStr.push_back(static_cast<char>(c));
-          }
-          else
-          {
-            logConnStr.push_back('?');
-          }
-        }
-      }
-      else
-      {
-        // Log invalid character
-        SQL_LOG_WARNING_STREAM("Skipping invalid character in connection string at position "
-                               << i << ", code: 0x" << std::hex << c << std::dec);
-      }
-    }
-
-    // Ensure the string is properly terminated with a semicolon if not already
-    if (!sanitizedConnStr.empty() && sanitizedConnStr.back() != L';')
-    {
-      sanitizedConnStr.push_back(L';');
-      logConnStr += ';';
-    }
-
-    // Null-terminate the string
-    sanitizedConnStr.push_back(0);
-
-    SQL_LOG_DEBUG_STREAM("Connection string (sanitized): " << logConnStr);
-
-    // Clear any previous diagnostics
-    _odbcApi.get()->ClearDiagnostics();
-
-    // Attempt the connection
+    // Direct pass-through to SQLDriverConnect with the UTF-16 data
+    // This approach matches the legacy driver implementation
     ret = _odbcApi->SQLDriverConnect(
         connection->get_handle(),
-        nullptr, // Use SQL_NULL_HWND instead of SQL_NULL_WINDOW_HANDLE
-        sanitizedConnStr.data(),
-        static_cast<SQLSMALLINT>(sanitizedConnStr.size() - 1), // -1 for null terminator
+        nullptr,
+        reinterpret_cast<SQLWCHAR *>(const_cast<char16_t *>(connection_string.data())),
+        static_cast<SQLSMALLINT>(connection_string.size()),
         nullptr,
         0,
         nullptr,
@@ -392,7 +380,6 @@ namespace mssql
       SQL_LOG_ERROR("SQLDriverConnect failed");
 
       // Get ODBC diagnostic records
-
       auto diagnostics = _odbcApi->GetDiagnostics();
 
       // Create error objects and add them to the error handler
