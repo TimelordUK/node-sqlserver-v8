@@ -3,7 +3,7 @@ import { Connection } from '../../src'
 import * as nativeModule from 'msnodesqlv8'
 import { TestConnectionFactory } from '../common/test-connection-factory'
 import { QueryBuilder } from 'msnodesqlv8/src/query-builder'
-import { Logger, LogLevel } from '../../src/logger'
+import logger, { Logger, LogLevel } from '../../src/logger'
 import { QueryReader } from '../../src/query-reader'
 
 
@@ -39,6 +39,7 @@ describe('bind', function () {
     const res = await connection.promises.query(sql)
     const reader = new QueryReader(connection, res)
     const top = await reader.begin()
+    logger.info(JSON.stringify(top))
     console.log(res)
   })
 })

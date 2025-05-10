@@ -96,7 +96,7 @@ export class Logger {
   }
 
   private log (level: LogLevel, message: string, additionalContext?: Record<string, any>): void {
-    if (level < this.minLevel) {
+    if (level > this.minLevel) {
       return
     }
 

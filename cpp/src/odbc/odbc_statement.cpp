@@ -106,17 +106,16 @@ namespace mssql
 
   struct lob_capture
   {
-    lob_capture(mssql::DatumStorage &storage) : 
-      reads(1),
-      n_items(0),
-      maxvarchar(false),
-      item_size(sizeof(uint16_t)),
-      src_data{},
-      write_ptr{},
-      atomic_read_bytes(24 * 1024),
-      bytes_to_read(atomic_read_bytes),
-      storage(storage),
-      total_bytes_to_read(atomic_read_bytes)
+    lob_capture(mssql::DatumStorage &storage) : reads(1),
+                                                n_items(0),
+                                                maxvarchar(false),
+                                                item_size(sizeof(uint16_t)),
+                                                src_data{},
+                                                write_ptr{},
+                                                atomic_read_bytes(24 * 1024),
+                                                bytes_to_read(atomic_read_bytes),
+                                                storage(storage),
+                                                total_bytes_to_read(atomic_read_bytes)
     {
       storage.reserve(atomic_read_bytes / item_size + 1);
       src_data = storage.getTypedVector<uint16_t>();
@@ -273,7 +272,7 @@ namespace mssql
     SQL_LOG_TRACE_STREAM("dispatch: t " << t << " row_id " << row_id << " column " << column);
     auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
-    column_data.setNull();
+
     // cerr << " dispatch row = " << row_id << endl;
     bool res;
     switch (t)
@@ -386,18 +385,18 @@ namespace mssql
     SQLLEN str_len_or_ind_ptr = 0;
     const auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
-    
+
     const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SLONG, &v, sizeof(long),
                                 &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
       return false;
-      
+
     if (str_len_or_ind_ptr == SQL_NULL_DATA)
     {
       column_data.setNull();
       return true;
     }
-    
+
     if (IsNumericStringEnabled())
     {
       auto str = std::to_wstring(v);
@@ -406,10 +405,10 @@ namespace mssql
     }
     else
     {
-      column_data.setType(DatumStorage::SqlType::Integer);
-      column_data.addValue(static_cast<int32_t>(v));
+      column_data.setType(DatumStorage::SqlType::BigInt);
+      column_data.addValue(static_cast<int64_t>(v));
     }
-    
+
     return true;
   }
 
@@ -454,18 +453,18 @@ namespace mssql
     SQLLEN str_len_or_ind_ptr = 0;
     const auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
-    
+
     const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_DOUBLE, &v, sizeof(double),
                                 &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
       return false;
-      
+
     if (str_len_or_ind_ptr == SQL_NULL_DATA)
     {
       column_data.setNull();
       return true;
     }
-    
+
     const auto v2 = trunc(v);
     if (v2 == v &&
         v2 >= static_cast<long double>(std::numeric_limits<DatumStorage::bigint_t>::min()) &&
@@ -498,7 +497,7 @@ namespace mssql
         column_data.addValue(v);
       }
     }
-    
+
     return true;
   }
 
@@ -510,18 +509,18 @@ namespace mssql
     SQLLEN str_len_or_ind_ptr = 0;
     const auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
-    
+
     const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BIT, &v, sizeof(char),
                                 &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
       return false;
-      
+
     if (str_len_or_ind_ptr == SQL_NULL_DATA)
     {
       column_data.setNull();
       return true;
     }
-    
+
     column_data.setType(DatumStorage::SqlType::Bit);
     column_data.addValue(static_cast<int8_t>(v != 0 ? 1 : 0));
     return true;
@@ -534,21 +533,21 @@ namespace mssql
     SQLLEN variant_type = 0;
     SQLLEN iv = 0;
     char b = 0;
-    
+
     // Figure out the length
     auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY, &b, 0, &iv);
     if (!check_odbc_error(ret))
       return false;
-    
+
     // Figure out the type
     ret = SQLColAttribute(statement, column + 1, SQL_CA_SS_VARIANT_TYPE, nullptr, 0, nullptr, &variant_type);
     if (!check_odbc_error(ret))
       return false;
-      
+
     // Create a copy of the definition and modify it
     auto definition = metaData_->get(static_cast<int>(column));
     definition.dataType = static_cast<SQLSMALLINT>(variant_type);
-    
+
     // Dispatch to the correct handler based on the variant's actual type
     const auto res = dispatch(definition.dataType, row_id, column);
     return res;
@@ -621,53 +620,53 @@ namespace mssql
     const auto &statement = statement_->get_handle();
     auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
-    
+
     constexpr SQLLEN atomic_read = 24 * 1024;
     auto bytes_to_read = atomic_read;
     column_data.reserve(bytes_to_read + 1);
     column_data.setType(DatumStorage::SqlType::Binary);
-    
+
     auto char_data = column_data.getTypedVector<char>();
     auto *write_ptr = char_data->data();
     SQLLEN total_bytes_to_read = 0;
-    
+
     auto r = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY, write_ptr, bytes_to_read, &total_bytes_to_read);
     if (!check_odbc_error(r))
       return false;
-      
+
     if (total_bytes_to_read == SQL_NULL_DATA)
     {
       column_data.setNull();
       return true;
     }
-    
+
     auto status = false;
     auto more = check_more_read(r, status);
     if (!status)
       return false;
-      
+
     column_data.resize(total_bytes_to_read);
-    
+
     if (total_bytes_to_read > bytes_to_read)
       total_bytes_to_read -= bytes_to_read;
-      
+
     write_ptr = char_data->data();
     write_ptr += bytes_to_read;
-    
+
     while (more)
     {
       bytes_to_read = std::min(static_cast<SQLLEN>(atomic_read), total_bytes_to_read);
       r = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY, write_ptr, bytes_to_read, &total_bytes_to_read);
       if (!check_odbc_error(r))
         return false;
-      
+
       more = check_more_read(r, status);
       if (!status)
         return false;
-        
+
       write_ptr += bytes_to_read;
     }
-    
+
     column_data.setNull(false);
     return true;
   }
@@ -679,22 +678,22 @@ namespace mssql
     SQLLEN str_len_or_ind_ptr = 0;
     auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
-    
+
     column_data.reserve(sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT));
     column_data.setType(DatumStorage::SqlType::DateTimeOffset);
-    
+
     SQL_SS_TIMESTAMPOFFSET_STRUCT ts_offset;
     const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_DEFAULT, &ts_offset,
                                 sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT), &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
       return false;
-      
+
     if (str_len_or_ind_ptr == SQL_NULL_DATA)
     {
       column_data.setNull();
       return true;
     }
-    
+
     column_data.addValue(ts_offset);
     return true;
   }
@@ -706,40 +705,40 @@ namespace mssql
     SQLLEN str_len_or_ind_ptr = 0;
     auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
-    
+
     SQL_SS_TIME2_STRUCT time = {};
     SQLLEN precision = 0;
     SQLLEN colscale = 0;
-    
+
     const auto ret2 = SQLColAttribute(statement, column + 1, SQL_COLUMN_PRECISION, nullptr, 0, nullptr, &precision);
     if (!check_odbc_error(ret2))
       return false;
-      
+
     const auto ret3 = SQLColAttribute(statement, column + 1, SQL_COLUMN_SCALE, nullptr, 0, nullptr, &colscale);
     if (!check_odbc_error(ret3))
       return false;
-      
+
     const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY, &time, sizeof(time), &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
       return false;
-      
+
     if (str_len_or_ind_ptr == SQL_NULL_DATA)
     {
       column_data.setNull();
       return true;
     }
-    
+
     column_data.setType(DatumStorage::SqlType::Time);
-    
+
     SQL_SS_TIMESTAMPOFFSET_STRUCT datetime = {};
-    datetime.year = 1900;  // Default year
-    datetime.month = 1;    // Default month
-    datetime.day = 1;      // Default day
+    datetime.year = 1900; // Default year
+    datetime.month = 1;   // Default month
+    datetime.day = 1;     // Default day
     datetime.hour = time.hour;
     datetime.minute = time.minute;
     datetime.second = time.second;
     datetime.fraction = time.fraction;
-    
+
     column_data.addValue(datetime);
     return true;
   }
@@ -751,19 +750,19 @@ namespace mssql
     SQLLEN str_len_or_ind_ptr = 0;
     auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
-    
+
     TIMESTAMP_STRUCT ts;
     const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_TIMESTAMP, &ts,
                                 sizeof(TIMESTAMP_STRUCT), &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
       return false;
-      
+
     if (str_len_or_ind_ptr == SQL_NULL_DATA)
     {
       column_data.setNull();
       return true;
     }
-    
+
     column_data.setType(DatumStorage::SqlType::DateTime);
     column_data.addValue(ts);
     return true;

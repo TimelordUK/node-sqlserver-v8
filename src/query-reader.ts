@@ -12,5 +12,6 @@ export class QueryReader extends EventEmitter {
   async begin () {
     const top = await this.connection.fetchRows(this.result.handle, 50)
     logger.debug(`statementId = ${this.result.handle.statementId}`)
+    logger.info(JSON.stringify(top))
   }
 }
