@@ -26,6 +26,8 @@
 // Platform-specific headers
 #ifdef PLATFORM_WINDOWS
 #include <windows.h>
+// Silence C++17 deprecation warnings for codecvt
+#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 typedef CRITICAL_SECTION PlatformMutex;
 
 // Platform-specific mutex initialization
