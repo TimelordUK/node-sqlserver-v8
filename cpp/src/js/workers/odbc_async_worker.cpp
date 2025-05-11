@@ -26,7 +26,7 @@ namespace mssql
         metadata.Set("handle", handle);
         metadata.Set("endOfRows", Napi::Boolean::New(env, result_->is_end_of_rows()));
         metadata.Set("endOfResults", Napi::Boolean::New(env, result_->is_end_of_results()));
-        return metadata_;
+        return metadata;
     }
 
     void OdbcAsyncWorker::OnError(const Napi::Error &error)
