@@ -34,11 +34,6 @@ namespace mssql
         return;
       }
 
-      // This is a stub implementation for now
-      // In a real implementation, we would:
-      // 1. Get the statement from a statement cache
-      // 2. Call methods to fetch rows
-      // 3. Process the result set
       const auto statement = GetStatement();
       if (!statement)
       {

@@ -19,7 +19,7 @@
 #include "workers/worker_base.h"
 #include "workers/query_worker.h"
 #include "workers/fetch_rows_worker.h"
-
+#include "workers/next_result_worker.h"
 namespace mssql
 {
   // Initialize static constructor reference
@@ -43,8 +43,8 @@ namespace mssql
                                                 InstanceMethod("close", &Connection::Close),
                                                 InstanceMethod("query", &Connection::Query),
                                                 InstanceMethod("fetchRows", &Connection::FetchRows),
-                                                InstanceMethod("NextResultSet", &Connection::NextResultSet),
-                                                InstanceMethod("CancelStatement", &Connection::CancelStatement),
+                                                InstanceMethod("nextResultSet", &Connection::NextResultSet),
+                                                InstanceMethod("cancelStatement", &Connection::CancelStatement),
                                             });
 
     // Create persistent reference to constructor
@@ -327,11 +327,100 @@ namespace mssql
 
   Napi::Value Connection::NextResultSet(const Napi::CallbackInfo &info)
   {
-    return Stubbed(info);
+    const Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    // Check if we have a connection
+    if (!isConnected_)
+    {
+      Napi::Error::New(env, "Connection is not open").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    // Validate statement handle
+    if (info.Length() < 1 || !info[0].IsObject())
+    {
+      Napi::TypeError::New(env, "Statement handle expected").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    // Get the statement handle from the first parameter
+    Napi::Object handleObj = info[0].As<Napi::Object>();
+    StatementHandle statementHandle = JsObjectMapper::toStatementHandle(handleObj);
+
+    if (!statementHandle.isValid())
+    {
+      Napi::Error::New(env, "Invalid statement handle").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    // Check for callback (last argument)
+    Napi::Function callback;
+
+    // Get the number of rows to fetch (optional, default to 1000)
+    size_t rowCount = 1000;
+    if (info.Length() > 1 && info[1].IsNumber())
+    {
+      rowCount = info[1].As<Napi::Number>().Uint32Value();
+    }
+
+    if (info.Length() > 1 && info[info.Length() - 1].IsFunction())
+    {
+      callback = info[info.Length() - 1].As<Napi::Function>();
+    }
+    else
+    {
+      // No callback provided, we'll use a Promise
+      // Create a deferred Promise
+      Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
+
+      // Create a callback that resolves/rejects the promise
+      callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo &info)
+                                     {
+                const Napi::Env env = info.Env();
+                if (info[0].IsNull() || info[0].IsUndefined()) {
+                    deferred.Resolve(info[1]);
+                }
+                else {
+                    deferred.Reject(info[0]);
+                }
+                return env.Undefined(); });
+
+      // Create and queue the worker
+      auto worker = new NextResultWorker(
+          callback,
+          odbcConnection_.get(),
+          statementHandle,
+          rowCount);
+      worker->Queue();
+
+      // Return the promise
+      return deferred.Promise();
+    }
+
+    // If we got here, we're using a callback
+    auto worker = new NextResultWorker(
+        callback,
+        odbcConnection_.get(),
+        statementHandle,
+        rowCount);
+    worker->Queue();
+
+    return env.Undefined();
   }
 
   Napi::Value Connection::CancelStatement(const Napi::CallbackInfo &info)
   {
+    const Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    // Check if we have a connection
+    if (!isConnected_)
+    {
+      Napi::Error::New(env, "Connection is not open").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
     return Stubbed(info);
   }
 
@@ -411,6 +500,4 @@ namespace mssql
 
     return env.Undefined();
   }
-
-  // QueryWorker implementation has been moved to query_worker.cpp
 }

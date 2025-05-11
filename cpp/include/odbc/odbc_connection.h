@@ -14,9 +14,9 @@
 #include <sqlext.h>
 
 // Project includes
-#include "odbc_statement.h"
-#include "odbc_error.h"
-#include "odbc_query_executor.h"
+#include "odbc/odbc_statement.h"
+#include "odbc/odbc_error.h"
+#include "odbc/odbc_query_executor.h"
 
 namespace mssql
 {
@@ -74,6 +74,8 @@ namespace mssql
         std::shared_ptr<QueryResult> &result) = 0;
 
     virtual const std::vector<std::shared_ptr<OdbcError>> &GetErrors() const = 0;
+
+    virtual bool TryReadNextResult(int statementId, std::shared_ptr<QueryResult> &result) = 0;
   };
 
   // This class encapsulates the actual ODBC functionality
@@ -127,6 +129,8 @@ namespace mssql
         const std::vector<std::shared_ptr<QueryParameter>> &parameters,
         std::shared_ptr<QueryResult> &result) override;
 
+    bool TryReadNextResult(int statementId, std::shared_ptr<QueryResult> &result) override;
+
     // Get connection errors
     const std::vector<std::shared_ptr<OdbcError>> &GetErrors() const override;
 
@@ -135,7 +139,7 @@ namespace mssql
     enum ConnectionState
     {
       ConnectionClosed,
-      ConnectionOpen
+      ConnectionOpen,
     };
 
     // Connection state

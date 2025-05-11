@@ -1,15 +1,15 @@
 // ReSharper disable CppInconsistentNaming
 
-#include "platform.h"
-#include "odbc_connection.h"
-#include "odbc_environment.h"
-#include "odbc_handles.h"
-#include "odbc_common.h"
-#include "odbc_transaction_manager.h"
-#include "odbc_error_handler.h"
-#include "odbc_statement_factory.h"
-#include "string_utils.h"
-#include "iodbc_api.h"
+#include "common/platform.h"
+#include "odbc/odbc_connection.h"
+#include "odbc/odbc_environment.h"
+#include "odbc/odbc_handles.h"
+#include "common/odbc_common.h"
+#include "odbc/odbc_transaction_manager.h"
+#include "odbc/odbc_error_handler.h"
+#include "odbc/odbc_statement_factory.h"
+#include "common/string_utils.h"
+#include "odbc/iodbc_api.h"
 #include <Logger.h>
 #include <iostream>
 #include <iomanip> // For std::setw, std::setfill, std::hex
@@ -290,6 +290,31 @@ namespace mssql
 
     // Execute it
     return statement->Execute(parameters, result);
+  }
+
+  bool OdbcConnection::TryReadNextResult(int statementId, std::shared_ptr<QueryResult> &result)
+  {
+    // fprintf(stderr, "TryReadNextResult\n");
+    // fprintf(stderr, "TryReadNextResult ID = %llu\n ", get_statement_id());
+    SQL_LOG_DEBUG_STREAM("TryReadNextResult ID = " << statementId);
+    std::lock_guard lock(_connectionMutex);
+
+    if (connectionState != ConnectionOpen)
+    {
+      result->set_end_of_results(true);
+      return false;
+    }
+
+    const auto &statement = GetStatement(statementId);
+    if (!statement)
+    {
+      SQL_LOG_DEBUG_STREAM("TryReadNextResult ID = " << statementId << " - statement not found");
+      result->set_end_of_results(true);
+      return false;
+    }
+
+    SQL_LOG_DEBUG_STREAM("TryReadNextResult ID = " << statementId << " - calling ReadNextResult");
+    return statement->ReadNextResult(result);
   }
 
   const std::vector<std::shared_ptr<OdbcError>> &OdbcConnection::GetErrors() const

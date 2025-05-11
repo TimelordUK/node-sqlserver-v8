@@ -83,7 +83,7 @@ namespace mssql
       state_ = State::STMT_ERROR;
       return false;
     }
-
+    SQL_LOG_TRACE_STREAM("TransientStatement::InitializeResultSet - numCols: " << numCols);
     // If no columns, this is not a result set
     if (numCols == 0)
     {
@@ -125,78 +125,50 @@ namespace mssql
     return true;
   }
 
-  bool TransientStatement::FetchNextBatch(size_t batchSize)
+  bool TransientStatement::ReadNextResult(std::shared_ptr<QueryResult> result)
   {
-    if (state_ != State::STMT_METADATA_READY && state_ != State::STMT_FETCHING_ROWS)
+    if (!statement_)
     {
+      SQL_LOG_DEBUG_STREAM("TryReadNextResult ID  - statement handle not found");
+      result->set_end_of_results(true);
       return false;
     }
 
-    state_ = State::STMT_FETCHING_ROWS;
+    const auto &handle = *statement_;
 
-    // Set up row array size
-    SQLULEN rowsFetched = 0;
-    auto ret = odbcApi_->SQLSetStmtAttr(
-        statement_->get_handle(),
-        SQL_ATTR_ROWS_FETCHED_PTR,
-        &rowsFetched,
-        0);
-
-    if (!errorHandler_->CheckOdbcError(ret))
+    const auto statementHandle = GetStatementHandle();
+    const auto statementId = statementHandle.getStatementId();
+    const auto ret = odbcApi_->SQLMoreResults(handle.get_handle());
+    switch (ret)
     {
-      state_ = State::STMT_ERROR;
-      return false;
-    }
-
-    // Fetch the rows
-    ret = odbcApi_->SQLFetchScroll(
-        statement_->get_handle(),
-        SQL_FETCH_NEXT,
-        0);
-
-    if (ret == SQL_NO_DATA)
+    case SQL_NO_DATA:
     {
-      endOfRows_ = true;
-      state_ = State::STMT_FETCH_COMPLETE;
+      SQL_LOG_DEBUG_STREAM("ReadNextResult ID = " << statementId << " - SQL_NO_DATA");
+      result->set_end_of_rows(true);
+      result->set_end_of_results(true);
       return true;
     }
 
-    if (!errorHandler_->CheckOdbcError(ret))
+    case SQL_SUCCESS_WITH_INFO:
     {
-      state_ = State::STMT_ERROR;
+      if (!check_odbc_error(ret))
+      {
+        return false;
+      }
+      const auto res = GetMetadata(result);
+      if (res)
+      {
+        result->set_end_of_rows(false);
+      }
+      else
+      {
+        result->set_end_of_rows(true);
+      }
       return false;
     }
-
-    return true;
+    default:;
+    }
+    result->set_end_of_results(false);
+    return GetMetadata(result);
   }
-
-  bool TransientStatement::NextResultSet()
-  {
-    if (!hasMoreResults_ || state_ != State::STMT_FETCH_COMPLETE)
-    {
-      return false;
-    }
-
-    auto ret = odbcApi_->SQLMoreResults(statement_->get_handle());
-
-    if (ret == SQL_NO_DATA)
-    {
-      hasMoreResults_ = false;
-      state_ = State::STMT_NO_MORE_RESULTS;
-      return false;
-    }
-
-    if (!errorHandler_->CheckOdbcError(ret))
-    {
-      state_ = State::STMT_ERROR;
-      return false;
-    }
-
-    endOfRows_ = false;
-    state_ = State::STMT_METADATA_READY;
-    return true;
-  }
-
-  // The HasMoreResults, EndOfRows, and GetState methods are inherited from OdbcStatement
-
 }

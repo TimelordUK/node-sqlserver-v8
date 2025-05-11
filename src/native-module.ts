@@ -40,6 +40,7 @@ export interface QueryResult {
   readonly handle: StatementHandle
   readonly rows?: OdbcRow[]
   readonly endOfRows: boolean
+  readonly endOfResults: boolean
 }
 
 export type QueryUserCallback = (err: Error | null, result?: QueryResult) => void
@@ -51,8 +52,8 @@ export interface NativeConnection {
   close: (callback: CloseConnectionCallback) => void
   query: (sql: string, params: any[], callback: QueryUserCallback) => void
   fetchRows: (handle: StatementHandle, batchSize: number, callback: QueryUserCallback) => void
-  nextResultSet: (statementId: number, callback: (err: Error | null, hasMore?: boolean, metadata?: any) => void) => void
-  cancelStatement: (statementId: number, callback: (err: Error | null) => void) => void
+  nextResultSet: (handle: StatementHandle, batchSize: number, callback: QueryUserCallback) => void
+  cancelStatement: (handle: StatementHandle, callback: (err: Error | null) => void) => void
 }
 
 /**

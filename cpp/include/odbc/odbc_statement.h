@@ -79,31 +79,6 @@ namespace mssql
     virtual bool IsNumericStringEnabled() const = 0;
 
     /**
-     * @brief Fetch the next batch of rows
-     * @param batchSize Number of rows to fetch
-     * @return true if successful, false otherwise
-     */
-    virtual bool FetchNextBatch(size_t batchSize) = 0;
-
-    /**
-     * @brief Move to the next result set, if any
-     * @return true if there was another result set, false otherwise
-     */
-    virtual bool NextResultSet() = 0;
-
-    /**
-     * @brief Check if there are more result sets available
-     * @return true if there are more result sets, false otherwise
-     */
-    virtual bool HasMoreResults() const = 0;
-
-    /**
-     * @brief Check if we've reached the end of rows in the current result set
-     * @return true if no more rows, false otherwise
-     */
-    virtual bool EndOfRows() const = 0;
-
-    /**
      * @brief Get the current state of the statement
      * @return Current state
      */
@@ -119,6 +94,13 @@ namespace mssql
      * @return true if successful, false otherwise
      */
     virtual bool TryReadRows(std::shared_ptr<QueryResult> result, const size_t number_rows) = 0;
+
+    /**
+     * @brief Read the next result
+     * @param result Result object to store row data
+     * @return true if successful, false otherwise
+     */
+    virtual bool ReadNextResult(std::shared_ptr<QueryResult> result) = 0;
   };
 
   /**
@@ -160,31 +142,6 @@ namespace mssql
     bool IsNumericStringEnabled() const override { return numericStringEnabled_; }
 
     /**
-     * @brief Fetch the next batch of rows
-     * @param batchSize Number of rows to fetch
-     * @return true if successful, false otherwise
-     */
-    virtual bool FetchNextBatch(size_t batchSize) override;
-
-    /**
-     * @brief Move to the next result set, if any
-     * @return true if there was another result set, false otherwise
-     */
-    virtual bool NextResultSet() override;
-
-    /**
-     * @brief Check if there are more result sets available
-     * @return true if there are more result sets, false otherwise
-     */
-    virtual bool HasMoreResults() const override { return hasMoreResults_; }
-
-    /**
-     * @brief Check if we've reached the end of rows in the current result set
-     * @return true if no more rows, false otherwise
-     */
-    virtual bool EndOfRows() const override { return endOfRows_; }
-
-    /**
      * @brief Get the current state of the statement
      * @return Current state
      */
@@ -200,6 +157,13 @@ namespace mssql
 
     virtual std::vector<std::shared_ptr<IOdbcRow>> &GetRows() override { return rows_; }
     virtual std::shared_ptr<QueryResult> GetMetaData() override { return metaData_; }
+
+    /**
+     * @brief Read the next result
+     * @param result Result object to store row data
+     * @return true if successful, false otherwise
+     */
+    virtual bool ReadNextResult(std::shared_ptr<QueryResult> result) override;
 
   protected:
     OdbcStatement(
@@ -223,7 +187,6 @@ namespace mssql
 
     // Legacy method for backward compatibility - delegates to TryReadRows
     bool try_read_rows(std::shared_ptr<QueryResult> result, const size_t number_rows);
-
     bool fetch_read(std::shared_ptr<QueryResult>, const size_t number_rows);
     bool check_odbc_error(const SQLRETURN ret);
     bool dispatch(const SQLSMALLINT t, const size_t row_id, const size_t column);
@@ -280,8 +243,7 @@ namespace mssql
         const std::vector<std::shared_ptr<QueryParameter>> &parameters,
         std::shared_ptr<QueryResult> &result) override;
 
-    bool FetchNextBatch(size_t batchSize) override;
-    bool NextResultSet() override;
+    bool ReadNextResult(std::shared_ptr<QueryResult> result) override;
 
   protected:
     bool GetMetadata(std::shared_ptr<QueryResult> &result);
@@ -310,9 +272,6 @@ namespace mssql
     bool Execute(
         const std::vector<std::shared_ptr<QueryParameter>> &parameters,
         std::shared_ptr<QueryResult> &result) override;
-
-    bool FetchNextBatch(size_t batchSize) override;
-    bool NextResultSet() override;
 
     /**
      * @brief Prepare the statement
@@ -345,9 +304,6 @@ namespace mssql
     bool Execute(
         const std::vector<std::shared_ptr<QueryParameter>> &parameters,
         std::shared_ptr<QueryResult> &result) override;
-
-    bool FetchNextBatch(size_t batchSize) override;
-    bool NextResultSet() override;
 
     /**
      * @brief Bind TVP columns

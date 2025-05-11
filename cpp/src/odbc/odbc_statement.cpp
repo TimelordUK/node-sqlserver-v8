@@ -5,6 +5,7 @@
 #include "odbc/odbc_statement.h"
 #include "odbc/odbc_error_handler.h"
 #include "common/string_utils.h"
+#include "odbc/odbc_driver_types.h"
 #include "utils/Logger.h"
 #include <cstring> // For std::memcpy
 
@@ -24,6 +25,12 @@ namespace mssql
     Error
   };
 
+  bool OdbcStatement::ReadNextResult(std::shared_ptr<QueryResult> result)
+  {
+    SQL_LOG_TRACE_STREAM("ReadNextResult: " << result->toString());
+    return true;
+  }
+
   // Implementation of TryReadRows from the Interface
   bool OdbcStatement::TryReadRows(std::shared_ptr<QueryResult> result, const size_t number_rows)
   {
@@ -42,20 +49,6 @@ namespace mssql
   {
     // Just delegate to the new method
     return TryReadRows(result, number_rows);
-  }
-
-  // Default implementation - derived classes should override as needed
-  bool OdbcStatement::FetchNextBatch(size_t batchSize)
-  {
-    SQL_LOG_TRACE("OdbcStatement::FetchNextBatch - Default implementation called, should be overridden");
-    return false;
-  }
-
-  // Default implementation - derived classes should override as needed
-  bool OdbcStatement::NextResultSet()
-  {
-    SQL_LOG_TRACE("OdbcStatement::NextResultSet - Default implementation called, should be overridden");
-    return false;
   }
 
   bool OdbcStatement::check_odbc_error(const SQLRETURN ret)
@@ -206,8 +199,8 @@ namespace mssql
 
     SQL_LOG_TRACE_STREAM("lob: calling SQLGetData for row_id " << row_id << " column " << column);
     auto r = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_WCHAR,
-                                 capture.write_ptr, capture.bytes_to_read + capture.item_size,
-                                 &capture.total_bytes_to_read);
+                                  capture.write_ptr, capture.bytes_to_read + capture.item_size,
+                                  &capture.total_bytes_to_read);
 
     if (capture.total_bytes_to_read == SQL_NULL_DATA)
     {
@@ -234,8 +227,8 @@ namespace mssql
 
       SQL_LOG_TRACE_STREAM("lob: calling SQLGetData for additional data");
       r = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_WCHAR,
-                              capture.write_ptr, capture.bytes_to_read + capture.item_size,
-                              &capture.total_bytes_to_read);
+                               capture.write_ptr, capture.bytes_to_read + capture.item_size,
+                               &capture.total_bytes_to_read);
 
       capture.on_next_read();
       if (!check_odbc_error(r))
@@ -266,7 +259,7 @@ namespace mssql
     {
       SQL_LOG_TRACE_STREAM("check_more_read: calling SQLGetDiagRec");
       r = odbcApi_->SQLGetDiagRecW(SQL_HANDLE_STMT, statement, 1, sql_state.data(),
-                                 &native_error, nullptr, 0, &text_length);
+                                   &native_error, nullptr, 0, &text_length);
 
       if (!check_odbc_error(r))
       {
@@ -450,7 +443,7 @@ namespace mssql
 
     SQL_LOG_TRACE_STREAM("get_data_tiny: calling SQLGetData");
     const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SLONG, &v, sizeof(long),
-                                       &str_len_or_ind_ptr);
+                                          &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
       column_data.setNull();
@@ -481,7 +474,7 @@ namespace mssql
 
     SQL_LOG_TRACE_STREAM("get_data_small_int: calling SQLGetData");
     const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SHORT, &v, sizeof(int16_t),
-                                &str_len_or_ind_ptr);
+                                          &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
       column_data.setNull();
@@ -518,7 +511,7 @@ namespace mssql
 
     SQL_LOG_TRACE_STREAM("get_data_int: calling SQLGetData");
     const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_INTEGER, &v, sizeof(int32_t),
-                                &str_len_or_ind_ptr);
+                                          &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
       column_data.setNull();
@@ -557,7 +550,7 @@ namespace mssql
 
     SQL_LOG_TRACE_STREAM("get_data_long: calling SQLGetData");
     const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SLONG, &v, sizeof(long),
-                                &str_len_or_ind_ptr);
+                                          &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
       column_data.setNull();
@@ -592,7 +585,7 @@ namespace mssql
 
     SQL_LOG_TRACE_STREAM("get_data_big_int: calling SQLGetData");
     const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SBIGINT, &v, sizeof(DatumStorage::bigint_t),
-                                &str_len_or_ind_ptr);
+                                          &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
       column_data.setNull();
@@ -637,7 +630,7 @@ namespace mssql
 
     SQL_LOG_TRACE_STREAM("get_data_decimal: calling SQLGetData");
     const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_DOUBLE, &v, sizeof(double),
-                                &str_len_or_ind_ptr);
+                                          &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
       column_data.setNull();
@@ -698,7 +691,7 @@ namespace mssql
 
     SQL_LOG_TRACE_STREAM("get_data_bit: calling SQLGetData");
     const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BIT, &v, sizeof(char),
-                                &str_len_or_ind_ptr);
+                                          &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
       column_data.setNull();
@@ -779,7 +772,7 @@ namespace mssql
 
     SQL_LOG_TRACE_STREAM("bounded_string: calling SQLGetData");
     const auto r = odbcApi_->SQLGetData(statement_->get_handle(), static_cast<SQLSMALLINT>(column + 1),
-                                      SQL_C_WCHAR, src_data, display_size * size, &value_len);
+                                        SQL_C_WCHAR, src_data, display_size * size, &value_len);
 
     if (r != SQL_NO_DATA && !check_odbc_error(r))
     {
@@ -812,7 +805,7 @@ namespace mssql
 
     SQL_LOG_TRACE_STREAM("try_read_string: calling SQLColAttribute for SQL_DESC_DISPLAY_SIZE");
     const auto r = odbcApi_->SQLColAttributeW(statement_->get_handle(), column + 1,
-                                          SQL_DESC_DISPLAY_SIZE, nullptr, 0, nullptr, &display_size);
+                                              SQL_DESC_DISPLAY_SIZE, nullptr, 0, nullptr, &display_size);
 
     if (!check_odbc_error(r))
     {
@@ -863,7 +856,7 @@ namespace mssql
     SQLLEN total_bytes_to_read = 0;
     SQL_LOG_TRACE_STREAM("get_data_binary: calling SQLGetData for first chunk");
     auto r = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY,
-                                write_ptr, bytes_to_read, &total_bytes_to_read);
+                                  write_ptr, bytes_to_read, &total_bytes_to_read);
 
     // Check for any SQL errors
     if (!check_odbc_error(r))
@@ -963,7 +956,7 @@ namespace mssql
 
           SQL_LOG_TRACE_STREAM("get_data_binary: calling SQLGetData for additional chunk");
           r = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY,
-                                 write_ptr, bytes_to_read, &total_bytes_to_read);
+                                   write_ptr, bytes_to_read, &total_bytes_to_read);
 
           if (!check_odbc_error(r))
           {
@@ -1026,7 +1019,7 @@ namespace mssql
 
     SQL_LOG_TRACE_STREAM("get_data_timestamp_offset: calling SQLGetData");
     const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_DEFAULT, &ts_offset,
-                                       sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT), &str_len_or_ind_ptr);
+                                          sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT), &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
       column_data.setNull();
@@ -1057,7 +1050,7 @@ namespace mssql
 
     SQL_LOG_TRACE_STREAM("d_time: calling SQLColAttribute for SQL_COLUMN_PRECISION");
     const auto ret2 = odbcApi_->SQLColAttributeW(statement, column + 1, SQL_COLUMN_PRECISION,
-                                           nullptr, 0, nullptr, &precision);
+                                                 nullptr, 0, nullptr, &precision);
     if (!check_odbc_error(ret2))
     {
       column_data.setNull();
@@ -1066,7 +1059,7 @@ namespace mssql
 
     SQL_LOG_TRACE_STREAM("d_time: calling SQLColAttribute for SQL_COLUMN_SCALE");
     const auto ret3 = odbcApi_->SQLColAttributeW(statement, column + 1, SQL_COLUMN_SCALE,
-                                           nullptr, 0, nullptr, &colscale);
+                                                 nullptr, 0, nullptr, &colscale);
     if (!check_odbc_error(ret3))
     {
       column_data.setNull();
@@ -1075,7 +1068,7 @@ namespace mssql
 
     SQL_LOG_TRACE_STREAM("d_time: calling SQLGetData");
     const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1),
-                                      SQL_C_BINARY, &time, sizeof(time), &str_len_or_ind_ptr);
+                                          SQL_C_BINARY, &time, sizeof(time), &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
       column_data.setNull();
@@ -1115,7 +1108,7 @@ namespace mssql
 
     SQL_LOG_TRACE_STREAM("get_data_timestamp: calling SQLGetData");
     const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_TIMESTAMP, &ts,
-                                       sizeof(TIMESTAMP_STRUCT), &str_len_or_ind_ptr);
+                                          sizeof(TIMESTAMP_STRUCT), &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
       column_data.setNull();

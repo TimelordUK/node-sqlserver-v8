@@ -30,6 +30,10 @@ class ConnectionPromises {
     return this.connection.fetchRows(handle, batchSize)
   }
 
+  async nextResultSet (handle: StatementHandle, batchSize: number): Promise<QueryResult | undefined> {
+    return this.connection.nextResultSet(handle, batchSize)
+  }
+
   async query (sql: string, params?: any[]): Promise<QueryResult> {
     return new Promise<QueryResult>((resolve, reject) => {
       this.connection.query(sql, params, (err, result) => {
@@ -134,6 +138,14 @@ export class Connection extends EventEmitter {
   fetchRows (handle: StatementHandle, batchSize: number, callback?: OpenConnectionCallback): Promise<QueryResult> | undefined {
     return this.executeOperation<QueryResult>(
       (cb) => { this._native.fetchRows(handle, batchSize, cb) },
+      callback,
+      'FetchRows'
+    )
+  }
+
+  nextResultSet (handle: StatementHandle, batchSize: number, callback?: OpenConnectionCallback): Promise<QueryResult> | undefined {
+    return this.executeOperation<QueryResult>(
+      (cb) => { this._native.nextResultSet(handle, batchSize, cb) },
       callback,
       'FetchRows'
     )

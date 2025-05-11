@@ -14,6 +14,7 @@
 namespace mssql
 {
   class DatumStorage;
+
   class StatementHandle
   {
   private:
@@ -93,10 +94,20 @@ namespace mssql
   {
   public:
     // Default constructor
-    QueryResult() : handle_(-1, -1) {}
+  public:
+    // Default constructor - maintain same order as declaration
+    QueryResult() : columns_(),
+                    end_of_rows_(false),
+                    end_of_results_(false),
+                    row_count_(0),
+                    handle_(-1, -1) {}
 
-    // Constructor with handle
-    QueryResult(StatementHandle handle) : handle_(handle) {}
+    // Constructor with handle - maintain same order as declaration
+    QueryResult(StatementHandle handle) : columns_(),
+                                          end_of_rows_(false),
+                                          end_of_results_(false),
+                                          row_count_(0),
+                                          handle_(handle) {}
 
     // Methods to add columns and rows
     void addColumn(ColumnDefinition d)
@@ -114,9 +125,19 @@ namespace mssql
       return end_of_rows_;
     }
 
+    inline void set_end_of_results(bool end_of_results)
+    {
+      end_of_results_ = end_of_results;
+    }
+
     inline void set_end_of_rows(bool end_of_rows)
     {
       end_of_rows_ = end_of_rows;
+    }
+
+    inline bool is_end_of_results() const
+    {
+      return end_of_results_;
     }
 
     inline size_t get_row_count() const
@@ -135,9 +156,26 @@ namespace mssql
     inline ColumnDefinition get(size_t i) const { return columns_[i]; }
     inline StatementHandle getHandle() const { return handle_; }
 
+    // String representation for debugging
+    std::string toString() const
+    {
+      std::string result = "QueryResult: ";
+      // Assuming StatementHandle has its own toString method
+      result += " handle: " + handle_.toString();
+      // Fix string concatenation with conditional expressions
+      result += ", end_of_rows: ";
+      result += (end_of_rows_ ? "true" : "false");
+      result += ", end_of_results: ";
+      result += (end_of_results_ ? "true" : "false");
+      result += ", row_count: " + std::to_string(row_count_);
+      result += ", columns: " + std::to_string(columns_.size());
+      return result;
+    }
+
   private:
     std::vector<ColumnDefinition> columns_;
     bool end_of_rows_;
+    bool end_of_results_;
     size_t row_count_;
     StatementHandle handle_;
   };
