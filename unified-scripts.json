@@ -1,0 +1,5 @@
+{
+  "watch": "tsc --watch",
+  "build": "tsc",
+  "test": "mocha lib/test/**/*.js"
+}
