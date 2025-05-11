@@ -1,8 +1,8 @@
 #include "platform.h"
-#include "odbc_common.h"
-#include "workers/fetch_rows_worker.h"
-#include "js_object_mapper.h"
-#include "odbc_row.h"
+#include "common/odbc_common.h"
+#include "js/workers/fetch_rows_worker.h"
+#include "js/js_object_mapper.h"
+#include "odbc/odbc_row.h"
 #include "Logger.h"
 
 namespace mssql
@@ -12,8 +12,7 @@ namespace mssql
                                    IOdbcConnection *connection,
                                    const StatementHandle &statementHandle,
                                    size_t rowCount)
-      : Napi::AsyncWorker(callback),
-        connection_(connection),
+      : OdbcAsyncWorker(callback, connection),
         statementHandle_(statementHandle),
         rowCount_(rowCount)
   {
@@ -23,7 +22,6 @@ namespace mssql
 
   void FetchRowsWorker::Execute()
   {
-
     try
     {
       SQL_LOG_DEBUG_STREAM("Executing FetchRowsWorker for statement: " << statementHandle_.toString());
@@ -90,38 +88,4 @@ namespace mssql
       Callback().Call({Napi::Error::New(env, e.what()).Value(), env.Null()});
     }
   }
-
-  void FetchRowsWorker::OnError(const Napi::Error &error)
-  {
-    const Napi::Env env = Env();
-    Napi::HandleScope scope(env);
-
-    // Create a detailed error object with ODBC specifics
-    Napi::Object errorObj = Napi::Object::New(env);
-    errorObj.Set("message", error.Message());
-
-    if (!errorDetails_.empty())
-    {
-      // Add SQLSTATE and native error code from the first error
-      errorObj.Set("sqlState", Napi::String::New(env, errorDetails_[0]->sqlstate));
-      errorObj.Set("code", Napi::Number::New(env, errorDetails_[0]->code));
-
-      // Add all errors as an array of details
-      Napi::Array details = Napi::Array::New(env);
-      for (size_t i = 0; i < errorDetails_.size(); i++)
-      {
-        const auto &err = errorDetails_[i];
-        Napi::Object detail = Napi::Object::New(env);
-        detail.Set("sqlState", Napi::String::New(env, err->sqlstate));
-        detail.Set("message", Napi::String::New(env, err->message));
-        detail.Set("code", Napi::Number::New(env, err->code));
-        details.Set(i, detail);
-      }
-      errorObj.Set("details", details);
-    }
-
-    // Call the callback with the enhanced error object and null result
-    Callback().Call({errorObj, env.Null()});
-  }
-
 } // namespace mssql

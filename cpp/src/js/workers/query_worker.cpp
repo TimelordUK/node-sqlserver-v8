@@ -13,8 +13,7 @@ namespace mssql
                            IOdbcConnection *connection,
                            const std::string &sqlText,
                            const Napi::Array &params)
-      : Napi::AsyncWorker(callback),
-        connection_(connection),
+      : OdbcAsyncWorker(callback, connection),
         sqlText_(StringUtils::Utf8ToU16String(sqlText))
   {
     // Convert JavaScript parameters to C++ parameters
@@ -66,25 +65,10 @@ namespace mssql
     const Napi::Env env = Env();
     Napi::HandleScope scope(env);
     SQL_LOG_DEBUG("QueryWorker::OnOK");
-    // Validate that we have a callback function as the last argument
 
     try
     {
-      // Create a JavaScript array of column definitions
-      Napi::Array columns = Napi::Array::New(env);
-
-      // Populate the array with column metadata
-      for (size_t i = 0; i < result_->size(); i++)
-      {
-        ColumnDefinition colDef = result_->get(i);
-        columns[i] = JsObjectMapper::fromColumnDefinition(env, colDef);
-      }
-
-      // Create a metadata object to return
-      Napi::Object metadata = Napi::Object::New(env);
-      Napi::Object handle = JsObjectMapper::fromStatementHandle(env, result_->getHandle());
-      metadata.Set("meta", columns);
-      metadata.Set("handle", handle);
+      const auto metadata = GetMetadata();
       Callback().Call({env.Null(), metadata});
     }
     catch (const std::exception &e)

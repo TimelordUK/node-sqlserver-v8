@@ -1,7 +1,7 @@
-#pragma once
+cd #pragma once
 
 #include "workers/odbc_async_worker.h"
-#include "odbc/odbc_driver_types.h"
+#include "statement_handle.h"
 
 namespace mssql
 {
@@ -14,13 +14,6 @@ namespace mssql
                     size_t rowCount);
 
     void Execute() override;
-    void OnOK() override;
-
-    std::shared_ptr<IOdbcStatement> GetStatement() const
-    {
-      return connection_->GetStatement(statementHandle_.getStatementId());
-    }
-
 
   private:
     StatementHandle statementHandle_;
