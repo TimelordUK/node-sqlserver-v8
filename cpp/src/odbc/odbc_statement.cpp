@@ -203,7 +203,12 @@ namespace mssql
     auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
     lob_capture capture(column_data);
-    auto r = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
+
+    SQL_LOG_TRACE_STREAM("lob: calling SQLGetData for row_id " << row_id << " column " << column);
+    auto r = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_WCHAR,
+                                 capture.write_ptr, capture.bytes_to_read + capture.item_size,
+                                 &capture.total_bytes_to_read);
+
     if (capture.total_bytes_to_read == SQL_NULL_DATA)
     {
       column_data.setNull();
@@ -226,7 +231,12 @@ namespace mssql
     while (more)
     {
       capture.bytes_to_read = std::min(capture.atomic_read_bytes, capture.total_bytes_to_read);
-      r = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_WCHAR, capture.write_ptr, capture.bytes_to_read + capture.item_size, &capture.total_bytes_to_read);
+
+      SQL_LOG_TRACE_STREAM("lob: calling SQLGetData for additional data");
+      r = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_WCHAR,
+                              capture.write_ptr, capture.bytes_to_read + capture.item_size,
+                              &capture.total_bytes_to_read);
+
       capture.on_next_read();
       if (!check_odbc_error(r))
       {
@@ -254,7 +264,10 @@ namespace mssql
     auto res = false;
     if (r == SQL_SUCCESS_WITH_INFO)
     {
-      r = SQLGetDiagRec(SQL_HANDLE_STMT, statement, 1, sql_state.data(), &native_error, nullptr, 0, &text_length);
+      SQL_LOG_TRACE_STREAM("check_more_read: calling SQLGetDiagRec");
+      r = odbcApi_->SQLGetDiagRecW(SQL_HANDLE_STMT, statement, 1, sql_state.data(),
+                                 &native_error, nullptr, 0, &text_length);
+
       if (!check_odbc_error(r))
       {
         status = false;
@@ -435,8 +448,9 @@ namespace mssql
     const auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
 
-    const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SLONG, &v, sizeof(long),
-                                &str_len_or_ind_ptr);
+    SQL_LOG_TRACE_STREAM("get_data_tiny: calling SQLGetData");
+    const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SLONG, &v, sizeof(long),
+                                       &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
       column_data.setNull();
@@ -465,7 +479,8 @@ namespace mssql
     const auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
 
-    const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SHORT, &v, sizeof(int16_t),
+    SQL_LOG_TRACE_STREAM("get_data_small_int: calling SQLGetData");
+    const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SHORT, &v, sizeof(int16_t),
                                 &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
@@ -501,7 +516,8 @@ namespace mssql
 
     SQL_LOG_DEBUG_STREAM("get_data_int: originalSqlType SQL type: " << originalSqlType);
 
-    const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_INTEGER, &v, sizeof(int32_t),
+    SQL_LOG_TRACE_STREAM("get_data_int: calling SQLGetData");
+    const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_INTEGER, &v, sizeof(int32_t),
                                 &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
@@ -539,7 +555,8 @@ namespace mssql
 
     SQL_LOG_DEBUG_STREAM("get_data_long: originalSqlType SQL type: " << originalSqlType);
 
-    const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SLONG, &v, sizeof(long),
+    SQL_LOG_TRACE_STREAM("get_data_long: calling SQLGetData");
+    const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SLONG, &v, sizeof(long),
                                 &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
@@ -572,7 +589,9 @@ namespace mssql
     SQLLEN str_len_or_ind_ptr = 0;
     const auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
-    const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SBIGINT, &v, sizeof(DatumStorage::bigint_t),
+
+    SQL_LOG_TRACE_STREAM("get_data_big_int: calling SQLGetData");
+    const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_SBIGINT, &v, sizeof(DatumStorage::bigint_t),
                                 &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
@@ -616,7 +635,8 @@ namespace mssql
     const auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
 
-    const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_DOUBLE, &v, sizeof(double),
+    SQL_LOG_TRACE_STREAM("get_data_decimal: calling SQLGetData");
+    const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_DOUBLE, &v, sizeof(double),
                                 &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
@@ -676,7 +696,8 @@ namespace mssql
     const auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
 
-    const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BIT, &v, sizeof(char),
+    SQL_LOG_TRACE_STREAM("get_data_bit: calling SQLGetData");
+    const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BIT, &v, sizeof(char),
                                 &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
@@ -706,7 +727,8 @@ namespace mssql
     char b = 0;
 
     // Figure out the length
-    auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY, &b, 0, &iv);
+    SQL_LOG_TRACE_STREAM("d_variant: calling SQLGetData to get length");
+    auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY, &b, 0, &iv);
     if (!check_odbc_error(ret))
     {
       column_data.setNull();
@@ -714,7 +736,8 @@ namespace mssql
     }
 
     // Figure out the type
-    ret = SQLColAttribute(statement, column + 1, SQL_CA_SS_VARIANT_TYPE, nullptr, 0, nullptr, &variant_type);
+    SQL_LOG_TRACE_STREAM("d_variant: calling SQLColAttribute for SQL_CA_SS_VARIANT_TYPE");
+    ret = odbcApi_->SQLColAttributeW(statement, column + 1, SQL_CA_SS_VARIANT_TYPE, nullptr, 0, nullptr, &variant_type);
     if (!check_odbc_error(ret))
     {
       column_data.setNull();
@@ -753,8 +776,10 @@ namespace mssql
     column_data.reserve(display_size);
     column_data.resize(display_size); // increment for null terminator
     auto src_data = column_data.getTypedVector<uint16_t>()->data();
-    const auto r = SQLGetData(statement_->get_handle(), static_cast<SQLSMALLINT>(column + 1), SQL_C_WCHAR, src_data, display_size * size,
-                              &value_len);
+
+    SQL_LOG_TRACE_STREAM("bounded_string: calling SQLGetData");
+    const auto r = odbcApi_->SQLGetData(statement_->get_handle(), static_cast<SQLSMALLINT>(column + 1),
+                                      SQL_C_WCHAR, src_data, display_size * size, &value_len);
 
     if (r != SQL_NO_DATA && !check_odbc_error(r))
     {
@@ -784,7 +809,11 @@ namespace mssql
     auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
     // cerr << " try_read_string row_id = " << row_id << " column = " << column;
-    const auto r = SQLColAttribute(statement_->get_handle(), column + 1, SQL_DESC_DISPLAY_SIZE, nullptr, 0, nullptr, &display_size);
+
+    SQL_LOG_TRACE_STREAM("try_read_string: calling SQLColAttribute for SQL_DESC_DISPLAY_SIZE");
+    const auto r = odbcApi_->SQLColAttributeW(statement_->get_handle(), column + 1,
+                                          SQL_DESC_DISPLAY_SIZE, nullptr, 0, nullptr, &display_size);
+
     if (!check_odbc_error(r))
     {
       column_data.setNull();
@@ -832,8 +861,9 @@ namespace mssql
 
     // Read the first chunk
     SQLLEN total_bytes_to_read = 0;
-    auto r = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY,
-                        write_ptr, bytes_to_read, &total_bytes_to_read);
+    SQL_LOG_TRACE_STREAM("get_data_binary: calling SQLGetData for first chunk");
+    auto r = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY,
+                                write_ptr, bytes_to_read, &total_bytes_to_read);
 
     // Check for any SQL errors
     if (!check_odbc_error(r))
@@ -930,8 +960,10 @@ namespace mssql
         while (more && remaining > 0)
         {
           bytes_to_read = std::min(static_cast<SQLLEN>(atomic_read), remaining);
-          r = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY,
-                         write_ptr, bytes_to_read, &total_bytes_to_read);
+
+          SQL_LOG_TRACE_STREAM("get_data_binary: calling SQLGetData for additional chunk");
+          r = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY,
+                                 write_ptr, bytes_to_read, &total_bytes_to_read);
 
           if (!check_odbc_error(r))
           {
@@ -991,8 +1023,10 @@ namespace mssql
     column_data.setType(DatumStorage::SqlType::DateTimeOffset);
 
     SQL_SS_TIMESTAMPOFFSET_STRUCT ts_offset;
-    const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_DEFAULT, &ts_offset,
-                                sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT), &str_len_or_ind_ptr);
+
+    SQL_LOG_TRACE_STREAM("get_data_timestamp_offset: calling SQLGetData");
+    const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_DEFAULT, &ts_offset,
+                                       sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT), &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
       column_data.setNull();
@@ -1021,21 +1055,27 @@ namespace mssql
     SQLLEN precision = 0;
     SQLLEN colscale = 0;
 
-    const auto ret2 = SQLColAttribute(statement, column + 1, SQL_COLUMN_PRECISION, nullptr, 0, nullptr, &precision);
+    SQL_LOG_TRACE_STREAM("d_time: calling SQLColAttribute for SQL_COLUMN_PRECISION");
+    const auto ret2 = odbcApi_->SQLColAttributeW(statement, column + 1, SQL_COLUMN_PRECISION,
+                                           nullptr, 0, nullptr, &precision);
     if (!check_odbc_error(ret2))
     {
       column_data.setNull();
       return false;
     }
 
-    const auto ret3 = SQLColAttribute(statement, column + 1, SQL_COLUMN_SCALE, nullptr, 0, nullptr, &colscale);
+    SQL_LOG_TRACE_STREAM("d_time: calling SQLColAttribute for SQL_COLUMN_SCALE");
+    const auto ret3 = odbcApi_->SQLColAttributeW(statement, column + 1, SQL_COLUMN_SCALE,
+                                           nullptr, 0, nullptr, &colscale);
     if (!check_odbc_error(ret3))
     {
       column_data.setNull();
       return false;
     }
 
-    const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY, &time, sizeof(time), &str_len_or_ind_ptr);
+    SQL_LOG_TRACE_STREAM("d_time: calling SQLGetData");
+    const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1),
+                                      SQL_C_BINARY, &time, sizeof(time), &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
       column_data.setNull();
@@ -1072,8 +1112,10 @@ namespace mssql
     auto &column_data = row->getColumn(column);
 
     TIMESTAMP_STRUCT ts;
-    const auto ret = SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_TIMESTAMP, &ts,
-                                sizeof(TIMESTAMP_STRUCT), &str_len_or_ind_ptr);
+
+    SQL_LOG_TRACE_STREAM("get_data_timestamp: calling SQLGetData");
+    const auto ret = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_TIMESTAMP, &ts,
+                                       sizeof(TIMESTAMP_STRUCT), &str_len_or_ind_ptr);
     if (!check_odbc_error(ret))
     {
       column_data.setNull();

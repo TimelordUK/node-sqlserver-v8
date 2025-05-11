@@ -113,7 +113,7 @@ namespace mssql
                  SQLLEN FetchOffset),
                 (override));
 
-    MOCK_METHOD(SQLRETURN, SQLSetStmtAttr,
+    MOCK_METHOD(SQLRETURN, SQLSetStmtAttrW,
                 (SQLHSTMT StatementHandle,
                  SQLINTEGER Attribute,
                  SQLPOINTER Value,
@@ -122,6 +122,28 @@ namespace mssql
 
     MOCK_METHOD(SQLRETURN, SQLMoreResults,
                 (SQLHSTMT StatementHandle),
+                (override));
+
+    // New methods we added to the interface
+    MOCK_METHOD(SQLRETURN, SQLGetDiagRecW,
+                (SQLSMALLINT HandleType,
+                 SQLHANDLE Handle,
+                 SQLSMALLINT RecNumber,
+                 SQLWCHAR *SQLState,
+                 SQLINTEGER *NativeErrorPtr,
+                 SQLWCHAR *MessageText,
+                 SQLSMALLINT BufferLength,
+                 SQLSMALLINT *TextLengthPtr),
+                (override));
+
+    MOCK_METHOD(SQLRETURN, SQLColAttributeW,
+                (SQLHSTMT StatementHandle,
+                 SQLUSMALLINT ColumnNumber,
+                 SQLUSMALLINT FieldIdentifier,
+                 SQLPOINTER CharacterAttributePtr,
+                 SQLSMALLINT BufferLength,
+                 SQLSMALLINT *StringLengthPtr,
+                 SQLLEN *NumericAttributePtr),
                 (override));
   };
 }

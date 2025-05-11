@@ -927,11 +927,126 @@ namespace mssql
       SQL_LOG_TRACE_STREAM("SQLSetStmtAttrW called - Handle: " << hstmt);
 
       SQLRETURN ret = ::SQLSetStmtAttr(hstmt, Attribute, Value, StringLength);
-      SQL_LOG_TRACE_STREAM("SQLMoreResults returned: " << GetSqlReturnCodeString(ret));
+      SQL_LOG_TRACE_STREAM("SQLSetStmtAttrW returned: " << GetSqlReturnCodeString(ret));
 
       if (!SQL_SUCCEEDED(ret) && ret != SQL_NO_DATA)
       {
           LogOdbcError(SQL_HANDLE_STMT, hstmt, "SQLSetStmtAttrW failed");
+      }
+
+      return ret;
+  }
+
+  SQLRETURN RealOdbcApi::SQLGetDiagRecW(
+      SQLSMALLINT HandleType,
+      SQLHANDLE Handle,
+      SQLSMALLINT RecNumber,
+      SQLWCHAR *SQLState,
+      SQLINTEGER *NativeErrorPtr,
+      SQLWCHAR *MessageText,
+      SQLSMALLINT BufferLength,
+      SQLSMALLINT *TextLengthPtr)
+  {
+      SQL_LOG_TRACE_STREAM("SQLGetDiagRec called - HandleType: " << HandleType
+                          << ", Handle: " << Handle
+                          << ", RecNumber: " << RecNumber
+                          << ", BufferLength: " << BufferLength);
+
+      SQLRETURN ret = ::SQLGetDiagRecW(HandleType, Handle, RecNumber, SQLState,
+                                     NativeErrorPtr, MessageText, BufferLength, TextLengthPtr);
+
+      // Only log successful diagnostics
+      if (SQL_SUCCEEDED(ret))
+      {
+          std::string stateStr = "null";
+          std::string msgStr = "null";
+
+          if (SQLState)
+          {
+              stateStr = WideToUtf8(SQLState);
+          }
+
+          if (MessageText && TextLengthPtr)
+          {
+              msgStr = WideToUtf8(MessageText, *TextLengthPtr);
+          }
+
+          SQL_LOG_TRACE_STREAM("SQLGetDiagRec returned: " << GetSqlReturnCodeString(ret)
+                            << ", SQLState: " << stateStr
+                            << ", NativeError: " << (NativeErrorPtr ? std::to_string(*NativeErrorPtr) : "null")
+                            << ", MessageText: " << msgStr
+                            << ", TextLength: " << (TextLengthPtr ? std::to_string(*TextLengthPtr) : "null"));
+      }
+      else
+      {
+          SQL_LOG_TRACE_STREAM("SQLGetDiagRec returned: " << GetSqlReturnCodeString(ret));
+      }
+
+      return ret;
+  }
+
+  SQLRETURN RealOdbcApi::SQLColAttributeW(
+      SQLHSTMT StatementHandle,
+      SQLUSMALLINT ColumnNumber,
+      SQLUSMALLINT FieldIdentifier,
+      SQLPOINTER CharacterAttributePtr,
+      SQLSMALLINT BufferLength,
+      SQLSMALLINT *StringLengthPtr,
+      SQLLEN *NumericAttributePtr)
+  {
+      // Convert field identifier to a readable string
+      std::string fieldIdStr;
+      switch (FieldIdentifier)
+      {
+      case SQL_DESC_DISPLAY_SIZE:
+          fieldIdStr = "SQL_DESC_DISPLAY_SIZE";
+          break;
+      case SQL_DESC_TYPE:
+          fieldIdStr = "SQL_DESC_TYPE";
+          break;
+      case SQL_DESC_LENGTH:
+          fieldIdStr = "SQL_DESC_LENGTH";
+          break;
+      case SQL_DESC_PRECISION:
+          fieldIdStr = "SQL_DESC_PRECISION";
+          break;
+      case SQL_DESC_SCALE:
+          fieldIdStr = "SQL_DESC_SCALE";
+          break;
+      case SQL_DESC_NULLABLE:
+          fieldIdStr = "SQL_DESC_NULLABLE";
+          break;
+      case SQL_CA_SS_VARIANT_TYPE:
+          fieldIdStr = "SQL_CA_SS_VARIANT_TYPE";
+          break;
+      case SQL_COLUMN_PRECISION:
+          fieldIdStr = "SQL_COLUMN_PRECISION";
+          break;
+      case SQL_COLUMN_SCALE:
+          fieldIdStr = "SQL_COLUMN_SCALE";
+          break;
+      default:
+          fieldIdStr = "Unknown(" + std::to_string(FieldIdentifier) + ")";
+      }
+
+      SQL_LOG_TRACE_STREAM("SQLColAttribute called - Handle: " << StatementHandle
+                          << ", ColumnNumber: " << ColumnNumber
+                          << ", FieldIdentifier: " << fieldIdStr
+                          << ", BufferLength: " << BufferLength);
+
+      SQLRETURN ret = ::SQLColAttributeW(StatementHandle, ColumnNumber, FieldIdentifier,
+                                      CharacterAttributePtr, BufferLength, StringLengthPtr, NumericAttributePtr);
+
+      if (SQL_SUCCEEDED(ret))
+      {
+          SQL_LOG_TRACE_STREAM("SQLColAttribute returned: " << GetSqlReturnCodeString(ret)
+                            << ", NumericAttribute: " << (NumericAttributePtr ? std::to_string(*NumericAttributePtr) : "null")
+                            << ", StringLength: " << (StringLengthPtr ? std::to_string(*StringLengthPtr) : "null"));
+      }
+      else
+      {
+          SQL_LOG_TRACE_STREAM("SQLColAttribute returned: " << GetSqlReturnCodeString(ret));
+          LogOdbcError(SQL_HANDLE_STMT, StatementHandle, "SQLColAttribute failed");
       }
 
       return ret;

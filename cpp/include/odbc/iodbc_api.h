@@ -107,6 +107,27 @@ namespace mssql
     // Add SQLMoreResults to the interface
     virtual SQLRETURN SQLMoreResults(SQLHSTMT StatementHandle) = 0;
 
+    // Add SQLGetDiagRecW to the interface
+    virtual SQLRETURN SQLGetDiagRecW(
+        SQLSMALLINT HandleType,
+        SQLHANDLE Handle,
+        SQLSMALLINT RecNumber,
+        SQLWCHAR *SQLState,
+        SQLINTEGER *NativeErrorPtr,
+        SQLWCHAR *MessageText,
+        SQLSMALLINT BufferLength,
+        SQLSMALLINT *TextLengthPtr) = 0;
+
+    // Add SQLColAttributeW to the interface
+    virtual SQLRETURN SQLColAttributeW(
+        SQLHSTMT StatementHandle,
+        SQLUSMALLINT ColumnNumber,
+        SQLUSMALLINT FieldIdentifier,
+        SQLPOINTER CharacterAttributePtr,
+        SQLSMALLINT BufferLength,
+        SQLSMALLINT *StringLengthPtr,
+        SQLLEN *NumericAttributePtr) = 0;
+
     // Method to retrieve diagnostic information
     virtual std::vector<DiagnosticInfo> GetDiagnostics() const = 0;
 
@@ -145,6 +166,13 @@ namespace mssql
     SQLRETURN SQLSetStmtAttrW(SQLHSTMT StatementHandle, SQLINTEGER Attribute, SQLPOINTER Value, SQLINTEGER StringLength) override;
     SQLRETURN SQLMoreResults(SQLHSTMT StatementHandle) override;
 
+    // New ODBC methods
+    SQLRETURN SQLGetDiagRecW(SQLSMALLINT HandleType, SQLHANDLE Handle, SQLSMALLINT RecNumber,
+                           SQLWCHAR *SQLState, SQLINTEGER *NativeErrorPtr, SQLWCHAR *MessageText,
+                           SQLSMALLINT BufferLength, SQLSMALLINT *TextLengthPtr) override;
+    SQLRETURN SQLColAttributeW(SQLHSTMT StatementHandle, SQLUSMALLINT ColumnNumber, SQLUSMALLINT FieldIdentifier,
+                             SQLPOINTER CharacterAttributePtr, SQLSMALLINT BufferLength,
+                             SQLSMALLINT *StringLengthPtr, SQLLEN *NumericAttributePtr) override;
 
     // Diagnostic methods
     std::vector<DiagnosticInfo> GetDiagnostics() const override;

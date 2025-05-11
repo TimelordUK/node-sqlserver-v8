@@ -59,3 +59,47 @@ Testing focuses on:
 1. Unit tests for individual components
 2. Integration tests for interaction between components
 3. Mock tests to verify behavior with controlled dependencies
+
+## Using the ODBC API Interface
+
+All ODBC calls should be routed through the `IOdbcApi` interface rather than being called directly. This allows for proper mocking in tests and ensures consistent error handling and logging across the codebase.
+
+Example of correct usage:
+
+```cpp
+// Instead of directly calling ODBC functions:
+// auto ret = SQLGetData(statement, column, SQL_C_WCHAR, buffer, bufferSize, &resultSize);
+
+// Use the interface:
+auto ret = odbcApi_->SQLGetData(statement, column, SQL_C_WCHAR, buffer, bufferSize, &resultSize);
+```
+
+Benefits of using the interface:
+1. Consistent logging of all ODBC calls
+2. Centralized error handling
+3. Support for mocking in tests
+4. Better cross-platform compatibility
+5. Easier maintenance when ODBC API changes
+
+## Building
+
+### Linux
+
+1. Install required dependencies:
+   ```bash
+   sudo apt-get install -y unixodbc-dev g++ make
+   ```
+
+2. Build the module:
+   ```bash
+   npm install --build-from-source
+   ```
+
+### Windows
+
+1. Install Visual Studio 2019 or later with C++ development tools.
+
+2. Build the module:
+   ```bash
+   npm install --build-from-source
+   ```
