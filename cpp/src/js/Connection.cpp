@@ -11,15 +11,15 @@
 #include "odbc/odbc_driver_types.h"
 #include "odbc/odbc_environment.h"
 #include "odbc/odbc_error.h"
-#include "query_parameter.h"
-#include "query_result.h"
-#include "parameter_set.h"
+#include "core/query_parameter.h"
+#include "core/query_result.h"
+#include "odbc/parameter_set.h"
 #include "js/js_object_mapper.h"
 #include "odbc/odbc_connection_factory.h"
-#include "workers/worker_base.h"
-#include "workers/query_worker.h"
-#include "workers/fetch_rows_worker.h"
-#include "workers/next_result_worker.h"
+#include "js/workers/worker_base.h"
+#include "js/workers/query_worker.h"
+#include "js/workers/fetch_rows_worker.h"
+#include "js/workers/next_result_worker.h"
 namespace mssql
 {
   // Initialize static constructor reference
