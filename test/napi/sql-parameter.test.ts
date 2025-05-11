@@ -17,7 +17,7 @@ import {
   DateTimeArrayParameter,
   ObjectParameter,
   TVPParameter
-} from '../../'
+} from '../../src/'
 
 describe('SqlParameter Tests', function() {
   describe('SqlParameter Base Class', function () {

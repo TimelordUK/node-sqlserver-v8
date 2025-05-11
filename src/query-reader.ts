@@ -16,29 +16,53 @@ export interface QueryOptions {
 }
 
 export class QueryReader extends EventEmitter {
-  constructor (public readonly connection: Connection, public readonly result: QueryResult, public readonly options?: QueryOptions) {
-    super()
-  }
+  private hasStarted = false
+  private isComplete = false
+  private fetchError: Error | null = null
+  private allRows: OdbcRow[] = [] // Only used in non-streaming mode
 
-  async begin () {
-    const batchSize = 50
-    const handle = this.result.handle
-    let total = 0
-    let allRows: OdbcRow[] = [] // If you need to collect all rows
-    const options = this.options ?? {
+  constructor (
+    public readonly connection: Connection,
+    public readonly result: QueryResult,
+    public readonly options?: QueryOptions
+  ) {
+    super()
+
+    // Set default options
+    this.options = this.options ?? {
       streaming: false,
       format: ResultFormat.OBJECT,
       camelCase: true
-    } as QueryOptions ?? {}
+    } as QueryOptions
 
-    if (options.streaming) this.emit('begin')
-    if (options.streaming) this.emit('meta', this.result.meta)
+    // Start fetching data automatically
+    this.fetchData().catch(err => {
+      this.fetchError = err
+      this.emit('error', err)
+    })
+  }
+
+  private async fetchData (): Promise<void> {
+    const batchSize = 50
+    const handle = this.result.handle
+    let total = 0
+    this.hasStarted = true
+    const isStreaming = this.options?.streaming === true
+
+    // Emit 'begin' and 'meta' events on next tick to allow listeners to be set up
+    process.nextTick(() => {
+      if (isStreaming) {
+        this.emit('begin')
+        this.emit('meta', this.result.meta)
+      }
+    })
 
     try {
       let endOfRows = false
       while (!endOfRows) {
         const next = await this.connection.promises.fetchRows(handle, batchSize)
         if (!next) break
+
         const rows = next.rows ?? []
         logger.debug(`
   statementId = ${handle.statementId}
@@ -47,30 +71,82 @@ export class QueryReader extends EventEmitter {
   end of rows = ${endOfRows}
   total = ${total}
 `)
-        if (options.streaming) {
+
+        if (isStreaming) {
+          // When streaming, just emit events, don't store rows
           this.dispatch(rows)
+        } else {
+          // Only collect rows in memory if not streaming
+          this.allRows = this.allRows.concat(rows)
         }
 
         endOfRows = next.endOfRows
         total += rows.length
-        allRows = allRows.concat(rows) // If collecting all rows
       }
 
-      if (options.streaming) this.emit('end')
+      this.isComplete = true
+
+      // Always emit 'end' event regardless of streaming mode
+      this.emit('end')
+
       logger.debug(`Query complete. Total rows: ${total}`)
-      return allRows // If you need to return all rows
     } catch (error: any) {
       logger.error(`Error fetching rows: ${error.message}`)
-      throw error
+      this.fetchError = error
+
+      // Always emit error event regardless of streaming mode
+      // This ensures getAllRows() will reject the promise in either mode
+      this.emit('error', error)
     }
   }
 
-  private dispatch (rows: OdbcRow[]) {
+  // For non-streaming mode, wait for all rows
+  async getAllRows (): Promise<OdbcRow[]> {
+    if (this.options?.streaming) {
+      throw new Error('Cannot use getAllRows() in streaming mode. Use event listeners instead.')
+    }
+
+    // If already complete, return the rows immediately
+    if (this.isComplete) {
+      return this.allRows
+    }
+
+    // If error has already occurred, reject immediately
+    if (this.fetchError) {
+      return Promise.reject(this.fetchError)
+    }
+
+    // Otherwise, wait for completion or error
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        this.removeListener('end', onComplete)
+        this.removeListener('error', onError)
+        reject(new Error('Timeout waiting for query to complete after 30 seconds'))
+      }, 30000) // 30 second timeout
+
+      const onComplete = () => {
+        clearTimeout(timeout)
+        this.removeListener('error', onError)
+        resolve(this.allRows)
+      }
+
+      const onError = (err: Error) => {
+        clearTimeout(timeout)
+        this.removeListener('end', onComplete)
+        reject(err)
+      }
+
+      this.once('end', onComplete)
+      this.once('error', onError)
+    })
+  }
+
+  private dispatch (rows: OdbcRow[]): void {
     const meta = this.result.meta
-    for (let i = 0; i++; i < rows.length) {
+    for (let i = 0; i < rows.length; i++) {
       const row = rows[i]
-      this.emit('row', i)
-      for (let j = 0; j++; j < meta.length) {
+      this.emit('row', row, i)
+      for (let j = 0; j < meta.length; j++) {
         const name: string = meta[j].colName
         this.emit('col', j, row[name])
       }

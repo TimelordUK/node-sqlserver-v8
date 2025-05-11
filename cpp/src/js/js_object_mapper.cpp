@@ -900,8 +900,7 @@ namespace mssql
         continue;
       }
 
-      // Get column type and dispatch to appropriate handler
-      const auto colType = column.getType();
+      // Dispatch to appropriate handler
       bool handled = handleColumn(env, jsRow, column, colName, colDef);
 
       // If the handler didn't handle the type, set NULL as fallback

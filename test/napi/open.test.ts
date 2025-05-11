@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { Connection } from '../../src';
-import * as nativeModule from 'msnodesqlv8';
+import * as nativeModule from '../../src/module-bridge'
 import { TestConnectionFactory } from '../common/test-connection-factory'
 
 

@@ -5,13 +5,27 @@
     "declaration": true,
     "sourceMap": true,
     "outDir": "./lib",
-    "rootDir": "./src",
+    "rootDir": "./",
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "types": ["node", "mocha", "chai"],
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*", "lib/query-builder.ts"],
-  "exclude": ["node_modules", "build"]
+  "baseUrl": ".",
+  "paths": {
+    "msnodesqlv8": ["./src/module-bridge"],
+    "msnodesqlv8/src/*": ["./src/*"]
+  },
+  "include": ["src/**/*", "test/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "build",
+    "lib",
+    "**/build/**",
+    "**/CMakeFiles/**",
+    "**/compiler_depend.ts"
+  ]
 }
