@@ -1,7 +1,8 @@
 // In js_object_mapper.h
 #pragma once
 #include <napi.h>
-#include "odbc_driver_types.h" // Include your C++ type definitions
+#include "odbc_driver_types.h"  // Include your C++ type definitions
+#include "core/datum_storage.h" // Include for DatumStorage::SqlType
 
 namespace mssql
 {
@@ -40,6 +41,47 @@ namespace mssql
     static int32_t safeGetInt32(const Napi::Object &obj, const std::string &prop, int32_t defaultVal = 0);
     static bool safeGetBool(const Napi::Object &obj, const std::string &prop, bool defaultVal = false);
 
-    // New helper for handling variant value
+    static bool handleColumn(const Napi::Env &env,
+                             Napi::Object &jsRow,
+                             const DatumStorage &column,
+                             const std::string &colName,
+                             const ColumnDefinition &colDef);
+
+    // Helper methods for handling different data types in fromOdbcRow
+    static void handleNullValue(const Napi::Env &env, Napi::Object &jsRow, const std::string &colName);
+
+    // String types
+    static bool handleStringTypes(const Napi::Env &env, Napi::Object &jsRow, const std::string &colName,
+                                  const DatumStorage &column, DatumStorage::SqlType colType);
+
+    // Numeric types
+    static bool handleTinyInt(const Napi::Env &env, Napi::Object &jsRow, const std::string &colName,
+                              const DatumStorage &column);
+    static bool handleSmallInt(const Napi::Env &env, Napi::Object &jsRow, const std::string &colName,
+                               const DatumStorage &column);
+    static bool handleInteger(const Napi::Env &env, Napi::Object &jsRow, const std::string &colName,
+                              const DatumStorage &column);
+    static bool handleBigInt(const Napi::Env &env, Napi::Object &jsRow, const std::string &colName,
+                             const DatumStorage &column);
+    static bool handleFloatingPoint(const Napi::Env &env, Napi::Object &jsRow, const std::string &colName,
+                                    const DatumStorage &column);
+    static bool handleBit(const Napi::Env &env, Napi::Object &jsRow, const std::string &colName,
+                          const DatumStorage &column);
+
+    // Date/Time types
+    static bool handleDateTimeTypes(const Napi::Env &env, Napi::Object &jsRow, const std::string &colName,
+                                    const DatumStorage &column, DatumStorage::SqlType colType);
+
+    // Binary types
+    static bool handleBinaryTypes(const Napi::Env &env, Napi::Object &jsRow, const std::string &colName,
+                                  const DatumStorage &column);
+
+    // Variant type
+    static bool handleVariantType(const Napi::Env &env, Napi::Object &jsRow, const std::string &colName,
+                                  const DatumStorage &column);
+
+    // Fallback for unknown types
+    static bool handleUnknownType(const Napi::Env &env, Napi::Object &jsRow, const std::string &colName,
+                                  const DatumStorage &column);
   };
 }

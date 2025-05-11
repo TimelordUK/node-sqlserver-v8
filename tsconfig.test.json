@@ -9,7 +9,11 @@
   "include": [
     "./test/**/*.ts"
   ],
-  "references": [
-    { "path": "../src" }
+  "exclude": [
+    "node_modules",
+    "build",
+    "**/build/**",
+    "**/CMakeFiles/**",
+    "**/compiler_depend.ts"
   ]
 }
