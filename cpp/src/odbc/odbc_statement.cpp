@@ -189,7 +189,7 @@ namespace mssql
     SQLLEN total_bytes_to_read;
   };
 
-  bool OdbcStatement::lob(const size_t row_id, size_t column)
+  bool OdbcStatement::lob_wchar(const size_t row_id, size_t column)
   {
     // cerr << "lob ..... " << endl;
     const auto &statement = statement_->get_handle();
@@ -197,7 +197,10 @@ namespace mssql
     auto &column_data = row->getColumn(column);
     lob_capture capture(column_data);
 
-    SQL_LOG_TRACE_STREAM("lob: calling SQLGetData for row_id " << row_id << " column " << column);
+    // Mark this as a Unicode/wide string type for consistent handling in JS
+    column_data.setType(DatumStorage::SqlType::NVarChar);
+
+    SQL_LOG_TRACE_STREAM("lob_wchar: calling SQLGetData for row_id " << row_id << " column " << column);
     auto r = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_WCHAR,
                                   capture.write_ptr, capture.bytes_to_read + capture.item_size,
                                   &capture.total_bytes_to_read);
@@ -216,7 +219,7 @@ namespace mssql
     auto more = check_more_read(r, status);
     if (!status)
     {
-      SQL_LOG_TRACE_STREAM("lob check_more_read " << status);
+      SQL_LOG_TRACE_STREAM("lob_wchar check_more_read " << status);
       // cerr << "lob check_more_read " << endl;
       return false;
     }
@@ -225,7 +228,7 @@ namespace mssql
     {
       capture.bytes_to_read = std::min(capture.atomic_read_bytes, capture.total_bytes_to_read);
 
-      SQL_LOG_TRACE_STREAM("lob: calling SQLGetData for additional data");
+      SQL_LOG_TRACE_STREAM("lob_wchar: calling SQLGetData for additional data");
       r = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_WCHAR,
                                capture.write_ptr, capture.bytes_to_read + capture.item_size,
                                &capture.total_bytes_to_read);
@@ -233,13 +236,159 @@ namespace mssql
       capture.on_next_read();
       if (!check_odbc_error(r))
       {
-        SQL_LOG_TRACE_STREAM("lob error " << r);
+        SQL_LOG_TRACE_STREAM("lob_wchar error " << r);
         return false;
       }
       more = check_more_read(r, status);
       if (!status)
       {
-        SQL_LOG_TRACE_STREAM("lob status " << status);
+        SQL_LOG_TRACE_STREAM("lob_wchar status " << status);
+        return false;
+      }
+    }
+    capture.trim();
+    column_data.setNull(false);
+    return true;
+  }
+
+  // Structure for handling single-byte character LOBs
+  struct lob_char_capture
+  {
+    lob_char_capture(mssql::DatumStorage &storage) : reads(1),
+                                                     n_items(0),
+                                                     maxvarchar(false),
+                                                     item_size(sizeof(char)),
+                                                     src_data{},
+                                                     write_ptr{},
+                                                     atomic_read_bytes(24 * 1024),
+                                                     bytes_to_read(atomic_read_bytes),
+                                                     storage(storage),
+                                                     total_bytes_to_read(atomic_read_bytes)
+    {
+      storage.reserve(atomic_read_bytes / item_size + 1);
+      src_data = storage.getTypedVector<char>();
+      write_ptr = src_data->data();
+    }
+
+    void trim() const
+    {
+      if (maxvarchar)
+      {
+        auto last = src_data->size() - 1;
+        while (last > 0 && (*src_data)[last] == 0)
+        {
+          --last;
+        }
+        if (last < src_data->size() - 1)
+        {
+          src_data->resize(last + 1);
+        }
+      }
+    }
+
+    void on_next_read()
+    {
+      ++reads;
+      if (total_bytes_to_read < 0)
+      {
+        const auto previous = src_data->size();
+        total_bytes_to_read = bytes_to_read * (reads + 1);
+        n_items = total_bytes_to_read / item_size;
+        src_data->reserve(n_items + 1);
+        src_data->resize(n_items);
+        write_ptr = src_data->data() + previous;
+        memset(write_ptr, 0, src_data->data() + src_data->size() - write_ptr);
+      }
+      else
+      {
+        write_ptr += bytes_to_read / item_size;
+      }
+    }
+
+    void on_first_read(const int factor = 2)
+    {
+      maxvarchar = total_bytes_to_read < 0;
+      if (maxvarchar)
+      {
+        total_bytes_to_read = bytes_to_read * factor;
+      }
+      n_items = total_bytes_to_read / item_size;
+      src_data->reserve(n_items + 1);
+      src_data->resize(n_items);
+
+      if (total_bytes_to_read > bytes_to_read)
+      {
+        total_bytes_to_read -= bytes_to_read;
+      }
+      write_ptr = src_data->data();
+      write_ptr += bytes_to_read / item_size;
+    }
+
+    SQLLEN reads;
+    size_t n_items;
+    bool maxvarchar;
+    const size_t item_size;
+    std::shared_ptr<std::vector<char>> src_data;
+    char *write_ptr;
+    const SQLLEN atomic_read_bytes;
+    SQLLEN bytes_to_read;
+    DatumStorage &storage;
+    SQLLEN total_bytes_to_read;
+  };
+
+  bool OdbcStatement::lob_char(const size_t row_id, size_t column)
+  {
+    const auto &statement = statement_->get_handle();
+    auto row = rows_[row_id];
+    auto &column_data = row->getColumn(column);
+
+    // Mark this as a varchar type for consistent handling in JS
+    column_data.setType(DatumStorage::SqlType::VarChar);
+
+    lob_char_capture capture(column_data);
+
+    SQL_LOG_TRACE_STREAM("lob_char: calling SQLGetData for row_id " << row_id << " column " << column);
+    auto r = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_CHAR,
+                                  capture.write_ptr, capture.bytes_to_read + capture.item_size,
+                                  &capture.total_bytes_to_read);
+
+    if (capture.total_bytes_to_read == SQL_NULL_DATA)
+    {
+      column_data.setNull();
+      return true;
+    }
+    if (!check_odbc_error(r))
+    {
+      column_data.setNull();
+      return false;
+    }
+    auto status = false;
+    auto more = check_more_read(r, status);
+    if (!status)
+    {
+      SQL_LOG_TRACE_STREAM("lob_char check_more_read " << status);
+      return false;
+    }
+    capture.on_first_read();
+    while (more)
+    {
+      capture.bytes_to_read = std::min(capture.atomic_read_bytes, capture.total_bytes_to_read);
+
+      SQL_LOG_TRACE_STREAM("lob_char: calling SQLGetData for additional data");
+      r = odbcApi_->SQLGetData(statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_CHAR,
+                               capture.write_ptr, capture.bytes_to_read + capture.item_size,
+                               &capture.total_bytes_to_read);
+
+      capture.on_next_read();
+      if (!check_odbc_error(r))
+      {
+        SQL_LOG_TRACE_STREAM("lob_char error " << r);
+        return false;
+      }
+      more = check_more_read(r, status);
+      if (!status)
+      {
+        SQL_LOG_TRACE_STREAM("lob_char status " << status);
         return false;
       }
     }
@@ -755,13 +904,15 @@ namespace mssql
     return res;
   }
 
-  bool OdbcStatement::bounded_string(size_t display_size, const size_t row_id, const size_t column)
+  bool OdbcStatement::bounded_string_wchar(size_t display_size, const size_t row_id, const size_t column)
   {
-    SQL_LOG_TRACE_STREAM("bounded_string: display_size " << display_size << " row_id " << row_id << " column " << column);
-    // cerr << "bounded_string ... " << endl;
+    SQL_LOG_TRACE_STREAM("bounded_string_wchar: display_size " << display_size << " row_id " << row_id << " column " << column);
 
     auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
+
+    // Mark this as a Unicode/wide string type for consistent handling in JS
+    column_data.setType(DatumStorage::SqlType::NVarChar);
 
     constexpr auto size = sizeof(uint16_t);
     SQLLEN value_len = 0;
@@ -770,7 +921,7 @@ namespace mssql
     column_data.resize(display_size); // increment for null terminator
     auto src_data = column_data.getTypedVector<uint16_t>()->data();
 
-    SQL_LOG_TRACE_STREAM("bounded_string: calling SQLGetData");
+    SQL_LOG_TRACE_STREAM("bounded_string_wchar: calling SQLGetData");
     const auto r = odbcApi_->SQLGetData(statement_->get_handle(), static_cast<SQLSMALLINT>(column + 1),
                                         SQL_C_WCHAR, src_data, display_size * size, &value_len);
 
@@ -794,6 +945,60 @@ namespace mssql
     return true;
   }
 
+  bool OdbcStatement::bounded_string_char(size_t display_size, const size_t row_id, const size_t column)
+  {
+    SQL_LOG_TRACE_STREAM("bounded_string_char: display_size " << display_size << " row_id " << row_id << " column " << column);
+
+    auto row = rows_[row_id];
+    auto &column_data = row->getColumn(column);
+
+    // Mark this as a varchar type for consistent handling in JS
+    column_data.setType(DatumStorage::SqlType::VarChar);
+
+    constexpr auto size = sizeof(char);
+    SQLLEN value_len = 0;
+    display_size++;
+    column_data.reserve(display_size);
+    column_data.resize(display_size); // increment for null terminator
+    auto src_data = column_data.getTypedVector<char>()->data();
+
+    SQL_LOG_TRACE_STREAM("bounded_string_char: calling SQLGetData");
+    const auto r = odbcApi_->SQLGetData(statement_->get_handle(), static_cast<SQLSMALLINT>(column + 1),
+                                        SQL_C_CHAR, src_data, display_size * size, &value_len);
+
+    if (r != SQL_NO_DATA && !check_odbc_error(r))
+    {
+      column_data.setNull();
+      return false;
+    }
+
+    if (r == SQL_NO_DATA || value_len == SQL_NULL_DATA)
+    {
+      column_data.setNull();
+      return true;
+    }
+
+    // For char strings, we don't need to divide by size since they're single-byte
+    column_data.resize(value_len);
+
+    SQL_LOG_TRACE_STREAM("datum (char): " << column_data.getDebugString());
+    column_data.setNull(false);
+    return true;
+  }
+
+  // For backward compatibility with any code that might call the old methods
+  bool OdbcStatement::bounded_string(const size_t display_size, const size_t row_id, const size_t column)
+  {
+    // Call the wide character version by default for backward compatibility
+    return bounded_string_wchar(display_size, row_id, column);
+  }
+
+  bool OdbcStatement::lob(const size_t row_id, size_t column)
+  {
+    // Call the wide character version by default for backward compatibility
+    return lob_wchar(row_id, column);
+  }
+
   bool OdbcStatement::try_read_string(const bool is_variant, const size_t row_id, const size_t column)
   {
     SQL_LOG_TRACE_STREAM("try_read_string: is_variant " << is_variant << " row_id " << row_id << " column " << column);
@@ -801,7 +1006,19 @@ namespace mssql
     SQLLEN display_size = 0;
     auto row = rows_[row_id];
     auto &column_data = row->getColumn(column);
-    // cerr << " try_read_string row_id = " << row_id << " column = " << column;
+
+    // Get the column data type to determine if it's wide or narrow character
+    SQLSMALLINT data_type = SQL_UNKNOWN_TYPE;
+    if (metaData_ && column < metaData_->get_column_count())
+    {
+      data_type = metaData_->get(static_cast<int>(column)).dataType;
+      SQL_LOG_DEBUG_STREAM("try_read_string: column data type = " << data_type);
+    }
+
+    // Check if we're dealing with a wide (Unicode) or narrow (ASCII) string
+    bool is_wide_char = true;
+
+    SQL_LOG_TRACE_STREAM("try_read_string: is_wide_char=" << (is_wide_char ? "true" : "false"));
 
     SQL_LOG_TRACE_STREAM("try_read_string: calling SQLColAttribute for SQL_DESC_DISPLAY_SIZE");
     const auto r = odbcApi_->SQLColAttributeW(statement_->get_handle(), column + 1,
@@ -818,12 +1035,12 @@ namespace mssql
         display_size == std::numeric_limits<int>::max() >> 1 ||
         static_cast<unsigned long>(display_size) == std::numeric_limits<unsigned long>::max() - 1)
     {
-      return lob(row_id, column);
+      return is_wide_char ? lob_wchar(row_id, column) : lob_char(row_id, column);
     }
 
     if (display_size >= 1 && display_size <= SQL_SERVER_MAX_STRING_SIZE)
     {
-      return bounded_string(display_size, row_id, column);
+      return is_wide_char ? bounded_string_wchar(display_size, row_id, column) : bounded_string_char(display_size, row_id, column);
     }
 
     return true;

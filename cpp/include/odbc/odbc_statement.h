@@ -198,8 +198,13 @@ namespace mssql
     bool get_data_decimal(const size_t row_id, const size_t column);
     bool get_data_bit(const size_t row_id, const size_t column);
     bool d_variant(const size_t row_id, const size_t column);
-    bool bounded_string(const size_t display_size, const size_t row_id, const size_t column);
+    bool bounded_string_wchar(const size_t display_size, const size_t row_id, const size_t column);
+    bool bounded_string_char(const size_t display_size, const size_t row_id, const size_t column);
     bool try_read_string(const bool is_variant, const size_t row_id, const size_t column);
+
+    // For backward compatibility
+    bool bounded_string(const size_t display_size, const size_t row_id, const size_t column);
+    bool lob(const size_t row_id, size_t column);
     bool get_data_binary(const size_t row_id, const size_t column);
     bool get_data_timestamp_offset(const size_t row_id, const size_t column);
     bool d_time(const size_t row_id, const size_t column);
@@ -215,7 +220,8 @@ namespace mssql
     bool hasMoreResults_;
     bool endOfRows_;
     std::shared_ptr<QueryResult> metaData_;
-    bool lob(const size_t row_id, size_t column);
+    bool lob_wchar(const size_t row_id, size_t column);
+    bool lob_char(const size_t row_id, size_t column);
     bool check_more_read(SQLRETURN r, bool &status);
     std::vector<std::shared_ptr<IOdbcRow>> rows_;
     std::shared_ptr<std::vector<shared_ptr<OdbcError>>> errors_;
