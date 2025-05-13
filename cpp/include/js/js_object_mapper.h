@@ -3,7 +3,7 @@
 #include <napi.h>
 #include "odbc_driver_types.h"  // Include your C++ type definitions
 #include "core/datum_storage.h" // Include for DatumStorage::SqlType
-
+#include "odbc/odbc_error.h"
 namespace mssql
 {
 
@@ -22,10 +22,11 @@ namespace mssql
     static Napi::Object fromColumnDefinition(const Napi::Env &env, const ColumnDefinition &colDef);
     static Napi::Array fromQueryResult(const Napi::Env &env, const QueryResult &result);
     static Napi::Object fromStatementHandle(const Napi::Env &env, StatementHandle handle);
-
+    static Napi::Object fromOdbcError(const Napi::Env &env, const OdbcError &error);
     // Reverse mapping (C++ to JS)
     static Napi::Object fromProcedureParamMeta(const Napi::Env &env, const ProcedureParamMeta &param);
     static Napi::Object fromNativeParam(const Napi::Env &env, const NativeParam &param);
+    static Napi::Object fromNativeQueryResult(const Napi::Env &env, const std::shared_ptr<QueryResult> queryResult);
 
     static SqlParamValue safeGetValue(const Napi::Object &obj, const std::string &prop);
     static Napi::Value fromSqlParamValue(const Napi::Env &env, const SqlParamValue &value);

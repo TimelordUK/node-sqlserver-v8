@@ -8,7 +8,6 @@
 
 namespace mssql
 {
-
   // Helper methods implementation
   std::string JsObjectMapper::safeGetString(const Napi::Object &obj, const std::string &prop, const std::string &defaultVal)
   {
@@ -240,6 +239,43 @@ namespace mssql
     }
 
     return env.Null();
+  }
+
+  Napi::Object JsObjectMapper::fromOdbcError(const Napi::Env &env, const OdbcError &error)
+  {
+    Napi::Object result = Napi::Object::New(env);
+
+    result.Set("sqlstate", Napi::String::New(env, error.sqlstate));
+    result.Set("message", Napi::String::New(env, error.message));
+    result.Set("code", Napi::Number::New(env, error.code));
+    result.Set("severity", Napi::Number::New(env, error.severity));
+    result.Set("serverName", Napi::String::New(env, error.serverName));
+    result.Set("procName", Napi::String::New(env, error.procName));
+    result.Set("lineNumber", Napi::Number::New(env, error.lineNumber));
+
+    return result;
+  }
+
+  Napi::Object JsObjectMapper::fromNativeQueryResult(const Napi::Env &env, const std::shared_ptr<QueryResult> queryResult)
+  {
+    Napi::Array columns = Napi::Array::New(env);
+
+    // Populate the array with column metadata
+    for (size_t i = 0; i < queryResult->size(); i++)
+    {
+      ColumnDefinition colDef = queryResult->get(i);
+      columns[i] = JsObjectMapper::fromColumnDefinition(env, colDef);
+    }
+
+    // Create a metadata object to return
+    Napi::Object metadata = Napi::Object::New(env);
+    Napi::Object handle = JsObjectMapper::fromStatementHandle(env, queryResult->getHandle());
+    metadata.Set("meta", columns);
+    metadata.Set("handle", handle);
+    metadata.Set("endOfRows", Napi::Boolean::New(env, queryResult->is_end_of_rows()));
+    metadata.Set("endOfResults", Napi::Boolean::New(env, queryResult->is_end_of_results()));
+
+    return metadata;
   }
 
   Napi::Object JsObjectMapper::fromNativeParam(const Napi::Env &env, const NativeParam &param)

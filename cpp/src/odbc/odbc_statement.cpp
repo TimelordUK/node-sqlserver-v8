@@ -1017,6 +1017,10 @@ namespace mssql
 
     // Check if we're dealing with a wide (Unicode) or narrow (ASCII) string
     bool is_wide_char = true;
+    if (data_type == SQL_CHAR || data_type == SQL_VARCHAR)
+    {
+      is_wide_char = false;
+    }
 
     SQL_LOG_TRACE_STREAM("try_read_string: is_wide_char=" << (is_wide_char ? "true" : "false"));
 
