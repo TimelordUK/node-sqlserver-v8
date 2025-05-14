@@ -2,8 +2,8 @@
 
 #include <napi.h>
 #include "common/odbc_common.h"
-#include "query_result.h"
-#include "odbc_connection.h"
+#include "core/query_result.h"
+#include "odbc/odbc_connection.h"
 
 namespace mssql
 {
@@ -24,7 +24,7 @@ namespace mssql
     std::vector<std::shared_ptr<OdbcError>> errorDetails_;
 
     void OnError(const Napi::Error &error) override;
-  
+
     Napi::Object GetMetadata();
 
     // Pure virtual method that derived classes must implement
@@ -35,4 +35,4 @@ namespace mssql
 
     // Common implementation of OnError that can be overridden if needed
   };
-} // namespace mssql 
+} // namespace mssql

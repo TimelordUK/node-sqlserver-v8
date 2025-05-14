@@ -21,8 +21,8 @@
 
 #include <memory>
 #include <vector>
-#include "column_buffer.h"
-#include "query_result.h"
+#include "core/column_buffer.h"
+#include "core/query_result.h"
 #include <platform.h>
 #include <Logger.h>
 

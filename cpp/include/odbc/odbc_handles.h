@@ -1,7 +1,7 @@
 #pragma once
 
 #include "platform.h"
-#include "odbc_common.h"
+#include <common/odbc_common.h>
 #include <vector>
 #include <set>
 #include <memory>

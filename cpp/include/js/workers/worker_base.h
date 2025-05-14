@@ -2,25 +2,26 @@
 #include <napi.h>
 #include <memory>
 #include <functional>
-#include "odbc_connection.h"
-#include "odbc_error.h"
+#include "odbc/odbc_connection.h"
+#include "odbc/odbc_error.h"
 #include "Logger.h"
 
-namespace mssql {
-
-// Forward declarations
-class Connection;
-
-/**
- * @brief Base class for all asynchronous workers
- * 
- * This class provides common functionality for all worker implementations,
- * including error handling and success callbacks.
- */
-template <typename ConnectionOp, typename SuccessCallback = std::function<void()>>
-class ConnectionWorkerBase : public Napi::AsyncWorker
+namespace mssql
 {
-public:
+
+  // Forward declarations
+  class Connection;
+
+  /**
+   * @brief Base class for all asynchronous workers
+   *
+   * This class provides common functionality for all worker implementations,
+   * including error handling and success callbacks.
+   */
+  template <typename ConnectionOp, typename SuccessCallback = std::function<void()>>
+  class ConnectionWorkerBase : public Napi::AsyncWorker
+  {
+  public:
     ConnectionWorkerBase(
         Napi::Function &callback,
         IOdbcConnection *connection,
@@ -127,7 +128,7 @@ public:
       Callback().Call({errorObj, env.Null()});
     }
 
-protected:
+  protected:
     Connection *parent_;
     IOdbcConnection *connection_;
     ConnectionOp operation_;
@@ -135,21 +136,21 @@ protected:
     SuccessCallback onSuccess_;
     // Add this to store error details
     std::vector<std::shared_ptr<OdbcError>> errorDetails_;
-};
+  };
 
-/**
- * @brief Helper function to create a connection worker
- */
-template <typename ConnectionOp, typename SuccessCallback = std::function<void()>>
-auto MakeConnectionWorker(
-    Napi::Function &callback,
-    IOdbcConnection *connection,
-    Connection *parent,
-    ConnectionOp operation,
-    SuccessCallback onSuccess = []() {})
-{
-  return new ConnectionWorkerBase<ConnectionOp, SuccessCallback>(
-      callback, connection, parent, std::move(operation), std::move(onSuccess));
-}
+  /**
+   * @brief Helper function to create a connection worker
+   */
+  template <typename ConnectionOp, typename SuccessCallback = std::function<void()>>
+  auto MakeConnectionWorker(
+      Napi::Function &callback,
+      IOdbcConnection *connection,
+      Connection *parent,
+      ConnectionOp operation,
+      SuccessCallback onSuccess = []() {})
+  {
+    return new ConnectionWorkerBase<ConnectionOp, SuccessCallback>(
+        callback, connection, parent, std::move(operation), std::move(onSuccess));
+  }
 
 } // namespace mssql

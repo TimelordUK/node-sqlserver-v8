@@ -2,7 +2,7 @@
 #pragma once
 
 #include <platform.h>
-#include <odbc_common.h>
+#include <common/odbc_common.h>
 #include <mutex>
 #include <string>
 #include <memory>
@@ -10,5 +10,5 @@
 
 namespace mssql
 {
-	
+
 }

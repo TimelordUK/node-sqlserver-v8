@@ -1,7 +1,7 @@
 #pragma once
 
 #include <platform.h>
-#include <odbc_common.h>
+#include <common/odbc_common.h>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -24,14 +24,13 @@ namespace mssql
     {
     }
 
-    OdbcError(const std::string& sqlstate, const std::string &message, int code)
+    OdbcError(const std::string &sqlstate, const std::string &message, int code)
         : sqlstate(sqlstate),
           message(message),
           code(code), severity(0),
           serverName(""),
           procName(""),
           lineNumber(0) {}
-
 
     // list of msnodesql specific errors
     static OdbcError NODE_SQL_NO_DATA;

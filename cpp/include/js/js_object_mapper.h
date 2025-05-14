@@ -1,8 +1,8 @@
 // In js_object_mapper.h
 #pragma once
 #include <napi.h>
-#include "odbc_driver_types.h"  // Include your C++ type definitions
-#include "core/datum_storage.h" // Include for DatumStorage::SqlType
+#include "odbc/odbc_driver_types.h" // Include your C++ type definitions
+#include "core/datum_storage.h"     // Include for DatumStorage::SqlType
 #include "odbc/odbc_error.h"
 namespace mssql
 {

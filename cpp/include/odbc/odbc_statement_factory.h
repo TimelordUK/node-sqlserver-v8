@@ -2,10 +2,10 @@
 
 #include <memory>
 #include <map>
-#include "odbc_handles.h"
-#include "id_factory.h"
-#include "odbc_driver_types.h"
-#include "odbc_statement.h"
+#include "odbc/odbc_handles.h"
+#include "common/id_factory.h"
+#include "odbc/odbc_driver_types.h"
+#include "odbc/odbc_statement.h"
 
 namespace mssql
 {

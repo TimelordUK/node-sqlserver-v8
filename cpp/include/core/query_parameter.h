@@ -6,11 +6,11 @@
 #include <string>
 #include <sql.h>
 #include <sqlext.h>
-#include "datum_storage.h"
+#include "core/datum_storage.h"
 
 namespace mssql
 {
-    class IOdbcApi;
+  class IOdbcApi;
   /**
    * @brief Represents a parameter value that can be bound to an ODBC statement.
    * The actual parameter data is stored in DatumStorage and binding to ODBC is handled here.

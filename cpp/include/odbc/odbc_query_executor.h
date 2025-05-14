@@ -10,12 +10,12 @@
 #include <sqlext.h>
 
 // Project includes
-#include "odbc_handles.h"
-#include "odbc_error_handler.h"
-#include "query_parameter.h"
-#include "query_result.h"
-#include "datum_storage.h"
-#include "string_utils.h"
+#include "odbc/odbc_handles.h"
+#include "odbc/odbc_error_handler.h"
+#include "core/query_parameter.h"
+#include "core/query_result.h"
+#include "core/datum_storage.h"
+#include "common/string_utils.h"
 
 namespace mssql
 {
@@ -28,8 +28,8 @@ namespace mssql
   {
   public:
     OdbcQueryExecutor(std::shared_ptr<IOdbcApi> api,
-        std::shared_ptr<ConnectionHandles> connectionHandles,
-        std::shared_ptr<OdbcErrorHandler> errorHandler);
+                      std::shared_ptr<ConnectionHandles> connectionHandles,
+                      std::shared_ptr<OdbcErrorHandler> errorHandler);
 
     bool ExecuteQuery(const std::string &sqlText,
                       const std::vector<std::shared_ptr<QueryParameter>> &parameters,

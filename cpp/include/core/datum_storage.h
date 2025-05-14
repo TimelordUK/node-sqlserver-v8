@@ -7,7 +7,7 @@
 #include <platform.h>
 
 // Then include ODBC headers which need the Windows types
-#include <odbc_common.h>
+#include <common/odbc_common.h>
 
 // Standard library includes
 #include <limits>
