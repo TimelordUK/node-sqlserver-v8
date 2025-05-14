@@ -19,6 +19,7 @@
 #include "js/workers/worker_base.h"
 #include "js/workers/query_worker.h"
 #include "js/workers/open_worker.h"
+#include "js/workers/close_worker.h"
 #include "js/workers/fetch_rows_worker.h"
 #include "js/workers/next_result_worker.h"
 namespace mssql
@@ -200,20 +201,10 @@ namespace mssql
       return Napi::Boolean::New(env, true);
     }
 
-    auto worker = MakeConnectionWorker(
+    auto worker = new CloseWorker(
         callback,
         odbcConnection_.get(),
-        this,
-        [](IOdbcConnection *conn)
-        {
-          SQL_LOG_DEBUG("Connection::Close - invoking native close");
-          return conn->Close();
-        },
-        [this]()
-        {
-          SQL_LOG_DEBUG("Connection::Close - setting connection state to closed");
-          this->SetConnected(false);
-        });
+        this);
     worker->Queue();
 
     return env.Undefined();
