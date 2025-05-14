@@ -131,21 +131,11 @@ namespace mssql
         }
         return env.Undefined(); });
 
-      auto worker = MakeConnectionWorker(
+      auto worker = new OpenWorker(
           callback,
           odbcConnection_.get(),
-          this,
-          [connectionString](IOdbcConnection *conn)
-          {
-            SQL_LOG_DEBUG("Connection::Open - invoking native open");
-            return conn->Open(connectionString, 0);
-          },
-          [this]()
-          {
-            // This will be called on success in the OnOK method
-            SQL_LOG_DEBUG("Connection::Open - setting connection state to open");
-            this->SetConnected(true);
-          });
+          connectionString);
+
       worker->Queue();
 
       // Return the promise
