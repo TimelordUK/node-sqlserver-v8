@@ -23,6 +23,7 @@ namespace mssql
 
     // Destructor
     ~Connection();
+    inline void SetConnected(bool connected) { isConnected_ = connected; }
 
   private:
     // Static reference to constructor for creating new instances
@@ -32,16 +33,15 @@ namespace mssql
     Napi::Value Open(const Napi::CallbackInfo &info);
     Napi::Value Close(const Napi::CallbackInfo &info);
     Napi::Value Query(const Napi::CallbackInfo &info);
-    Napi::Value FetchRows(const Napi::CallbackInfo& info);
-    Napi::Value NextResultSet(const Napi::CallbackInfo& info);
-    Napi::Value CancelStatement(const Napi::CallbackInfo& info);
+    Napi::Value FetchRows(const Napi::CallbackInfo &info);
+    Napi::Value NextResultSet(const Napi::CallbackInfo &info);
+    Napi::Value CancelStatement(const Napi::CallbackInfo &info);
 
     // Internal state
     std::shared_ptr<IOdbcConnection> odbcConnection_;
     bool isConnected_ = false;
 
     // Helper method to set connection state
-    inline void SetConnected(bool connected) { isConnected_ = connected; }
   };
 
   // QueryWorker class has been moved to query_worker.h

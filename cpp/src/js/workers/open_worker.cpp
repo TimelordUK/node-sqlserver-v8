@@ -3,6 +3,8 @@
 #include "js/js_object_mapper.h"
 #include "odbc/odbc_row.h"
 #include "js/workers/open_worker.h"
+#include "js/Connection.h"
+#include "odbc/odbc_connection.h"
 #include "Logger.h"
 
 namespace mssql
@@ -13,23 +15,24 @@ namespace mssql
                          const std::u16string &connectionString)
       : OdbcAsyncWorker(callback, connection),
         parent_(parent),
-        connectionString_(connectionString)
+        connectionString_(connectionString),
+        connectionId_(-1)
   {
-    SQL_LOG_DEBUG_STREAM("OpenWorker constructor for connection: " << connectionString_);
+    SQL_LOG_DEBUG_U16STREAM("OpenWorker constructor for connection: " << connectionString_);
   }
 
   void OpenWorker::Execute()
   {
     try
     {
-      SQL_LOG_DEBUG_STREAM("Executing OpenWorker for connection: " << connectionString_);
+      SQL_LOG_DEBUG_U16STREAM("Executing OpenWorker for connection: " << connectionString_);
 
-      if (!connection->Open(connectionString_))
+      if (!connection_->Open(connectionString_, 0))
       {
         SetError("Failed to open connection");
         return;
       }
-      connectionId_ = connection->GetConnectionId();
+      // connectionId_ = connection->GetConnectionId();
     }
 
     catch (const std::exception &e)
@@ -50,10 +53,11 @@ namespace mssql
     Napi::HandleScope scope(env);
     SQL_LOG_DEBUG("OpenWorker::OnOK - setting connection state to open");
     parent_->SetConnected(true);
+
     try
     {
       // Call the callback with the result
-      Callback().Call({env.Null(), connectionId_});
+      Callback().Call({env.Null(), Napi::Number::New(env, connectionId_)});
     }
     catch (const std::exception &e)
     {

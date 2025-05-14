@@ -15,14 +15,15 @@ namespace mssql
     OpenWorker(Napi::Function &callback,
                IOdbcConnection *connection,
                Connection *parent,
-               const const std::u16string &connectionString);
+               const std::u16string &connectionString);
 
     void Execute() override;
     void OnOK() override;
 
   private:
-    std::u16string connectionString_;
-    IOdbcConnection *connection;
     Connection *parent_;
+    std::u16string connectionString_;
+    // Using connection_ inherited from OdbcAsyncWorker
+    int connectionId_;
   };
 } // namespace mssql

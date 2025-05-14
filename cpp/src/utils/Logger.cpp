@@ -4,6 +4,8 @@
 #include <iomanip>
 #include <chrono>
 #include <sstream>
+#include <codecvt>
+#include <locale>
 
 namespace mssql
 {
@@ -135,6 +137,90 @@ namespace mssql
   void Logger::Trace(const std::string &message)
   {
     Log(LogLevel::Trace, message);
+  }
+
+  // Wide string (wstring) conversion and logging methods
+  std::string Logger::WideToUtf8(const std::wstring &wide)
+  {
+    try {
+      std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+      return converter.to_bytes(wide);
+    } catch (const std::exception &) {
+      return "(Error converting wide string)";
+    }
+  }
+
+  // UTF-16 string (u16string) conversion method
+  std::string Logger::Utf16ToUtf8(const std::u16string &utf16)
+  {
+    try {
+      std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
+      return converter.to_bytes(utf16);
+    } catch (const std::exception &) {
+      return "(Error converting UTF-16 string)";
+    }
+  }
+
+  // Wide string logging implementations
+  void Logger::Log(LogLevel level, const std::wstring &message)
+  {
+    Log(level, WideToUtf8(message));
+  }
+
+  void Logger::Error(const std::wstring &message)
+  {
+    Error(WideToUtf8(message));
+  }
+
+  void Logger::Warning(const std::wstring &message)
+  {
+    Warning(WideToUtf8(message));
+  }
+
+  void Logger::Info(const std::wstring &message)
+  {
+    Info(WideToUtf8(message));
+  }
+
+  void Logger::Debug(const std::wstring &message)
+  {
+    Debug(WideToUtf8(message));
+  }
+
+  void Logger::Trace(const std::wstring &message)
+  {
+    Trace(WideToUtf8(message));
+  }
+
+  // UTF-16 string logging implementations
+  void Logger::Log(LogLevel level, const std::u16string &message)
+  {
+    Log(level, Utf16ToUtf8(message));
+  }
+
+  void Logger::Error(const std::u16string &message)
+  {
+    Error(Utf16ToUtf8(message));
+  }
+
+  void Logger::Warning(const std::u16string &message)
+  {
+    Warning(Utf16ToUtf8(message));
+  }
+
+  void Logger::Info(const std::u16string &message)
+  {
+    Info(Utf16ToUtf8(message));
+  }
+
+  void Logger::Debug(const std::u16string &message)
+  {
+    Debug(Utf16ToUtf8(message));
+  }
+
+  void Logger::Trace(const std::u16string &message)
+  {
+    Trace(Utf16ToUtf8(message));
   }
 
 } // namespace mssql

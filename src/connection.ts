@@ -34,7 +34,16 @@ class ConnectionPromises {
     return this.connection.nextResultSet(handle, batchSize)
   }
 
-  async query (sql: string, params?: any[]): Promise<QueryResult> {
+  async submit (sql: string, params?: any[]): Promise<QueryResult> {
+    return new Promise<QueryResult>((resolve, reject) => {
+      this.connection.query(sql, params, (err, result) => {
+        if (err) reject(err)
+        else resolve(result ?? {} as QueryResult)
+      })
+    })
+  }
+
+  async submitReadAll (sql: string, params?: any[]): Promise<QueryResult> {
     return new Promise<QueryResult>((resolve, reject) => {
       this.connection.query(sql, params, (err, result) => {
         if (err) reject(err)

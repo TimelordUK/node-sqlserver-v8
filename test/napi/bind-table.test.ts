@@ -30,10 +30,10 @@ describe('bind', function () {
   it('query syscolumns', async function () {
     const sql = 'select * from node.sys.syscolumns'
     if (connection === null) return
-    const res = await connection.promises.query(sql)
+    const res = await connection.promises.submit(sql)
     const reader = new QueryReader(connection, res)
     const top = await reader.getAllRows()
-    logger.info(JSON.stringify(top))
+    // logger.info(JSON.stringify(top))
     console.log(res)
   })
 
@@ -45,7 +45,7 @@ describe('bind', function () {
     })
     const sql = query.sql
     if (connection === null) return
-    const res = await connection.promises.query(sql)
+    const res = await connection.promises.submit(sql)
     const reader = new QueryReader(connection, res)
     const top = await reader.getAllRows()
     logger.info(JSON.stringify(top))

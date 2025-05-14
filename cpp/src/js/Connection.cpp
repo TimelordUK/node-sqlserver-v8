@@ -18,6 +18,7 @@
 #include "odbc/odbc_connection_factory.h"
 #include "js/workers/worker_base.h"
 #include "js/workers/query_worker.h"
+#include "js/workers/open_worker.h"
 #include "js/workers/fetch_rows_worker.h"
 #include "js/workers/next_result_worker.h"
 namespace mssql
@@ -134,6 +135,7 @@ namespace mssql
       auto worker = new OpenWorker(
           callback,
           odbcConnection_.get(),
+          this,
           connectionString);
 
       worker->Queue();

@@ -29,10 +29,10 @@ describe('compound query', function () {
   it('query syscolumns, sysobjects', async function () {
     const sql = 'select * from node.sys.syscolumns; select * from node.sys.sysobjects'
     if (connection === null) return
-    const res = await connection.promises.query(sql)
+    const res = await connection.promises.submit(sql)
     const reader = new QueryReader(connection, res)
     const top = await reader.getAllRows()
-    logger.info(JSON.stringify(top))
+    logger.info(`len = ${top.length}`)
     const res2 = await connection.promises.nextResultSet(res.handle, 50) ?? {
       meta: [],
       handle: {
@@ -44,7 +44,7 @@ describe('compound query', function () {
     } as nativeModule.QueryResult
     const reader2 = new QueryReader(connection, res2)
     const top2 = await reader2.getAllRows()
-    logger.info(JSON.stringify(top2))
+    logger.info(`len = ${top2.length}`)
     console.log(res)
   })
 })

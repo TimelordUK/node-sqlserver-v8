@@ -443,6 +443,7 @@ namespace mssql
 
         case SqlType::Char:
         case SqlType::Text:
+        case SqlType::VarChar:
         case SqlType::Binary:
         case SqlType::VarBinary:
           if constexpr (std::is_same_v<T, char>)
@@ -451,7 +452,6 @@ namespace mssql
 
         case SqlType::NChar:
         case SqlType::NVarChar:
-        case SqlType::VarChar:
         case SqlType::NText:
           if constexpr (std::is_same_v<T, uint16_t> || std::is_same_v<T, wchar_t>)
             return static_cast<VectorImpl<uint16_t> *>(vectorData.get())->vector;
@@ -519,11 +519,11 @@ namespace mssql
       else if constexpr (std::is_same_v<T, SQL_NUMERIC_STRUCT>)
         return sqlType == SqlType::Decimal || sqlType == SqlType::Numeric;
       else if constexpr (std::is_same_v<T, char>)
-        return sqlType == SqlType::Char ||
+        return sqlType == SqlType::Char || sqlType == SqlType::VarChar ||
                sqlType == SqlType::Text || sqlType == SqlType::Binary ||
                sqlType == SqlType::VarBinary;
       else if constexpr (std::is_same_v<T, uint16_t>)
-        return sqlType == SqlType::NChar || sqlType == SqlType::NVarChar || sqlType == SqlType::VarChar ||
+        return sqlType == SqlType::NChar || sqlType == SqlType::NVarChar ||
                sqlType == SqlType::NText;
       else if constexpr (std::is_same_v<T, SQL_DATE_STRUCT>)
         return sqlType == SqlType::Date;
