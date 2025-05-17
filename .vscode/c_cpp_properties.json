@@ -3,25 +3,34 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/node_modules/nan",
                 "${workspaceFolder}/**",
+                "${workspaceFolder}/cpp",
                 "${workspaceFolder}/cpp/include",
                 "${workspaceFolder}/cpp/include/common",
                 "${workspaceFolder}/cpp/include/core",
                 "${workspaceFolder}/cpp/include/js",
+                "${workspaceFolder}/cpp/include/js/workers",
                 "${workspaceFolder}/cpp/include/odbc",
                 "${workspaceFolder}/cpp/include/utils",
+                "${workspaceFolder}/node_modules/node-addon-api",
+                "${HOME}/.cache/node-gyp/22.15.0/include/node",
+                "/usr/include",
                 "/usr/include/**",
-                "/opt/microsoft/msodbcsql17/include/**"
+                "/opt/microsoft/msodbcsql18/include",
+                "/opt/microsoft/msodbcsql17/include",
+                "/usr/local/include"
             ],
             "defines": [
                 "LINUX_BUILD",
-                "UNICODE"
+                "UNICODE",
+                "NAPI_CPP_EXCEPTIONS",
+                "BUILDING_NODE_EXTENSION",
+                "NODE_GYP_V4"
             ],
-            "compilerPath": "/usr/bin/gcc",
+            "compilerPath": "/usr/bin/g++",
             "cStandard": "c11",
-            "cppStandard": "gnu++14",
-            "intelliSenseMode": "clang-x64"
+            "cppStandard": "c++20",
+            "intelliSenseMode": "gcc-x64"
         },
         {
             "name": "Win32",
