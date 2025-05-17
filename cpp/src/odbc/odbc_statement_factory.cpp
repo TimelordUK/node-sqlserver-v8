@@ -1,9 +1,10 @@
-#include "odbc_statement_factory.h"
+#include "odbc/odbc_statement_factory.h"
 
-#include "Logger.h"
-#include "odbc_error.h"
-#include "odbc_handles.h"
-#include "odbc_statement.h"
+#include "odbc/connection_handles.h"
+#include "odbc/odbc_error.h"
+#include "odbc/odbc_handles.h"
+#include "odbc/odbc_statement.h"
+#include "utils/Logger.h"
 
 namespace mssql {
 std::shared_ptr<IOdbcStatementHandle> OdbcStatementHandleFactory::createStatement() {
@@ -13,11 +14,16 @@ std::shared_ptr<IOdbcStatementHandle> OdbcStatementHandleFactory::createStatemen
 std::shared_ptr<IOdbcStatement> OdbcStatementFactory::MakeStatement(
     std::shared_ptr<IOdbcApi> odbcApi,
     StatementType type,
-    std::shared_ptr<IOdbcStatementHandle> handle,
     std::shared_ptr<OdbcErrorHandler> errorHandler,
     const std::string& query,
     const std::string& tvpType) {
   auto id = factory_.getNextId();
+  SQL_LOG_DEBUG_STREAM("MakeStatement - create a new statement handle with id = " << id);
+  auto handle = connectionHandles_->checkout(id);
+  if (!handle) {
+    SQL_LOG_ERROR_STREAM("MakeStatement - failed to checkout statement handle with id = " << id);
+    return nullptr;
+  }
   StatementHandle statementHandle(connectionId_, id);
 
   switch (type) {
@@ -39,6 +45,8 @@ std::shared_ptr<IOdbcStatement> OdbcStatementFactory::MakeStatement(
 }
 
 void OdbcStatementFactory::RemoveStatement(int statementId) {
+  SQL_LOG_DEBUG_STREAM("RemoveStatement - checkin statementId = " << statementId);
+  connectionHandles_->checkin(statementId);
   statements_.erase(statementId);
 }
 
@@ -54,13 +62,12 @@ std::shared_ptr<IOdbcStatement> OdbcStatementFactory::GetStatement(int statement
 std::shared_ptr<IOdbcStatement> OdbcStatementFactory::CreateStatement(
     std::shared_ptr<IOdbcApi> odbcApi,
     OdbcStatement::Type type,
-    std::shared_ptr<IOdbcStatementHandle> handle,
     std::shared_ptr<OdbcErrorHandler> errorHandler,
     const std::string& query,
     const std::string& tvpType) {
   SQL_LOG_TRACE_STREAM("CreateStatement type " << (int)type);
 
-  auto statement = MakeStatement(odbcApi, type, handle, errorHandler, query, tvpType);
+  auto statement = MakeStatement(odbcApi, type, errorHandler, query, tvpType);
   if (statement) {
     auto statementId = statement->GetStatementHandle().getStatementId();
     statements_[statementId] = statement;

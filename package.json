@@ -36,6 +36,7 @@
     }
   ],
   "dependencies": {
+    "@anthropic-ai/claude-code": "^0.2.115",
     "golang": "^0.1.5-stable",
     "node-abi": "^3.74.0",
     "node-addon-api": "^8.3.1",

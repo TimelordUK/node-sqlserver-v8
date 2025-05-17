@@ -21,17 +21,18 @@ class OdbcStatementHandleFactory {
  */
 class OdbcStatementFactory {
  public:
-  OdbcStatementFactory(int connectionId) : connectionId_(connectionId) {}
+  OdbcStatementFactory(int connectionId, std::shared_ptr<ConnectionHandles> connectionHandles)
+      : connectionId_(connectionId), connectionHandles_(connectionHandles) {}
 
   std::shared_ptr<IOdbcStatement> CreateStatement(std::shared_ptr<IOdbcApi> odbcApi,
                                                   StatementType type,
-                                                  std::shared_ptr<IOdbcStatementHandle> handle,
                                                   std::shared_ptr<OdbcErrorHandler> errorHandler,
                                                   const std::string& query,
                                                   const std::string& tvpType = "");
   IdFactory factory_;
   int connectionId_;
   std::map<int, std::shared_ptr<IOdbcStatement>> statements_;
+  std::shared_ptr<ConnectionHandles> connectionHandles_;
 
   void RemoveStatement(int statementId);
 
@@ -40,7 +41,6 @@ class OdbcStatementFactory {
  private:
   std::shared_ptr<IOdbcStatement> MakeStatement(std::shared_ptr<IOdbcApi> odbcApi,
                                                 OdbcStatement::Type type,
-                                                std::shared_ptr<IOdbcStatementHandle> handle,
                                                 std::shared_ptr<OdbcErrorHandler> errorHandler,
                                                 const std::string& query,
                                                 const std::string& tvpType = "");

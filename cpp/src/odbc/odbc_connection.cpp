@@ -29,8 +29,7 @@ OdbcConnection::OdbcConnection(std::shared_ptr<IOdbcEnvironment> environment,
                                int connectionId)
     : connectionState(ConnectionState::ConnectionClosed),
       _odbcApi(odbcApi ? odbcApi : std::make_shared<RealOdbcApi>()),
-      _connectionId(connectionId),
-      _statementFactory(std::make_shared<OdbcStatementFactory>(connectionId)) {
+      _connectionId(connectionId) {
   // Set up environment
   if (environment) {
     environment_ = environment;
@@ -45,6 +44,8 @@ OdbcConnection::OdbcConnection(std::shared_ptr<IOdbcEnvironment> environment,
 
   // Create error handler first since other components need it
   _errorHandler = std::make_shared<OdbcErrorHandler>(_connectionHandles);
+  _connectionHandles = std::make_shared<ConnectionHandles>(environment_->GetEnvironmentHandle());
+  _statementFactory = std::make_shared<OdbcStatementFactory>(_connectionId, _connectionHandles);
 }
 
 OdbcConnection::~OdbcConnection() {
@@ -192,20 +193,12 @@ std::shared_ptr<IOdbcStatement> OdbcConnection::CreateStatement(StatementType ty
     return nullptr;
   }
 
-  // Create a new statement handle
-  auto handle = create_statement_handle();
-  if (!handle->alloc(_connectionHandles->connectionHandle()->get_handle())) {
-    SQL_LOG_ERROR("Failed to allocate statement handle");
-    return nullptr;
-  }
-
   // Convert from std::u16string to std::string using our proper conversion utility
   std::string utf8Query = StringUtils::U16StringToUtf8(query);
   std::string utf8TvpType = StringUtils::U16StringToUtf8(tvpType);
 
   // Create the statement using the factory
-  return _statementFactory->CreateStatement(
-      _odbcApi, type, handle, _errorHandler, utf8Query, utf8TvpType);
+  return _statementFactory->CreateStatement(_odbcApi, type, _errorHandler, utf8Query, utf8TvpType);
 }
 
 std::shared_ptr<IOdbcStatement> OdbcConnection::GetPreparedStatement(
@@ -283,28 +276,6 @@ bool OdbcConnection::try_open(const std::u16string& connection_string, const int
   // Simple logging for connection attempt
   SQL_LOG_DEBUG_STREAM("Opening connection with " << connection_string.size()
                                                   << " UTF-16 characters");
-
-  // Create a sanitized version for logging
-  // std::string sanitizedStr;
-  // sanitizedStr.reserve(connection_string.size());
-
-  // for (const auto &c : connection_string)
-  // {
-  //   char ascii = static_cast<char>(c & 0xFF);
-  //   if (ascii >= 32 && ascii <= 126)
-  //   {
-  //     sanitizedStr.push_back(ascii);
-  //   }
-  // }
-
-  // Log a sanitized version with passwords masked
-  // if (!sanitizedStr.empty()) {
-  //   SQL_LOG_DEBUG_STREAM("Connection string (sanitized): "
-  //                       << StringUtils::SanitizeConnectionString(sanitizedStr));
-  // }
-
-  this->_connectionHandles =
-      std::make_shared<ConnectionHandles>(environment_->GetEnvironmentHandle());
 
   const auto connection = _connectionHandles->connectionHandle();
   if (connection == nullptr) {
