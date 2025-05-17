@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------------------------------------------------------
 // File: ConnectionHandles.h
 // Contents: Object to manage ODBC handles
-// 
+//
 // Copyright Microsoft Corporation and contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,32 +19,32 @@
 
 #pragma once
 
-#include "stdafx.h"
-#include <vector>
 #include <map>
+#include <vector>
 
-namespace mssql
-{
-    using namespace std;
-    class OdbcConnectionHandle;
-    class OdbcStatementHandle;
-    class OdbcEnvironmentHandle;
+#include "stdafx.h"
 
-    class ConnectionHandles
-    {
-    public:
-		 ConnectionHandles(const OdbcEnvironmentHandle &env);
-         ~ConnectionHandles();
-         shared_ptr<OdbcStatementHandle> checkout(long statementId);
-         void checkin(long statementId);
-         inline shared_ptr<OdbcConnectionHandle> connectionHandle() { return _connectionHandle; }
-         void clear();
+namespace mssql {
+using namespace std;
+class OdbcConnectionHandle;
+class OdbcStatementHandle;
+class OdbcEnvironmentHandle;
 
-    private:
-      
-        shared_ptr<OdbcStatementHandle> store(shared_ptr<OdbcStatementHandle> handle);
-        shared_ptr<OdbcStatementHandle> find(const long statement_id); 
-        map<long, shared_ptr<OdbcStatementHandle>> _statementHandles;
-        shared_ptr<OdbcConnectionHandle> _connectionHandle;
-    };
-}
+class ConnectionHandles {
+ public:
+  ConnectionHandles(const OdbcEnvironmentHandle& env);
+  ~ConnectionHandles();
+  shared_ptr<OdbcStatementHandle> checkout(long statementId);
+  void checkin(long statementId);
+  inline shared_ptr<OdbcConnectionHandle> connectionHandle() {
+    return _connectionHandle;
+  }
+  void clear();
+
+ private:
+  shared_ptr<OdbcStatementHandle> store(shared_ptr<OdbcStatementHandle> handle);
+  shared_ptr<OdbcStatementHandle> find(const long statement_id);
+  map<long, shared_ptr<OdbcStatementHandle>> _statementHandles;
+  shared_ptr<OdbcConnectionHandle> _connectionHandle;
+};
+}  // namespace mssql

@@ -28,11 +28,11 @@
 
 #ifndef __RPCNDR_H_VERSION__
 #error this stub requires an updated version of <rpcndr.h>
-#endif // __RPCNDR_H_VERSION__
+#endif  // __RPCNDR_H_VERSION__
 
 #ifndef COM_NO_WINDOWS_H
-#include "windows.h"
 #include "ole2.h"
+#include "windows.h"
 #endif /*COM_NO_WINDOWS_H*/
 
 #ifndef __sqlncli_h__
@@ -108,26 +108,25 @@ typedef interface ISSAsynchStatus ISSAsynchStatus;
 #endif /* __ISSAsynchStatus_FWD_DEFINED__ */
 
 /* header files for imported files */
-#include "unknwn.h"
 #include "oaidl.h"
+#include "unknwn.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-  /* interface __MIDL_itf_sqlncli_0000_0000 */
-  /* [local] */
+/* interface __MIDL_itf_sqlncli_0000_0000 */
+/* [local] */
 
-  //-----------------------------------------------------------------------------
-  // File:        sqlncli.h
-  //
-  // Copyright:   Copyright (c) Microsoft Corporation
-  //
-  // Contents:    SQL Server Native Client OLEDB provider and ODBC driver specific
-  //              definitions.
-  //
-  //-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// File:        sqlncli.h
+//
+// Copyright:   Copyright (c) Microsoft Corporation
+//
+// Contents:    SQL Server Native Client OLEDB provider and ODBC driver specific
+//              definitions.
+//
+//-----------------------------------------------------------------------------
 
 #if !defined(SQLNCLI_VER)
 #define SQLNCLI_VER 1100
@@ -175,7 +174,7 @@ extern "C"
 #define SQLNCLI_ERROR_CLSID CLSID_SQLNCLI11_ERROR
 #define SQLNCLI_ENUMERATOR_CLSID CLSID_SQLNCLI11_ENUMERATOR
 
-#endif // defined(_SQLNCLI_OLEDB_) || !defined(_SQLNCLI_ODBC_)
+#endif  // defined(_SQLNCLI_OLEDB_) || !defined(_SQLNCLI_ODBC_)
 
 #elif SQLNCLI_VER >= 1000
 
@@ -219,7 +218,7 @@ extern "C"
 #define SQLNCLI_ERROR_CLSID CLSID_SQLNCLI10_ERROR
 #define SQLNCLI_ENUMERATOR_CLSID CLSID_SQLNCLI10_ENUMERATOR
 
-#endif // defined(_SQLNCLI_OLEDB_) || !defined(_SQLNCLI_ODBC_)
+#endif  // defined(_SQLNCLI_OLEDB_) || !defined(_SQLNCLI_ODBC_)
 
 #else
 
@@ -263,9 +262,9 @@ extern "C"
 #define SQLNCLI_ERROR_CLSID CLSID_SQLNCLI_ERROR
 #define SQLNCLI_ENUMERATOR_CLSID CLSID_SQLNCLI_ENUMERATOR
 
-#endif // defined(_SQLNCLI_OLEDB_) || !defined(_SQLNCLI_ODBC_)
+#endif  // defined(_SQLNCLI_OLEDB_) || !defined(_SQLNCLI_ODBC_)
 
-#endif // SQLNCLI_VER >= 1100
+#endif  // SQLNCLI_VER >= 1100
 
 // define the character type agnostic constants
 #if defined(_UNICODE) || defined(UNICODE)
@@ -289,9 +288,9 @@ extern "C"
 #define SQLNCLI_ERROR_LOOKUP_PROG_ID SQLNCLI_ERROR_LOOKUP_PROG_ID_UNICODE
 #define SQLNCLI_ENUMERATOR_PROG_ID SQLNCLI_ENUMERATOR_PROG_ID_UNICODE
 
-#endif // defined(_SQLNCLI_OLEDB_) || !defined(_SQLNCLI_ODBC_)
+#endif  // defined(_SQLNCLI_OLEDB_) || !defined(_SQLNCLI_ODBC_)
 
-#else // _UNICODE || UNICODE
+#else  // _UNICODE || UNICODE
 
 #define SQLNCLI_PRODUCT_NAME_FULL_VER SQLNCLI_PRODUCT_NAME_FULL_VER_ANSI
 #define SQLNCLI_PRODUCT_NAME_FULL SQLNCLI_PRODUCT_NAME_FULL_ANSI
@@ -312,9 +311,9 @@ extern "C"
 #define SQLNCLI_ERROR_LOOKUP_PROG_ID SQLNCLI_ERROR_LOOKUP_PROG_ID_ANSI
 #define SQLNCLI_ENUMERATOR_PROG_ID SQLNCLI_ENUMERATOR_PROG_ID_ANSI
 
-#endif // defined(_SQLNCLI_OLEDB_) || !defined(_SQLNCLI_ODBC_)
+#endif  // defined(_SQLNCLI_OLEDB_) || !defined(_SQLNCLI_ODBC_)
 
-#endif // _UNICODE || UNICODE
+#endif  // _UNICODE || UNICODE
 
 #if defined(_SQLNCLI_ODBC_) || !defined(_SQLNCLI_OLEDB_)
 
@@ -328,7 +327,7 @@ extern "C"
 #include <oledb.h>
 #endif /*__oledb_h__*/
 
-#if 0 // This is already defined in oledb.h
+#if 0  // This is already defined in oledb.h
 
 #ifdef _WIN64
 
@@ -372,7 +371,7 @@ typedef LONGLONG				DB_LRESERVE;
 
 typedef ULONGLONG			DB_URESERVE;
 
-#else //_WIN64
+#else  //_WIN64
 
 // Length of a non-character object, size
 typedef ULONG DBLENGTH;
@@ -414,7 +413,7 @@ typedef LONG DB_LRESERVE;
 
 typedef ULONG DB_URESERVE;
 
-#endif // _WIN64
+#endif  // _WIN64
 typedef DWORD DBKIND;
 
 
@@ -630,11 +629,9 @@ EXTERN_C const IID IID_ICommandWithParameters;
 #define ICommandWithParameters_QueryInterface(This, riid, ppvObject) \
   ((This)->lpVtbl->QueryInterface(This, riid, ppvObject))
 
-#define ICommandWithParameters_AddRef(This) \
-  ((This)->lpVtbl->AddRef(This))
+#define ICommandWithParameters_AddRef(This) ((This)->lpVtbl->AddRef(This))
 
-#define ICommandWithParameters_Release(This) \
-  ((This)->lpVtbl->Release(This))
+#define ICommandWithParameters_Release(This) ((This)->lpVtbl->Release(This))
 
 #define ICommandWithParameters_GetParameterInfo(This, pcParams, prgParamInfo, ppNamesBuffer) \
   ((This)->lpVtbl->GetParameterInfo(This, pcParams, prgParamInfo, ppNamesBuffer))
@@ -707,10 +704,14 @@ typedef DWORD DBASYNCHOP;
 
 typedef DWORD DBASYNCHPHASE;
 
-#endif // This is already defined in oledb.h
+#endif  // This is already defined in oledb.h
 
 #ifndef _SQLNCLI_OLEDB_IGNORE_DEPRECATION_WARNING_
-#define _SQLNCLI_OLEDB_DEPRECATE_WARNING __declspec(deprecated("The SQL Server Native Client OLEDB provider is deprecated and will be removed in a future release of SQL Server Native Client. To disable this warning, define the following symbol in your application: _SQLNCLI_OLEDB_IGNORE_DEPRECATION_WARNING_"))
+#define _SQLNCLI_OLEDB_DEPRECATE_WARNING                                                           \
+  __declspec(deprecated(                                                                           \
+      "The SQL Server Native Client OLEDB provider is deprecated and will be removed in a future " \
+      "release of SQL Server Native Client. To disable this warning, define the following symbol " \
+      "in your application: _SQLNCLI_OLEDB_IGNORE_DEPRECATION_WARNING_"))
 #else
 #define _SQLNCLI_OLEDB_DEPRECATE_WARNING
 #endif
@@ -763,150 +764,135 @@ typedef DWORD DBASYNCHPHASE;
 #define V_SS_DATETIME2(X) V_SS_UNION(X, DateTimeVal)
 #define V_SS_DATETIMEOFFSET(X) V_SS_UNION(X, DateTimeOffsetVal)
 
-  //-------------------------------------------------------------------
-  // define SQL Server specific types.
-  //-------------------------------------------------------------------
-  typedef enum DBTYPEENUM EOledbTypes;
-#define DBTYPE_XML ((EOledbTypes)141)               // introduced in SQL 2005
-#define DBTYPE_TABLE ((EOledbTypes)143)             // introduced in SQL 2008
-#define DBTYPE_DBTIME2 ((EOledbTypes)145)           // introduced in SQL 2008
-#define DBTYPE_DBTIMESTAMPOFFSET ((EOledbTypes)146) // introduced in SQL 2008
+//-------------------------------------------------------------------
+// define SQL Server specific types.
+//-------------------------------------------------------------------
+typedef enum DBTYPEENUM EOledbTypes;
+#define DBTYPE_XML ((EOledbTypes)141)                // introduced in SQL 2005
+#define DBTYPE_TABLE ((EOledbTypes)143)              // introduced in SQL 2008
+#define DBTYPE_DBTIME2 ((EOledbTypes)145)            // introduced in SQL 2008
+#define DBTYPE_DBTIMESTAMPOFFSET ((EOledbTypes)146)  // introduced in SQL 2008
 #ifdef _SQLOLEDB_H_
 #undef DBTYPE_SQLVARIANT
-#endif                                       //_SQLOLEDB_H_
-#define DBTYPE_SQLVARIANT ((EOledbTypes)144) // introduced in MDAC 2.5
+#endif                                        //_SQLOLEDB_H_
+#define DBTYPE_SQLVARIANT ((EOledbTypes)144)  // introduced in MDAC 2.5
 
 #ifndef _SQLOLEDB_H_
-  enum SQLVARENUM
-  {
-    VT_SS_EMPTY = DBTYPE_EMPTY,
-    VT_SS_NULL = DBTYPE_NULL,
-    VT_SS_UI1 = DBTYPE_UI1,
-    VT_SS_I2 = DBTYPE_I2,
-    VT_SS_I4 = DBTYPE_I4,
-    VT_SS_I8 = DBTYPE_I8,
+enum SQLVARENUM {
+  VT_SS_EMPTY = DBTYPE_EMPTY,
+  VT_SS_NULL = DBTYPE_NULL,
+  VT_SS_UI1 = DBTYPE_UI1,
+  VT_SS_I2 = DBTYPE_I2,
+  VT_SS_I4 = DBTYPE_I4,
+  VT_SS_I8 = DBTYPE_I8,
 
-    // Floats
-    VT_SS_R4 = DBTYPE_R4,
-    VT_SS_R8 = DBTYPE_R8,
+  // Floats
+  VT_SS_R4 = DBTYPE_R4,
+  VT_SS_R8 = DBTYPE_R8,
 
-    // Money
-    VT_SS_MONEY = DBTYPE_CY,
-    VT_SS_SMALLMONEY = 200,
+  // Money
+  VT_SS_MONEY = DBTYPE_CY,
+  VT_SS_SMALLMONEY = 200,
 
-    // Strings
-    VT_SS_WSTRING = 201,
-    VT_SS_WVARSTRING = 202,
+  // Strings
+  VT_SS_WSTRING = 201,
+  VT_SS_WVARSTRING = 202,
 
-    VT_SS_STRING = 203,
-    VT_SS_VARSTRING = 204,
+  VT_SS_STRING = 203,
+  VT_SS_VARSTRING = 204,
 
-    // Bit
-    VT_SS_BIT = DBTYPE_BOOL,
+  // Bit
+  VT_SS_BIT = DBTYPE_BOOL,
 
-    // Guid
-    VT_SS_GUID = DBTYPE_GUID,
+  // Guid
+  VT_SS_GUID = DBTYPE_GUID,
 
-    // Exact precision
-    VT_SS_NUMERIC = DBTYPE_NUMERIC,
-    VT_SS_DECIMAL = 205,
+  // Exact precision
+  VT_SS_NUMERIC = DBTYPE_NUMERIC,
+  VT_SS_DECIMAL = 205,
 
-    // Datetime
-    VT_SS_DATETIME = DBTYPE_DBTIMESTAMP,
-    VT_SS_SMALLDATETIME = 206,
+  // Datetime
+  VT_SS_DATETIME = DBTYPE_DBTIMESTAMP,
+  VT_SS_SMALLDATETIME = 206,
 
-    // Binary
-    VT_SS_BINARY = 207,
-    VT_SS_VARBINARY = 208,
-    // Future
-    VT_SS_UNKNOWN = 209,
+  // Binary
+  VT_SS_BINARY = 207,
+  VT_SS_VARBINARY = 208,
+  // Future
+  VT_SS_UNKNOWN = 209,
 
-    // Additional datetime
-    VT_SS_DATE = DBTYPE_DBDATE,
-    VT_SS_TIME2 = DBTYPE_DBTIME2,
-    VT_SS_DATETIME2 = 212,
-    VT_SS_DATETIMEOFFSET = DBTYPE_DBTIMESTAMPOFFSET,
-  };
-  typedef unsigned short SSVARTYPE;
+  // Additional datetime
+  VT_SS_DATE = DBTYPE_DBDATE,
+  VT_SS_TIME2 = DBTYPE_DBTIME2,
+  VT_SS_DATETIME2 = 212,
+  VT_SS_DATETIMEOFFSET = DBTYPE_DBTIMESTAMPOFFSET,
+};
+typedef unsigned short SSVARTYPE;
 
-  enum DBPARAMFLAGSENUM_SS_100
-  {
-    DBPARAMFLAGS_SS_ISVARIABLESCALE = 0x40000000
-  };
-  enum DBCOLUMNFLAGSENUM_SS_100
-  {
-    DBCOLUMNFLAGS_SS_ISVARIABLESCALE = 0x40000000,
-    DBCOLUMNFLAGS_SS_ISCOLUMNSET = 0x80000000
-  };
+enum DBPARAMFLAGSENUM_SS_100 { DBPARAMFLAGS_SS_ISVARIABLESCALE = 0x40000000 };
+enum DBCOLUMNFLAGSENUM_SS_100 {
+  DBCOLUMNFLAGS_SS_ISVARIABLESCALE = 0x40000000,
+  DBCOLUMNFLAGS_SS_ISCOLUMNSET = 0x80000000
+};
 
-  //-------------------------------------------------------------------
-  // Class Factory Interface used to initialize pointer to UMS.
-  //-------------------------------------------------------------------
+//-------------------------------------------------------------------
+// Class Factory Interface used to initialize pointer to UMS.
+//-------------------------------------------------------------------
 
-  extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0001_v0_0_c_ifspec;
-  extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0001_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0001_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0001_v0_0_s_ifspec;
 
 #ifndef __IUMSInitialize_INTERFACE_DEFINED__
 #define __IUMSInitialize_INTERFACE_DEFINED__
 
-  /* interface IUMSInitialize */
-  /* [unique][uuid][object][local] */
+/* interface IUMSInitialize */
+/* [unique][uuid][object][local] */
 
-  EXTERN_C const IID IID_IUMSInitialize;
+EXTERN_C const IID IID_IUMSInitialize;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
 
-  MIDL_INTERFACE("5cf4ca14-ef21-11d0-97e7-00c04fc2ad98")
-  IUMSInitialize : public IUnknown
-  {
-  public:
-    virtual HRESULT STDMETHODCALLTYPE Initialize(
-        /* [in] */ void *pUMS) = 0;
-  };
+MIDL_INTERFACE("5cf4ca14-ef21-11d0-97e7-00c04fc2ad98")
+IUMSInitialize : public IUnknown {
+ public:
+  virtual HRESULT STDMETHODCALLTYPE Initialize(
+      /* [in] */ void* pUMS) = 0;
+};
 
 #else /* C style interface */
 
-  typedef struct IUMSInitializeVtbl
-  {
-    BEGIN_INTERFACE
+typedef struct IUMSInitializeVtbl {
+  BEGIN_INTERFACE
 
-    HRESULT(STDMETHODCALLTYPE *QueryInterface)(
-        IUMSInitialize *This,
-        /* [in] */ REFIID riid,
-        /* [annotation][iid_is][out] */
-        __RPC__deref_out void **ppvObject);
+  HRESULT(STDMETHODCALLTYPE* QueryInterface)(IUMSInitialize* This,
+                                             /* [in] */ REFIID riid,
+                                             /* [annotation][iid_is][out] */
+                                             __RPC__deref_out void** ppvObject);
 
-    ULONG(STDMETHODCALLTYPE *AddRef)(
-        IUMSInitialize *This);
+  ULONG(STDMETHODCALLTYPE* AddRef)(IUMSInitialize* This);
 
-    ULONG(STDMETHODCALLTYPE *Release)(
-        IUMSInitialize *This);
+  ULONG(STDMETHODCALLTYPE* Release)(IUMSInitialize* This);
 
-    HRESULT(STDMETHODCALLTYPE *Initialize)(
-        IUMSInitialize *This,
-        /* [in] */ void *pUMS);
+  HRESULT(STDMETHODCALLTYPE* Initialize)(IUMSInitialize* This,
+                                         /* [in] */ void* pUMS);
 
-    END_INTERFACE
-  } IUMSInitializeVtbl;
+  END_INTERFACE
+} IUMSInitializeVtbl;
 
-  interface IUMSInitialize
-  {
-    CONST_VTBL struct IUMSInitializeVtbl *lpVtbl;
-  };
+interface IUMSInitialize {
+  CONST_VTBL struct IUMSInitializeVtbl* lpVtbl;
+};
 
 #ifdef COBJMACROS
 
 #define IUMSInitialize_QueryInterface(This, riid, ppvObject) \
   ((This)->lpVtbl->QueryInterface(This, riid, ppvObject))
 
-#define IUMSInitialize_AddRef(This) \
-  ((This)->lpVtbl->AddRef(This))
+#define IUMSInitialize_AddRef(This) ((This)->lpVtbl->AddRef(This))
 
-#define IUMSInitialize_Release(This) \
-  ((This)->lpVtbl->Release(This))
+#define IUMSInitialize_Release(This) ((This)->lpVtbl->Release(This))
 
-#define IUMSInitialize_Initialize(This, pUMS) \
-  ((This)->lpVtbl->Initialize(This, pUMS))
+#define IUMSInitialize_Initialize(This, pUMS) ((This)->lpVtbl->Initialize(This, pUMS))
 
 #endif /* COBJMACROS */
 
@@ -914,86 +900,76 @@ typedef DWORD DBASYNCHPHASE;
 
 #endif /* __IUMSInitialize_INTERFACE_DEFINED__ */
 
-  /* interface __MIDL_itf_sqlncli_0000_0002 */
-  /* [local] */
+/* interface __MIDL_itf_sqlncli_0000_0002 */
+/* [local] */
 
-  // the structure returned by  ISQLServerErrorInfo::GetSQLServerInfo
-  typedef struct tagSSErrorInfo
-  {
-    LPOLESTR pwszMessage;
-    LPOLESTR pwszServer;
-    LPOLESTR pwszProcedure;
-    LONG lNative;
-    BYTE bState;
-    BYTE bClass;
-    WORD wLineNumber;
-  } SSERRORINFO;
+// the structure returned by  ISQLServerErrorInfo::GetSQLServerInfo
+typedef struct tagSSErrorInfo {
+  LPOLESTR pwszMessage;
+  LPOLESTR pwszServer;
+  LPOLESTR pwszProcedure;
+  LONG lNative;
+  BYTE bState;
+  BYTE bClass;
+  WORD wLineNumber;
+} SSERRORINFO;
 
-  extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0002_v0_0_c_ifspec;
-  extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0002_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0002_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0002_v0_0_s_ifspec;
 
 #ifndef __ISQLServerErrorInfo_INTERFACE_DEFINED__
 #define __ISQLServerErrorInfo_INTERFACE_DEFINED__
 
-  /* interface ISQLServerErrorInfo */
-  /* [unique][uuid][object][local] */
+/* interface ISQLServerErrorInfo */
+/* [unique][uuid][object][local] */
 
-  EXTERN_C const IID IID_ISQLServerErrorInfo;
+EXTERN_C const IID IID_ISQLServerErrorInfo;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
 
-  MIDL_INTERFACE("5CF4CA12-EF21-11d0-97E7-00C04FC2AD98")
-  ISQLServerErrorInfo : public IUnknown
-  {
-  public:
-    virtual HRESULT STDMETHODCALLTYPE GetErrorInfo(
-        /* [out] */ SSERRORINFO * *ppErrorInfo,
-        /* [annotation][out] */
-        __deref_out OLECHAR * *ppStringsBuffer) = 0;
-  };
+MIDL_INTERFACE("5CF4CA12-EF21-11d0-97E7-00C04FC2AD98")
+ISQLServerErrorInfo : public IUnknown {
+ public:
+  virtual HRESULT STDMETHODCALLTYPE GetErrorInfo(
+      /* [out] */ SSERRORINFO * *ppErrorInfo,
+      /* [annotation][out] */
+      __deref_out OLECHAR * *ppStringsBuffer) = 0;
+};
 
 #else /* C style interface */
 
-  typedef struct ISQLServerErrorInfoVtbl
-  {
-    BEGIN_INTERFACE
+typedef struct ISQLServerErrorInfoVtbl {
+  BEGIN_INTERFACE
 
-    HRESULT(STDMETHODCALLTYPE *QueryInterface)(
-        ISQLServerErrorInfo *This,
-        /* [in] */ REFIID riid,
-        /* [annotation][iid_is][out] */
-        __RPC__deref_out void **ppvObject);
+  HRESULT(STDMETHODCALLTYPE* QueryInterface)(ISQLServerErrorInfo* This,
+                                             /* [in] */ REFIID riid,
+                                             /* [annotation][iid_is][out] */
+                                             __RPC__deref_out void** ppvObject);
 
-    ULONG(STDMETHODCALLTYPE *AddRef)(
-        ISQLServerErrorInfo *This);
+  ULONG(STDMETHODCALLTYPE* AddRef)(ISQLServerErrorInfo* This);
 
-    ULONG(STDMETHODCALLTYPE *Release)(
-        ISQLServerErrorInfo *This);
+  ULONG(STDMETHODCALLTYPE* Release)(ISQLServerErrorInfo* This);
 
-    HRESULT(STDMETHODCALLTYPE *GetErrorInfo)(
-        ISQLServerErrorInfo *This,
-        /* [out] */ SSERRORINFO **ppErrorInfo,
-        /* [annotation][out] */
-        __deref_out OLECHAR **ppStringsBuffer);
+  HRESULT(STDMETHODCALLTYPE* GetErrorInfo)(ISQLServerErrorInfo* This,
+                                           /* [out] */ SSERRORINFO** ppErrorInfo,
+                                           /* [annotation][out] */
+                                           __deref_out OLECHAR** ppStringsBuffer);
 
-    END_INTERFACE
-  } ISQLServerErrorInfoVtbl;
+  END_INTERFACE
+} ISQLServerErrorInfoVtbl;
 
-  interface ISQLServerErrorInfo
-  {
-    CONST_VTBL struct ISQLServerErrorInfoVtbl *lpVtbl;
-  };
+interface ISQLServerErrorInfo {
+  CONST_VTBL struct ISQLServerErrorInfoVtbl* lpVtbl;
+};
 
 #ifdef COBJMACROS
 
 #define ISQLServerErrorInfo_QueryInterface(This, riid, ppvObject) \
   ((This)->lpVtbl->QueryInterface(This, riid, ppvObject))
 
-#define ISQLServerErrorInfo_AddRef(This) \
-  ((This)->lpVtbl->AddRef(This))
+#define ISQLServerErrorInfo_AddRef(This) ((This)->lpVtbl->AddRef(This))
 
-#define ISQLServerErrorInfo_Release(This) \
-  ((This)->lpVtbl->Release(This))
+#define ISQLServerErrorInfo_Release(This) ((This)->lpVtbl->Release(This))
 
 #define ISQLServerErrorInfo_GetErrorInfo(This, ppErrorInfo, ppStringsBuffer) \
   ((This)->lpVtbl->GetErrorInfo(This, ppErrorInfo, ppStringsBuffer))
@@ -1007,76 +983,65 @@ typedef DWORD DBASYNCHPHASE;
 #ifndef __IRowsetFastLoad_INTERFACE_DEFINED__
 #define __IRowsetFastLoad_INTERFACE_DEFINED__
 
-  /* interface IRowsetFastLoad */
-  /* [unique][uuid][object][local] */
+/* interface IRowsetFastLoad */
+/* [unique][uuid][object][local] */
 
-  EXTERN_C const IID IID_IRowsetFastLoad;
+EXTERN_C const IID IID_IRowsetFastLoad;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
 
-  MIDL_INTERFACE("5CF4CA13-EF21-11d0-97E7-00C04FC2AD98")
-  IRowsetFastLoad : public IUnknown
-  {
-  public:
-    virtual HRESULT STDMETHODCALLTYPE InsertRow(
-        /* [in] */ HACCESSOR hAccessor,
-        /* [in] */ void *pData) = 0;
+MIDL_INTERFACE("5CF4CA13-EF21-11d0-97E7-00C04FC2AD98")
+IRowsetFastLoad : public IUnknown {
+ public:
+  virtual HRESULT STDMETHODCALLTYPE InsertRow(
+      /* [in] */ HACCESSOR hAccessor,
+      /* [in] */ void* pData) = 0;
 
-    virtual HRESULT STDMETHODCALLTYPE Commit(
-        /* [in] */ BOOL fDone) = 0;
-  };
+  virtual HRESULT STDMETHODCALLTYPE Commit(
+      /* [in] */ BOOL fDone) = 0;
+};
 
 #else /* C style interface */
 
-  typedef struct IRowsetFastLoadVtbl
-  {
-    BEGIN_INTERFACE
+typedef struct IRowsetFastLoadVtbl {
+  BEGIN_INTERFACE
 
-    HRESULT(STDMETHODCALLTYPE *QueryInterface)(
-        IRowsetFastLoad *This,
-        /* [in] */ REFIID riid,
-        /* [annotation][iid_is][out] */
-        __RPC__deref_out void **ppvObject);
+  HRESULT(STDMETHODCALLTYPE* QueryInterface)(IRowsetFastLoad* This,
+                                             /* [in] */ REFIID riid,
+                                             /* [annotation][iid_is][out] */
+                                             __RPC__deref_out void** ppvObject);
 
-    ULONG(STDMETHODCALLTYPE *AddRef)(
-        IRowsetFastLoad *This);
+  ULONG(STDMETHODCALLTYPE* AddRef)(IRowsetFastLoad* This);
 
-    ULONG(STDMETHODCALLTYPE *Release)(
-        IRowsetFastLoad *This);
+  ULONG(STDMETHODCALLTYPE* Release)(IRowsetFastLoad* This);
 
-    HRESULT(STDMETHODCALLTYPE *InsertRow)(
-        IRowsetFastLoad *This,
-        /* [in] */ HACCESSOR hAccessor,
-        /* [in] */ void *pData);
+  HRESULT(STDMETHODCALLTYPE* InsertRow)(IRowsetFastLoad* This,
+                                        /* [in] */ HACCESSOR hAccessor,
+                                        /* [in] */ void* pData);
 
-    HRESULT(STDMETHODCALLTYPE *Commit)(
-        IRowsetFastLoad *This,
-        /* [in] */ BOOL fDone);
+  HRESULT(STDMETHODCALLTYPE* Commit)(IRowsetFastLoad* This,
+                                     /* [in] */ BOOL fDone);
 
-    END_INTERFACE
-  } IRowsetFastLoadVtbl;
+  END_INTERFACE
+} IRowsetFastLoadVtbl;
 
-  interface IRowsetFastLoad
-  {
-    CONST_VTBL struct IRowsetFastLoadVtbl *lpVtbl;
-  };
+interface IRowsetFastLoad {
+  CONST_VTBL struct IRowsetFastLoadVtbl* lpVtbl;
+};
 
 #ifdef COBJMACROS
 
 #define IRowsetFastLoad_QueryInterface(This, riid, ppvObject) \
   ((This)->lpVtbl->QueryInterface(This, riid, ppvObject))
 
-#define IRowsetFastLoad_AddRef(This) \
-  ((This)->lpVtbl->AddRef(This))
+#define IRowsetFastLoad_AddRef(This) ((This)->lpVtbl->AddRef(This))
 
-#define IRowsetFastLoad_Release(This) \
-  ((This)->lpVtbl->Release(This))
+#define IRowsetFastLoad_Release(This) ((This)->lpVtbl->Release(This))
 
 #define IRowsetFastLoad_InsertRow(This, hAccessor, pData) \
   ((This)->lpVtbl->InsertRow(This, hAccessor, pData))
 
-#define IRowsetFastLoad_Commit(This, fDone) \
-  ((This)->lpVtbl->Commit(This, fDone))
+#define IRowsetFastLoad_Commit(This, fDone) ((This)->lpVtbl->Commit(This, fDone))
 
 #endif /* COBJMACROS */
 
@@ -1084,189 +1049,166 @@ typedef DWORD DBASYNCHPHASE;
 
 #endif /* __IRowsetFastLoad_INTERFACE_DEFINED__ */
 
-  /* interface __MIDL_itf_sqlncli_0000_0004 */
-  /* [local] */
+/* interface __MIDL_itf_sqlncli_0000_0004 */
+/* [local] */
 
-#include <pshpack8.h> // 8-byte structure packing
+#include <pshpack8.h>  // 8-byte structure packing
 
-  typedef struct tagDBTIME2
-  {
-    USHORT hour;
-    USHORT minute;
-    USHORT second;
-    ULONG fraction;
-  } DBTIME2;
+typedef struct tagDBTIME2 {
+  USHORT hour;
+  USHORT minute;
+  USHORT second;
+  ULONG fraction;
+} DBTIME2;
 
-  typedef struct tagDBTIMESTAMPOFFSET
-  {
-    SHORT year;
-    USHORT month;
-    USHORT day;
-    USHORT hour;
-    USHORT minute;
-    USHORT second;
-    ULONG fraction;
-    SHORT timezone_hour;
-    SHORT timezone_minute;
-  } DBTIMESTAMPOFFSET;
+typedef struct tagDBTIMESTAMPOFFSET {
+  SHORT year;
+  USHORT month;
+  USHORT day;
+  USHORT hour;
+  USHORT minute;
+  USHORT second;
+  ULONG fraction;
+  SHORT timezone_hour;
+  SHORT timezone_minute;
+} DBTIMESTAMPOFFSET;
 
-#include <poppack.h> // restore original structure packing
+#include <poppack.h>  // restore original structure packing
 
-  struct SSVARIANT
-  {
-    SSVARTYPE vt;
-    DWORD dwReserved1;
-    DWORD dwReserved2;
-    union
-    {
-      BYTE bTinyIntVal;
-      SHORT sShortIntVal;
-      LONG lIntVal;
-      LONGLONG llBigIntVal;
-      FLOAT fltRealVal;
-      DOUBLE dblFloatVal;
-      CY cyMoneyVal;
-      VARIANT_BOOL fBitVal;
-      BYTE rgbGuidVal[16];
-      DB_NUMERIC numNumericVal;
-      DBDATE dDateVal;
+struct SSVARIANT {
+  SSVARTYPE vt;
+  DWORD dwReserved1;
+  DWORD dwReserved2;
+  union {
+    BYTE bTinyIntVal;
+    SHORT sShortIntVal;
+    LONG lIntVal;
+    LONGLONG llBigIntVal;
+    FLOAT fltRealVal;
+    DOUBLE dblFloatVal;
+    CY cyMoneyVal;
+    VARIANT_BOOL fBitVal;
+    BYTE rgbGuidVal[16];
+    DB_NUMERIC numNumericVal;
+    DBDATE dDateVal;
+    DBTIMESTAMP tsDateTimeVal;
+    struct _Time2Val {
+      DBTIME2 tTime2Val;
+      BYTE bScale;
+    } Time2Val;
+    struct _DateTimeVal {
       DBTIMESTAMP tsDateTimeVal;
-      struct _Time2Val
-      {
-        DBTIME2 tTime2Val;
-        BYTE bScale;
-      } Time2Val;
-      struct _DateTimeVal
-      {
-        DBTIMESTAMP tsDateTimeVal;
-        BYTE bScale;
-      } DateTimeVal;
-      struct _DateTimeOffsetVal
-      {
-        DBTIMESTAMPOFFSET tsoDateTimeOffsetVal;
-        BYTE bScale;
-      } DateTimeOffsetVal;
-      struct _NCharVal
-      {
-        SHORT sActualLength;
-        SHORT sMaxLength;
-        WCHAR *pwchNCharVal;
-        BYTE rgbReserved[5];
-        DWORD dwReserved;
-        WCHAR *pwchReserved;
-      } NCharVal;
-      struct _CharVal
-      {
-        SHORT sActualLength;
-        SHORT sMaxLength;
-        CHAR *pchCharVal;
-        BYTE rgbReserved[5];
-        DWORD dwReserved;
-        WCHAR *pwchReserved;
-      } CharVal;
-      struct _BinaryVal
-      {
-        SHORT sActualLength;
-        SHORT sMaxLength;
-        BYTE *prgbBinaryVal;
-        DWORD dwReserved;
-      } BinaryVal;
-      struct _UnknownType
-      {
-        DWORD dwActualLength;
-        BYTE rgMetadata[16];
-        BYTE *pUnknownData;
-      } UnknownType;
-      struct _BLOBType
-      {
-        DBOBJECT dbobj;
-        IUnknown *pUnk;
-      } BLOBType;
-    };
+      BYTE bScale;
+    } DateTimeVal;
+    struct _DateTimeOffsetVal {
+      DBTIMESTAMPOFFSET tsoDateTimeOffsetVal;
+      BYTE bScale;
+    } DateTimeOffsetVal;
+    struct _NCharVal {
+      SHORT sActualLength;
+      SHORT sMaxLength;
+      WCHAR* pwchNCharVal;
+      BYTE rgbReserved[5];
+      DWORD dwReserved;
+      WCHAR* pwchReserved;
+    } NCharVal;
+    struct _CharVal {
+      SHORT sActualLength;
+      SHORT sMaxLength;
+      CHAR* pchCharVal;
+      BYTE rgbReserved[5];
+      DWORD dwReserved;
+      WCHAR* pwchReserved;
+    } CharVal;
+    struct _BinaryVal {
+      SHORT sActualLength;
+      SHORT sMaxLength;
+      BYTE* prgbBinaryVal;
+      DWORD dwReserved;
+    } BinaryVal;
+    struct _UnknownType {
+      DWORD dwActualLength;
+      BYTE rgMetadata[16];
+      BYTE* pUnknownData;
+    } UnknownType;
+    struct _BLOBType {
+      DBOBJECT dbobj;
+      IUnknown* pUnk;
+    } BLOBType;
   };
-  typedef DWORD LOCKMODE;
+};
+typedef DWORD LOCKMODE;
 
-  enum LOCKMODEENUM
-  {
-    LOCKMODE_INVALID = 0,
-    LOCKMODE_EXCLUSIVE = (LOCKMODE_INVALID + 1),
-    LOCKMODE_SHARED = (LOCKMODE_EXCLUSIVE + 1)
-  };
+enum LOCKMODEENUM {
+  LOCKMODE_INVALID = 0,
+  LOCKMODE_EXCLUSIVE = (LOCKMODE_INVALID + 1),
+  LOCKMODE_SHARED = (LOCKMODE_EXCLUSIVE + 1)
+};
 
-  extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0004_v0_0_c_ifspec;
-  extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0004_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0004_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0004_v0_0_s_ifspec;
 
 #ifndef __ISchemaLock_INTERFACE_DEFINED__
 #define __ISchemaLock_INTERFACE_DEFINED__
 
-  /* interface ISchemaLock */
-  /* [unique][uuid][object][local] */
+/* interface ISchemaLock */
+/* [unique][uuid][object][local] */
 
-  EXTERN_C const IID IID_ISchemaLock;
+EXTERN_C const IID IID_ISchemaLock;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
 
-  MIDL_INTERFACE("4C2389FB-2511-11d4-B258-00C04F7971CE")
-  ISchemaLock : public IUnknown
-  {
-  public:
-    virtual HRESULT STDMETHODCALLTYPE GetSchemaLock(
-        /* [in] */ DBID * pTableID,
-        /* [in] */ LOCKMODE lmMode,
-        /* [out] */ HANDLE * phLockHandle,
-        /* [out] */ ULONGLONG * pTableVersion) = 0;
+MIDL_INTERFACE("4C2389FB-2511-11d4-B258-00C04F7971CE")
+ISchemaLock : public IUnknown {
+ public:
+  virtual HRESULT STDMETHODCALLTYPE GetSchemaLock(
+      /* [in] */ DBID * pTableID,
+      /* [in] */ LOCKMODE lmMode,
+      /* [out] */ HANDLE * phLockHandle,
+      /* [out] */ ULONGLONG * pTableVersion) = 0;
 
-    virtual HRESULT STDMETHODCALLTYPE ReleaseSchemaLock(
-        /* [in] */ HANDLE hLockHandle) = 0;
-  };
+  virtual HRESULT STDMETHODCALLTYPE ReleaseSchemaLock(
+      /* [in] */ HANDLE hLockHandle) = 0;
+};
 
 #else /* C style interface */
 
-  typedef struct ISchemaLockVtbl
-  {
-    BEGIN_INTERFACE
+typedef struct ISchemaLockVtbl {
+  BEGIN_INTERFACE
 
-    HRESULT(STDMETHODCALLTYPE *QueryInterface)(
-        ISchemaLock *This,
-        /* [in] */ REFIID riid,
-        /* [annotation][iid_is][out] */
-        __RPC__deref_out void **ppvObject);
+  HRESULT(STDMETHODCALLTYPE* QueryInterface)(ISchemaLock* This,
+                                             /* [in] */ REFIID riid,
+                                             /* [annotation][iid_is][out] */
+                                             __RPC__deref_out void** ppvObject);
 
-    ULONG(STDMETHODCALLTYPE *AddRef)(
-        ISchemaLock *This);
+  ULONG(STDMETHODCALLTYPE* AddRef)(ISchemaLock* This);
 
-    ULONG(STDMETHODCALLTYPE *Release)(
-        ISchemaLock *This);
+  ULONG(STDMETHODCALLTYPE* Release)(ISchemaLock* This);
 
-    HRESULT(STDMETHODCALLTYPE *GetSchemaLock)(
-        ISchemaLock *This,
-        /* [in] */ DBID *pTableID,
-        /* [in] */ LOCKMODE lmMode,
-        /* [out] */ HANDLE *phLockHandle,
-        /* [out] */ ULONGLONG *pTableVersion);
+  HRESULT(STDMETHODCALLTYPE* GetSchemaLock)(ISchemaLock* This,
+                                            /* [in] */ DBID* pTableID,
+                                            /* [in] */ LOCKMODE lmMode,
+                                            /* [out] */ HANDLE* phLockHandle,
+                                            /* [out] */ ULONGLONG* pTableVersion);
 
-    HRESULT(STDMETHODCALLTYPE *ReleaseSchemaLock)(
-        ISchemaLock *This,
-        /* [in] */ HANDLE hLockHandle);
+  HRESULT(STDMETHODCALLTYPE* ReleaseSchemaLock)(ISchemaLock* This,
+                                                /* [in] */ HANDLE hLockHandle);
 
-    END_INTERFACE
-  } ISchemaLockVtbl;
+  END_INTERFACE
+} ISchemaLockVtbl;
 
-  interface ISchemaLock
-  {
-    CONST_VTBL struct ISchemaLockVtbl *lpVtbl;
-  };
+interface ISchemaLock {
+  CONST_VTBL struct ISchemaLockVtbl* lpVtbl;
+};
 
 #ifdef COBJMACROS
 
 #define ISchemaLock_QueryInterface(This, riid, ppvObject) \
   ((This)->lpVtbl->QueryInterface(This, riid, ppvObject))
 
-#define ISchemaLock_AddRef(This) \
-  ((This)->lpVtbl->AddRef(This))
+#define ISchemaLock_AddRef(This) ((This)->lpVtbl->AddRef(This))
 
-#define ISchemaLock_Release(This) \
-  ((This)->lpVtbl->Release(This))
+#define ISchemaLock_Release(This) ((This)->lpVtbl->Release(This))
 
 #define ISchemaLock_GetSchemaLock(This, pTableID, lmMode, phLockHandle, pTableVersion) \
   ((This)->lpVtbl->GetSchemaLock(This, pTableID, lmMode, phLockHandle, pTableVersion))
@@ -1283,143 +1225,138 @@ typedef DWORD DBASYNCHPHASE;
 #ifndef __IBCPSession_INTERFACE_DEFINED__
 #define __IBCPSession_INTERFACE_DEFINED__
 
-  /* interface IBCPSession */
-  /* [unique][uuid][object][local] */
+/* interface IBCPSession */
+/* [unique][uuid][object][local] */
 
-  EXTERN_C const IID IID_IBCPSession;
+EXTERN_C const IID IID_IBCPSession;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
 
-  MIDL_INTERFACE("88352D80-42D1-42f0-A170-AB0F8B45B939")
-  IBCPSession : public IUnknown
-  {
-  public:
-    virtual HRESULT STDMETHODCALLTYPE BCPColFmt(
-        /* [in] */ DBORDINAL idxUserDataCol,
-        /* [in] */ int eUserDataType,
-        /* [in] */ int cbIndicator,
-        /* [in] */ int cbUserData,
-        /* [size_is][in] */ BYTE *pbUserDataTerm,
-        /* [in] */ int cbUserDataTerm,
-        /* [in] */ DBORDINAL idxServerCol) = 0;
+MIDL_INTERFACE("88352D80-42D1-42f0-A170-AB0F8B45B939")
+IBCPSession : public IUnknown {
+ public:
+  virtual HRESULT STDMETHODCALLTYPE BCPColFmt(
+      /* [in] */ DBORDINAL idxUserDataCol,
+      /* [in] */ int eUserDataType,
+      /* [in] */ int cbIndicator,
+      /* [in] */ int cbUserData,
+      /* [size_is][in] */ BYTE* pbUserDataTerm,
+      /* [in] */ int cbUserDataTerm,
+      /* [in] */ DBORDINAL idxServerCol) = 0;
 
-    virtual HRESULT STDMETHODCALLTYPE BCPColumns(
-        /* [in] */ DBCOUNTITEM nColumns) = 0;
+  virtual HRESULT STDMETHODCALLTYPE BCPColumns(
+      /* [in] */ DBCOUNTITEM nColumns) = 0;
 
-    virtual HRESULT STDMETHODCALLTYPE BCPControl(
-        /* [in] */ int eOption,
-        /* [in] */ void *iValue) = 0;
+  virtual HRESULT STDMETHODCALLTYPE BCPControl(
+      /* [in] */ int eOption,
+      /* [in] */ void* iValue) = 0;
 
-    virtual HRESULT STDMETHODCALLTYPE BCPDone(void) = 0;
+  virtual HRESULT STDMETHODCALLTYPE BCPDone(void) = 0;
 
-    virtual HRESULT STDMETHODCALLTYPE BCPExec(
-        /* [out] */ DBROWCOUNT * pRowsCopied) = 0;
+  virtual HRESULT STDMETHODCALLTYPE BCPExec(
+      /* [out] */ DBROWCOUNT * pRowsCopied) = 0;
 
-    virtual HRESULT STDMETHODCALLTYPE BCPInit(
-        /* [string][in] */ const wchar_t *pwszTable,
-        /* [string][in] */ const wchar_t *pwszDataFile,
-        /* [string][in] */ const wchar_t *pwszErrorFile,
-        /* [in] */ int eDirection) = 0;
+  virtual HRESULT STDMETHODCALLTYPE BCPInit(
+      /* [string][in] */ const wchar_t* pwszTable,
+      /* [string][in] */ const wchar_t* pwszDataFile,
+      /* [string][in] */ const wchar_t* pwszErrorFile,
+      /* [in] */ int eDirection) = 0;
 
-    virtual HRESULT STDMETHODCALLTYPE BCPReadFmt(
-        /* [string][in] */ const wchar_t *pwszFormatFile) = 0;
+  virtual HRESULT STDMETHODCALLTYPE BCPReadFmt(
+      /* [string][in] */ const wchar_t* pwszFormatFile) = 0;
 
-    virtual HRESULT STDMETHODCALLTYPE BCPWriteFmt(
-        /* [string][in] */ const wchar_t *pwszFormatFile) = 0;
-  };
+  virtual HRESULT STDMETHODCALLTYPE BCPWriteFmt(
+      /* [string][in] */ const wchar_t* pwszFormatFile) = 0;
+};
 
 #else /* C style interface */
 
-  typedef struct IBCPSessionVtbl
-  {
-    BEGIN_INTERFACE
+typedef struct IBCPSessionVtbl {
+  BEGIN_INTERFACE
 
-    HRESULT(STDMETHODCALLTYPE *QueryInterface)(
-        IBCPSession *This,
-        /* [in] */ REFIID riid,
-        /* [annotation][iid_is][out] */
-        __RPC__deref_out void **ppvObject);
+  HRESULT(STDMETHODCALLTYPE* QueryInterface)(IBCPSession* This,
+                                             /* [in] */ REFIID riid,
+                                             /* [annotation][iid_is][out] */
+                                             __RPC__deref_out void** ppvObject);
 
-    ULONG(STDMETHODCALLTYPE *AddRef)(
-        IBCPSession *This);
+  ULONG(STDMETHODCALLTYPE* AddRef)(IBCPSession* This);
 
-    ULONG(STDMETHODCALLTYPE *Release)(
-        IBCPSession *This);
+  ULONG(STDMETHODCALLTYPE* Release)(IBCPSession* This);
 
-    HRESULT(STDMETHODCALLTYPE *BCPColFmt)(
-        IBCPSession *This,
-        /* [in] */ DBORDINAL idxUserDataCol,
-        /* [in] */ int eUserDataType,
-        /* [in] */ int cbIndicator,
-        /* [in] */ int cbUserData,
-        /* [size_is][in] */ BYTE *pbUserDataTerm,
-        /* [in] */ int cbUserDataTerm,
-        /* [in] */ DBORDINAL idxServerCol);
+  HRESULT(STDMETHODCALLTYPE* BCPColFmt)(IBCPSession* This,
+                                        /* [in] */ DBORDINAL idxUserDataCol,
+                                        /* [in] */ int eUserDataType,
+                                        /* [in] */ int cbIndicator,
+                                        /* [in] */ int cbUserData,
+                                        /* [size_is][in] */ BYTE* pbUserDataTerm,
+                                        /* [in] */ int cbUserDataTerm,
+                                        /* [in] */ DBORDINAL idxServerCol);
 
-    HRESULT(STDMETHODCALLTYPE *BCPColumns)(
-        IBCPSession *This,
-        /* [in] */ DBCOUNTITEM nColumns);
+  HRESULT(STDMETHODCALLTYPE* BCPColumns)(IBCPSession* This,
+                                         /* [in] */ DBCOUNTITEM nColumns);
 
-    HRESULT(STDMETHODCALLTYPE *BCPControl)(
-        IBCPSession *This,
-        /* [in] */ int eOption,
-        /* [in] */ void *iValue);
+  HRESULT(STDMETHODCALLTYPE* BCPControl)(IBCPSession* This,
+                                         /* [in] */ int eOption,
+                                         /* [in] */ void* iValue);
 
-    HRESULT(STDMETHODCALLTYPE *BCPDone)(
-        IBCPSession *This);
+  HRESULT(STDMETHODCALLTYPE* BCPDone)(IBCPSession* This);
 
-    HRESULT(STDMETHODCALLTYPE *BCPExec)(
-        IBCPSession *This,
-        /* [out] */ DBROWCOUNT *pRowsCopied);
+  HRESULT(STDMETHODCALLTYPE* BCPExec)(IBCPSession* This,
+                                      /* [out] */ DBROWCOUNT* pRowsCopied);
 
-    HRESULT(STDMETHODCALLTYPE *BCPInit)(
-        IBCPSession *This,
-        /* [string][in] */ const wchar_t *pwszTable,
-        /* [string][in] */ const wchar_t *pwszDataFile,
-        /* [string][in] */ const wchar_t *pwszErrorFile,
-        /* [in] */ int eDirection);
+  HRESULT(STDMETHODCALLTYPE* BCPInit)(IBCPSession* This,
+                                      /* [string][in] */ const wchar_t* pwszTable,
+                                      /* [string][in] */ const wchar_t* pwszDataFile,
+                                      /* [string][in] */ const wchar_t* pwszErrorFile,
+                                      /* [in] */ int eDirection);
 
-    HRESULT(STDMETHODCALLTYPE *BCPReadFmt)(
-        IBCPSession *This,
-        /* [string][in] */ const wchar_t *pwszFormatFile);
+  HRESULT(STDMETHODCALLTYPE* BCPReadFmt)(IBCPSession* This,
+                                         /* [string][in] */ const wchar_t* pwszFormatFile);
 
-    HRESULT(STDMETHODCALLTYPE *BCPWriteFmt)(
-        IBCPSession *This,
-        /* [string][in] */ const wchar_t *pwszFormatFile);
+  HRESULT(STDMETHODCALLTYPE* BCPWriteFmt)(IBCPSession* This,
+                                          /* [string][in] */ const wchar_t* pwszFormatFile);
 
-    END_INTERFACE
-  } IBCPSessionVtbl;
+  END_INTERFACE
+} IBCPSessionVtbl;
 
-  interface IBCPSession
-  {
-    CONST_VTBL struct IBCPSessionVtbl *lpVtbl;
-  };
+interface IBCPSession {
+  CONST_VTBL struct IBCPSessionVtbl* lpVtbl;
+};
 
 #ifdef COBJMACROS
 
 #define IBCPSession_QueryInterface(This, riid, ppvObject) \
   ((This)->lpVtbl->QueryInterface(This, riid, ppvObject))
 
-#define IBCPSession_AddRef(This) \
-  ((This)->lpVtbl->AddRef(This))
+#define IBCPSession_AddRef(This) ((This)->lpVtbl->AddRef(This))
 
-#define IBCPSession_Release(This) \
-  ((This)->lpVtbl->Release(This))
+#define IBCPSession_Release(This) ((This)->lpVtbl->Release(This))
 
-#define IBCPSession_BCPColFmt(This, idxUserDataCol, eUserDataType, cbIndicator, cbUserData, pbUserDataTerm, cbUserDataTerm, idxServerCol) \
-  ((This)->lpVtbl->BCPColFmt(This, idxUserDataCol, eUserDataType, cbIndicator, cbUserData, pbUserDataTerm, cbUserDataTerm, idxServerCol))
+#define IBCPSession_BCPColFmt(This,           \
+                              idxUserDataCol, \
+                              eUserDataType,  \
+                              cbIndicator,    \
+                              cbUserData,     \
+                              pbUserDataTerm, \
+                              cbUserDataTerm, \
+                              idxServerCol)   \
+  ((This)->lpVtbl->BCPColFmt(This,            \
+                             idxUserDataCol,  \
+                             eUserDataType,   \
+                             cbIndicator,     \
+                             cbUserData,      \
+                             pbUserDataTerm,  \
+                             cbUserDataTerm,  \
+                             idxServerCol))
 
-#define IBCPSession_BCPColumns(This, nColumns) \
-  ((This)->lpVtbl->BCPColumns(This, nColumns))
+#define IBCPSession_BCPColumns(This, nColumns) ((This)->lpVtbl->BCPColumns(This, nColumns))
 
 #define IBCPSession_BCPControl(This, eOption, iValue) \
   ((This)->lpVtbl->BCPControl(This, eOption, iValue))
 
-#define IBCPSession_BCPDone(This) \
-  ((This)->lpVtbl->BCPDone(This))
+#define IBCPSession_BCPDone(This) ((This)->lpVtbl->BCPDone(This))
 
-#define IBCPSession_BCPExec(This, pRowsCopied) \
-  ((This)->lpVtbl->BCPExec(This, pRowsCopied))
+#define IBCPSession_BCPExec(This, pRowsCopied) ((This)->lpVtbl->BCPExec(This, pRowsCopied))
 
 #define IBCPSession_BCPInit(This, pwszTable, pwszDataFile, pwszErrorFile, eDirection) \
   ((This)->lpVtbl->BCPInit(This, pwszTable, pwszDataFile, pwszErrorFile, eDirection))
@@ -1439,125 +1376,119 @@ typedef DWORD DBASYNCHPHASE;
 #ifndef __IBCPSession2_INTERFACE_DEFINED__
 #define __IBCPSession2_INTERFACE_DEFINED__
 
-  /* interface IBCPSession2 */
-  /* [unique][uuid][object][local] */
+/* interface IBCPSession2 */
+/* [unique][uuid][object][local] */
 
-  EXTERN_C const IID IID_IBCPSession2;
+EXTERN_C const IID IID_IBCPSession2;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
 
-  MIDL_INTERFACE("AD79D3B6-59DD-46a3-BFC6-E62A65FF3523")
-  IBCPSession2 : public IBCPSession
-  {
-  public:
-    virtual HRESULT STDMETHODCALLTYPE BCPSetBulkMode(
-        /* [in] */ int property,
-        /* [size_is][in] */ void *pField,
-        /* [in] */ int cbField,
-        /* [size_is][in] */ void *pRow,
-        /* [in] */ int cbRow) = 0;
-  };
+MIDL_INTERFACE("AD79D3B6-59DD-46a3-BFC6-E62A65FF3523")
+IBCPSession2 : public IBCPSession {
+ public:
+  virtual HRESULT STDMETHODCALLTYPE BCPSetBulkMode(
+      /* [in] */ int property,
+      /* [size_is][in] */ void* pField,
+      /* [in] */ int cbField,
+      /* [size_is][in] */ void* pRow,
+      /* [in] */ int cbRow) = 0;
+};
 
 #else /* C style interface */
 
-  typedef struct IBCPSession2Vtbl
-  {
-    BEGIN_INTERFACE
+typedef struct IBCPSession2Vtbl {
+  BEGIN_INTERFACE
 
-    HRESULT(STDMETHODCALLTYPE *QueryInterface)(
-        IBCPSession2 *This,
-        /* [in] */ REFIID riid,
-        /* [annotation][iid_is][out] */
-        __RPC__deref_out void **ppvObject);
+  HRESULT(STDMETHODCALLTYPE* QueryInterface)(IBCPSession2* This,
+                                             /* [in] */ REFIID riid,
+                                             /* [annotation][iid_is][out] */
+                                             __RPC__deref_out void** ppvObject);
 
-    ULONG(STDMETHODCALLTYPE *AddRef)(
-        IBCPSession2 *This);
+  ULONG(STDMETHODCALLTYPE* AddRef)(IBCPSession2* This);
 
-    ULONG(STDMETHODCALLTYPE *Release)(
-        IBCPSession2 *This);
+  ULONG(STDMETHODCALLTYPE* Release)(IBCPSession2* This);
 
-    HRESULT(STDMETHODCALLTYPE *BCPColFmt)(
-        IBCPSession2 *This,
-        /* [in] */ DBORDINAL idxUserDataCol,
-        /* [in] */ int eUserDataType,
-        /* [in] */ int cbIndicator,
-        /* [in] */ int cbUserData,
-        /* [size_is][in] */ BYTE *pbUserDataTerm,
-        /* [in] */ int cbUserDataTerm,
-        /* [in] */ DBORDINAL idxServerCol);
+  HRESULT(STDMETHODCALLTYPE* BCPColFmt)(IBCPSession2* This,
+                                        /* [in] */ DBORDINAL idxUserDataCol,
+                                        /* [in] */ int eUserDataType,
+                                        /* [in] */ int cbIndicator,
+                                        /* [in] */ int cbUserData,
+                                        /* [size_is][in] */ BYTE* pbUserDataTerm,
+                                        /* [in] */ int cbUserDataTerm,
+                                        /* [in] */ DBORDINAL idxServerCol);
 
-    HRESULT(STDMETHODCALLTYPE *BCPColumns)(
-        IBCPSession2 *This,
-        /* [in] */ DBCOUNTITEM nColumns);
+  HRESULT(STDMETHODCALLTYPE* BCPColumns)(IBCPSession2* This,
+                                         /* [in] */ DBCOUNTITEM nColumns);
 
-    HRESULT(STDMETHODCALLTYPE *BCPControl)(
-        IBCPSession2 *This,
-        /* [in] */ int eOption,
-        /* [in] */ void *iValue);
+  HRESULT(STDMETHODCALLTYPE* BCPControl)(IBCPSession2* This,
+                                         /* [in] */ int eOption,
+                                         /* [in] */ void* iValue);
 
-    HRESULT(STDMETHODCALLTYPE *BCPDone)(
-        IBCPSession2 *This);
+  HRESULT(STDMETHODCALLTYPE* BCPDone)(IBCPSession2* This);
 
-    HRESULT(STDMETHODCALLTYPE *BCPExec)(
-        IBCPSession2 *This,
-        /* [out] */ DBROWCOUNT *pRowsCopied);
+  HRESULT(STDMETHODCALLTYPE* BCPExec)(IBCPSession2* This,
+                                      /* [out] */ DBROWCOUNT* pRowsCopied);
 
-    HRESULT(STDMETHODCALLTYPE *BCPInit)(
-        IBCPSession2 *This,
-        /* [string][in] */ const wchar_t *pwszTable,
-        /* [string][in] */ const wchar_t *pwszDataFile,
-        /* [string][in] */ const wchar_t *pwszErrorFile,
-        /* [in] */ int eDirection);
+  HRESULT(STDMETHODCALLTYPE* BCPInit)(IBCPSession2* This,
+                                      /* [string][in] */ const wchar_t* pwszTable,
+                                      /* [string][in] */ const wchar_t* pwszDataFile,
+                                      /* [string][in] */ const wchar_t* pwszErrorFile,
+                                      /* [in] */ int eDirection);
 
-    HRESULT(STDMETHODCALLTYPE *BCPReadFmt)(
-        IBCPSession2 *This,
-        /* [string][in] */ const wchar_t *pwszFormatFile);
+  HRESULT(STDMETHODCALLTYPE* BCPReadFmt)(IBCPSession2* This,
+                                         /* [string][in] */ const wchar_t* pwszFormatFile);
 
-    HRESULT(STDMETHODCALLTYPE *BCPWriteFmt)(
-        IBCPSession2 *This,
-        /* [string][in] */ const wchar_t *pwszFormatFile);
+  HRESULT(STDMETHODCALLTYPE* BCPWriteFmt)(IBCPSession2* This,
+                                          /* [string][in] */ const wchar_t* pwszFormatFile);
 
-    HRESULT(STDMETHODCALLTYPE *BCPSetBulkMode)(
-        IBCPSession2 *This,
-        /* [in] */ int property,
-        /* [size_is][in] */ void *pField,
-        /* [in] */ int cbField,
-        /* [size_is][in] */ void *pRow,
-        /* [in] */ int cbRow);
+  HRESULT(STDMETHODCALLTYPE* BCPSetBulkMode)(IBCPSession2* This,
+                                             /* [in] */ int property,
+                                             /* [size_is][in] */ void* pField,
+                                             /* [in] */ int cbField,
+                                             /* [size_is][in] */ void* pRow,
+                                             /* [in] */ int cbRow);
 
-    END_INTERFACE
-  } IBCPSession2Vtbl;
+  END_INTERFACE
+} IBCPSession2Vtbl;
 
-  interface IBCPSession2
-  {
-    CONST_VTBL struct IBCPSession2Vtbl *lpVtbl;
-  };
+interface IBCPSession2 {
+  CONST_VTBL struct IBCPSession2Vtbl* lpVtbl;
+};
 
 #ifdef COBJMACROS
 
 #define IBCPSession2_QueryInterface(This, riid, ppvObject) \
   ((This)->lpVtbl->QueryInterface(This, riid, ppvObject))
 
-#define IBCPSession2_AddRef(This) \
-  ((This)->lpVtbl->AddRef(This))
+#define IBCPSession2_AddRef(This) ((This)->lpVtbl->AddRef(This))
 
-#define IBCPSession2_Release(This) \
-  ((This)->lpVtbl->Release(This))
+#define IBCPSession2_Release(This) ((This)->lpVtbl->Release(This))
 
-#define IBCPSession2_BCPColFmt(This, idxUserDataCol, eUserDataType, cbIndicator, cbUserData, pbUserDataTerm, cbUserDataTerm, idxServerCol) \
-  ((This)->lpVtbl->BCPColFmt(This, idxUserDataCol, eUserDataType, cbIndicator, cbUserData, pbUserDataTerm, cbUserDataTerm, idxServerCol))
+#define IBCPSession2_BCPColFmt(This,           \
+                               idxUserDataCol, \
+                               eUserDataType,  \
+                               cbIndicator,    \
+                               cbUserData,     \
+                               pbUserDataTerm, \
+                               cbUserDataTerm, \
+                               idxServerCol)   \
+  ((This)->lpVtbl->BCPColFmt(This,             \
+                             idxUserDataCol,   \
+                             eUserDataType,    \
+                             cbIndicator,      \
+                             cbUserData,       \
+                             pbUserDataTerm,   \
+                             cbUserDataTerm,   \
+                             idxServerCol))
 
-#define IBCPSession2_BCPColumns(This, nColumns) \
-  ((This)->lpVtbl->BCPColumns(This, nColumns))
+#define IBCPSession2_BCPColumns(This, nColumns) ((This)->lpVtbl->BCPColumns(This, nColumns))
 
 #define IBCPSession2_BCPControl(This, eOption, iValue) \
   ((This)->lpVtbl->BCPControl(This, eOption, iValue))
 
-#define IBCPSession2_BCPDone(This) \
-  ((This)->lpVtbl->BCPDone(This))
+#define IBCPSession2_BCPDone(This) ((This)->lpVtbl->BCPDone(This))
 
-#define IBCPSession2_BCPExec(This, pRowsCopied) \
-  ((This)->lpVtbl->BCPExec(This, pRowsCopied))
+#define IBCPSession2_BCPExec(This, pRowsCopied) ((This)->lpVtbl->BCPExec(This, pRowsCopied))
 
 #define IBCPSession2_BCPInit(This, pwszTable, pwszDataFile, pwszErrorFile, eDirection) \
   ((This)->lpVtbl->BCPInit(This, pwszTable, pwszDataFile, pwszErrorFile, eDirection))
@@ -1577,77 +1508,68 @@ typedef DWORD DBASYNCHPHASE;
 
 #endif /* __IBCPSession2_INTERFACE_DEFINED__ */
 
-  /* interface __MIDL_itf_sqlncli_0000_0007 */
-  /* [local] */
+/* interface __MIDL_itf_sqlncli_0000_0007 */
+/* [local] */
 
-#endif //_SQLOLEDB_H_
+#endif  //_SQLOLEDB_H_
 
-#define ISOLATIONLEVEL_SNAPSHOT ((ISOLATIONLEVEL)(0x01000000)) // Changes made in other transactions can not be seen.
+#define ISOLATIONLEVEL_SNAPSHOT \
+  ((ISOLATIONLEVEL)(0x01000000))  // Changes made in other transactions can not be seen.
 
 #define DBPROPVAL_TI_SNAPSHOT 0x01000000L
 
-  extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0007_v0_0_c_ifspec;
-  extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0007_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0007_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0007_v0_0_s_ifspec;
 
 #ifndef __ISSAbort_INTERFACE_DEFINED__
 #define __ISSAbort_INTERFACE_DEFINED__
 
-  /* interface ISSAbort */
-  /* [unique][uuid][object][local] */
+/* interface ISSAbort */
+/* [unique][uuid][object][local] */
 
-  EXTERN_C const IID IID_ISSAbort;
+EXTERN_C const IID IID_ISSAbort;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
 
-  MIDL_INTERFACE("5CF4CA15-EF21-11d0-97E7-00C04FC2AD98")
-  ISSAbort : public IUnknown
-  {
-  public:
-    virtual HRESULT STDMETHODCALLTYPE Abort(void) = 0;
-  };
+MIDL_INTERFACE("5CF4CA15-EF21-11d0-97E7-00C04FC2AD98")
+ISSAbort : public IUnknown {
+ public:
+  virtual HRESULT STDMETHODCALLTYPE Abort(void) = 0;
+};
 
 #else /* C style interface */
 
-  typedef struct ISSAbortVtbl
-  {
-    BEGIN_INTERFACE
+typedef struct ISSAbortVtbl {
+  BEGIN_INTERFACE
 
-    HRESULT(STDMETHODCALLTYPE *QueryInterface)(
-        ISSAbort *This,
-        /* [in] */ REFIID riid,
-        /* [annotation][iid_is][out] */
-        __RPC__deref_out void **ppvObject);
+  HRESULT(STDMETHODCALLTYPE* QueryInterface)(ISSAbort* This,
+                                             /* [in] */ REFIID riid,
+                                             /* [annotation][iid_is][out] */
+                                             __RPC__deref_out void** ppvObject);
 
-    ULONG(STDMETHODCALLTYPE *AddRef)(
-        ISSAbort *This);
+  ULONG(STDMETHODCALLTYPE* AddRef)(ISSAbort* This);
 
-    ULONG(STDMETHODCALLTYPE *Release)(
-        ISSAbort *This);
+  ULONG(STDMETHODCALLTYPE* Release)(ISSAbort* This);
 
-    HRESULT(STDMETHODCALLTYPE *Abort)(
-        ISSAbort *This);
+  HRESULT(STDMETHODCALLTYPE* Abort)(ISSAbort* This);
 
-    END_INTERFACE
-  } ISSAbortVtbl;
+  END_INTERFACE
+} ISSAbortVtbl;
 
-  interface ISSAbort
-  {
-    CONST_VTBL struct ISSAbortVtbl *lpVtbl;
-  };
+interface ISSAbort {
+  CONST_VTBL struct ISSAbortVtbl* lpVtbl;
+};
 
 #ifdef COBJMACROS
 
 #define ISSAbort_QueryInterface(This, riid, ppvObject) \
   ((This)->lpVtbl->QueryInterface(This, riid, ppvObject))
 
-#define ISSAbort_AddRef(This) \
-  ((This)->lpVtbl->AddRef(This))
+#define ISSAbort_AddRef(This) ((This)->lpVtbl->AddRef(This))
 
-#define ISSAbort_Release(This) \
-  ((This)->lpVtbl->Release(This))
+#define ISSAbort_Release(This) ((This)->lpVtbl->Release(This))
 
-#define ISSAbort_Abort(This) \
-  ((This)->lpVtbl->Abort(This))
+#define ISSAbort_Abort(This) ((This)->lpVtbl->Abort(This))
 
 #endif /* COBJMACROS */
 
@@ -1655,125 +1577,108 @@ typedef DWORD DBASYNCHPHASE;
 
 #endif /* __ISSAbort_INTERFACE_DEFINED__ */
 
-  /* interface __MIDL_itf_sqlncli_0000_0008 */
-  /* [local] */
+/* interface __MIDL_itf_sqlncli_0000_0008 */
+/* [local] */
 
-  enum DBBINDFLAGENUM90
-  {
-    DBBINDFLAG_OBJECT = 0x2
-  };
+enum DBBINDFLAGENUM90 { DBBINDFLAG_OBJECT = 0x2 };
 
-  enum SSACCESSORFLAGS
-  {
-    SSACCESSOR_ROWDATA = 0x100
-  };
+enum SSACCESSORFLAGS { SSACCESSOR_ROWDATA = 0x100 };
 
-  enum DBPROPFLAGSENUM90
-  {
-    DBPROPFLAGS_PARAMETER = 0x10000
-  };
-  typedef struct tagSSPARAMPROPS
-  {
-    DBORDINAL iOrdinal;
-    ULONG cPropertySets;
-    DBPROPSET *rgPropertySets;
-  } SSPARAMPROPS;
+enum DBPROPFLAGSENUM90 { DBPROPFLAGS_PARAMETER = 0x10000 };
+typedef struct tagSSPARAMPROPS {
+  DBORDINAL iOrdinal;
+  ULONG cPropertySets;
+  DBPROPSET* rgPropertySets;
+} SSPARAMPROPS;
 
-  extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0008_v0_0_c_ifspec;
-  extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0008_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0008_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0008_v0_0_s_ifspec;
 
 #ifndef __ISSCommandWithParameters_INTERFACE_DEFINED__
 #define __ISSCommandWithParameters_INTERFACE_DEFINED__
 
-  /* interface ISSCommandWithParameters */
-  /* [unique][uuid][object][local] */
+/* interface ISSCommandWithParameters */
+/* [unique][uuid][object][local] */
 
-  EXTERN_C const IID IID_ISSCommandWithParameters;
+EXTERN_C const IID IID_ISSCommandWithParameters;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
 
-  MIDL_INTERFACE("eec30162-6087-467c-b995-7c523ce96561")
-  ISSCommandWithParameters : public ICommandWithParameters
-  {
-  public:
-    virtual /* [local] */ HRESULT STDMETHODCALLTYPE GetParameterProperties(
-        /* [out][in] */ DB_UPARAMS * pcParams,
-        /* [size_is][size_is][out] */ SSPARAMPROPS * *prgParamProperties) = 0;
+MIDL_INTERFACE("eec30162-6087-467c-b995-7c523ce96561")
+ISSCommandWithParameters : public ICommandWithParameters {
+ public:
+  virtual /* [local] */ HRESULT STDMETHODCALLTYPE GetParameterProperties(
+      /* [out][in] */ DB_UPARAMS * pcParams,
+      /* [size_is][size_is][out] */ SSPARAMPROPS * *prgParamProperties) = 0;
 
-    virtual /* [local] */ HRESULT STDMETHODCALLTYPE SetParameterProperties(
-        /* [in] */ DB_UPARAMS cParams,
-        /* [size_is][unique][in] */ SSPARAMPROPS rgParamProperties[]) = 0;
-  };
+  virtual /* [local] */ HRESULT STDMETHODCALLTYPE SetParameterProperties(
+      /* [in] */ DB_UPARAMS cParams,
+      /* [size_is][unique][in] */ SSPARAMPROPS rgParamProperties[]) = 0;
+};
 
 #else /* C style interface */
 
-  typedef struct ISSCommandWithParametersVtbl
-  {
-    BEGIN_INTERFACE
+typedef struct ISSCommandWithParametersVtbl {
+  BEGIN_INTERFACE
 
-    HRESULT(STDMETHODCALLTYPE *QueryInterface)(
-        ISSCommandWithParameters *This,
-        /* [in] */ REFIID riid,
-        /* [annotation][iid_is][out] */
-        __RPC__deref_out void **ppvObject);
+  HRESULT(STDMETHODCALLTYPE* QueryInterface)(ISSCommandWithParameters* This,
+                                             /* [in] */ REFIID riid,
+                                             /* [annotation][iid_is][out] */
+                                             __RPC__deref_out void** ppvObject);
 
-    ULONG(STDMETHODCALLTYPE *AddRef)(
-        ISSCommandWithParameters *This);
+  ULONG(STDMETHODCALLTYPE* AddRef)(ISSCommandWithParameters* This);
 
-    ULONG(STDMETHODCALLTYPE *Release)(
-        ISSCommandWithParameters *This);
+  ULONG(STDMETHODCALLTYPE* Release)(ISSCommandWithParameters* This);
 
-    /* [local] */ HRESULT(STDMETHODCALLTYPE *GetParameterInfo)(
-        ISSCommandWithParameters *This,
-        /* [out][in] */ DB_UPARAMS *pcParams,
-        /* [size_is][size_is][out] */ DBPARAMINFO **prgParamInfo,
-        /* [out] */ OLECHAR **ppNamesBuffer);
+  /* [local] */ HRESULT(STDMETHODCALLTYPE* GetParameterInfo)(
+      ISSCommandWithParameters* This,
+      /* [out][in] */ DB_UPARAMS* pcParams,
+      /* [size_is][size_is][out] */ DBPARAMINFO** prgParamInfo,
+      /* [out] */ OLECHAR** ppNamesBuffer);
 
-    /* [local] */ HRESULT(STDMETHODCALLTYPE *MapParameterNames)(
-        ISSCommandWithParameters *This,
-        /* [in] */ DB_UPARAMS cParamNames,
-        /* [size_is][in] */ const OLECHAR *rgParamNames[],
-        /* [size_is][out] */ DB_LPARAMS rgParamOrdinals[]);
+  /* [local] */ HRESULT(STDMETHODCALLTYPE* MapParameterNames)(
+      ISSCommandWithParameters* This,
+      /* [in] */ DB_UPARAMS cParamNames,
+      /* [size_is][in] */ const OLECHAR* rgParamNames[],
+      /* [size_is][out] */ DB_LPARAMS rgParamOrdinals[]);
 
-    /* [local] */ HRESULT(STDMETHODCALLTYPE *SetParameterInfo)(
-        ISSCommandWithParameters *This,
-        /* [in] */ DB_UPARAMS cParams,
-        /* [size_is][unique][in] */ const DB_UPARAMS rgParamOrdinals[],
-        /* [size_is][unique][in] */ const DBPARAMBINDINFO rgParamBindInfo[]);
+  /* [local] */ HRESULT(STDMETHODCALLTYPE* SetParameterInfo)(
+      ISSCommandWithParameters* This,
+      /* [in] */ DB_UPARAMS cParams,
+      /* [size_is][unique][in] */ const DB_UPARAMS rgParamOrdinals[],
+      /* [size_is][unique][in] */ const DBPARAMBINDINFO rgParamBindInfo[]);
 
-    /* [local] */ HRESULT(STDMETHODCALLTYPE *GetParameterProperties)(
-        ISSCommandWithParameters *This,
-        /* [out][in] */ DB_UPARAMS *pcParams,
-        /* [size_is][size_is][out] */ SSPARAMPROPS **prgParamProperties);
+  /* [local] */ HRESULT(STDMETHODCALLTYPE* GetParameterProperties)(
+      ISSCommandWithParameters* This,
+      /* [out][in] */ DB_UPARAMS* pcParams,
+      /* [size_is][size_is][out] */ SSPARAMPROPS** prgParamProperties);
 
-    /* [local] */ HRESULT(STDMETHODCALLTYPE *SetParameterProperties)(
-        ISSCommandWithParameters *This,
-        /* [in] */ DB_UPARAMS cParams,
-        /* [size_is][unique][in] */ SSPARAMPROPS rgParamProperties[]);
+  /* [local] */ HRESULT(STDMETHODCALLTYPE* SetParameterProperties)(
+      ISSCommandWithParameters* This,
+      /* [in] */ DB_UPARAMS cParams,
+      /* [size_is][unique][in] */ SSPARAMPROPS rgParamProperties[]);
 
-    END_INTERFACE
-  } ISSCommandWithParametersVtbl;
+  END_INTERFACE
+} ISSCommandWithParametersVtbl;
 
-  interface ISSCommandWithParameters
-  {
-    CONST_VTBL struct ISSCommandWithParametersVtbl *lpVtbl;
-  };
+interface ISSCommandWithParameters {
+  CONST_VTBL struct ISSCommandWithParametersVtbl* lpVtbl;
+};
 
 #ifdef COBJMACROS
 
 #define ISSCommandWithParameters_QueryInterface(This, riid, ppvObject) \
   ((This)->lpVtbl->QueryInterface(This, riid, ppvObject))
 
-#define ISSCommandWithParameters_AddRef(This) \
-  ((This)->lpVtbl->AddRef(This))
+#define ISSCommandWithParameters_AddRef(This) ((This)->lpVtbl->AddRef(This))
 
-#define ISSCommandWithParameters_Release(This) \
-  ((This)->lpVtbl->Release(This))
+#define ISSCommandWithParameters_Release(This) ((This)->lpVtbl->Release(This))
 
 #define ISSCommandWithParameters_GetParameterInfo(This, pcParams, prgParamInfo, ppNamesBuffer) \
   ((This)->lpVtbl->GetParameterInfo(This, pcParams, prgParamInfo, ppNamesBuffer))
 
-#define ISSCommandWithParameters_MapParameterNames(This, cParamNames, rgParamNames, rgParamOrdinals) \
+#define ISSCommandWithParameters_MapParameterNames(   \
+    This, cParamNames, rgParamNames, rgParamOrdinals) \
   ((This)->lpVtbl->MapParameterNames(This, cParamNames, rgParamNames, rgParamOrdinals))
 
 #define ISSCommandWithParameters_SetParameterInfo(This, cParams, rgParamOrdinals, rgParamBindInfo) \
@@ -1794,199 +1699,181 @@ typedef DWORD DBASYNCHPHASE;
 #ifndef __IDBAsynchStatus_INTERFACE_DEFINED__
 #define __IDBAsynchStatus_INTERFACE_DEFINED__
 
-  /* interface IDBAsynchStatus */
-  /* [unique][uuid][object][local] */
+/* interface IDBAsynchStatus */
+/* [unique][uuid][object][local] */
 
-  EXTERN_C const IID IID_IDBAsynchStatus;
+EXTERN_C const IID IID_IDBAsynchStatus;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
 
-  MIDL_INTERFACE("0c733a95-2a1c-11ce-ade5-00aa0044773d")
-  IDBAsynchStatus : public IUnknown
-  {
-  public:
-    virtual /* [local] */ HRESULT STDMETHODCALLTYPE Abort(
-        /* [in] */ HCHAPTER hChapter,
-        /* [in] */ DBASYNCHOP eOperation) = 0;
+MIDL_INTERFACE("0c733a95-2a1c-11ce-ade5-00aa0044773d")
+IDBAsynchStatus : public IUnknown {
+ public:
+  virtual /* [local] */ HRESULT STDMETHODCALLTYPE Abort(
+      /* [in] */ HCHAPTER hChapter,
+      /* [in] */ DBASYNCHOP eOperation) = 0;
 
-    virtual /* [local] */ HRESULT STDMETHODCALLTYPE GetStatus(
-        /* [in] */ HCHAPTER hChapter,
-        /* [in] */ DBASYNCHOP eOperation,
-        /* [out] */ DBCOUNTITEM * pulProgress,
-        /* [out] */ DBCOUNTITEM * pulProgressMax,
-        /* [out] */ DBASYNCHPHASE * peAsynchPhase,
-        /* [out] */ LPOLESTR * ppwszStatusText) = 0;
-  };
+  virtual /* [local] */ HRESULT STDMETHODCALLTYPE GetStatus(
+      /* [in] */ HCHAPTER hChapter,
+      /* [in] */ DBASYNCHOP eOperation,
+      /* [out] */ DBCOUNTITEM * pulProgress,
+      /* [out] */ DBCOUNTITEM * pulProgressMax,
+      /* [out] */ DBASYNCHPHASE * peAsynchPhase,
+      /* [out] */ LPOLESTR * ppwszStatusText) = 0;
+};
 
 #else /* C style interface */
 
-  typedef struct IDBAsynchStatusVtbl
-  {
-    BEGIN_INTERFACE
+typedef struct IDBAsynchStatusVtbl {
+  BEGIN_INTERFACE
 
-    HRESULT(STDMETHODCALLTYPE *QueryInterface)(
-        IDBAsynchStatus *This,
-        /* [in] */ REFIID riid,
-        /* [annotation][iid_is][out] */
-        __RPC__deref_out void **ppvObject);
+  HRESULT(STDMETHODCALLTYPE* QueryInterface)(IDBAsynchStatus* This,
+                                             /* [in] */ REFIID riid,
+                                             /* [annotation][iid_is][out] */
+                                             __RPC__deref_out void** ppvObject);
 
-    ULONG(STDMETHODCALLTYPE *AddRef)(
-        IDBAsynchStatus *This);
+  ULONG(STDMETHODCALLTYPE* AddRef)(IDBAsynchStatus* This);
 
-    ULONG(STDMETHODCALLTYPE *Release)(
-        IDBAsynchStatus *This);
+  ULONG(STDMETHODCALLTYPE* Release)(IDBAsynchStatus* This);
 
-    /* [local] */ HRESULT(STDMETHODCALLTYPE *Abort)(
-        IDBAsynchStatus *This,
-        /* [in] */ HCHAPTER hChapter,
-        /* [in] */ DBASYNCHOP eOperation);
+  /* [local] */ HRESULT(STDMETHODCALLTYPE* Abort)(IDBAsynchStatus* This,
+                                                  /* [in] */ HCHAPTER hChapter,
+                                                  /* [in] */ DBASYNCHOP eOperation);
 
-    /* [local] */ HRESULT(STDMETHODCALLTYPE *GetStatus)(
-        IDBAsynchStatus *This,
-        /* [in] */ HCHAPTER hChapter,
-        /* [in] */ DBASYNCHOP eOperation,
-        /* [out] */ DBCOUNTITEM *pulProgress,
-        /* [out] */ DBCOUNTITEM *pulProgressMax,
-        /* [out] */ DBASYNCHPHASE *peAsynchPhase,
-        /* [out] */ LPOLESTR *ppwszStatusText);
+  /* [local] */ HRESULT(STDMETHODCALLTYPE* GetStatus)(IDBAsynchStatus* This,
+                                                      /* [in] */ HCHAPTER hChapter,
+                                                      /* [in] */ DBASYNCHOP eOperation,
+                                                      /* [out] */ DBCOUNTITEM* pulProgress,
+                                                      /* [out] */ DBCOUNTITEM* pulProgressMax,
+                                                      /* [out] */ DBASYNCHPHASE* peAsynchPhase,
+                                                      /* [out] */ LPOLESTR* ppwszStatusText);
 
-    END_INTERFACE
-  } IDBAsynchStatusVtbl;
+  END_INTERFACE
+} IDBAsynchStatusVtbl;
 
-  interface IDBAsynchStatus
-  {
-    CONST_VTBL struct IDBAsynchStatusVtbl *lpVtbl;
-  };
+interface IDBAsynchStatus {
+  CONST_VTBL struct IDBAsynchStatusVtbl* lpVtbl;
+};
 
 #ifdef COBJMACROS
 
 #define IDBAsynchStatus_QueryInterface(This, riid, ppvObject) \
   ((This)->lpVtbl->QueryInterface(This, riid, ppvObject))
 
-#define IDBAsynchStatus_AddRef(This) \
-  ((This)->lpVtbl->AddRef(This))
+#define IDBAsynchStatus_AddRef(This) ((This)->lpVtbl->AddRef(This))
 
-#define IDBAsynchStatus_Release(This) \
-  ((This)->lpVtbl->Release(This))
+#define IDBAsynchStatus_Release(This) ((This)->lpVtbl->Release(This))
 
 #define IDBAsynchStatus_Abort(This, hChapter, eOperation) \
   ((This)->lpVtbl->Abort(This, hChapter, eOperation))
 
-#define IDBAsynchStatus_GetStatus(This, hChapter, eOperation, pulProgress, pulProgressMax, peAsynchPhase, ppwszStatusText) \
-  ((This)->lpVtbl->GetStatus(This, hChapter, eOperation, pulProgress, pulProgressMax, peAsynchPhase, ppwszStatusText))
+#define IDBAsynchStatus_GetStatus(                                                           \
+    This, hChapter, eOperation, pulProgress, pulProgressMax, peAsynchPhase, ppwszStatusText) \
+  ((This)->lpVtbl->GetStatus(                                                                \
+      This, hChapter, eOperation, pulProgress, pulProgressMax, peAsynchPhase, ppwszStatusText))
 
 #endif /* COBJMACROS */
 
 #endif /* C style interface */
 
-  /* [call_as] */ HRESULT STDMETHODCALLTYPE IDBAsynchStatus_RemoteAbort_Proxy(
-      IDBAsynchStatus *This,
-      /* [in] */ HCHAPTER hChapter,
-      /* [in] */ DBASYNCHOP eOperation,
-      /* [out] */ IErrorInfo **ppErrorInfoRem);
+/* [call_as] */ HRESULT STDMETHODCALLTYPE
+IDBAsynchStatus_RemoteAbort_Proxy(IDBAsynchStatus* This,
+                                  /* [in] */ HCHAPTER hChapter,
+                                  /* [in] */ DBASYNCHOP eOperation,
+                                  /* [out] */ IErrorInfo** ppErrorInfoRem);
 
-  void __RPC_STUB IDBAsynchStatus_RemoteAbort_Stub(
-      IRpcStubBuffer *This,
-      IRpcChannelBuffer *_pRpcChannelBuffer,
-      PRPC_MESSAGE _pRpcMessage,
-      DWORD *_pdwStubPhase);
+void __RPC_STUB IDBAsynchStatus_RemoteAbort_Stub(IRpcStubBuffer* This,
+                                                 IRpcChannelBuffer* _pRpcChannelBuffer,
+                                                 PRPC_MESSAGE _pRpcMessage,
+                                                 DWORD* _pdwStubPhase);
 
-  /* [call_as] */ HRESULT STDMETHODCALLTYPE IDBAsynchStatus_RemoteGetStatus_Proxy(
-      IDBAsynchStatus *This,
-      /* [in] */ HCHAPTER hChapter,
-      /* [in] */ DBASYNCHOP eOperation,
-      /* [unique][out][in] */ DBCOUNTITEM *pulProgress,
-      /* [unique][out][in] */ DBCOUNTITEM *pulProgressMax,
-      /* [unique][out][in] */ DBASYNCHPHASE *peAsynchPhase,
-      /* [unique][out][in] */ LPOLESTR *ppwszStatusText,
-      /* [out] */ IErrorInfo **ppErrorInfoRem);
+/* [call_as] */ HRESULT STDMETHODCALLTYPE
+IDBAsynchStatus_RemoteGetStatus_Proxy(IDBAsynchStatus* This,
+                                      /* [in] */ HCHAPTER hChapter,
+                                      /* [in] */ DBASYNCHOP eOperation,
+                                      /* [unique][out][in] */ DBCOUNTITEM* pulProgress,
+                                      /* [unique][out][in] */ DBCOUNTITEM* pulProgressMax,
+                                      /* [unique][out][in] */ DBASYNCHPHASE* peAsynchPhase,
+                                      /* [unique][out][in] */ LPOLESTR* ppwszStatusText,
+                                      /* [out] */ IErrorInfo** ppErrorInfoRem);
 
-  void __RPC_STUB IDBAsynchStatus_RemoteGetStatus_Stub(
-      IRpcStubBuffer *This,
-      IRpcChannelBuffer *_pRpcChannelBuffer,
-      PRPC_MESSAGE _pRpcMessage,
-      DWORD *_pdwStubPhase);
+void __RPC_STUB IDBAsynchStatus_RemoteGetStatus_Stub(IRpcStubBuffer* This,
+                                                     IRpcChannelBuffer* _pRpcChannelBuffer,
+                                                     PRPC_MESSAGE _pRpcMessage,
+                                                     DWORD* _pdwStubPhase);
 
 #endif /* __IDBAsynchStatus_INTERFACE_DEFINED__ */
 
 #ifndef __ISSAsynchStatus_INTERFACE_DEFINED__
 #define __ISSAsynchStatus_INTERFACE_DEFINED__
 
-  /* interface ISSAsynchStatus */
-  /* [unique][uuid][object][local] */
+/* interface ISSAsynchStatus */
+/* [unique][uuid][object][local] */
 
-  EXTERN_C const IID IID_ISSAsynchStatus;
+EXTERN_C const IID IID_ISSAsynchStatus;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
 
-  MIDL_INTERFACE("1FF1F743-8BB0-4c00-ACC4-C10E43B08FC1")
-  ISSAsynchStatus : public IDBAsynchStatus
-  {
-  public:
-    virtual /* [local] */ HRESULT STDMETHODCALLTYPE WaitForAsynchCompletion(
-        /* [in] */ DWORD dwMillisecTimeOut) = 0;
-  };
+MIDL_INTERFACE("1FF1F743-8BB0-4c00-ACC4-C10E43B08FC1")
+ISSAsynchStatus : public IDBAsynchStatus {
+ public:
+  virtual /* [local] */ HRESULT STDMETHODCALLTYPE WaitForAsynchCompletion(
+      /* [in] */ DWORD dwMillisecTimeOut) = 0;
+};
 
 #else /* C style interface */
 
-  typedef struct ISSAsynchStatusVtbl
-  {
-    BEGIN_INTERFACE
+typedef struct ISSAsynchStatusVtbl {
+  BEGIN_INTERFACE
 
-    HRESULT(STDMETHODCALLTYPE *QueryInterface)(
-        ISSAsynchStatus *This,
-        /* [in] */ REFIID riid,
-        /* [annotation][iid_is][out] */
-        __RPC__deref_out void **ppvObject);
+  HRESULT(STDMETHODCALLTYPE* QueryInterface)(ISSAsynchStatus* This,
+                                             /* [in] */ REFIID riid,
+                                             /* [annotation][iid_is][out] */
+                                             __RPC__deref_out void** ppvObject);
 
-    ULONG(STDMETHODCALLTYPE *AddRef)(
-        ISSAsynchStatus *This);
+  ULONG(STDMETHODCALLTYPE* AddRef)(ISSAsynchStatus* This);
 
-    ULONG(STDMETHODCALLTYPE *Release)(
-        ISSAsynchStatus *This);
+  ULONG(STDMETHODCALLTYPE* Release)(ISSAsynchStatus* This);
 
-    /* [local] */ HRESULT(STDMETHODCALLTYPE *Abort)(
-        ISSAsynchStatus *This,
-        /* [in] */ HCHAPTER hChapter,
-        /* [in] */ DBASYNCHOP eOperation);
+  /* [local] */ HRESULT(STDMETHODCALLTYPE* Abort)(ISSAsynchStatus* This,
+                                                  /* [in] */ HCHAPTER hChapter,
+                                                  /* [in] */ DBASYNCHOP eOperation);
 
-    /* [local] */ HRESULT(STDMETHODCALLTYPE *GetStatus)(
-        ISSAsynchStatus *This,
-        /* [in] */ HCHAPTER hChapter,
-        /* [in] */ DBASYNCHOP eOperation,
-        /* [out] */ DBCOUNTITEM *pulProgress,
-        /* [out] */ DBCOUNTITEM *pulProgressMax,
-        /* [out] */ DBASYNCHPHASE *peAsynchPhase,
-        /* [out] */ LPOLESTR *ppwszStatusText);
+  /* [local] */ HRESULT(STDMETHODCALLTYPE* GetStatus)(ISSAsynchStatus* This,
+                                                      /* [in] */ HCHAPTER hChapter,
+                                                      /* [in] */ DBASYNCHOP eOperation,
+                                                      /* [out] */ DBCOUNTITEM* pulProgress,
+                                                      /* [out] */ DBCOUNTITEM* pulProgressMax,
+                                                      /* [out] */ DBASYNCHPHASE* peAsynchPhase,
+                                                      /* [out] */ LPOLESTR* ppwszStatusText);
 
-    /* [local] */ HRESULT(STDMETHODCALLTYPE *WaitForAsynchCompletion)(
-        ISSAsynchStatus *This,
-        /* [in] */ DWORD dwMillisecTimeOut);
+  /* [local] */ HRESULT(STDMETHODCALLTYPE* WaitForAsynchCompletion)(
+      ISSAsynchStatus* This,
+      /* [in] */ DWORD dwMillisecTimeOut);
 
-    END_INTERFACE
-  } ISSAsynchStatusVtbl;
+  END_INTERFACE
+} ISSAsynchStatusVtbl;
 
-  interface ISSAsynchStatus
-  {
-    CONST_VTBL struct ISSAsynchStatusVtbl *lpVtbl;
-  };
+interface ISSAsynchStatus {
+  CONST_VTBL struct ISSAsynchStatusVtbl* lpVtbl;
+};
 
 #ifdef COBJMACROS
 
 #define ISSAsynchStatus_QueryInterface(This, riid, ppvObject) \
   ((This)->lpVtbl->QueryInterface(This, riid, ppvObject))
 
-#define ISSAsynchStatus_AddRef(This) \
-  ((This)->lpVtbl->AddRef(This))
+#define ISSAsynchStatus_AddRef(This) ((This)->lpVtbl->AddRef(This))
 
-#define ISSAsynchStatus_Release(This) \
-  ((This)->lpVtbl->Release(This))
+#define ISSAsynchStatus_Release(This) ((This)->lpVtbl->Release(This))
 
 #define ISSAsynchStatus_Abort(This, hChapter, eOperation) \
   ((This)->lpVtbl->Abort(This, hChapter, eOperation))
 
-#define ISSAsynchStatus_GetStatus(This, hChapter, eOperation, pulProgress, pulProgressMax, peAsynchPhase, ppwszStatusText) \
-  ((This)->lpVtbl->GetStatus(This, hChapter, eOperation, pulProgress, pulProgressMax, peAsynchPhase, ppwszStatusText))
+#define ISSAsynchStatus_GetStatus(                                                           \
+    This, hChapter, eOperation, pulProgress, pulProgressMax, peAsynchPhase, ppwszStatusText) \
+  ((This)->lpVtbl->GetStatus(                                                                \
+      This, hChapter, eOperation, pulProgress, pulProgressMax, peAsynchPhase, ppwszStatusText))
 
 #define ISSAsynchStatus_WaitForAsynchCompletion(This, dwMillisecTimeOut) \
   ((This)->lpVtbl->WaitForAsynchCompletion(This, dwMillisecTimeOut))
@@ -2002,14 +1889,14 @@ typedef DWORD DBASYNCHPHASE;
 
 //----------------------------------------------------------------------------
 // Values for STATUS bitmask for DBSCHEMA_TABLES & DBSCHEMA_TABLES_INFO
-#define TABLE_HAS_UPDATE_INSTEAD_OF_TRIGGER 0x00000001 // table has IOT defined
-#define TABLE_HAS_DELETE_INSTEAD_OF_TRIGGER 0x00000002 // table has IOT defined
-#define TABLE_HAS_INSERT_INSTEAD_OF_TRIGGER 0x00000004 // table has IOT defined
-#define TABLE_HAS_AFTER_UPDATE_TRIGGER 0x00000008      // table has update trigger
-#define TABLE_HAS_AFTER_DELETE_TRIGGER 0x00000010      // table has delete trigger
-#define TABLE_HAS_AFTER_INSERT_TRIGGER 0x00000020      // table has insert trigger
-#define TABLE_HAS_CASCADE_UPDATE 0x00000040            // table has cascade update
-#define TABLE_HAS_CASCADE_DELETE 0x00000080            // table has cascade delete
+#define TABLE_HAS_UPDATE_INSTEAD_OF_TRIGGER 0x00000001  // table has IOT defined
+#define TABLE_HAS_DELETE_INSTEAD_OF_TRIGGER 0x00000002  // table has IOT defined
+#define TABLE_HAS_INSERT_INSTEAD_OF_TRIGGER 0x00000004  // table has IOT defined
+#define TABLE_HAS_AFTER_UPDATE_TRIGGER 0x00000008       // table has update trigger
+#define TABLE_HAS_AFTER_DELETE_TRIGGER 0x00000010       // table has delete trigger
+#define TABLE_HAS_AFTER_INSERT_TRIGGER 0x00000020       // table has insert trigger
+#define TABLE_HAS_CASCADE_UPDATE 0x00000040             // table has cascade update
+#define TABLE_HAS_CASCADE_DELETE 0x00000080             // table has cascade delete
 
 //----------------------------------------------------------------------------
 // PropIds for DBPROP_INIT_GENERALTIMEOUT
@@ -2096,7 +1983,7 @@ typedef DWORD DBASYNCHPHASE;
 // Values for SSPROP_QP_NOTIFICATION_TIMEOUT
 #define SSPROPVAL_DEFAULT_NOTIFICATION_TIMEOUT 432000 /* in sec */
 #define SSPROPVAL_MAX_NOTIFICATION_TIMEOUT 0x7FFFFFFF /* in sec */
-#define MAX_NOTIFICATION_LEN 2000                     /* NVARCHAR [2000] for both ID & DELIVERY_QUEUE */
+#define MAX_NOTIFICATION_LEN 2000 /* NVARCHAR [2000] for both ID & DELIVERY_QUEUE */
 
 //----------------------------------------------------------------------------
 // PropIds for DBPROPSET_SQLSERVERCOLUMN
@@ -2217,65 +2104,95 @@ typedef DWORD DBASYNCHPHASE;
 
 #define BCP_LENGTH_NULL (-1)
 #define BCP_LENGTH_VARIABLE (-10)
-  //
-  //-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
 
-  //----------------------------------------------------------------------------
-  // Provider-specific Class Ids
-  //
+//----------------------------------------------------------------------------
+// Provider-specific Class Ids
+//
 
 #if SQLNCLI_VER >= 1100
 
-  extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI11 = {0x397C2819L, 0x8272, 0x4532, {0xAD, 0x3A, 0xFB, 0x5E, 0x43, 0xBE, 0xAA, 0x39}};
-  extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI11_ERROR = {0xCA99D701L, 0xE6E7, 0x4db4, {0xA5, 0xCC, 0x81, 0x54, 0x1C, 0x75, 0x18, 0x8A}};
-  extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI11_ENUMERATOR = {0x8F612DD2L, 0x7E28, 0x424f, {0xA2, 0xFD, 0xC2, 0xEE, 0xCC, 0x31, 0x4A, 0xA2}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI11 = {
+    0x397C2819L, 0x8272, 0x4532, {0xAD, 0x3A, 0xFB, 0x5E, 0x43, 0xBE, 0xAA, 0x39}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI11_ERROR = {
+    0xCA99D701L, 0xE6E7, 0x4db4, {0xA5, 0xCC, 0x81, 0x54, 0x1C, 0x75, 0x18, 0x8A}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI11_ENUMERATOR = {
+    0x8F612DD2L, 0x7E28, 0x424f, {0xA2, 0xFD, 0xC2, 0xEE, 0xCC, 0x31, 0x4A, 0xA2}};
 
 #endif
 
 #if SQLNCLI_VER >= 1000
 
-  extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI10 = {0x8F4A6B68L, 0x4F36, 0x4e3c, {0xBE, 0x81, 0xBC, 0x7C, 0xA4, 0xE9, 0xC4, 0x5C}};
-  extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI10_ERROR = {0x53F9C3BCL, 0x275F, 0x4FA5, {0xB3, 0xE6, 0x25, 0xED, 0xCD, 0x51, 0x20, 0x23}};
-  extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI10_ENUMERATOR = {0x91E4F2A5L, 0x1B07, 0x45f6, {0x86, 0xBF, 0x92, 0x03, 0xC7, 0xC7, 0x2B, 0xE3}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI10 = {
+    0x8F4A6B68L, 0x4F36, 0x4e3c, {0xBE, 0x81, 0xBC, 0x7C, 0xA4, 0xE9, 0xC4, 0x5C}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI10_ERROR = {
+    0x53F9C3BCL, 0x275F, 0x4FA5, {0xB3, 0xE6, 0x25, 0xED, 0xCD, 0x51, 0x20, 0x23}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI10_ENUMERATOR = {
+    0x91E4F2A5L, 0x1B07, 0x45f6, {0x86, 0xBF, 0x92, 0x03, 0xC7, 0xC7, 0x2B, 0xE3}};
 
 #endif
 
-  extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI = {0x85ecafccL, 0xbdd9, 0x4b03, {0x97, 0xa8, 0xfa, 0x65, 0xcb, 0xe3, 0x85, 0x9b}};
-  extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI_ERROR = {0xe8bc0a7aL, 0xea71, 0x4263, {0x8c, 0xda, 0x94, 0xf3, 0x88, 0xb8, 0xed, 0x10}};
-  extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI_ENUMERATOR = {0x4898ad37L, 0xfe05, 0x42df, {0x92, 0xf9, 0xe8, 0x57, 0xdd, 0xfe, 0xe7, 0x30}};
-  extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_ROWSET_TVP = {0xc7ef28d5L, 0x7bee, 0x443f, {0x86, 0xda, 0xe3, 0x98, 0x4f, 0xcd, 0x4d, 0xf9}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI = {
+    0x85ecafccL, 0xbdd9, 0x4b03, {0x97, 0xa8, 0xfa, 0x65, 0xcb, 0xe3, 0x85, 0x9b}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI_ERROR = {
+    0xe8bc0a7aL, 0xea71, 0x4263, {0x8c, 0xda, 0x94, 0xf3, 0x88, 0xb8, 0xed, 0x10}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_SQLNCLI_ENUMERATOR = {
+    0x4898ad37L, 0xfe05, 0x42df, {0x92, 0xf9, 0xe8, 0x57, 0xdd, 0xfe, 0xe7, 0x30}};
+extern const GUID OLEDBDECLSPEC _SQLNCLI_OLEDB_DEPRECATE_WARNING CLSID_ROWSET_TVP = {
+    0xc7ef28d5L, 0x7bee, 0x443f, {0x86, 0xda, 0xe3, 0x98, 0x4f, 0xcd, 0x4d, 0xf9}};
 
 //----------------------------------------------------------------------------
 // Provider-specific Interface Ids
 //
 #ifndef _SQLOLEDB_H_
-  extern const GUID OLEDBDECLSPEC IID_ISQLServerErrorInfo = {0x5cf4ca12, 0xef21, 0x11d0, {0x97, 0xe7, 0x0, 0xc0, 0x4f, 0xc2, 0xad, 0x98}};
-  extern const GUID OLEDBDECLSPEC IID_IRowsetFastLoad = {0x5cf4ca13, 0xef21, 0x11d0, {0x97, 0xe7, 0x0, 0xc0, 0x4f, 0xc2, 0xad, 0x98}};
-  extern const GUID OLEDBDECLSPEC IID_IUMSInitialize = {0x5cf4ca14, 0xef21, 0x11d0, {0x97, 0xe7, 0x0, 0xc0, 0x4f, 0xc2, 0xad, 0x98}};
-  extern const GUID OLEDBDECLSPEC IID_ISchemaLock = {0x4c2389fb, 0x2511, 0x11d4, {0xb2, 0x58, 0x0, 0xc0, 0x4f, 0x79, 0x71, 0xce}};
-  extern const GUID OLEDBDECLSPEC IID_ISQLXMLHelper = {0xd22a7678L, 0xf860, 0x40cd, {0xa5, 0x67, 0x15, 0x63, 0xde, 0xb4, 0x6d, 0x49}};
-#endif //_SQLOLEDB_H_
-  extern const GUID OLEDBDECLSPEC IID_ISSAbort = {0x5cf4ca15, 0xef21, 0x11d0, {0x97, 0xe7, 0x0, 0xc0, 0x4f, 0xc2, 0xad, 0x98}};
-  extern const GUID OLEDBDECLSPEC IID_IBCPSession = {0x88352D80, 0x42D1, 0x42f0, {0xA1, 0x70, 0xAB, 0x0F, 0x8B, 0x45, 0xB9, 0x39}};
-  extern const GUID OLEDBDECLSPEC IID_IBCPSession2 = {0xad79d3b6, 0x59dd, 0x46a3, {0xbf, 0xc6, 0xe6, 0x2a, 0x65, 0xff, 0x35, 0x23}};
-  extern const GUID OLEDBDECLSPEC IID_ISSCommandWithParameters = {0xeec30162, 0x6087, 0x467c, {0xb9, 0x95, 0x7c, 0x52, 0x3c, 0xe9, 0x65, 0x61}};
-  extern const GUID OLEDBDECLSPEC IID_ISSAsynchStatus = {0x1FF1F743, 0x8BB0, 0x4c00, {0xAC, 0xC4, 0xC1, 0x0E, 0x43, 0xB0, 0x8F, 0xC1}};
+extern const GUID OLEDBDECLSPEC IID_ISQLServerErrorInfo = {
+    0x5cf4ca12, 0xef21, 0x11d0, {0x97, 0xe7, 0x0, 0xc0, 0x4f, 0xc2, 0xad, 0x98}};
+extern const GUID OLEDBDECLSPEC IID_IRowsetFastLoad = {
+    0x5cf4ca13, 0xef21, 0x11d0, {0x97, 0xe7, 0x0, 0xc0, 0x4f, 0xc2, 0xad, 0x98}};
+extern const GUID OLEDBDECLSPEC IID_IUMSInitialize = {
+    0x5cf4ca14, 0xef21, 0x11d0, {0x97, 0xe7, 0x0, 0xc0, 0x4f, 0xc2, 0xad, 0x98}};
+extern const GUID OLEDBDECLSPEC IID_ISchemaLock = {
+    0x4c2389fb, 0x2511, 0x11d4, {0xb2, 0x58, 0x0, 0xc0, 0x4f, 0x79, 0x71, 0xce}};
+extern const GUID OLEDBDECLSPEC IID_ISQLXMLHelper = {
+    0xd22a7678L, 0xf860, 0x40cd, {0xa5, 0x67, 0x15, 0x63, 0xde, 0xb4, 0x6d, 0x49}};
+#endif  //_SQLOLEDB_H_
+extern const GUID OLEDBDECLSPEC IID_ISSAbort = {
+    0x5cf4ca15, 0xef21, 0x11d0, {0x97, 0xe7, 0x0, 0xc0, 0x4f, 0xc2, 0xad, 0x98}};
+extern const GUID OLEDBDECLSPEC IID_IBCPSession = {
+    0x88352D80, 0x42D1, 0x42f0, {0xA1, 0x70, 0xAB, 0x0F, 0x8B, 0x45, 0xB9, 0x39}};
+extern const GUID OLEDBDECLSPEC IID_IBCPSession2 = {
+    0xad79d3b6, 0x59dd, 0x46a3, {0xbf, 0xc6, 0xe6, 0x2a, 0x65, 0xff, 0x35, 0x23}};
+extern const GUID OLEDBDECLSPEC IID_ISSCommandWithParameters = {
+    0xeec30162, 0x6087, 0x467c, {0xb9, 0x95, 0x7c, 0x52, 0x3c, 0xe9, 0x65, 0x61}};
+extern const GUID OLEDBDECLSPEC IID_ISSAsynchStatus = {
+    0x1FF1F743, 0x8BB0, 0x4c00, {0xAC, 0xC4, 0xC1, 0x0E, 0x43, 0xB0, 0x8F, 0xC1}};
 
 //----------------------------------------------------------------------------
 // Provider-specific schema rowsets
 //
 #ifndef _SQLOLEDB_H_
-  extern const GUID OLEDBDECLSPEC DBSCHEMA_LINKEDSERVERS = {0x9093caf4, 0x2eac, 0x11d1, {0x98, 0x9, 0x0, 0xc0, 0x4f, 0xc2, 0xad, 0x98}};
-#endif //_SQLOLEDB_H_
-  extern const GUID OLEDBDECLSPEC DBSCHEMA_SQL_ASSEMBLIES = {0x7c1112c8, 0xc2d3, 0x4f6e, {0x94, 0x9a, 0x98, 0x3d, 0x38, 0xa5, 0x8f, 0x46}};
-  extern const GUID OLEDBDECLSPEC DBSCHEMA_SQL_ASSEMBLY_DEPENDENCIES = {0xcb0f837b, 0x974c, 0x41b8, {0x90, 0x9d, 0x64, 0x9c, 0xaf, 0x45, 0xad, 0x2f}};
-  extern const GUID OLEDBDECLSPEC DBSCHEMA_SQL_USER_TYPES = {0xf1198bd8, 0xa424, 0x4ea3, {0x8d, 0x4c, 0x60, 0x7e, 0xee, 0x2b, 0xab, 0x60}};
-  extern const GUID OLEDBDECLSPEC DBSCHEMA_XML_COLLECTIONS = {0x56bfad8c, 0x6e8f, 0x480d, {0x91, 0xde, 0x35, 0x16, 0xd9, 0x9a, 0x5d, 0x10}};
-  extern const GUID OLEDBDECLSPEC DBSCHEMA_SQL_TABLE_TYPES = {0x4e26cde7, 0xaaa4, 0x41ed, {0x93, 0xdd, 0x37, 0x6e, 0x6d, 0x40, 0x9c, 0x17}};
-  extern const GUID OLEDBDECLSPEC DBSCHEMA_SQL_TABLE_TYPE_PRIMARY_KEYS = {0x9738faea, 0x31e8, 0x4f63, {0xae, 0xd, 0x61, 0x33, 0x16, 0x41, 0x8c, 0xdd}};
-  extern const GUID OLEDBDECLSPEC DBSCHEMA_SQL_TABLE_TYPE_COLUMNS = {0xa663d94b, 0xddf7, 0x4a7f, {0xa5, 0x37, 0xd6, 0x1f, 0x12, 0x36, 0x5d, 0x7c}};
-  extern const GUID OLEDBDECLSPEC DBSCHEMA_COLUMNS_EXTENDED = {0x66462f01, 0x633a, 0x44d9, {0xb0, 0xd0, 0xfe, 0x66, 0xf2, 0x1a, 0x0d, 0x24}};
-  extern const GUID OLEDBDECLSPEC DBSCHEMA_SPARSE_COLUMN_SET = {0x31a4837c, 0xf9ff, 0x405f, {0x89, 0x82, 0x02, 0x19, 0xaa, 0xaa, 0x4a, 0x12}};
+extern const GUID OLEDBDECLSPEC DBSCHEMA_LINKEDSERVERS = {
+    0x9093caf4, 0x2eac, 0x11d1, {0x98, 0x9, 0x0, 0xc0, 0x4f, 0xc2, 0xad, 0x98}};
+#endif  //_SQLOLEDB_H_
+extern const GUID OLEDBDECLSPEC DBSCHEMA_SQL_ASSEMBLIES = {
+    0x7c1112c8, 0xc2d3, 0x4f6e, {0x94, 0x9a, 0x98, 0x3d, 0x38, 0xa5, 0x8f, 0x46}};
+extern const GUID OLEDBDECLSPEC DBSCHEMA_SQL_ASSEMBLY_DEPENDENCIES = {
+    0xcb0f837b, 0x974c, 0x41b8, {0x90, 0x9d, 0x64, 0x9c, 0xaf, 0x45, 0xad, 0x2f}};
+extern const GUID OLEDBDECLSPEC DBSCHEMA_SQL_USER_TYPES = {
+    0xf1198bd8, 0xa424, 0x4ea3, {0x8d, 0x4c, 0x60, 0x7e, 0xee, 0x2b, 0xab, 0x60}};
+extern const GUID OLEDBDECLSPEC DBSCHEMA_XML_COLLECTIONS = {
+    0x56bfad8c, 0x6e8f, 0x480d, {0x91, 0xde, 0x35, 0x16, 0xd9, 0x9a, 0x5d, 0x10}};
+extern const GUID OLEDBDECLSPEC DBSCHEMA_SQL_TABLE_TYPES = {
+    0x4e26cde7, 0xaaa4, 0x41ed, {0x93, 0xdd, 0x37, 0x6e, 0x6d, 0x40, 0x9c, 0x17}};
+extern const GUID OLEDBDECLSPEC DBSCHEMA_SQL_TABLE_TYPE_PRIMARY_KEYS = {
+    0x9738faea, 0x31e8, 0x4f63, {0xae, 0xd, 0x61, 0x33, 0x16, 0x41, 0x8c, 0xdd}};
+extern const GUID OLEDBDECLSPEC DBSCHEMA_SQL_TABLE_TYPE_COLUMNS = {
+    0xa663d94b, 0xddf7, 0x4a7f, {0xa5, 0x37, 0xd6, 0x1f, 0x12, 0x36, 0x5d, 0x7c}};
+extern const GUID OLEDBDECLSPEC DBSCHEMA_COLUMNS_EXTENDED = {
+    0x66462f01, 0x633a, 0x44d9, {0xb0, 0xd0, 0xfe, 0x66, 0xf2, 0x1a, 0x0d, 0x24}};
+extern const GUID OLEDBDECLSPEC DBSCHEMA_SPARSE_COLUMN_SET = {
+    0x31a4837c, 0xf9ff, 0x405f, {0x89, 0x82, 0x02, 0x19, 0xaa, 0xaa, 0x4a, 0x12}};
 
 #ifndef CRESTRICTIONS_DBSCHEMA_LINKEDSERVERS
 #define CRESTRICTIONS_DBSCHEMA_LINKEDSERVERS 1
@@ -2321,40 +2238,63 @@ typedef DWORD DBASYNCHPHASE;
 // Provider-specific property sets
 //
 #ifndef _SQLOLEDB_H_
-  extern const GUID OLEDBDECLSPEC DBPROPSET_SQLSERVERDATASOURCE = {0x28efaee4, 0x2d2c, 0x11d1, {0x98, 0x7, 0x0, 0xc0, 0x4f, 0xc2, 0xad, 0x98}};
-  extern const GUID OLEDBDECLSPEC DBPROPSET_SQLSERVERDATASOURCEINFO = {0xdf10cb94, 0x35f6, 0x11d2, {0x9c, 0x54, 0x0, 0xc0, 0x4f, 0x79, 0x71, 0xd3}};
-  extern const GUID OLEDBDECLSPEC DBPROPSET_SQLSERVERDBINIT = {0x5cf4ca10, 0xef21, 0x11d0, {0x97, 0xe7, 0x0, 0xc0, 0x4f, 0xc2, 0xad, 0x98}};
-  extern const GUID OLEDBDECLSPEC DBPROPSET_SQLSERVERROWSET = {0x5cf4ca11, 0xef21, 0x11d0, {0x97, 0xe7, 0x0, 0xc0, 0x4f, 0xc2, 0xad, 0x98}};
-  extern const GUID OLEDBDECLSPEC DBPROPSET_SQLSERVERSESSION = {0x28efaee5, 0x2d2c, 0x11d1, {0x98, 0x7, 0x0, 0xc0, 0x4f, 0xc2, 0xad, 0x98}};
-  extern const GUID OLEDBDECLSPEC DBPROPSET_SQLSERVERCOLUMN = {0x3b63fb5e, 0x3fbb, 0x11d3, {0x9f, 0x29, 0x0, 0xc0, 0x4f, 0x8e, 0xe9, 0xdc}};
-  extern const GUID OLEDBDECLSPEC DBPROPSET_SQLSERVERSTREAM = {0x9f79c073, 0x8a6d, 0x4bca, {0xa8, 0xa8, 0xc9, 0xb7, 0x9a, 0x9b, 0x96, 0x2d}};
-#endif //_SQLOLEDB_H_
-  extern const GUID OLEDBDECLSPEC DBPROPSET_SQLSERVERPARAMETER = {0xfee09128, 0xa67d, 0x47ea, {0x8d, 0x40, 0x24, 0xa1, 0xd4, 0x73, 0x7e, 0x8d}};
-  extern const GUID OLEDBDECLSPEC DBPROPSET_SQLSERVERINDEX = {0xE428B84E, 0xA6B7, 0x413a, {0x94, 0x65, 0x56, 0x23, 0x2E, 0x0D, 0x2B, 0xEB}};
-  extern const GUID OLEDBDECLSPEC DBPROPSET_PARAMETERALL = {0x2cd2b7d8, 0xe7c2, 0x4f6c, {0x9b, 0x30, 0x75, 0xe2, 0x58, 0x46, 0x10, 0x97}};
+extern const GUID OLEDBDECLSPEC DBPROPSET_SQLSERVERDATASOURCE = {
+    0x28efaee4, 0x2d2c, 0x11d1, {0x98, 0x7, 0x0, 0xc0, 0x4f, 0xc2, 0xad, 0x98}};
+extern const GUID OLEDBDECLSPEC DBPROPSET_SQLSERVERDATASOURCEINFO = {
+    0xdf10cb94, 0x35f6, 0x11d2, {0x9c, 0x54, 0x0, 0xc0, 0x4f, 0x79, 0x71, 0xd3}};
+extern const GUID OLEDBDECLSPEC DBPROPSET_SQLSERVERDBINIT = {
+    0x5cf4ca10, 0xef21, 0x11d0, {0x97, 0xe7, 0x0, 0xc0, 0x4f, 0xc2, 0xad, 0x98}};
+extern const GUID OLEDBDECLSPEC DBPROPSET_SQLSERVERROWSET = {
+    0x5cf4ca11, 0xef21, 0x11d0, {0x97, 0xe7, 0x0, 0xc0, 0x4f, 0xc2, 0xad, 0x98}};
+extern const GUID OLEDBDECLSPEC DBPROPSET_SQLSERVERSESSION = {
+    0x28efaee5, 0x2d2c, 0x11d1, {0x98, 0x7, 0x0, 0xc0, 0x4f, 0xc2, 0xad, 0x98}};
+extern const GUID OLEDBDECLSPEC DBPROPSET_SQLSERVERCOLUMN = {
+    0x3b63fb5e, 0x3fbb, 0x11d3, {0x9f, 0x29, 0x0, 0xc0, 0x4f, 0x8e, 0xe9, 0xdc}};
+extern const GUID OLEDBDECLSPEC DBPROPSET_SQLSERVERSTREAM = {
+    0x9f79c073, 0x8a6d, 0x4bca, {0xa8, 0xa8, 0xc9, 0xb7, 0x9a, 0x9b, 0x96, 0x2d}};
+#endif  //_SQLOLEDB_H_
+extern const GUID OLEDBDECLSPEC DBPROPSET_SQLSERVERPARAMETER = {
+    0xfee09128, 0xa67d, 0x47ea, {0x8d, 0x40, 0x24, 0xa1, 0xd4, 0x73, 0x7e, 0x8d}};
+extern const GUID OLEDBDECLSPEC DBPROPSET_SQLSERVERINDEX = {
+    0xE428B84E, 0xA6B7, 0x413a, {0x94, 0x65, 0x56, 0x23, 0x2E, 0x0D, 0x2B, 0xEB}};
+extern const GUID OLEDBDECLSPEC DBPROPSET_PARAMETERALL = {
+    0x2cd2b7d8, 0xe7c2, 0x4f6c, {0x9b, 0x30, 0x75, 0xe2, 0x58, 0x46, 0x10, 0x97}};
 
 //----------------------------------------------------------------------------
 // Provider-specific columns for IColumnsRowset
 //
-#define DBCOLUMN_SS_X_GUID {0x627bd890, 0xed54, 0x11d2, {0xb9, 0x94, 0x0, 0xc0, 0x4f, 0x8c, 0xa8, 0x2c}}
+#define DBCOLUMN_SS_X_GUID \
+  {0x627bd890, 0xed54, 0x11d2, {0xb9, 0x94, 0x0, 0xc0, 0x4f, 0x8c, 0xa8, 0x2c}}
 //
 #ifndef _SQLOLEDB_H_
-  extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_COMPFLAGS = {DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)100};
-  extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_SORTID = {DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)101};
-  extern const DBID OLEDBDECLSPEC DBCOLUMN_BASETABLEINSTANCE = {DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)102};
-  extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_TDSCOLLATION = {DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)103};
-#endif //_SQLOLEDB_H_
-  extern const DBID OLEDBDECLSPEC DBCOLUMN_BASESERVERNAME = {DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)104};
-  extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_XML_SCHEMACOLLECTION_CATALOGNAME = {DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)105};
-  extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_XML_SCHEMACOLLECTION_SCHEMANAME = {DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)106};
-  extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_XML_SCHEMACOLLECTIONNAME = {DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)107};
-  extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_UDT_CATALOGNAME = {DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)108};
-  extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_UDT_SCHEMANAME = {DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)109};
-  extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_UDT_NAME = {DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)110};
-  extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_ASSEMBLY_TYPENAME = {DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)111};
+extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_COMPFLAGS = {
+    DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)100};
+extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_SORTID = {
+    DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)101};
+extern const DBID OLEDBDECLSPEC DBCOLUMN_BASETABLEINSTANCE = {
+    DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)102};
+extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_TDSCOLLATION = {
+    DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)103};
+#endif  //_SQLOLEDB_H_
+extern const DBID OLEDBDECLSPEC DBCOLUMN_BASESERVERNAME = {
+    DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)104};
+extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_XML_SCHEMACOLLECTION_CATALOGNAME = {
+    DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)105};
+extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_XML_SCHEMACOLLECTION_SCHEMANAME = {
+    DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)106};
+extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_XML_SCHEMACOLLECTIONNAME = {
+    DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)107};
+extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_UDT_CATALOGNAME = {
+    DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)108};
+extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_UDT_SCHEMANAME = {
+    DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)109};
+extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_UDT_NAME = {
+    DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)110};
+extern const DBID OLEDBDECLSPEC DBCOLUMN_SS_ASSEMBLY_TYPENAME = {
+    DBCOLUMN_SS_X_GUID, DBKIND_GUID_PROPID, (LPOLESTR)111};
 
 // OLEDB part of SQL Server Native Client header - end here!
-#endif // defined(_SQLNCLI_OLEDB_) || !defined(_SQLNCLI_ODBC_)
+#endif  // defined(_SQLNCLI_OLEDB_) || !defined(_SQLNCLI_ODBC_)
 
 // ODBC part of SQL Server Native Client header - begin here!
 #if defined(_SQLNCLI_ODBC_) || !defined(_SQLNCLI_OLEDB_)
@@ -2367,37 +2307,52 @@ typedef DWORD DBASYNCHPHASE;
 // Microsoft has 1200 thru 1249 reserved for Microsoft SQL Server Native Client driver usage.
 // Connection attributes
 #define SQL_COPT_SS_BASE 1200
-#define SQL_COPT_SS_REMOTE_PWD (SQL_COPT_SS_BASE + 1)                        // dbrpwset SQLSetConnectOption only
-#define SQL_COPT_SS_USE_PROC_FOR_PREP (SQL_COPT_SS_BASE + 2)                 // Use create proc for SQLPrepare
-#define SQL_COPT_SS_INTEGRATED_SECURITY (SQL_COPT_SS_BASE + 3)               // Force integrated security on login
-#define SQL_COPT_SS_PRESERVE_CURSORS (SQL_COPT_SS_BASE + 4)                  // Preserve server cursors after SQLTransact
-#define SQL_COPT_SS_USER_DATA (SQL_COPT_SS_BASE + 5)                         // dbgetuserdata/dbsetuserdata
-#define SQL_COPT_SS_ENLIST_IN_DTC SQL_ATTR_ENLIST_IN_DTC                     // Enlist in a DTC transaction
-#define SQL_COPT_SS_ENLIST_IN_XA SQL_ATTR_ENLIST_IN_XA                       // Enlist in a XA transaction
-#define SQL_COPT_SS_FALLBACK_CONNECT (SQL_COPT_SS_BASE + 10)                 // Enables FallBack connections
-#define SQL_COPT_SS_PERF_DATA (SQL_COPT_SS_BASE + 11)                        // Used to access SQL Server ODBC driver performance data
-#define SQL_COPT_SS_PERF_DATA_LOG (SQL_COPT_SS_BASE + 12)                    // Used to set the logfile name for the Performance data
-#define SQL_COPT_SS_PERF_QUERY_INTERVAL (SQL_COPT_SS_BASE + 13)              // Used to set the query logging threshold in milliseconds.
-#define SQL_COPT_SS_PERF_QUERY_LOG (SQL_COPT_SS_BASE + 14)                   // Used to set the logfile name for saving queryies.
-#define SQL_COPT_SS_PERF_QUERY (SQL_COPT_SS_BASE + 15)                       // Used to start and stop query logging.
-#define SQL_COPT_SS_PERF_DATA_LOG_NOW (SQL_COPT_SS_BASE + 16)                // Used to make a statistics log entry to disk.
-#define SQL_COPT_SS_QUOTED_IDENT (SQL_COPT_SS_BASE + 17)                     // Enable/Disable Quoted Identifiers
-#define SQL_COPT_SS_ANSI_NPW (SQL_COPT_SS_BASE + 18)                         // Enable/Disable ANSI NULL, Padding and Warnings
-#define SQL_COPT_SS_BCP (SQL_COPT_SS_BASE + 19)                              // Allow BCP usage on connection
-#define SQL_COPT_SS_TRANSLATE (SQL_COPT_SS_BASE + 20)                        // Perform code page translation
-#define SQL_COPT_SS_ATTACHDBFILENAME (SQL_COPT_SS_BASE + 21)                 // File name to be attached as a database
-#define SQL_COPT_SS_CONCAT_NULL (SQL_COPT_SS_BASE + 22)                      // Enable/Disable CONCAT_NULL_YIELDS_NULL
-#define SQL_COPT_SS_ENCRYPT (SQL_COPT_SS_BASE + 23)                          // Allow strong encryption for data
-#define SQL_COPT_SS_MARS_ENABLED (SQL_COPT_SS_BASE + 24)                     // Multiple active result set per connection
-#define SQL_COPT_SS_FAILOVER_PARTNER (SQL_COPT_SS_BASE + 25)                 // Failover partner server
-#define SQL_COPT_SS_OLDPWD (SQL_COPT_SS_BASE + 26)                           // Old Password, used when changing password during login
-#define SQL_COPT_SS_TXN_ISOLATION (SQL_COPT_SS_BASE + 27)                    // Used to set/get any driver-specific or ODBC-defined TXN iso level
-#define SQL_COPT_SS_TRUST_SERVER_CERTIFICATE (SQL_COPT_SS_BASE + 28)         // Trust server certificate
-#define SQL_COPT_SS_SERVER_SPN (SQL_COPT_SS_BASE + 29)                       // Server SPN
-#define SQL_COPT_SS_FAILOVER_PARTNER_SPN (SQL_COPT_SS_BASE + 30)             // Failover partner server SPN
-#define SQL_COPT_SS_INTEGRATED_AUTHENTICATION_METHOD (SQL_COPT_SS_BASE + 31) // The integrated authentication method used for the connection
-#define SQL_COPT_SS_MUTUALLY_AUTHENTICATED (SQL_COPT_SS_BASE + 32)           // Used to decide if the connection is mutually authenticated
-#define SQL_COPT_SS_CLIENT_CONNECTION_ID (SQL_COPT_SS_BASE + 33)             // Post connection attribute used to get the ConnectionID
+#define SQL_COPT_SS_REMOTE_PWD (SQL_COPT_SS_BASE + 1)         // dbrpwset SQLSetConnectOption only
+#define SQL_COPT_SS_USE_PROC_FOR_PREP (SQL_COPT_SS_BASE + 2)  // Use create proc for SQLPrepare
+#define SQL_COPT_SS_INTEGRATED_SECURITY \
+  (SQL_COPT_SS_BASE + 3)  // Force integrated security on login
+#define SQL_COPT_SS_PRESERVE_CURSORS \
+  (SQL_COPT_SS_BASE + 4)                              // Preserve server cursors after SQLTransact
+#define SQL_COPT_SS_USER_DATA (SQL_COPT_SS_BASE + 5)  // dbgetuserdata/dbsetuserdata
+#define SQL_COPT_SS_ENLIST_IN_DTC SQL_ATTR_ENLIST_IN_DTC      // Enlist in a DTC transaction
+#define SQL_COPT_SS_ENLIST_IN_XA SQL_ATTR_ENLIST_IN_XA        // Enlist in a XA transaction
+#define SQL_COPT_SS_FALLBACK_CONNECT (SQL_COPT_SS_BASE + 10)  // Enables FallBack connections
+#define SQL_COPT_SS_PERF_DATA \
+  (SQL_COPT_SS_BASE + 11)  // Used to access SQL Server ODBC driver performance data
+#define SQL_COPT_SS_PERF_DATA_LOG \
+  (SQL_COPT_SS_BASE + 12)  // Used to set the logfile name for the Performance data
+#define SQL_COPT_SS_PERF_QUERY_INTERVAL \
+  (SQL_COPT_SS_BASE + 13)  // Used to set the query logging threshold in milliseconds.
+#define SQL_COPT_SS_PERF_QUERY_LOG \
+  (SQL_COPT_SS_BASE + 14)  // Used to set the logfile name for saving queryies.
+#define SQL_COPT_SS_PERF_QUERY (SQL_COPT_SS_BASE + 15)  // Used to start and stop query logging.
+#define SQL_COPT_SS_PERF_DATA_LOG_NOW \
+  (SQL_COPT_SS_BASE + 16)  // Used to make a statistics log entry to disk.
+#define SQL_COPT_SS_QUOTED_IDENT (SQL_COPT_SS_BASE + 17)  // Enable/Disable Quoted Identifiers
+#define SQL_COPT_SS_ANSI_NPW \
+  (SQL_COPT_SS_BASE + 18)                        // Enable/Disable ANSI NULL, Padding and Warnings
+#define SQL_COPT_SS_BCP (SQL_COPT_SS_BASE + 19)  // Allow BCP usage on connection
+#define SQL_COPT_SS_TRANSLATE (SQL_COPT_SS_BASE + 20)  // Perform code page translation
+#define SQL_COPT_SS_ATTACHDBFILENAME \
+  (SQL_COPT_SS_BASE + 21)                                // File name to be attached as a database
+#define SQL_COPT_SS_CONCAT_NULL (SQL_COPT_SS_BASE + 22)  // Enable/Disable CONCAT_NULL_YIELDS_NULL
+#define SQL_COPT_SS_ENCRYPT (SQL_COPT_SS_BASE + 23)      // Allow strong encryption for data
+#define SQL_COPT_SS_MARS_ENABLED \
+  (SQL_COPT_SS_BASE + 24)  // Multiple active result set per connection
+#define SQL_COPT_SS_FAILOVER_PARTNER (SQL_COPT_SS_BASE + 25)  // Failover partner server
+#define SQL_COPT_SS_OLDPWD \
+  (SQL_COPT_SS_BASE + 26)  // Old Password, used when changing password during login
+#define SQL_COPT_SS_TXN_ISOLATION \
+  (SQL_COPT_SS_BASE + 27)  // Used to set/get any driver-specific or ODBC-defined TXN iso level
+#define SQL_COPT_SS_TRUST_SERVER_CERTIFICATE (SQL_COPT_SS_BASE + 28)  // Trust server certificate
+#define SQL_COPT_SS_SERVER_SPN (SQL_COPT_SS_BASE + 29)                // Server SPN
+#define SQL_COPT_SS_FAILOVER_PARTNER_SPN (SQL_COPT_SS_BASE + 30)      // Failover partner server SPN
+#define SQL_COPT_SS_INTEGRATED_AUTHENTICATION_METHOD \
+  (SQL_COPT_SS_BASE + 31)  // The integrated authentication method used for the connection
+#define SQL_COPT_SS_MUTUALLY_AUTHENTICATED \
+  (SQL_COPT_SS_BASE + 32)  // Used to decide if the connection is mutually authenticated
+#define SQL_COPT_SS_CLIENT_CONNECTION_ID \
+  (SQL_COPT_SS_BASE + 33)  // Post connection attribute used to get the ConnectionID
 #define SQL_COPT_SS_MAX_USED SQL_COPT_SS_CLIENT_CONNECTION_ID
 // Define old names
 #define SQL_REMOTE_PWD SQL_COPT_SS_REMOTE_PWD
@@ -2408,146 +2363,165 @@ typedef DWORD DBASYNCHPHASE;
 // SQLSetStmtAttr SQL Server Native Client driver specific defines.
 // Statement attributes
 #define SQL_SOPT_SS_BASE 1225
-#define SQL_SOPT_SS_TEXTPTR_LOGGING (SQL_SOPT_SS_BASE + 0)            // Text pointer logging
-#define SQL_SOPT_SS_CURRENT_COMMAND (SQL_SOPT_SS_BASE + 1)            // dbcurcmd SQLGetStmtOption only
-#define SQL_SOPT_SS_HIDDEN_COLUMNS (SQL_SOPT_SS_BASE + 2)             // Expose FOR BROWSE hidden columns
-#define SQL_SOPT_SS_NOBROWSETABLE (SQL_SOPT_SS_BASE + 3)              // Set NOBROWSETABLE option
-#define SQL_SOPT_SS_REGIONALIZE (SQL_SOPT_SS_BASE + 4)                // Regionalize output character conversions
-#define SQL_SOPT_SS_CURSOR_OPTIONS (SQL_SOPT_SS_BASE + 5)             // Server cursor options
-#define SQL_SOPT_SS_NOCOUNT_STATUS (SQL_SOPT_SS_BASE + 6)             // Real vs. Not Real row count indicator
-#define SQL_SOPT_SS_DEFER_PREPARE (SQL_SOPT_SS_BASE + 7)              // Defer prepare until necessary
-#define SQL_SOPT_SS_QUERYNOTIFICATION_TIMEOUT (SQL_SOPT_SS_BASE + 8)  // Notification timeout
-#define SQL_SOPT_SS_QUERYNOTIFICATION_MSGTEXT (SQL_SOPT_SS_BASE + 9)  // Notification message text
-#define SQL_SOPT_SS_QUERYNOTIFICATION_OPTIONS (SQL_SOPT_SS_BASE + 10) // SQL service broker name
-#define SQL_SOPT_SS_PARAM_FOCUS (SQL_SOPT_SS_BASE + 11)               // Direct subsequent calls to parameter related methods to set properties on constituent columns/parameters of container types
-#define SQL_SOPT_SS_NAME_SCOPE (SQL_SOPT_SS_BASE + 12)                // Sets name scope for subsequent catalog function calls
+#define SQL_SOPT_SS_TEXTPTR_LOGGING (SQL_SOPT_SS_BASE + 0)  // Text pointer logging
+#define SQL_SOPT_SS_CURRENT_COMMAND (SQL_SOPT_SS_BASE + 1)  // dbcurcmd SQLGetStmtOption only
+#define SQL_SOPT_SS_HIDDEN_COLUMNS (SQL_SOPT_SS_BASE + 2)   // Expose FOR BROWSE hidden columns
+#define SQL_SOPT_SS_NOBROWSETABLE (SQL_SOPT_SS_BASE + 3)    // Set NOBROWSETABLE option
+#define SQL_SOPT_SS_REGIONALIZE (SQL_SOPT_SS_BASE + 4)  // Regionalize output character conversions
+#define SQL_SOPT_SS_CURSOR_OPTIONS (SQL_SOPT_SS_BASE + 5)  // Server cursor options
+#define SQL_SOPT_SS_NOCOUNT_STATUS (SQL_SOPT_SS_BASE + 6)  // Real vs. Not Real row count indicator
+#define SQL_SOPT_SS_DEFER_PREPARE (SQL_SOPT_SS_BASE + 7)   // Defer prepare until necessary
+#define SQL_SOPT_SS_QUERYNOTIFICATION_TIMEOUT (SQL_SOPT_SS_BASE + 8)   // Notification timeout
+#define SQL_SOPT_SS_QUERYNOTIFICATION_MSGTEXT (SQL_SOPT_SS_BASE + 9)   // Notification message text
+#define SQL_SOPT_SS_QUERYNOTIFICATION_OPTIONS (SQL_SOPT_SS_BASE + 10)  // SQL service broker name
+#define SQL_SOPT_SS_PARAM_FOCUS \
+  (SQL_SOPT_SS_BASE + 11)  // Direct subsequent calls to parameter related methods to set properties
+                           // on constituent columns/parameters of container types
+#define SQL_SOPT_SS_NAME_SCOPE \
+  (SQL_SOPT_SS_BASE + 12)  // Sets name scope for subsequent catalog function calls
 #define SQL_SOPT_SS_MAX_USED SQL_SOPT_SS_NAME_SCOPE
 // Define old names
 #define SQL_TEXTPTR_LOGGING SQL_SOPT_SS_TEXTPTR_LOGGING
 #define SQL_COPT_SS_BASE_EX 1240
-#define SQL_COPT_SS_BROWSE_CONNECT (SQL_COPT_SS_BASE_EX + 1)       // Browse connect mode of operation
-#define SQL_COPT_SS_BROWSE_SERVER (SQL_COPT_SS_BASE_EX + 2)        // Single Server browse request.
-#define SQL_COPT_SS_WARN_ON_CP_ERROR (SQL_COPT_SS_BASE_EX + 3)     // Issues warning when data from the server had a loss during code page conversion.
-#define SQL_COPT_SS_CONNECTION_DEAD (SQL_COPT_SS_BASE_EX + 4)      // dbdead SQLGetConnectOption only. It will try to ping the server. Expensive connection check
-#define SQL_COPT_SS_BROWSE_CACHE_DATA (SQL_COPT_SS_BASE_EX + 5)    // Determines if we should cache browse info. Used when returned buffer is greater then ODBC limit (32K)
-#define SQL_COPT_SS_RESET_CONNECTION (SQL_COPT_SS_BASE_EX + 6)     // When this option is set, we will perform connection reset on next packet
-#define SQL_COPT_SS_APPLICATION_INTENT (SQL_COPT_SS_BASE_EX + 7)   // Application Intent
-#define SQL_COPT_SS_MULTISUBNET_FAILOVER (SQL_COPT_SS_BASE_EX + 8) // Multi-subnet Failover
+#define SQL_COPT_SS_BROWSE_CONNECT (SQL_COPT_SS_BASE_EX + 1)  // Browse connect mode of operation
+#define SQL_COPT_SS_BROWSE_SERVER (SQL_COPT_SS_BASE_EX + 2)   // Single Server browse request.
+#define SQL_COPT_SS_WARN_ON_CP_ERROR \
+  (SQL_COPT_SS_BASE_EX +             \
+   3)  // Issues warning when data from the server had a loss during code page conversion.
+#define SQL_COPT_SS_CONNECTION_DEAD \
+  (SQL_COPT_SS_BASE_EX + 4)  // dbdead SQLGetConnectOption only. It will try to ping the server.
+                             // Expensive connection check
+#define SQL_COPT_SS_BROWSE_CACHE_DATA \
+  (SQL_COPT_SS_BASE_EX + 5)  // Determines if we should cache browse info. Used when returned buffer
+                             // is greater then ODBC limit (32K)
+#define SQL_COPT_SS_RESET_CONNECTION \
+  (SQL_COPT_SS_BASE_EX +             \
+   6)  // When this option is set, we will perform connection reset on next packet
+#define SQL_COPT_SS_APPLICATION_INTENT (SQL_COPT_SS_BASE_EX + 7)    // Application Intent
+#define SQL_COPT_SS_MULTISUBNET_FAILOVER (SQL_COPT_SS_BASE_EX + 8)  // Multi-subnet Failover
 #define SQL_COPT_SS_EX_MAX_USED SQL_COPT_SS_MULTISUBNET_FAILOVER
 
 // SQLColAttributes driver specific defines.
 // SQLSetDescField/SQLGetDescField driver specific defines.
 // Microsoft has 1200 thru 1249 reserved for Microsoft SQL Server Native Client driver usage.
 #define SQL_CA_SS_BASE 1200
-#define SQL_CA_SS_COLUMN_SSTYPE (SQL_CA_SS_BASE + 0)  //  dbcoltype/dbalttype
-#define SQL_CA_SS_COLUMN_UTYPE (SQL_CA_SS_BASE + 1)   //  dbcolutype/dbaltutype
-#define SQL_CA_SS_NUM_ORDERS (SQL_CA_SS_BASE + 2)     //  dbnumorders
-#define SQL_CA_SS_COLUMN_ORDER (SQL_CA_SS_BASE + 3)   //  dbordercol
-#define SQL_CA_SS_COLUMN_VARYLEN (SQL_CA_SS_BASE + 4) //  dbvarylen
-#define SQL_CA_SS_NUM_COMPUTES (SQL_CA_SS_BASE + 5)   //  dbnumcompute
-#define SQL_CA_SS_COMPUTE_ID (SQL_CA_SS_BASE + 6)     //  dbnextrow status return
-#define SQL_CA_SS_COMPUTE_BYLIST (SQL_CA_SS_BASE + 7) //  dbbylist
-#define SQL_CA_SS_COLUMN_ID (SQL_CA_SS_BASE + 8)      //  dbaltcolid
-#define SQL_CA_SS_COLUMN_OP (SQL_CA_SS_BASE + 9)      //  dbaltop
-#define SQL_CA_SS_COLUMN_SIZE (SQL_CA_SS_BASE + 10)   //  dbcollen
-#define SQL_CA_SS_COLUMN_HIDDEN (SQL_CA_SS_BASE + 11) //  Column is hidden (FOR BROWSE)
-#define SQL_CA_SS_COLUMN_KEY (SQL_CA_SS_BASE + 12)    //  Column is key column (FOR BROWSE)
-// #define SQL_DESC_BASE_COLUMN_NAME_OLD             (SQL_CA_SS_BASE+13)  //  This is defined at another location.
-#define SQL_CA_SS_COLUMN_COLLATION (SQL_CA_SS_BASE + 14) //  Column collation (only for chars)
+#define SQL_CA_SS_COLUMN_SSTYPE (SQL_CA_SS_BASE + 0)   //  dbcoltype/dbalttype
+#define SQL_CA_SS_COLUMN_UTYPE (SQL_CA_SS_BASE + 1)    //  dbcolutype/dbaltutype
+#define SQL_CA_SS_NUM_ORDERS (SQL_CA_SS_BASE + 2)      //  dbnumorders
+#define SQL_CA_SS_COLUMN_ORDER (SQL_CA_SS_BASE + 3)    //  dbordercol
+#define SQL_CA_SS_COLUMN_VARYLEN (SQL_CA_SS_BASE + 4)  //  dbvarylen
+#define SQL_CA_SS_NUM_COMPUTES (SQL_CA_SS_BASE + 5)    //  dbnumcompute
+#define SQL_CA_SS_COMPUTE_ID (SQL_CA_SS_BASE + 6)      //  dbnextrow status return
+#define SQL_CA_SS_COMPUTE_BYLIST (SQL_CA_SS_BASE + 7)  //  dbbylist
+#define SQL_CA_SS_COLUMN_ID (SQL_CA_SS_BASE + 8)       //  dbaltcolid
+#define SQL_CA_SS_COLUMN_OP (SQL_CA_SS_BASE + 9)       //  dbaltop
+#define SQL_CA_SS_COLUMN_SIZE (SQL_CA_SS_BASE + 10)    //  dbcollen
+#define SQL_CA_SS_COLUMN_HIDDEN (SQL_CA_SS_BASE + 11)  //  Column is hidden (FOR BROWSE)
+#define SQL_CA_SS_COLUMN_KEY (SQL_CA_SS_BASE + 12)     //  Column is key column (FOR BROWSE)
+// #define SQL_DESC_BASE_COLUMN_NAME_OLD             (SQL_CA_SS_BASE+13)  //  This is defined at
+// another location.
+#define SQL_CA_SS_COLUMN_COLLATION (SQL_CA_SS_BASE + 14)  //  Column collation (only for chars)
 #define SQL_CA_SS_VARIANT_TYPE (SQL_CA_SS_BASE + 15)
 #define SQL_CA_SS_VARIANT_SQL_TYPE (SQL_CA_SS_BASE + 16)
 #define SQL_CA_SS_VARIANT_SERVER_TYPE (SQL_CA_SS_BASE + 17)
 
 // XML, CLR UDT, and table valued parameter related metadata
-#define SQL_CA_SS_UDT_CATALOG_NAME (SQL_CA_SS_BASE + 18)                  //  UDT catalog name
-#define SQL_CA_SS_UDT_SCHEMA_NAME (SQL_CA_SS_BASE + 19)                   //  UDT schema name
-#define SQL_CA_SS_UDT_TYPE_NAME (SQL_CA_SS_BASE + 20)                     //  UDT type name
-#define SQL_CA_SS_UDT_ASSEMBLY_TYPE_NAME (SQL_CA_SS_BASE + 21)            //  Qualified name of the assembly containing the UDT class
-#define SQL_CA_SS_XML_SCHEMACOLLECTION_CATALOG_NAME (SQL_CA_SS_BASE + 22) //  Name of the catalog that contains XML Schema collection
-#define SQL_CA_SS_XML_SCHEMACOLLECTION_SCHEMA_NAME (SQL_CA_SS_BASE + 23)  //  Name of the schema that contains XML Schema collection
-#define SQL_CA_SS_XML_SCHEMACOLLECTION_NAME (SQL_CA_SS_BASE + 24)         //  Name of the XML Schema collection
-#define SQL_CA_SS_CATALOG_NAME (SQL_CA_SS_BASE + 25)                      //  Catalog name
-#define SQL_CA_SS_SCHEMA_NAME (SQL_CA_SS_BASE + 26)                       //  Schema name
-#define SQL_CA_SS_TYPE_NAME (SQL_CA_SS_BASE + 27)                         //  Type name
+#define SQL_CA_SS_UDT_CATALOG_NAME (SQL_CA_SS_BASE + 18)  //  UDT catalog name
+#define SQL_CA_SS_UDT_SCHEMA_NAME (SQL_CA_SS_BASE + 19)   //  UDT schema name
+#define SQL_CA_SS_UDT_TYPE_NAME (SQL_CA_SS_BASE + 20)     //  UDT type name
+#define SQL_CA_SS_UDT_ASSEMBLY_TYPE_NAME \
+  (SQL_CA_SS_BASE + 21)  //  Qualified name of the assembly containing the UDT class
+#define SQL_CA_SS_XML_SCHEMACOLLECTION_CATALOG_NAME \
+  (SQL_CA_SS_BASE + 22)  //  Name of the catalog that contains XML Schema collection
+#define SQL_CA_SS_XML_SCHEMACOLLECTION_SCHEMA_NAME \
+  (SQL_CA_SS_BASE + 23)  //  Name of the schema that contains XML Schema collection
+#define SQL_CA_SS_XML_SCHEMACOLLECTION_NAME \
+  (SQL_CA_SS_BASE + 24)                               //  Name of the XML Schema collection
+#define SQL_CA_SS_CATALOG_NAME (SQL_CA_SS_BASE + 25)  //  Catalog name
+#define SQL_CA_SS_SCHEMA_NAME (SQL_CA_SS_BASE + 26)   //  Schema name
+#define SQL_CA_SS_TYPE_NAME (SQL_CA_SS_BASE + 27)     //  Type name
 
 // table valued parameter related metadata
-#define SQL_CA_SS_COLUMN_COMPUTED (SQL_CA_SS_BASE + 29)          //  column is computed
-#define SQL_CA_SS_COLUMN_IN_UNIQUE_KEY (SQL_CA_SS_BASE + 30)     //  column is part of a unique key
-#define SQL_CA_SS_COLUMN_SORT_ORDER (SQL_CA_SS_BASE + 31)        //  column sort order
-#define SQL_CA_SS_COLUMN_SORT_ORDINAL (SQL_CA_SS_BASE + 32)      //  column sort ordinal
-#define SQL_CA_SS_COLUMN_HAS_DEFAULT_VALUE (SQL_CA_SS_BASE + 33) //  column has default value for all rows of the table valued parameter
+#define SQL_CA_SS_COLUMN_COMPUTED (SQL_CA_SS_BASE + 29)       //  column is computed
+#define SQL_CA_SS_COLUMN_IN_UNIQUE_KEY (SQL_CA_SS_BASE + 30)  //  column is part of a unique key
+#define SQL_CA_SS_COLUMN_SORT_ORDER (SQL_CA_SS_BASE + 31)     //  column sort order
+#define SQL_CA_SS_COLUMN_SORT_ORDINAL (SQL_CA_SS_BASE + 32)   //  column sort ordinal
+#define SQL_CA_SS_COLUMN_HAS_DEFAULT_VALUE \
+  (SQL_CA_SS_BASE + 33)  //  column has default value for all rows of the table valued parameter
 
 // sparse column related metadata
-#define SQL_CA_SS_IS_COLUMN_SET (SQL_CA_SS_BASE + 34) //  column is a column-set column for sparse columns
+#define SQL_CA_SS_IS_COLUMN_SET \
+  (SQL_CA_SS_BASE + 34)  //  column is a column-set column for sparse columns
 
 // Legacy datetime related metadata
-#define SQL_CA_SS_SERVER_TYPE (SQL_CA_SS_BASE + 35) //  column type to send on the wire for datetime types
+#define SQL_CA_SS_SERVER_TYPE \
+  (SQL_CA_SS_BASE + 35)  //  column type to send on the wire for datetime types
 
 #define SQL_CA_SS_MAX_USED (SQL_CA_SS_BASE + 36)
 
 // Defines returned by SQL_ATTR_CURSOR_TYPE/SQL_CURSOR_TYPE
-#define SQL_CURSOR_FAST_FORWARD_ONLY 8 //  Only returned by SQLGetStmtAttr/Option
+#define SQL_CURSOR_FAST_FORWARD_ONLY 8  //  Only returned by SQLGetStmtAttr/Option
 // Defines for use with SQL_COPT_SS_USE_PROC_FOR_PREP
-#define SQL_UP_OFF 0L     //  Procedures won't be used for prepare
-#define SQL_UP_ON 1L      //  Procedures will be used for prepare
-#define SQL_UP_ON_DROP 2L //  Temp procedures will be explicitly dropped
+#define SQL_UP_OFF 0L      //  Procedures won't be used for prepare
+#define SQL_UP_ON 1L       //  Procedures will be used for prepare
+#define SQL_UP_ON_DROP 2L  //  Temp procedures will be explicitly dropped
 #define SQL_UP_DEFAULT SQL_UP_ON
 // Defines for use with SQL_COPT_SS_INTEGRATED_SECURITY - Pre-Connect Option only
-#define SQL_IS_OFF 0L //  Integrated security isn't used
-#define SQL_IS_ON 1L  //  Integrated security is used
+#define SQL_IS_OFF 0L  //  Integrated security isn't used
+#define SQL_IS_ON 1L   //  Integrated security is used
 #define SQL_IS_DEFAULT SQL_IS_OFF
 // Defines for use with SQL_COPT_SS_PRESERVE_CURSORS
-#define SQL_PC_OFF 0L //  Cursors are closed on SQLTransact
-#define SQL_PC_ON 1L  //  Cursors remain open on SQLTransact
+#define SQL_PC_OFF 0L  //  Cursors are closed on SQLTransact
+#define SQL_PC_ON 1L   //  Cursors remain open on SQLTransact
 #define SQL_PC_DEFAULT SQL_PC_OFF
 // Defines for use with SQL_COPT_SS_USER_DATA
-#define SQL_UD_NOTSET NULL //  No user data pointer set
+#define SQL_UD_NOTSET NULL  //  No user data pointer set
 // Defines for use with SQL_COPT_SS_TRANSLATE
-#define SQL_XL_OFF 0L //  Code page translation is not performed
-#define SQL_XL_ON 1L  //  Code page translation is performed
+#define SQL_XL_OFF 0L  //  Code page translation is not performed
+#define SQL_XL_ON 1L   //  Code page translation is performed
 #define SQL_XL_DEFAULT SQL_XL_ON
 // Defines for use with SQL_COPT_SS_FALLBACK_CONNECT - Pre-Connect Option only
-#define SQL_FB_OFF 0L //  FallBack connections are disabled
-#define SQL_FB_ON 1L  //  FallBack connections are enabled
+#define SQL_FB_OFF 0L  //  FallBack connections are disabled
+#define SQL_FB_ON 1L   //  FallBack connections are enabled
 #define SQL_FB_DEFAULT SQL_FB_OFF
 // Defines for use with SQL_COPT_SS_BCP - Pre-Connect Option only
-#define SQL_BCP_OFF 0L //  BCP is not allowed on connection
-#define SQL_BCP_ON 1L  //  BCP is allowed on connection
+#define SQL_BCP_OFF 0L  //  BCP is not allowed on connection
+#define SQL_BCP_ON 1L   //  BCP is allowed on connection
 #define SQL_BCP_DEFAULT SQL_BCP_OFF
 // Defines for use with SQL_COPT_SS_QUOTED_IDENT
-#define SQL_QI_OFF 0L //  Quoted identifiers are enable
-#define SQL_QI_ON 1L  //  Quoted identifiers are disabled
+#define SQL_QI_OFF 0L  //  Quoted identifiers are enable
+#define SQL_QI_ON 1L   //  Quoted identifiers are disabled
 #define SQL_QI_DEFAULT SQL_QI_ON
 // Defines for use with SQL_COPT_SS_ANSI_NPW - Pre-Connect Option only
-#define SQL_AD_OFF 0L //  ANSI NULLs, Padding and Warnings are enabled
-#define SQL_AD_ON 1L  //  ANSI NULLs, Padding and Warnings are disabled
+#define SQL_AD_OFF 0L  //  ANSI NULLs, Padding and Warnings are enabled
+#define SQL_AD_ON 1L   //  ANSI NULLs, Padding and Warnings are disabled
 #define SQL_AD_DEFAULT SQL_AD_ON
 // Defines for use with SQL_COPT_SS_CONCAT_NULL - Pre-Connect Option only
-#define SQL_CN_OFF 0L //  CONCAT_NULL_YIELDS_NULL is off
-#define SQL_CN_ON 1L  //  CONCAT_NULL_YIELDS_NULL is on
+#define SQL_CN_OFF 0L  //  CONCAT_NULL_YIELDS_NULL is off
+#define SQL_CN_ON 1L   //  CONCAT_NULL_YIELDS_NULL is on
 #define SQL_CN_DEFAULT SQL_CN_ON
 // Defines for use with SQL_SOPT_SS_TEXTPTR_LOGGING
-#define SQL_TL_OFF 0L //  No logging on text pointer ops
-#define SQL_TL_ON 1L  //  Logging occurs on text pointer ops
+#define SQL_TL_OFF 0L  //  No logging on text pointer ops
+#define SQL_TL_ON 1L   //  Logging occurs on text pointer ops
 #define SQL_TL_DEFAULT SQL_TL_ON
 // Defines for use with SQL_SOPT_SS_HIDDEN_COLUMNS
-#define SQL_HC_OFF 0L //  FOR BROWSE columns are hidden
-#define SQL_HC_ON 1L  //  FOR BROWSE columns are exposed
+#define SQL_HC_OFF 0L  //  FOR BROWSE columns are hidden
+#define SQL_HC_ON 1L   //  FOR BROWSE columns are exposed
 #define SQL_HC_DEFAULT SQL_HC_OFF
 // Defines for use with SQL_SOPT_SS_NOBROWSETABLE
-#define SQL_NB_OFF 0L //  NO_BROWSETABLE is off
-#define SQL_NB_ON 1L  //  NO_BROWSETABLE is on
+#define SQL_NB_OFF 0L  //  NO_BROWSETABLE is off
+#define SQL_NB_ON 1L   //  NO_BROWSETABLE is on
 #define SQL_NB_DEFAULT SQL_NB_OFF
 // Defines for use with SQL_SOPT_SS_REGIONALIZE
-#define SQL_RE_OFF 0L //  No regionalization occurs on output character conversions
-#define SQL_RE_ON 1L  //  Regionalization occurs on output character conversions
+#define SQL_RE_OFF 0L  //  No regionalization occurs on output character conversions
+#define SQL_RE_ON 1L   //  Regionalization occurs on output character conversions
 #define SQL_RE_DEFAULT SQL_RE_OFF
 // Defines for use with SQL_SOPT_SS_CURSOR_OPTIONS
-#define SQL_CO_OFF 0L                          //  Clear all cursor options
-#define SQL_CO_FFO 1L                          //  Fast-forward cursor will be used
-#define SQL_CO_AF 2L                           //  Autofetch on cursor open
-#define SQL_CO_FFO_AF (SQL_CO_FFO | SQL_CO_AF) //  Fast-forward cursor with autofetch
-#define SQL_CO_FIREHOSE_AF 4L                  //  Auto fetch on fire-hose cursors
+#define SQL_CO_OFF 0L                           //  Clear all cursor options
+#define SQL_CO_FFO 1L                           //  Fast-forward cursor will be used
+#define SQL_CO_AF 2L                            //  Autofetch on cursor open
+#define SQL_CO_FFO_AF (SQL_CO_FFO | SQL_CO_AF)  //  Fast-forward cursor with autofetch
+#define SQL_CO_FIREHOSE_AF 4L                   //  Auto fetch on fire-hose cursors
 #define SQL_CO_DEFAULT SQL_CO_OFF
 // SQL_SOPT_SS_NOCOUNT_STATUS
 #define SQL_NC_OFF 0L
@@ -2663,7 +2637,7 @@ typedef DWORD DBASYNCHPHASE;
 // Define old names
 #define SQLDECIMALN 0x6a
 #define SQLNUMERICN 0x6c
-#endif // SQLNCLI_NO_BCP
+#endif  // SQLNCLI_NO_BCP
 
 // SQL_SS_LENGTH_UNLIMITED is used to describe the max length of
 // VARCHAR(max), VARBINARY(max), NVARCHAR(max), and XML columns
@@ -2702,22 +2676,22 @@ typedef DWORD DBASYNCHPHASE;
 #define MIN_USER_DATATYPE 256
 // Aggregate operator types.
 // Returned by SQLColAttributes/SQL_CA_SS_COLUMN_OP.
-#define SQLAOPSTDEV 0x30  // Standard deviation
-#define SQLAOPSTDEVP 0x31 // Standard deviation population
-#define SQLAOPVAR 0x32    // Variance
-#define SQLAOPVARP 0x33   // Variance population
-#define SQLAOPCNT 0x4b    // Count
-#define SQLAOPSUM 0x4d    // Sum
-#define SQLAOPAVG 0x4f    // Average
-#define SQLAOPMIN 0x51    // Min
-#define SQLAOPMAX 0x52    // Max
-#define SQLAOPANY 0x53    // Any
-#define SQLAOPNOOP 0x56   // None
+#define SQLAOPSTDEV 0x30   // Standard deviation
+#define SQLAOPSTDEVP 0x31  // Standard deviation population
+#define SQLAOPVAR 0x32     // Variance
+#define SQLAOPVARP 0x33    // Variance population
+#define SQLAOPCNT 0x4b     // Count
+#define SQLAOPSUM 0x4d     // Sum
+#define SQLAOPAVG 0x4f     // Average
+#define SQLAOPMIN 0x51     // Min
+#define SQLAOPMAX 0x52     // Max
+#define SQLAOPANY 0x53     // Any
+#define SQLAOPNOOP 0x56    // None
 // SQLGetInfo driver specific defines.
 // Microsoft has 1151 thru 1200 reserved for Microsoft SQL Server Native Client driver usage.
 #define SQL_INFO_SS_FIRST 1199
-#define SQL_INFO_SS_NETLIB_NAMEW (SQL_INFO_SS_FIRST + 0) //  dbprocinfo
-#define SQL_INFO_SS_NETLIB_NAMEA (SQL_INFO_SS_FIRST + 1) //  dbprocinfo
+#define SQL_INFO_SS_NETLIB_NAMEW (SQL_INFO_SS_FIRST + 0)  //  dbprocinfo
+#define SQL_INFO_SS_NETLIB_NAMEA (SQL_INFO_SS_FIRST + 1)  //  dbprocinfo
 #define SQL_INFO_SS_MAX_USED SQL_INFO_SS_NETLIB_NAMEA
 #ifdef UNICODE
 #define SQL_INFO_SS_NETLIB_NAME SQL_INFO_SS_NETLIB_NAMEW
@@ -2820,85 +2794,80 @@ typedef DWORD DBASYNCHPHASE;
 #define EX_HARDWARE 24
 #define EX_CONTROL 25
 // Internal server datatypes - used when binding to SQL_C_BINARY
-#ifndef MAXNUMERICLEN // Resolve ODS/DBLib conflicts
+#ifndef MAXNUMERICLEN  // Resolve ODS/DBLib conflicts
 // DB-Library datatypes
-#define DBMAXCHAR (8000 + 1)                // Max length of DBVARBINARY and DBVARCHAR, etc. +1 for zero byte
-#define MAXNAME (SQL_MAX_SQLSERVERNAME + 1) // Max server identifier length including zero byte
+#define DBMAXCHAR (8000 + 1)  // Max length of DBVARBINARY and DBVARCHAR, etc. +1 for zero byte
+#define MAXNAME (SQL_MAX_SQLSERVERNAME + 1)  // Max server identifier length including zero byte
 #ifdef UNICODE
-  typedef wchar_t DBCHAR;
+typedef wchar_t DBCHAR;
 #else
-  typedef char DBCHAR;
+typedef char DBCHAR;
 
 #endif
-  typedef short SQLSMALLINT;
+typedef short SQLSMALLINT;
 
-  typedef unsigned short SQLUSMALLINT;
+typedef unsigned short SQLUSMALLINT;
 
-  typedef unsigned char DBBINARY;
+typedef unsigned char DBBINARY;
 
-  typedef unsigned char DBTINYINT;
+typedef unsigned char DBTINYINT;
 
-  typedef short DBSMALLINT;
+typedef short DBSMALLINT;
 
-  typedef unsigned short DBUSMALLINT;
+typedef unsigned short DBUSMALLINT;
 
-  typedef double DBFLT8;
+typedef double DBFLT8;
 
-  typedef unsigned char DBBIT;
+typedef unsigned char DBBIT;
 
-  typedef unsigned char DBBOOL;
+typedef unsigned char DBBOOL;
 
-  typedef float DBFLT4;
+typedef float DBFLT4;
 
-  typedef DBFLT4 DBREAL;
+typedef DBFLT4 DBREAL;
 
-  typedef UINT DBUBOOL;
+typedef UINT DBUBOOL;
 
-  typedef struct dbmoney
-  {
-    LONG mnyhigh;
-    ULONG mnylow;
-  } DBMONEY;
+typedef struct dbmoney {
+  LONG mnyhigh;
+  ULONG mnylow;
+} DBMONEY;
 
-  typedef struct dbdatetime
-  {
-    LONG dtdays;
-    ULONG dttime;
-  } DBDATETIME;
+typedef struct dbdatetime {
+  LONG dtdays;
+  ULONG dttime;
+} DBDATETIME;
 
-  typedef struct dbdatetime4
-  {
-    USHORT numdays;
-    USHORT nummins;
-  } DBDATETIM4;
+typedef struct dbdatetime4 {
+  USHORT numdays;
+  USHORT nummins;
+} DBDATETIM4;
 
-  typedef LONG DBMONEY4;
+typedef LONG DBMONEY4;
 
-#include <pshpack8.h> // 8-byte structure packing
+#include <pshpack8.h>  // 8-byte structure packing
 
-  // New Date Time Structures
-  // New Structure for TIME2
-  typedef struct tagSS_TIME2_STRUCT
-  {
-    SQLUSMALLINT hour;
-    SQLUSMALLINT minute;
-    SQLUSMALLINT second;
-    SQLUINTEGER fraction;
-  } SQL_SS_TIME2_STRUCT;
-  // New Structure for TIMESTAMPOFFSET
-  typedef struct tagSS_TIMESTAMPOFFSET_STRUCT
-  {
-    SQLSMALLINT year;
-    SQLUSMALLINT month;
-    SQLUSMALLINT day;
-    SQLUSMALLINT hour;
-    SQLUSMALLINT minute;
-    SQLUSMALLINT second;
-    SQLUINTEGER fraction;
-    SQLSMALLINT timezone_hour;
-    SQLSMALLINT timezone_minute;
-  } SQL_SS_TIMESTAMPOFFSET_STRUCT;
-#include <poppack.h> // restore original structure packing
+// New Date Time Structures
+// New Structure for TIME2
+typedef struct tagSS_TIME2_STRUCT {
+  SQLUSMALLINT hour;
+  SQLUSMALLINT minute;
+  SQLUSMALLINT second;
+  SQLUINTEGER fraction;
+} SQL_SS_TIME2_STRUCT;
+// New Structure for TIMESTAMPOFFSET
+typedef struct tagSS_TIMESTAMPOFFSET_STRUCT {
+  SQLSMALLINT year;
+  SQLUSMALLINT month;
+  SQLUSMALLINT day;
+  SQLUSMALLINT hour;
+  SQLUSMALLINT minute;
+  SQLUSMALLINT second;
+  SQLUINTEGER fraction;
+  SQLSMALLINT timezone_hour;
+  SQLSMALLINT timezone_minute;
+} SQL_SS_TIMESTAMPOFFSET_STRUCT;
+#include <poppack.h>  // restore original structure packing
 
 // Money value *10,000
 #define DBNUM_PREC_TYPE BYTE
@@ -2907,83 +2876,82 @@ typedef DWORD DBASYNCHPHASE;
 
 #if (ODBCVER < 0x0300)
 #define MAXNUMERICLEN 16
-  typedef struct dbnumeric // Internal representation of NUMERIC data type
-  {
-    DBNUM_PREC_TYPE precision;         // Precision
-    DBNUM_SCALE_TYPE scale;            // Scale
-    BYTE sign;                         // Sign (1 if positive, 0 if negative)
-    DBNUM_VAL_TYPE val[MAXNUMERICLEN]; // Value
-  } DBNUMERIC;
-  typedef DBNUMERIC DBDECIMAL; // Internal representation of DECIMAL data type
-#else                          //  Use ODBC 3.0 definitions since same as DBLib
+typedef struct dbnumeric  // Internal representation of NUMERIC data type
+{
+  DBNUM_PREC_TYPE precision;          // Precision
+  DBNUM_SCALE_TYPE scale;             // Scale
+  BYTE sign;                          // Sign (1 if positive, 0 if negative)
+  DBNUM_VAL_TYPE val[MAXNUMERICLEN];  // Value
+} DBNUMERIC;
+typedef DBNUMERIC DBDECIMAL;  // Internal representation of DECIMAL data type
+#else                         //  Use ODBC 3.0 definitions since same as DBLib
 #define MAXNUMERICLEN SQL_MAX_NUMERIC_LEN
-  typedef SQL_NUMERIC_STRUCT DBNUMERIC;
-  typedef SQL_NUMERIC_STRUCT DBDECIMAL;
-#endif // ODCBVER
-#endif // MAXNUMERICLEN
+typedef SQL_NUMERIC_STRUCT DBNUMERIC;
+typedef SQL_NUMERIC_STRUCT DBDECIMAL;
+#endif  // ODCBVER
+#endif  // MAXNUMERICLEN
 
 #ifndef INT
-  typedef int INT;
-  typedef long DBINT;
-  typedef DBINT *LPDBINT;
+typedef int INT;
+typedef long DBINT;
+typedef DBINT* LPDBINT;
 #ifndef _LPCBYTE_DEFINED
 #define _LPCBYTE_DEFINED
-  typedef BYTE const *LPCBYTE;
-#endif //_LPCBYTE_DEFINED
-#endif // INT
-  /**************************************************************************
-  This struct is a global used for gathering statistical data on the driver.
-  Access to this structure is controlled via the pStatCrit;
-  ***************************************************************************/
-  typedef struct sqlperf
-  {
-    // Application Profile Statistics
-    DWORD TimerResolution;
-    DWORD SQLidu;
-    DWORD SQLiduRows;
-    DWORD SQLSelects;
-    DWORD SQLSelectRows;
-    DWORD Transactions;
-    DWORD SQLPrepares;
-    DWORD ExecDirects;
-    DWORD SQLExecutes;
-    DWORD CursorOpens;
-    DWORD CursorSize;
-    DWORD CursorUsed;
-    LDOUBLE PercentCursorUsed;
-    LDOUBLE AvgFetchTime;
-    LDOUBLE AvgCursorSize;
-    LDOUBLE AvgCursorUsed;
-    DWORD SQLFetchTime;
-    DWORD SQLFetchCount;
-    DWORD CurrentStmtCount;
-    DWORD MaxOpenStmt;
-    DWORD SumOpenStmt;
-    // Connection Statistics
-    DWORD CurrentConnectionCount;
-    DWORD MaxConnectionsOpened;
-    DWORD SumConnectionsOpened;
-    DWORD SumConnectiontime;
-    LDOUBLE AvgTimeOpened;
-    // Network Statistics
-    DWORD ServerRndTrips;
-    DWORD BuffersSent;
-    DWORD BuffersRec;
-    DWORD BytesSent;
-    DWORD BytesRec;
-    // Time Statistics;
-    DWORD msExecutionTime;
-    DWORD msNetWorkServerTime;
-  } SQLPERF;
+typedef BYTE const* LPCBYTE;
+#endif  //_LPCBYTE_DEFINED
+#endif  // INT
+/**************************************************************************
+This struct is a global used for gathering statistical data on the driver.
+Access to this structure is controlled via the pStatCrit;
+***************************************************************************/
+typedef struct sqlperf {
+  // Application Profile Statistics
+  DWORD TimerResolution;
+  DWORD SQLidu;
+  DWORD SQLiduRows;
+  DWORD SQLSelects;
+  DWORD SQLSelectRows;
+  DWORD Transactions;
+  DWORD SQLPrepares;
+  DWORD ExecDirects;
+  DWORD SQLExecutes;
+  DWORD CursorOpens;
+  DWORD CursorSize;
+  DWORD CursorUsed;
+  LDOUBLE PercentCursorUsed;
+  LDOUBLE AvgFetchTime;
+  LDOUBLE AvgCursorSize;
+  LDOUBLE AvgCursorUsed;
+  DWORD SQLFetchTime;
+  DWORD SQLFetchCount;
+  DWORD CurrentStmtCount;
+  DWORD MaxOpenStmt;
+  DWORD SumOpenStmt;
+  // Connection Statistics
+  DWORD CurrentConnectionCount;
+  DWORD MaxConnectionsOpened;
+  DWORD SumConnectionsOpened;
+  DWORD SumConnectiontime;
+  LDOUBLE AvgTimeOpened;
+  // Network Statistics
+  DWORD ServerRndTrips;
+  DWORD BuffersSent;
+  DWORD BuffersRec;
+  DWORD BytesSent;
+  DWORD BytesRec;
+  // Time Statistics;
+  DWORD msExecutionTime;
+  DWORD msNetWorkServerTime;
+} SQLPERF;
 // The following are options for SQL_COPT_SS_PERF_DATA and SQL_COPT_SS_PERF_QUERY
-#define SQL_PERF_START 1 // Starts the driver sampling performance data.
-#define SQL_PERF_STOP 2  // Stops the counters from sampling performance data.
+#define SQL_PERF_START 1  // Starts the driver sampling performance data.
+#define SQL_PERF_STOP 2   // Stops the counters from sampling performance data.
 // The following are defines for SQL_COPT_SS_PERF_DATA_LOG
 #define SQL_SS_DL_DEFAULT TEXT("STATS.LOG")
 // The following are defines for SQL_COPT_SS_PERF_QUERY_LOG
 #define SQL_SS_QL_DEFAULT TEXT("QUERY.LOG")
 // The following are defines for SQL_COPT_SS_PERF_QUERY_INTERVAL
-#define SQL_SS_QI_DEFAULT 30000 //  30,000 milliseconds
+#define SQL_SS_QI_DEFAULT 30000  //  30,000 milliseconds
 
 #ifndef SQLNCLI_NO_BCP
 // Define the symbol SQLNCLI_NO_BCP if you are not using BCP in your application
@@ -2996,38 +2964,39 @@ typedef DWORD DBASYNCHPHASE;
 #define SUCCEED_ABORT 2
 #define SUCCEED_ASYNC 3
 // Transfer directions
-#define DB_IN 1  // Transfer from client to server
-#define DB_OUT 2 // Transfer from server to client
+#define DB_IN 1   // Transfer from client to server
+#define DB_OUT 2  // Transfer from server to client
 // bcp_control option
-#define BCPMAXERRS 1      // Sets max errors allowed
-#define BCPFIRST 2        // Sets first row to be copied out
-#define BCPLAST 3         // Sets number of rows to be copied out
-#define BCPBATCH 4        // Sets input batch size
-#define BCPKEEPNULLS 5    // Sets to insert NULLs for empty input values
-#define BCPABORT 6        // Sets to have bcpexec return SUCCEED_ABORT
-#define BCPODBC 7         // Sets ODBC canonical character output
-#define BCPKEEPIDENTITY 8 // Sets IDENTITY_INSERT on
+#define BCPMAXERRS 1       // Sets max errors allowed
+#define BCPFIRST 2         // Sets first row to be copied out
+#define BCPLAST 3          // Sets number of rows to be copied out
+#define BCPBATCH 4         // Sets input batch size
+#define BCPKEEPNULLS 5     // Sets to insert NULLs for empty input values
+#define BCPABORT 6         // Sets to have bcpexec return SUCCEED_ABORT
+#define BCPODBC 7          // Sets ODBC canonical character output
+#define BCPKEEPIDENTITY 8  // Sets IDENTITY_INSERT on
 #if SQLNCLI_VER < 1000
-#define BCP6xFILEFMT 9 // DEPRECATED: Sets 6x file format on
+#define BCP6xFILEFMT 9  // DEPRECATED: Sets 6x file format on
 #endif
 #define BCPHINTSA 10       // Sets server BCP hints (ANSI string)
 #define BCPHINTSW 11       // Sets server BCP hints (UNICODE string)
 #define BCPFILECP 12       // Sets clients code page for the file
 #define BCPUNICODEFILE 13  // Sets that the file contains unicode header
-#define BCPTEXTFILE 14     // Sets BCP mode to expect a text file and to detect Unicode or ANSI automatically
-#define BCPFILEFMT 15      // Sets file format version
-#define BCPFMTXML 16       // Sets the format file type to xml
-#define BCPFIRSTEX 17      // Starting Row for BCP operation (64 bit)
-#define BCPLASTEX 18       // Ending Row for BCP operation (64 bit)
-#define BCPROWCOUNT 19     // Total Number of Rows Copied (64 bit)
-#define BCPDELAYREADFMT 20 // Delay reading format file unil bcp_exec
+#define BCPTEXTFILE \
+  14  // Sets BCP mode to expect a text file and to detect Unicode or ANSI automatically
+#define BCPFILEFMT 15       // Sets file format version
+#define BCPFMTXML 16        // Sets the format file type to xml
+#define BCPFIRSTEX 17       // Starting Row for BCP operation (64 bit)
+#define BCPLASTEX 18        // Ending Row for BCP operation (64 bit)
+#define BCPROWCOUNT 19      // Total Number of Rows Copied (64 bit)
+#define BCPDELAYREADFMT 20  // Delay reading format file unil bcp_exec
 // BCPFILECP values
 // Any valid code page that is installed on the client can be passed plus:
-#define BCPFILECP_ACP 0    // Data in file is in Windows code page
-#define BCPFILECP_OEMCP 1  // Data in file is in OEM code page (default)
-#define BCPFILECP_RAW (-1) // Data in file is in Server code page (no conversion)
+#define BCPFILECP_ACP 0     // Data in file is in Windows code page
+#define BCPFILECP_OEMCP 1   // Data in file is in OEM code page (default)
+#define BCPFILECP_RAW (-1)  // Data in file is in Server code page (no conversion)
 // bcp_collen definition
-#define SQL_VARLEN_DATA (-10) // Use default length for column
+#define SQL_VARLEN_DATA (-10)  // Use default length for column
 // BCP column format properties
 #define BCP_FMT_TYPE 0x01
 #define BCP_FMT_INDICATOR_LEN 0x02
@@ -3041,31 +3010,32 @@ typedef DWORD DBASYNCHPHASE;
 #define BCP_OUT_WIDE_CHARACTER_MODE 0x02
 #define BCP_OUT_NATIVE_TEXT_MODE 0x03
 #define BCP_OUT_NATIVE_MODE 0x04
-  // BCP functions
-  DBINT SQL_API bcp_batch(HDBC);
-  RETCODE SQL_API bcp_bind(HDBC, LPCBYTE, INT, DBINT, LPCBYTE, INT, INT, INT);
-  RETCODE SQL_API bcp_colfmt(HDBC, INT, BYTE, INT, DBINT, LPCBYTE, INT, INT);
-  RETCODE SQL_API bcp_collen(HDBC, DBINT, INT);
-  RETCODE SQL_API bcp_colptr(HDBC, LPCBYTE, INT);
-  RETCODE SQL_API bcp_columns(HDBC, INT);
-  RETCODE SQL_API bcp_control(HDBC, INT, void *);
-  DBINT SQL_API bcp_done(HDBC);
-  RETCODE SQL_API bcp_exec(HDBC, LPDBINT);
-  RETCODE SQL_API bcp_getcolfmt(HDBC, INT, INT, void *, INT, INT *);
-  RETCODE SQL_API bcp_initA(HDBC, LPCSTR, LPCSTR, LPCSTR, INT);
-  RETCODE SQL_API bcp_initW(HDBC, LPCWSTR, LPCWSTR, LPCWSTR, INT);
-  RETCODE SQL_API bcp_moretext(HDBC, DBINT, LPCBYTE);
-  RETCODE SQL_API bcp_readfmtA(HDBC, LPCSTR);
-  RETCODE SQL_API bcp_readfmtW(HDBC, LPCWSTR);
-  RETCODE SQL_API bcp_sendrow(HDBC);
-  RETCODE SQL_API bcp_setbulkmode(HDBC, INT, __in_bcount(cbField) void *, INT cbField, __in_bcount(cbRow) void *, INT cbRow);
-  RETCODE SQL_API bcp_setcolfmt(HDBC, INT, INT, void *, INT);
-  RETCODE SQL_API bcp_writefmtA(HDBC, LPCSTR);
-  RETCODE SQL_API bcp_writefmtW(HDBC, LPCWSTR);
-  CHAR *SQL_API dbprtypeA(INT);
-  WCHAR *SQL_API dbprtypeW(INT);
-  CHAR *SQL_API bcp_gettypenameA(INT, DBBOOL);
-  WCHAR *SQL_API bcp_gettypenameW(INT, DBBOOL);
+// BCP functions
+DBINT SQL_API bcp_batch(HDBC);
+RETCODE SQL_API bcp_bind(HDBC, LPCBYTE, INT, DBINT, LPCBYTE, INT, INT, INT);
+RETCODE SQL_API bcp_colfmt(HDBC, INT, BYTE, INT, DBINT, LPCBYTE, INT, INT);
+RETCODE SQL_API bcp_collen(HDBC, DBINT, INT);
+RETCODE SQL_API bcp_colptr(HDBC, LPCBYTE, INT);
+RETCODE SQL_API bcp_columns(HDBC, INT);
+RETCODE SQL_API bcp_control(HDBC, INT, void*);
+DBINT SQL_API bcp_done(HDBC);
+RETCODE SQL_API bcp_exec(HDBC, LPDBINT);
+RETCODE SQL_API bcp_getcolfmt(HDBC, INT, INT, void*, INT, INT*);
+RETCODE SQL_API bcp_initA(HDBC, LPCSTR, LPCSTR, LPCSTR, INT);
+RETCODE SQL_API bcp_initW(HDBC, LPCWSTR, LPCWSTR, LPCWSTR, INT);
+RETCODE SQL_API bcp_moretext(HDBC, DBINT, LPCBYTE);
+RETCODE SQL_API bcp_readfmtA(HDBC, LPCSTR);
+RETCODE SQL_API bcp_readfmtW(HDBC, LPCWSTR);
+RETCODE SQL_API bcp_sendrow(HDBC);
+RETCODE SQL_API bcp_setbulkmode(
+    HDBC, INT, __in_bcount(cbField) void*, INT cbField, __in_bcount(cbRow) void*, INT cbRow);
+RETCODE SQL_API bcp_setcolfmt(HDBC, INT, INT, void*, INT);
+RETCODE SQL_API bcp_writefmtA(HDBC, LPCSTR);
+RETCODE SQL_API bcp_writefmtW(HDBC, LPCWSTR);
+CHAR* SQL_API dbprtypeA(INT);
+WCHAR* SQL_API dbprtypeW(INT);
+CHAR* SQL_API bcp_gettypenameA(INT, DBBOOL);
+WCHAR* SQL_API bcp_gettypenameW(INT, DBBOOL);
 #ifdef UNICODE
 #define bcp_init bcp_initW
 #define bcp_readfmt bcp_readfmtW
@@ -3080,15 +3050,15 @@ typedef DWORD DBASYNCHPHASE;
 #define dbprtype dbprtypeA
 #define bcp_gettypename bcp_gettypenameA
 #define BCPHINTS BCPHINTSA
-#endif // UNICODE
+#endif  // UNICODE
 
-#endif // SQLNCLI_NO_BCP
+#endif  // SQLNCLI_NO_BCP
 
 // The following options have been deprecated
 #define SQL_FAST_CONNECT (SQL_COPT_SS_BASE + 0)
 // Defines for use with SQL_FAST_CONNECT - only useable before connecting
-#define SQL_FC_OFF 0L //  Fast connect is off
-#define SQL_FC_ON 1L  //  Fast connect is on
+#define SQL_FC_OFF 0L  //  Fast connect is off
+#define SQL_FC_ON 1L   //  Fast connect is on
 #define SQL_FC_DEFAULT SQL_FC_OFF
 #define SQL_COPT_SS_ANSI_OEM (SQL_COPT_SS_BASE + 6)
 #define SQL_AO_OFF 0L
@@ -3096,30 +3066,29 @@ typedef DWORD DBASYNCHPHASE;
 #define SQL_AO_DEFAULT SQL_AO_OFF
 #define SQL_CA_SS_BASE_COLUMN_NAME SQL_DESC_BASE_COLUMN_NAME
 
-#endif // ODBCVER
-#endif // defined(_SQLNCLI_ODBC_) || !defined(_SQLNCLI_OLEDB_)
-  // ODBC part of SQL Server Native Client header - end here!
+#endif  // ODBCVER
+#endif  // defined(_SQLNCLI_ODBC_) || !defined(_SQLNCLI_OLEDB_)
+// ODBC part of SQL Server Native Client header - end here!
 
-  // The following facilitates opening a handle to a SQL filestream
-  typedef enum _SQL_FILESTREAM_DESIRED_ACCESS
-  {
-    SQL_FILESTREAM_READ = 0,
-    SQL_FILESTREAM_WRITE = 1,
-    SQL_FILESTREAM_READWRITE = 2
-  } SQL_FILESTREAM_DESIRED_ACCESS;
+// The following facilitates opening a handle to a SQL filestream
+typedef enum _SQL_FILESTREAM_DESIRED_ACCESS {
+  SQL_FILESTREAM_READ = 0,
+  SQL_FILESTREAM_WRITE = 1,
+  SQL_FILESTREAM_READWRITE = 2
+} SQL_FILESTREAM_DESIRED_ACCESS;
 #define SQL_FILESTREAM_OPEN_FLAG_ASYNC 0x00000001L
 #define SQL_FILESTREAM_OPEN_FLAG_NO_BUFFERING 0x00000002L
 #define SQL_FILESTREAM_OPEN_FLAG_NO_WRITE_THROUGH 0x00000004L
 #define SQL_FILESTREAM_OPEN_FLAG_SEQUENTIAL_SCAN 0x00000008L
 #define SQL_FILESTREAM_OPEN_FLAG_RANDOM_ACCESS 0x00000010L
-  HANDLE __stdcall OpenSqlFilestream(
-      LPCWSTR FilestreamPath,
-      SQL_FILESTREAM_DESIRED_ACCESS DesiredAccess,
-      ULONG OpenOptions,
-      LPBYTE FilestreamTransactionContext,
-      SSIZE_T FilestreamTransactionContextLength,
-      PLARGE_INTEGER AllocationSize);
-#define FSCTL_SQL_FILESTREAM_FETCH_OLD_CONTENT CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 2392, METHOD_BUFFERED, FILE_ANY_ACCESS)
+HANDLE __stdcall OpenSqlFilestream(LPCWSTR FilestreamPath,
+                                   SQL_FILESTREAM_DESIRED_ACCESS DesiredAccess,
+                                   ULONG OpenOptions,
+                                   LPBYTE FilestreamTransactionContext,
+                                   SSIZE_T FilestreamTransactionContextLength,
+                                   PLARGE_INTEGER AllocationSize);
+#define FSCTL_SQL_FILESTREAM_FETCH_OLD_CONTENT \
+  CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 2392, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 #ifndef _SQLUSERINSTANCE_H_
 #define _SQLUSERINSTANCE_H_
@@ -3127,62 +3096,64 @@ typedef DWORD DBASYNCHPHASE;
 #include <windows.h>
 
 #ifdef __cplusplus
-  extern "C"
-  {
+extern "C" {
 #endif
 
 //  Recommended buffer size to store a LocalDB connection string
 #define LOCALDB_MAX_SQLCONNECTION_BUFFER_SIZE 260
 
-    // type definition for LocalDBCreateInstance function
-    typedef HRESULT __cdecl FnLocalDBCreateInstance(
-        // I			the LocalDB version (e.g. 11.0 or 11.0.1094.2)
-        __in_z PCWSTR wszVersion,
-        // I			the instance name
-        __in_z PCWSTR pInstanceName,
-        // I			reserved for the future use. Currently should be set to 0.
-        __in DWORD dwFlags);
+// type definition for LocalDBCreateInstance function
+typedef HRESULT __cdecl FnLocalDBCreateInstance(
+    // I			the LocalDB version (e.g. 11.0 or 11.0.1094.2)
+    __in_z PCWSTR wszVersion,
+    // I			the instance name
+    __in_z PCWSTR pInstanceName,
+    // I			reserved for the future use. Currently should be set to 0.
+    __in DWORD dwFlags);
 
-    // type definition for pointer to LocalDBCreateInstance function
-    typedef FnLocalDBCreateInstance *PFnLocalDBCreateInstance;
+// type definition for pointer to LocalDBCreateInstance function
+typedef FnLocalDBCreateInstance* PFnLocalDBCreateInstance;
 
-    // type definition for LocalDBStartInstance function
-    typedef HRESULT __cdecl FnLocalDBStartInstance(
-        // I			the LocalDB instance name
-        __in_z PCWSTR pInstanceName,
-        // I			reserved for the future use. Currently should be set to 0.
-        __in DWORD dwFlags,
-        // O			the buffer to store the connection string to the LocalDB instance
-        __out_ecount_z_opt(*lpcchSqlConnection) LPWSTR wszSqlConnection,
-        // I/O			on input has the size of the wszSqlConnection buffer in characters. On output, if the given buffer size is
-        //				too small, has the buffer size required, in characters, including trailing null.
-        __inout_opt LPDWORD lpcchSqlConnection);
+// type definition for LocalDBStartInstance function
+typedef HRESULT __cdecl FnLocalDBStartInstance(
+    // I			the LocalDB instance name
+    __in_z PCWSTR pInstanceName,
+    // I			reserved for the future use. Currently should be set to 0.
+    __in DWORD dwFlags,
+    // O			the buffer to store the connection string to the LocalDB instance
+    __out_ecount_z_opt(*lpcchSqlConnection) LPWSTR wszSqlConnection,
+    // I/O			on input has the size of the wszSqlConnection buffer in characters. On output, if
+    // the given buffer size is
+    //				too small, has the buffer size required, in characters, including trailing null.
+    __inout_opt LPDWORD lpcchSqlConnection);
 
-    // type definition for pointer to LocalDBStartInstance function
-    typedef FnLocalDBStartInstance *PFnLocalDBStartInstance;
+// type definition for pointer to LocalDBStartInstance function
+typedef FnLocalDBStartInstance* PFnLocalDBStartInstance;
 
 // Flags for the LocalDBFormatMessage function
 #define LOCALDB_TRUNCATE_ERR_MESSAGE 0x0001L
 
-    // type definition for LocalDBFormatMessage function
-    typedef HRESULT __cdecl FnLocalDBFormatMessage(
-        // I		the LocalDB error code
-        __in HRESULT hrLocalDB,
-        // I		Available flags:
-        //			LOCALDB_TRUNCATE_ERR_MESSAGE - if the input buffer is too short,
-        //			the error message will be truncated to fit into the buffer
-        __in DWORD dwFlags,
-        // I		Language desired (LCID) or 0 (in which case Win32 FormatMessage order is used)
-        __in DWORD dwLanguageId,
-        // O		the buffer to store the LocalDB error message
-        __out_ecount_z(*lpcchMessage) LPWSTR wszMessage,
-        // I/O		on input has the size of the wszMessage buffer in characters. On output, if the given buffer size is
-        //			too small, has the buffer size required, in characters, including trailing null. If the function succeeds
-        //			contains the number of characters in the message, excluding the trailing null
-        __inout LPDWORD lpcchMessage);
+// type definition for LocalDBFormatMessage function
+typedef HRESULT __cdecl FnLocalDBFormatMessage(
+    // I		the LocalDB error code
+    __in HRESULT hrLocalDB,
+    // I		Available flags:
+    //			LOCALDB_TRUNCATE_ERR_MESSAGE - if the input buffer is too short,
+    //			the error message will be truncated to fit into the buffer
+    __in DWORD dwFlags,
+    // I		Language desired (LCID) or 0 (in which case Win32 FormatMessage order is used)
+    __in DWORD dwLanguageId,
+    // O		the buffer to store the LocalDB error message
+    __out_ecount_z(*lpcchMessage) LPWSTR wszMessage,
+    // I/O		on input has the size of the wszMessage buffer in characters. On output, if the given
+    // buffer size is
+    //			too small, has the buffer size required, in characters, including trailing null. If the
+    //function succeeds 			contains the number of characters in the message, excluding the trailing
+    //null
+    __inout LPDWORD lpcchMessage);
 
-    // type definition for function pointer to LocalDBFormatMessage function
-    typedef FnLocalDBFormatMessage *PFnLocalDBFormatMessage;
+// type definition for function pointer to LocalDBFormatMessage function
+typedef FnLocalDBFormatMessage* PFnLocalDBFormatMessage;
 
 // MessageId: LOCALDB_ERROR_NOT_INSTALLED
 //
@@ -3192,394 +3163,407 @@ typedef DWORD DBASYNCHPHASE;
 //
 #define LOCALDB_ERROR_NOT_INSTALLED ((HRESULT)0x89C50116L)
 
-    //---------------------------------------------------------------------
-    // Function: LocalDBCreateInstance
-    //
-    // Description: This function will create the new LocalDB instance.
-    //
-    // Available Flags:
-    //	No flags available. Reserved for future use.
-    //
-    // Return Values:
-    //	S_OK, if the function succeeds
-    //	LOCALDB_ERROR_INVALID_PARAM_INSTANCE_NAME, if the instance name parameter is invalid
-    //	LOCALDB_ERROR_INVALID_PARAM_VERSION, if the version parameter is invalid
-    //	LOCALDB_ERROR_INVALID_PARAM_FLAGS, if the flags are invalid
-    //	LOCALDB_ERROR_INVALID_OPERATION, if the user tries to create a default instance
-    //	LOCALDB_ERROR_INSTANCE_FOLDER_PATH_TOO_LONG, if the path where instance should be stored is longer than MAX_PATH
-    //	LOCALDB_ERROR_VERSION_REQUESTED_NOT_INSTALLED, if the specified patch level is not installed
-    //	LOCALDB_ERROR_INSTANCE_FOLDER_ALREADY_EXISTS, if the instance folder already exists and is not empty
-    //	LOCALDB_ERROR_INSTANCE_EXISTS_WITH_LOWER_VERSION,	if the specified instance already exists but with lower version
-    //	LOCALDB_ERROR_CANNOT_CREATE_INSTANCE_FOLDER, if a folder cannot be created under %userprofile%
-    //	LOCALDB_ERROR_CANNOT_GET_USER_PROFILE_FOLDER, if a user profile folder cannot be retrieved
-    //	LOCALDB_ERROR_CANNOT_ACCESS_INSTANCE_FOLDER, if a instance folder cannot be accessed
-    //	LOCALDB_ERROR_CANNOT_ACCESS_INSTANCE_REGISTRY, if a instance registry cannot be accessed
-    //	LOCALDB_ERROR_INTERNAL_ERROR, if an unexpected error occurred. See event log for details
-    //	LOCALDB_ERROR_CANNOT_MODIFY_INSTANCE_REGISTRY, if an instance registry cannot be modified
-    //	LOCALDB_ERROR_CANNOT_CREATE_SQL_PROCESS, if a process for Sql Server cannot be created
-    //	LOCALDB_ERROR_SQL_SERVER_STARTUP_FAILED, if a Sql Server process is started but Sql Server startup failed.
-    //	LOCALDB_ERROR_INSTANCE_CONFIGURATION_CORRUPT, if a instance configuration is corrupted
-    //
-    FnLocalDBCreateInstance LocalDBCreateInstance;
+//---------------------------------------------------------------------
+// Function: LocalDBCreateInstance
+//
+// Description: This function will create the new LocalDB instance.
+//
+// Available Flags:
+//	No flags available. Reserved for future use.
+//
+// Return Values:
+//	S_OK, if the function succeeds
+//	LOCALDB_ERROR_INVALID_PARAM_INSTANCE_NAME, if the instance name parameter is invalid
+//	LOCALDB_ERROR_INVALID_PARAM_VERSION, if the version parameter is invalid
+//	LOCALDB_ERROR_INVALID_PARAM_FLAGS, if the flags are invalid
+//	LOCALDB_ERROR_INVALID_OPERATION, if the user tries to create a default instance
+//	LOCALDB_ERROR_INSTANCE_FOLDER_PATH_TOO_LONG, if the path where instance should be stored is
+//longer than MAX_PATH 	LOCALDB_ERROR_VERSION_REQUESTED_NOT_INSTALLED, if the specified patch level
+//is not installed 	LOCALDB_ERROR_INSTANCE_FOLDER_ALREADY_EXISTS, if the instance folder already
+//exists and is not empty 	LOCALDB_ERROR_INSTANCE_EXISTS_WITH_LOWER_VERSION,	if the specified
+//instance already exists but with lower version 	LOCALDB_ERROR_CANNOT_CREATE_INSTANCE_FOLDER, if a
+//folder cannot be created under %userprofile% 	LOCALDB_ERROR_CANNOT_GET_USER_PROFILE_FOLDER, if a
+//user profile folder cannot be retrieved 	LOCALDB_ERROR_CANNOT_ACCESS_INSTANCE_FOLDER, if a instance
+//folder cannot be accessed 	LOCALDB_ERROR_CANNOT_ACCESS_INSTANCE_REGISTRY, if a instance registry
+//cannot be accessed 	LOCALDB_ERROR_INTERNAL_ERROR, if an unexpected error occurred. See event log
+//for details 	LOCALDB_ERROR_CANNOT_MODIFY_INSTANCE_REGISTRY, if an instance registry cannot be
+//modified 	LOCALDB_ERROR_CANNOT_CREATE_SQL_PROCESS, if a process for Sql Server cannot be created
+//	LOCALDB_ERROR_SQL_SERVER_STARTUP_FAILED, if a Sql Server process is started but Sql Server
+//startup failed. 	LOCALDB_ERROR_INSTANCE_CONFIGURATION_CORRUPT, if a instance configuration is
+//corrupted
+//
+FnLocalDBCreateInstance LocalDBCreateInstance;
 
-    //---------------------------------------------------------------------
-    // Function: LocalDBStartInstance
-    //
-    // Description: This function will start the given LocalDB instance.
-    //
-    // Return Values:
-    //	S_OK, if the function succeeds
-    //	LOCALDB_ERROR_UNKNOWN_INSTANCE, if the specified instance doesn't exist
-    //	LOCALDB_ERROR_INVALID_PARAM_INSTANCE_NAME, if the instance name parameter is invalid
-    //	LOCALDB_ERROR_INVALID_PARAM_CONNECTION, if the wszSqlConnection parameter is NULL
-    //	LOCALDB_ERROR_INVALID_PARAM_FLAGS, if the flags are invalid
-    //	LOCALDB_ERROR_INSUFFICIENT_BUFFER, if the buffer wszSqlConnection is too small
-    //	LOCALDB_ERROR_INSTANCE_FOLDER_PATH_TOO_LONG, if the path where instance should be stored is longer than MAX_PATH
+//---------------------------------------------------------------------
+// Function: LocalDBStartInstance
+//
+// Description: This function will start the given LocalDB instance.
+//
+// Return Values:
+//	S_OK, if the function succeeds
+//	LOCALDB_ERROR_UNKNOWN_INSTANCE, if the specified instance doesn't exist
+//	LOCALDB_ERROR_INVALID_PARAM_INSTANCE_NAME, if the instance name parameter is invalid
+//	LOCALDB_ERROR_INVALID_PARAM_CONNECTION, if the wszSqlConnection parameter is NULL
+//	LOCALDB_ERROR_INVALID_PARAM_FLAGS, if the flags are invalid
+//	LOCALDB_ERROR_INSUFFICIENT_BUFFER, if the buffer wszSqlConnection is too small
+//	LOCALDB_ERROR_INSTANCE_FOLDER_PATH_TOO_LONG, if the path where instance should be stored is
+//longer than MAX_PATH
 
-    //	LOCALDB_ERROR_CANNOT_GET_USER_PROFILE_FOLDER, if a user profile folder cannot be retrieved
-    //	LOCALDB_ERROR_CANNOT_ACCESS_INSTANCE_FOLDER, if a instance folder cannot be accessed
-    //	LOCALDB_ERROR_CANNOT_ACCESS_INSTANCE_REGISTRY, if a instance registry cannot be accessed
-    //	LOCALDB_ERROR_INTERNAL_ERROR, if an unexpected error occurred. See event log for details
-    //	LOCALDB_ERROR_CANNOT_MODIFY_INSTANCE_REGISTRY, if an instance registry cannot be modified
-    //	LOCALDB_ERROR_CANNOT_CREATE_SQL_PROCESS, if a process for Sql Server cannot be created
-    //	LOCALDB_ERROR_SQL_SERVER_STARTUP_FAILED, if a Sql Server process is started but Sql Server startup failed.
-    //	LOCALDB_ERROR_INSTANCE_CONFIGURATION_CORRUPT, if a instance configuration is corrupted
-    //
-    FnLocalDBStartInstance LocalDBStartInstance;
+//	LOCALDB_ERROR_CANNOT_GET_USER_PROFILE_FOLDER, if a user profile folder cannot be retrieved
+//	LOCALDB_ERROR_CANNOT_ACCESS_INSTANCE_FOLDER, if a instance folder cannot be accessed
+//	LOCALDB_ERROR_CANNOT_ACCESS_INSTANCE_REGISTRY, if a instance registry cannot be accessed
+//	LOCALDB_ERROR_INTERNAL_ERROR, if an unexpected error occurred. See event log for details
+//	LOCALDB_ERROR_CANNOT_MODIFY_INSTANCE_REGISTRY, if an instance registry cannot be modified
+//	LOCALDB_ERROR_CANNOT_CREATE_SQL_PROCESS, if a process for Sql Server cannot be created
+//	LOCALDB_ERROR_SQL_SERVER_STARTUP_FAILED, if a Sql Server process is started but Sql Server
+//startup failed. 	LOCALDB_ERROR_INSTANCE_CONFIGURATION_CORRUPT, if a instance configuration is
+//corrupted
+//
+FnLocalDBStartInstance LocalDBStartInstance;
 
-    // type definition for LocalDBStopInstance function
-    typedef HRESULT __cdecl FnLocalDBStopInstance(
-        // I			the LocalDB instance name
-        __in_z PCWSTR pInstanceName,
-        // I			Available flags:
-        //				LOCALDB_SHUTDOWN_KILL_PROCESS	- force the instance to stop immediately
-        //				LOCALDB_SHUTDOWN_WITH_NOWAIT	- shutdown the instance with NOWAIT option
-        __in DWORD dwFlags,
-        // I			the time in seconds to wait this operation to complete. If this value is 0, this function will return immediately
-        //				without waiting for LocalDB instance to stop
-        __in ULONG ulTimeout);
+// type definition for LocalDBStopInstance function
+typedef HRESULT __cdecl FnLocalDBStopInstance(
+    // I			the LocalDB instance name
+    __in_z PCWSTR pInstanceName,
+    // I			Available flags:
+    //				LOCALDB_SHUTDOWN_KILL_PROCESS	- force the instance to stop immediately
+    //				LOCALDB_SHUTDOWN_WITH_NOWAIT	- shutdown the instance with NOWAIT option
+    __in DWORD dwFlags,
+    // I			the time in seconds to wait this operation to complete. If this value is 0, this
+    // function will return immediately
+    //				without waiting for LocalDB instance to stop
+    __in ULONG ulTimeout);
 
-    // type definition for pointer to LocalDBStopInstance function
-    typedef FnLocalDBStopInstance *PFnLocalDBStopInstance;
+// type definition for pointer to LocalDBStopInstance function
+typedef FnLocalDBStopInstance* PFnLocalDBStopInstance;
 
 // Flags for the StopLocalDBInstance function
 #define LOCALDB_SHUTDOWN_KILL_PROCESS 0x0001L
 #define LOCALDB_SHUTDOWN_WITH_NOWAIT 0x0002L
 
-    //---------------------------------------------------------------------
-    // Function: LocalDBStopInstance
-    //
-    // Description: This function will shutdown the given LocalDB instance.
-    // If the flag LOCALDB_SHUTDOWN_KILL_PROCESS is set, the LocalDB instance will be killed immediately.
-    // IF the flag LOCALDB_SHUTDOWN_WITH_NOWAIT is set, the LocalDB instance will shutdown with NOWAIT option.
-    //
-    // Return Values:
-    //	S_OK, if the function succeeds
-    //	LOCALDB_ERROR_UNKNOWN_INSTANCE, if the specified instance doesn't exist
-    //	LOCALDB_ERROR_INVALID_PARAM_INSTANCE_NAME, if the instance name parameter is invalid
-    //	LOCALDB_ERROR_INVALID_PARAM_FLAGS, if the flags are invalid
-    //	LOCALDB_ERROR_WAIT_TIMEOUT - if this function has not finished in given time
-    //	LOCALDB_ERROR_INTERNAL_ERROR, if an unexpected error occurred. See event log for details
-    //
-    FnLocalDBStopInstance LocalDBStopInstance;
+//---------------------------------------------------------------------
+// Function: LocalDBStopInstance
+//
+// Description: This function will shutdown the given LocalDB instance.
+// If the flag LOCALDB_SHUTDOWN_KILL_PROCESS is set, the LocalDB instance will be killed
+// immediately. IF the flag LOCALDB_SHUTDOWN_WITH_NOWAIT is set, the LocalDB instance will shutdown
+// with NOWAIT option.
+//
+// Return Values:
+//	S_OK, if the function succeeds
+//	LOCALDB_ERROR_UNKNOWN_INSTANCE, if the specified instance doesn't exist
+//	LOCALDB_ERROR_INVALID_PARAM_INSTANCE_NAME, if the instance name parameter is invalid
+//	LOCALDB_ERROR_INVALID_PARAM_FLAGS, if the flags are invalid
+//	LOCALDB_ERROR_WAIT_TIMEOUT - if this function has not finished in given time
+//	LOCALDB_ERROR_INTERNAL_ERROR, if an unexpected error occurred. See event log for details
+//
+FnLocalDBStopInstance LocalDBStopInstance;
 
-    // type definition for LocalDBDeleteInstance function
-    typedef HRESULT __cdecl FnLocalDBDeleteInstance(
-        // I			the LocalDB instance name
-        __in_z PCWSTR pInstanceName,
-        // I			reserved for the future use. Currently should be set to 0.
-        __in DWORD dwFlags);
+// type definition for LocalDBDeleteInstance function
+typedef HRESULT __cdecl FnLocalDBDeleteInstance(
+    // I			the LocalDB instance name
+    __in_z PCWSTR pInstanceName,
+    // I			reserved for the future use. Currently should be set to 0.
+    __in DWORD dwFlags);
 
-    // type definition for pointer to LocalDBDeleteInstance function
-    typedef FnLocalDBDeleteInstance *PFnLocalDBDeleteInstance;
+// type definition for pointer to LocalDBDeleteInstance function
+typedef FnLocalDBDeleteInstance* PFnLocalDBDeleteInstance;
 
-    //---------------------------------------------------------------------
-    // Function: LocalDBDeleteInstance
-    //
-    // Description: This function will remove the given LocalDB instance. If the given instance is running this function will
-    // fail with the error code LOCALDB_ERROR_INSTANCE_BUSY.
-    //
-    // Return Values:
-    //	S_OK, if the function succeeds
-    //	LOCALDB_ERROR_INVALID_PARAM_INSTANCE_NAME, if the instance name parameter is invalid
-    //	LOCALDB_ERROR_INVALID_PARAM_FLAGS, if the flags are invalid
-    //	LOCALDB_ERROR_UNKNOWN_INSTANCE, if the specified instance doesn't exist
-    //	LOCALDB_ERROR_INSTANCE_BUSY, if the given instance is running
-    //	LOCALDB_ERROR_INTERNAL_ERROR, if an unexpected error occurred. See event log for details
-    //
-    FnLocalDBDeleteInstance LocalDBDeleteInstance;
+//---------------------------------------------------------------------
+// Function: LocalDBDeleteInstance
+//
+// Description: This function will remove the given LocalDB instance. If the given instance is
+// running this function will fail with the error code LOCALDB_ERROR_INSTANCE_BUSY.
+//
+// Return Values:
+//	S_OK, if the function succeeds
+//	LOCALDB_ERROR_INVALID_PARAM_INSTANCE_NAME, if the instance name parameter is invalid
+//	LOCALDB_ERROR_INVALID_PARAM_FLAGS, if the flags are invalid
+//	LOCALDB_ERROR_UNKNOWN_INSTANCE, if the specified instance doesn't exist
+//	LOCALDB_ERROR_INSTANCE_BUSY, if the given instance is running
+//	LOCALDB_ERROR_INTERNAL_ERROR, if an unexpected error occurred. See event log for details
+//
+FnLocalDBDeleteInstance LocalDBDeleteInstance;
 
-    // Function: LocalDBFormatMessage
-    //
-    // Description: This function will return the localized textual description for the given LocalDB error
-    //
-    // Available Flags:
-    //	LOCALDB_TRUNCATE_ERR_MESSAGE - the error message should be truncated to fit into the provided buffer
-    //
-    // Return Value:
-    //	S_OK, if the function succeeds
-    //
-    //	LOCALDB_ERROR_UNKNOWN_HRESULT,		if the given HRESULT is unknown
-    //	LOCALDB_ERROR_UNKNOWN_LANGUAGE_ID,	if the given language id is unknown (0 is recommended for the //	default language)
-    //	LOCALDB_ERROR_UNKNOWN_ERROR_CODE,	if the LocalDB error code is unknown
-    //	LOCALDB_ERROR_INVALID_PARAM_FLAGS,	if the flags are invalid
-    //	LOCALDB_ERROR_INSUFFICIENT_BUFFER,	if the input buffer is too short and LOCALDB_TRUNCATE_ERR_MESSAGE flag
-    //										is not set
-    //	LOCALDB_ERROR_INTERNAL_ERROR,		if an unexpected error occurred. See event log for details
-    //
-    FnLocalDBFormatMessage LocalDBFormatMessage;
+// Function: LocalDBFormatMessage
+//
+// Description: This function will return the localized textual description for the given LocalDB
+// error
+//
+// Available Flags:
+//	LOCALDB_TRUNCATE_ERR_MESSAGE - the error message should be truncated to fit into the provided
+//buffer
+//
+// Return Value:
+//	S_OK, if the function succeeds
+//
+//	LOCALDB_ERROR_UNKNOWN_HRESULT,		if the given HRESULT is unknown
+//	LOCALDB_ERROR_UNKNOWN_LANGUAGE_ID,	if the given language id is unknown (0 is recommended for
+//the //	default language) 	LOCALDB_ERROR_UNKNOWN_ERROR_CODE,	if the LocalDB error code is unknown
+//	LOCALDB_ERROR_INVALID_PARAM_FLAGS,	if the flags are invalid
+//	LOCALDB_ERROR_INSUFFICIENT_BUFFER,	if the input buffer is too short and
+//LOCALDB_TRUNCATE_ERR_MESSAGE flag 										is not set 	LOCALDB_ERROR_INTERNAL_ERROR,		if an unexpected
+//error occurred. See event log for details
+//
+FnLocalDBFormatMessage LocalDBFormatMessage;
 
 #define MAX_LOCALDB_INSTANCE_NAME_LENGTH 128
 #define MAX_LOCALDB_PARENT_INSTANCE_LENGTH MAX_INSTANCE_NAME
 
-    typedef WCHAR TLocalDBInstanceName[MAX_LOCALDB_INSTANCE_NAME_LENGTH + 1];
-    typedef TLocalDBInstanceName *PTLocalDBInstanceName;
+typedef WCHAR TLocalDBInstanceName[MAX_LOCALDB_INSTANCE_NAME_LENGTH + 1];
+typedef TLocalDBInstanceName* PTLocalDBInstanceName;
 
-    // type definition for LocalDBGetInstances function
-    typedef HRESULT __cdecl FnLocalDBGetInstances(
-        // O					buffer for a LocalDB instance names
-        __out PTLocalDBInstanceName pInstanceNames,
-        // I/O					on input has the number slots for instance names in the pInstanceNames buffer. On output,
-        //						has the number of existing LocalDB instances
-        __inout LPDWORD lpdwNumberOfInstances);
+// type definition for LocalDBGetInstances function
+typedef HRESULT __cdecl FnLocalDBGetInstances(
+    // O					buffer for a LocalDB instance names
+    __out PTLocalDBInstanceName pInstanceNames,
+    // I/O					on input has the number slots for instance names in the pInstanceNames buffer.
+    // On output,
+    //						has the number of existing LocalDB instances
+    __inout LPDWORD lpdwNumberOfInstances);
 
-    // type definition for pointer to LocalDBGetInstances function
-    typedef FnLocalDBGetInstances *PFnLocalDBGetInstances;
+// type definition for pointer to LocalDBGetInstances function
+typedef FnLocalDBGetInstances* PFnLocalDBGetInstances;
 
-    // Function: LocalDBGetInstances
-    //
-    // Description: This function returns names for all existing Local DB instances
-    //
-    // Usage Example:
-    //	DWORD dwN = 0;
-    //	LocalDBGetInstances(NULL, &dwN);
+// Function: LocalDBGetInstances
+//
+// Description: This function returns names for all existing Local DB instances
+//
+// Usage Example:
+//	DWORD dwN = 0;
+//	LocalDBGetInstances(NULL, &dwN);
 
-    //	PTLocalDBInstanceName insts = (PTLocalDBInstanceName) malloc(dwN * sizeof(TLocalDBInstanceName));
-    //	LocalDBGetInstances(insts, &dwN);
+//	PTLocalDBInstanceName insts = (PTLocalDBInstanceName) malloc(dwN *
+//sizeof(TLocalDBInstanceName)); 	LocalDBGetInstances(insts, &dwN);
 
-    //	for (int i = 0; i < dwN; i++)
-    //		wprintf(L"%s\n", insts[i]);
-    //
-    // Return values:
-    //	S_OK, if the function succeeds
-    //
-    // LOCALDB_ERROR_INSUFFICIENT_BUFFER,			the given buffer is to small
-    // LOCALDB_ERROR_INTERNAL_ERROR,		if an unexpected error occurred. See event log for details
-    //
-    FnLocalDBGetInstances LocalDBGetInstances;
+//	for (int i = 0; i < dwN; i++)
+//		wprintf(L"%s\n", insts[i]);
+//
+// Return values:
+//	S_OK, if the function succeeds
+//
+// LOCALDB_ERROR_INSUFFICIENT_BUFFER,			the given buffer is to small
+// LOCALDB_ERROR_INTERNAL_ERROR,		if an unexpected error occurred. See event log for details
+//
+FnLocalDBGetInstances LocalDBGetInstances;
 
-// SID string format: S - Revision(1B) - Authority ID (6B) {- Sub authority ID (4B)} * max 15 sub-authorities = 1 + 1 + 3 + 1 + 15 + (1 + 10) * 15
+// SID string format: S - Revision(1B) - Authority ID (6B) {- Sub authority ID (4B)} * max 15
+// sub-authorities = 1 + 1 + 3 + 1 + 15 + (1 + 10) * 15
 #define MAX_STRING_SID_LENGTH 186
 
 #pragma pack(push)
 #pragma pack(8)
 
-    // DEVNOTE: If you want to modify this structure please read DEVNOTEs on top of function LocalDBGetInstanceInfo in sqluserinstance.cpp file.
-    //
-    typedef struct _LocalDBInstanceInfo
-    {
-      DWORD cbLocalDBInstanceInfoSize;
-      TLocalDBInstanceName wszInstanceName;
-      BOOL bExists;
-      BOOL bConfigurationCorrupted;
-      BOOL bIsRunning;
-      DWORD dwMajor;
-      DWORD dwMinor;
-      DWORD dwBuild;
-      DWORD dwRevision;
-      FILETIME ftLastStartDateUTC;
-      WCHAR wszConnection[LOCALDB_MAX_SQLCONNECTION_BUFFER_SIZE];
-      BOOL bIsShared;
-      TLocalDBInstanceName wszSharedInstanceName;
-      WCHAR wszOwnerSID[MAX_STRING_SID_LENGTH + 1];
-      BOOL bIsAutomatic;
-    } LocalDBInstanceInfo;
+// DEVNOTE: If you want to modify this structure please read DEVNOTEs on top of function
+// LocalDBGetInstanceInfo in sqluserinstance.cpp file.
+//
+typedef struct _LocalDBInstanceInfo {
+  DWORD cbLocalDBInstanceInfoSize;
+  TLocalDBInstanceName wszInstanceName;
+  BOOL bExists;
+  BOOL bConfigurationCorrupted;
+  BOOL bIsRunning;
+  DWORD dwMajor;
+  DWORD dwMinor;
+  DWORD dwBuild;
+  DWORD dwRevision;
+  FILETIME ftLastStartDateUTC;
+  WCHAR wszConnection[LOCALDB_MAX_SQLCONNECTION_BUFFER_SIZE];
+  BOOL bIsShared;
+  TLocalDBInstanceName wszSharedInstanceName;
+  WCHAR wszOwnerSID[MAX_STRING_SID_LENGTH + 1];
+  BOOL bIsAutomatic;
+} LocalDBInstanceInfo;
 
 #pragma pack(pop)
 
-    typedef LocalDBInstanceInfo *PLocalDBInstanceInfo;
+typedef LocalDBInstanceInfo* PLocalDBInstanceInfo;
 
-    // type definition for LocalDBGetInstanceInfo function
-    typedef HRESULT __cdecl FnLocalDBGetInstanceInfo(
-        // I		the LocalDB instance name
-        __in_z PCWSTR wszInstanceName,
-        // O		instance information
-        __out PLocalDBInstanceInfo pInfo,
-        // I		Size of LocalDBInstanceInfo structure in bytes
-        __in DWORD cbInfo);
+// type definition for LocalDBGetInstanceInfo function
+typedef HRESULT __cdecl FnLocalDBGetInstanceInfo(
+    // I		the LocalDB instance name
+    __in_z PCWSTR wszInstanceName,
+    // O		instance information
+    __out PLocalDBInstanceInfo pInfo,
+    // I		Size of LocalDBInstanceInfo structure in bytes
+    __in DWORD cbInfo);
 
-    // type definition for pointer to LocalDBGetInstances function
-    typedef FnLocalDBGetInstanceInfo *PFnLocalDBGetInstanceInfo;
+// type definition for pointer to LocalDBGetInstances function
+typedef FnLocalDBGetInstanceInfo* PFnLocalDBGetInstanceInfo;
 
-    // Function: LocalDBGetInstanceInfo
-    //
-    // Description: This function returns information about the given instance.
-    //
-    // Return values:
-    //	S_OK, if the function succeeds
-    //
-    // ERROR_INVALID_PARAMETER, if some of the parameters is invalid
-    // LOCALDB_ERROR_INTERNAL_ERROR,		if an unexpected error occurred. See event log for details
-    //
-    FnLocalDBGetInstanceInfo LocalDBGetInstanceInfo;
+// Function: LocalDBGetInstanceInfo
+//
+// Description: This function returns information about the given instance.
+//
+// Return values:
+//	S_OK, if the function succeeds
+//
+// ERROR_INVALID_PARAMETER, if some of the parameters is invalid
+// LOCALDB_ERROR_INTERNAL_ERROR,		if an unexpected error occurred. See event log for details
+//
+FnLocalDBGetInstanceInfo LocalDBGetInstanceInfo;
 
-// Version has format: Major.Minor[.Build[.Revision]]. Each of components is 32bit integer which is at most 40 digits and 3 dots
+// Version has format: Major.Minor[.Build[.Revision]]. Each of components is 32bit integer which is
+// at most 40 digits and 3 dots
 //
 #define MAX_LOCALDB_VERSION_LENGTH 43
 
-    typedef WCHAR TLocalDBVersion[MAX_LOCALDB_VERSION_LENGTH + 1];
-    typedef TLocalDBVersion *PTLocalDBVersion;
+typedef WCHAR TLocalDBVersion[MAX_LOCALDB_VERSION_LENGTH + 1];
+typedef TLocalDBVersion* PTLocalDBVersion;
 
-    // type definition for LocalDBGetVersions function
-    typedef HRESULT __cdecl FnLocalDBGetVersions(
-        // O					buffer for installed LocalDB versions
-        __out PTLocalDBVersion pVersions,
-        // I/O					on input has the number slots for versions in the pVersions buffer. On output,
-        //						has the number of existing LocalDB versions
-        __inout LPDWORD lpdwNumberOfVersions);
+// type definition for LocalDBGetVersions function
+typedef HRESULT __cdecl FnLocalDBGetVersions(
+    // O					buffer for installed LocalDB versions
+    __out PTLocalDBVersion pVersions,
+    // I/O					on input has the number slots for versions in the pVersions buffer. On output,
+    //						has the number of existing LocalDB versions
+    __inout LPDWORD lpdwNumberOfVersions);
 
-    // type definition for pointer to LocalDBGetVersions function
-    typedef FnLocalDBGetVersions *PFnLocalDBGetVersions;
+// type definition for pointer to LocalDBGetVersions function
+typedef FnLocalDBGetVersions* PFnLocalDBGetVersions;
 
-    // Function: LocalDBGetVersions
-    //
-    // Description: This function returns all installed LocalDB versions. Returned versions will be in format Major.Minor
-    //
-    // Usage Example:
-    //	DWORD dwN = 0;
-    //	LocalDBGetVersions(NULL, &dwN);
+// Function: LocalDBGetVersions
+//
+// Description: This function returns all installed LocalDB versions. Returned versions will be in
+// format Major.Minor
+//
+// Usage Example:
+//	DWORD dwN = 0;
+//	LocalDBGetVersions(NULL, &dwN);
 
-    //	PTLocalDBVersion versions = (PTLocalDBVersion) malloc(dwN * sizeof(TLocalDBVersion));
-    //	LocalDBGetVersions(insts, &dwN);
+//	PTLocalDBVersion versions = (PTLocalDBVersion) malloc(dwN * sizeof(TLocalDBVersion));
+//	LocalDBGetVersions(insts, &dwN);
 
-    //	for (int i = 0; i < dwN; i++)
-    //		wprintf(L"%s\n", insts[i]);
-    //
-    // Return values:
-    //	S_OK, if the function succeeds
-    //
-    // LOCALDB_ERROR_INSUFFICIENT_BUFFER,			the given buffer is to small
-    // LOCALDB_ERROR_INTERNAL_ERROR,				if an unexpected error occurs.
-    //
-    FnLocalDBGetVersions LocalDBGetVersions;
+//	for (int i = 0; i < dwN; i++)
+//		wprintf(L"%s\n", insts[i]);
+//
+// Return values:
+//	S_OK, if the function succeeds
+//
+// LOCALDB_ERROR_INSUFFICIENT_BUFFER,			the given buffer is to small
+// LOCALDB_ERROR_INTERNAL_ERROR,				if an unexpected error occurs.
+//
+FnLocalDBGetVersions LocalDBGetVersions;
 
 #pragma pack(push)
 #pragma pack(8)
 
-    // DEVNOTE: If you want to modify this structure please read DEVNOTEs on top of function LocalDBGetVersionInfo in sqluserinstance.cpp file.
-    //
-    typedef struct _LocalDBVersionInfo
-    {
-      DWORD cbLocalDBVersionInfoSize;
-      TLocalDBVersion wszVersion;
-      BOOL bExists;
-      DWORD dwMajor;
-      DWORD dwMinor;
-      DWORD dwBuild;
-      DWORD dwRevision;
-    } LocalDBVersionInfo;
+// DEVNOTE: If you want to modify this structure please read DEVNOTEs on top of function
+// LocalDBGetVersionInfo in sqluserinstance.cpp file.
+//
+typedef struct _LocalDBVersionInfo {
+  DWORD cbLocalDBVersionInfoSize;
+  TLocalDBVersion wszVersion;
+  BOOL bExists;
+  DWORD dwMajor;
+  DWORD dwMinor;
+  DWORD dwBuild;
+  DWORD dwRevision;
+} LocalDBVersionInfo;
 
 #pragma pack(pop)
 
-    typedef LocalDBVersionInfo *PLocalDBVersionInfo;
+typedef LocalDBVersionInfo* PLocalDBVersionInfo;
 
-    // type definition for LocalDBGetVersionInfo function
-    typedef HRESULT __cdecl FnLocalDBGetVersionInfo(
-        // I			LocalDB version string
-        __in_z PCWSTR wszVersion,
-        // O			version information
-        __out PLocalDBVersionInfo pVersionInfo,
-        // I			Size of LocalDBVersionInfo structure in bytes
-        __in DWORD cbVersionInfo);
+// type definition for LocalDBGetVersionInfo function
+typedef HRESULT __cdecl FnLocalDBGetVersionInfo(
+    // I			LocalDB version string
+    __in_z PCWSTR wszVersion,
+    // O			version information
+    __out PLocalDBVersionInfo pVersionInfo,
+    // I			Size of LocalDBVersionInfo structure in bytes
+    __in DWORD cbVersionInfo);
 
-    // type definition for pointer to LocalDBGetVersionInfo function
-    typedef FnLocalDBGetVersionInfo *PFnLocalDBGetVersionInfo;
+// type definition for pointer to LocalDBGetVersionInfo function
+typedef FnLocalDBGetVersionInfo* PFnLocalDBGetVersionInfo;
 
-    // Function: LocalDBGetVersionInfo
-    //
-    // Description: This function returns information about the given LocalDB version
-    //
-    // Return values:
-    //	S_OK, if the function succeeds
-    //	LOCALDB_ERROR_INTERNAL_ERROR, if some internal error occurred
-    //	LOCALDB_ERROR_INVALID_PARAMETER, if a input parameter is invalid
-    //
-    FnLocalDBGetVersionInfo LocalDBGetVersionInfo;
+// Function: LocalDBGetVersionInfo
+//
+// Description: This function returns information about the given LocalDB version
+//
+// Return values:
+//	S_OK, if the function succeeds
+//	LOCALDB_ERROR_INTERNAL_ERROR, if some internal error occurred
+//	LOCALDB_ERROR_INVALID_PARAMETER, if a input parameter is invalid
+//
+FnLocalDBGetVersionInfo LocalDBGetVersionInfo;
 
-    typedef HRESULT __cdecl FnLocalDBStartTracing();
-    typedef FnLocalDBStartTracing *PFnLocalDBStartTracing;
+typedef HRESULT __cdecl FnLocalDBStartTracing();
+typedef FnLocalDBStartTracing* PFnLocalDBStartTracing;
 
-    // Function: LocalDBStartTracing
-    //
-    // Description: This function will write in registry that Tracing sessions should be started for the current user.
-    //
-    // Return values:
-    //	S_OK - on success
-    //	Propper HRESULT in case of failure
-    //
-    FnLocalDBStartTracing LocalDBStartTracing;
+// Function: LocalDBStartTracing
+//
+// Description: This function will write in registry that Tracing sessions should be started for the
+// current user.
+//
+// Return values:
+//	S_OK - on success
+//	Propper HRESULT in case of failure
+//
+FnLocalDBStartTracing LocalDBStartTracing;
 
-    typedef HRESULT __cdecl FnLocalDBStopTracing();
-    typedef FnLocalDBStopTracing *PFnFnLocalDBStopTracing;
+typedef HRESULT __cdecl FnLocalDBStopTracing();
+typedef FnLocalDBStopTracing* PFnFnLocalDBStopTracing;
 
-    // Function: LocalDBStopTracing
-    //
-    // Description: This function will write in registry that Tracing sessions should be stopped for the current user.
-    //
-    // Return values:
-    //	S_OK - on success
-    //	Propper HRESULT in case of failure
-    //
-    FnLocalDBStopTracing LocalDBStopTracing;
+// Function: LocalDBStopTracing
+//
+// Description: This function will write in registry that Tracing sessions should be stopped for the
+// current user.
+//
+// Return values:
+//	S_OK - on success
+//	Propper HRESULT in case of failure
+//
+FnLocalDBStopTracing LocalDBStopTracing;
 
-    // type definition for LocalDBShareInstance function
-    typedef HRESULT __cdecl FnLocalDBShareInstance(
-        // I		the SID of the LocalDB instance owner
-        __in_opt PSID pOwnerSID,
-        // I		the private name of LocalDB instance which should be shared
-        __in_z PCWSTR wszPrivateLocalDBInstanceName,
-        // I		the public shared name
-        __in_z PCWSTR wszSharedName,
-        // I		reserved for the future use. Currently should be set to 0.
-        __in DWORD dwFlags);
+// type definition for LocalDBShareInstance function
+typedef HRESULT __cdecl FnLocalDBShareInstance(
+    // I		the SID of the LocalDB instance owner
+    __in_opt PSID pOwnerSID,
+    // I		the private name of LocalDB instance which should be shared
+    __in_z PCWSTR wszPrivateLocalDBInstanceName,
+    // I		the public shared name
+    __in_z PCWSTR wszSharedName,
+    // I		reserved for the future use. Currently should be set to 0.
+    __in DWORD dwFlags);
 
-    // type definition for pointer to LocalDBShareInstance function
-    typedef FnLocalDBShareInstance *PFnLocalDBShareInstance;
+// type definition for pointer to LocalDBShareInstance function
+typedef FnLocalDBShareInstance* PFnLocalDBShareInstance;
 
-    // Function: LocalDBShareInstance
-    //
-    // Description: This function will share the given private instance of the given user with the given shared name.
-    // This function has to be executed elevated.
-    //
-    // Return values:
-    //	HRESULT
-    //
-    FnLocalDBShareInstance LocalDBShareInstance;
+// Function: LocalDBShareInstance
+//
+// Description: This function will share the given private instance of the given user with the given
+// shared name. This function has to be executed elevated.
+//
+// Return values:
+//	HRESULT
+//
+FnLocalDBShareInstance LocalDBShareInstance;
 
-    // type definition for LocalDBUnshareInstance function
-    typedef HRESULT __cdecl FnLocalDBUnshareInstance(
-        // I		the LocalDB instance name
-        __in_z PCWSTR pInstanceName,
-        // I		reserved for the future use. Currently should be set to 0.
-        __in DWORD dwFlags);
+// type definition for LocalDBUnshareInstance function
+typedef HRESULT __cdecl FnLocalDBUnshareInstance(
+    // I		the LocalDB instance name
+    __in_z PCWSTR pInstanceName,
+    // I		reserved for the future use. Currently should be set to 0.
+    __in DWORD dwFlags);
 
-    // type definition for pointer to LocalDBUnshareInstance function
-    typedef FnLocalDBUnshareInstance *PFnLocalDBUnshareInstance;
+// type definition for pointer to LocalDBUnshareInstance function
+typedef FnLocalDBUnshareInstance* PFnLocalDBUnshareInstance;
 
-    // Function: LocalDBUnshareInstance
-    //
-    // Description: This function unshares the given LocalDB instance.
-    // If a shared name is given then that shared instance will be unshared.
-    // If a private name is given then we will check if the caller
-    // shares a private instance with the given private name and unshare it.
-    //
-    // Return values:
-    //	HRESULT
-    //
-    FnLocalDBUnshareInstance LocalDBUnshareInstance;
+// Function: LocalDBUnshareInstance
+//
+// Description: This function unshares the given LocalDB instance.
+// If a shared name is given then that shared instance will be unshared.
+// If a private name is given then we will check if the caller
+// shares a private instance with the given private name and unshare it.
+//
+// Return values:
+//	HRESULT
+//
+FnLocalDBUnshareInstance LocalDBUnshareInstance;
 
 #ifdef __cplusplus
-  } // extern "C"
+}  // extern "C"
 #endif
 
 #if defined(LOCALDB_DEFINE_PROXY_FUNCTIONS)
@@ -3602,340 +3586,330 @@ typedef DWORD DBASYNCHPHASE;
 
 // This macro provides the body for each proxy function.
 //
-#define LOCALDB_PROXY(LocalDBFn)                                        \
-  static Fn##LocalDBFn *pfn##LocalDBFn = NULL;                          \
-  if (!pfn##LocalDBFn)                                                  \
-  {                                                                     \
-    HRESULT hr = LocalDBGetPFn(#LocalDBFn, (FARPROC *)&pfn##LocalDBFn); \
-    if (FAILED(hr))                                                     \
-      return hr;                                                        \
-  }                                                                     \
+#define LOCALDB_PROXY(LocalDBFn)                                       \
+  static Fn##LocalDBFn* pfn##LocalDBFn = NULL;                         \
+  if (!pfn##LocalDBFn) {                                               \
+    HRESULT hr = LocalDBGetPFn(#LocalDBFn, (FARPROC*)&pfn##LocalDBFn); \
+    if (FAILED(hr))                                                    \
+      return hr;                                                       \
+  }                                                                    \
   return (*pfn##LocalDBFn)
 
-  // Structure and function to parse the "Installed Versions" registry subkeys
-  //
-  typedef struct
-  {
-    DWORD dwComponent[2];
-    WCHAR wszKeyName[256];
-  } Version;
+// Structure and function to parse the "Installed Versions" registry subkeys
+//
+typedef struct {
+  DWORD dwComponent[2];
+  WCHAR wszKeyName[256];
+} Version;
 
-  // The following algorithm is intended to match, in part, the .NET Version class.
-  // A maximum of two components are allowed, which must be separated with a period.
-  // Valid: "11", "11.0"
-  // Invalid: "", ".0", "11.", "11.0."
-  //
-  static BOOL ParseVersion(Version *pVersion)
-  {
-    pVersion->dwComponent[0] = 0;
-    pVersion->dwComponent[1] = 0;
-    WCHAR *pwch = pVersion->wszKeyName;
+// The following algorithm is intended to match, in part, the .NET Version class.
+// A maximum of two components are allowed, which must be separated with a period.
+// Valid: "11", "11.0"
+// Invalid: "", ".0", "11.", "11.0."
+//
+static BOOL ParseVersion(Version* pVersion) {
+  pVersion->dwComponent[0] = 0;
+  pVersion->dwComponent[1] = 0;
+  WCHAR* pwch = pVersion->wszKeyName;
 
-    for (int i = 0; i < 2; i++)
-    {
-      LONGLONG llVal = 0;
-      BOOL fHaveDigit = FALSE;
+  for (int i = 0; i < 2; i++) {
+    LONGLONG llVal = 0;
+    BOOL fHaveDigit = FALSE;
 
-      while (*pwch >= L'0' && *pwch <= L'9')
-      {
-        llVal = llVal * 10 + (*pwch++ - L'0');
-        fHaveDigit = TRUE;
+    while (*pwch >= L'0' && *pwch <= L'9') {
+      llVal = llVal * 10 + (*pwch++ - L'0');
+      fHaveDigit = TRUE;
 
-        if (llVal > 0x7fffffff)
-        {
-          return FALSE;
-        }
+      if (llVal > 0x7fffffff) {
+        return FALSE;
       }
-
-      if (!fHaveDigit)
-        return FALSE;
-
-      pVersion->dwComponent[i] = (DWORD)llVal;
-
-      if (*pwch == L'\0')
-        return TRUE;
-
-      if (*pwch != L'.')
-        return FALSE;
-
-      pwch++;
     }
-    // If we get here, the version string was terminated with L'.', which is not valid
-    //
-    return FALSE;
+
+    if (!fHaveDigit)
+      return FALSE;
+
+    pVersion->dwComponent[i] = (DWORD)llVal;
+
+    if (*pwch == L'\0')
+      return TRUE;
+
+    if (*pwch != L'.')
+      return FALSE;
+
+    pwch++;
   }
+  // If we get here, the version string was terminated with L'.', which is not valid
+  //
+  return FALSE;
+}
 
 #include <assert.h>
 
-  // This function loads the correct LocalDB API DLL (if required) and returns a pointer to a procedure.
-  // Note that the first-loaded API DLL for the process will be used until process termination: installation of
-  //  a new version of the API will not be recognized after first load.
-  //
-  static HRESULT LocalDBGetPFn(LPCSTR szLocalDBFn, FARPROC *pfnLocalDBFn)
-  {
-    static volatile HMODULE hLocalDBDll = NULL;
+// This function loads the correct LocalDB API DLL (if required) and returns a pointer to a
+// procedure. Note that the first-loaded API DLL for the process will be used until process
+// termination: installation of
+//  a new version of the API will not be recognized after first load.
+//
+static HRESULT LocalDBGetPFn(LPCSTR szLocalDBFn, FARPROC* pfnLocalDBFn) {
+  static volatile HMODULE hLocalDBDll = NULL;
 
-    if (!hLocalDBDll)
-    {
-      LONG ec;
-      HKEY hkeyVersions = NULL;
-      HKEY hkeyVersion = NULL;
-      Version verHigh = {0};
-      Version verCurrent;
-      DWORD cchKeyName;
-      DWORD dwValueType;
-      WCHAR wszLocalDBDll[MAX_PATH + 1];
-      DWORD cbLocalDBDll = sizeof(wszLocalDBDll) - sizeof(WCHAR); // to deal with RegQueryValueEx null-termination quirk
-      HMODULE hLocalDBDllTemp = NULL;
+  if (!hLocalDBDll) {
+    LONG ec;
+    HKEY hkeyVersions = NULL;
+    HKEY hkeyVersion = NULL;
+    Version verHigh = {0};
+    Version verCurrent;
+    DWORD cchKeyName;
+    DWORD dwValueType;
+    WCHAR wszLocalDBDll[MAX_PATH + 1];
+    DWORD cbLocalDBDll = sizeof(wszLocalDBDll) -
+                         sizeof(WCHAR);  // to deal with RegQueryValueEx null-termination quirk
+    HMODULE hLocalDBDllTemp = NULL;
 
-      if (ERROR_SUCCESS != (ec = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Microsoft SQL Server Local DB\\Installed Versions", 0, KEY_READ, &hkeyVersions)))
-      {
-        goto Cleanup;
-      }
-
-      for (int i = 0;; i++)
-      {
-        cchKeyName = 256;
-        if (ERROR_SUCCESS != (ec = RegEnumKeyExW(hkeyVersions, i, verCurrent.wszKeyName, &cchKeyName, 0, NULL, NULL, NULL)))
-        {
-          if (ERROR_NO_MORE_ITEMS == ec)
-          {
-            break;
-          }
-          goto Cleanup;
-        }
-
-        if (!ParseVersion(&verCurrent))
-        {
-          continue; // invalid version syntax
-        }
-
-        if (verCurrent.dwComponent[0] > verHigh.dwComponent[0] ||
-            (verCurrent.dwComponent[0] == verHigh.dwComponent[0] && verCurrent.dwComponent[1] > verHigh.dwComponent[1]))
-        {
-          verHigh = verCurrent;
-        }
-      }
-      if (!verHigh.wszKeyName[0])
-      {
-        // ec must be ERROR_NO_MORE_ITEMS here
-        //
-        assert(ec == ERROR_NO_MORE_ITEMS);
-
-        // We will change the error code to ERROR_FILE_NOT_FOUND in order to indicate that
-        // LocalDB instalation is not found. Registry key "SOFTWARE\\Microsoft\\Microsoft SQL Server Local DB\\Installed Versions" exists
-        // but it is empty.
-        //
-        ec = ERROR_FILE_NOT_FOUND;
-        goto Cleanup;
-      }
-
-      if (ERROR_SUCCESS != (ec = RegOpenKeyExW(hkeyVersions, verHigh.wszKeyName, 0, KEY_READ, &hkeyVersion)))
-      {
-        goto Cleanup;
-      }
-      if (ERROR_SUCCESS != (ec = RegQueryValueExW(hkeyVersion, L"InstanceAPIPath", NULL, &dwValueType, (PBYTE)wszLocalDBDll, &cbLocalDBDll)))
-      {
-        goto Cleanup;
-      }
-      if (dwValueType != REG_SZ)
-      {
-        ec = ERROR_INVALID_DATA;
-        goto Cleanup;
-      }
-      // Ensure string value null-terminated
-      // Note that we left a spare character in the output buffer for RegQueryValueEx for this purpose
-      //
-      wszLocalDBDll[cbLocalDBDll / sizeof(WCHAR)] = L'\0';
-
-      hLocalDBDllTemp = LoadLibraryW(wszLocalDBDll);
-      if (NULL == hLocalDBDllTemp)
-      {
-        ec = GetLastError();
-        goto Cleanup;
-      }
-      if (NULL == InterlockedCompareExchangePointer((volatile PVOID *)&hLocalDBDll, hLocalDBDllTemp, NULL))
-      {
-        // We were the winner: we gave away our DLL handle
-        //
-        hLocalDBDllTemp = NULL;
-      }
-      ec = ERROR_SUCCESS;
-    Cleanup:
-      if (hLocalDBDllTemp)
-        FreeLibrary(hLocalDBDllTemp);
-      if (hkeyVersion)
-        RegCloseKey(hkeyVersion);
-      if (hkeyVersions)
-        RegCloseKey(hkeyVersions);
-
-      // Error code ERROR_FILE_NOT_FOUND can occure if registry hive with installed LocalDB versions is missing.
-      // In that case we should return the LocalDB specific error code
-      //
-      if (ec == ERROR_FILE_NOT_FOUND)
-        return LOCALDB_ERROR_NOT_INSTALLED;
-
-      if (ec != ERROR_SUCCESS)
-        return HRESULT_FROM_WIN32(ec);
+    if (ERROR_SUCCESS !=
+        (ec = RegOpenKeyExW(
+             HKEY_LOCAL_MACHINE,
+             L"SOFTWARE\\Microsoft\\Microsoft SQL Server Local DB\\Installed Versions",
+             0,
+             KEY_READ,
+             &hkeyVersions))) {
+      goto Cleanup;
     }
 
-    FARPROC pfn = GetProcAddress(hLocalDBDll, szLocalDBFn);
+    for (int i = 0;; i++) {
+      cchKeyName = 256;
+      if (ERROR_SUCCESS !=
+          (ec = RegEnumKeyExW(
+               hkeyVersions, i, verCurrent.wszKeyName, &cchKeyName, 0, NULL, NULL, NULL))) {
+        if (ERROR_NO_MORE_ITEMS == ec) {
+          break;
+        }
+        goto Cleanup;
+      }
 
-    if (!pfn)
-    {
-      return HRESULT_FROM_WIN32(GetLastError());
+      if (!ParseVersion(&verCurrent)) {
+        continue;  // invalid version syntax
+      }
+
+      if (verCurrent.dwComponent[0] > verHigh.dwComponent[0] ||
+          (verCurrent.dwComponent[0] == verHigh.dwComponent[0] &&
+           verCurrent.dwComponent[1] > verHigh.dwComponent[1])) {
+        verHigh = verCurrent;
+      }
     }
-    *pfnLocalDBFn = pfn;
-    return S_OK;
+    if (!verHigh.wszKeyName[0]) {
+      // ec must be ERROR_NO_MORE_ITEMS here
+      //
+      assert(ec == ERROR_NO_MORE_ITEMS);
+
+      // We will change the error code to ERROR_FILE_NOT_FOUND in order to indicate that
+      // LocalDB instalation is not found. Registry key "SOFTWARE\\Microsoft\\Microsoft SQL Server
+      // Local DB\\Installed Versions" exists but it is empty.
+      //
+      ec = ERROR_FILE_NOT_FOUND;
+      goto Cleanup;
+    }
+
+    if (ERROR_SUCCESS !=
+        (ec = RegOpenKeyExW(hkeyVersions, verHigh.wszKeyName, 0, KEY_READ, &hkeyVersion))) {
+      goto Cleanup;
+    }
+    if (ERROR_SUCCESS != (ec = RegQueryValueExW(hkeyVersion,
+                                                L"InstanceAPIPath",
+                                                NULL,
+                                                &dwValueType,
+                                                (PBYTE)wszLocalDBDll,
+                                                &cbLocalDBDll))) {
+      goto Cleanup;
+    }
+    if (dwValueType != REG_SZ) {
+      ec = ERROR_INVALID_DATA;
+      goto Cleanup;
+    }
+    // Ensure string value null-terminated
+    // Note that we left a spare character in the output buffer for RegQueryValueEx for this purpose
+    //
+    wszLocalDBDll[cbLocalDBDll / sizeof(WCHAR)] = L'\0';
+
+    hLocalDBDllTemp = LoadLibraryW(wszLocalDBDll);
+    if (NULL == hLocalDBDllTemp) {
+      ec = GetLastError();
+      goto Cleanup;
+    }
+    if (NULL ==
+        InterlockedCompareExchangePointer((volatile PVOID*)&hLocalDBDll, hLocalDBDllTemp, NULL)) {
+      // We were the winner: we gave away our DLL handle
+      //
+      hLocalDBDllTemp = NULL;
+    }
+    ec = ERROR_SUCCESS;
+  Cleanup:
+    if (hLocalDBDllTemp)
+      FreeLibrary(hLocalDBDllTemp);
+    if (hkeyVersion)
+      RegCloseKey(hkeyVersion);
+    if (hkeyVersions)
+      RegCloseKey(hkeyVersions);
+
+    // Error code ERROR_FILE_NOT_FOUND can occure if registry hive with installed LocalDB versions
+    // is missing. In that case we should return the LocalDB specific error code
+    //
+    if (ec == ERROR_FILE_NOT_FOUND)
+      return LOCALDB_ERROR_NOT_INSTALLED;
+
+    if (ec != ERROR_SUCCESS)
+      return HRESULT_FROM_WIN32(ec);
   }
 
-  // The following proxy functions forward calls to the latest LocalDB API DLL.
-  //
+  FARPROC pfn = GetProcAddress(hLocalDBDll, szLocalDBFn);
 
-  HRESULT __cdecl LocalDBCreateInstance(
-      // I			the LocalDB version (e.g. 11.0 or 11.0.1094.2)
-      __in_z PCWSTR wszVersion,
-      // I			the instance name
-      __in_z PCWSTR pInstanceName,
-      // I			reserved for the future use. Currently should be set to 0.
-      __in DWORD dwFlags)
-  {
-    LOCALDB_PROXY(LocalDBCreateInstance)(wszVersion, pInstanceName, dwFlags);
+  if (!pfn) {
+    return HRESULT_FROM_WIN32(GetLastError());
   }
+  *pfnLocalDBFn = pfn;
+  return S_OK;
+}
 
-  HRESULT __cdecl LocalDBStartInstance(
-      // I			the instance name
-      __in_z PCWSTR pInstanceName,
-      // I			reserved for the future use. Currently should be set to 0.
-      __in DWORD dwFlags,
-      // O			the buffer to store the connection string to the LocalDB instance
-      __out_ecount_z_opt(*lpcchSqlConnection) LPWSTR wszSqlConnection,
-      // I/O			on input has the size of the wszSqlConnection buffer in characters. On output, if the given buffer size is
-      //				too small, has the buffer size required, in characters, including trailing null.
-      __inout_opt LPDWORD lpcchSqlConnection)
-  {
-    LOCALDB_PROXY(LocalDBStartInstance)(pInstanceName, dwFlags, wszSqlConnection, lpcchSqlConnection);
-  }
+// The following proxy functions forward calls to the latest LocalDB API DLL.
+//
 
-  HRESULT __cdecl LocalDBStopInstance(
-      // I			the instance name
-      __in_z PCWSTR pInstanceName,
-      // I			Available flags:
-      //				LOCALDB_SHUTDOWN_KILL_PROCESS		- force the instance to stop immediately
-      //				LOCALDB_SHUTDOWN_WITH_NOWAIT	- shutdown the instance with NOWAIT option
-      __in DWORD dwFlags,
-      // I			the time in seconds to wait this operation to complete. If this value is 0, this function will return immediately
-      //				without waiting for LocalDB instance to stop
-      __in ULONG ulTimeout)
-  {
-    LOCALDB_PROXY(LocalDBStopInstance)(pInstanceName, dwFlags, ulTimeout);
-  }
+HRESULT __cdecl LocalDBCreateInstance(
+    // I			the LocalDB version (e.g. 11.0 or 11.0.1094.2)
+    __in_z PCWSTR wszVersion,
+    // I			the instance name
+    __in_z PCWSTR pInstanceName,
+    // I			reserved for the future use. Currently should be set to 0.
+    __in DWORD dwFlags) {
+  LOCALDB_PROXY(LocalDBCreateInstance)(wszVersion, pInstanceName, dwFlags);
+}
 
-  HRESULT __cdecl LocalDBDeleteInstance(
-      // I			the instance name
-      __in_z PCWSTR pInstanceName,
-      //				reserved for the future use. Currently should be set to 0.
-      __in DWORD dwFlags)
-  {
-    LOCALDB_PROXY(LocalDBDeleteInstance)(pInstanceName, dwFlags);
-  }
+HRESULT __cdecl LocalDBStartInstance(
+    // I			the instance name
+    __in_z PCWSTR pInstanceName,
+    // I			reserved for the future use. Currently should be set to 0.
+    __in DWORD dwFlags,
+    // O			the buffer to store the connection string to the LocalDB instance
+    __out_ecount_z_opt(*lpcchSqlConnection) LPWSTR wszSqlConnection,
+    // I/O			on input has the size of the wszSqlConnection buffer in characters. On output, if
+    // the given buffer size is
+    //				too small, has the buffer size required, in characters, including trailing null.
+    __inout_opt LPDWORD lpcchSqlConnection) {
+  LOCALDB_PROXY(LocalDBStartInstance)(pInstanceName, dwFlags, wszSqlConnection, lpcchSqlConnection);
+}
 
-  HRESULT __cdecl LocalDBFormatMessage(
-      // I		the LocalDB error code
-      __in HRESULT hrLocalDB,
-      // I		Available flags:
-      //			LOCALDB_TRUNCATE_ERR_MESSAGE - if the input buffer is too short,
-      //			the error message will be truncated to fit into the buffer
-      __in DWORD dwFlags,
-      // I		Language desired (LCID) or 0 (in which case Win32 FormatMessage order is used)
-      __in DWORD dwLanguageId,
-      // O		the buffer to store the LocalDB error message
-      __out_ecount_z(*lpcchMessage) LPWSTR wszMessage,
-      // I/O		on input has the size of the wszMessage buffer in characters. On output, if the given buffer size is
-      //			too small, has the buffer size required, in characters, including trailing null. If the function succeeds
-      //			contains the number of characters in the message, excluding the trailing null
-      __inout LPDWORD lpcchMessage)
-  {
-    LOCALDB_PROXY(LocalDBFormatMessage)(hrLocalDB, dwFlags, dwLanguageId, wszMessage, lpcchMessage);
-  }
+HRESULT __cdecl LocalDBStopInstance(
+    // I			the instance name
+    __in_z PCWSTR pInstanceName,
+    // I			Available flags:
+    //				LOCALDB_SHUTDOWN_KILL_PROCESS		- force the instance to stop immediately
+    //				LOCALDB_SHUTDOWN_WITH_NOWAIT	- shutdown the instance with NOWAIT option
+    __in DWORD dwFlags,
+    // I			the time in seconds to wait this operation to complete. If this value is 0, this
+    // function will return immediately
+    //				without waiting for LocalDB instance to stop
+    __in ULONG ulTimeout) {
+  LOCALDB_PROXY(LocalDBStopInstance)(pInstanceName, dwFlags, ulTimeout);
+}
 
-  HRESULT __cdecl LocalDBGetInstances(
-      // O					buffer with instance names
-      __out PTLocalDBInstanceName pInstanceNames,
-      // I/O					on input has the number slots for instance names in the pInstanceNames buffer. On output,
-      //						has the number of existing LocalDB instances
-      __inout LPDWORD lpdwNumberOfInstances)
-  {
-    LOCALDB_PROXY(LocalDBGetInstances)(pInstanceNames, lpdwNumberOfInstances);
-  }
+HRESULT __cdecl LocalDBDeleteInstance(
+    // I			the instance name
+    __in_z PCWSTR pInstanceName,
+    //				reserved for the future use. Currently should be set to 0.
+    __in DWORD dwFlags) {
+  LOCALDB_PROXY(LocalDBDeleteInstance)(pInstanceName, dwFlags);
+}
 
-  HRESULT __cdecl LocalDBGetInstanceInfo(
-      // I		the instance name
-      __in_z PCWSTR wszInstanceName,
-      // O		instance information
-      __out PLocalDBInstanceInfo pInfo,
-      // I		Size of LocalDBInstanceInfo structure in bytes
-      __in DWORD cbInfo)
-  {
-    LOCALDB_PROXY(LocalDBGetInstanceInfo)(wszInstanceName, pInfo, cbInfo);
-  }
+HRESULT __cdecl LocalDBFormatMessage(
+    // I		the LocalDB error code
+    __in HRESULT hrLocalDB,
+    // I		Available flags:
+    //			LOCALDB_TRUNCATE_ERR_MESSAGE - if the input buffer is too short,
+    //			the error message will be truncated to fit into the buffer
+    __in DWORD dwFlags,
+    // I		Language desired (LCID) or 0 (in which case Win32 FormatMessage order is used)
+    __in DWORD dwLanguageId,
+    // O		the buffer to store the LocalDB error message
+    __out_ecount_z(*lpcchMessage) LPWSTR wszMessage,
+    // I/O		on input has the size of the wszMessage buffer in characters. On output, if the given
+    // buffer size is
+    //			too small, has the buffer size required, in characters, including trailing null. If the
+    //function succeeds 			contains the number of characters in the message, excluding the trailing
+    //null
+    __inout LPDWORD lpcchMessage) {
+  LOCALDB_PROXY(LocalDBFormatMessage)(hrLocalDB, dwFlags, dwLanguageId, wszMessage, lpcchMessage);
+}
 
-  HRESULT __cdecl LocalDBStartTracing()
-  {
-    LOCALDB_PROXY(LocalDBStartTracing)();
-  }
+HRESULT __cdecl LocalDBGetInstances(
+    // O					buffer with instance names
+    __out PTLocalDBInstanceName pInstanceNames,
+    // I/O					on input has the number slots for instance names in the pInstanceNames buffer.
+    // On output,
+    //						has the number of existing LocalDB instances
+    __inout LPDWORD lpdwNumberOfInstances) {
+  LOCALDB_PROXY(LocalDBGetInstances)(pInstanceNames, lpdwNumberOfInstances);
+}
 
-  HRESULT __cdecl LocalDBStopTracing()
-  {
-    LOCALDB_PROXY(LocalDBStopTracing)();
-  }
+HRESULT __cdecl LocalDBGetInstanceInfo(
+    // I		the instance name
+    __in_z PCWSTR wszInstanceName,
+    // O		instance information
+    __out PLocalDBInstanceInfo pInfo,
+    // I		Size of LocalDBInstanceInfo structure in bytes
+    __in DWORD cbInfo) {
+  LOCALDB_PROXY(LocalDBGetInstanceInfo)(wszInstanceName, pInfo, cbInfo);
+}
 
-  HRESULT __cdecl LocalDBShareInstance(
-      // I		the SID of the LocalDB instance owner
-      __in_opt PSID pOwnerSID,
-      // I		the private name of LocalDB instance which should be shared
-      __in_z PCWSTR wszLocalDBInstancePrivateName,
-      // I		the public shared name
-      __in_z PCWSTR wszSharedName,
-      // I		reserved for the future use. Currently should be set to 0.
-      __in DWORD dwFlags)
-  {
-    LOCALDB_PROXY(LocalDBShareInstance)(pOwnerSID, wszLocalDBInstancePrivateName, wszSharedName, dwFlags);
-  }
+HRESULT __cdecl LocalDBStartTracing() {
+  LOCALDB_PROXY(LocalDBStartTracing)();
+}
 
-  HRESULT __cdecl LocalDBGetVersions(
-      // O					buffer for installed LocalDB versions
-      __out PTLocalDBVersion pVersions,
-      // I/O					on input has the number slots for versions in the pVersions buffer. On output,
-      //						has the number of existing LocalDB versions
-      __inout LPDWORD lpdwNumberOfVersions)
-  {
-    LOCALDB_PROXY(LocalDBGetVersions)(pVersions, lpdwNumberOfVersions);
-  }
+HRESULT __cdecl LocalDBStopTracing() {
+  LOCALDB_PROXY(LocalDBStopTracing)();
+}
 
-  HRESULT __cdecl LocalDBUnshareInstance(
-      // I		the LocalDB instance name
-      __in_z PCWSTR pInstanceName,
-      // I		reserved for the future use. Currently should be set to 0.
-      __in DWORD dwFlags)
-  {
-    LOCALDB_PROXY(LocalDBUnshareInstance)(pInstanceName, dwFlags);
-  }
+HRESULT __cdecl LocalDBShareInstance(
+    // I		the SID of the LocalDB instance owner
+    __in_opt PSID pOwnerSID,
+    // I		the private name of LocalDB instance which should be shared
+    __in_z PCWSTR wszLocalDBInstancePrivateName,
+    // I		the public shared name
+    __in_z PCWSTR wszSharedName,
+    // I		reserved for the future use. Currently should be set to 0.
+    __in DWORD dwFlags) {
+  LOCALDB_PROXY(LocalDBShareInstance)(
+      pOwnerSID, wszLocalDBInstancePrivateName, wszSharedName, dwFlags);
+}
 
-  HRESULT __cdecl LocalDBGetVersionInfo(
-      // I			LocalDB version string
-      __in_z PCWSTR wszVersion,
-      // O			version information
-      __out PLocalDBVersionInfo pVersionInfo,
-      // I			Size of LocalDBVersionInfo structure in bytes
-      __in DWORD cbVersionInfo)
-  {
-    LOCALDB_PROXY(LocalDBGetVersionInfo)(wszVersion, pVersionInfo, cbVersionInfo);
-  }
+HRESULT __cdecl LocalDBGetVersions(
+    // O					buffer for installed LocalDB versions
+    __out PTLocalDBVersion pVersions,
+    // I/O					on input has the number slots for versions in the pVersions buffer. On output,
+    //						has the number of existing LocalDB versions
+    __inout LPDWORD lpdwNumberOfVersions) {
+  LOCALDB_PROXY(LocalDBGetVersions)(pVersions, lpdwNumberOfVersions);
+}
+
+HRESULT __cdecl LocalDBUnshareInstance(
+    // I		the LocalDB instance name
+    __in_z PCWSTR pInstanceName,
+    // I		reserved for the future use. Currently should be set to 0.
+    __in DWORD dwFlags) {
+  LOCALDB_PROXY(LocalDBUnshareInstance)(pInstanceName, dwFlags);
+}
+
+HRESULT __cdecl LocalDBGetVersionInfo(
+    // I			LocalDB version string
+    __in_z PCWSTR wszVersion,
+    // O			version information
+    __out PLocalDBVersionInfo pVersionInfo,
+    // I			Size of LocalDBVersionInfo structure in bytes
+    __in DWORD cbVersionInfo) {
+  LOCALDB_PROXY(LocalDBGetVersionInfo)(wszVersion, pVersionInfo, cbVersionInfo);
+}
 
 #endif
 
-#endif // _SQLUSERINSTANCE_H_
+#endif  // _SQLUSERINSTANCE_H_
 
 //-----------------------------------------------------------------------------
 // File:			sqluserinstancemsgs.mc
@@ -3997,7 +3971,8 @@ typedef DWORD DBASYNCHPHASE;
 //
 // MessageText:
 //
-// Cannot create folder for the LocalDB instance at: %%LOCALAPPDATA%%\Microsoft\Microsoft SQL Server Local DB\Instances\<instance name>.
+// Cannot create folder for the LocalDB instance at: %%LOCALAPPDATA%%\Microsoft\Microsoft SQL Server
+// Local DB\Instances\<instance name>.
 //
 #define LOCALDB_ERROR_CANNOT_CREATE_INSTANCE_FOLDER ((HRESULT)0x89C50100L)
 
@@ -4015,7 +3990,8 @@ typedef DWORD DBASYNCHPHASE;
 //
 // MessageText:
 //
-// Unable to create the LocalDB instance with specified version. An instance with the same name already exists, but it has lower version than the specified version.
+// Unable to create the LocalDB instance with specified version. An instance with the same name
+// already exists, but it has lower version than the specified version.
 //
 #define LOCALDB_ERROR_INSTANCE_EXISTS_WITH_LOWER_VERSION ((HRESULT)0x89C50102L)
 
@@ -4033,7 +4009,9 @@ typedef DWORD DBASYNCHPHASE;
 //
 // MessageText:
 //
-// The full path length of the LocalDB instance folder is longer than MAX_PATH. The instance must be stored in folder: %%LOCALAPPDATA%%\Microsoft\Microsoft SQL Server Local DB\Instances\<instance name>.
+// The full path length of the LocalDB instance folder is longer than MAX_PATH. The instance must be
+// stored in folder: %%LOCALAPPDATA%%\Microsoft\Microsoft SQL Server Local DB\Instances\<instance
+// name>.
 //
 #define LOCALDB_ERROR_INSTANCE_FOLDER_PATH_TOO_LONG ((HRESULT)0x89C50104L)
 
@@ -4042,7 +4020,8 @@ typedef DWORD DBASYNCHPHASE;
 //
 // MessageText:
 //
-// Cannot access LocalDB instance folder: %%LOCALAPPDATA%%\Microsoft\Microsoft SQL Server Local DB\Instances\<instance name>.
+// Cannot access LocalDB instance folder: %%LOCALAPPDATA%%\Microsoft\Microsoft SQL Server Local
+// DB\Instances\<instance name>.
 //
 #define LOCALDB_ERROR_CANNOT_ACCESS_INSTANCE_FOLDER ((HRESULT)0x89C50105L)
 
@@ -4051,7 +4030,8 @@ typedef DWORD DBASYNCHPHASE;
 //
 // MessageText:
 //
-// Unexpected error occurred while trying to access the LocalDB instance registry configuration. See the Windows Application event log for error details.
+// Unexpected error occurred while trying to access the LocalDB instance registry configuration. See
+// the Windows Application event log for error details.
 //
 #define LOCALDB_ERROR_CANNOT_ACCESS_INSTANCE_REGISTRY ((HRESULT)0x89C50106L)
 
@@ -4069,7 +4049,8 @@ typedef DWORD DBASYNCHPHASE;
 //
 // MessageText:
 //
-// Unexpected error occurred inside a LocalDB instance API method call. See the Windows Application event log for error details.
+// Unexpected error occurred inside a LocalDB instance API method call. See the Windows Application
+// event log for error details.
 //
 #define LOCALDB_ERROR_INTERNAL_ERROR ((HRESULT)0x89C50108L)
 
@@ -4078,7 +4059,8 @@ typedef DWORD DBASYNCHPHASE;
 //
 // MessageText:
 //
-// Unexpected error occurred while trying to modify the registry configuration for the LocalDB instance. See the Windows Application event log for error details.
+// Unexpected error occurred while trying to modify the registry configuration for the LocalDB
+// instance. See the Windows Application event log for error details.
 //
 #define LOCALDB_ERROR_CANNOT_MODIFY_INSTANCE_REGISTRY ((HRESULT)0x89C50109L)
 
@@ -4123,7 +4105,8 @@ typedef DWORD DBASYNCHPHASE;
 //
 // MessageText:
 //
-// Error getting the localized error message. The language specified by 'Language ID' parameter is unknown.
+// Error getting the localized error message. The language specified by 'Language ID' parameter is
+// unknown.
 //
 #define LOCALDB_ERROR_UNKNOWN_LANGUAGE_ID ((HRESULT)0x89C5010EL)
 
@@ -4159,7 +4142,8 @@ typedef DWORD DBASYNCHPHASE;
 //
 // MessageText:
 //
-// Requested operation on LocalDB instance cannot be performed because specified instance is currently in use. Stop the instance and try again.
+// Requested operation on LocalDB instance cannot be performed because specified instance is
+// currently in use. Stop the instance and try again.
 //
 #define LOCALDB_ERROR_INSTANCE_BUSY ((HRESULT)0x89C50112L)
 
@@ -4190,8 +4174,9 @@ typedef DWORD DBASYNCHPHASE;
 //
 #define LOCALDB_ERROR_WAIT_TIMEOUT ((HRESULT)0x89C50115L)
 
-// MessageId=0x0116 message id is reserved. This message ID will be used for error LOCALDB_ERROR_NOT_INSTALLED.
-// This message is specific since it has to be present in SqlUserIntsnace.h because it can be returned by discovery API.
+// MessageId=0x0116 message id is reserved. This message ID will be used for error
+// LOCALDB_ERROR_NOT_INSTALLED. This message is specific since it has to be present in
+// SqlUserIntsnace.h because it can be returned by discovery API.
 //
 //
 // MessageId: LOCALDB_ERROR_XEVENT_FAILED
@@ -4279,7 +4264,8 @@ typedef DWORD DBASYNCHPHASE;
 //
 // MessageText:
 //
-// Cannot get a local application data path. Most probably a user profile is not loaded. If LocalDB is executed under IIS, make sure that profile loading is enabled for the current user.
+// Cannot get a local application data path. Most probably a user profile is not loaded. If LocalDB
+// is executed under IIS, make sure that profile loading is enabled for the current user.
 //
 #define LOCALDB_ERROR_CANNOT_GET_LOCAL_APP_DATA_PATH ((HRESULT)0x89C50120L)
 
@@ -4288,11 +4274,12 @@ typedef DWORD DBASYNCHPHASE;
 //
 // MessageText:
 //
-// Cannot load resources for this DLL. Resources for this DLL should be stored in a subfolder Resources, with the same file name as this DLL and the extension ".RLL".
+// Cannot load resources for this DLL. Resources for this DLL should be stored in a subfolder
+// Resources, with the same file name as this DLL and the extension ".RLL".
 //
 #define LOCALDB_ERROR_CANNOT_LOAD_RESOURCES ((HRESULT)0x89C50121L)
 
-  // Detailed error descriptions
+// Detailed error descriptions
 //
 // MessageId: LOCALDB_EDETAIL_DATADIRECTORY_IS_MISSING
 //
@@ -4443,7 +4430,8 @@ typedef DWORD DBASYNCHPHASE;
 //
 // MessageText:
 //
-// Windows API call %1 returned error code: %2. Windows system error message is: %3Reported at line: %4. %5
+// Windows API call %1 returned error code: %2. Windows system error message is: %3Reported at line:
+// %4. %5
 //
 #define LOCALDB_EDETAIL_WINAPI_ERROR ((HRESULT)0xC9C50210L)
 
@@ -4459,12 +4447,12 @@ typedef DWORD DBASYNCHPHASE;
 //
 #endif
 
-  extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0011_v0_0_c_ifspec;
-  extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0011_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0011_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_sqlncli_0000_0011_v0_0_s_ifspec;
 
-  /* Additional Prototypes for ALL interfaces */
+/* Additional Prototypes for ALL interfaces */
 
-  /* end of Additional Prototypes */
+/* end of Additional Prototypes */
 
 #ifdef __cplusplus
 }

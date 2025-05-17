@@ -1,8 +1,8 @@
 #pragma once
 
-#include <sqltypes.h>
-#include <sqlspi.h>
-#include <sqlext.h>
 #include <sql.h>
+#include <sqlext.h>
+#include <sqlspi.h>
+#include <sqltypes.h>
 
 typedef unsigned char DBBIT;

@@ -1,29 +1,26 @@
 #include "odbc_statement_factory.h"
-#include "odbc_handles.h"
-#include "odbc_error.h"
-#include "odbc_statement.h"
+
 #include "Logger.h"
+#include "odbc_error.h"
+#include "odbc_handles.h"
+#include "odbc_statement.h"
 
-namespace mssql
-{
-  std::shared_ptr<IOdbcStatementHandle> OdbcStatementHandleFactory::createStatement()
-  {
-    return std::make_shared<OdbcStatementHandleImpl>();
-  }
+namespace mssql {
+std::shared_ptr<IOdbcStatementHandle> OdbcStatementHandleFactory::createStatement() {
+  return std::make_shared<OdbcStatementHandleImpl>();
+}
 
-  std::shared_ptr<IOdbcStatement> OdbcStatementFactory::MakeStatement(
-      std::shared_ptr<IOdbcApi> odbcApi,
-      StatementType type,
-      std::shared_ptr<IOdbcStatementHandle> handle,
-      std::shared_ptr<OdbcErrorHandler> errorHandler,
-      const std::string &query,
-      const std::string &tvpType)
-  {
-    auto id = factory_.getNextId();
-    StatementHandle statementHandle(connectionId_, id);
+std::shared_ptr<IOdbcStatement> OdbcStatementFactory::MakeStatement(
+    std::shared_ptr<IOdbcApi> odbcApi,
+    StatementType type,
+    std::shared_ptr<IOdbcStatementHandle> handle,
+    std::shared_ptr<OdbcErrorHandler> errorHandler,
+    const std::string& query,
+    const std::string& tvpType) {
+  auto id = factory_.getNextId();
+  StatementHandle statementHandle(connectionId_, id);
 
-    switch (type)
-    {
+  switch (type) {
     case StatementType::Transient:
       return std::make_shared<TransientStatement>(
           handle, errorHandler, query, odbcApi, statementHandle);
@@ -38,45 +35,38 @@ namespace mssql
 
     default:
       return nullptr;
-    }
   }
+}
 
-  void OdbcStatementFactory::RemoveStatement(int statementId)
-  {
-    statements_.erase(statementId);
+void OdbcStatementFactory::RemoveStatement(int statementId) {
+  statements_.erase(statementId);
+}
+
+std::shared_ptr<IOdbcStatement> OdbcStatementFactory::GetStatement(int statementId) {
+  auto it = statements_.find(statementId);
+  if (it != statements_.end()) {
+    return it->second;
   }
+  SQL_LOG_ERROR_STREAM("GetStatement failed for id " << statementId);
+  return nullptr;
+}
 
-  std::shared_ptr<IOdbcStatement> OdbcStatementFactory::GetStatement(int statementId)
-  {
-    auto it = statements_.find(statementId);
-    if (it != statements_.end())
-    {
-      return it->second;
-    }
-    SQL_LOG_ERROR_STREAM("GetStatement failed for id " << statementId);
-    return nullptr;
+std::shared_ptr<IOdbcStatement> OdbcStatementFactory::CreateStatement(
+    std::shared_ptr<IOdbcApi> odbcApi,
+    OdbcStatement::Type type,
+    std::shared_ptr<IOdbcStatementHandle> handle,
+    std::shared_ptr<OdbcErrorHandler> errorHandler,
+    const std::string& query,
+    const std::string& tvpType) {
+  SQL_LOG_TRACE_STREAM("CreateStatement type " << (int)type);
+
+  auto statement = MakeStatement(odbcApi, type, handle, errorHandler, query, tvpType);
+  if (statement) {
+    auto statementId = statement->GetStatementHandle().getStatementId();
+    statements_[statementId] = statement;
+  } else {
+    SQL_LOG_ERROR_STREAM("CreateStatement failed for type " << (int)type);
   }
-
-  std::shared_ptr<IOdbcStatement> OdbcStatementFactory::CreateStatement(
-      std::shared_ptr<IOdbcApi> odbcApi,
-      OdbcStatement::Type type,
-      std::shared_ptr<IOdbcStatementHandle> handle,
-      std::shared_ptr<OdbcErrorHandler> errorHandler,
-      const std::string &query,
-      const std::string &tvpType)
-  {
-    SQL_LOG_TRACE_STREAM("CreateStatement type " << (int)type);
-
-    auto statement = MakeStatement(odbcApi, type, handle, errorHandler, query, tvpType);
-    if (statement)
-    {
-      auto statementId = statement->GetStatementHandle().getStatementId();
-      statements_[statementId] = statement;
-    }
-    else
-    {
-      SQL_LOG_ERROR_STREAM("CreateStatement failed for type " << (int)type);
-    }
-    return statement;
-  }
-} // namespace mssql
+  return statement;
+}
+}  // namespace mssql

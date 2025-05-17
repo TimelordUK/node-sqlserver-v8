@@ -1,224 +1,191 @@
 // Create this file in your project
 #pragma once
-#include <string>
 #include <fstream>
-#include <mutex>
 #include <functional>
+#include <mutex>
 #include <sstream>
+#include <string>
 
-namespace mssql
-{
+namespace mssql {
 
-  enum class LogLevel
-  {
-    Silent = 0,
-    Error = 1,
-    Warning = 2,
-    Info = 3,
-    Debug = 4,
-    Trace = 5
-  };
+enum class LogLevel { Silent = 0, Error = 1, Warning = 2, Info = 3, Debug = 4, Trace = 5 };
 
-  class Logger
-  {
-  public:
-    static Logger &GetInstance();
+class Logger {
+ public:
+  static Logger& GetInstance();
 
-    void SetLogLevel(LogLevel level);
-    void SetLogToFile(const std::string &filePath);
-    void SetLogToConsole(bool enabled);
+  void SetLogLevel(LogLevel level);
+  void SetLogToFile(const std::string& filePath);
+  void SetLogToConsole(bool enabled);
 
-    // Regular string logging
-    void Log(LogLevel level, const std::string &message);
-    void Error(const std::string &message);
-    void Warning(const std::string &message);
-    void Info(const std::string &message);
-    void Debug(const std::string &message);
-    void Trace(const std::string &message);
+  // Regular string logging
+  void Log(LogLevel level, const std::string& message);
+  void Error(const std::string& message);
+  void Warning(const std::string& message);
+  void Info(const std::string& message);
+  void Debug(const std::string& message);
+  void Trace(const std::string& message);
 
-    // Wide string logging
-    void Log(LogLevel level, const std::wstring &message);
-    void Error(const std::wstring &message);
-    void Warning(const std::wstring &message);
-    void Info(const std::wstring &message);
-    void Debug(const std::wstring &message);
-    void Trace(const std::wstring &message);
+  // Wide string logging
+  void Log(LogLevel level, const std::wstring& message);
+  void Error(const std::wstring& message);
+  void Warning(const std::wstring& message);
+  void Info(const std::wstring& message);
+  void Debug(const std::wstring& message);
+  void Trace(const std::wstring& message);
 
-    // UTF-16 string logging (u16string)
-    void Log(LogLevel level, const std::u16string &message);
-    void Error(const std::u16string &message);
-    void Warning(const std::u16string &message);
-    void Info(const std::u16string &message);
-    void Debug(const std::u16string &message);
-    void Trace(const std::u16string &message);
+  // UTF-16 string logging (u16string)
+  void Log(LogLevel level, const std::u16string& message);
+  void Error(const std::u16string& message);
+  void Warning(const std::u16string& message);
+  void Info(const std::u16string& message);
+  void Debug(const std::u16string& message);
+  void Trace(const std::u16string& message);
 
-    bool IsEnabled(LogLevel level) const { return currentLevel_ >= level; }
+  bool IsEnabled(LogLevel level) const {
+    return currentLevel_ >= level;
+  }
 
-  private:
-    Logger();
-    ~Logger();
+ private:
+  Logger();
+  ~Logger();
 
-    Logger(const Logger &) = delete;
-    Logger &operator=(const Logger &) = delete;
+  Logger(const Logger&) = delete;
+  Logger& operator=(const Logger&) = delete;
 
-    std::string LevelToString(LogLevel level);
-    std::string WideToUtf8(const std::wstring &wide);
-    std::string Utf16ToUtf8(const std::u16string &utf16);
+  std::string LevelToString(LogLevel level);
+  std::string WideToUtf8(const std::wstring& wide);
+  std::string Utf16ToUtf8(const std::u16string& utf16);
 
-    LogLevel currentLevel_ = LogLevel::Info;
-    bool logToConsole_ = false;
-    std::ofstream logFile_;
+  LogLevel currentLevel_ = LogLevel::Info;
+  bool logToConsole_ = false;
+  std::ofstream logFile_;
 
-    std::mutex mutex_;
-  };
+  std::mutex mutex_;
+};
 
-  // Convenience macros
+// Convenience macros
 // In Logger.h, replace your existing macros with these:
 #define SQL_LOG_ERROR(msg) mssql::Logger::GetInstance().Error(std::string(__func__) + ": " + msg)
-#define SQL_LOG_WARNING(msg) mssql::Logger::GetInstance().Warning(std::string(__func__) + ": " + msg)
+#define SQL_LOG_WARNING(msg) \
+  mssql::Logger::GetInstance().Warning(std::string(__func__) + ": " + msg)
 #define SQL_LOG_INFO(msg) mssql::Logger::GetInstance().Info(std::string(__func__) + ": " + msg)
 #define SQL_LOG_DEBUG(msg) mssql::Logger::GetInstance().Debug(std::string(__func__) + ": " + msg)
 #define SQL_LOG_TRACE(msg) mssql::Logger::GetInstance().Trace(std::string(__func__) + ": " + msg)
 // Add stream-style macros:
-#define SQL_LOG_ERROR_STREAM(expr)                                      \
-  do                                                                    \
-  {                                                                     \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Error)) \
-    {                                                                   \
-      std::ostringstream oss;                                           \
-      oss << __func__ << ": " << expr;                                  \
-      mssql::Logger::GetInstance().Error(oss.str());                    \
-    }                                                                   \
-  } while (0)
-
-#define SQL_LOG_WARNING_STREAM(expr)                                      \
-  do                                                                      \
-  {                                                                       \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Warning)) \
-    {                                                                     \
+#define SQL_LOG_ERROR_STREAM(expr)                                        \
+  do {                                                                    \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Error)) { \
       std::ostringstream oss;                                             \
       oss << __func__ << ": " << expr;                                    \
-      mssql::Logger::GetInstance().Warning(oss.str());                    \
+      mssql::Logger::GetInstance().Error(oss.str());                      \
     }                                                                     \
   } while (0)
 
-#define SQL_LOG_INFO_STREAM(expr)                                      \
-  do                                                                   \
-  {                                                                    \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Info)) \
-    {                                                                  \
-      std::ostringstream oss;                                          \
-      oss << __func__ << ": " << expr;                                 \
-      mssql::Logger::GetInstance().Info(oss.str());                    \
-    }                                                                  \
+#define SQL_LOG_WARNING_STREAM(expr)                                        \
+  do {                                                                      \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Warning)) { \
+      std::ostringstream oss;                                               \
+      oss << __func__ << ": " << expr;                                      \
+      mssql::Logger::GetInstance().Warning(oss.str());                      \
+    }                                                                       \
   } while (0)
 
-#define SQL_LOG_DEBUG_STREAM(expr)                                      \
-  do                                                                    \
-  {                                                                     \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Debug)) \
-    {                                                                   \
-      std::ostringstream oss;                                           \
-      oss << __func__ << ": " << expr;                                  \
-      mssql::Logger::GetInstance().Debug(oss.str());                    \
-    }                                                                   \
+#define SQL_LOG_INFO_STREAM(expr)                                        \
+  do {                                                                   \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Info)) { \
+      std::ostringstream oss;                                            \
+      oss << __func__ << ": " << expr;                                   \
+      mssql::Logger::GetInstance().Info(oss.str());                      \
+    }                                                                    \
   } while (0)
 
-#define SQL_LOG_TRACE_STREAM(expr)                                      \
-  do                                                                    \
-  {                                                                     \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Trace)) \
-    {                                                                   \
-      std::ostringstream oss;                                           \
-      oss << __func__ << ": " << expr;                                  \
-      mssql::Logger::GetInstance().Trace(oss.str());                    \
-    }                                                                   \
+#define SQL_LOG_DEBUG_STREAM(expr)                                        \
+  do {                                                                    \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Debug)) { \
+      std::ostringstream oss;                                             \
+      oss << __func__ << ": " << expr;                                    \
+      mssql::Logger::GetInstance().Debug(oss.str());                      \
+    }                                                                     \
+  } while (0)
+
+#define SQL_LOG_TRACE_STREAM(expr)                                        \
+  do {                                                                    \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Trace)) { \
+      std::ostringstream oss;                                             \
+      oss << __func__ << ": " << expr;                                    \
+      mssql::Logger::GetInstance().Trace(oss.str());                      \
+    }                                                                     \
   } while (0)
 
 // Wide string (wstring) stream macros
-#define SQL_LOG_ERROR_WSTREAM(expr)                                      \
-  do                                                                     \
-  {                                                                      \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Error))  \
-    {                                                                    \
-      std::wostringstream woss;                                          \
-      woss << __func__ << L": " << expr;                                 \
-      mssql::Logger::GetInstance().Error(woss.str());                    \
-    }                                                                    \
-  } while (0)
-
-#define SQL_LOG_WARNING_WSTREAM(expr)                                     \
-  do                                                                      \
-  {                                                                       \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Warning)) \
-    {                                                                     \
+#define SQL_LOG_ERROR_WSTREAM(expr)                                       \
+  do {                                                                    \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Error)) { \
       std::wostringstream woss;                                           \
       woss << __func__ << L": " << expr;                                  \
-      mssql::Logger::GetInstance().Warning(woss.str());                   \
+      mssql::Logger::GetInstance().Error(woss.str());                     \
     }                                                                     \
   } while (0)
 
-#define SQL_LOG_INFO_WSTREAM(expr)                                      \
-  do                                                                    \
-  {                                                                     \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Info))  \
-    {                                                                   \
-      std::wostringstream woss;                                         \
-      woss << __func__ << L": " << expr;                                \
-      mssql::Logger::GetInstance().Info(woss.str());                    \
-    }                                                                   \
+#define SQL_LOG_WARNING_WSTREAM(expr)                                       \
+  do {                                                                      \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Warning)) { \
+      std::wostringstream woss;                                             \
+      woss << __func__ << L": " << expr;                                    \
+      mssql::Logger::GetInstance().Warning(woss.str());                     \
+    }                                                                       \
   } while (0)
 
-#define SQL_LOG_DEBUG_WSTREAM(expr)                                      \
-  do                                                                     \
-  {                                                                      \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Debug))  \
-    {                                                                    \
+#define SQL_LOG_INFO_WSTREAM(expr)                                       \
+  do {                                                                   \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Info)) { \
       std::wostringstream woss;                                          \
       woss << __func__ << L": " << expr;                                 \
-      mssql::Logger::GetInstance().Debug(woss.str());                    \
+      mssql::Logger::GetInstance().Info(woss.str());                     \
     }                                                                    \
   } while (0)
 
-#define SQL_LOG_TRACE_WSTREAM(expr)                                      \
-  do                                                                     \
-  {                                                                      \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Trace))  \
-    {                                                                    \
-      std::wostringstream woss;                                          \
-      woss << __func__ << L": " << expr;                                 \
-      mssql::Logger::GetInstance().Trace(woss.str());                    \
-    }                                                                    \
+#define SQL_LOG_DEBUG_WSTREAM(expr)                                       \
+  do {                                                                    \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Debug)) { \
+      std::wostringstream woss;                                           \
+      woss << __func__ << L": " << expr;                                  \
+      mssql::Logger::GetInstance().Debug(woss.str());                     \
+    }                                                                     \
+  } while (0)
+
+#define SQL_LOG_TRACE_WSTREAM(expr)                                       \
+  do {                                                                    \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Trace)) { \
+      std::wostringstream woss;                                           \
+      woss << __func__ << L": " << expr;                                  \
+      mssql::Logger::GetInstance().Trace(woss.str());                     \
+    }                                                                     \
   } while (0)
 
 // UTF-16 string (u16string) stream macros
-#define SQL_LOG_ERROR_U16STREAM(expr)                                    \
-  do                                                                     \
-  {                                                                      \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Error))  \
-    {                                                                    \
-      std::basic_ostringstream<char16_t> u16oss;                         \
-      u16oss << u"" << expr;                                             \
-      mssql::Logger::GetInstance().Error(u16oss.str());                  \
-    }                                                                    \
-  } while (0)
-
-#define SQL_LOG_WARNING_U16STREAM(expr)                                   \
-  do                                                                      \
-  {                                                                       \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Warning)) \
-    {                                                                     \
+#define SQL_LOG_ERROR_U16STREAM(expr)                                     \
+  do {                                                                    \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Error)) { \
       std::basic_ostringstream<char16_t> u16oss;                          \
       u16oss << u"" << expr;                                              \
-      mssql::Logger::GetInstance().Warning(u16oss.str());                 \
+      mssql::Logger::GetInstance().Error(u16oss.str());                   \
     }                                                                     \
   } while (0)
 
+#define SQL_LOG_WARNING_U16STREAM(expr)                                     \
+  do {                                                                      \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Warning)) { \
+      std::basic_ostringstream<char16_t> u16oss;                            \
+      u16oss << u"" << expr;                                                \
+      mssql::Logger::GetInstance().Warning(u16oss.str());                   \
+    }                                                                       \
+  } while (0)
+
 #define SQL_LOG_INFO_U16STREAM(expr)                                     \
-  do                                                                     \
-  {                                                                      \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Info))   \
-    {                                                                    \
+  do {                                                                   \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Info)) { \
       std::basic_ostringstream<char16_t> u16oss;                         \
       u16oss << u"" << expr;                                             \
       mssql::Logger::GetInstance().Info(u16oss.str());                   \
@@ -226,10 +193,8 @@ namespace mssql
   } while (0)
 
 #define SQL_LOG_DEBUG_U16STREAM(expr)                                     \
-  do                                                                      \
-  {                                                                       \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Debug))   \
-    {                                                                     \
+  do {                                                                    \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Debug)) { \
       std::basic_ostringstream<char16_t> u16oss;                          \
       u16oss << u"" << expr;                                              \
       mssql::Logger::GetInstance().Debug(u16oss.str());                   \
@@ -237,14 +202,12 @@ namespace mssql
   } while (0)
 
 #define SQL_LOG_TRACE_U16STREAM(expr)                                     \
-  do                                                                      \
-  {                                                                       \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Trace))   \
-    {                                                                     \
+  do {                                                                    \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Trace)) { \
       std::basic_ostringstream<char16_t> u16oss;                          \
       u16oss << u"" << expr;                                              \
       mssql::Logger::GetInstance().Trace(u16oss.str());                   \
     }                                                                     \
   } while (0)
 
-} // namespace mssql
+}  // namespace mssql

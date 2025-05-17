@@ -1,159 +1,129 @@
+#include "odbc_row.h"
+
+#include <iomanip>
+#include <sstream>
+
 #include "odbc_driver_types.h"
 #include "query_result.h"
-#include "odbc_row.h"
-#include <sstream>
-#include <iomanip>
 
-namespace mssql
-{
-  // Constructor that initializes from a query result
-  OdbcRow::OdbcRow(const QueryResult &queryResult)
-  {
-    // Extract column definitions from the query result
-    std::vector<ColumnDefinition> columnDefs;
-    for (size_t i = 0; i < queryResult.get_column_count(); ++i)
-    {
-      columnDefs.push_back(queryResult.get(i));
-    }
-
-    // Initialize columns based on the extracted definitions
-    initializeColumns(columnDefs);
+namespace mssql {
+// Constructor that initializes from a query result
+OdbcRow::OdbcRow(const QueryResult& queryResult) {
+  // Extract column definitions from the query result
+  std::vector<ColumnDefinition> columnDefs;
+  for (size_t i = 0; i < queryResult.get_column_count(); ++i) {
+    columnDefs.push_back(queryResult.get(i));
   }
 
-  // Constructor that initializes from column definitions
-  OdbcRow::OdbcRow(const std::vector<ColumnDefinition> &columnDefs)
-  {
-    initializeColumns(columnDefs);
+  // Initialize columns based on the extracted definitions
+  initializeColumns(columnDefs);
+}
+
+// Constructor that initializes from column definitions
+OdbcRow::OdbcRow(const std::vector<ColumnDefinition>& columnDefs) {
+  initializeColumns(columnDefs);
+}
+
+// Get a DatumStorage for a column by index
+DatumStorage& OdbcRow::getColumn(size_t index) {
+  if (index >= columns_.size()) {
+    throw std::out_of_range("Column index out of range");
   }
+  return *columns_[index];
+}
 
-  // Get a DatumStorage for a column by index
-  DatumStorage &OdbcRow::getColumn(size_t index)
-  {
-    if (index >= columns_.size())
-    {
-      throw std::out_of_range("Column index out of range");
-    }
-    return *columns_[index];
+// Get a const DatumStorage for a column by index
+const DatumStorage& OdbcRow::getColumn(size_t index) const {
+  if (index >= columns_.size()) {
+    throw std::out_of_range("Column index out of range");
   }
+  return *columns_[index];
+}
 
-  // Get a const DatumStorage for a column by index
-  const DatumStorage &OdbcRow::getColumn(size_t index) const
-  {
-    if (index >= columns_.size())
-    {
-      throw std::out_of_range("Column index out of range");
-    }
-    return *columns_[index];
+// Get the number of columns in the row
+size_t OdbcRow::columnCount() const {
+  return columns_.size();
+}
+
+// Reserve space for batch operations
+void OdbcRow::reserve(size_t batchSize) {
+  for (auto& column : columns_) {
+    column->reserve(batchSize);
   }
+}
 
-  // Get the number of columns in the row
-  size_t OdbcRow::columnCount() const
-  {
-    return columns_.size();
+// Resize all columns to the specified batch size
+void OdbcRow::resize(size_t batchSize) {
+  for (auto& column : columns_) {
+    column->resize(batchSize);
   }
+}
 
-  // Reserve space for batch operations
-  void OdbcRow::reserve(size_t batchSize)
-  {
-    for (auto &column : columns_)
-    {
-      column->reserve(batchSize);
-    }
+// Clear all data in all columns
+void OdbcRow::clear() {
+  for (auto& column : columns_) {
+    column->clear();
   }
+}
 
-  // Resize all columns to the specified batch size
-  void OdbcRow::resize(size_t batchSize)
-  {
-    for (auto &column : columns_)
-    {
-      column->resize(batchSize);
-    }
-  }
+// Log debug information about this row
+void OdbcRow::logDebug(LogLevel level, bool showValues, size_t maxValues) const {
+  Logger::GetInstance().Log(level, getDebugString(showValues, maxValues, true));
+}
 
-  // Clear all data in all columns
-  void OdbcRow::clear()
-  {
-    for (auto &column : columns_)
-    {
-      column->clear();
-    }
-  }
+// Helper method for convenience logging at error level
+void OdbcRow::logError(bool showValues, size_t maxValues) const {
+  logDebug(LogLevel::Error, showValues, maxValues);
+}
 
-  // Log debug information about this row
-  void OdbcRow::logDebug(LogLevel level, bool showValues, size_t maxValues) const
-  {
-    Logger::GetInstance().Log(level, getDebugString(showValues, maxValues, true));
-  }
+// Helper method for convenience logging at warning level
+void OdbcRow::logWarning(bool showValues, size_t maxValues) const {
+  logDebug(LogLevel::Warning, showValues, maxValues);
+}
 
-  // Helper method for convenience logging at error level
-  void OdbcRow::logError(bool showValues, size_t maxValues) const
-  {
-    logDebug(LogLevel::Error, showValues, maxValues);
-  }
+// Helper method for convenience logging at info level
+void OdbcRow::logInfo(bool showValues, size_t maxValues) const {
+  logDebug(LogLevel::Info, showValues, maxValues);
+}
 
-  // Helper method for convenience logging at warning level
-  void OdbcRow::logWarning(bool showValues, size_t maxValues) const
-  {
-    logDebug(LogLevel::Warning, showValues, maxValues);
-  }
+// Helper method for convenience logging at trace level
+void OdbcRow::logTrace(bool showValues, size_t maxValues) const {
+  logDebug(LogLevel::Trace, showValues, maxValues);
+}
 
-  // Helper method for convenience logging at info level
-  void OdbcRow::logInfo(bool showValues, size_t maxValues) const
-  {
-    logDebug(LogLevel::Info, showValues, maxValues);
-  }
+// Get a string representation of this row for debugging
+std::string OdbcRow::getDebugString(bool showValues, size_t maxValues, bool compactFormat) const {
+  std::ostringstream oss;
 
-  // Helper method for convenience logging at trace level
-  void OdbcRow::logTrace(bool showValues, size_t maxValues) const
-  {
-    logDebug(LogLevel::Trace, showValues, maxValues);
-  }
-
-  // Get a string representation of this row for debugging
-  std::string OdbcRow::getDebugString(bool showValues, size_t maxValues, bool compactFormat) const
-  {
-    std::ostringstream oss;
-
-    if (compactFormat)
-    {
-      oss << "OdbcRow[" << columns_.size() << " columns]:";
-      for (size_t i = 0; i < columns_.size(); ++i)
-      {
-        oss << " Col" << i << "(" << columns_[i]->getTypeName() << ")";
-        if (showValues)
-        {
-          oss << "=" << columns_[i]->getDebugString(true, maxValues, true);
-        }
-        if (i < columns_.size() - 1)
-        {
-          oss << ",";
-        }
+  if (compactFormat) {
+    oss << "OdbcRow[" << columns_.size() << " columns]:";
+    for (size_t i = 0; i < columns_.size(); ++i) {
+      oss << " Col" << i << "(" << columns_[i]->getTypeName() << ")";
+      if (showValues) {
+        oss << "=" << columns_[i]->getDebugString(true, maxValues, true);
+      }
+      if (i < columns_.size() - 1) {
+        oss << ",";
       }
     }
-    else
-    {
-      oss << "OdbcRow with " << columns_.size() << " columns:" << std::endl;
-      for (size_t i = 0; i < columns_.size(); ++i)
-      {
-        oss << "  Column " << i << ": Type=" << columns_[i]->getTypeName();
-        if (showValues)
-        {
-          oss << std::endl
-              << "    Values: " << columns_[i]->getDebugString(true, maxValues, false);
-        }
-        oss << std::endl;
+  } else {
+    oss << "OdbcRow with " << columns_.size() << " columns:" << std::endl;
+    for (size_t i = 0; i < columns_.size(); ++i) {
+      oss << "  Column " << i << ": Type=" << columns_[i]->getTypeName();
+      if (showValues) {
+        oss << std::endl << "    Values: " << columns_[i]->getDebugString(true, maxValues, false);
       }
+      oss << std::endl;
     }
-
-    return oss.str();
   }
 
-  // Convert ODBC SQL type to DatumStorage::SqlType
-  DatumStorage::SqlType OdbcRow::convertSqlType(SQLSMALLINT sqlType)
-  {
-    // Map ODBC SQL types to DatumStorage SQL types
-    switch (sqlType)
-    {
+  return oss.str();
+}
+
+// Convert ODBC SQL type to DatumStorage::SqlType
+DatumStorage::SqlType OdbcRow::convertSqlType(SQLSMALLINT sqlType) {
+  // Map ODBC SQL types to DatumStorage SQL types
+  switch (sqlType) {
     case SQL_TINYINT:
       return DatumStorage::SqlType::TinyInt;
     case SQL_SMALLINT:
@@ -201,22 +171,20 @@ namespace mssql
     default:
       // For types we don't explicitly handle, default to Variant
       return DatumStorage::SqlType::Variant;
-    }
   }
+}
 
-  // Initialize columns based on column definitions
-  void OdbcRow::initializeColumns(const std::vector<ColumnDefinition> &columnDefs)
-  {
-    columns_.clear();
-    columns_.reserve(columnDefs.size());
+// Initialize columns based on column definitions
+void OdbcRow::initializeColumns(const std::vector<ColumnDefinition>& columnDefs) {
+  columns_.clear();
+  columns_.reserve(columnDefs.size());
 
-    for (const auto &def : columnDefs)
-    {
-      // Create a new DatumStorage with the appropriate SQL type
-      auto sqlType = convertSqlType(def.dataType);
-      auto storage = std::make_shared<DatumStorage>(sqlType);
-      columns_.push_back(storage);
-    }
+  for (const auto& def : columnDefs) {
+    // Create a new DatumStorage with the appropriate SQL type
+    auto sqlType = convertSqlType(def.dataType);
+    auto storage = std::make_shared<DatumStorage>(sqlType);
+    columns_.push_back(storage);
   }
+}
 
-} // namespace mssql
+}  // namespace mssql

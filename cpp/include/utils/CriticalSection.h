@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------------------------------------------------------
 // File: CriticalSection.h
 // Contents: Wrapper for a critical section that handles scope
-// 
+//
 // Copyright Microsoft Corporation and contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,30 +16,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------
-#include <thread>
 #include <mutex>
+#include <thread>
 
 namespace mssql {
 
 #pragma once
 
-   class ScopedCriticalSectionLock {
+class ScopedCriticalSectionLock {
+ public:
+  ScopedCriticalSectionLock(std::mutex& cs) : criticalSection_(cs) {
+    criticalSection_.lock();
+  }
 
-   public:
+  ~ScopedCriticalSectionLock(void) {
+    criticalSection_.unlock();
+  }
 
-       ScopedCriticalSectionLock( std::mutex & cs ) :
-           criticalSection_( cs )
-       {
-           criticalSection_.lock();
-       }
+ private:
+  std::mutex& criticalSection_;
+};
 
-       ~ScopedCriticalSectionLock( void )
-       {
-           criticalSection_.unlock();
-       }
-
-   private:
-      std::mutex & criticalSection_;
-   };
-
-}  // mssql
+}  // namespace mssql

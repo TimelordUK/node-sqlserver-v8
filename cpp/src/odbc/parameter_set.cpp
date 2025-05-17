@@ -1,19 +1,15 @@
+#include <napi.h>
+#include <parameter_set.h>
 #include <platform.h>
 #include <query_parameter.h>
-#include <parameter_set.h>
-#include <napi.h>
 
-namespace mssql
-{
-  // ParameterSet implementation
+namespace mssql {
+// ParameterSet implementation
 
-  ParameterSet::ParameterSet()
-  {
-  }
+ParameterSet::ParameterSet() {}
 
-  void ParameterSet::add(std::shared_ptr<QueryParameter> qp)
-  {
-    parameters_.push_back(qp);
-  }
-
+void ParameterSet::add(std::shared_ptr<QueryParameter> qp) {
+  parameters_.push_back(qp);
 }
+
+}  // namespace mssql
