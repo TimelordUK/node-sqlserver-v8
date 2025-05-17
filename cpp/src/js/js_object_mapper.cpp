@@ -1,11 +1,11 @@
 // In js_object_mapper.cpp
-#include "js/js_object_mapper.h"
+#include <js/js_object_mapper.h>
 
-#include "js/js_time_adapter.h"
-#include "odbc/odbc_driver_types.h"
-#include "odbc/odbc_row.h"
-#include "common/string_utils.h"
-#include "utils/Logger.h"
+#include <js/js_time_adapter.h>
+#include <odbc/odbc_driver_types.h>
+#include <odbc/odbc_row.h>
+#include <common/string_utils.h>
+#include <utils/Logger.h>
 
 namespace mssql {
 // Helper methods implementation

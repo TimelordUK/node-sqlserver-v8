@@ -4,7 +4,7 @@
 #include <odbc/odbc_error.h>
 #include <odbc/odbc_handles.h>
 #include <odbc/odbc_statement.h>
-#include "utils/Logger.h"
+#include <utils/Logger.h>
 
 namespace mssql {
 std::shared_ptr<IOdbcStatementHandle> OdbcStatementHandleFactory::createStatement() {
