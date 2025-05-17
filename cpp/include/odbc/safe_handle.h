@@ -102,6 +102,18 @@ public:
         state_ = State::FREED;
         free_stack_ = captureStackTrace();
     }
+    
+    /**
+     * @brief Force reset reference count - use only during cleanup
+     */
+    void resetReferences() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (ref_count_ > 0) {
+            SQL_LOG_DEBUG_STREAM("SafeHandle reset references: " << name_ 
+                << " was=" << ref_count_.load());
+            ref_count_ = 0;
+        }
+    }
 
     bool isValid() const {
         std::lock_guard<std::mutex> lock(mutex_);

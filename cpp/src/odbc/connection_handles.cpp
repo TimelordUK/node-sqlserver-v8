@@ -53,6 +53,9 @@ void ConnectionHandles::clear() {
   for (const auto& [id, safeHandle] : _statementHandles) {
     SQL_LOG_DEBUG_STREAM("destruct OdbcStatementCache - free statement " << id);
     if (safeHandle) {
+      // During connection cleanup, we need to force-free handles
+      // Reset references first to avoid warning about freeing referenced handles
+      safeHandle->resetReferences();
       safeHandle->free();
     }
   }
