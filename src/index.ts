@@ -74,10 +74,15 @@ export {
   fromValue
 }
 
-// Export utility functions directly from the native module
-export const setLogLevel = nativeModule.setLogLevel
-export const enableConsoleLogging = nativeModule.enableConsoleLogging
-export const setLogFile = nativeModule.setLogFile
+// Import unified logger for coordinated logging
+import unifiedLogger from './unified-logger'
+import { LogLevel } from './logger'
+
+// Export logging functionality through unified logger
+export const setLogLevel = (level: LogLevel) => unifiedLogger.setLogLevel(level)
+export const enableConsoleLogging = (enabled: boolean) => unifiedLogger.setConsoleLogging(enabled)
+export const setLogFile = (path: string | null) => unifiedLogger.setLogFile(path)
+export { LogLevel }
 
 // Default export for CommonJS compatibility
 export default {
@@ -99,7 +104,8 @@ export default {
   TVPParameter,
   createConnection,
   fromValue,
-  setLogLevel: nativeModule.setLogLevel,
-  enableConsoleLogging: nativeModule.enableConsoleLogging,
-  setLogFile: nativeModule.setLogFile
+  setLogLevel,
+  enableConsoleLogging,
+  setLogFile,
+  LogLevel
 }

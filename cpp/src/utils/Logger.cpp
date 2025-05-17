@@ -18,7 +18,14 @@ Logger& Logger::GetInstance() {
 Logger::Logger() {}
 
 Logger::~Logger() {
+  // Flush console output before destruction
+  if (logToConsole_) {
+    std::cout.flush();
+    std::cerr.flush();
+  }
+  
   if (logFile_.is_open()) {
+    logFile_.flush();
     logFile_.close();
   }
 }
@@ -91,6 +98,7 @@ void Logger::Log(LogLevel level, const std::string& message) {
 
   if (logToConsole_) {
     std::cout << logLine.str() << std::endl;
+    std::cout.flush();  // Ensure immediate flush for Node.js termination
   }
 
   if (logFile_.is_open()) {

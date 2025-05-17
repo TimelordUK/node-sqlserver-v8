@@ -1,4 +1,7 @@
 // src/logger.ts
+import * as fs from 'fs'
+import * as path from 'path'
+
 export enum LogLevel {
   SILENT = 0,
   ERROR = 1,
@@ -19,7 +22,9 @@ export class ConsoleAppender implements LogAppender {
     const levelStr = LogLevel[level]
     const contextStr = context ? ` [${this.formatContext(context)}]` : ''
 
-    console.log(`[${timestamp}] [${levelStr}]${contextStr} ${message}`)
+    // Use stderr for error/warning levels to match C++ logger behavior
+    const output = level <= LogLevel.WARNING ? console.error : console.log
+    output(`[${timestamp}] [${levelStr}]${contextStr} ${message}`)
   }
 
   private formatContext (context: Record<string, any>): string {
@@ -30,14 +35,43 @@ export class ConsoleAppender implements LogAppender {
 }
 export class FileAppender implements LogAppender {
   private readonly filePath: string
+  private writeStream?: fs.WriteStream
 
   constructor (filePath: string) {
     this.filePath = filePath
-    // Initialize file logging (you might use fs.createWriteStream)
+    this.initializeStream()
+  }
+
+  private initializeStream (): void {
+    const fs = require('fs')
+    const path = require('path')
+
+    // Ensure directory exists
+    const dir = path.dirname(this.filePath)
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true })
+    }
+
+    // Create write stream with append mode
+    this.writeStream = fs.createWriteStream(this.filePath, {
+      flags: 'a',
+      encoding: 'utf8'
+    })
   }
 
   log (level: LogLevel, message: string, context?: Record<string, any>): void {
-    // Implement file logging using Node.js fs module
+    const timestamp = new Date().toISOString()
+    const levelStr = LogLevel[level]
+    const contextStr = context ? ` [${this.formatContext(context)}]` : ''
+
+    const logLine = `[${timestamp}] [${levelStr}]${contextStr} ${message}\n`
+    this.writeStream?.write(logLine)
+  }
+
+  private formatContext (context: Record<string, any>): string {
+    return Object.entries(context)
+      .map(([key, value]) => `${key}=${value}`)
+      .join(', ')
   }
 }
 
@@ -57,6 +91,16 @@ export class Logger {
       Logger.instance = new Logger()
     }
     return Logger.instance
+  }
+
+  /**
+   * Reset the singleton instance (mainly for testing)
+   */
+  public static reset (): void {
+    if (Logger.instance) {
+      Logger.instance.clearAppenders()
+    }
+    Logger.instance = null as any
   }
 
   public setMinLevel (level: LogLevel): void {
