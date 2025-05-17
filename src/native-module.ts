@@ -72,14 +72,17 @@ export function loadNativeModule (): NativeModule {
     : ['Debug', 'Release']
 
   for (const buildType of buildTypes) {
-    const modulePath = path.join(__dirname, '..', 'build', buildType, 'sqlserver')
     try {
-      // Check if the file exists before requiring
-      const moduleName = 'sqlserver.node'
-      const fullPath = path.join(modulePath, '..', moduleName)
-
-      if (fs.existsSync(fullPath)) {
-        return require(fullPath)
+      // Check for both potential locations of the module
+      const buildPaths = [
+        path.join(__dirname, '..', 'build', buildType, 'sqlserver.node'),
+        path.join(__dirname, '..', '..', 'build', buildType, 'sqlserver.node')
+      ]
+      
+      for (const fullPath of buildPaths) {
+        if (fs.existsSync(fullPath)) {
+          return require(fullPath)
+        }
       }
     } catch (e) {
       // Silently continue to the next option

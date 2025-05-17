@@ -5,7 +5,7 @@
     "declaration": true,
     "sourceMap": true,
     "outDir": "./lib",
-    "rootDir": "./",
+    "rootDir": "./src",
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -19,7 +19,7 @@
     "msnodesqlv8": ["./src/module-bridge"],
     "msnodesqlv8/src/*": ["./src/*"]
   },
-  "include": ["src/**/*", "test/**/*.ts"],
+  "include": ["src/**/*"],
   "exclude": [
     "node_modules",
     "build",

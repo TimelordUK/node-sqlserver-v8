@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "odbc/odbc_handles.h"
+#include "odbc/safe_handle.h"
 #include "platform.h"
 
 namespace mssql {
@@ -59,8 +60,8 @@ class ConnectionHandles {
   shared_ptr<IOdbcStatementHandle> store(const long statement_id,
                                          shared_ptr<IOdbcStatementHandle> handle);
   shared_ptr<IOdbcStatementHandle> find(const long statement_id);
-  std::map<long, shared_ptr<IOdbcStatementHandle>> _statementHandles;
-  std::shared_ptr<IOdbcEnvironmentHandle> envHandle_;
-  std::shared_ptr<IOdbcConnectionHandle> connectionHandle_;
+  std::map<long, std::shared_ptr<SafeHandle<IOdbcStatementHandle>>> _statementHandles;
+  std::shared_ptr<SafeHandle<IOdbcEnvironmentHandle>> envHandle_;
+  std::shared_ptr<SafeHandle<IOdbcConnectionHandle>> connectionHandle_;
 };
 }  // namespace mssql
