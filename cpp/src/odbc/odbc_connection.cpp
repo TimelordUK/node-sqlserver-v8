@@ -44,10 +44,10 @@ OdbcConnection::OdbcConnection(std::shared_ptr<IOdbcEnvironment> environment,
 
   // Create connection handles first
   _connectionHandles = std::make_shared<ConnectionHandles>(environment_->GetEnvironmentHandle());
-  
+
   // Create error handler with the connection handles
   _errorHandler = std::make_shared<OdbcErrorHandler>(_connectionHandles);
-  
+
   // Create statement factory
   _statementFactory = std::make_shared<OdbcStatementFactory>(_connectionId, _connectionHandles);
 }
@@ -233,7 +233,7 @@ bool OdbcConnection::ReleasePreparedStatement(const std::string& statementId) {
 
 bool OdbcConnection::RemoveStatement(const std::shared_ptr<OdbcStatement>& statement) {
   std::lock_guard lock(_statementMutex);
-  
+
   // Remove from prepared statements if it exists
   for (auto it = _preparedStatements.begin(); it != _preparedStatements.end(); ++it) {
     if (it->second == statement) {
@@ -241,18 +241,18 @@ bool OdbcConnection::RemoveStatement(const std::shared_ptr<OdbcStatement>& state
       break;
     }
   }
-  
+
   // Ask the factory to remove the statement
   if (statement) {
     _statementFactory->RemoveStatement(statement->GetStatementHandle().getStatementId());
   }
-  
+
   return true;
 }
 
 bool OdbcConnection::RemoveStatement(int statementId) {
   std::lock_guard lock(_statementMutex);
-  
+
   // First get the statement from the factory
   auto statement = _statementFactory->GetStatement(statementId);
   if (statement) {
@@ -264,7 +264,8 @@ bool OdbcConnection::RemoveStatement(int statementId) {
       }
     }
   }
-  
+
+  SQL_LOG_DEBUG_STREAM("RemoveStatement ID = " << statementId);
   // Ask the factory to remove the statement
   _statementFactory->RemoveStatement(statementId);
   return true;

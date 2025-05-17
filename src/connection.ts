@@ -9,6 +9,7 @@ import {
 import { EventEmitter } from 'events'
 import { AsyncQueue, QueueTask } from './async-queue'
 import { ClassLogger } from './class-logger'
+import { AggregatedResult, QueryAggregator } from './query-aggregator'
 
 /**
  * Wrapper for the native Connection class that enforces operation queuing
@@ -47,11 +48,15 @@ class ConnectionPromises {
     })
   }
 
-  async submitReadAll (sql: string, params?: any[]): Promise<QueryResult> {
-    return new Promise<QueryResult>((resolve, reject) => {
-      this.connection.query(sql, params, (err, result) => {
+  async submitReadAll (sql: string, params?: any[]): Promise<AggregatedResult> {
+    return new Promise<AggregatedResult>((resolve, reject) => {
+      this.connection.query(sql, params, async (err, result) => {
         if (err) reject(err)
-        else resolve(result ?? {} as QueryResult)
+        else {
+          const qa = new QueryAggregator(this.connection, result!)
+          const res = await qa.getResults()
+          resolve(res)
+        }
       })
     })
   }

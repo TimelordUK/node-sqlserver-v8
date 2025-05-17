@@ -47,4 +47,11 @@ describe('compound query', function () {
     logger.info(`len = ${top2.length}`)
     console.log(res)
   })
+
+  it('query syscolumns, sysobjects using aggregator', async function () {
+    const sql = 'select * from node.sys.syscolumns; select * from node.sys.sysobjects'
+    if (connection === null) return
+    const res = await connection.promises.submitReadAll(sql)
+    console.log(res)
+  })
 })
