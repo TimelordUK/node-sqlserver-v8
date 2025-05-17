@@ -231,6 +231,45 @@ bool OdbcConnection::ReleasePreparedStatement(const std::string& statementId) {
   return _preparedStatements.erase(statementId) > 0;
 }
 
+bool OdbcConnection::RemoveStatement(const std::shared_ptr<OdbcStatement>& statement) {
+  std::lock_guard lock(_statementMutex);
+  
+  // Remove from prepared statements if it exists
+  for (auto it = _preparedStatements.begin(); it != _preparedStatements.end(); ++it) {
+    if (it->second == statement) {
+      _preparedStatements.erase(it);
+      break;
+    }
+  }
+  
+  // Ask the factory to remove the statement
+  if (statement) {
+    _statementFactory->RemoveStatement(statement->GetStatementHandle().getStatementId());
+  }
+  
+  return true;
+}
+
+bool OdbcConnection::RemoveStatement(int statementId) {
+  std::lock_guard lock(_statementMutex);
+  
+  // First get the statement from the factory
+  auto statement = _statementFactory->GetStatement(statementId);
+  if (statement) {
+    // Remove from prepared statements if it exists
+    for (auto it = _preparedStatements.begin(); it != _preparedStatements.end(); ++it) {
+      if (it->second == statement) {
+        _preparedStatements.erase(it);
+        break;
+      }
+    }
+  }
+  
+  // Ask the factory to remove the statement
+  _statementFactory->RemoveStatement(statementId);
+  return true;
+}
+
 bool OdbcConnection::ExecuteQuery(const std::u16string& sqlText,
                                   const std::vector<std::shared_ptr<QueryParameter>>& parameters,
                                   std::shared_ptr<QueryResult>& result) {

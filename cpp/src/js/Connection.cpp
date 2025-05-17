@@ -15,6 +15,7 @@
 #include "js/workers/next_result_worker.h"
 #include "js/workers/open_worker.h"
 #include "js/workers/query_worker.h"
+#include "js/workers/release_worker.h"
 #include "js/workers/worker_base.h"
 #include "odbc/odbc_connection.h"
 #include "odbc/odbc_connection_factory.h"
@@ -339,7 +340,55 @@ Napi::Value Connection::CancelStatement(const Napi::CallbackInfo& info) {
     return env.Undefined();
   }
 
-  return Stubbed(info);
+  // Validate statement handle
+  if (info.Length() < 1 || !info[0].IsObject()) {
+    Napi::TypeError::New(env, "Statement handle expected").ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  // Get the statement handle from the first parameter
+  Napi::Object handleObj = info[0].As<Napi::Object>();
+  StatementHandle statementHandle = JsObjectMapper::toStatementHandle(handleObj);
+
+  if (!statementHandle.isValid()) {
+    Napi::Error::New(env, "Invalid statement handle").ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  // Check for callback (last argument)
+  Napi::Function callback;
+
+  if (info.Length() > 1 && info[info.Length() - 1].IsFunction()) {
+    callback = info[info.Length() - 1].As<Napi::Function>();
+  } else {
+    // No callback provided, we'll use a Promise
+    // Create a deferred Promise
+    Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
+
+    // Create a callback that resolves/rejects the promise
+    callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo& info) {
+      const Napi::Env env = info.Env();
+      if (info[0].IsNull() || info[0].IsUndefined()) {
+        deferred.Resolve(info[1]);
+      } else {
+        deferred.Reject(info[0]);
+      }
+      return env.Undefined();
+    });
+
+    // Create and queue the worker
+    auto worker = new ReleaseWorker(callback, odbcConnection_.get(), statementHandle);
+    worker->Queue();
+
+    // Return the promise
+    return deferred.Promise();
+  }
+
+  // If we got here, we're using a callback
+  auto worker = new ReleaseWorker(callback, odbcConnection_.get(), statementHandle);
+  worker->Queue();
+  
+  return env.Undefined();
 }
 
 // Implement Query method

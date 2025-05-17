@@ -34,6 +34,10 @@ class ConnectionPromises {
     return this.connection.nextResultSet(handle, batchSize)
   }
 
+  async releaseStatement (handle: StatementHandle): Promise<void> {
+    return this.connection.releaseStatement(handle)
+  }
+
   async submit (sql: string, params?: any[]): Promise<QueryResult> {
     return new Promise<QueryResult>((resolve, reject) => {
       this.connection.query(sql, params, (err, result) => {
@@ -172,6 +176,28 @@ export class Connection extends EventEmitter {
         })
       },
       callback
+    )
+  }
+
+  /**
+   * Release a statement handle and clean up resources
+   */
+  releaseStatement (handle: StatementHandle, callback?: (err: Error | null) => void): Promise<void> | undefined {
+    return this.executeOperation<void>(
+      (cb) => {
+        // For now, use the cancelStatement API as a proxy for statement cleanup
+        // In the future, we should add a dedicated releaseStatement method to the native module
+        this._native.cancelStatement(handle, (err) => {
+          if (err) {
+            this._logger.error('Error releasing statement', { statementId: handle.statementId, error: err })
+          } else {
+            this._logger.debug('Statement released successfully', { statementId: handle.statementId })
+          }
+          cb(err)
+        })
+      },
+      callback,
+      'ReleaseStatement'
     )
   }
 

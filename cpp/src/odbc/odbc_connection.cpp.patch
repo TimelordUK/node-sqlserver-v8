@@ -1,0 +1,15 @@
+bool OdbcConnection::RemoveStatement(int statementId) {
+  std::lock_guard lock(_connectionMutex);
+  
+  SQL_LOG_DEBUG_STREAM("RemoveStatement - removing statement " << statementId);
+  
+  try {
+    // Remove the statement from the factory which will also free the handle
+    _statementFactory->RemoveStatement(statementId);
+    SQL_LOG_DEBUG_STREAM("RemoveStatement - successfully removed statement " << statementId);
+    return true;
+  } catch (const std::exception& e) {
+    SQL_LOG_ERROR_STREAM("RemoveStatement - error removing statement " << statementId << ": " << e.what());
+    return false;
+  }
+}
