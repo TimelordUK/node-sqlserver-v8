@@ -1,11 +1,13 @@
 import { expect } from 'chai'
 import { Connection } from '../../src'
-import * as nativeModule from '../../src/module-bridge'
 import { TestConnectionFactory } from '../common/test-connection-factory'
 
+import { logger, LogLevel } from '../../src/logger-facade'
+
 // Set logging options
-nativeModule.setLogLevel(5) // Debug level
-nativeModule.enableConsoleLogging(true)
+logger.configureDevelopment({
+  logLevel: LogLevel.DEBUG
+})
 
 describe('open', function () {
   this.timeout(0)

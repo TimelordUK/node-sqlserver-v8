@@ -1,6 +1,5 @@
 // src/logger.ts
 import * as fs from 'fs'
-import * as path from 'path'
 
 export enum LogLevel {
   SILENT = 0,
