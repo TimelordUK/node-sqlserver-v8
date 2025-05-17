@@ -1,5 +1,5 @@
-#include "platform.h"
-#include "odbc/connection_handles.h"
+#include <platform.h>
+#include <odbc/connection_handles.h>
 
 #include <common/odbc_common.h>
 
@@ -8,10 +8,10 @@
 #include <string>
 #include <vector>
 
-#include "odbc/odbc_handles.h"
-#include "odbc/safe_handle.h"
+#include <odbc/odbc_handles.h>
+#include <odbc/safe_handle.h>
 
-#include "utils/Logger.h"
+#include <utils/Logger.h>
 
 namespace mssql {
 ConnectionHandles::ConnectionHandles(std::shared_ptr<IOdbcEnvironmentHandle> env)

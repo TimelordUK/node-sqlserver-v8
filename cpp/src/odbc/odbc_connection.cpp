@@ -1,21 +1,21 @@
 // ReSharper disable CppInconsistentNaming
-#include "platform.h"
-#include "common/odbc_common.h"
-#include "odbc/odbc_connection.h"
+#include <platform.h>
+#include <common/odbc_common.h>
+#include <odbc/odbc_connection.h>
 
 #include <utils/Logger.h>
 
 #include <iomanip>  // For std::setw, std::setfill, std::hex
 #include <iostream>
 
-#include "common/string_utils.h"
-#include "odbc/connection_handles.h"
-#include "odbc/iodbc_api.h"
-#include "odbc/odbc_environment.h"
-#include "odbc/odbc_error_handler.h"
-#include "odbc/odbc_handles.h"
-#include "odbc/odbc_statement_factory.h"
-#include "odbc/odbc_transaction_manager.h"
+#include <common/string_utils.h>
+#include <odbc/connection_handles.h>
+#include <odbc/iodbc_api.h>
+#include <odbc/odbc_environment.h>
+#include <odbc/odbc_error_handler.h>
+#include <odbc/odbc_handles.h>
+#include <odbc/odbc_statement_factory.h>
+#include <odbc/odbc_transaction_manager.h>
 
 namespace mssql {
 

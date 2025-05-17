@@ -1,7 +1,7 @@
-#include "workers/odbc_async_worker.h"
+#include <js/workers/odbc_async_worker.h>
 
-#include "Logger.h"
-#include "js_object_mapper.h"
+#include <utils/Logger.h>
+#include <js/js_object_mapper.h>
 
 namespace mssql {
 Napi::Object OdbcAsyncWorker::GetMetadata() {

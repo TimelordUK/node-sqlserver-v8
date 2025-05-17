@@ -1,6 +1,6 @@
 // OdbcApi.cpp
-#include "platform.h"
-#include "common/odbc_common.h"
+#include <platform.h>
+#include <common/odbc_common.h>
 #include <cctype>
 #include <iomanip>
 #include <sstream>

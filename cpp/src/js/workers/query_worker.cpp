@@ -1,11 +1,11 @@
-#include "workers/query_worker.h"
+#include <js/workers/query_worker.h>
 
-#include "Logger.h"
-#include "js_object_mapper.h"
-#include "odbc_common.h"
-#include "parameter_set.h"
-#include "platform.h"
-#include "string_utils.h"
+#include <utils/Logger.h>
+#include <js/js_object_mapper.h>
+#include <common/odbc_common.h>
+#include <odbc/parameter_set.h>
+#include <platform.h>
+#include <common/string_utils.h>
 
 namespace mssql {
 

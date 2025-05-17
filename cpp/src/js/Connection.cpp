@@ -1,7 +1,6 @@
-
-#include "platform.h"
-#include "common/odbc_common.h"
-#include "js/Connection.h"
+#include <platform.h>
+#include <common/odbc_common.h>
+#include <js/Connection.h>
 
 #include <chrono>
 #include <functional>
@@ -10,22 +9,22 @@
 #include <thread>
 #include <vector>
 
-#include "core/query_parameter.h"
-#include "core/query_result.h"
-#include "js/js_object_mapper.h"
-#include "js/workers/close_worker.h"
-#include "js/workers/fetch_rows_worker.h"
-#include "js/workers/next_result_worker.h"
-#include "js/workers/open_worker.h"
-#include "js/workers/query_worker.h"
-#include "js/workers/release_worker.h"
-#include "js/workers/worker_base.h"
-#include "odbc/odbc_connection.h"
-#include "odbc/odbc_connection_factory.h"
-#include "odbc/odbc_driver_types.h"
-#include "odbc/odbc_environment.h"
-#include "odbc/odbc_error.h"
-#include "odbc/parameter_set.h"
+#include <core/query_parameter.h>
+#include <core/query_result.h>
+#include <js/js_object_mapper.h>
+#include <js/workers/close_worker.h>
+#include <js/workers/fetch_rows_worker.h>
+#include <js/workers/next_result_worker.h>
+#include <js/workers/open_worker.h>
+#include <js/workers/query_worker.h>
+#include <js/workers/release_worker.h>
+#include <js/workers/worker_base.h>
+#include <odbc/odbc_connection.h>
+#include <odbc/odbc_connection_factory.h>
+#include <odbc/odbc_driver_types.h>
+#include <odbc/odbc_environment.h>
+#include <odbc/odbc_error.h>
+#include <odbc/parameter_set.h>
 
 namespace mssql {
 // Initialize static constructor reference

@@ -1,10 +1,10 @@
-#include "js/workers/next_result_worker.h"
+#include <js/workers/next_result_worker.h>
 
-#include "Logger.h"
-#include "common/odbc_common.h"
-#include "common/platform.h"
-#include "js/js_object_mapper.h"
-#include "odbc_row.h"
+#include <utils/Logger.h>
+#include <common/odbc_common.h>
+#include <common/platform.h>
+#include <js/js_object_mapper.h>
+#include <odbc/odbc_row.h>
 
 namespace mssql {
 NextResultWorker::NextResultWorker(Napi::Function& callback,

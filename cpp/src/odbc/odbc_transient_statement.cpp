@@ -1,11 +1,11 @@
-#include "platform.h"
+#include <platform.h>
 #include <utils/Logger.h>
 
-#include "common/odbc_common.h"
-#include "common/string_utils.h"
-#include "odbc/iodbc_api.h"
-#include "odbc/odbc_error_handler.h"
-#include "odbc/odbc_statement.h"
+#include <common/odbc_common.h>
+#include <common/string_utils.h>
+#include <odbc/iodbc_api.h>
+#include <odbc/odbc_error_handler.h>
+#include <odbc/odbc_statement.h>
 
 namespace mssql {
 

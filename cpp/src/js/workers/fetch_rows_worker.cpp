@@ -1,10 +1,10 @@
-#include "js/workers/fetch_rows_worker.h"
+#include <js/workers/fetch_rows_worker.h>
 
-#include "Logger.h"
-#include "common/odbc_common.h"
-#include "js/js_object_mapper.h"
-#include "odbc/odbc_row.h"
-#include "platform.h"
+#include <utils/Logger.h>
+#include <common/odbc_common.h>
+#include <js/js_object_mapper.h>
+#include <odbc/odbc_row.h>
+#include <platform.h>
 
 namespace mssql {
 

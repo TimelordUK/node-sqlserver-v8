@@ -1,12 +1,13 @@
-#include "js/workers/close_worker.h"
+#include <platform.h>
+#include <common/odbc_common.h>
+#include <js/workers/close_worker.h>
 
-#include "Logger.h"
-#include "common/odbc_common.h"
-#include "js/Connection.h"
-#include "js/js_object_mapper.h"
-#include "odbc/odbc_connection.h"
-#include "odbc/odbc_row.h"
-#include "platform.h"
+#include <utils/Logger.h>
+
+#include <js/Connection.h>
+#include <js/js_object_mapper.h>
+#include <odbc/odbc_connection.h>
+#include <odbc/odbc_row.h>
 
 namespace mssql {
 CloseWorker::CloseWorker(Napi::Function& callback, IOdbcConnection* connection, Connection* parent)
