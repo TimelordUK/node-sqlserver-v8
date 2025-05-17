@@ -1,12 +1,13 @@
 #include "platform.h"
-#include "odbc_query_executor.h"
-#include "string_utils.h"
-#include "odbc_statement_factory.h"
-#include "iodbc_api.h"
-#include <Logger.h>
-#include "column_buffer.h"
-#include "result_buffer.h"
-#include "odbc_driver_types.h"
+#include "odbc/odbc_query_executor.h"
+#include "common/string_utils.h"
+#include "odbc/odbc_statement_factory.h"
+#include "odbc/connection_handles.h"
+#include "odbc/iodbc_api.h"
+#include <utils/Logger.h>
+#include "core/column_buffer.h"
+#include "core/result_buffer.h"
+#include "odbc/odbc_driver_types.h"
 
 namespace mssql
 {

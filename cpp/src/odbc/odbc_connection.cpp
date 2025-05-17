@@ -10,6 +10,7 @@
 #include "odbc/odbc_statement_factory.h"
 #include "common/string_utils.h"
 #include "odbc/iodbc_api.h"
+#include "odbc/connection_handles.h"
 #include <Logger.h>
 #include <iostream>
 #include <iomanip> // For std::setw, std::setfill, std::hex

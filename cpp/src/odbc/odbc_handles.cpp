@@ -1,5 +1,6 @@
-#include "odbc_error.h"
-#include "odbc_handles.h"
+#include "odbc/odbc_error.h"
+#include "odbc/odbc_handles.h"
+#include "odbc/connection_handles.h"
 
 namespace mssql
 {

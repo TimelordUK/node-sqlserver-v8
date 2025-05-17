@@ -1,5 +1,7 @@
-#include "odbc_transaction_manager.h"
-#include <Logger.h>
+#include "odbc/odbc_transaction_manager.h"
+#include "odbc/connection_handles.h"
+#include "odbc/odbc_error.h"
+#include <utils/Logger.h>
 
 namespace mssql
 {

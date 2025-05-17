@@ -13,6 +13,7 @@ namespace mssql
 
   // Forward declarations
   class OdbcError;
+  class ConnectionHandles;
 
   // Interface for all ODBC handles
   class IOdbcHandle
@@ -158,37 +159,5 @@ namespace mssql
   extern DescriptorHandleFactory create_descriptor_handle;
 
   // Updated ConnectionHandles class
-  class ConnectionHandles
-  {
-  public:
-    ConnectionHandles(std::shared_ptr<IOdbcEnvironmentHandle> env)
-        : envHandle_(env),
-          connectionHandle_(create_connection_handle())
-    {
-      connectionHandle_->alloc(env->get_handle());
-    }
 
-    ~ConnectionHandles()
-    {
-      clear();
-    }
-
-    void clear()
-    {
-      if (connectionHandle_)
-      {
-        connectionHandle_->free();
-      }
-    }
-
-    // Return the interface pointer
-    std::shared_ptr<IOdbcConnectionHandle> connectionHandle()
-    {
-      return connectionHandle_;
-    }
-
-  private:
-    std::shared_ptr<IOdbcEnvironmentHandle> envHandle_;
-    std::shared_ptr<IOdbcConnectionHandle> connectionHandle_;
-  };
 }
