@@ -47,6 +47,7 @@ Napi::Object Connection::Init(Napi::Env env, Napi::Object exports) {
                       InstanceMethod("fetchRows", &Connection::FetchRows),
                       InstanceMethod("nextResultSet", &Connection::NextResultSet),
                       InstanceMethod("cancelStatement", &Connection::CancelStatement),
+                      InstanceMethod("releaseStatement", &Connection::ReleaseStatement),
                   });
 
   // Create persistent reference to constructor
@@ -331,6 +332,10 @@ Napi::Value Connection::NextResultSet(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Connection::CancelStatement(const Napi::CallbackInfo& info) {
+  return Stubbed(info);
+}
+
+Napi::Value Connection::ReleaseStatement(const Napi::CallbackInfo& info) {
   const Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
@@ -387,7 +392,7 @@ Napi::Value Connection::CancelStatement(const Napi::CallbackInfo& info) {
   // If we got here, we're using a callback
   auto worker = new ReleaseWorker(callback, odbcConnection_.get(), statementHandle);
   worker->Queue();
-  
+
   return env.Undefined();
 }
 

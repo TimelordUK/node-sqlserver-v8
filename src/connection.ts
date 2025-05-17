@@ -188,11 +188,11 @@ export class Connection extends EventEmitter {
    * Release a statement handle and clean up resources
    */
   releaseStatement (handle: StatementHandle, callback?: (err: Error | null) => void): Promise<void> | undefined {
-    return this.executeOperation<void>(
+    return this.executeOperation(
       (cb) => {
         // For now, use the cancelStatement API as a proxy for statement cleanup
         // In the future, we should add a dedicated releaseStatement method to the native module
-        this._native.cancelStatement(handle, (err) => {
+        this._native.releaseStatement(handle, (err) => {
           if (err) {
             this._logger.error('Error releasing statement', { statementId: handle.statementId, error: err })
           } else {

@@ -54,6 +54,7 @@ export interface NativeConnection {
   fetchRows: (handle: StatementHandle, batchSize: number, callback: QueryUserCallback) => void
   nextResultSet: (handle: StatementHandle, batchSize: number, callback: QueryUserCallback) => void
   cancelStatement: (handle: StatementHandle, callback: (err: Error | null) => void) => void
+  releaseStatement: (handle: StatementHandle, callback: (err: Error | null) => void) => void
 }
 
 /**
@@ -78,7 +79,7 @@ export function loadNativeModule (): NativeModule {
         path.join(__dirname, '..', 'build', buildType, 'sqlserver.node'),
         path.join(__dirname, '..', '..', 'build', buildType, 'sqlserver.node')
       ]
-      
+
       for (const fullPath of buildPaths) {
         if (fs.existsSync(fullPath)) {
           return require(fullPath)
