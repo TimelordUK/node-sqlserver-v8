@@ -1,5 +1,6 @@
 // ReSharper disable CppInconsistentNaming
-
+#include "platform.h"
+#include "common/odbc_common.h"
 #include "odbc/odbc_connection.h"
 
 #include <Logger.h>
@@ -7,8 +8,6 @@
 #include <iomanip>  // For std::setw, std::setfill, std::hex
 #include <iostream>
 
-#include "common/odbc_common.h"
-#include "common/platform.h"
 #include "common/string_utils.h"
 #include "odbc/connection_handles.h"
 #include "odbc/iodbc_api.h"

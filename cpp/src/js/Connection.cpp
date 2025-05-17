@@ -1,3 +1,6 @@
+
+#include "platform.h"
+#include "common/odbc_common.h"
 #include "js/Connection.h"
 
 #include <chrono>
@@ -23,7 +26,7 @@
 #include "odbc/odbc_environment.h"
 #include "odbc/odbc_error.h"
 #include "odbc/parameter_set.h"
-#include "platform.h"
+
 namespace mssql {
 // Initialize static constructor reference
 Napi::FunctionReference Connection::constructor;

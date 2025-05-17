@@ -1,3 +1,5 @@
+#include "platform.h"
+#include "common/odbc_common.h"
 #include "string_utils.h"
 
 #include <Logger.h>
@@ -5,8 +7,6 @@
 #include <codecvt>
 #include <locale>
 #include <stdexcept>
-
-#include "platform.h"
 
 namespace mssql {
 

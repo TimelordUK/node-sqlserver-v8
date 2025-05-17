@@ -13,8 +13,8 @@ IndentWidth: 2
 TabWidth: 2
 UseTab: Never
 SpacesBeforeTrailingComments: 2
-SortIncludes: true
-IncludeBlocks: Regroup
+SortIncludes: false
+IncludeBlocks: Preserve
 MaxEmptyLinesToKeep: 1
 KeepEmptyLinesAtTheStartOfBlocks: false
 SpaceAfterCStyleCast: false

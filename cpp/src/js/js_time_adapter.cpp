@@ -1,3 +1,5 @@
+#include "platform.h"
+#include "common/odbc_common.h"
 #include "js_time_adapter.h"
 
 #include <platform.h>
