@@ -1,10 +1,10 @@
-#include "odbc_row.h"
+#include "odbc/odbc_row.h"
 
 #include <iomanip>
 #include <sstream>
 
-#include "odbc_driver_types.h"
-#include "query_result.h"
+#include "odbc/odbc_driver_types.h"
+#include "core/query_result.h"
 
 namespace mssql {
 // Constructor that initializes from a query result

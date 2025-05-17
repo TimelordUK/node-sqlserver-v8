@@ -1,14 +1,14 @@
 #include "platform.h"
 #include "common/odbc_common.h"
-#include "js_time_adapter.h"
+#include "js/js_time_adapter.h"
 
 #include <platform.h>
 #include <sql.h>
 #include <sqlext.h>
 
-#include "datum_storage.h"
-#include "napi_wrapper.h"
-#include "time_utils.h"
+#include "core/datum_storage.h"
+#include "js/napi_wrapper.h"
+#include "common/time_utils.h"
 
 namespace mssql {
 

@@ -5,7 +5,7 @@
 #include <iomanip>
 #include <sstream>
 
-#include "iodbc_api.h"
+#include "odbc/iodbc_api.h"
 
 namespace mssql {
 // Helper function implementations

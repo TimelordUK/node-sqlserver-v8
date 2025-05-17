@@ -1,6 +1,6 @@
-#include "odbc_environment.h"
+#include <odbc/odbc_environment.h>
 
-#include <Logger.h>
+#include <utils/Logger.h>
 
 namespace mssql {
 

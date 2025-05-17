@@ -1,29 +1,25 @@
 #pragma once
 
-#include "workers/odbc_async_worker.h"
-#include "odbc/odbc_driver_types.h"
+#include <js/workers/odbc_async_worker.h>
+#include <odbc/odbc_driver_types.h>
 
-namespace mssql
-{
-  class NextResultWorker : public OdbcAsyncWorker
-  {
-  public:
-    NextResultWorker(Napi::Function &callback,
-                    IOdbcConnection *connection,
-                    const StatementHandle &statementHandle,
-                    size_t rowCount);
+namespace mssql {
+class NextResultWorker : public OdbcAsyncWorker {
+ public:
+  NextResultWorker(Napi::Function& callback,
+                   IOdbcConnection* connection,
+                   const StatementHandle& statementHandle,
+                   size_t rowCount);
 
-    void Execute() override;
-    void OnOK() override;
+  void Execute() override;
+  void OnOK() override;
 
-    std::shared_ptr<IOdbcStatement> GetStatement() const
-    {
-      return connection_->GetStatement(statementHandle_.getStatementId());
-    }
+  std::shared_ptr<IOdbcStatement> GetStatement() const {
+    return connection_->GetStatement(statementHandle_.getStatementId());
+  }
 
-
-  private:
-    StatementHandle statementHandle_;
-    size_t rowCount_;
-  };
-} // namespace mssql 
+ private:
+  StatementHandle statementHandle_;
+  size_t rowCount_;
+};
+}  // namespace mssql

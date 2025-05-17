@@ -1,11 +1,11 @@
-#include "platform.h"
-#include "common/odbc_common.h"
-#include <Logger.h>
+#include <platform.h>
+#include <common/odbc_common.h>
+#include <utils/Logger.h>
 
-#include "odbc/iodbc_api.h"
-#include "odbc/odbc_error_handler.h"
-#include "odbc/odbc_statement.h"
-#include "common/string_utils.h"
+#include <odbc/iodbc_api.h>
+#include <odbc/odbc_error_handler.h>
+#include <odbc/odbc_statement.h>
+#include <common/string_utils.h>
 
 namespace mssql {
 bool PreparedStatement::Prepare() {

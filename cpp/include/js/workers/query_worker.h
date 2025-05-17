@@ -1,23 +1,21 @@
 #pragma once
 
-#include "workers/odbc_async_worker.h"
-#include "parameter_set.h"
+#include <js/workers/odbc_async_worker.h>
+#include <odbc/parameter_set.h>
 
-namespace mssql
-{
-  class QueryWorker : public OdbcAsyncWorker
-  {
-  public:
-    QueryWorker(Napi::Function &callback,
-                IOdbcConnection *connection,
-                const std::string &sqlText,
-                const Napi::Array &params);
+namespace mssql {
+class QueryWorker : public OdbcAsyncWorker {
+ public:
+  QueryWorker(Napi::Function& callback,
+              IOdbcConnection* connection,
+              const std::string& sqlText,
+              const Napi::Array& params);
 
-    void Execute() override;
-    void OnOK() override;
+  void Execute() override;
+  void OnOK() override;
 
-  private:
-    std::u16string sqlText_;
-    std::shared_ptr<ParameterSet> parameters_;
-  };
-} // namespace mssql 
+ private:
+  std::u16string sqlText_;
+  std::shared_ptr<ParameterSet> parameters_;
+};
+}  // namespace mssql

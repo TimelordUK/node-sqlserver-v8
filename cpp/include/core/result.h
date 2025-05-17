@@ -2,29 +2,24 @@
 
 #include <memory>
 #include <vector>
-#include "core/column_buffer.h"
-#include "core/query_result.h"
+#include <core/column_buffer.h>
+#include <core/query_result.h>
 #include <platform.h>
-#include <Logger.h>
-#include "core/datum_storage.h"
+#include <utils/Logger.h>
+#include <core/datum_storage.h>
 #include "js/js_time_utils.h"
 
-namespace mssql
-{
+namespace mssql {
 
-  class Result
-  {
-  public:
-    void addTypedRow(const std::vector<std::shared_ptr<DatumStorage>> &row)
-    {
-      Napi::Env env = env_;
-      Napi::Array jsRow = Napi::Array::New(env, row.size());
+class Result {
+ public:
+  void addTypedRow(const std::vector<std::shared_ptr<DatumStorage>>& row) {
+    Napi::Env env = env_;
+    Napi::Array jsRow = Napi::Array::New(env, row.size());
 
-      for (size_t i = 0; i < row.size(); i++)
-      {
-        const auto &datum = row[i];
-        switch (datum->getType())
-        {
+    for (size_t i = 0; i < row.size(); i++) {
+      const auto& datum = row[i];
+      switch (datum->getType()) {
         case DatumStorage::SqlType::Bit:
           jsRow[i] = Napi::Boolean::New(env, datum->getBool());
           break;
@@ -79,31 +74,28 @@ namespace mssql
           break;
 
         default:
-          SQL_LOG_WARNING_STREAM("Unknown SQL type: "
-                                 << static_cast<int>(datum->getType())
-                                 << " - converting to string");
+          SQL_LOG_WARNING_STREAM("Unknown SQL type: " << static_cast<int>(datum->getType())
+                                                      << " - converting to string");
           jsRow[i] = Napi::String::New(env, datum->toString());
-        }
       }
-
-      rows_.push_back(std::move(jsRow));
     }
 
-    void addTypedRow(const std::vector<std::shared_ptr<DatumStorage>> &rowData)
-    {
-      Napi::Array jsRow = Napi::Array::New(env_, rowData.size());
+    rows_.push_back(std::move(jsRow));
+  }
 
-      for (size_t i = 0; i < rowData.size(); i++)
-      {
-        jsRow[i] = JsTimeUtils::ToJsValue(env_, *rowData[i]);
-      }
+  void addTypedRow(const std::vector<std::shared_ptr<DatumStorage>>& rowData) {
+    Napi::Array jsRow = Napi::Array::New(env_, rowData.size());
 
-      rows_.push_back(std::move(jsRow));
+    for (size_t i = 0; i < rowData.size(); i++) {
+      jsRow[i] = JsTimeUtils::ToJsValue(env_, *rowData[i]);
     }
 
-  private:
-    Napi::Env env_;
-    std::vector<Napi::Array> rows_;
-    std::vector<std::vector<std::shared_ptr<DatumStorage>>> rows_;
-  };
-}
+    rows_.push_back(std::move(jsRow));
+  }
+
+ private:
+  Napi::Env env_;
+  std::vector<Napi::Array> rows_;
+  std::vector<std::vector<std::shared_ptr<DatumStorage>>> rows_;
+};
+}  // namespace mssql

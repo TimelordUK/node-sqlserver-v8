@@ -2,9 +2,9 @@
 #pragma once
 #include <napi.h>
 
-#include "core/datum_storage.h"      // Include for DatumStorage::SqlType
-#include "odbc/odbc_driver_types.h"  // Include your C++ type definitions
-#include "odbc/odbc_error.h"
+#include <core/datum_storage.h>      // Include for DatumStorage::SqlType
+#include <odbc/odbc_driver_types.h>  // Include your C++ type definitions
+#include <odbc/odbc_error.h>
 namespace mssql {
 
 class IOdbcRow;

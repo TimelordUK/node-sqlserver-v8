@@ -1,8 +1,8 @@
-#include "platform.h"
-#include "common/odbc_common.h"
-#include "string_utils.h"
+#include <platform.h>
+#include <common/odbc_common.h>
+#include <common/string_utils.h>
 
-#include <Logger.h>
+#include <utils/Logger.h>
 
 #include <codecvt>
 #include <locale>

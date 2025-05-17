@@ -1,7 +1,7 @@
 #pragma once
 #include <napi.h>
 
-#include "core/datum_storage.h"
+#include <core/datum_storage.h>
 
 namespace mssql {
 

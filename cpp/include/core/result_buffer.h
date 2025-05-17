@@ -24,99 +24,82 @@
 #include "core/column_buffer.h"
 #include "core/query_result.h"
 #include <platform.h>
-#include <Logger.h>
+#include <utils/Logger.h>
 
-namespace mssql
-{
+namespace mssql {
 
-  class ResultBuffer
-  {
-  public:
-    ResultBuffer(size_t columnCount, size_t rowCount)
-    {
-      SQL_LOG_TRACE_STREAM("Creating ResultBuffer - Columns: " << columnCount
-                                                               << ", Rows: " << rowCount);
-      columns_.resize(columnCount);
+class ResultBuffer {
+ public:
+  ResultBuffer(size_t columnCount, size_t rowCount) {
+    SQL_LOG_TRACE_STREAM("Creating ResultBuffer - Columns: " << columnCount
+                                                             << ", Rows: " << rowCount);
+    columns_.resize(columnCount);
+  }
+
+  void setRowArraySize(size_t size) {
+    rowArraySize_ = size;
+    for (auto& col : columns_) {
+      col->setRowArraySize(size);
+    }
+  }
+
+  bool fetchRows(std::shared_ptr<QueryResult>& result) {
+    SQL_LOG_TRACE("Fetching next batch of results");
+    SQLRETURN ret;
+    SQLULEN rowsFetched = 0;
+
+    // Set the row array size
+    SQLSetStmtAttr(statement_, SQL_ATTR_ROW_ARRAY_SIZE, (SQLPOINTER)rowArraySize_, 0);
+    SQLSetStmtAttr(statement_, SQL_ATTR_ROWS_FETCHED_PTR, &rowsFetched, 0);
+
+    // Fetch a batch of rows
+    ret = SQLFetch(statement_);
+
+    if (ret == SQL_NO_DATA) {
+      SQL_LOG_TRACE("No more data found");
+      return false;
     }
 
-    void setRowArraySize(size_t size)
-    {
-      rowArraySize_ = size;
-      for (auto &col : columns_)
-      {
-        col->setRowArraySize(size);
-      }
+    if (!SQL_SUCCEEDED(ret)) {
+      SQL_LOG_ERROR("SQLFetch failed");
+      return false;
     }
 
-    bool fetchRows(std::shared_ptr<QueryResult> &result)
-    {
-      SQL_LOG_TRACE("Fetching next batch of results");
-      SQLRETURN ret;
-      SQLULEN rowsFetched = 0;
+    // Process each row in the batch
+    for (SQLULEN row = 0; row < rowsFetched; row++) {
+      SQL_LOG_TRACE_STREAM("Processing row " << row << " of " << rowsFetched);
+      std::vector<std::shared_ptr<DatumStorage>> rowData;
+      rowData.reserve(columns_.size());
 
-      // Set the row array size
-      SQLSetStmtAttr(statement_, SQL_ATTR_ROW_ARRAY_SIZE,
-                     (SQLPOINTER)rowArraySize_, 0);
-      SQLSetStmtAttr(statement_, SQL_ATTR_ROWS_FETCHED_PTR,
-                     &rowsFetched, 0);
+      for (size_t col = 0; col < columns_.size(); col++) {
+        // Get the raw datum storage which maintains type information
+        auto value = columns_[col]->getDatum(row);
+        rowData.push_back(value);
 
-      // Fetch a batch of rows
-      ret = SQLFetch(statement_);
-
-      if (ret == SQL_NO_DATA)
-      {
-        SQL_LOG_TRACE("No more data found");
-        return false;
-      }
-
-      if (!SQL_SUCCEEDED(ret))
-      {
-        SQL_LOG_ERROR("SQLFetch failed");
-        return false;
-      }
-
-      // Process each row in the batch
-      for (SQLULEN row = 0; row < rowsFetched; row++)
-      {
-        SQL_LOG_TRACE_STREAM("Processing row " << row << " of " << rowsFetched);
-        std::vector<std::shared_ptr<DatumStorage>> rowData;
-        rowData.reserve(columns_.size());
-
-        for (size_t col = 0; col < columns_.size(); col++)
-        {
-          // Get the raw datum storage which maintains type information
-          auto value = columns_[col]->getDatum(row);
-          rowData.push_back(value);
-
-          SQL_LOG_TRACE_STREAM("Column " << col << " type: "
-                                         << static_cast<int>(value->getType()));
-        }
-
-        // Add the typed row data to the result
-        // result->addTypedRow(rowData);
+        SQL_LOG_TRACE_STREAM("Column " << col << " type: " << static_cast<int>(value->getType()));
       }
 
-      SQL_LOG_TRACE_STREAM("Fetched " << rowsFetched << " rows");
-      return true;
+      // Add the typed row data to the result
+      // result->addTypedRow(rowData);
     }
 
-    bool hasMoreRows() const
-    {
-      SQL_LOG_TRACE_STREAM("Checking for more rows - Current position: "
-                           << currentRow_ << "/" << totalRows_);
-      return currentRow_ < totalRows_;
-    }
+    SQL_LOG_TRACE_STREAM("Fetched " << rowsFetched << " rows");
+    return true;
+  }
 
-    void addTypedRow(const std::vector<std::shared_ptr<DatumStorage>> &rowData)
-    {
-      rows_.push_back(rowData);
-    }
+  bool hasMoreRows() const {
+    SQL_LOG_TRACE_STREAM("Checking for more rows - Current position: " << currentRow_ << "/"
+                                                                       << totalRows_);
+    return currentRow_ < totalRows_;
+  }
 
-  private:
-    SQLSMALLINT getTargetType(SQLSMALLINT sqlType)
-    {
-      switch (sqlType)
-      {
+  void addTypedRow(const std::vector<std::shared_ptr<DatumStorage>>& rowData) {
+    rows_.push_back(rowData);
+  }
+
+ private:
+  SQLSMALLINT getTargetType(SQLSMALLINT sqlType) {
+    switch (sqlType) {
       case SQL_CHAR:
       case SQL_VARCHAR:
       case SQL_LONGVARCHAR:
@@ -157,16 +140,16 @@ namespace mssql
         return SQL_C_GUID;
       default:
         return SQL_C_CHAR;
-      }
     }
+  }
 
-    SQLHSTMT statement_;
-    size_t rowArraySize_;
-    std::vector<std::shared_ptr<ColumnBuffer>> columns_;
-    std::vector<std::vector<std::shared_ptr<DatumStorage>>> rows_;
-    size_t currentRow_ = 0;
-    size_t totalRows_ = 0;
-    size_t rowsFetched_ = 0;
-  };
+  SQLHSTMT statement_;
+  size_t rowArraySize_;
+  std::vector<std::shared_ptr<ColumnBuffer>> columns_;
+  std::vector<std::vector<std::shared_ptr<DatumStorage>>> rows_;
+  size_t currentRow_ = 0;
+  size_t totalRows_ = 0;
+  size_t rowsFetched_ = 0;
+};
 
-} // namespace mssql
+}  // namespace mssql

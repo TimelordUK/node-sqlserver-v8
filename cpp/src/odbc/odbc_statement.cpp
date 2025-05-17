@@ -1,15 +1,16 @@
-#include "odbc/odbc_statement.h"
+#include <platform.h>
+#include <odbc/odbc_statement.h>
 
 #include <cstring>  // For std::memcpy
 
-#include "common/odbc_common.h"
-#include "common/platform.h"
-#include "common/string_utils.h"
-#include "odbc/iodbc_api.h"
-#include "odbc/odbc_driver_types.h"
-#include "odbc/odbc_error_handler.h"
-#include "odbc/odbc_row.h"
-#include "utils/Logger.h"
+#include <common/odbc_common.h>
+
+#include <common/string_utils.h>
+#include <odbc/iodbc_api.h>
+#include <odbc/odbc_driver_types.h>
+#include <odbc/odbc_error_handler.h>
+#include <odbc/odbc_row.h>
+#include <utils/Logger.h>
 
 const int SQL_SERVER_MAX_STRING_SIZE = 8000;
 
