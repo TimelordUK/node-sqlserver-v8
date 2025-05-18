@@ -1,4 +1,5 @@
-import { expect } from 'chai'
+import { expect, assert } from 'chai'
+
 import { Connection } from '../../src'
 import * as nativeModule from '../../src/module-bridge'
 import { TestConnectionFactory } from '../common/test-connection-factory'
@@ -55,12 +56,20 @@ describe('params query', function () {
             },
             async function handler () {
                 const r = await theConnection.promises.submitReadAll(`SELECT bigint_test FROM ${tableName}`, [])
-                const expectedMeta = [{ name: 'bigint_test', size: 19, nullable: true, type: 'number', sqlType: 'bigint' }]
+                const expectedMeta = [
+                    {
+                        name: 'bigint_test',
+                        size: 19, nullable: true,
+                        type: 'number',
+                        sqlType: 'bigint'
+                    }
+                ]
                 const expected = [
                     [0x80000000]
                 ]
-                // assert.deepStrictEqual(expected, r.first)
-                // assert.deepStrictEqual(expectedMeta, r.meta[0])
+                const r0 = r.resultSets[0]
+                //assert.deepStrictEqual(expected, r0.rows)
+                //assert.deepStrictEqual(expectedMeta, r0.meta)
             })
     })
 })
