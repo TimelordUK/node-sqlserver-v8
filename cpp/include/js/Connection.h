@@ -38,6 +38,7 @@ class Connection : public Napi::ObjectWrap<Connection> {
   Napi::Value NextResultSet(const Napi::CallbackInfo& info);
   Napi::Value CancelStatement(const Napi::CallbackInfo& info);
   Napi::Value ReleaseStatement(const Napi::CallbackInfo& info);
+  Napi::Value CreateBcp(const Napi::CallbackInfo& info);
 
   // Internal state
   std::shared_ptr<IOdbcConnection> odbcConnection_;

@@ -508,7 +508,7 @@ namespace mssql
         return sqlType == SqlType::TinyInt || sqlType == SqlType::Bit;
       else if constexpr (std::is_same_v<T, int16_t>)
         return sqlType == SqlType::SmallInt;
-      else if constexpr (std::is_same_v<T, int32_t>)
+      else if constexpr (std::is_same_v<T, int32_t> || std::is_same_v<T, int>)
         return sqlType == SqlType::Integer;
       else if constexpr (std::is_same_v<T, uint32_t>)
         return sqlType == SqlType::UnsignedInt;

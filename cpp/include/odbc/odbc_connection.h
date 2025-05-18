@@ -125,6 +125,9 @@ class OdbcConnection : public IOdbcConnection {
 
   // Get connection errors
   const std::vector<std::shared_ptr<OdbcError>>& GetErrors() const override;
+  
+  // Get connection handles for BCP operations
+  std::shared_ptr<ConnectionHandles> GetConnectionHandles() const { return _connectionHandles; }
 
  private:
   // Connection state enum

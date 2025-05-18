@@ -25,6 +25,9 @@
 #include <odbc/odbc_environment.h>
 #include <odbc/odbc_error.h>
 #include <odbc/parameter_set.h>
+#include <odbc/connection_handles.h>
+#include <odbc/bcp_executor.h>
+#include <js/bcp_wrapper.h>
 
 namespace mssql {
 // Initialize static constructor reference
@@ -50,6 +53,7 @@ Napi::Object Connection::Init(Napi::Env env, Napi::Object exports) {
                       InstanceMethod("nextResultSet", &Connection::NextResultSet),
                       InstanceMethod("cancelStatement", &Connection::CancelStatement),
                       InstanceMethod("releaseStatement", &Connection::ReleaseStatement),
+                      InstanceMethod("createBcp", &Connection::CreateBcp),
                   });
 
   // Create persistent reference to constructor
@@ -396,6 +400,43 @@ Napi::Value Connection::ReleaseStatement(const Napi::CallbackInfo& info) {
   worker->Queue();
 
   return env.Undefined();
+}
+
+// Implement CreateBcp method
+Napi::Value Connection::CreateBcp(const Napi::CallbackInfo& info) {
+  const Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
+
+  // Check if we have a connection
+  if (!isConnected_) {
+    Napi::Error::New(env, "Connection is not open").ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  // Get the ODBC connection handle
+  auto odbcConn = std::static_pointer_cast<OdbcConnection>(odbcConnection_);
+  if (!odbcConn) {
+    Napi::Error::New(env, "Invalid connection type").ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  // Get connection handles
+  auto connectionHandles = odbcConn->GetConnectionHandles();
+  if (!connectionHandles) {
+    Napi::Error::New(env, "Failed to get connection handles").ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  // Create BCP executor using the HDBC handle
+  auto hdbc = connectionHandles->connectionHandle()->get_handle();
+  auto executor = createBcpExecutor(hdbc);
+  if (!executor) {
+    Napi::Error::New(env, "Failed to create BCP executor. BCP plugin may not be available.").ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  // Create and return JavaScript wrapper
+  return BcpWrapper::NewInstance(env, executor);
 }
 
 // Implement Query method

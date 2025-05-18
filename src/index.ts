@@ -26,6 +26,7 @@ import {
   TableValuedParameter,
   TableColumn
 } from './sql-parameter'
+import { Bcp, BcpOptions, BcpColumnBinding, BcpResult } from './bcp'
 
 // Load the native module
 const nativeModule = loadNativeModule()
@@ -42,6 +43,12 @@ function createConnection (): Connection {
 export {
   // Core classes
   Connection,
+  Bcp,
+  
+  // BCP types
+  type BcpOptions,
+  type BcpColumnBinding,
+  type BcpResult,
 
   // Parameter types
   SqlParameter,
@@ -87,6 +94,7 @@ export { LogLevel }
 // Default export for CommonJS compatibility
 export default {
   Connection,
+  Bcp,
   SqlParameter,
   StringParameter,
   IntegerParameter,

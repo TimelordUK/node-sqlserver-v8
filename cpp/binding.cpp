@@ -1,6 +1,7 @@
 #include <napi.h>
 #include "include/utils/Logger.h"
 #include "include/js/Connection.h"
+#include "include/js/bcp_wrapper.h"
 
 static Napi::Value SetLogLevel(const Napi::CallbackInfo &info)
 {
@@ -58,6 +59,8 @@ Napi::Object InitModule(Napi::Env env, Napi::Object exports)
 {
   // Initialize and export the Connection class
   mssql::Connection::Init(env, exports);
+  // Initialize and export the BcpWrapper class
+  mssql::BcpWrapper::Init(env, exports);
   exports.Set("setLogLevel", Napi::Function::New(env, SetLogLevel));
   exports.Set("enableConsoleLogging", Napi::Function::New(env, EnableConsoleLogging));
   exports.Set("setLogFile", Napi::Function::New(env, SetLogFile));
