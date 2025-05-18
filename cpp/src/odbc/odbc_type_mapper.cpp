@@ -4,6 +4,50 @@
 
 namespace mssql {
 
+/*
+Recommendation
+
+  For your use case, I'd recommend the unordered_map approach because:
+
+  1. It's simple to implement and maintain
+  2. Provides O(1) average case performance
+  3. The map is initialized once (static)
+  4. Easy to add new types
+  5. The memory overhead is negligible for ~150 entries
+
+  Here's the optimized version:
+
+  SQLSMALLINT OdbcTypeMapper::parseOdbcTypeString(const std::string& typeStr) {
+    if (typeStr.empty()) {
+      return SQL_UNKNOWN_TYPE;
+    }
+
+    // Initialize once, reuse for all calls
+    static const std::unordered_map<std::string, SQLSMALLINT> typeMap = []() {
+      std::unordered_map<std::string, SQLSMALLINT> map;
+      map.reserve(150); // Prevent rehashing
+
+      // C Types
+      map["SQL_C_CHAR"] = SQL_C_CHAR;
+      map["SQL_C_WCHAR"] = SQL_C_WCHAR;
+      // ... add all mappings
+
+      return map;
+    }();
+
+    std::string upperTypeStr;
+    upperTypeStr.reserve(typeStr.length());
+    std::transform(typeStr.begin(), typeStr.end(),
+                   std::back_inserter(upperTypeStr), ::toupper);
+
+    auto it = typeMap.find(upperTypeStr);
+    return (it != typeMap.end()) ? it->second : SQL_UNKNOWN_TYPE;
+  }
+
+  This should be significantly faster than the sequential if-statements, especially as the number of
+types grows.
+*/
+
 SQLSMALLINT OdbcTypeMapper::parseOdbcParamTypeString(const std::string& typeStr) {
   if (typeStr.empty()) {
     return SQL_UNKNOWN_TYPE;
@@ -43,6 +87,118 @@ SQLSMALLINT OdbcTypeMapper::parseOdbcTypeString(const std::string& typeStr) {
 
   std::string upperTypeStr = typeStr;
   std::transform(upperTypeStr.begin(), upperTypeStr.end(), upperTypeStr.begin(), ::toupper);
+
+  // Initialize once, reuse for all calls
+  static const std::unordered_map<std::string, SQLSMALLINT> typeMap = []() {
+    std::unordered_map<std::string, SQLSMALLINT> map;
+    map.reserve(150);  // Prevent rehashing
+
+    // C Types
+    map["SQL_C_CHAR"] = SQL_C_CHAR;
+    map["SQL_C_WCHAR"] = SQL_C_WCHAR;
+    map["SQL_C_BIT"] = SQL_C_BIT;
+    map["SQL_C_TINYINT"] = SQL_C_TINYINT;
+    map["SQL_C_STINYINT"] = SQL_C_STINYINT;
+    map["SQL_C_UTINYINT"] = SQL_C_UTINYINT;
+    map["SQL_C_SHORT"] = SQL_C_SHORT;
+    map["SQL_C_SSHORT"] = SQL_C_SSHORT;
+    map["SQL_C_USHORT"] = SQL_C_USHORT;
+    map["SQL_C_LONG"] = SQL_C_LONG;
+    map["SQL_C_SLONG"] = SQL_C_SLONG;
+    map["SQL_C_ULONG"] = SQL_C_ULONG;
+    map["SQL_C_FLOAT"] = SQL_C_FLOAT;
+    map["SQL_C_DOUBLE"] = SQL_C_DOUBLE;
+    map["SQL_C_NUMERIC"] = SQL_C_NUMERIC;
+    map["SQL_C_DATE"] = SQL_C_DATE;
+    map["SQL_C_TIME"] = SQL_C_TIME;
+    map["SQL_C_TIMESTAMP"] = SQL_C_TIMESTAMP;
+    map["SQL_C_TYPE_DATE"] = SQL_C_TYPE_DATE;
+    map["SQL_C_TYPE_TIME"] = SQL_C_TYPE_TIME;
+    map["SQL_C_TYPE_TIMESTAMP"] = SQL_C_TYPE_TIMESTAMP;
+    map["SQL_C_BINARY"] = SQL_C_BINARY;
+    map["SQL_C_BOOKMARK"] = SQL_C_BOOKMARK;
+    map["SQL_C_VARBOOKMARK"] = SQL_C_VARBOOKMARK;
+    map["SQL_C_DEFAULT"] = SQL_C_DEFAULT;
+    map["SQL_C_SBIGINT"] = SQL_C_SBIGINT;
+    map["SQL_C_UBIGINT"] = SQL_C_UBIGINT;
+    map["SQL_C_GUID"] = SQL_C_GUID;
+    map["SQL_C_INTERVAL_YEAR"] = SQL_C_INTERVAL_YEAR;
+    map["SQL_C_INTERVAL_MONTH"] = SQL_C_INTERVAL_MONTH;
+    map["SQL_C_INTERVAL_DAY"] = SQL_C_INTERVAL_DAY;
+    map["SQL_C_INTERVAL_HOUR"] = SQL_C_INTERVAL_HOUR;
+    map["SQL_C_INTERVAL_MINUTE"] = SQL_C_INTERVAL_MINUTE;
+    map["SQL_C_INTERVAL_SECOND"] = SQL_C_INTERVAL_SECOND;
+    map["SQL_C_INTERVAL_YEAR_TO_MONTH"] = SQL_C_INTERVAL_YEAR_TO_MONTH;
+    map["SQL_C_INTERVAL_DAY_TO_HOUR"] = SQL_C_INTERVAL_DAY_TO_HOUR;
+    map["SQL_C_INTERVAL_DAY_TO_MINUTE"] = SQL_C_INTERVAL_DAY_TO_MINUTE;
+    map["SQL_C_INTERVAL_DAY_TO_SECOND"] = SQL_C_INTERVAL_DAY_TO_SECOND;
+
+    map["SQL_CHAR"] = SQL_CHAR;
+    map["SQL_VARCHAR"] = SQL_VARCHAR;
+    map["SQL_LONGVARCHAR"] = SQL_LONGVARCHAR;
+    map["SQL_WCHAR"] = SQL_WCHAR;
+    map["SQL_WVARCHAR"] = SQL_WVARCHAR;
+    map["SQL_WLONGVARCHAR"] = SQL_WLONGVARCHAR;
+    map["SQL_DECIMAL"] = SQL_DECIMAL;
+    map["SQL_NUMERIC"] = SQL_NUMERIC;
+    map["SQL_SMALLINT"] = SQL_SMALLINT;
+    map["SQL_INTEGER"] = SQL_INTEGER;
+    map["SQL_REAL"] = SQL_REAL;
+    map["SQL_FLOAT"] = SQL_FLOAT;
+    map["SQL_DOUBLE"] = SQL_DOUBLE;
+    map["SQL_BIT"] = SQL_BIT;
+    map["SQL_TINYINT"] = SQL_TINYINT;
+    map["SQL_BIGINT"] = SQL_BIGINT;
+    map["SQL_BINARY"] = SQL_BINARY;
+    map["SQL_VARBINARY"] = SQL_VARBINARY;
+    map["SQL_LONGVARBINARY"] = SQL_LONGVARBINARY;
+    map["SQL_TYPE_DATE"] = SQL_TYPE_DATE;
+    map["SQL_TYPE_TIME"] = SQL_TYPE_TIME;
+    map["SQL_TYPE_TIMESTAMP"] = SQL_TYPE_TIMESTAMP;
+    map["SQL_GUID"] = SQL_GUID;
+    map["SQL_DATE"] = SQL_DATE;
+    map["SQL_TIME"] = SQL_TIME;
+    map["SQL_TIMESTAMP"] = SQL_TIMESTAMP;
+    map["SQL_INTERVAL_YEAR"] = SQL_INTERVAL_YEAR;
+    map["SQL_INTERVAL_MONTH"] = SQL_INTERVAL_MONTH;
+
+    map["CHAR"] = SQL_CHAR;
+    map["VARCHAR"] = SQL_VARCHAR;
+    map["TEXT"] = SQL_LONGVARCHAR;
+    map["NCHAR"] = SQL_WCHAR;
+    map["NVARCHAR"] = SQL_WVARCHAR;
+    map["NTEXT"] = SQL_WLONGVARCHAR;
+    map["DECIMAL"] = SQL_DECIMAL;
+    map["NUMERIC"] = SQL_NUMERIC;
+    map["SMALLINT"] = SQL_SMALLINT;
+    map["INTEGER"] = SQL_INTEGER;
+    map["REAL"] = SQL_REAL;
+    map["FLOAT"] = SQL_FLOAT;
+    map["DOUBLE"] = SQL_DOUBLE;
+    map["BIT"] = SQL_BIT;
+    map["TINYINT"] = SQL_TINYINT;
+    map["BIGINT"] = SQL_BIGINT;
+    map["BINARY"] = SQL_BINARY;
+    map["VARBINARY"] = SQL_VARBINARY;
+    map["DATE"] = SQL_TYPE_DATE;
+    map["TIME"] = SQL_TYPE_TIME;
+    map["TIMESTAMP"] = SQL_TYPE_TIMESTAMP;
+    map["DATETIME"] = SQL_TYPE_TIMESTAMP;
+    map["DATETIME2"] = SQL_TYPE_TIMESTAMP;
+    map["BOOLEAN"] = SQL_BIT;
+    map["INT"] = SQL_INTEGER;
+    map["STRING"] = SQL_VARCHAR;
+
+    map["JS_UNKNOWN"] = 0;
+    map["JS_NULL"] = 1;
+    map["JS_STRING"] = 2;
+    map["JS_BOOLEAN"] = 3;
+    map["JS_INT"] = 4;
+    map["JS_UINT"] = 5;
+    map["JS_NUMBER"] = 6;
+
+    return map;
+  }();
 
   // C Types (SQL_C_*)
   if (upperTypeStr == "SQL_C_CHAR")
