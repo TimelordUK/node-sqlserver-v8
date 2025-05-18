@@ -3,12 +3,8 @@ import { Connection } from '../../src'
 import { TestConnectionFactory } from '../common/test-connection-factory'
 import { QueryBuilder } from 'msnodesqlv8/src/query-builder'
 import { QueryReader } from '../../src/query-reader'
-import { logger, LogLevel } from '../../src/logger-facade'
+import { logger, createLogger, LogLevel } from '../../src/logger-facade'
 
-// Set logging options
-logger.configureDevelopment({
-  logLevel: LogLevel.DEBUG
-})
 
 describe('bind', function () {
   this.timeout(0)
@@ -16,6 +12,10 @@ describe('bind', function () {
   const factory = new TestConnectionFactory()
 
   beforeEach(async function () {
+    // Set logging options
+    logger.configureDevelopment({
+      logLevel: LogLevel.DEBUG
+    })
     // Create connection using the default connection string
     connection = await factory.createTestConnection()
   })

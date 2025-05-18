@@ -4,17 +4,17 @@ import { TestConnectionFactory } from '../common/test-connection-factory'
 
 import { logger, LogLevel } from '../../src/logger-facade'
 
-// Set logging options
-logger.configureDevelopment({
-  logLevel: LogLevel.DEBUG
-})
-
 describe('open', function () {
   this.timeout(0)
+
   let connection: Connection | null = null
   const factory = new TestConnectionFactory()
 
   beforeEach(async function () {
+    // Set logging options
+    logger.configureDevelopment({
+      logLevel: LogLevel.DEBUG
+    })
     // Create connection using the default connection string
     connection = await factory.createTestConnection()
   })

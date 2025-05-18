@@ -79,7 +79,8 @@
             "args": [
                 "./node_modules/mocha/bin/mocha.js",
               //  "test/napi/bind-table.test",
-              "test/napi/compound-query.test"
+              // "test/napi/compound-query.test"
+              "test/napi/params.test"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

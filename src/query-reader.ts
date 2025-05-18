@@ -58,7 +58,7 @@ export class QueryReader extends EventEmitter {
     })
 
     try {
-      let endOfRows = false
+      let endOfRows = this.result.meta.length === 0 || this.result.endOfRows
       while (!endOfRows) {
         const next = await this.connection.promises.fetchRows(handle, batchSize)
         if (!next) break

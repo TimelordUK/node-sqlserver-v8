@@ -6,10 +6,7 @@ import { QueryReader } from '../../src/query-reader'
 
 import { logger, LogLevel } from '../../src/logger-facade'
 
-// Set logging options
-logger.configureDevelopment({
-  logLevel: LogLevel.DEBUG
-})
+
 
 describe('compound query', function () {
   this.timeout(0)
@@ -17,6 +14,11 @@ describe('compound query', function () {
   const factory = new TestConnectionFactory()
 
   beforeEach(async function () {
+    // Set logging options
+    logger.configureDevelopment({
+      logLevel: LogLevel.INFO
+    })
+
     // Create connection using the default connection string
     connection = await factory.createTestConnection()
   })

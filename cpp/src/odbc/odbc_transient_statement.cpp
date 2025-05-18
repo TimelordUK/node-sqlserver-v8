@@ -80,6 +80,7 @@ bool TransientStatement::InitializeResultSet(std::shared_ptr<QueryResult>& resul
   if (numCols == 0) {
     hasMoreResults_ = false;
     endOfRows_ = true;
+    result->set_end_of_rows(true);
     state_ = State::STMT_NO_MORE_RESULTS;
     return true;
   }
