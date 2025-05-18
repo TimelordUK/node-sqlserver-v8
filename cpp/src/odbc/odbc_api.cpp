@@ -949,4 +949,95 @@ SQLRETURN RealOdbcApi::SQLColAttributeW(SQLHSTMT StatementHandle,
   return ret;
 }
 
+SQLRETURN RealOdbcApi::SQLGetStmtAttr(SQLHSTMT StatementHandle,
+                                      SQLINTEGER Attribute,
+                                      SQLPOINTER Value,
+                                      SQLINTEGER BufferLength,
+                                      SQLINTEGER* StringLength) {
+  // Convert attribute to readable string for logging
+  std::string attributeName;
+  switch (Attribute) {
+    case SQL_ATTR_APP_PARAM_DESC:
+      attributeName = "SQL_ATTR_APP_PARAM_DESC";
+      break;
+    case SQL_ATTR_APP_ROW_DESC:
+      attributeName = "SQL_ATTR_APP_ROW_DESC";
+      break;
+    case SQL_ATTR_IMP_PARAM_DESC:
+      attributeName = "SQL_ATTR_IMP_PARAM_DESC";
+      break;
+    case SQL_ATTR_IMP_ROW_DESC:
+      attributeName = "SQL_ATTR_IMP_ROW_DESC";
+      break;
+    case SQL_ATTR_ROWS_FETCHED_PTR:
+      attributeName = "SQL_ATTR_ROWS_FETCHED_PTR";
+      break;
+    case SQL_ATTR_ROW_ARRAY_SIZE:
+      attributeName = "SQL_ATTR_ROW_ARRAY_SIZE";
+      break;
+    default:
+      attributeName = "Unknown(" + std::to_string(Attribute) + ")";
+  }
+
+  SQL_LOG_TRACE_STREAM("SQLGetStmtAttr called - Handle: "
+                       << StatementHandle << ", Attribute: " << attributeName
+                       << ", BufferLength: " << BufferLength);
+
+  SQLRETURN ret = ::SQLGetStmtAttr(StatementHandle, Attribute, Value, BufferLength, StringLength);
+  SQL_LOG_TRACE_STREAM("SQLGetStmtAttr returned: " << GetSqlReturnCodeString(ret));
+
+  if (!SQL_SUCCEEDED(ret)) {
+    LogOdbcError(SQL_HANDLE_STMT, StatementHandle, "SQLGetStmtAttr failed");
+  }
+
+  return ret;
+}
+
+SQLRETURN RealOdbcApi::SQLSetDescField(SQLHDESC DescriptorHandle,
+                                       SQLSMALLINT RecNumber,
+                                       SQLSMALLINT FieldIdentifier,
+                                       SQLPOINTER Value,
+                                       SQLINTEGER BufferLength) {
+  // Convert field identifier to readable string for logging
+  std::string fieldIdStr;
+  switch (FieldIdentifier) {
+    case SQL_DESC_TYPE:
+      fieldIdStr = "SQL_DESC_TYPE";
+      break;
+    case SQL_DESC_LENGTH:
+      fieldIdStr = "SQL_DESC_LENGTH";
+      break;
+    case SQL_DESC_PRECISION:
+      fieldIdStr = "SQL_DESC_PRECISION";
+      break;
+    case SQL_DESC_SCALE:
+      fieldIdStr = "SQL_DESC_SCALE";
+      break;
+    case SQL_DESC_DATA_PTR:
+      fieldIdStr = "SQL_DESC_DATA_PTR";
+      break;
+    case SQL_DESC_OCTET_LENGTH_PTR:
+      fieldIdStr = "SQL_DESC_OCTET_LENGTH_PTR";
+      break;
+    case SQL_DESC_INDICATOR_PTR:
+      fieldIdStr = "SQL_DESC_INDICATOR_PTR";
+      break;
+    default:
+      fieldIdStr = "Unknown(" + std::to_string(FieldIdentifier) + ")";
+  }
+
+  SQL_LOG_TRACE_STREAM("SQLSetDescField called - Handle: "
+                       << DescriptorHandle << ", RecNumber: " << RecNumber
+                       << ", FieldIdentifier: " << fieldIdStr << ", BufferLength: " << BufferLength);
+
+  SQLRETURN ret = ::SQLSetDescField(DescriptorHandle, RecNumber, FieldIdentifier, Value, BufferLength);
+  SQL_LOG_TRACE_STREAM("SQLSetDescField returned: " << GetSqlReturnCodeString(ret));
+
+  if (!SQL_SUCCEEDED(ret)) {
+    LogOdbcError(SQL_HANDLE_DESC, DescriptorHandle, "SQLSetDescField failed");
+  }
+
+  return ret;
+}
+
 }  // namespace mssql

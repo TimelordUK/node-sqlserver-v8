@@ -214,10 +214,12 @@ struct SqlParameter {
   std::string sql_type;
   std::string js_type;
   std::string c_type;
+  std::string param_type;
   int32_t precision;
   int32_t scale;
   int32_t param_size;
   int32_t buffer_len;
+  int32_t digits;
   std::string encoding;
   // Add this new member
   std::shared_ptr<mssql::DatumStorage> storage;
@@ -273,6 +275,7 @@ inline std::ostream& operator<<(std::ostream& os, const SqlParameter& param) {
   os << "SqlParameter {\n"
      << "  type: " << param.type << ",\n"
      << "  element_type: " << param.element_type << ",\n"
+     << "  param_type: " << param.param_type << ",\n"
      << "  sql_type: " << param.sql_type << ",\n"
      << "  js_type: " << param.js_type << ",\n"
      << "  c_type: " << param.c_type << ",\n"
@@ -280,6 +283,7 @@ inline std::ostream& operator<<(std::ostream& os, const SqlParameter& param) {
      << "  scale: " << param.scale << ",\n"
      << "  param_size: " << param.param_size << ",\n"
      << "  buffer_len: " << param.buffer_len << ",\n"
+     << "  digits: " << param.digits << ",\n"
      << "  encoding: " << param.encoding << "\n"
      << "  // value field omitted as it's a variant type\n"
      << "}";

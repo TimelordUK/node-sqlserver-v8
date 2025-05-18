@@ -208,6 +208,8 @@ std::shared_ptr<SqlParameter> JsObjectMapper::toSqlParameter(const Napi::Object&
   result->param_size = safeGetInt32(jsObject, "paramSize");
   result->buffer_len = safeGetInt32(jsObject, "bufferLen");
   result->encoding = safeGetString(jsObject, "encoding", "utf8");
+  result->param_type = safeGetString(jsObject, "paramType", "SQL_PARAM_INPUT");
+  result->digits = safeGetInt32(jsObject, "digits");
   decodeIntoStorage(jsObject, *result);
 
   return result;

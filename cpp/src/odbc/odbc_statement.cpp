@@ -1279,6 +1279,49 @@ bool OdbcStatement::get_data_timestamp(const size_t row_id, const size_t column)
   return true;
 }
 
+bool OdbcStatement::apply_precision(const std::shared_ptr<SqlParameter>& datum,
+                                    const int current_param) {
+  /* Modify the fields in the implicit application parameter descriptor */
+  SQLHDESC hdesc = nullptr;
+  const auto c_type = OdbcTypeMapper::parseOdbcTypeString(datum->c_type);
+  const SQLINTEGER bufferLength = 0;
+  auto statement = statement_->get_handle();
+  auto r = odbcApi_->SQLGetStmtAttr(statement, SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, nullptr);
+  if (!check_odbc_error(r)) {
+    return false;
+  }
+  r = odbcApi_->SQLSetDescField(
+      hdesc, current_param, SQL_DESC_TYPE, reinterpret_cast<SQLPOINTER>(c_type), bufferLength);
+  if (!check_odbc_error(r)) {
+    return false;
+  }
+  r = odbcApi_->SQLSetDescField(hdesc,
+                      current_param,
+                      SQL_DESC_PRECISION,
+                      reinterpret_cast<SQLPOINTER>(datum->param_size),
+                      bufferLength);
+  if (!check_odbc_error(r)) {
+    return false;
+  }
+  r = odbcApi_->SQLSetDescField(hdesc,
+                      current_param,
+                      SQL_DESC_SCALE,
+                      reinterpret_cast<SQLPOINTER>(datum->digits),
+                      bufferLength);
+  if (!check_odbc_error(r)) {
+    return false;
+  }
+  r = odbcApi_->SQLSetDescField(hdesc,
+                      current_param,
+                      SQL_DESC_DATA_PTR,
+                      static_cast<SQLPOINTER>(datum->storage->getStorage()->data()),
+                      bufferLength);
+  if (!check_odbc_error(r)) {
+    return false;
+  }
+  return true;
+}
+
 bool OdbcStatement::bind_parameters(const std::vector<std::shared_ptr<SqlParameter>>& parameters) {
   SQL_LOG_TRACE_STREAM("bind_parameters: " << parameters.size());
   auto current_param = 1;
@@ -1287,8 +1330,8 @@ bool OdbcStatement::bind_parameters(const std::vector<std::shared_ptr<SqlParamet
     const auto storage = datum->storage;
     const auto c_type = OdbcTypeMapper::parseOdbcTypeString(datum->c_type);
     const auto sql_type = OdbcTypeMapper::parseOdbcTypeString(datum->sql_type);
-    const auto param_type = SQL_PARAM_INPUT;  // parseOdbcParamTypeString(datum->param_type);
-    SQL_LOG_TRACE_STREAM("Binding parameter " << datum);
+    const auto param_type = OdbcTypeMapper::parseOdbcParamTypeString(datum->param_type);
+    SQL_LOG_DEBUG_STREAM("Binding parameter " << *datum);
     auto ret = odbcApi_->SQLBindParameter(statement,
                                           static_cast<SQLUSMALLINT>(current_param),
                                           param_type,
