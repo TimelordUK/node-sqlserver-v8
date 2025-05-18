@@ -3,16 +3,15 @@
 #include <mutex>
 #include <string>
 #include <vector>
-
+#include "odbc_driver_types.h"
 namespace mssql {
-class QueryParameter;
 
 /**
  * @brief Collection of parameters for a query
  */
 class ParameterSet {
  public:
-  typedef std::vector<std::shared_ptr<QueryParameter>> qp_vec_t;
+  typedef std::vector<std::shared_ptr<SqlParameter>> qp_vec_t;
 
   /**
    * @brief Default constructor
@@ -23,7 +22,7 @@ class ParameterSet {
    * @brief Add a parameter to the set
    * @param qp Parameter to add
    */
-  void add(std::shared_ptr<QueryParameter> qp);
+  void add(std::shared_ptr<SqlParameter> qp);
 
   /**
    * @brief Get all parameters

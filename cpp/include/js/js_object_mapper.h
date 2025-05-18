@@ -13,6 +13,7 @@ class JsObjectMapper {
   // Main mapping methods
   static ProcedureParamMeta toProcedureParamMeta(const Napi::Object& jsObject);
   static NativeParam toNativeParam(const Napi::Object& jsObject);
+  static std::shared_ptr<SqlParameter> toSqlParameter(const Napi::Object& jsObject);
   static StatementHandle toStatementHandle(const Napi::Object& jsObject);
   // static UserDefinedType toUserDefinedType(const Napi::Object &jsObject);
   // static DatabaseConnection toDatabaseConnection(const Napi::Object &jsObject);
@@ -25,6 +26,7 @@ class JsObjectMapper {
   // Reverse mapping (C++ to JS)
   static Napi::Object fromProcedureParamMeta(const Napi::Env& env, const ProcedureParamMeta& param);
   static Napi::Object fromNativeParam(const Napi::Env& env, const NativeParam& param);
+  static Napi::Object fromSqlParameter(const Napi::Env& env, const SqlParameter& param);
   static Napi::Object fromNativeQueryResult(const Napi::Env& env,
                                             const std::shared_ptr<QueryResult> queryResult);
 
@@ -120,5 +122,7 @@ class JsObjectMapper {
                                 Napi::Object& jsRow,
                                 const std::string& colName,
                                 const DatumStorage& column);
+
+  static void decodeIntoStorage(const Napi::Object& jsObject, SqlParameter& param);
 };
 }  // namespace mssql

@@ -410,18 +410,8 @@ export class IntegerParameter extends SqlParameter {
     if (options.sqlType) {
       this.sqlType = options.sqlType
       this.precision = options.precision ?? 8 // Default to largest size if custom type
-    } else if (this.value >= -128 && this.value <= 127) {
-      this.sqlType = 'SQL_TINYINT'
-      this.precision = 1
-    } else if (this.value >= -32768 && this.value <= 32767) {
-      this.sqlType = 'SQL_SMALLINT'
-      this.precision = 2
-    } else if (this.value >= -2147483648 && this.value <= 2147483647) {
-      this.sqlType = 'SQL_INTEGER'
-      this.precision = 4
     } else {
-      this.sqlType = 'SQL_BIGINT'
-      this.precision = 8
+      [this.sqlType, this.precision] = IntegerParameter.GetTypePrecision(value)
     }
 
     // Override with provided precision if available
@@ -431,6 +421,26 @@ export class IntegerParameter extends SqlParameter {
 
     this.paramSize = options.paramSize ?? this.precision
     this.bufferLen = options.bufferLen ?? this.precision
+  }
+
+  static GetTypePrecision (value: number): [string, number] {
+    let sqlType: string
+    let precision: number = 8
+    if (value >= -128 && value <= 127) {
+      sqlType = 'SQL_TINYINT'
+      precision = 1
+    } else if (value >= -32768 && value <= 32767) {
+      sqlType = 'SQL_SMALLINT'
+      precision = 2
+    } else if (value >= -2147483648 && value <= 2147483647) {
+      sqlType = 'SQL_INTEGER'
+      precision = 4
+    } else {
+      sqlType = 'SQL_BIGINT'
+      precision = 8
+    }
+
+    return [sqlType, precision]
   }
 }
 
@@ -621,9 +631,21 @@ export class IntegerArrayParameter extends ArrayParameter {
     // Implementation similar to StringArrayParameter
     // For this example, adding a placeholder implementation
 
-    this.cType = 'SQL_C_SBIGINT'
+    let maxType: string = 'SQL_SMALLINT'
+    let maxPrecision: number = 2
+    for (let i = 0; i < array.length; i++) {
+      if (array[i]) {
+        const [type, precision] = IntegerParameter.GetTypePrecision(Number(array[i]))
+        if (precision > maxPrecision) {
+          maxPrecision = precision
+          maxType = type
+        }
+      }
+    }
+
+    this.cType = maxType
     this.sqlType = 'SQL_BIGINT'
-    this.precision = 8 // Size of bigint
+    this.precision = maxPrecision
     this.paramSize = this.precision
     this.bufferLen = this.precision
   }

@@ -4,12 +4,14 @@ import {
   NativeConnection,
   OpenConnectionCallback,
   QueryResult,
-  QueryUserCallback, StatementHandle
+  QueryUserCallback,
+  StatementHandle
 } from './native-module'
 import { EventEmitter } from 'events'
 import { AsyncQueue, QueueTask } from './async-queue'
 import { ClassLogger } from './class-logger'
 import { AggregatedResult, QueryAggregator } from './query-aggregator'
+import { SqlParameter } from './sql-parameter'
 
 /**
  * Wrapper for the native Connection class that enforces operation queuing
@@ -50,7 +52,8 @@ class ConnectionPromises {
 
   async submitReadAll (sql: string, params?: any[]): Promise<AggregatedResult> {
     return new Promise<AggregatedResult>((resolve, reject) => {
-      this.connection.query(sql, params, async (err, result) => {
+      const sqlParams = params ? params.map(p => SqlParameter.fromValue(p)) : undefined
+      this.connection.query(sql, sqlParams, async (err, result) => {
         if (err) reject(err)
         else {
           const qa = new QueryAggregator(this.connection, result!)
@@ -211,7 +214,7 @@ export class Connection extends EventEmitter {
    */
   query (
     sql: string,
-    paramsOrCallback?: any[] | QueryUserCallback,
+    paramsOrCallback?: SqlParameter[] | QueryUserCallback,
     callback?: QueryUserCallback
   ): any {
     // Parse parameters

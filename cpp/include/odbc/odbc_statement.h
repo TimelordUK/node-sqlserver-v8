@@ -51,7 +51,7 @@ class IOdbcStatement {
   /**
    * @brief Execute the statement with given parameters
    */
-  virtual bool Execute(const std::vector<std::shared_ptr<QueryParameter>>& parameters,
+  virtual bool Execute(const std::vector<std::shared_ptr<SqlParameter>>& parameters,
                        std::shared_ptr<QueryResult>& result) = 0;
 
   /**
@@ -112,7 +112,7 @@ class OdbcStatement : public IOdbcStatement {
   /**
    * @brief Execute the statement with given parameters
    */
-  virtual bool Execute(const std::vector<std::shared_ptr<QueryParameter>>& parameters,
+  virtual bool Execute(const std::vector<std::shared_ptr<SqlParameter>>& parameters,
                        std::shared_ptr<QueryResult>& result) override = 0;
 
   /**
@@ -245,7 +245,7 @@ class TransientStatement : public OdbcStatement {
       : OdbcStatement(Type::Transient, statement, errorHandler, odbcApi, handle), query_(query) {}
 
   // Core operations only
-  bool Execute(const std::vector<std::shared_ptr<QueryParameter>>& parameters,
+  bool Execute(const std::vector<std::shared_ptr<SqlParameter>>& parameters,
                std::shared_ptr<QueryResult>& result) override;
 
   bool ReadNextResult(std::shared_ptr<QueryResult> result) override;
@@ -270,7 +270,7 @@ class PreparedStatement : public OdbcStatement {
                     StatementHandle handle)
       : OdbcStatement(Type::Prepared, statement, errorHandler, odbcApi, handle), query_(query) {}
 
-  bool Execute(const std::vector<std::shared_ptr<QueryParameter>>& parameters,
+  bool Execute(const std::vector<std::shared_ptr<SqlParameter>>& parameters,
                std::shared_ptr<QueryResult>& result) override;
 
   /**
@@ -298,7 +298,7 @@ class TvpStatement : public OdbcStatement {
         query_(query),
         tvpType_(tvpType) {}
 
-  bool Execute(const std::vector<std::shared_ptr<QueryParameter>>& parameters,
+  bool Execute(const std::vector<std::shared_ptr<SqlParameter>>& parameters,
                std::shared_ptr<QueryResult>& result) override;
 
   /**

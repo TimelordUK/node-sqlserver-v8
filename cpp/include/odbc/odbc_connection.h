@@ -60,13 +60,13 @@ class IOdbcConnection {
   virtual std::shared_ptr<IOdbcStatement> GetStatement(int statementId) const = 0;
 
   virtual bool ReleasePreparedStatement(const std::string& statementId) = 0;
-  
+
   // Remove a statement and free its resources
   virtual bool RemoveStatement(int statementId) = 0;
 
   // Legacy ExecuteQuery for backward compatibility
   virtual bool ExecuteQuery(const std::u16string& sqlText,
-                            const std::vector<std::shared_ptr<QueryParameter>>& parameters,
+                            const std::vector<std::shared_ptr<SqlParameter>>& parameters,
                             std::shared_ptr<QueryResult>& result) = 0;
 
   virtual const std::vector<std::shared_ptr<OdbcError>>& GetErrors() const = 0;
@@ -112,13 +112,13 @@ class OdbcConnection : public IOdbcConnection {
   std::shared_ptr<IOdbcStatement> GetStatement(const StatementHandle& handle) override;
 
   bool ReleasePreparedStatement(const std::string& statementId) override;
-  
+
   bool RemoveStatement(int statementId) override;
   bool RemoveStatement(const std::shared_ptr<OdbcStatement>& statement);
 
   // Legacy ExecuteQuery implementation
   bool ExecuteQuery(const std::u16string& sqlText,
-                    const std::vector<std::shared_ptr<QueryParameter>>& parameters,
+                    const std::vector<std::shared_ptr<SqlParameter>>& parameters,
                     std::shared_ptr<QueryResult>& result) override;
 
   bool TryReadNextResult(int statementId, std::shared_ptr<QueryResult>& result) override;

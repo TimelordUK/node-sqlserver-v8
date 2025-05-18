@@ -134,6 +134,56 @@ NativeParam JsObjectMapper::toNativeParam(const Napi::Object& jsObject) {
   return result;
 }
 
+// Helper function to decode SqlParamValue into DatumStorage
+void JsObjectMapper::decodeIntoStorage(const Napi::Object& jsObject, SqlParameter& param) {
+  // Create storage if it doesn't exist
+  if (!param.storage) {
+    param.storage = std::make_shared<mssql::DatumStorage>();
+  }
+
+  // Set the appropriate SQL type in the DatumStorage
+  DatumStorage::SqlType storageType = DatumStorage::getTypeFromName(param.sql_type);
+  param.storage->setType(storageType);
+
+  switch (storageType) {
+    case DatumStorage::SqlType::TinyInt: {
+      const int32_t v = safeGetInt32(jsObject, "value");
+      param.storage->addValue<int8_t>(static_cast<int8_t>(v));
+    } break;
+    case DatumStorage::SqlType::SmallInt: {
+      const int32_t v = safeGetInt32(jsObject, "value");
+      param.storage->addValue<int16_t>(static_cast<int16_t>(v));
+    } break;
+    case DatumStorage::SqlType::Integer: {
+      const int32_t v = safeGetInt32(jsObject, "value");
+      param.storage->addValue<int32_t>(v);
+    } break;
+    case DatumStorage::SqlType::BigInt: {
+      const int64_t v = safeGetInt64(jsObject, "value");
+      param.storage->addValue<int64_t>(v);
+    } break;
+    default:
+      throw std::runtime_error("Unsupported SQL type");
+  }
+}
+
+std::shared_ptr<SqlParameter> JsObjectMapper::toSqlParameter(const Napi::Object& jsObject) {
+  std::shared_ptr<SqlParameter> result = std::make_shared<SqlParameter>();
+
+  result->type = safeGetString(jsObject, "type");
+  result->sql_type = safeGetString(jsObject, "sqlType");
+  result->js_type = safeGetString(jsObject, "jsType");
+  result->c_type = safeGetString(jsObject, "cType");
+  result->precision = safeGetInt32(jsObject, "precision");
+  result->scale = safeGetInt32(jsObject, "scale");
+  result->param_size = safeGetInt32(jsObject, "paramSize");
+  result->buffer_len = safeGetInt32(jsObject, "bufferLen");
+  result->encoding = safeGetString(jsObject, "encoding", "utf8");
+  decodeIntoStorage(jsObject, *result);
+
+  return result;
+}
+
 Napi::Object JsObjectMapper::fromProcedureParamMeta(const Napi::Env& env,
                                                     const ProcedureParamMeta& param) {
   Napi::Object result = Napi::Object::New(env);
@@ -260,6 +310,29 @@ Napi::Object JsObjectMapper::fromNativeParam(const Napi::Env& env, const NativeP
   result.Set("is_output", Napi::Boolean::New(env, param.is_output));
   result.Set("name", Napi::String::New(env, param.name));
   result.Set("value", fromSqlParamValue(env, param.value));
+
+  return result;
+}
+
+Napi::Object JsObjectMapper::fromSqlParameter(const Napi::Env& env, const SqlParameter& param) {
+  Napi::Object result = Napi::Object::New(env);
+
+  result.Set("type", Napi::String::New(env, param.type));
+  result.Set("sqlType", Napi::String::New(env, param.sql_type));
+  result.Set("jsType", Napi::String::New(env, param.js_type));
+  result.Set("cType", Napi::String::New(env, param.c_type));
+  result.Set("precision", Napi::Number::New(env, param.precision));
+  result.Set("scale", Napi::Number::New(env, param.scale));
+  // Handle param_size which could be string
+  if (param.param_size == 0) {
+    // Could be SQL_VARLEN_DATA or similar
+    result.Set("paramSize", Napi::String::New(env, "SQL_VARLEN_DATA"));
+  } else {
+    result.Set("paramSize", Napi::Number::New(env, param.param_size));
+  }
+  result.Set("bufferLen", Napi::Number::New(env, param.buffer_len));
+  result.Set("encoding", Napi::String::New(env, param.encoding));
+  // result.Set("value", fromSqlParamValue(env, param.value));
 
   return result;
 }

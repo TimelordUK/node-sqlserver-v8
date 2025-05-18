@@ -23,7 +23,7 @@ bool TvpStatement::BindTvpColumns(const std::vector<std::string>& columnNames) {
   return true;
 }
 
-bool TvpStatement::Execute(const std::vector<std::shared_ptr<QueryParameter>>& parameters,
+bool TvpStatement::Execute(const std::vector<std::shared_ptr<SqlParameter>>& parameters,
                            std::shared_ptr<QueryResult>& result) {
   SQL_LOG_TRACE_STREAM("TvpStatement::Execute - Starting execution with " << parameters.size()
                                                                           << " parameters");

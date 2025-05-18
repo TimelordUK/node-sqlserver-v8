@@ -48,7 +48,7 @@ bool PreparedStatement::Prepare() {
   return true;
 }
 
-bool PreparedStatement::Execute(const std::vector<std::shared_ptr<QueryParameter>>& parameters,
+bool PreparedStatement::Execute(const std::vector<std::shared_ptr<SqlParameter>>& parameters,
                                 std::shared_ptr<QueryResult>& result) {
   SQL_LOG_TRACE_STREAM("PreparedStatement::Execute - Executing prepared statement with "
                        << parameters.size() << " parameters");
@@ -66,13 +66,13 @@ bool PreparedStatement::Execute(const std::vector<std::shared_ptr<QueryParameter
 
   // Bind parameters
   for (const auto& param : parameters) {
-    SQL_LOG_TRACE_STREAM("Binding parameter " << param->getIndex());
-    auto ret = param->bind(statement_->get_handle(), odbcApi_);
-    if (!errorHandler_->CheckOdbcError(ret)) {
-      SQL_LOG_ERROR_STREAM("Failed to bind parameter " << param->getIndex());
-      state_ = State::STMT_ERROR;
-      return false;
-    }
+    SQL_LOG_TRACE_STREAM("Binding parameter " << *param);
+    // auto ret = param->bind(statement_->get_handle(), odbcApi_);
+    // if (!errorHandler_->CheckOdbcError(ret)) {
+    //   SQL_LOG_ERROR_STREAM("Failed to bind parameter " << *param);
+    //   state_ = State::STMT_ERROR;
+    //   return false;
+    // }
   }
 
   // Execute the statement

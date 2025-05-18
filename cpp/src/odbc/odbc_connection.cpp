@@ -271,7 +271,7 @@ bool OdbcConnection::RemoveStatement(int statementId) {
 }
 
 bool OdbcConnection::ExecuteQuery(const std::u16string& sqlText,
-                                  const std::vector<std::shared_ptr<QueryParameter>>& parameters,
+                                  const std::vector<std::shared_ptr<SqlParameter>>& parameters,
                                   std::shared_ptr<QueryResult>& result) {
   // Create a transient statement
   auto statement = CreateStatement(OdbcStatement::Type::Transient, sqlText);

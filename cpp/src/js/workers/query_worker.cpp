@@ -22,6 +22,15 @@ QueryWorker::QueryWorker(Napi::Function& callback,
   parameters_ = std::make_shared<ParameterSet>();
   // ParameterFactory::populateParameterSet(params, parameters_);
 
+  for (uint32_t i = 0; i < length; i++) {
+    Napi::Value param = params[i];
+    if (param.IsObject()) {
+      const Napi::Object jsParam = param.As<Napi::Object>();
+      const std::shared_ptr<SqlParameter> sqlParam = JsObjectMapper::toSqlParameter(jsParam);
+      parameters_->add(sqlParam);
+    }
+  }
+
   result_ = std::make_shared<QueryResult>();
 }
 

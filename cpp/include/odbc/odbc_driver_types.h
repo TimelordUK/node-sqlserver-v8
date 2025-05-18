@@ -10,6 +10,7 @@
 #include "common/odbc_common.h"
 #include "common/platform.h"
 #include "common/string_utils.h"
+#include "core/datum_storage.h"
 
 // Common ODBC utility functions and constants
 namespace mssql {
@@ -207,6 +208,29 @@ struct NativeParam {
   SqlParamValue value;
 };
 
+struct SqlParameter {
+  std::string type;
+  std::string element_type;
+  std::string sql_type;
+  std::string js_type;
+  std::string c_type;
+  int32_t precision;
+  int32_t scale;
+  int32_t param_size;
+  int32_t buffer_len;
+  std::string encoding;
+  // Add this new member
+  std::shared_ptr<mssql::DatumStorage> storage;
+
+  // Constructor with storage initialization
+  SqlParameter()
+      : precision(0),
+        scale(0),
+        param_size(0),
+        buffer_len(0),
+        storage(std::make_shared<mssql::DatumStorage>()) {}
+};
+
 inline std::ostream& operator<<(std::ostream& os, const ProcedureParamMeta& param) {
   os << "ProcedureParamMeta {\n"
      << "  proc_name: " << param.proc_name << ",\n"
@@ -239,6 +263,23 @@ inline std::ostream& operator<<(std::ostream& os, const NativeParam& param) {
      << "  precision: " << param.precision << ",\n"
      << "  is_output: " << (param.is_output ? "true" : "false") << ",\n"
      << "  name: " << param.name << "\n"
+     << "  // value field omitted as it's a variant type\n"
+     << "}";
+  return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const SqlParameter& param) {
+  os << "SqlParameter {\n"
+     << "  type: " << param.type << ",\n"
+     << "  element_type: " << param.element_type << ",\n"
+     << "  sql_type: " << param.sql_type << ",\n"
+     << "  js_type: " << param.js_type << ",\n"
+     << "  c_type: " << param.c_type << ",\n"
+     << "  precision: " << param.precision << ",\n"
+     << "  scale: " << param.scale << ",\n"
+     << "  param_size: " << param.param_size << ",\n"
+     << "  buffer_len: " << param.buffer_len << ",\n"
+     << "  encoding: " << param.encoding << "\n"
      << "  // value field omitted as it's a variant type\n"
      << "}";
   return os;
