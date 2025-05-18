@@ -30,6 +30,12 @@ bool TransientStatement::Execute(const std::vector<std::shared_ptr<SqlParameter>
       StringUtils::SafeWideToUtf8ForLogging(reinterpret_cast<SQLWCHAR*>(wideQuery->data()));
   SQL_LOG_TRACE_STREAM("Query for execution: " << queryForLog);
 
+  if (!bind_parameters(parameters)) {
+    SQL_LOG_ERROR_STREAM("Failed to bind parameters");
+    state_ = State::STMT_ERROR;
+    return false;
+  }
+
   // Execute directly using SQL_NTS to indicate null-terminated string
   SQL_LOG_TRACE_STREAM(
       "Executing SQLExecDirectW on statement handle: " << statement_->get_handle());

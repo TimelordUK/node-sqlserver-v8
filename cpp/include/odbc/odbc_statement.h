@@ -214,6 +214,7 @@ class OdbcStatement : public IOdbcStatement {
   bool get_data_timestamp_offset(const size_t row_id, const size_t column);
   bool d_time(const size_t row_id, const size_t column);
   bool get_data_timestamp(const size_t row_id, const size_t column);
+  bool bind_parameters(const std::vector<std::shared_ptr<SqlParameter>>& parameters);
 
   Type type_;
   std::shared_ptr<IOdbcStatementHandle> statement_;

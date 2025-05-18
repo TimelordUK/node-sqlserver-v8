@@ -221,6 +221,7 @@ struct SqlParameter {
   std::string encoding;
   // Add this new member
   std::shared_ptr<mssql::DatumStorage> storage;
+  std::vector<SQLLEN> indvec;
 
   // Constructor with storage initialization
   SqlParameter()
