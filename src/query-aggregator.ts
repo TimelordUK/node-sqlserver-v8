@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
 import { Connection } from './connection'
 import { QueryResult, OdbcRow, StatementHandle } from './native-module'
-import { QueryOptions, QueryReader } from './query-reader'
+import { QueryReaderOptions, QueryReader } from './query-reader'
 import logger from './logger'
 
 export interface AggregatedResult {
@@ -28,7 +28,7 @@ export class QueryAggregator extends EventEmitter {
   constructor (
     public readonly connection: Connection,
     initialResult: QueryResult,
-    public readonly options?: QueryOptions
+    public readonly options?: QueryReaderOptions
   ) {
     super()
     this.currentResult = initialResult
@@ -53,7 +53,7 @@ export class QueryAggregator extends EventEmitter {
 
         // Check if there are more result sets
         if (!this.currentResult.endOfResults) {
-          const nextResult = await this.connection.promises.nextResultSet(this.statementHandle, 50)
+          const nextResult = await this.connection.promises.nextResultSet(this.statementHandle)
 
           if (nextResult && !nextResult.endOfResults) {
             this.currentResult = nextResult

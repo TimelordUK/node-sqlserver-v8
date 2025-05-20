@@ -298,12 +298,6 @@ Napi::Value Connection::NextResultSet(const Napi::CallbackInfo& info) {
   // Check for callback (last argument)
   Napi::Function callback;
 
-  // Get the number of rows to fetch (optional, default to 1000)
-  size_t rowCount = 1000;
-  if (info.Length() > 1 && info[1].IsNumber()) {
-    rowCount = info[1].As<Napi::Number>().Uint32Value();
-  }
-
   if (info.Length() > 1 && info[info.Length() - 1].IsFunction()) {
     callback = info[info.Length() - 1].As<Napi::Function>();
   } else {
@@ -323,7 +317,7 @@ Napi::Value Connection::NextResultSet(const Napi::CallbackInfo& info) {
     });
 
     // Create and queue the worker
-    auto worker = new NextResultWorker(callback, odbcConnection_.get(), statementHandle, rowCount);
+    auto worker = new NextResultWorker(callback, odbcConnection_.get(), statementHandle);
     worker->Queue();
 
     // Return the promise
@@ -331,7 +325,7 @@ Napi::Value Connection::NextResultSet(const Napi::CallbackInfo& info) {
   }
 
   // If we got here, we're using a callback
-  auto worker = new NextResultWorker(callback, odbcConnection_.get(), statementHandle, rowCount);
+  auto worker = new NextResultWorker(callback, odbcConnection_.get(), statementHandle);
   worker->Queue();
 
   return env.Undefined();

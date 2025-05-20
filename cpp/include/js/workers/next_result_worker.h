@@ -8,8 +8,7 @@ class NextResultWorker : public OdbcAsyncWorker {
  public:
   NextResultWorker(Napi::Function& callback,
                    IOdbcConnection* connection,
-                   const StatementHandle& statementHandle,
-                   size_t rowCount);
+                   const StatementHandle& statementHandle);
 
   void Execute() override;
   void OnOK() override;
@@ -20,6 +19,5 @@ class NextResultWorker : public OdbcAsyncWorker {
 
  private:
   StatementHandle statementHandle_;
-  size_t rowCount_;
 };
 }  // namespace mssql

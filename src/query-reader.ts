@@ -2,14 +2,14 @@
 import { EventEmitter } from 'events'
 import { Connection } from './connection'
 import logger from './logger'
-import { QueryResult, OdbcRow } from './native-module'
+import { QueryResult, OdbcRow, QueryOptions } from './native-module'
 
 export enum ResultFormat {
   ARRAY = 'array', // Return rows as arrays of values
   OBJECT = 'object', // Return rows as objects with column names as keys
 }
 
-export interface QueryOptions {
+export interface QueryReaderOptions {
   streaming?: boolean // Stream results via events or return all at once
   format?: ResultFormat // How to format each row
   camelCase?: boolean // Convert snake_case column names to camelCase
@@ -24,7 +24,7 @@ export class QueryReader extends EventEmitter {
   constructor (
     public readonly connection: Connection,
     public readonly result: QueryResult,
-    public readonly options?: QueryOptions
+    public readonly options?: QueryReaderOptions
   ) {
     super()
 
@@ -33,7 +33,7 @@ export class QueryReader extends EventEmitter {
       streaming: false,
       format: ResultFormat.OBJECT,
       camelCase: true
-    } as QueryOptions
+    } as QueryReaderOptions
 
     // Start fetching data automatically
     this.fetchData().catch(err => {
@@ -57,10 +57,15 @@ export class QueryReader extends EventEmitter {
       }
     })
 
+    const fetchOptions: QueryOptions = {
+      asObjects: true,
+      batchSize: 50,
+      asArrays: false
+    }
     try {
       let endOfRows = this.result.meta.length === 0 || this.result.endOfRows
       while (!endOfRows) {
-        const next = await this.connection.promises.fetchRows(handle, batchSize)
+        const next = await this.connection.promises.fetchRows(handle, fetchOptions)
         if (!next) break
 
         const rows = next.rows ?? []

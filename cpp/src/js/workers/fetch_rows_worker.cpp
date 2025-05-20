@@ -58,7 +58,9 @@ void FetchRowsWorker::OnOK() {
     // Convert each row to a JavaScript object
     for (size_t i = 0; i < nativeData.size(); ++i) {
       const auto& row = nativeData[i];
-      const auto jsRow = JsObjectMapper::fromOdbcRow(env, row, columnDefs);
+      const auto jsRow = options_.as_objects
+                             ? JsObjectMapper::fromOdbcRow(env, row, columnDefs)
+                             : JsObjectMapper::fromOdbcRowAsArray(env, row, columnDefs);
       rows.Set(i, jsRow);
     }
 

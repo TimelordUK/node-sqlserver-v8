@@ -33,8 +33,8 @@ class ConnectionPromises {
     return this.connection.fetchRows(handle, options)
   }
 
-  async nextResultSet (handle: StatementHandle, options: QueryOptions): Promise<QueryResult | undefined> {
-    return this.connection.nextResultSet(handle, options)
+  async nextResultSet (handle: StatementHandle): Promise<QueryResult | undefined> {
+    return this.connection.nextResultSet(handle)
   }
 
   async releaseStatement (handle: StatementHandle): Promise<void> {
@@ -164,9 +164,9 @@ export class Connection extends EventEmitter {
     )
   }
 
-  nextResultSet (handle: StatementHandle, options: QueryOptions, callback?: OpenConnectionCallback): Promise<QueryResult> | undefined {
+  nextResultSet (handle: StatementHandle, callback?: OpenConnectionCallback): Promise<QueryResult> | undefined {
     return this.executeOperation<QueryResult>(
-      (cb) => { this._native.nextResultSet(handle, options, cb) },
+      (cb) => { this._native.nextResultSet(handle, cb) },
       callback,
       'FetchRows'
     )

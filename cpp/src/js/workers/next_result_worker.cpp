@@ -9,11 +9,8 @@
 namespace mssql {
 NextResultWorker::NextResultWorker(Napi::Function& callback,
                                    IOdbcConnection* connection,
-                                   const StatementHandle& statementHandle,
-                                   size_t rowCount)
-    : OdbcAsyncWorker(callback, connection),
-      statementHandle_(statementHandle),
-      rowCount_(rowCount) {
+                                   const StatementHandle& statementHandle)
+    : OdbcAsyncWorker(callback, connection), statementHandle_(statementHandle) {
   SQL_LOG_DEBUG_STREAM(
       "NextResultWorker constructor for statement: " << statementHandle_.toString());
   result_ = std::make_shared<QueryResult>(statementHandle_);
