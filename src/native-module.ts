@@ -53,10 +53,25 @@ export type QueryUserCallback = (err: Error | null, result?: QueryResult) => voi
 export type CloseConnectionCallback = (err: Error | null) => void
 export type OpenConnectionCallback = (err: Error | null, conn?: any) => void
 
+export interface NativeSqlParameter {
+  type: string
+  element_type: string
+  sql_type: string
+  js_type: string
+  c_type: string
+  param_type: string
+  precision: number
+  scale: number
+  param_size: number
+  buffer_len: number
+  digits: number
+  encoding: string
+}
+
 export interface NativeConnection {
   open: (connectionString: string, callback: OpenConnectionCallback) => void
   close: (callback: CloseConnectionCallback) => void
-  query: (sql: string, params: any[], callback: QueryUserCallback) => void
+  query: (sql: string, params: NativeSqlParameter[], callback: QueryUserCallback) => void
   fetchRows: (handle: StatementHandle, options: QueryOptions, callback: QueryUserCallback) => void
   nextResultSet: (handle: StatementHandle, callback: QueryUserCallback) => void
   cancelStatement: (handle: StatementHandle, callback: (err: Error | null) => void) => void

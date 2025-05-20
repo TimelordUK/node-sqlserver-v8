@@ -13,6 +13,9 @@ export interface QueryReaderOptions {
   streaming?: boolean // Stream results via events or return all at once
   format?: ResultFormat // How to format each row
   camelCase?: boolean // Convert snake_case column names to camelCase
+  asObjects?: false
+  batchSize?: number
+  asArrays?: true
 }
 
 export class QueryReader extends EventEmitter {
@@ -43,7 +46,6 @@ export class QueryReader extends EventEmitter {
   }
 
   private async fetchData (): Promise<void> {
-    const batchSize = 50
     const handle = this.result.handle
     let total = 0
     this.hasStarted = true
@@ -57,11 +59,17 @@ export class QueryReader extends EventEmitter {
       }
     })
 
-    const fetchOptions: QueryOptions = {
-      asObjects: true,
-      batchSize: 50,
-      asArrays: false
+    let asObjects: boolean = true
+    if (this.options?.asArrays) {
+      asObjects = false
     }
+    const batchSize = this.options?.batchSize ?? 50
+    const fetchOptions: QueryOptions = {
+      asObjects,
+      batchSize,
+      asArrays: !asObjects
+    }
+
     try {
       let endOfRows = this.result.meta.length === 0 || this.result.endOfRows
       while (!endOfRows) {

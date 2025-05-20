@@ -36,7 +36,7 @@ describe('compound query', function () {
     const reader = new QueryReader(connection, res)
     const top = await reader.getAllRows()
     logger.info(`len = ${top.length}`)
-    const res2 = await connection.promises.nextResultSet(res.handle, 50) ?? {
+    const res2 = await connection.promises.nextResultSet(res.handle) ?? {
       meta: [],
       handle: {
         connectionId: 0,

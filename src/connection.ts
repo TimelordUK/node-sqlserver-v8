@@ -50,7 +50,7 @@ class ConnectionPromises {
     })
   }
 
-  async submitReadAll (sql: string, params?: SqlParameter[]): Promise<AggregatedResult> {
+  async submitReadAll (sql: string, params?: any[]): Promise<AggregatedResult> {
     return new Promise<AggregatedResult>((resolve, reject) => {
       const sqlParams = params ? params.map(p => SqlParameter.fromValue(p)) : undefined
       this.connection.query(sql, sqlParams, async (err, result) => {
