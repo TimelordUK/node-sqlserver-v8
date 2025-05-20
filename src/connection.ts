@@ -2,7 +2,7 @@
 import {
   CloseConnectionCallback,
   NativeConnection,
-  OpenConnectionCallback,
+  OpenConnectionCallback, QueryOptions,
   QueryResult,
   QueryUserCallback,
   StatementHandle
@@ -29,19 +29,19 @@ class ConnectionPromises {
     return this.connection.close()
   }
 
-  async fetchRows (handle: StatementHandle, batchSize: number): Promise<QueryResult | undefined> {
-    return this.connection.fetchRows(handle, batchSize)
+  async fetchRows (handle: StatementHandle, options: QueryOptions): Promise<QueryResult | undefined> {
+    return this.connection.fetchRows(handle, options)
   }
 
-  async nextResultSet (handle: StatementHandle, batchSize: number): Promise<QueryResult | undefined> {
-    return this.connection.nextResultSet(handle, batchSize)
+  async nextResultSet (handle: StatementHandle, options: QueryOptions): Promise<QueryResult | undefined> {
+    return this.connection.nextResultSet(handle, options)
   }
 
   async releaseStatement (handle: StatementHandle): Promise<void> {
     return this.connection.releaseStatement(handle)
   }
 
-  async submit (sql: string, params?: any[]): Promise<QueryResult> {
+  async submit (sql: string, params?: SqlParameter[]): Promise<QueryResult> {
     return new Promise<QueryResult>((resolve, reject) => {
       this.connection.query(sql, params, (err, result) => {
         if (err) reject(err)
@@ -50,7 +50,7 @@ class ConnectionPromises {
     })
   }
 
-  async submitReadAll (sql: string, params?: any[]): Promise<AggregatedResult> {
+  async submitReadAll (sql: string, params?: SqlParameter[]): Promise<AggregatedResult> {
     return new Promise<AggregatedResult>((resolve, reject) => {
       const sqlParams = params ? params.map(p => SqlParameter.fromValue(p)) : undefined
       this.connection.query(sql, sqlParams, async (err, result) => {
@@ -156,17 +156,17 @@ export class Connection extends EventEmitter {
     )
   }
 
-  fetchRows (handle: StatementHandle, batchSize: number, callback?: OpenConnectionCallback): Promise<QueryResult> | undefined {
+  fetchRows (handle: StatementHandle, options: QueryOptions, callback?: OpenConnectionCallback): Promise<QueryResult> | undefined {
     return this.executeOperation<QueryResult>(
-      (cb) => { this._native.fetchRows(handle, batchSize, cb) },
+      (cb) => { this._native.fetchRows(handle, options, cb) },
       callback,
       'FetchRows'
     )
   }
 
-  nextResultSet (handle: StatementHandle, batchSize: number, callback?: OpenConnectionCallback): Promise<QueryResult> | undefined {
+  nextResultSet (handle: StatementHandle, options: QueryOptions, callback?: OpenConnectionCallback): Promise<QueryResult> | undefined {
     return this.executeOperation<QueryResult>(
-      (cb) => { this._native.nextResultSet(handle, batchSize, cb) },
+      (cb) => { this._native.nextResultSet(handle, options, cb) },
       callback,
       'FetchRows'
     )

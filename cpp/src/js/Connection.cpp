@@ -224,11 +224,15 @@ Napi::Value Connection::FetchRows(const Napi::CallbackInfo& info) {
     return env.Undefined();
   }
 
-  // Get the number of rows to fetch (optional, default to 1000)
-  size_t rowCount = 1000;
-  if (info.Length() > 1 && info[1].IsNumber()) {
-    rowCount = info[1].As<Napi::Number>().Uint32Value();
+  // Validate statement handle
+  if (info.Length() < 1 || !info[1].IsObject()) {
+    Napi::TypeError::New(env, "query options expected").ThrowAsJavaScriptException();
+    return env.Undefined();
   }
+
+  // Get the statement handle from the first parameter
+  Napi::Object optionsObj = info[1].As<Napi::Object>();
+  QueryOptions options = JsObjectMapper::toQueryOptions(optionsObj);
 
   // Check for callback (last argument)
   Napi::Function callback;
@@ -252,7 +256,7 @@ Napi::Value Connection::FetchRows(const Napi::CallbackInfo& info) {
     });
 
     // Create and queue the worker
-    auto worker = new FetchRowsWorker(callback, odbcConnection_.get(), statementHandle, rowCount);
+    auto worker = new FetchRowsWorker(callback, odbcConnection_.get(), statementHandle, options);
     worker->Queue();
 
     // Return the promise
@@ -260,7 +264,7 @@ Napi::Value Connection::FetchRows(const Napi::CallbackInfo& info) {
   }
 
   // If we got here, we're using a callback
-  auto worker = new FetchRowsWorker(callback, odbcConnection_.get(), statementHandle, rowCount);
+  auto worker = new FetchRowsWorker(callback, odbcConnection_.get(), statementHandle, options);
   worker->Queue();
 
   return env.Undefined();

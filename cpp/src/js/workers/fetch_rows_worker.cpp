@@ -11,10 +11,8 @@ namespace mssql {
 FetchRowsWorker::FetchRowsWorker(Napi::Function& callback,
                                  IOdbcConnection* connection,
                                  const StatementHandle& statementHandle,
-                                 size_t rowCount)
-    : OdbcAsyncWorker(callback, connection),
-      statementHandle_(statementHandle),
-      rowCount_(rowCount) {
+                                 const QueryOptions& options)
+    : OdbcAsyncWorker(callback, connection), statementHandle_(statementHandle), options_(options) {
   SQL_LOG_DEBUG_STREAM(
       "FetchRowsWorker constructor for statement: " << statementHandle_.toString());
   result_ = std::make_shared<QueryResult>(statementHandle_);
@@ -35,7 +33,7 @@ void FetchRowsWorker::Execute() {
       SetError("Statement not found");
       return;
     }
-    statement->TryReadRows(result_, rowCount_);
+    statement->TryReadRows(result_, options_.batch_size);
   } catch (const std::exception& e) {
     SQL_LOG_ERROR("Exception in FetchRowsWorker::Execute: " + std::string(e.what()));
     SetError("Exception occurred: " + std::string(e.what()));

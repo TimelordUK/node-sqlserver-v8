@@ -43,6 +43,12 @@ export interface QueryResult {
   readonly endOfResults: boolean
 }
 
+export interface QueryOptions {
+  asObjects: boolean
+  asArrays: boolean
+  batchSize: boolean
+}
+
 export type QueryUserCallback = (err: Error | null, result?: QueryResult) => void
 export type CloseConnectionCallback = (err: Error | null) => void
 export type OpenConnectionCallback = (err: Error | null, conn?: any) => void
@@ -51,8 +57,8 @@ export interface NativeConnection {
   open: (connectionString: string, callback: OpenConnectionCallback) => void
   close: (callback: CloseConnectionCallback) => void
   query: (sql: string, params: any[], callback: QueryUserCallback) => void
-  fetchRows: (handle: StatementHandle, batchSize: number, callback: QueryUserCallback) => void
-  nextResultSet: (handle: StatementHandle, batchSize: number, callback: QueryUserCallback) => void
+  fetchRows: (handle: StatementHandle, options: QueryOptions, callback: QueryUserCallback) => void
+  nextResultSet: (handle: StatementHandle, options: QueryOptions, callback: QueryUserCallback) => void
   cancelStatement: (handle: StatementHandle, callback: (err: Error | null) => void) => void
   releaseStatement: (handle: StatementHandle, callback: (err: Error | null) => void) => void
 }

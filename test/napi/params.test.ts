@@ -34,42 +34,58 @@ describe('params query', function () {
 
     type HandlerFunction =  () => Promise<void>;
 
-    async function testBoilerPlateAsync (tableName: string, tableFields: Record<string, string>, insertFunction: HandlerFunction, verifyFunction: HandlerFunction) {
-        const fieldsSql = Object.keys(tableFields).map(field => `${field} ${tableFields[field]}`)
-        const tableFieldsSql = `(id int identity, ${fieldsSql.join(', ')})`
-        const promises = theConnection.promises
-        const todrop = dropTableSql(tableName)
-        await promises.submitReadAll(todrop)
-        const createQuery = `CREATE TABLE ${tableName}${tableFieldsSql}`
-        await promises.submitReadAll(createQuery)
-        const clusteredIndexSql = ['CREATE CLUSTERED INDEX IX_', tableName, ' ON ', tableName, ' (id)'].join('')
-        await promises.submitReadAll(clusteredIndexSql)
-        if (insertFunction) await insertFunction()
-        if (verifyFunction) await verifyFunction()
+
+    class BaseParamTest {
+        constructor(public tableName: string, private connection: Connection) {}
+        async run (tableFields: Record<string, string>) {
+            const tableName = this.tableName
+            const fieldsSql = Object.keys(tableFields).map(field => `${field} ${tableFields[field]}`)
+            const tableFieldsSql = `(id int identity, ${fieldsSql.join(', ')})`
+            const promises = this.connection.promises
+            const todrop = dropTableSql(tableName)
+            await promises.submitReadAll(todrop)
+            const createQuery = `CREATE TABLE ${tableName}${tableFieldsSql}`
+            await promises.submitReadAll(createQuery)
+            const clusteredIndexSql = ['CREATE CLUSTERED INDEX IX_', tableName, ' ON ', tableName, ' (id)'].join('')
+            await promises.submitReadAll(clusteredIndexSql)
+            await this.setup()
+            await this.test()
+        }
+
+        async setup() : Promise<void> {
+        }
+
+        async test() : Promise<void> {
+        }
+    }
+
+    class BigIntInsert extends BaseParamTest {
+        constructor(tableName: string, connection: Connection) {
+            super(tableName, connection);
+        }
+        override async setup(): Promise<void> {
+            await theConnection.promises.submitReadAll(`INSERT INTO ${this.tableName} VALUES (?)`, [0x80000000])
+        }
+        override async test () {
+            const r = await theConnection.promises.submitReadAll(`SELECT bigint_test FROM ${this.tableName}`, [])
+            const expectedMeta = [
+                {
+                    name: 'bigint_test',
+                    size: 19, nullable: true,
+                    type: 'number',
+                    sqlType: 'bigint'
+                }
+            ]
+            const expected = [
+                [0x80000000]
+            ]
+            const r0 = r.resultSets[0]
+        }
     }
 
     it('insert bigint as parameter', async function handler () {
         const tableName = 'test_bigint'
-        await testBoilerPlateAsync(tableName, { bigint_test: 'bigint' },
-            async function () {
-                await theConnection.promises.submitReadAll(`INSERT INTO ${tableName} VALUES (?)`, [0x80000000])
-            },
-            async function handler () {
-                const r = await theConnection.promises.submitReadAll(`SELECT bigint_test FROM ${tableName}`, [])
-                const expectedMeta = [
-                    {
-                        name: 'bigint_test',
-                        size: 19, nullable: true,
-                        type: 'number',
-                        sqlType: 'bigint'
-                    }
-                ]
-                const expected = [
-                    [0x80000000]
-                ]
-                const r0 = r.resultSets[0]
-                //assert.deepStrictEqual(expected, r0.rows)
-                //assert.deepStrictEqual(expectedMeta, r0.meta)
-            })
+        const tester = new BigIntInsert(tableName, theConnection)
+        await tester.run( { bigint_test: 'bigint' })
     })
 })

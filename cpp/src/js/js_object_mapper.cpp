@@ -45,39 +45,6 @@ bool JsObjectMapper::safeGetBool(const Napi::Object& obj,
   return defaultVal;
 }
 
-SqlParamValue JsObjectMapper::safeGetValue(const Napi::Object& obj, const std::string& prop) {
-  if (!obj.Has(prop) || obj.Get(prop).IsNull() || obj.Get(prop).IsUndefined()) {
-    return nullptr;
-  }
-
-  Napi::Value val = obj.Get(prop);
-
-  if (val.IsBoolean()) {
-    return val.As<Napi::Boolean>().Value();
-  } else if (val.IsNumber()) {
-    // Try to deduce if it's an integer or a float
-    double dVal = val.As<Napi::Number>().DoubleValue();
-    int64_t iVal = val.As<Napi::Number>().Int64Value();
-
-    if (dVal == static_cast<double>(iVal)) {
-      // It's an integer
-      if (iVal >= INT32_MIN && iVal <= INT32_MAX) {
-        return static_cast<int32_t>(iVal);
-      }
-      return iVal;
-    }
-    return dVal;
-  } else if (val.IsString()) {
-    return val.As<Napi::String>().Utf8Value();
-  } else if (val.IsBuffer()) {
-    Napi::Buffer<uint8_t> buffer = val.As<Napi::Buffer<uint8_t>>();
-    return std::vector<uint8_t>(buffer.Data(), buffer.Data() + buffer.Length());
-  }
-
-  // Default to null for unsupported types
-  return nullptr;
-}
-
 // Convert to Napi::Object for returning to JavaScript
 Napi::Object JsObjectMapper::fromStatementHandle(const Napi::Env& env, StatementHandle handle) {
   Napi::Object result = Napi::Object::New(env);
@@ -114,22 +81,12 @@ ProcedureParamMeta JsObjectMapper::toProcedureParamMeta(const Napi::Object& jsOb
   return result;
 }
 
-NativeParam JsObjectMapper::toNativeParam(const Napi::Object& jsObject) {
-  NativeParam result;
+QueryOptions JsObjectMapper::toQueryOptions(const Napi::Object& jsObject) {
+  QueryOptions result;
 
-  result.is_user_defined = safeGetBool(jsObject, "is_user_defined");
-  result.type_id = safeGetInt32(jsObject, "type_id");
-  result.schema = safeGetString(jsObject, "schema");
-  result.bcp = safeGetBool(jsObject, "bcp");
-  result.bcp_version = safeGetInt32(jsObject, "bcp_version");
-  result.table_name = safeGetString(jsObject, "table_name");
-  result.ordinal_position = safeGetInt32(jsObject, "ordinal_position");
-  result.scale = safeGetInt32(jsObject, "scale");
-  result.offset = safeGetInt32(jsObject, "offset");
-  result.precision = safeGetInt32(jsObject, "precision");
-  result.is_output = safeGetBool(jsObject, "is_output");
-  result.name = safeGetString(jsObject, "name");
-  result.value = safeGetValue(jsObject, "value");
+  result.as_objects = safeGetBool(jsObject, "asObjects");
+  result.as_arrays = safeGetBool(jsObject, "asArrays");
+  result.batch_size = safeGetInt32(jsObject, "batchSize");
 
   return result;
 }
@@ -269,27 +226,6 @@ Napi::Array JsObjectMapper::fromQueryResult(const Napi::Env& env, const QueryRes
   return columns;
 }
 
-Napi::Value JsObjectMapper::fromSqlParamValue(const Napi::Env& env, const SqlParamValue& value) {
-  if (std::holds_alternative<std::nullptr_t>(value)) {
-    return env.Null();
-  } else if (std::holds_alternative<bool>(value)) {
-    return Napi::Boolean::New(env, std::get<bool>(value));
-  } else if (std::holds_alternative<int32_t>(value)) {
-    return Napi::Number::New(env, std::get<int32_t>(value));
-  } else if (std::holds_alternative<int64_t>(value)) {
-    return Napi::Number::New(env, std::get<int64_t>(value));
-  } else if (std::holds_alternative<double>(value)) {
-    return Napi::Number::New(env, std::get<double>(value));
-  } else if (std::holds_alternative<std::string>(value)) {
-    return Napi::String::New(env, std::get<std::string>(value));
-  } else if (std::holds_alternative<std::vector<uint8_t>>(value)) {
-    const auto& vec = std::get<std::vector<uint8_t>>(value);
-    return Napi::Buffer<uint8_t>::Copy(env, vec.data(), vec.size());
-  }
-
-  return env.Null();
-}
-
 Napi::Object JsObjectMapper::fromOdbcError(const Napi::Env& env, const OdbcError& error) {
   Napi::Object result = Napi::Object::New(env);
 
@@ -325,26 +261,6 @@ Napi::Object JsObjectMapper::fromNativeQueryResult(const Napi::Env& env,
   return metadata;
 }
 
-Napi::Object JsObjectMapper::fromNativeParam(const Napi::Env& env, const NativeParam& param) {
-  Napi::Object result = Napi::Object::New(env);
-
-  result.Set("is_user_defined", Napi::Boolean::New(env, param.is_user_defined));
-  result.Set("type_id", Napi::Number::New(env, param.type_id));
-  result.Set("schema", Napi::String::New(env, param.schema));
-  result.Set("bcp", Napi::Boolean::New(env, param.bcp));
-  result.Set("bcp_version", Napi::Number::New(env, param.bcp_version));
-  result.Set("table_name", Napi::String::New(env, param.table_name));
-  result.Set("ordinal_position", Napi::Number::New(env, param.ordinal_position));
-  result.Set("scale", Napi::Number::New(env, param.scale));
-  result.Set("offset", Napi::Number::New(env, param.offset));
-  result.Set("precision", Napi::Number::New(env, param.precision));
-  result.Set("is_output", Napi::Boolean::New(env, param.is_output));
-  result.Set("name", Napi::String::New(env, param.name));
-  result.Set("value", fromSqlParamValue(env, param.value));
-
-  return result;
-}
-
 Napi::Object JsObjectMapper::fromSqlParameter(const Napi::Env& env, const SqlParameter& param) {
   Napi::Object result = Napi::Object::New(env);
 
@@ -369,15 +285,12 @@ Napi::Object JsObjectMapper::fromSqlParameter(const Napi::Env& env, const SqlPar
 }
 
 // Helper methods for handling different types
-void JsObjectMapper::handleNullValue(const Napi::Env& env,
-                                     Napi::Object& jsRow,
-                                     const std::string& colName) {
-  jsRow.Set(colName, env.Null());
+void JsObjectMapper::handleNullValue(const Napi::Env& env, JsValueTarget& jsWriter) {
+  jsWriter.setNull(env);
 }
 
 bool JsObjectMapper::handleStringTypes(const Napi::Env& env,
-                                       Napi::Object& jsRow,
-                                       const std::string& colName,
+                                       JsValueTarget& jsWriter,
                                        const DatumStorage& column,
                                        DatumStorage::SqlType colType) {
   // Handle both wide and ASCII strings
@@ -386,11 +299,12 @@ bool JsObjectMapper::handleStringTypes(const Napi::Env& env,
     // Handle Unicode strings (SQLWCHAR)
     auto wcharVec = const_cast<DatumStorage&>(column).getTypedVector<uint16_t>();
     if (wcharVec && !wcharVec->empty()) {
-      jsRow.Set(colName,
-                Napi::String::New(
-                    env, reinterpret_cast<const char16_t*>(wcharVec->data()), wcharVec->size()));
+      jsWriter.setValue(
+          env,
+          Napi::String::New(
+              env, reinterpret_cast<const char16_t*>(wcharVec->data()), wcharVec->size()));
     } else {
-      handleNullValue(env, jsRow, colName);
+      handleNullValue(env, jsWriter);
     }
   } else {
     // Handle ASCII strings
@@ -401,30 +315,29 @@ bool JsObjectMapper::handleStringTypes(const Napi::Env& env,
       if (!str.empty() && str.back() == '\0') {
         str.pop_back();
       }
-      jsRow.Set(colName, Napi::String::New(env, str));
+      jsWriter.setValue(env, Napi::String::New(env, str));
     } else {
-      handleNullValue(env, jsRow, colName);
+      handleNullValue(env, jsWriter);
     }
   }
   return true;
 }
 
 bool JsObjectMapper::handleTinyInt(const Napi::Env& env,
-                                   Napi::Object& jsRow,
-                                   const std::string& colName,
+                                   JsValueTarget& jsWriter,
                                    const DatumStorage& column) {
   try {
     auto int8Vec = const_cast<DatumStorage&>(column).getTypedVector<int8_t>();
     if (int8Vec && !int8Vec->empty()) {
       // Use int for TinyInt to avoid treating it as a character
-      jsRow.Set(colName, Napi::Number::New(env, static_cast<int>((*int8Vec)[0])));
+      jsWriter.setValue(env, Napi::Number::New(env, static_cast<int>((*int8Vec)[0])));
     } else {
-      handleNullValue(env, jsRow, colName);
+      handleNullValue(env, jsWriter);
     }
   } catch (const std::exception& e) {
-    Logger::GetInstance().Log(
-        LogLevel::Warning,
-        "JsObjectMapper: Exception with TinyInt type for column " + colName + ": " + e.what());
+    Logger::GetInstance().Log(LogLevel::Warning,
+                              "JsObjectMapper: Exception with TinyInt type for column " +
+                                  jsWriter.description() + ": " + e.what());
 
     // Try to read as raw data
     try {
@@ -432,32 +345,31 @@ bool JsObjectMapper::handleTinyInt(const Napi::Env& env,
       if (rawVec && !rawVec->empty()) {
         // Read as int8_t but present as int to avoid treating as char
         int8_t val = rawVec->at(0);
-        jsRow.Set(colName, Napi::Number::New(env, static_cast<int>(val)));
+        jsWriter.setValue(env, Napi::Number::New(env, static_cast<int>(val)));
       } else {
-        handleNullValue(env, jsRow, colName);
+        handleNullValue(env, jsWriter);
       }
     } catch (...) {
-      handleNullValue(env, jsRow, colName);
+      handleNullValue(env, jsWriter);
     }
   }
   return true;
 }
 
 bool JsObjectMapper::handleSmallInt(const Napi::Env& env,
-                                    Napi::Object& jsRow,
-                                    const std::string& colName,
+                                    JsValueTarget& jsWriter,
                                     const DatumStorage& column) {
   try {
     auto int16Vec = const_cast<DatumStorage&>(column).getTypedVector<int16_t>();
     if (int16Vec && !int16Vec->empty()) {
-      jsRow.Set(colName, Napi::Number::New(env, (*int16Vec)[0]));
+      jsWriter.setValue(env, Napi::Number::New(env, (*int16Vec)[0]));
     } else {
-      handleNullValue(env, jsRow, colName);
+      handleNullValue(env, jsWriter);
     }
   } catch (const std::exception& e) {
-    Logger::GetInstance().Log(
-        LogLevel::Warning,
-        "JsObjectMapper: Exception with SmallInt type for column " + colName + ": " + e.what());
+    Logger::GetInstance().Log(LogLevel::Warning,
+                              "JsObjectMapper: Exception with SmallInt type for column " +
+                                  jsWriter.description() + ": " + e.what());
 
     // Try to read as raw data
     try {
@@ -465,33 +377,32 @@ bool JsObjectMapper::handleSmallInt(const Napi::Env& env,
       if (rawVec && rawVec->size() >= 2) {
         // Read as int16_t
         int16_t val = *reinterpret_cast<int16_t*>(rawVec->data());
-        jsRow.Set(colName, Napi::Number::New(env, val));
+        jsWriter.setValue(env, Napi::Number::New(env, val));
       } else {
-        handleNullValue(env, jsRow, colName);
+        handleNullValue(env, jsWriter);
       }
     } catch (...) {
-      handleNullValue(env, jsRow, colName);
+      handleNullValue(env, jsWriter);
     }
   }
   return true;
 }
 
 bool JsObjectMapper::handleInteger(const Napi::Env& env,
-                                   Napi::Object& jsRow,
-                                   const std::string& colName,
+                                   JsValueTarget& jsWriter,
                                    const DatumStorage& column) {
   try {
     auto intVec = const_cast<DatumStorage&>(column).getTypedVector<int32_t>();
     if (intVec && !intVec->empty()) {
       const auto val = (*intVec)[0];
-      jsRow.Set(colName, Napi::Number::New(env, val));
+      jsWriter.setValue(env, Napi::Number::New(env, val));
     } else {
-      handleNullValue(env, jsRow, colName);
+      handleNullValue(env, jsWriter);
     }
   } catch (const std::exception& e) {
-    Logger::GetInstance().Log(
-        LogLevel::Warning,
-        "JsObjectMapper: Exception with Integer type for column " + colName + ": " + e.what());
+    Logger::GetInstance().Log(LogLevel::Warning,
+                              "JsObjectMapper: Exception with Integer type for column " +
+                                  jsWriter.description() + ": " + e.what());
 
     // Try to read as raw data
     try {
@@ -499,24 +410,24 @@ bool JsObjectMapper::handleInteger(const Napi::Env& env,
       if (rawVec && rawVec->size() >= 4) {
         // Read as int32_t
         int32_t val = *reinterpret_cast<int32_t*>(rawVec->data());
-        jsRow.Set(colName, Napi::Number::New(env, val));
+        jsWriter.setValue(env, Napi::Number::New(env, val));
       } else {
-        handleNullValue(env, jsRow, colName);
+        handleNullValue(env, jsWriter);
       }
     } catch (...) {
-      handleNullValue(env, jsRow, colName);
+      handleNullValue(env, jsWriter);
     }
   }
   return true;
 }
 
 bool JsObjectMapper::handleBigInt(const Napi::Env& env,
-                                  Napi::Object& jsRow,
-                                  const std::string& colName,
+                                  JsValueTarget& jsWriter,
                                   const DatumStorage& column) {
   // BigInt type is defined as long long int (bigint_t) in DatumStorage
-  Logger::GetInstance().Log(LogLevel::Debug,
-                            "JsObjectMapper: Processing BigInt type for column: " + colName);
+  Logger::GetInstance().Log(
+      LogLevel::Debug,
+      "JsObjectMapper: Processing BigInt type for column: " + jsWriter.description());
 
   // Try multiple approaches to get the BigInt value
   try {
@@ -529,13 +440,13 @@ bool JsObjectMapper::handleBigInt(const Napi::Env& env,
 
       // For values that can be represented accurately as a Number in JavaScript
       if (bigintValue >= -9007199254740991LL && bigintValue <= 9007199254740991LL) {
-        jsRow.Set(colName, Napi::Number::New(env, static_cast<double>(bigintValue)));
+        jsWriter.setValue(env, Napi::Number::New(env, static_cast<double>(bigintValue)));
       } else {
         // For large values outside JavaScript Number safe range, use BigInt
-        jsRow.Set(colName, Napi::BigInt::New(env, static_cast<int64_t>(bigintValue)));
+        jsWriter.setValue(env, Napi::BigInt::New(env, static_cast<int64_t>(bigintValue)));
       }
     } else {
-      handleNullValue(env, jsRow, colName);
+      handleNullValue(env, jsWriter);
     }
   } catch (const std::exception& e) {
     Logger::GetInstance().Log(
@@ -553,53 +464,50 @@ bool JsObjectMapper::handleBigInt(const Napi::Env& env,
 
         // For values that can be represented accurately as a Number in JavaScript
         if (intValue >= -9007199254740991LL && intValue <= 9007199254740991LL) {
-          jsRow.Set(colName, Napi::Number::New(env, static_cast<double>(intValue)));
+          jsWriter.setValue(env, Napi::Number::New(env, static_cast<double>(intValue)));
         } else {
           // For large values outside JavaScript Number safe range, use BigInt
-          jsRow.Set(colName, Napi::BigInt::New(env, static_cast<int64_t>(intValue)));
+          jsWriter.setValue(env, Napi::BigInt::New(env, static_cast<int64_t>(intValue)));
         }
       } else {
-        handleNullValue(env, jsRow, colName);
+        handleNullValue(env, jsWriter);
       }
     } catch (const std::exception& e2) {
       Logger::GetInstance().Log(
           LogLevel::Error,
           "JsObjectMapper: Both BigInt retrieval approaches failed: " + std::string(e2.what()));
-      handleNullValue(env, jsRow, colName);
+      handleNullValue(env, jsWriter);
     }
   }
   return true;
 }
 
 bool JsObjectMapper::handleFloatingPoint(const Napi::Env& env,
-                                         Napi::Object& jsRow,
-                                         const std::string& colName,
+                                         JsValueTarget& jsWriter,
                                          const DatumStorage& column) {
   auto doubleVec = const_cast<DatumStorage&>(column).getTypedVector<double>();
   if (doubleVec && !doubleVec->empty()) {
-    jsRow.Set(colName, Napi::Number::New(env, (*doubleVec)[0]));
+    jsWriter.setValue(env, Napi::Number::New(env, (*doubleVec)[0]));
   } else {
-    handleNullValue(env, jsRow, colName);
+    handleNullValue(env, jsWriter);
   }
   return true;
 }
 
 bool JsObjectMapper::handleBit(const Napi::Env& env,
-                               Napi::Object& jsRow,
-                               const std::string& colName,
+                               JsValueTarget& jsWriter,
                                const DatumStorage& column) {
   auto bitVec = const_cast<DatumStorage&>(column).getTypedVector<int8_t>();
   if (bitVec && !bitVec->empty()) {
-    jsRow.Set(colName, Napi::Boolean::New(env, (*bitVec)[0] != 0));
+    jsWriter.setValue(env, Napi::Boolean::New(env, (*bitVec)[0] != 0));
   } else {
-    handleNullValue(env, jsRow, colName);
+    handleNullValue(env, jsWriter);
   }
   return true;
 }
 
 bool JsObjectMapper::handleDateTimeTypes(const Napi::Env& env,
-                                         Napi::Object& jsRow,
-                                         const std::string& colName,
+                                         JsValueTarget& jsWriter,
                                          const DatumStorage& column,
                                          DatumStorage::SqlType colType) {
   switch (colType) {
@@ -608,9 +516,9 @@ bool JsObjectMapper::handleDateTimeTypes(const Napi::Env& env,
       if (dateVec && !dateVec->empty()) {
         const auto& date = (*dateVec)[0];
         napi_value jsDate = JSTimeAdapter::createJsDateFromDate(env, date);
-        jsRow.Set(colName, Napi::Value(env, jsDate));
+        jsWriter.setValue(env, Napi::Value(env, jsDate));
       } else {
-        handleNullValue(env, jsRow, colName);
+        handleNullValue(env, jsWriter);
       }
       break;
     }
@@ -620,9 +528,9 @@ bool JsObjectMapper::handleDateTimeTypes(const Napi::Env& env,
       if (timeVec && !timeVec->empty()) {
         const auto& time = (*timeVec)[0];
         napi_value jsDate = JSTimeAdapter::createJsDateFromTime(env, time);
-        jsRow.Set(colName, Napi::Value(env, jsDate));
+        jsWriter.setValue(env, Napi::Value(env, jsDate));
       } else {
-        handleNullValue(env, jsRow, colName);
+        handleNullValue(env, jsWriter);
       }
       break;
     }
@@ -633,9 +541,9 @@ bool JsObjectMapper::handleDateTimeTypes(const Napi::Env& env,
       if (timestampVec && !timestampVec->empty()) {
         const auto& timestamp = (*timestampVec)[0];
         napi_value jsDate = JSTimeAdapter::createJsDateFromTimestamp(env, timestamp);
-        jsRow.Set(colName, Napi::Value(env, jsDate));
+        jsWriter.setValue(env, Napi::Value(env, jsDate));
       } else {
-        handleNullValue(env, jsRow, colName);
+        handleNullValue(env, jsWriter);
       }
       break;
     }
@@ -646,84 +554,86 @@ bool JsObjectMapper::handleDateTimeTypes(const Napi::Env& env,
       if (offsetVec && !offsetVec->empty()) {
         const auto& offset = (*offsetVec)[0];
         napi_value jsDate = JSTimeAdapter::createJsDateFromTimestampOffset(env, offset);
-        jsRow.Set(colName, Napi::Value(env, jsDate));
+        jsWriter.setValue(env, Napi::Value(env, jsDate));
       } else {
-        handleNullValue(env, jsRow, colName);
+        handleNullValue(env, jsWriter);
       }
       break;
     }
 
     default:
-      handleNullValue(env, jsRow, colName);
+      handleNullValue(env, jsWriter);
       return false;
   }
   return true;
 }
 
 bool JsObjectMapper::handleBinaryTypes(const Napi::Env& env,
-                                       Napi::Object& jsRow,
-                                       const std::string& colName,
+                                       JsValueTarget& jsWriter,
                                        const DatumStorage& column) {
   try {
     auto binaryVec = const_cast<DatumStorage&>(column).getTypedVector<char>();
     if (!binaryVec) {
-      Logger::GetInstance().Log(
-          LogLevel::Warning,
-          "JsObjectMapper: Null vector returned for binary data in column " + colName);
-      handleNullValue(env, jsRow, colName);
+      Logger::GetInstance().Log(LogLevel::Warning,
+                                "JsObjectMapper: Null vector returned for binary data in column " +
+                                    jsWriter.description());
+      handleNullValue(env, jsWriter);
       return false;
     }
 
     // For binary data, we treat empty data as an empty buffer, not null
     // This maintains distinction between NULL and empty binary in SQL
     if (binaryVec->empty()) {
-      Logger::GetInstance().Log(LogLevel::Debug,
-                                "JsObjectMapper: Empty binary data for column " + colName);
+      Logger::GetInstance().Log(
+          LogLevel::Debug,
+          "JsObjectMapper: Empty binary data for column " + jsWriter.description());
       // Create empty buffer (0 length)
       auto emptyBuffer = Napi::Buffer<char>::New(env, 0);
-      jsRow.Set(colName, emptyBuffer);
+      jsWriter.setValue(env, emptyBuffer);
     } else {
       // Check for null data pointer (safety)
       if (!binaryVec->data()) {
         Logger::GetInstance().Log(
             LogLevel::Warning,
-            "JsObjectMapper: Binary vector has null data pointer for column " + colName);
-        handleNullValue(env, jsRow, colName);
+            "JsObjectMapper: Binary vector has null data pointer for column " +
+                jsWriter.description());
+        handleNullValue(env, jsWriter);
         return false;
       }
 
       // Create a Buffer for binary data
       auto buffer = Napi::Buffer<char>::Copy(env, binaryVec->data(), binaryVec->size());
-      jsRow.Set(colName, buffer);
+      jsWriter.setValue(env, buffer);
 
       Logger::GetInstance().Log(LogLevel::Debug,
                                 "JsObjectMapper: Binary data converted to buffer, size = " +
-                                    std::to_string(binaryVec->size()) + " for column " + colName);
+                                    std::to_string(binaryVec->size()) + " for column " +
+                                    jsWriter.description());
     }
   } catch (const std::exception& e) {
-    Logger::GetInstance().Log(
-        LogLevel::Warning,
-        "JsObjectMapper: Exception with Binary type for column " + colName + ": " + e.what());
-    handleNullValue(env, jsRow, colName);
+    Logger::GetInstance().Log(LogLevel::Warning,
+                              "JsObjectMapper: Exception with Binary type for column " +
+                                  jsWriter.description() + ": " + e.what());
+    handleNullValue(env, jsWriter);
     return false;
   }
   return true;
 }
 
 bool JsObjectMapper::handleVariantType(const Napi::Env& env,
-                                       Napi::Object& jsRow,
-                                       const std::string& colName,
+                                       JsValueTarget& jsWriter,
                                        const DatumStorage& column) {
   // For Variant type, try to get the raw data and convert it to a string or number
-  Logger::GetInstance().Log(LogLevel::Info,
-                            "JsObjectMapper: Handling Variant type for column: " + colName);
+  Logger::GetInstance().Log(
+      LogLevel::Info,
+      "JsObjectMapper: Handling Variant type for column: " + jsWriter.description());
 
   // Try various approaches to extract data
   try {
     // First try as int32
     auto int32Vec = const_cast<DatumStorage&>(column).getTypedVector<int32_t>();
     if (int32Vec && !int32Vec->empty()) {
-      jsRow.Set(colName, Napi::Number::New(env, (*int32Vec)[0]));
+      jsWriter.setValue(env, Napi::Number::New(env, (*int32Vec)[0]));
       return true;
     }
   } catch (...) {
@@ -734,7 +644,7 @@ bool JsObjectMapper::handleVariantType(const Napi::Env& env,
     // Then try as int64
     auto int64Vec = const_cast<DatumStorage&>(column).getTypedVector<int64_t>();
     if (int64Vec && !int64Vec->empty()) {
-      jsRow.Set(colName, Napi::Number::New(env, static_cast<double>((*int64Vec)[0])));
+      jsWriter.setValue(env, Napi::Number::New(env, static_cast<double>((*int64Vec)[0])));
       return true;
     }
   } catch (...) {
@@ -746,7 +656,7 @@ bool JsObjectMapper::handleVariantType(const Napi::Env& env,
     auto charVec = const_cast<DatumStorage&>(column).getTypedVector<char>();
     if (charVec && !charVec->empty()) {
       std::string str(charVec->data(), charVec->size());
-      jsRow.Set(colName, Napi::String::New(env, str));
+      jsWriter.setValue(env, Napi::String::New(env, str));
       return true;
     }
   } catch (...) {
@@ -757,9 +667,10 @@ bool JsObjectMapper::handleVariantType(const Napi::Env& env,
     // Try as uint16_t (wide string)
     auto wcharVec = const_cast<DatumStorage&>(column).getTypedVector<uint16_t>();
     if (wcharVec && !wcharVec->empty()) {
-      jsRow.Set(colName,
-                Napi::String::New(
-                    env, reinterpret_cast<const char16_t*>(wcharVec->data()), wcharVec->size()));
+      jsWriter.setValue(
+          env,
+          Napi::String::New(
+              env, reinterpret_cast<const char16_t*>(wcharVec->data()), wcharVec->size()));
       return true;
     }
   } catch (...) {
@@ -767,13 +678,12 @@ bool JsObjectMapper::handleVariantType(const Napi::Env& env,
   }
 
   // If all fails, return as string
-  jsRow.Set(colName, Napi::String::New(env, "[Variant]"));
+  jsWriter.setValue(env, Napi::String::New(env, "[Variant]"));
   return true;
 }
 
 bool JsObjectMapper::handleUnknownType(const Napi::Env& env,
-                                       Napi::Object& jsRow,
-                                       const std::string& colName,
+                                       JsValueTarget& jsWriter,
                                        const DatumStorage& column) {
   // For unsupported types, add logging and convert to string representation
   const auto typeName = column.getTypeName();
@@ -781,7 +691,7 @@ bool JsObjectMapper::handleUnknownType(const Napi::Env& env,
   Logger::GetInstance().Log(LogLevel::Warning,
                             "JsObjectMapper: Unsupported type encountered: " + typeName +
                                 " (Type ID: " + std::to_string(sqlTypeValue) +
-                                ") for column: " + colName);
+                                ") for column: " + jsWriter.description());
 
   // As a fallback, try to extract raw data
   try {
@@ -792,17 +702,17 @@ bool JsObjectMapper::handleUnknownType(const Napi::Env& env,
       if (rawVec->size() == 4) {
         // Interpret as int32
         int32_t val = *reinterpret_cast<int32_t*>(rawVec->data());
-        jsRow.Set(colName, Napi::Number::New(env, val));
+        jsWriter.setValue(env, Napi::Number::New(env, val));
         return true;
       } else if (rawVec->size() == 8) {
         // Interpret as int64
         int64_t val = *reinterpret_cast<int64_t*>(rawVec->data());
-        jsRow.Set(colName, Napi::Number::New(env, static_cast<double>(val)));
+        jsWriter.setValue(env, Napi::Number::New(env, static_cast<double>(val)));
         return true;
       } else {
         // Return as buffer
         auto buffer = Napi::Buffer<char>::Copy(env, rawVec->data(), rawVec->size());
-        jsRow.Set(colName, buffer);
+        jsWriter.setValue(env, buffer);
         return true;
       }
     }
@@ -811,14 +721,13 @@ bool JsObjectMapper::handleUnknownType(const Napi::Env& env,
   }
 
   // Last resort: return a string representation
-  jsRow.Set(colName, Napi::String::New(env, "[Unknown type: " + typeName + "]"));
+  jsWriter.setValue(env, Napi::String::New(env, "[Unknown type: " + typeName + "]"));
   return true;
 }
 
 bool JsObjectMapper::handleColumn(const Napi::Env& env,
-                                  Napi::Object& jsRow,
+                                  JsValueTarget& jsWriter,
                                   const DatumStorage& column,
-                                  const std::string& colName,
                                   const ColumnDefinition& colDef) {
   // Get column type and dispatch to appropriate handler
   const auto colType = column.getType();
@@ -831,34 +740,34 @@ bool JsObjectMapper::handleColumn(const Napi::Env& env,
     case mssql::DatumStorage::SqlType::Char:
     case mssql::DatumStorage::SqlType::VarChar:
     case mssql::DatumStorage::SqlType::Text:
-      handled = handleStringTypes(env, jsRow, colName, column, colType);
+      handled = handleStringTypes(env, jsWriter, column, colType);
       break;
 
     // Numeric types
     case mssql::DatumStorage::SqlType::TinyInt:
-      handled = handleTinyInt(env, jsRow, colName, column);
+      handled = handleTinyInt(env, jsWriter, column);
       break;
 
     case mssql::DatumStorage::SqlType::SmallInt:
-      handled = handleSmallInt(env, jsRow, colName, column);
+      handled = handleSmallInt(env, jsWriter, column);
       break;
 
     case mssql::DatumStorage::SqlType::Integer:
-      handled = handleInteger(env, jsRow, colName, column);
+      handled = handleInteger(env, jsWriter, column);
       break;
 
     case mssql::DatumStorage::SqlType::BigInt:
-      handled = handleBigInt(env, jsRow, colName, column);
+      handled = handleBigInt(env, jsWriter, column);
       break;
 
     case mssql::DatumStorage::SqlType::Double:
     case mssql::DatumStorage::SqlType::Float:
     case mssql::DatumStorage::SqlType::Real:
-      handled = handleFloatingPoint(env, jsRow, colName, column);
+      handled = handleFloatingPoint(env, jsWriter, column);
       break;
 
     case mssql::DatumStorage::SqlType::Bit:
-      handled = handleBit(env, jsRow, colName, column);
+      handled = handleBit(env, jsWriter, column);
       break;
 
     // Date/Time types
@@ -867,33 +776,61 @@ bool JsObjectMapper::handleColumn(const Napi::Env& env,
     case mssql::DatumStorage::SqlType::DateTime:
     case mssql::DatumStorage::SqlType::DateTime2:
     case mssql::DatumStorage::SqlType::DateTimeOffset:
-      handled = handleDateTimeTypes(env, jsRow, colName, column, colType);
+      handled = handleDateTimeTypes(env, jsWriter, column, colType);
       break;
 
     // Binary types
     case mssql::DatumStorage::SqlType::Binary:
     case mssql::DatumStorage::SqlType::VarBinary:
-      handled = handleBinaryTypes(env, jsRow, colName, column);
+      handled = handleBinaryTypes(env, jsWriter, column);
       break;
 
     // Variant type
     case mssql::DatumStorage::SqlType::Variant:
-      handled = handleVariantType(env, jsRow, colName, column);
+      handled = handleVariantType(env, jsWriter, column);
       break;
 
     // Unknown/default type
     default:
-      handled = handleUnknownType(env, jsRow, colName, column);
+      handled = handleUnknownType(env, jsWriter, column);
       break;
   }
   return handled;
+}
+
+Napi::Array JsObjectMapper::fromOdbcRowAsArray(const Napi::Env& env,
+                                               const std::shared_ptr<IOdbcRow>& row,
+                                               const QueryResult& columnDefs) {
+  const auto columnCount = row->columnCount();
+  Napi::Array jsArray = Napi::Array::New(env, columnCount);
+
+  // Iterate through each column in the row
+  for (size_t colIdx = 0; colIdx < columnCount; ++colIdx) {
+    const auto& column = row->getColumn(colIdx);
+    const auto& colDef = columnDefs.get(colIdx);
+
+    // Check for NULL
+    if (column.isNull()) {
+      jsArray[colIdx] = env.Null();
+      continue;
+    }
+    JsArrayTarget jsArrayTarget(jsArray, colIdx);
+    bool handled = handleColumn(env, jsArrayTarget, column, colDef);
+
+    // If the handler didn't handle the type, set NULL as fallback
+    if (!handled) {
+      jsArray[colIdx] = env.Null();
+    }
+  }
+
+  return jsArray;
 }
 
 // Main method to convert ODBC row to JavaScript object
 Napi::Object JsObjectMapper::fromOdbcRow(const Napi::Env& env,
                                          const std::shared_ptr<IOdbcRow>& row,
                                          const QueryResult& columnDefs) {
-  Napi::Object jsRow = Napi::Object::New(env);
+  Napi::Object jsWriter = Napi::Object::New(env);
   const auto columnCount = row->columnCount();
 
   // Iterate through each column in the row
@@ -901,22 +838,22 @@ Napi::Object JsObjectMapper::fromOdbcRow(const Napi::Env& env,
     const auto& column = row->getColumn(colIdx);
     const auto& colDef = columnDefs.get(colIdx);
     const auto colName = colDef.colNameUtf8();
-
+    JsObjectTarget jsWriterTarget(jsWriter, colName);
     // Check for NULL
     if (column.isNull()) {
-      handleNullValue(env, jsRow, colName);
+      handleNullValue(env, jsWriterTarget);
       continue;
     }
 
     // Dispatch to appropriate handler
-    bool handled = handleColumn(env, jsRow, column, colName, colDef);
+    bool handled = handleColumn(env, jsWriterTarget, column, colDef);
 
     // If the handler didn't handle the type, set NULL as fallback
     if (!handled) {
-      handleNullValue(env, jsRow, colName);
+      handleNullValue(env, jsWriterTarget);
     }
   }
 
-  return jsRow;
+  return jsWriter;
 }
 }  // namespace mssql
