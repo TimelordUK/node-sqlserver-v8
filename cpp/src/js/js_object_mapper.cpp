@@ -91,6 +91,20 @@ QueryOptions JsObjectMapper::toQueryOptions(const Napi::Object& jsObject) {
   return result;
 }
 
+template <typename T>
+void writeInt(SqlParameter& param, T value, bool isNull) {
+  // Static assertion to ensure T is an integral type
+  static_assert(std::is_integral<T>::value, "writeInt can only be used with integral types");
+
+  if (!isNull) {
+    param.storage->addValue<T>(value);
+    param.indvec.emplace_back(0);  // Not NULL
+  } else {
+    param.storage->addValue<T>(0);             // Add dummy value
+    param.indvec.emplace_back(SQL_NULL_DATA);  // Mark as NULL
+  }
+}
+
 // Helper function to decode SqlParamValue into DatumStorage
 void JsObjectMapper::decodeIntoStorage(const Napi::Object& jsObject, SqlParameter& param) {
   // Create storage if it doesn't exist
@@ -102,51 +116,32 @@ void JsObjectMapper::decodeIntoStorage(const Napi::Object& jsObject, SqlParamete
   DatumStorage::SqlType storageType = DatumStorage::getTypeFromName(param.sql_type);
   param.storage->setType(storageType);
 
+  bool isNull = false;
+
+  if (!jsObject.Has("value")) {
+    isNull = true;
+  }
+
+  if (jsObject.Get("value").IsNull() || jsObject.Get("value").IsUndefined()) {
+    isNull = true;
+  }
+
   switch (storageType) {
     case DatumStorage::SqlType::TinyInt: {
-      if (jsObject.Has("value") && !jsObject.Get("value").IsNull() &&
-          !jsObject.Get("value").IsUndefined()) {
-        const int32_t v = safeGetInt32(jsObject, "value");
-        param.storage->addValue<int8_t>(static_cast<int8_t>(v));
-        param.indvec.emplace_back(0);  // Not NULL
-      } else {
-        // For NULL, we still need to add a placeholder value to maintain array indices
-        param.storage->addValue<int8_t>(0);        // Add dummy value
-        param.indvec.emplace_back(SQL_NULL_DATA);  // Mark as NULL
-      }
+      const auto v = safeGetInt32(jsObject, "value");
+      writeInt(param, static_cast<int8_t>(v), isNull);
     } break;
     case DatumStorage::SqlType::SmallInt: {
-      if (jsObject.Has("value") && !jsObject.Get("value").IsNull() &&
-          !jsObject.Get("value").IsUndefined()) {
-        const int32_t v = safeGetInt32(jsObject, "value");
-        param.storage->addValue<int16_t>(static_cast<int16_t>(v));
-        param.indvec.emplace_back(0);  // Not NULL
-      } else {
-        param.storage->addValue<int16_t>(0);       // Add dummy value
-        param.indvec.emplace_back(SQL_NULL_DATA);  // Mark as NULL
-      }
+      const auto v = safeGetInt32(jsObject, "value");
+      writeInt(param, static_cast<int16_t>(v), isNull);
     } break;
     case DatumStorage::SqlType::Integer: {
-      if (jsObject.Has("value") && !jsObject.Get("value").IsNull() &&
-          !jsObject.Get("value").IsUndefined()) {
-        const int32_t v = safeGetInt32(jsObject, "value");
-        param.storage->addValue<int32_t>(v);
-        param.indvec.emplace_back(0);  // Not NULL
-      } else {
-        param.storage->addValue<int32_t>(0);       // Add dummy value
-        param.indvec.emplace_back(SQL_NULL_DATA);  // Mark as NULL
-      }
+      const auto v = safeGetInt32(jsObject, "value");
+      writeInt(param, static_cast<int32_t>(v), isNull);
     } break;
     case DatumStorage::SqlType::BigInt: {
-      if (jsObject.Has("value") && !jsObject.Get("value").IsNull() &&
-          !jsObject.Get("value").IsUndefined()) {
-        const int64_t v = safeGetInt64(jsObject, "value");
-        param.storage->addValue<int64_t>(v);
-        param.indvec.emplace_back(0);  // Not NULL
-      } else {
-        param.storage->addValue<int64_t>(0);       // Add dummy value
-        param.indvec.emplace_back(SQL_NULL_DATA);  // Mark as NULL
-      }
+      const auto v = safeGetInt64(jsObject, "value");
+      writeInt(param, v, isNull);
     } break;
     default:
       throw std::runtime_error("Unsupported SQL type");

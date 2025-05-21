@@ -56,7 +56,8 @@ class ConnectionPromises {
       this.connection.query(sql, sqlParams, async (err, result) => {
         if (err) reject(err)
         else {
-          const qa = new QueryAggregator(this.connection, result!)
+          result = result ?? {} as QueryResult
+          const qa = new QueryAggregator(this.connection, result)
           const res = await qa.getResults()
           resolve(res)
         }
