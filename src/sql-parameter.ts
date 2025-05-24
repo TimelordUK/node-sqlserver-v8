@@ -672,7 +672,7 @@ export class FloatArrayParameter extends ArrayParameter {
     this.sqlType = 'SQL_DOUBLE'
     this.precision = 8 // Size of double
     this.paramSize = this.precision
-    this.bufferLen = this.precision
+    this.bufferLen = this.paramSize * array.length
   }
 }
 
@@ -705,7 +705,7 @@ export class DateTimeArrayParameter extends ArrayParameter {
     this.precision = 23
     this.scale = 3 // Milliseconds
     this.paramSize = this.precision
-    this.bufferLen = 16 // sizeof(SQL_TIMESTAMP_STRUCT)
+    this.bufferLen = 16 * array.length // sizeof(SQL_TIMESTAMP_STRUCT)
   }
 }
 
