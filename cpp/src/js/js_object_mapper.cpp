@@ -36,6 +36,20 @@ int32_t JsObjectMapper::safeGetInt32(const Napi::Object& obj,
   return defaultVal;
 }
 
+int32_t JsObjectMapper::safeGetInt32(const Napi::Object& obj, int32_t defaultVal) {
+  if (obj.IsNumber()) {
+    return obj.As<Napi::Number>().Int32Value();
+  }
+  return defaultVal;
+}
+
+int64_t JsObjectMapper::safeGetInt64(const Napi::Object& obj, int64_t defaultVal) {
+  if (obj.IsNumber()) {
+    return obj.As<Napi::Number>().Int64Value();
+  }
+  return defaultVal;
+}
+
 bool JsObjectMapper::safeGetBool(const Napi::Object& obj,
                                  const std::string& prop,
                                  bool defaultVal) {
@@ -91,22 +105,65 @@ QueryOptions JsObjectMapper::toQueryOptions(const Napi::Object& jsObject) {
   return result;
 }
 
-template <typename T>
-void writeInt(SqlParameter& param, T value, bool isNull) {
-  // Static assertion to ensure T is an integral type
-  static_assert(std::is_integral<T>::value, "writeInt can only be used with integral types");
-
-  if (!isNull) {
-    param.storage->addValue<T>(value);
-    param.indvec.emplace_back(0);  // Not NULL
-  } else {
-    param.storage->addValue<T>(0);             // Add dummy value
-    param.indvec.emplace_back(SQL_NULL_DATA);  // Mark as NULL
-  }
-}
-
 // Helper function to decode SqlParamValue into DatumStorage
 void JsObjectMapper::decodeIntoStorage(const Napi::Object& jsObject, SqlParameter& param) {
+  // Local template function for writing int values
+  auto writeInt = [](SqlParameter& param, auto value, bool isNull) {
+    using T = decltype(value);
+    static_assert(std::is_integral<T>::value, "writeInt can only be used with integral types");
+
+    if (!isNull) {
+      param.storage->addValue<T>(value);
+      param.indvec.emplace_back(0);  // Not NULL
+    } else {
+      param.storage->addValue<T>(static_cast<T>(0));  // Add dummy value
+      param.indvec.emplace_back(SQL_NULL_DATA);       // Mark as NULL
+    }
+  };
+
+  // Local template function for handling numeric types
+  auto decodeNumericType = [&](const Napi::Object& jsObject,
+                               SqlParameter& param,
+                               bool isArray,
+                               const Napi::Array& asArray,
+                               bool isNull,
+                               auto typeTag) {
+    using T = decltype(typeTag);
+    if (isArray) {
+      for (size_t i = 0; i < asArray.Length(); i++) {
+        isNull = false;
+        Napi::Value element = asArray[i];
+        if (element.IsNull() || element.IsUndefined()) {
+          isNull = true;
+        }
+        Napi::Object obj = element.As<Napi::Object>();
+        const auto v = safeGetInt32(obj, static_cast<int32_t>(0));
+        writeInt(param, static_cast<T>(v), isNull);
+      }
+    } else {
+      const auto v = safeGetInt32(jsObject, "value");
+      writeInt(param, static_cast<T>(v), isNull);
+    }
+  };
+
+  // Local function for handling BigInt types (needs int64 handling)
+  auto decodeBigIntType = [&](const Napi::Object& jsObject,
+                              SqlParameter& param,
+                              bool isArray,
+                              const Napi::Array& asArray,
+                              bool isNull) {
+    if (isArray) {
+      for (size_t i = 0; i < asArray.Length(); i++) {
+        Napi::Value element = asArray[i];
+        Napi::Object obj = element.As<Napi::Object>();
+        const auto v = safeGetInt64(obj, static_cast<int64_t>(0));
+        writeInt(param, v, isNull);
+      }
+    } else {
+      const auto v = safeGetInt64(jsObject, "value");
+      writeInt(param, v, isNull);
+    }
+  };
   // Create storage if it doesn't exist
   if (!param.storage) {
     param.storage = std::make_shared<mssql::DatumStorage>();
@@ -125,24 +182,28 @@ void JsObjectMapper::decodeIntoStorage(const Napi::Object& jsObject, SqlParamete
   if (jsObject.Get("value").IsNull() || jsObject.Get("value").IsUndefined()) {
     isNull = true;
   }
+  bool isArray = false;
+
+  if (!isNull) {
+    isArray = jsObject.Get("value").IsArray();
+  }
+
+  Napi::Array asArray = isArray ? jsObject.Get("value").As<Napi::Array>() : Napi::Array::New(0);
 
   switch (storageType) {
-    case DatumStorage::SqlType::TinyInt: {
-      const auto v = safeGetInt32(jsObject, "value");
-      writeInt(param, static_cast<int8_t>(v), isNull);
-    } break;
-    case DatumStorage::SqlType::SmallInt: {
-      const auto v = safeGetInt32(jsObject, "value");
-      writeInt(param, static_cast<int16_t>(v), isNull);
-    } break;
-    case DatumStorage::SqlType::Integer: {
-      const auto v = safeGetInt32(jsObject, "value");
-      writeInt(param, static_cast<int32_t>(v), isNull);
-    } break;
-    case DatumStorage::SqlType::BigInt: {
-      const auto v = safeGetInt64(jsObject, "value");
-      writeInt(param, v, isNull);
-    } break;
+    case DatumStorage::SqlType::TinyInt:
+      decodeNumericType(jsObject, param, isArray, asArray, isNull, int8_t{});
+      break;
+    case DatumStorage::SqlType::SmallInt:
+      decodeNumericType(jsObject, param, isArray, asArray, isNull, int16_t{});
+      break;
+    case DatumStorage::SqlType::Integer:
+      decodeNumericType(jsObject, param, isArray, asArray, isNull, int32_t{});
+      break;
+    case DatumStorage::SqlType::BigInt:
+      decodeBigIntType(jsObject, param, isArray, asArray, isNull);
+      break;
+
     default:
       throw std::runtime_error("Unsupported SQL type");
   }

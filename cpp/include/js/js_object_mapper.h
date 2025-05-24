@@ -98,6 +98,8 @@ class JsObjectMapper {
   static int64_t safeGetInt64(const Napi::Object& obj,
                               const std::string& prop,
                               int64_t defaultVal = 0);
+  static int64_t safeGetInt64(const Napi::Object& obj, int64_t defaultVal = 0);
+  static int32_t safeGetInt32(const Napi::Object& obj, int32_t defaultVal = 0);
   static int32_t safeGetInt32(const Napi::Object& obj,
                               const std::string& prop,
                               int32_t defaultVal = 0);

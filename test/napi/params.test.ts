@@ -63,8 +63,9 @@ describe('params query', function () {
         constructor(tableName: string, connection: Connection) {
             super(tableName, connection);
         }
-        override async setup(): Promise<void> {
-            await theConnection.promises.submitReadAll(`INSERT INTO ${this.tableName} VALUES (?)`, [0x80000000])
+      override async setup(): Promise<void> {
+        await theConnection.promises.submitReadAll(`INSERT INTO ${this.tableName} VALUES (?)`, [[0x80, 0x8000, 0x800000, 0x80000000]])
+        // await theConnection.promises.submitReadAll(`INSERT INTO ${this.tableName} VALUES (?)`, [0x80000000])
         }
         override async test () {
             const r = await theConnection.promises.submitReadAll(`SELECT bigint_test FROM ${this.tableName}`, [])

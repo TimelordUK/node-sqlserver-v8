@@ -1296,26 +1296,26 @@ bool OdbcStatement::apply_precision(const std::shared_ptr<SqlParameter>& datum,
     return false;
   }
   r = odbcApi_->SQLSetDescField(hdesc,
-                      current_param,
-                      SQL_DESC_PRECISION,
-                      reinterpret_cast<SQLPOINTER>(datum->param_size),
-                      bufferLength);
+                                current_param,
+                                SQL_DESC_PRECISION,
+                                reinterpret_cast<SQLPOINTER>(datum->param_size),
+                                bufferLength);
   if (!check_odbc_error(r)) {
     return false;
   }
   r = odbcApi_->SQLSetDescField(hdesc,
-                      current_param,
-                      SQL_DESC_SCALE,
-                      reinterpret_cast<SQLPOINTER>(datum->digits),
-                      bufferLength);
+                                current_param,
+                                SQL_DESC_SCALE,
+                                reinterpret_cast<SQLPOINTER>(datum->digits),
+                                bufferLength);
   if (!check_odbc_error(r)) {
     return false;
   }
   r = odbcApi_->SQLSetDescField(hdesc,
-                      current_param,
-                      SQL_DESC_DATA_PTR,
-                      static_cast<SQLPOINTER>(datum->storage->getStorage()->data()),
-                      bufferLength);
+                                current_param,
+                                SQL_DESC_DATA_PTR,
+                                static_cast<SQLPOINTER>(datum->storage->getStorage()->data()),
+                                bufferLength);
   if (!check_odbc_error(r)) {
     return false;
   }
@@ -1338,7 +1338,7 @@ bool OdbcStatement::bind_parameters(const std::vector<std::shared_ptr<SqlParamet
                                           c_type,
                                           sql_type,
                                           datum->param_size,
-                                          datum->precision,
+                                          datum->digits,
                                           storage->getStorage()->data(),
                                           datum->buffer_len,
                                           datum->indvec.data());
