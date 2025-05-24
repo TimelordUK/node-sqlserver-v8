@@ -1324,8 +1324,32 @@ bool OdbcStatement::apply_precision(const std::shared_ptr<SqlParameter>& datum,
 
 bool OdbcStatement::bind_parameters(const std::vector<std::shared_ptr<SqlParameter>>& parameters) {
   SQL_LOG_TRACE_STREAM("bind_parameters: " << parameters.size());
-  auto current_param = 1;
+  
+  // Check if we have array parameters and get the array size
+  size_t array_size = 1;
+  for (const auto& param : parameters) {
+    if (param->is_array && param->array_length > 1) {
+      array_size = param->array_length;
+      break;  // All array parameters should have the same length
+    }
+  }
+  
+  // Set paramset size if we have array parameters
   auto statement = statement_->get_handle();
+  if (array_size > 1) {
+    SQL_LOG_DEBUG_STREAM("Setting SQL_ATTR_PARAMSET_SIZE to " << array_size);
+    auto ret = odbcApi_->SQLSetStmtAttr(statement, 
+                                        SQL_ATTR_PARAMSET_SIZE, 
+                                        reinterpret_cast<SQLPOINTER>(array_size), 
+                                        0);
+    if (!check_odbc_error(ret)) {
+      SQL_LOG_ERROR_STREAM("Failed to set SQL_ATTR_PARAMSET_SIZE");
+      state_ = State::STMT_ERROR;
+      return false;
+    }
+  }
+  
+  auto current_param = 1;
   for (const auto& datum : parameters) {
     const auto storage = datum->storage;
     const auto c_type = OdbcTypeMapper::parseOdbcTypeString(datum->c_type);

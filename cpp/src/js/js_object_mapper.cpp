@@ -189,6 +189,12 @@ void JsObjectMapper::decodeIntoStorage(const Napi::Object& jsObject, SqlParamete
   }
 
   Napi::Array asArray = isArray ? jsObject.Get("value").As<Napi::Array>() : Napi::Array::New(0);
+  
+  // Set array parameter flags
+  if (isArray) {
+    param.is_array = true;
+    param.array_length = asArray.Length();
+  }
 
   switch (storageType) {
     case DatumStorage::SqlType::TinyInt:

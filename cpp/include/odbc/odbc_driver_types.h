@@ -213,6 +213,10 @@ struct SqlParameter {
   // Add this new member
   std::shared_ptr<mssql::DatumStorage> storage;
   std::vector<SQLLEN> indvec;
+  
+  // Array parameter support
+  bool is_array;
+  size_t array_length;
 
   // Constructor with storage initialization
   SqlParameter()
@@ -220,7 +224,9 @@ struct SqlParameter {
         scale(0),
         param_size(0),
         buffer_len(0),
-        storage(std::make_shared<mssql::DatumStorage>()) {}
+        storage(std::make_shared<mssql::DatumStorage>()),
+        is_array(false),
+        array_length(1) {}
 };
 
 inline std::ostream& operator<<(std::ostream& os, const ProcedureParamMeta& param) {

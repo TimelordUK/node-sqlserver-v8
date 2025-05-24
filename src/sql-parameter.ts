@@ -64,6 +64,7 @@ export class SqlParameter {
   bufferLen: number = 0 // Buffer length for binding
   encoding: BufferEncoding // Character encoding
   bytes?: Buffer // Pre-encoded bytes
+  isArray?: boolean // Flag to indicate if this is an array parameter
 
   /**
    * Create a SQL parameter
@@ -572,6 +573,7 @@ export class ArrayParameter extends SqlParameter {
     this.elementType = elementType || 'UNKNOWN'
     this.jsType = 'JS_ARRAY'
     this.value = array
+    this.isArray = true
 
     // Build null map
     this.nullMap = array.map(item => item === null || item === undefined)
