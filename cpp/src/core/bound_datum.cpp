@@ -1245,10 +1245,18 @@ void BoundDatum::bind_number(const Napi::Object& p) {
 
 void BoundDatum::bind_number_array(const Napi::Object& pp) {
   const Napi::Array arr = pp.As<Napi::Array>();
-  const Napi::Value maybe_elem = arr[static_cast<uint32_t>(0)];
-  Napi::Value p;
-  const auto maybe = p.ToNumber();
-  const auto d = static_cast<long double>(maybe.ToNumber().DoubleValue());
+  if (arr.Length() == 0) {
+    bind_double_array(pp);
+    return;
+  }
+  
+  const Napi::Value first_elem = arr[static_cast<uint32_t>(0)];
+  if (!first_elem.IsNumber()) {
+    bind_double_array(pp);
+    return;
+  }
+  
+  const auto d = static_cast<long double>(first_elem.ToNumber().DoubleValue());
   if (d == floor(d) && d >= static_cast<long double>(numeric_limits<int64_t>::min()) &&
       d <= static_cast<long double>(numeric_limits<int64_t>::max())) {
     bind_integer_array(pp);
