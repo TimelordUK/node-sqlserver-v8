@@ -12,8 +12,8 @@
 
 namespace mssql {
 
-bool JSTimeAdapter::bindJsDateToDateStorage(napi_env env,
-                                            napi_value jsDate,
+bool JSTimeAdapter::bindJsDateToDateStorage(Napi::Env env,
+                                            Napi::Value jsDate,
                                             DatumStorage& storage,
                                             int32_t offset) {
   if (storage.getType() != DatumStorage::SqlType::Date) {
@@ -33,8 +33,8 @@ bool JSTimeAdapter::bindJsDateToDateStorage(napi_env env,
 }
 
 // Bind a JavaScript Date to a TIME type in DatumStorage
-bool JSTimeAdapter::bindJsDateToTimeStorage(napi_env env,
-                                            napi_value jsDate,
+bool JSTimeAdapter::bindJsDateToTimeStorage(Napi::Env env,
+                                            Napi::Value jsDate,
                                             DatumStorage& storage,
                                             int32_t offset) {
   if (storage.getType() != DatumStorage::SqlType::Time) {
@@ -53,8 +53,8 @@ bool JSTimeAdapter::bindJsDateToTimeStorage(napi_env env,
 }
 
 // Bind a JavaScript Date to a TIMESTAMP type in DatumStorage
-bool JSTimeAdapter::bindJsDateToTimestampStorage(napi_env env,
-                                                 napi_value jsDate,
+bool JSTimeAdapter::bindJsDateToTimestampStorage(Napi::Env env,
+                                                 Napi::Value jsDate,
                                                  DatumStorage& storage,
                                                  int32_t offset) {
   if (storage.getType() != DatumStorage::SqlType::DateTime &&
@@ -74,8 +74,8 @@ bool JSTimeAdapter::bindJsDateToTimestampStorage(napi_env env,
 }
 
 // Bind a JavaScript Date to a TIMESTAMPOFFSET type in DatumStorage
-bool JSTimeAdapter::bindJsDateToTimestampOffsetStorage(napi_env env,
-                                                       napi_value jsDate,
+bool JSTimeAdapter::bindJsDateToTimestampOffsetStorage(Napi::Env env,
+                                                       Napi::Value jsDate,
                                                        DatumStorage& storage,
                                                        int32_t offset) {
   if (storage.getType() != DatumStorage::SqlType::DateTimeOffset) {
@@ -96,7 +96,7 @@ bool JSTimeAdapter::bindJsDateToTimestampOffsetStorage(napi_env env,
 
 // Implementation for the new date conversion functions
 
-napi_value JSTimeAdapter::createJsDateFromDate(napi_env env, const SQL_DATE_STRUCT& date) {
+Napi::Value JSTimeAdapter::createJsDateFromDate(Napi::Env env, const SQL_DATE_STRUCT& date) {
   struct tm timeinfo = {};
   timeinfo.tm_year = date.year - 1900;  // tm_year is years since 1900
   timeinfo.tm_mon = date.month - 1;     // tm_mon is 0-based
@@ -111,12 +111,10 @@ napi_value JSTimeAdapter::createJsDateFromDate(napi_env env, const SQL_DATE_STRU
   // Convert to milliseconds
   double ms = static_cast<double>(rawtime) * 1000.0;
 
-  napi_value jsDate;
-  napi_create_date(env, ms, &jsDate);
-  return jsDate;
+  return Napi::Date::New(env, ms);
 }
 
-napi_value JSTimeAdapter::createJsDateFromTime(napi_env env, const SQL_SS_TIME2_STRUCT& time) {
+Napi::Value JSTimeAdapter::createJsDateFromTime(Napi::Env env, const SQL_SS_TIME2_STRUCT& time) {
   // Create a date representing today with this time
   time_t now = std::time(nullptr);
   struct tm* tm_now = std::localtime(&now);
@@ -131,13 +129,11 @@ napi_value JSTimeAdapter::createJsDateFromTime(napi_env env, const SQL_SS_TIME2_
   double ms = static_cast<double>(time_with_today) * 1000.0 +
               static_cast<double>(time.fraction) / 1000000.0;
 
-  napi_value jsDate;
-  napi_create_date(env, ms, &jsDate);
-  return jsDate;
+  return Napi::Date::New(env, ms);
 }
 
-napi_value JSTimeAdapter::createJsDateFromTimestamp(napi_env env,
-                                                    const SQL_TIMESTAMP_STRUCT& timestamp) {
+Napi::Value JSTimeAdapter::createJsDateFromTimestamp(Napi::Env env,
+                                                     const SQL_TIMESTAMP_STRUCT& timestamp) {
   struct tm timeinfo = {};
   timeinfo.tm_year = timestamp.year - 1900;  // tm_year is years since 1900
   timeinfo.tm_mon = timestamp.month - 1;     // tm_mon is 0-based
@@ -153,13 +149,11 @@ napi_value JSTimeAdapter::createJsDateFromTimestamp(napi_env env,
   double ms =
       static_cast<double>(rawtime) * 1000.0 + static_cast<double>(timestamp.fraction) / 1000000.0;
 
-  napi_value jsDate;
-  napi_create_date(env, ms, &jsDate);
-  return jsDate;
+  return Napi::Date::New(env, ms);
 }
 
-napi_value JSTimeAdapter::createJsDateFromTimestampOffset(
-    napi_env env, const SQL_SS_TIMESTAMPOFFSET_STRUCT& offset) {
+Napi::Value JSTimeAdapter::createJsDateFromTimestampOffset(
+    Napi::Env env, const SQL_SS_TIMESTAMPOFFSET_STRUCT& offset) {
   struct tm timeinfo = {};
   timeinfo.tm_year = offset.year - 1900;
   timeinfo.tm_mon = offset.month - 1;
@@ -184,9 +178,7 @@ napi_value JSTimeAdapter::createJsDateFromTimestampOffset(
   double ms =
       static_cast<double>(rawtime) * 1000.0 + static_cast<double>(offset.fraction) / 1000000.0;
 
-  napi_value jsDate;
-  napi_create_date(env, ms, &jsDate);
-  return jsDate;
+  return Napi::Date::New(env, ms);
 }
 
 }  // namespace mssql

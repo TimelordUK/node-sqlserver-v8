@@ -90,7 +90,9 @@ class JsObjectMapper {
                                   const std::shared_ptr<IOdbcRow>& row,
                                   const QueryResult& columnDefs);
 
- private:
+  static std::u16string safeGetWideString(const Napi::Object& obj,
+                                          const std::string& prop,
+                                          const std::u16string& defaultVal = u"");
   // Helper methods to reduce boilerplate
   static std::string safeGetString(const Napi::Object& obj,
                                    const std::string& prop,
@@ -107,6 +109,7 @@ class JsObjectMapper {
                           const std::string& prop,
                           bool defaultVal = false);
 
+ private:
   static bool handleColumn(const Napi::Env& env,
                            JsValueTarget& jsWriter,
                            const DatumStorage& column,

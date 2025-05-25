@@ -10,7 +10,7 @@ import {
 import { EventEmitter } from 'events'
 import { AsyncQueue, QueueTask } from './async-queue'
 import { ClassLogger } from './class-logger'
-import { AggregatedResult, QueryAggregator } from './query-aggregator'
+import { AggregatorResults, QueryAggregator } from './query-aggregator'
 import { SqlParameter } from './sql-parameter'
 
 /**
@@ -50,8 +50,8 @@ class ConnectionPromises {
     })
   }
 
-  async submitReadAll (sql: string, params?: any[]): Promise<AggregatedResult> {
-    return new Promise<AggregatedResult>((resolve, reject) => {
+  async submitReadAll (sql: string, params?: any[]): Promise<AggregatorResults> {
+    return new Promise<AggregatorResults>((resolve, reject) => {
       const sqlParams = params ? params.map(p => SqlParameter.fromValue(p)) : undefined
       this.connection.query(sql, sqlParams, async (err, result) => {
         if (err) reject(err)

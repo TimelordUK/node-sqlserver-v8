@@ -6,6 +6,7 @@
 #include <odbc/odbc_row.h>
 #include <common/string_utils.h>
 #include <utils/Logger.h>
+#include <odbc/odbc_type_mapper.h>
 
 namespace mssql {
 // Helper methods implementation
@@ -14,6 +15,15 @@ std::string JsObjectMapper::safeGetString(const Napi::Object& obj,
                                           const std::string& defaultVal) {
   if (obj.Has(prop) && obj.Get(prop).IsString()) {
     return obj.Get(prop).As<Napi::String>().Utf8Value();
+  }
+  return defaultVal;
+}
+
+std::u16string JsObjectMapper::safeGetWideString(const Napi::Object& obj,
+                                                 const std::string& prop,
+                                                 const std::u16string& defaultVal) {
+  if (obj.Has(prop) && obj.Get(prop).IsString()) {
+    return obj.Get(prop).As<Napi::String>().Utf16Value();
   }
   return defaultVal;
 }
@@ -189,7 +199,7 @@ void JsObjectMapper::decodeIntoStorage(const Napi::Object& jsObject, SqlParamete
   }
 
   Napi::Array asArray = isArray ? jsObject.Get("value").As<Napi::Array>() : Napi::Array::New(0);
-  
+
   // Set array parameter flags
   if (isArray) {
     param.is_array = true;
@@ -266,13 +276,16 @@ Napi::Object JsObjectMapper::fromColumnDefinition(const Napi::Env& env,
     colName = StringUtils::WideToUtf8(colDef.colName, colDef.colNameLen);
   }
 
+  std::string jsType = OdbcTypeMapper::MapSqlTypeToJsType(colDef.dataType);
+
   // Set properties on the JavaScript object
+  result.Set("size", Napi::Number::New(env, colDef.colNameLen));
   result.Set("name", Napi::String::New(env, colName));
-  result.Set("nameLength", Napi::Number::New(env, colDef.colNameLen));
-  result.Set("dataType", Napi::Number::New(env, colDef.dataType));
+  result.Set("nullable", Napi::Boolean::New(env, colDef.nullable != 0));
+  result.Set("type", Napi::String::New(env, jsType));
+  result.Set("sqlType", Napi::Number::New(env, colDef.dataType));
   result.Set("columnSize", Napi::Number::New(env, colDef.columnSize));
   result.Set("decimalDigits", Napi::Number::New(env, colDef.decimalDigits));
-  result.Set("nullable", Napi::Boolean::New(env, colDef.nullable != 0));
 
   return result;
 }

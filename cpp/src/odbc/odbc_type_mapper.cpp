@@ -47,6 +47,53 @@ Recommendation
   This should be significantly faster than the sequential if-statements, especially as the number of
 types grows.
 */
+std::string OdbcTypeMapper::MapSqlTypeToJsType(const SQLSMALLINT datatype) {
+  string type_name;
+
+  switch (datatype) {
+    case SQL_CHAR:
+    case SQL_VARCHAR:
+    case SQL_LONGVARCHAR:
+    case SQL_WCHAR:
+    case SQL_WVARCHAR:
+    case SQL_WLONGVARCHAR:
+    case SQL_GUID:
+    case SQL_SS_XML:
+      type_name = "text";
+      break;
+    case SQL_BIT:
+      type_name = "boolean";
+      break;
+    case SQL_SMALLINT:
+    case SQL_TINYINT:
+    case SQL_INTEGER:
+    case SQL_DECIMAL:
+    case SQL_NUMERIC:
+    case SQL_REAL:
+    case SQL_FLOAT:
+    case SQL_DOUBLE:
+    case SQL_BIGINT:
+      type_name = "number";
+      break;
+    case SQL_TYPE_TIME:
+    case SQL_SS_TIME2:
+    case SQL_TYPE_TIMESTAMP:
+    case SQL_TYPE_DATE:
+    case SQL_SS_TIMESTAMPOFFSET:
+      type_name = "date";
+      break;
+    case SQL_BINARY:
+    case SQL_VARBINARY:
+    case SQL_LONGVARBINARY:
+    case SQL_SS_UDT:
+      type_name = "binary";
+      break;
+    default:
+      type_name = "text";
+      break;
+  }
+  return type_name;
+}
 
 SQLSMALLINT OdbcTypeMapper::parseOdbcParamTypeString(const std::string& typeStr) {
   if (typeStr.empty()) {

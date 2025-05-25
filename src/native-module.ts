@@ -16,12 +16,14 @@ export interface StatementHandle {
 }
 
 export interface ColumnDefinition {
-  colName: string
-  colNameLength: number
+  size: number
+  name: string
+  nullable: boolean
+  type: string
+  sqlType: string
   dataType: number
   columnSize: number
   decimalDigits: number
-  nullable?: number
 }
 
 export type OdbcScalarValue =
@@ -33,7 +35,7 @@ export type OdbcScalarValue =
     | Buffer // For binary data
     | null // For NULL values
 
-export type OdbcRow = Record<string, OdbcScalarValue>
+export type OdbcRow = Record<string, OdbcScalarValue> | OdbcScalarValue[]
 
 export interface QueryResult {
   readonly meta: ColumnDefinition[]

@@ -48,8 +48,6 @@ describe('params query', function () {
             await promises.submitReadAll(createQuery)
             const clusteredIndexSql = ['CREATE CLUSTERED INDEX IX_', tableName, ' ON ', tableName, ' (id)'].join('')
             await promises.submitReadAll(clusteredIndexSql)
-            await this.setup()
-            await this.test()
         }
 
         async setup() : Promise<void> {

@@ -1,186 +1,309 @@
-import { EventEmitter } from 'events'
-import { Connection } from './connection'
-import { QueryResult, OdbcRow, StatementHandle } from './native-module'
-import { QueryReaderOptions, QueryReader } from './query-reader'
-import logger from './logger'
+import { OdbcRow, OdbcScalarValue, QueryOptions, QueryResult } from './native-module'
+import { Connection, SqlParameter } from '.'
 
-export interface AggregatedResult {
-  resultSets: Array<{
-    meta: QueryResult['meta']
-    rows: OdbcRow[]
-  }>
-  totalRows: number
-  totalResultSets: number
+export class AggregatorResults {
+  public beginAt: Date
+  public submittedAt: Date | null
+  public endAt: Date | null
+  public elapsed: number
+  public first: QueryResult['rows'] | null
+  public firstMeta: QueryResult['meta'] | null
+  public meta: Array<QueryResult['meta']>
+  public metaElapsed: number[]
+  public counts: number[]
+  public results: Array<QueryResult['rows'] | null>
+  public output: OdbcScalarValue[] | null
+  public info: string[] | null
+  public errors: Error[]
+  public sql: string | null
+  public rowRate: number
+  public rows: number
+  public returns: OdbcScalarValue | null
+  public row: OdbcRow
+
+  constructor (public options: AggregatorOptions) {
+    this.beginAt = new Date()
+    this.submittedAt = null
+    this.endAt = null
+    this.elapsed = 0
+    this.first = null
+    this.firstMeta = null
+    this.meta = []
+    this.metaElapsed = []
+    this.counts = []
+    this.results = []
+    this.output = null
+    this.info = null
+    this.errors = []
+    this.options = options
+    this.rows = 0
+    this.row = []
+    this.rowRate = 0
+    this.sql = null
+
+    this.returns = null
+  }
+
+  onMeta (meta: QueryResult['meta']) {
+    for (let i = 0; i < meta.length; ++i) {
+      if (this.options.replaceEmptyColumnNames) {
+        if (!meta[i].name || meta[i].name.length === 0) {
+          meta[i].name = `Column${i}`
+        }
+      }
+    }
+    this.calcElapsed()
+    this.meta.push(meta)
+    this.results.push([])
+    this.metaElapsed.push(this.elapsed)
+    if (this.first === null) {
+      this.first = this.results[0]
+      this.firstMeta = meta
+    }
+  }
+
+  onOutput (o: OdbcScalarValue[]) {
+    this.output = this.output ?? []
+    this.output = o
+    if (o.length > 0) {
+      this.returns = o[0]
+    }
+  }
+
+  onSubmitted (q) {
+    this.calcElapsed()
+    this.submittedAt = new Date()
+    this.sql = q.query_str
+  }
+
+  onRowCount (count: number) {
+    this.counts.push(count)
+  }
+
+  end () {
+    this.endAt = new Date()
+  }
+
+  onRow () {
+    this.rows++
+    if (this.options.raw) {
+      this.row = []
+    } else {
+      this.row = {}
+    }
+    this.calcElapsed()
+    this.rowRate = (this.rows / this.elapsed) * 1000
+  }
+
+  onInfo (m: Error) {
+    this.info = this.info ?? []
+    this.info.push(m.message.substring(m.message.lastIndexOf(']') + 1))
+  }
+
+  calcElapsed () {
+    this.elapsed = new Date() - this.beginAt
+  }
+
+  onDone () {
+    this.calcElapsed()
+  }
+
+  lastError () {
+    return this.errors.length > 0
+      ? this.errors[this.errors.length - 1]
+      : null
+  }
+
+  resultId () {
+    return this.meta.length - 1
+  }
+
+  newRow () {
+    const resultId = this.resultId()
+    return this.options.raw ? [this.meta[resultId].length] : {}
+  }
+
+  onColumn (c: number, v: OdbcScalarValue) {
+    const resultId = this.resultId()
+    const meta = this.meta[resultId]
+    this.results = this.results ?? []
+    this.results[resultId] = []
+    const results = this.results[resultId]
+
+    if (this.options.raw) {
+      const row = this.row as OdbcScalarValue[]
+      row[c] = v
+    } else {
+      const row = this.row as Record<string, OdbcScalarValue>
+      row[meta[c].name] = v
+    }
+    if (c === meta.length - 1) {
+      results.push(this.row)
+    }
+  }
 }
 
-export class QueryAggregator extends EventEmitter {
-  private readonly results: AggregatedResult = {
-    resultSets: [],
-    totalRows: 0,
-    totalResultSets: 0
+class AggregatorOptions {
+  public readonly raw: boolean
+  public readonly timeoutMs: number
+  public readonly replaceEmptyColumnNames: boolean
+  constructor (options: QueryOptions) {
+    this.timeoutMs = this.getOpt(options, 'timeoutMs', 0)
+    this.raw = this.getOpt(options, 'raw', false)
+    this.replaceEmptyColumnNames = this.getOpt(options, 'replaceEmptyColumnNames', false)
   }
 
-  private currentResult: QueryResult
-  private isComplete = false
-  private readonly statementHandle: StatementHandle
-  private currentReader: QueryReader | null = null
+  getOpt (src: Record<string, any>, p: string, def: any) {
+    if (!src) {
+      return def
+    }
+    let ret
+    if (Object.hasOwnProperty.call(src, p)) {
+      ret = src[p]
+    } else {
+      ret = def
+    }
+    return ret
+  }
+}
 
-  constructor (
-    public readonly connection: Connection,
-    initialResult: QueryResult,
-    public readonly options?: QueryReaderOptions
-  ) {
-    super()
-    this.currentResult = initialResult
-    this.statementHandle = initialResult.handle
-
-    // Start processing automatically
-    this.processResults().catch(err => {
-      this.emit('error', err)
-    })
+export class QueryAggregator {
+  constructor (private readonly connectionProxy: Connection) {
   }
 
-  private async processResults (): Promise<void> {
-    logger.debug(`QueryAggregator: Starting to process results for statement ${this.statementHandle.statementId}`)
+  emptyResults (options: AggregatorOptions) {
+    return new AggregatorResults(options)
+  }
 
-    try {
-      let hasMoreResults = true
-      let resultSetIndex = 0
+  async run (q, opt) {
+    return new Promise((resolve, reject) => {
+      if (this.connectionProxy.isClosed()) {
+        reject(new Error('connection is closed.'))
+      }
+      let handle: NodeJS.Timeout
 
-      while (hasMoreResults) {
-        // Process current result set
-        await this.processResultSet(this.currentResult, resultSetIndex)
+      const options = new AggregatorOptions(opt)
+      const ret = this.emptyResults(options)
 
-        // Check if there are more result sets
-        if (!this.currentResult.endOfResults) {
-          const nextResult = await this.connection.promises.nextResultSet(this.statementHandle)
-
-          if (nextResult && !nextResult.endOfResults) {
-            this.currentResult = nextResult
-            resultSetIndex++
-          } else {
-            hasMoreResults = false
+      if (options.timeoutMs) {
+        handle = this.timeOut(q, options.timeoutMs, (e: Error) => {
+          if (e) {
+            ret.errors.push(e)
           }
+        })
+      }
+
+      function onSubmitted (q) {
+        ret.onSubmitted(q)
+      }
+
+      function onRowCount (count: number) {
+        ret.onRowCount(count)
+      }
+
+      function onOutput (o: OdbcScalarValue[]) {
+        ret.onOutput(o)
+      }
+
+      function onError (e: Error, more: boolean) {
+        ret.errors.push(e)
+      }
+
+      function onInfo (m: Error) {
+        ret.onInfo(m)
+      }
+
+      function onMeta (meta: QueryResult['meta']) {
+        ret.onMeta(meta)
+      }
+
+      function onRow () {
+        ret.onRow()
+      }
+
+      function rejectResolve () {
+        ret.end()
+        const last = ret.lastError()
+        if (last) {
+          reject(last)
         } else {
-          hasMoreResults = false
+          resolve(ret)
         }
       }
 
-      this.isComplete = true
-
-      // Emit completion event with aggregated results
-      this.emit('complete', this.results)
-
-      // Clean up resources
-      await this.cleanup()
-    } catch (error) {
-      logger.error(`QueryAggregator error: ${error}`)
-      this.emit('error', error)
-
-      // Still try to clean up on error
-      await this.cleanup().catch(cleanupError => {
-        logger.error(`Error during cleanup: ${cleanupError}`)
-      })
-    }
-  }
-
-  private async processResultSet (result: QueryResult, index: number): Promise<void> {
-    logger.debug(`Processing result set ${index} for statement ${this.statementHandle.statementId}`)
-
-    // Use the same options but force non-streaming for aggregation
-    const aggregateOptions = { ...this.options, streaming: false }
-
-    // Create a reader for this result set
-    this.currentReader = new QueryReader(this.connection, result, aggregateOptions)
-
-    try {
-      // Get all rows for this result set
-      const rows = await this.currentReader.getAllRows()
-
-      // Add to aggregated results
-      this.results.resultSets.push({
-        meta: result.meta,
-        rows
-      })
-
-      this.results.totalRows += rows.length
-      this.results.totalResultSets++
-
-      // Emit progress event
-      this.emit('resultSet', {
-        index,
-        meta: result.meta,
-        rowCount: rows.length,
-        rows: this.options?.streaming ? undefined : rows
-      })
-    } finally {
-      // Clear the current reader reference
-      this.currentReader = null
-    }
-  }
-
-  private async cleanup (): Promise<void> {
-    logger.debug(`QueryAggregator: Cleaning up statement ${this.statementHandle.statementId}`)
-
-    try {
-      // Tell the connection to release the statement
-      await this.releaseStatement()
-      logger.debug(`QueryAggregator: Successfully released statement ${this.statementHandle.statementId}`)
-    } catch (error) {
-      logger.error(`QueryAggregator: Error releasing statement ${this.statementHandle.statementId}: ${error}`)
-      throw error
-    }
-  }
-
-  private async releaseStatement (): Promise<void> {
-    // Release the statement handle on the connection
-    await this.connection.promises.releaseStatement(this.statementHandle)
-
-    // Also emit an event for any listeners
-    this.emit('statementComplete', this.statementHandle)
-  }
-
-  async getResults (): Promise<AggregatedResult> {
-    if (this.isComplete) {
-      return this.results
-    }
-
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        this.removeListener('complete', onComplete)
-        this.removeListener('error', onError)
-        reject(new Error('Timeout waiting for query aggregation to complete'))
-      }, 60000) // 60 second timeout for complex queries
-
-      const onComplete = (results: AggregatedResult) => {
-        clearTimeout(timeout)
-        this.removeListener('error', onError)
-        resolve(results)
+      function onDone () {
+        if (handle) {
+          clearTimeout(handle)
+        }
+        unSubscribe()
+        ret.onDone()
+        // these will not be free at this point as the
+        // statement can be used over and over again until
+        // manually free
+        if (q.isPrepared()) {
+          rejectResolve()
+        }
       }
 
-      const onError = (err: Error) => {
-        clearTimeout(timeout)
-        this.removeListener('complete', onComplete)
-        reject(err)
+      function onFree () {
+        q.off('free', onFree)
+        rejectResolve()
       }
 
-      this.once('complete', onComplete)
-      this.once('error', onError)
+      function onColumn (c: number, v: OdbcScalarValue) {
+        ret.onColumn(c, v)
+      }
+
+      function unSubscribe () {
+        q.off('submitted', onSubmitted)
+        q.off('rowcount', onRowCount)
+        q.off('column', onColumn)
+        q.off('output', onOutput)
+        q.off('error', onError)
+        q.off('info', onInfo)
+        q.off('meta', onMeta)
+        q.off('row', onRow)
+        q.off('done', onDone)
+        if (q.isPrepared()) {
+          q.off('free', onFree)
+        }
+      }
+
+      function subscribe () {
+        q.on('submitted', onSubmitted)
+        q.on('rowcount', onRowCount)
+        q.on('output', onOutput)
+        q.on('error', onError)
+        q.on('info', onInfo)
+        q.on('meta', onMeta)
+        q.on('row', onRow)
+        q.on('done', onDone)
+        q.on('free', onFree)
+        q.on('column', onColumn)
+      }
+
+      subscribe()
     })
   }
 
-  /**
-   * Get current progress of the aggregation
-   */
-  getProgress (): {
-    totalResultSets: number
-    totalRows: number
-    isComplete: boolean
-  } {
-    return {
-      totalResultSets: this.results.totalResultSets,
-      totalRows: this.results.totalRows,
-      isComplete: this.isComplete
-    }
+  timeOut (q, timeoutMs: number, reject): NodeJS.Timeout {
+    return setTimeout(() => {
+      try {
+        q.pauseQuery()
+        q.cancelQuery((e: Error) => {
+          e = e || new Error(`Query cancelled timeout ${timeoutMs}`)
+          reject(e)
+        })
+      } catch (e) {
+        reject(e)
+      }
+    }, timeoutMs)
+  }
+
+  async query (sql: string, params: SqlParameter[], options: QueryOptions) {
+    const q = this.connectionProxy.query(sql, params)
+    return this.run(q, options)
   }
 }
+
+exports.QueryAggregator = QueryAggregator

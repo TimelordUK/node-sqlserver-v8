@@ -19,7 +19,6 @@ export interface QueryReaderOptions {
 }
 
 export class QueryReader extends EventEmitter {
-  private hasStarted = false
   private isComplete = false
   private fetchError: Error | null = null
   private allRows: OdbcRow[] = [] // Only used in non-streaming mode
@@ -100,8 +99,10 @@ export class QueryReader extends EventEmitter {
       this.isComplete = true
 
       // Always emit 'end' event regardless of streaming mode
-      this.emit('end')
 
+      await this.connection.promises.releaseStatement(this.result.handle)
+      this.emit('end')
+      this.emit('free')
       logger.debug(`Query complete. Total rows: ${total}`)
     } catch (error: any) {
       logger.error(`Error fetching rows: ${error.message}`)
@@ -149,7 +150,7 @@ export class QueryReader extends EventEmitter {
         reject(err)
       }
 
-      this.once('end', onComplete)
+      this.once('free', onComplete)
       this.once('error', onError)
     })
   }
@@ -160,7 +161,7 @@ export class QueryReader extends EventEmitter {
       const row = rows[i]
       this.emit('row', row, i)
       for (let j = 0; j < meta.length; j++) {
-        const name: string = meta[j].colName
+        const name: string = meta[j].name
         this.emit('col', j, row[name])
       }
     }
