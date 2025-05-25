@@ -1,4 +1,7 @@
 #pragma once
+
+#include <platform.h>
+
 #include <sql.h>
 #include <sqlext.h>
 
@@ -10,6 +13,14 @@ namespace mssql {
 
 class StringUtils {
  public:
+  inline static vector<SQLWCHAR> wstr2wcvec(const wstring& s) {
+    vector<SQLWCHAR> ret;
+    ret.reserve(s.size());
+    for (auto ch : s) {
+      ret.push_back(static_cast<SQLWCHAR>(ch));
+    }
+    return ret;
+  }
   // Convert UTF-8 string to UTF-16 vector
   static std::shared_ptr<std::vector<uint16_t>> Utf8ToUtf16(const std::string& utf8Str);
 
