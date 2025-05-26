@@ -22,10 +22,11 @@ BoundDatumSet::BoundDatumSet(shared_ptr<QueryOperationParams> params) : BoundDat
   _params = std::move(params);
 }
 
-bool BoundDatumSet::reserve(const shared_ptr<QueryResult>& set, const size_t row_count) const {
-  for (uint32_t i = 0; i < set->get_column_count(); ++i) {
+bool BoundDatumSet::reserve(const std::vector<ColumnDefinition>& set,
+                            const size_t row_count) const {
+  for (uint32_t i = 0; i < set.size(); ++i) {
     const auto binding = make_shared<BoundDatum>(_params);
-    const auto& def = set->get(i);
+    const auto& def = set[i];
     const size_t size = def.columnSize;
     size_t new_size = size;
     binding->reserve_column_type(def.dataType, new_size, row_count);

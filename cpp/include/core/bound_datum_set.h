@@ -8,6 +8,7 @@
 
 // Then include ODBC headers which need the Windows types
 #include <common/odbc_common.h>
+#include <odbc/odbc_driver_types.h>
 
 // Standard library includes
 #include <limits>
@@ -40,7 +41,7 @@ class BoundDatumSet {
   typedef std::vector<std::shared_ptr<BoundDatum>> param_bindings;
   BoundDatumSet();
   BoundDatumSet(const std::shared_ptr<QueryOperationParams> params);
-  bool reserve(const std::shared_ptr<QueryResult>& set, size_t row_count) const;
+  bool reserve(const std::vector<ColumnDefinition>& set, size_t row_count) const;
   bool bind(const Napi::Array& node_params);
   Napi::Array unbind(Napi::Env& env) const;
   void clear() {

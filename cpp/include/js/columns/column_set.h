@@ -15,5 +15,5 @@
 #include <js/columns/string_column.h>
 #include <js/columns/binary_column.h>
 #include <js/columns/timestamp_column.h>
-
+#include <js/columns/number_column.h>
 namespace mssql {}  // namespace mssql

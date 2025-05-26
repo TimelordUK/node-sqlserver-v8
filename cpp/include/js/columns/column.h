@@ -26,7 +26,7 @@ class Column {
   int Id() const {
     return _id;
   }
-  void AsString(Napi::Env env) {
+  void AsString() {
     _asNative = false;
   }
 

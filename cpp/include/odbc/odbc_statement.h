@@ -39,7 +39,7 @@ enum class StatementState {
   STMT_FETCH_COMPLETE,   // All rows in current result set have been fetched
   STMT_ERROR             // An error occurred
 };
-
+class BoundDatumSet;
 /**
  * @brief Interface for ODBC statements
  * This allows for easier mocking in tests

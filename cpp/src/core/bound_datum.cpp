@@ -1,4 +1,5 @@
 #include <core/bound_datum.h>
+#include <common/odbc_common.h>
 #include <core/bound_datum_helper.h>
 #include <js/js_object_mapper.h>
 #include <common/time_utils.h>
@@ -407,16 +408,6 @@ static int get_row_count(const Napi::Object& p) {
   return rows;
 }
 
-// Helper function to convert wstring to vector<SQLWCHAR>
-vector<SQLWCHAR> wstr2wcvec(const wstring& s) {
-  vector<SQLWCHAR> ret;
-  ret.reserve(s.size());
-  for (auto ch : s) {
-    ret.push_back(static_cast<SQLWCHAR>(ch));
-  }
-  return ret;
-}
-
 wstring wide_from_js_string(const Napi::String& s) {
   const auto utf8 = s.Utf8Value();
   // Convert UTF-8 to UTF-16 using StringUtils
@@ -462,7 +453,7 @@ void BoundDatum::bind_tvp(const Napi::Object& p) {
   for (auto ch : u16str) {
     type_name.push_back(static_cast<wchar_t>(ch));
   }
-  const auto type_name_vec = wstr2wcvec(type_name);
+  const auto type_name_vec = odbcstr::wstr2wcvec(type_name);
   constexpr auto size = sizeof(type_name_vec[0]);
   memcpy(_storage->uint16vec_ptr->data(), type_name_vec.data(), precision * size);
   buffer = _storage->uint16vec_ptr->data();
