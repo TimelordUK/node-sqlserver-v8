@@ -104,6 +104,7 @@
                     "require('fs').readdirSync('./cpp/src/core').map(f => 'cpp/src/core/'+f),"
                     "require('fs').readdirSync('./cpp/src/js').map(f => 'cpp/src/js/'+f),"
                     "require('fs').readdirSync('./cpp/src/js/workers').map(f => 'cpp/src/js/workers/'+f),"
+                    "require('fs').readdirSync('./cpp/src/js/columns').map(f => 'cpp/src/js/columns/'+f),"
                     "require('fs').readdirSync('./cpp/src/odbc').map(f => 'cpp/src/odbc/'+f),"
                     "require('fs').readdirSync('./cpp/src/utils').map(f => 'cpp/src/utils/'+f)"
                     ")"
@@ -121,6 +122,7 @@
                 "cpp/include/core",
                 "cpp/include/js",
                 "cpp/include/js/workers",
+                "cpp/include/js/columns",
                 "cpp/include/odbc",
                 "cpp/include/utils",
             ],
