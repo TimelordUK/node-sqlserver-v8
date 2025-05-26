@@ -1,5 +1,5 @@
 //  ---------------------------------------------------------------------------------------------------------------------------------
-// File: connect.js
+// File: connect.test.js
 // Contents: test suite for connections
 
 // Copyright Microsoft Corporation
