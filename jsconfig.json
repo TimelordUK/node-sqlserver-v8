@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "checkJs": true,
+    "allowJs": true,
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020"],
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "types": ["node", "mocha", "chai"],
+    "baseUrl": ".",
+    "paths": {
+      "msnodesqlv8": ["./lib/sql.js"],
+      "msnodesqlv8/types": ["./lib/index-improved.d.ts"]
+    }
+  },
+  "include": [
+    "lib/**/*.js",
+    "test/**/*.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist"
+  ]
+}
