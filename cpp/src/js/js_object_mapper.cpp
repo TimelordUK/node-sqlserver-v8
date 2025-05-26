@@ -78,6 +78,25 @@ Napi::Object JsObjectMapper::fromStatementHandle(const Napi::Env& env, Statement
   return result;
 }
 
+NativeParam JsObjectMapper::toNativeParam(const Napi::Object& jsObject) {
+  NativeParam result;
+
+  result.is_user_defined = safeGetBool(jsObject, "is_user_defined");
+  result.type_id = safeGetInt32(jsObject, "type_id");
+  result.schema = safeGetString(jsObject, "schema");
+  result.bcp = safeGetBool(jsObject, "bcp");
+  result.bcp_version = safeGetInt32(jsObject, "bcp_version");
+  result.table_name = safeGetString(jsObject, "table_name");
+  result.ordinal_position = safeGetInt32(jsObject, "ordinal_position");
+  result.scale = safeGetInt32(jsObject, "scale");
+  result.offset = safeGetInt32(jsObject, "offset");
+  result.precision = safeGetInt32(jsObject, "precision");
+  result.is_output = safeGetBool(jsObject, "is_output");
+  result.name = safeGetString(jsObject, "name");
+
+  return result;
+}
+
 // Move this inside the JsObjectMapper class implementation
 StatementHandle JsObjectMapper::toStatementHandle(const Napi::Object& jsObject) {
   int conn_id = jsObject.Get("connectionId").As<Napi::Number>().Int32Value();

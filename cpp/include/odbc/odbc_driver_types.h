@@ -213,7 +213,7 @@ struct SqlParameter {
   // Add this new member
   std::shared_ptr<mssql::DatumStorage> storage;
   std::vector<SQLLEN> indvec;
-  
+
   // Array parameter support
   bool is_array;
   size_t array_length;
@@ -228,6 +228,39 @@ struct SqlParameter {
         is_array(false),
         array_length(1) {}
 };
+
+struct NativeParam {
+  bool is_user_defined;
+  int type_id;
+  string schema;
+  bool bcp;
+  int bcp_version;
+  string table_name;
+  int ordinal_position;
+  int scale;
+  int offset;
+  int precision;
+  bool is_output;
+  std::string name;
+};
+
+inline std::ostream& operator<<(std::ostream& os, const NativeParam& param) {
+  os << "NativeParam {\n"
+     << "  is_user_defined: " << param.is_user_defined << ",\n"
+     << "  type_id: " << param.type_id << ",\n"
+     << "  schema: " << param.schema << ",\n"
+     << "  bcp: " << param.bcp << ",\n"
+     << "  bcp_version: " << param.bcp_version << ",\n"
+     << "  table_name: " << param.table_name << ",\n"
+     << "  ordinal_position: " << param.ordinal_position << ",\n"
+     << "  scale: " << param.scale << ",\n"
+     << "  offset: " << param.offset << ",\n"
+     << "  precision: " << param.precision << ",\n"
+     << "  is_output: " << param.is_output << ",\n"
+     << "  name: " << param.name << "\n"
+     << "}";
+  return os;
+}
 
 inline std::ostream& operator<<(std::ostream& os, const ProcedureParamMeta& param) {
   os << "ProcedureParamMeta {\n"
