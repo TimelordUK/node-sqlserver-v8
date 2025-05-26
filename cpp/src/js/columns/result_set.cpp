@@ -34,8 +34,8 @@ Napi::Array ResultSet::meta_to_value(Napi::Env env) {
 
   for_each(this->_metadata.begin(),
            this->_metadata.end(),
-           [metadata](const ColumnDefinition& definition) {
-             metadata.Set(metadata.Length(), get_entry(definition));
+           [metadata, env, this](const ColumnDefinition& definition) {
+             metadata.Set(metadata.Length(), get_entry(env, definition));
            });
 
   return metadata;

@@ -48,7 +48,7 @@ class ResultSet {
   }
 
  private:
-  static Napi::Object get_entry(const ColumnDefinition& definition);
+  Napi::Object get_entry(const ColumnDefinition& definition);
   std::vector<ColumnDefinition> _metadata;
 
   SQLLEN _row_count;
