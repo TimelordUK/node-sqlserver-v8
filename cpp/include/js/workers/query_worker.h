@@ -8,7 +8,7 @@ class QueryWorker : public OdbcAsyncWorker {
  public:
   QueryWorker(Napi::Function& callback,
               IOdbcConnection* connection,
-              const std::string& sqlText,
+              const std::u16string& sqlText,
               const Napi::Array& params);
 
   void Execute() override;

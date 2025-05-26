@@ -413,7 +413,7 @@ Napi::Value Connection::Query(const Napi::CallbackInfo& info) {
     return env.Undefined();
   }
 
-  std::string sqlText = info[0].As<Napi::String>().Utf8Value();
+  std::u16string sqlText = info[0].As<Napi::String>().Utf16Value();
 
   // Get parameters array (optional)
   Napi::Array params = Napi::Array::New(env, 0);

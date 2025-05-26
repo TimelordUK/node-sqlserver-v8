@@ -11,9 +11,9 @@ namespace mssql {
 
 QueryWorker::QueryWorker(Napi::Function& callback,
                          IOdbcConnection* connection,
-                         const std::string& sqlText,
+                         const std::u16string& sqlText,
                          const Napi::Array& params)
-    : OdbcAsyncWorker(callback, connection), sqlText_(StringUtils::Utf8ToU16String(sqlText)) {
+    : OdbcAsyncWorker(callback, connection), sqlText_(sqlText) {
   // Convert JavaScript parameters to C++ parameters
   const uint32_t length = params.Length();
 
