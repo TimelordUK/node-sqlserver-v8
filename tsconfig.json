@@ -1,32 +1,31 @@
 {
   "compilerOptions": {
-    "target": "es2018",
+    "rootDir": "./",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "target": "es6",
     "module": "commonjs",
-    "declaration": true,
-    "sourceMap": true,
-    "outDir": "./lib",
-    "rootDir": "./src",
-    "strict": true,
     "noImplicitAny": true,
+    "declaration": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "pretty": true,
     "strictNullChecks": true,
-    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["node", "mocha", "chai"],
-    "resolveJsonModule": true
+    "outDir": "./dist"
   },
-  "baseUrl": ".",
-  "paths": {
-    "msnodesqlv8": ["./src/module-bridge"],
-    "msnodesqlv8/src/*": ["./src/*"]
-  },
-  "include": ["src/**/*"],
+  "compileOnSave": true,
+  "include": [
+    "samples/**/*",
+    "lib/**/*",
+    "test/**/*",
+    "lib/*",
+    "lib/index.d.ts"
+  ],
   "exclude": [
     "node_modules",
-    "test",
-    "build",
-    "lib",
-    "**/build/**",
-    "**/CMakeFiles/**",
-    "**/compiler_depend.ts"
+    "./dist"
   ]
 }

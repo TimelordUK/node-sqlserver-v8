@@ -15,8 +15,8 @@
     "url": "https://github.com/TimelordUK/node-sqlserver-v8/issues"
   },
   "license": "Apache-2.0",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./lib/sql.js",
+  "typings": "./lib/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TimelordUK/node-sqlserver-v8.git"
@@ -36,12 +36,9 @@
     }
   ],
   "dependencies": {
-    "@anthropic-ai/claude-code": "^0.2.115",
-    "golang": "^0.1.5-stable",
     "node-abi": "^3.74.0",
     "node-addon-api": "^8.3.1",
-    "prebuild-install": "^7.1.3",
-    "sinon": "^20.0.0"
+    "prebuild-install": "^7.1.3"
   },
   "devDependencies": {
     "@types/chai": "^5.0.1",
@@ -83,7 +80,11 @@
   "scripts": {
     "build": "tsc",
     "build:test": "tsc -p tsconfig.test.json",
-    "test": "npm run build:test && mocha lib/test/**/*.js",
+    "test": "mocha test/**/*.js",
+    "test:improved": "mocha test/connection-improved.test.js --reporter spec",
+    "test:webstorm": "mocha test/connection-webstorm.test.js --config test/.mocharc.webstorm.js",
+    "test:connection": "mocha test/connect*.js --reporter spec --timeout 30000",
+    "test:watch": "mocha test/**/*.js --watch --reporter min",
     "watch": "tsc --watch",
     "watch:test": "tsc -p tsconfig.test.json --watch",
     "builddbg": "node-gyp build --debug",

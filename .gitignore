@@ -166,7 +166,6 @@ runtest-macos
 **/_deps/
 
 # Local build scripts
-.gitignore
 lib/index.d.ts
 
 # IDE specific files

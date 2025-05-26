@@ -1,7 +1,7 @@
 {
   "require": ["ts-node/register", "source-map-support/register"],
-  "extensions": ["ts", "tsx"],
-  "spec": ["test/**/*.test.ts"],
-  "watch-files": ["test/**/*.ts", "src/**/*.ts"],
+  "extensions": ["ts","js","tsx"],
+  "spec": ["test/**/*.js"],
+  "watch-files": ["test/**/*.js", "src/**/*.js"],
   "timeout": 5000
-} 
+}
