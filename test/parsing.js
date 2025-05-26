@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
-// File: params.js
+// File: params.test.js
 // Contents: test suite for parameters
 //
 // Copyright Microsoft Corporation and contributors

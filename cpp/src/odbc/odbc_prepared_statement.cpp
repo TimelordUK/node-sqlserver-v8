@@ -6,7 +6,7 @@
 #include <odbc/odbc_error_handler.h>
 #include <odbc/odbc_statement.h>
 #include <common/string_utils.h>
-
+#include <core/bound_datum_set.h>
 namespace mssql {
 bool PreparedStatement::Prepare() {
   SQL_LOG_TRACE_STREAM("PreparedStatement::Prepare - Preparing statement: " << query_);
@@ -48,10 +48,10 @@ bool PreparedStatement::Prepare() {
   return true;
 }
 
-bool PreparedStatement::Execute(const std::vector<std::shared_ptr<SqlParameter>>& parameters,
+bool PreparedStatement::Execute(const std::shared_ptr<BoundDatumSet> parameters,
                                 std::shared_ptr<QueryResult>& result) {
   SQL_LOG_TRACE_STREAM("PreparedStatement::Execute - Executing prepared statement with "
-                       << parameters.size() << " parameters");
+                       << parameters->size() << " parameters");
 
   // Ensure statement is prepared first
   if (!isPrepared_ && !Prepare()) {
@@ -65,15 +65,15 @@ bool PreparedStatement::Execute(const std::vector<std::shared_ptr<SqlParameter>>
   result->setHandle(this->GetStatementHandle());
 
   // Bind parameters
-  for (const auto& param : parameters) {
-    SQL_LOG_TRACE_STREAM("Binding parameter " << *param);
-    // auto ret = param->bind(statement_->get_handle(), odbcApi_);
-    // if (!errorHandler_->CheckOdbcError(ret)) {
-    //   SQL_LOG_ERROR_STREAM("Failed to bind parameter " << *param);
-    //   state_ = State::STMT_ERROR;
-    //   return false;
-    // }
-  }
+  // for (const auto& param : parameters) {
+  //  SQL_LOG_TRACE_STREAM("Binding parameter " << *param);
+  // auto ret = param->bind(statement_->get_handle(), odbcApi_);
+  // if (!errorHandler_->CheckOdbcError(ret)) {
+  //   SQL_LOG_ERROR_STREAM("Failed to bind parameter " << *param);
+  //   state_ = State::STMT_ERROR;
+  //   return false;
+  // }
+  // }
 
   // Execute the statement
   auto ret = odbcApi_->SQLExecute(statement_->get_handle());

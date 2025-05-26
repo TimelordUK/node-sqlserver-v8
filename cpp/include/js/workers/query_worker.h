@@ -4,6 +4,8 @@
 #include <odbc/parameter_set.h>
 
 namespace mssql {
+class BoundDatumSet;
+
 class QueryWorker : public OdbcAsyncWorker {
  public:
   QueryWorker(Napi::Function& callback,
@@ -16,6 +18,6 @@ class QueryWorker : public OdbcAsyncWorker {
 
  private:
   std::u16string sqlText_;
-  std::shared_ptr<ParameterSet> parameters_;
+  std::shared_ptr<BoundDatumSet> parameters_;
 };
 }  // namespace mssql

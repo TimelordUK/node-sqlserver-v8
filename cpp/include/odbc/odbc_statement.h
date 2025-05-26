@@ -14,7 +14,7 @@ class OdbcErrorHandler;
 class IOdbcApi;
 class QueryResult;
 class IOdbcRow;
-
+class BoundDatumSet;
 /**
  * @brief Common statement types for OdbcStatement
  */
@@ -51,7 +51,7 @@ class IOdbcStatement {
   /**
    * @brief Execute the statement with given parameters
    */
-  virtual bool Execute(const std::vector<std::shared_ptr<SqlParameter>>& parameters,
+  virtual bool Execute(const std::shared_ptr<BoundDatumSet> parameters,
                        std::shared_ptr<QueryResult>& result) = 0;
 
   /**
@@ -112,7 +112,7 @@ class OdbcStatement : public IOdbcStatement {
   /**
    * @brief Execute the statement with given parameters
    */
-  virtual bool Execute(const std::vector<std::shared_ptr<SqlParameter>>& parameters,
+  virtual bool Execute(const std::shared_ptr<BoundDatumSet> parameters,
                        std::shared_ptr<QueryResult>& result) override = 0;
 
   /**
@@ -214,7 +214,7 @@ class OdbcStatement : public IOdbcStatement {
   bool get_data_timestamp_offset(const size_t row_id, const size_t column);
   bool d_time(const size_t row_id, const size_t column);
   bool get_data_timestamp(const size_t row_id, const size_t column);
-  bool bind_parameters(const std::vector<std::shared_ptr<SqlParameter>>& parameters);
+  bool bind_parameters(std::shared_ptr<BoundDatumSet> parameters);
   bool apply_precision(const std::shared_ptr<SqlParameter>& datum, const int current_param);
 
   Type type_;
@@ -247,7 +247,7 @@ class TransientStatement : public OdbcStatement {
       : OdbcStatement(Type::Transient, statement, errorHandler, odbcApi, handle), query_(query) {}
 
   // Core operations only
-  bool Execute(const std::vector<std::shared_ptr<SqlParameter>>& parameters,
+  bool Execute(const std::shared_ptr<BoundDatumSet> parameters,
                std::shared_ptr<QueryResult>& result) override;
 
   bool ReadNextResult(std::shared_ptr<QueryResult> result) override;
@@ -272,7 +272,7 @@ class PreparedStatement : public OdbcStatement {
                     StatementHandle handle)
       : OdbcStatement(Type::Prepared, statement, errorHandler, odbcApi, handle), query_(query) {}
 
-  bool Execute(const std::vector<std::shared_ptr<SqlParameter>>& parameters,
+  bool Execute(const std::shared_ptr<BoundDatumSet> parameters,
                std::shared_ptr<QueryResult>& result) override;
 
   /**
@@ -300,7 +300,7 @@ class TvpStatement : public OdbcStatement {
         query_(query),
         tvpType_(tvpType) {}
 
-  bool Execute(const std::vector<std::shared_ptr<SqlParameter>>& parameters,
+  bool Execute(const std::shared_ptr<BoundDatumSet> parameters,
                std::shared_ptr<QueryResult>& result) override;
 
   /**

@@ -37,7 +37,7 @@
             "args": [
                 //"samples/javascript/streaming.js"
                 "./node_modules/mocha/bin/mocha.js",
-                "test/napi/bind-table.tests"
+                "test/params.test"
                 // "test/napi/open"
                 // "test/sproc"
                 // "test/table-builder"
@@ -78,10 +78,10 @@
             "program": "/home/me/.nvm/versions/node/v22.15.0/bin/node",
             "args": [
                 "./node_modules/mocha/bin/mocha.js",
-              //  "test/napi/bind-table.test",
+              //  "test/bind-table.test",
               // "test/napi/compound-query.test"
-              //"test/napi/params.test"
-              "test/connection-improved.test"
+                 "test/params.test"
+              // "test/connection-improved.test"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

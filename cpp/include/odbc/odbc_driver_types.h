@@ -56,6 +56,7 @@ struct ColumnDefinition {
   SQLSMALLINT colNameLen;
   SQLSMALLINT dataType;
   SQLULEN columnSize;
+  std::string dataTypeName;
   SQLSMALLINT decimalDigits;
   SQLSMALLINT nullable;
 

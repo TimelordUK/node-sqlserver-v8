@@ -68,7 +68,7 @@ bool BoundDatumSet::tvp(Napi::Object& v) const {
   return true;
 }
 
-bool BoundDatumSet::bind(Napi::Array& node_params) {
+bool BoundDatumSet::bind(const Napi::Array& node_params) {
   const auto count = node_params.Length();
   auto res = true;
   _output_param_count = 0;

@@ -298,13 +298,14 @@ Napi::Object JsObjectMapper::fromColumnDefinition(const Napi::Env& env,
   std::string jsType = OdbcTypeMapper::MapSqlTypeToJsType(colDef.dataType);
 
   // Set properties on the JavaScript object
-  result.Set("size", Napi::Number::New(env, colDef.colNameLen));
+  // result.Set("size", Napi::Number::New(env, colDef.colNameLen));
   result.Set("name", Napi::String::New(env, colName));
   result.Set("nullable", Napi::Boolean::New(env, colDef.nullable != 0));
   result.Set("type", Napi::String::New(env, jsType));
   result.Set("sqlType", Napi::Number::New(env, colDef.dataType));
-  result.Set("columnSize", Napi::Number::New(env, colDef.columnSize));
-  result.Set("decimalDigits", Napi::Number::New(env, colDef.decimalDigits));
+  result.Set("size", Napi::Number::New(env, colDef.columnSize));
+  result.Set("sqlType", Napi::String::New(env, colDef.dataTypeName));
+  // result.Set("decimalDigits", Napi::Number::New(env, colDef.decimalDigits));
 
   return result;
 }

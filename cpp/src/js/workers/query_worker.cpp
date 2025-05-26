@@ -3,7 +3,7 @@
 #include <utils/Logger.h>
 #include <js/js_object_mapper.h>
 #include <common/odbc_common.h>
-#include <odbc/parameter_set.h>
+#include <core/bound_datum_set.h>
 #include <platform.h>
 #include <common/string_utils.h>
 
@@ -19,17 +19,20 @@ QueryWorker::QueryWorker(Napi::Function& callback,
 
   // Or use it somewhere, perhaps in a logging statement:
   SQL_LOG_DEBUG_STREAM("Processing " << length << " parameters");
-  parameters_ = std::make_shared<ParameterSet>();
+  parameters_ = std::make_shared<BoundDatumSet>();
   // ParameterFactory::populateParameterSet(params, parameters_);
+  parameters_->bind(params);
 
-  for (uint32_t i = 0; i < length; i++) {
-    Napi::Value param = params[i];
-    if (param.IsObject()) {
-      const Napi::Object jsParam = param.As<Napi::Object>();
-      const std::shared_ptr<SqlParameter> sqlParam = JsObjectMapper::toSqlParameter(jsParam);
-      parameters_->add(sqlParam);
+  /*
+    for (uint32_t i = 0; i < length; i++) {
+      Napi::Value param = params[i];
+      if (param.IsObject()) {
+        const Napi::Object jsParam = param.As<Napi::Object>();
+        const std::shared_ptr<SqlParameter> sqlParam = JsObjectMapper::toSqlParameter(jsParam);
+        parameters_->add(sqlParam);
+      }
     }
-  }
+  */
 
   result_ = std::make_shared<QueryResult>();
 }
@@ -39,7 +42,7 @@ void QueryWorker::Execute() {
     SQL_LOG_DEBUG_STREAM("Executing QueryWorker " << StringUtils::U16StringToUtf8(sqlText_));
     // This will need to be implemented in OdbcConnection
     // Here's a placeholder showing what it might look like
-    if (!connection_->ExecuteQuery(sqlText_, parameters_->getParams(), result_)) {
+    if (!connection_->ExecuteQuery(sqlText_, parameters_, result_)) {
       const auto& errors = connection_->GetErrors();
       if (!errors.empty()) {
         const std::string errorMessage = errors[0]->message;

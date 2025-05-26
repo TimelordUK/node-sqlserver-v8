@@ -6,6 +6,7 @@
 #include <common/odbc_common.h>
 
 #include <common/string_utils.h>
+#include <core/bound_datum_set.h>
 #include <odbc/iodbc_api.h>
 #include <odbc/odbc_driver_types.h>
 #include <odbc/odbc_error_handler.h>
@@ -1322,40 +1323,19 @@ bool OdbcStatement::apply_precision(const std::shared_ptr<SqlParameter>& datum,
   return true;
 }
 
-bool OdbcStatement::bind_parameters(const std::vector<std::shared_ptr<SqlParameter>>& parameters) {
-  SQL_LOG_TRACE_STREAM("bind_parameters: " << parameters.size());
-  
-  // Check if we have array parameters and get the array size
-  size_t array_size = 1;
-  for (const auto& param : parameters) {
-    if (param->is_array && param->array_length > 1) {
-      array_size = param->array_length;
-      break;  // All array parameters should have the same length
-    }
-  }
-  
-  // Set paramset size if we have array parameters
+bool OdbcStatement::bind_parameters(std::shared_ptr<BoundDatumSet> parameters) {
+  // SQL_LOG_TRACE_STREAM("bind_parameters: " << parameters.size());
+
+  // TODO: Handle array parameters when BoundDatum supports them
   auto statement = statement_->get_handle();
-  if (array_size > 1) {
-    SQL_LOG_DEBUG_STREAM("Setting SQL_ATTR_PARAMSET_SIZE to " << array_size);
-    auto ret = odbcApi_->SQLSetStmtAttr(statement, 
-                                        SQL_ATTR_PARAMSET_SIZE, 
-                                        reinterpret_cast<SQLPOINTER>(array_size), 
-                                        0);
-    if (!check_odbc_error(ret)) {
-      SQL_LOG_ERROR_STREAM("Failed to set SQL_ATTR_PARAMSET_SIZE");
-      state_ = State::STMT_ERROR;
-      return false;
-    }
-  }
-  
+
   auto current_param = 1;
-  for (const auto& datum : parameters) {
-    const auto storage = datum->storage;
-    const auto c_type = OdbcTypeMapper::parseOdbcTypeString(datum->c_type);
-    const auto sql_type = OdbcTypeMapper::parseOdbcTypeString(datum->sql_type);
-    const auto param_type = OdbcTypeMapper::parseOdbcParamTypeString(datum->param_type);
-    SQL_LOG_DEBUG_STREAM("Binding parameter " << *datum);
+  for (const auto& datum : *parameters) {
+    const auto storage = datum->get_storage();
+    const auto c_type = datum->c_type;
+    const auto sql_type = datum->sql_type;
+    const auto param_type = datum->param_type;
+    SQL_LOG_DEBUG_STREAM("Binding parameter " << current_param);
     auto ret = odbcApi_->SQLBindParameter(statement,
                                           static_cast<SQLUSMALLINT>(current_param),
                                           param_type,
@@ -1363,12 +1343,12 @@ bool OdbcStatement::bind_parameters(const std::vector<std::shared_ptr<SqlParamet
                                           sql_type,
                                           datum->param_size,
                                           datum->digits,
-                                          storage->getStorage()->data(),
+                                          datum->buffer,
                                           datum->buffer_len,
-                                          datum->indvec.data());
+                                          datum->get_ind_vec().data());
 
     if (!check_odbc_error(ret)) {
-      SQL_LOG_ERROR_STREAM("Failed to bind parameter " << *datum);
+      SQL_LOG_ERROR_STREAM("Failed to bind parameter " << current_param);
       state_ = State::STMT_ERROR;
       return false;
     }

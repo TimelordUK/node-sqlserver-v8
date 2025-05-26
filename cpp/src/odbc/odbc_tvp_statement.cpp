@@ -2,6 +2,7 @@
 #include <common/odbc_common.h>
 #include <utils/Logger.h>
 
+#include <core/bound_datum_set.h>
 #include <odbc/iodbc_api.h>
 #include <odbc/odbc_error_handler.h>
 #include <odbc/odbc_statement.h>
@@ -23,9 +24,9 @@ bool TvpStatement::BindTvpColumns(const std::vector<std::string>& columnNames) {
   return true;
 }
 
-bool TvpStatement::Execute(const std::vector<std::shared_ptr<SqlParameter>>& parameters,
+bool TvpStatement::Execute(const std::shared_ptr<BoundDatumSet> parameters,
                            std::shared_ptr<QueryResult>& result) {
-  SQL_LOG_TRACE_STREAM("TvpStatement::Execute - Starting execution with " << parameters.size()
+  SQL_LOG_TRACE_STREAM("TvpStatement::Execute - Starting execution with " << parameters->size()
                                                                           << " parameters");
 
   state_ = State::STMT_EXECUTING;

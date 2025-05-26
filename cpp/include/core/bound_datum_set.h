@@ -37,11 +37,11 @@ class QueryOperationParams;
 
 class BoundDatumSet {
  public:
-  typedef vector<shared_ptr<BoundDatum>> param_bindings;
+  typedef std::vector<std::shared_ptr<BoundDatum>> param_bindings;
   BoundDatumSet();
-  BoundDatumSet(const shared_ptr<QueryOperationParams> params);
-  bool reserve(const shared_ptr<QueryResult>& set, size_t row_count) const;
-  bool bind(Napi::Array& node_params);
+  BoundDatumSet(const std::shared_ptr<QueryOperationParams> params);
+  bool reserve(const std::shared_ptr<QueryResult>& set, size_t row_count) const;
+  bool bind(const Napi::Array& node_params);
   Napi::Array unbind(Napi::Env& env) const;
   void clear() {
     _bindings->clear();
@@ -49,7 +49,7 @@ class BoundDatumSet {
   size_t size() {
     return _bindings->size();
   }
-  shared_ptr<BoundDatum>& atIndex(int i) {
+  std::shared_ptr<BoundDatum>& atIndex(int i) {
     return (*_bindings)[i];
   }
   param_bindings::iterator begin() {
@@ -58,6 +58,18 @@ class BoundDatumSet {
   param_bindings::iterator end() {
     return _bindings->end();
   }
+  param_bindings::const_iterator begin() const {
+    return _bindings->begin();
+  }
+  param_bindings::const_iterator end() const {
+    return _bindings->end();
+  }
+  param_bindings::const_iterator cbegin() const {
+    return _bindings->cbegin();
+  }
+  param_bindings::const_iterator cend() const {
+    return _bindings->cend();
+  }
 
   char* err;
   uint32_t first_error;
@@ -65,7 +77,7 @@ class BoundDatumSet {
  private:
   bool tvp(Napi::Object& v) const;
   int _output_param_count;
-  shared_ptr<param_bindings> _bindings;
-  shared_ptr<QueryOperationParams> _params;
+  std::shared_ptr<param_bindings> _bindings;
+  std::shared_ptr<QueryOperationParams> _params;
 };
 }  // namespace mssql

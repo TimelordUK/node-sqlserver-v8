@@ -28,6 +28,7 @@ class IOdbcApi;
 class OdbcQueryExecutor;
 class IOdbcEnvironmentHandle;
 class IOdbcConnectionHandle;
+class BoundDatumSet;
 class IOdbcStatementHandle;
 class ConnectionHandles;
 class OdbcErrorHandler;
@@ -66,7 +67,7 @@ class IOdbcConnection {
 
   // Legacy ExecuteQuery for backward compatibility
   virtual bool ExecuteQuery(const std::u16string& sqlText,
-                            const std::vector<std::shared_ptr<SqlParameter>>& parameters,
+                            const std::shared_ptr<BoundDatumSet> parameters,
                             std::shared_ptr<QueryResult>& result) = 0;
 
   virtual const std::vector<std::shared_ptr<OdbcError>>& GetErrors() const = 0;
@@ -118,7 +119,7 @@ class OdbcConnection : public IOdbcConnection {
 
   // Legacy ExecuteQuery implementation
   bool ExecuteQuery(const std::u16string& sqlText,
-                    const std::vector<std::shared_ptr<SqlParameter>>& parameters,
+                    const std::shared_ptr<BoundDatumSet> parameters,
                     std::shared_ptr<QueryResult>& result) override;
 
   bool TryReadNextResult(int statementId, std::shared_ptr<QueryResult>& result) override;

@@ -9,10 +9,10 @@
 
 namespace mssql {
 
-bool TransientStatement::Execute(const std::vector<std::shared_ptr<SqlParameter>>& parameters,
+bool TransientStatement::Execute(const std::shared_ptr<BoundDatumSet> parameters,
                                  std::shared_ptr<QueryResult>& result) {
-  SQL_LOG_TRACE_STREAM("TransientStatement::Execute - Starting execution with " << parameters.size()
-                                                                                << " parameters");
+  // SQL_LOG_TRACE_STREAM("TransientStatement::Execute - Starting execution with "
+  //                     << parameters->size() << " parameters");
   state_ = State::STMT_EXECUTING;
 
   // Convert query to wide string
@@ -98,20 +98,39 @@ bool TransientStatement::InitializeResultSet(std::shared_ptr<QueryResult>& resul
     colDef.colNameLen = 0;
 
     // Let ODBC write directly to our struct members
-    ret = SQLDescribeCol(statement_->get_handle(),
-                         i,
-                         colDef.colName,
-                         sizeof(colDef.colName) / sizeof(SQLWCHAR),
-                         &colDef.colNameLen,
-                         &colDef.dataType,
-                         &colDef.columnSize,
-                         &colDef.decimalDigits,
-                         &colDef.nullable);
+    ret = odbcApi_->SQLDescribeCol(statement_->get_handle(),
+                                   i,
+                                   colDef.colName,
+                                   sizeof(colDef.colName) / sizeof(SQLWCHAR),
+                                   &colDef.colNameLen,
+                                   &colDef.dataType,
+                                   &colDef.columnSize,
+                                   &colDef.decimalDigits,
+                                   &colDef.nullable);
 
     if (!errorHandler_->CheckOdbcError(ret)) {
       state_ = State::STMT_ERROR;
       return false;
     }
+
+    constexpr size_t l = 1024;
+    vector<SQLWCHAR> type_name(l);
+    SQLSMALLINT type_name_len = 0;
+    auto ret = odbcApi_->SQLColAttribute(statement_->get_handle(),
+                                         i,
+                                         SQL_DESC_TYPE_NAME,
+                                         type_name.data(),
+                                         type_name.size() * sizeof(SQLWCHAR),
+                                         &type_name_len,
+                                         nullptr);
+    if (!errorHandler_->CheckOdbcError(ret)) {
+      state_ = State::STMT_ERROR;
+      return false;
+    }
+
+    // type_name_len is in bytes, convert to character count
+    SQLSMALLINT char_len = type_name_len / sizeof(SQLWCHAR);
+    colDef.dataTypeName = StringUtils::WideToUtf8(type_name.data(), char_len);
 
     // Add the column definition directly to the result
     result->addColumn(colDef);
