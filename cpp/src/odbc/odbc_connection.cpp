@@ -274,7 +274,7 @@ bool OdbcConnection::ExecuteQuery(const std::u16string& sqlText,
                                   const std::shared_ptr<BoundDatumSet> parameters,
                                   std::shared_ptr<QueryResult>& result) {
   // Create a transient statement
-  auto statement = CreateStatement(OdbcStatement::Type::Transient, sqlText);
+  auto statement = CreateStatement(OdbcStatement::Type::Legacy, sqlText);
   if (!statement) {
     return false;
   }

@@ -4,6 +4,7 @@
 #include <odbc/odbc_error.h>
 #include <odbc/odbc_handles.h>
 #include <odbc/odbc_statement.h>
+#include <odbc/odbc_statement_legacy.h>
 #include <utils/Logger.h>
 
 namespace mssql {
@@ -27,6 +28,10 @@ std::shared_ptr<IOdbcStatement> OdbcStatementFactory::MakeStatement(
   StatementHandle statementHandle(connectionId_, id);
 
   switch (type) {
+    case StatementType::Legacy:
+      return std::make_shared<OdbcStatementLegacy>(
+          handle, errorHandler, odbcApi, statementHandle);
+
     case StatementType::Transient:
       return std::make_shared<TransientStatement>(
           handle, errorHandler, query, odbcApi, statementHandle);

@@ -41,6 +41,65 @@ OdbcStatementLegacy::~OdbcStatementLegacy() {
   }
 }
 
+bool OdbcStatementLegacy::Execute(const std::shared_ptr<BoundDatumSet> parameters,
+                                  std::shared_ptr<QueryResult>& result) {
+  return false;
+}
+
+/**
+ * @brief Get the statement type
+ */
+StatementType OdbcStatementLegacy::GetType() const {
+  return StatementType::Legacy;
+}
+
+/**
+ * @brief Get the native ODBC statement handle
+ */
+SQLHSTMT OdbcStatementLegacy::GetHandle() const {
+  return _statement->get_handle();
+}
+
+/**
+ * @brief Get the statement handle (our wrapper type)
+ */
+StatementHandle OdbcStatementLegacy::GetStatementHandle() const {
+  return _handle;
+}
+
+/**
+ * @brief Check if numeric string mode is enabled
+ */
+bool OdbcStatementLegacy::IsNumericStringEnabled() const {
+  return _numericStringEnabled;
+}
+
+/**
+ * @brief Get the current state of the statement
+ * @return Current state
+ */
+OdbcStatementState OdbcStatementLegacy::GetState() const {
+  return _statementState;
+}
+
+std::vector<std::shared_ptr<IOdbcRow>>& OdbcStatementLegacy::GetRows() {
+  return _rows;
+}
+
+std::shared_ptr<QueryResult> OdbcStatementLegacy::GetMetaData() {
+  return nullptr;
+}
+
+bool OdbcStatementLegacy::TryReadRows(std::shared_ptr<QueryResult> result, const size_t number_rows) {
+  // Stub implementation
+  return false;
+}
+
+bool OdbcStatementLegacy::ReadNextResult(std::shared_ptr<QueryResult> result) {
+  // Stub implementation
+  return false;
+}
+
 OdbcStatementLegacy::OdbcStatementLegacy(std::shared_ptr<IOdbcStatementHandle> statement,
                                          std::shared_ptr<OdbcErrorHandler> errorHandler,
                                          std::shared_ptr<IOdbcApi> odbcApi,
@@ -237,7 +296,7 @@ void OdbcStatementLegacy::set_state(const OdbcStatementState state) {
   _statementState = state;
 }
 
-OdbcStatementLegacy::OdbcStatementState OdbcStatementLegacy::get_state() {
+OdbcStatementState OdbcStatementLegacy::get_state() {
   lock_guard<recursive_mutex> lock(g_i_mutex);
   const auto state = _statementState;
   return state;

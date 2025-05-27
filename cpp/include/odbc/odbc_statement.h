@@ -19,6 +19,7 @@ class BoundDatumSet;
  * @brief Common statement types for OdbcStatement
  */
 enum class StatementType {
+  Legacy,     // Legacy statement that uses the old ODBC API
   Transient,  // One-off query execution
   Prepared,   // Prepared statement that can be reused
   TVP         // Table-valued parameter statement
@@ -27,17 +28,17 @@ enum class StatementType {
 /**
  * @brief Common statement states for OdbcStatement
  */
-enum class StatementState {
-  STMT_INITIAL,
-  STMT_PREPARED,
-  STMT_SUBMITTED,
-  STMT_READING,
-  STMT_NO_MORE_RESULTS,  // No more result sets available
-  STMT_METADATA_READY,   // Metadata for current result set is ready
-  STMT_EXECUTING,        // Statement is executing
-  STMT_FETCHING_ROWS,    // Currently fetching rows
-  STMT_FETCH_COMPLETE,   // All rows in current result set have been fetched
-  STMT_ERROR             // An error occurred
+enum class OdbcStatementState {
+  STATEMENT_CREATED = 1,
+  STATEMENT_PREPARED = 2,
+  STATEMENT_SUBMITTED = 3,
+  STATEMENT_READING = 4,
+  STATEMENT_CANCEL_HANDLE = 5,
+  STATEMENT_CANCELLED = 6,
+  STATEMENT_ERROR = 7,
+  STATEMENT_CLOSED = 8,
+  STATEMENT_BINDING = 9,
+  STATEMENT_POLLING = 10,
 };
 class BoundDatumSet;
 /**
@@ -78,7 +79,7 @@ class IOdbcStatement {
    * @brief Get the current state of the statement
    * @return Current state
    */
-  virtual StatementState GetState() const = 0;
+  virtual OdbcStatementState GetState() const = 0;
 
   virtual std::vector<std::shared_ptr<IOdbcRow>>& GetRows() = 0;
   virtual std::shared_ptr<QueryResult> GetMetaData() = 0;
@@ -105,7 +106,7 @@ class IOdbcStatement {
 class OdbcStatement : public IOdbcStatement {
  public:
   using Type = StatementType;
-  using State = StatementState;
+  using State = OdbcStatementState;
 
   virtual ~OdbcStatement() = default;
 
@@ -147,7 +148,7 @@ class OdbcStatement : public IOdbcStatement {
    * @brief Get the current state of the statement
    * @return Current state
    */
-  virtual StatementState GetState() const override {
+  virtual OdbcStatementState GetState() const override {
     return state_;
   }
 
@@ -185,7 +186,7 @@ class OdbcStatement : public IOdbcStatement {
         odbcApi_(odbcApi),
         handle_(handle),
         numericStringEnabled_(false),
-        state_(State::STMT_INITIAL),
+        state_(State::STATEMENT_CREATED),
         hasMoreResults_(false),
         endOfRows_(true),
         errors_(new std::vector<std::shared_ptr<OdbcError>>()) {}

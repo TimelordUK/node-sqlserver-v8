@@ -11,6 +11,7 @@
 #include "odbc_handles.h"
 #include "query_parameter.h"
 #include <js/columns/result_set.h>
+#include <odbc/odbc_statement.h>
 
 namespace mssql {
 class BoundDatum;
@@ -22,21 +23,43 @@ class OdbcError;
 
 using namespace std;
 
-class OdbcStatementLegacy {
+class OdbcStatementLegacy : public IOdbcStatement {
  public:
   mutex _statement_mutex;
-  enum class OdbcStatementState {
-    STATEMENT_CREATED = 1,
-    STATEMENT_PREPARED = 2,
-    STATEMENT_SUBMITTED = 3,
-    STATEMENT_READING = 4,
-    STATEMENT_CANCEL_HANDLE = 5,
-    STATEMENT_CANCELLED = 6,
-    STATEMENT_ERROR = 7,
-    STATEMENT_CLOSED = 8,
-    STATEMENT_BINDING = 9,
-    STATEMENT_POLLING = 10,
-  };
+
+  virtual bool Execute(const std::shared_ptr<BoundDatumSet> parameters,
+                       std::shared_ptr<QueryResult>& result) override;
+
+  /**
+   * @brief Get the statement type
+   */
+  virtual StatementType GetType() const override;
+
+  /**
+   * @brief Get the native ODBC statement handle
+   */
+  virtual SQLHSTMT GetHandle() const override;
+
+  /**
+   * @brief Get the statement handle (our wrapper type)
+   */
+  virtual StatementHandle GetStatementHandle() const override;
+
+  /**
+   * @brief Check if numeric string mode is enabled
+   */
+  virtual bool IsNumericStringEnabled() const override;
+
+  /**
+   * @brief Get the current state of the statement
+   * @return Current state
+   */
+  virtual OdbcStatementState GetState() const override;
+
+  virtual std::vector<std::shared_ptr<IOdbcRow>>& GetRows() override;
+  virtual std::shared_ptr<QueryResult> GetMetaData() override;
+  virtual bool TryReadRows(std::shared_ptr<QueryResult> result, const size_t number_rows) override;
+  virtual bool ReadNextResult(std::shared_ptr<QueryResult> result) override;
 
   bool created() {
     return _statementState == OdbcStatementState::STATEMENT_CREATED;
@@ -71,8 +94,8 @@ class OdbcStatementLegacy {
   Napi::Object get_column_values(Napi::Env env) const;
   bool set_polling(bool mode);
   bool get_polling();
-  void set_state(const OdbcStatementLegacy::OdbcStatementState state);
-  OdbcStatementLegacy::OdbcStatementState get_state();
+  void set_state(const OdbcStatementState state);
+  OdbcStatementState get_state();
   bool set_numeric_string(bool mode);
 
   shared_ptr<vector<shared_ptr<OdbcError>>> errors(void) const {
@@ -170,6 +193,7 @@ class OdbcStatementLegacy {
   std::shared_ptr<OdbcErrorHandler> _errorHandler;
   std::shared_ptr<IOdbcApi> _odbcApi;  // Added IOdbcApi reference
   StatementHandle _handle;
+  std::vector<std::shared_ptr<IOdbcRow>> _rows;
 
   recursive_mutex g_i_mutex;
 

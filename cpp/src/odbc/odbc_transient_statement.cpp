@@ -13,7 +13,7 @@ bool TransientStatement::Execute(const std::shared_ptr<BoundDatumSet> parameters
                                  std::shared_ptr<QueryResult>& result) {
   // SQL_LOG_TRACE_STREAM("TransientStatement::Execute - Starting execution with "
   //                     << parameters->size() << " parameters");
-  state_ = State::STMT_EXECUTING;
+  state_ = State::STATEMENT_READING;
 
   // Convert query to wide string
   auto wideQuery = StringUtils::Utf8ToUtf16(query_);
@@ -32,7 +32,7 @@ bool TransientStatement::Execute(const std::shared_ptr<BoundDatumSet> parameters
 
   if (!bind_parameters(parameters)) {
     SQL_LOG_ERROR_STREAM("Failed to bind parameters");
-    state_ = State::STMT_ERROR;
+    state_ = State::STATEMENT_ERROR;
     return false;
   }
 
@@ -46,7 +46,7 @@ bool TransientStatement::Execute(const std::shared_ptr<BoundDatumSet> parameters
   if (!errorHandler_->CheckOdbcError(ret)) {
     SQL_LOG_ERROR_STREAM(
         "Statement execution failed with return code: " << GetSqlReturnCodeString(ret));
-    state_ = State::STMT_ERROR;
+    state_ = State::STATEMENT_ERROR;
     return false;
   }
 
@@ -66,7 +66,7 @@ bool TransientStatement::GetMetadata(std::shared_ptr<QueryResult>& result) {
     return false;
   }
 
-  state_ = State::STMT_METADATA_READY;
+  state_ = State::STATEMENT_BINDING;
   SQL_LOG_TRACE("Getting metadata for result set");
   auto res = InitializeResultSet(result);
   this->metaData_ = result;
@@ -78,7 +78,7 @@ bool TransientStatement::InitializeResultSet(std::shared_ptr<QueryResult>& resul
   SQLSMALLINT numCols = 0;
   auto ret = odbcApi_->SQLNumResultCols(statement_->get_handle(), &numCols);
   if (!errorHandler_->CheckOdbcError(ret)) {
-    state_ = State::STMT_ERROR;
+    state_ = State::STATEMENT_ERROR;
     return false;
   }
   SQL_LOG_TRACE_STREAM("TransientStatement::InitializeResultSet - numCols: " << numCols);
@@ -87,7 +87,7 @@ bool TransientStatement::InitializeResultSet(std::shared_ptr<QueryResult>& resul
     hasMoreResults_ = false;
     endOfRows_ = true;
     result->set_end_of_rows(true);
-    state_ = State::STMT_NO_MORE_RESULTS;
+    state_ = State::STATEMENT_READING;
     return true;
   }
 
@@ -109,7 +109,7 @@ bool TransientStatement::InitializeResultSet(std::shared_ptr<QueryResult>& resul
                                    &colDef.nullable);
 
     if (!errorHandler_->CheckOdbcError(ret)) {
-      state_ = State::STMT_ERROR;
+      state_ = State::STATEMENT_ERROR;
       return false;
     }
 
@@ -124,7 +124,7 @@ bool TransientStatement::InitializeResultSet(std::shared_ptr<QueryResult>& resul
                                          &type_name_len,
                                          nullptr);
     if (!errorHandler_->CheckOdbcError(ret)) {
-      state_ = State::STMT_ERROR;
+      state_ = State::STATEMENT_ERROR;
       return false;
     }
 

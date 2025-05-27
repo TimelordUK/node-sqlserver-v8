@@ -16,7 +16,7 @@ bool PreparedStatement::Prepare() {
     return true;
   }
 
-  state_ = State::STMT_EXECUTING;
+  state_ = State::STATEMENT_READING;
 
   // Convert query to wide string
   auto wideQuery = StringUtils::Utf8ToUtf16(query_);
@@ -38,13 +38,13 @@ bool PreparedStatement::Prepare() {
 
   if (!errorHandler_->CheckOdbcError(ret)) {
     SQL_LOG_ERROR_STREAM("Statement preparation failed");
-    state_ = State::STMT_ERROR;
+    state_ = State::STATEMENT_ERROR;
     return false;
   }
 
   SQL_LOG_TRACE("Statement prepared successfully");
   isPrepared_ = true;
-  state_ = State::STMT_PREPARED;
+  state_ = State::STATEMENT_PREPARED;
   return true;
 }
 
@@ -59,7 +59,7 @@ bool PreparedStatement::Execute(const std::shared_ptr<BoundDatumSet> parameters,
     return false;
   }
 
-  state_ = State::STMT_EXECUTING;
+  state_ = State::STATEMENT_READING;
 
   // Set the statement handle on the result
   result->setHandle(this->GetStatementHandle());
@@ -80,7 +80,7 @@ bool PreparedStatement::Execute(const std::shared_ptr<BoundDatumSet> parameters,
 
   if (!errorHandler_->CheckOdbcError(ret)) {
     SQL_LOG_ERROR_STREAM("Statement execution failed");
-    state_ = State::STMT_ERROR;
+    state_ = State::STATEMENT_ERROR;
     return false;
   }
 

@@ -1349,7 +1349,7 @@ bool OdbcStatement::bind_parameters(std::shared_ptr<BoundDatumSet> parameters) {
 
     if (!check_odbc_error(ret)) {
       SQL_LOG_ERROR_STREAM("Failed to bind parameter " << current_param);
-      state_ = State::STMT_ERROR;
+      state_ = State::STATEMENT_ERROR;
       return false;
     }
 

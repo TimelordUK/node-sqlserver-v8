@@ -29,7 +29,7 @@ bool TvpStatement::Execute(const std::shared_ptr<BoundDatumSet> parameters,
   SQL_LOG_TRACE_STREAM("TvpStatement::Execute - Starting execution with " << parameters->size()
                                                                           << " parameters");
 
-  state_ = State::STMT_EXECUTING;
+  state_ = State::STATEMENT_READING;
 
   // Set the statement handle on the result
   result->setHandle(this->GetStatementHandle());
@@ -51,7 +51,7 @@ bool TvpStatement::Execute(const std::shared_ptr<BoundDatumSet> parameters,
 
   if (!errorHandler_->CheckOdbcError(ret)) {
     SQL_LOG_ERROR_STREAM("TVP statement execution failed");
-    state_ = State::STMT_ERROR;
+    state_ = State::STATEMENT_ERROR;
     return false;
   }
 
