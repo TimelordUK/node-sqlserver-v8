@@ -81,7 +81,7 @@ Napi::Object JsObjectMapper::fromStatementHandle(const Napi::Env& env, Statement
 std::shared_ptr<QueryOperationParams> JsObjectMapper::toQueryOperationParams(
     const Napi::Object& jsObject) {
   std::shared_ptr<QueryOperationParams> result = std::make_shared<QueryOperationParams>();
-  result->query_string = safeGetWideString(jsObject, "query_string");
+  result->query_string = safeGetWideString(jsObject, "query_str");
   result->timeout = safeGetInt32(jsObject, "timeout");
   result->query_tz_adjustment = safeGetInt32(jsObject, "query_tz_adjustment");
   result->id = safeGetInt64(jsObject, "id");

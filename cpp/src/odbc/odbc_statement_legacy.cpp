@@ -45,7 +45,8 @@ OdbcStatementLegacy::~OdbcStatementLegacy() {
 
 bool OdbcStatementLegacy::Execute(const std::shared_ptr<BoundDatumSet> parameters,
                                   std::shared_ptr<QueryResult>& result) {
-  return false;
+  auto res = try_execute_direct(_operationParams, parameters);
+  return res;
 }
 
 /**
