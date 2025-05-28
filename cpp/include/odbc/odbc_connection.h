@@ -15,7 +15,6 @@
 
 // Project includes
 #include "odbc/odbc_error.h"
-#include "odbc/odbc_query_executor.h"
 #include "odbc/odbc_statement.h"
 
 namespace mssql {
@@ -50,9 +49,8 @@ class IOdbcConnection {
   virtual bool RollbackTransaction() = 0;
 
   // Statement management
-  virtual std::shared_ptr<IOdbcStatement> CreateStatement(StatementType type,
-                                                          const std::u16string& query,
-                                                          const std::u16string& tvpType = u"") = 0;
+  virtual std::shared_ptr<IOdbcStatement> CreateStatement(
+      StatementType type, const std::shared_ptr<QueryOperationParams> operationParam) = 0;
 
   virtual std::shared_ptr<IOdbcStatement> GetPreparedStatement(const std::string& statementId) = 0;
 
@@ -66,7 +64,7 @@ class IOdbcConnection {
   virtual bool RemoveStatement(int statementId) = 0;
 
   // Legacy ExecuteQuery for backward compatibility
-  virtual bool ExecuteQuery(const std::u16string& sqlText,
+  virtual bool ExecuteQuery(const std::shared_ptr<QueryOperationParams> operationParams,
                             const std::shared_ptr<BoundDatumSet> parameters,
                             std::shared_ptr<QueryResult>& result) = 0;
 
@@ -104,9 +102,8 @@ class OdbcConnection : public IOdbcConnection {
   // Get the statement factory
 
   // Statement management
-  std::shared_ptr<IOdbcStatement> CreateStatement(StatementType type,
-                                                  const std::u16string& query,
-                                                  const std::u16string& tvpType = u"") override;
+  std::shared_ptr<IOdbcStatement> CreateStatement(
+      StatementType type, const std::shared_ptr<QueryOperationParams> operationParam) override;
 
   std::shared_ptr<IOdbcStatement> GetPreparedStatement(const std::string& statementId) override;
 
@@ -118,7 +115,7 @@ class OdbcConnection : public IOdbcConnection {
   bool RemoveStatement(const std::shared_ptr<OdbcStatement>& statement);
 
   // Legacy ExecuteQuery implementation
-  bool ExecuteQuery(const std::u16string& sqlText,
+  bool ExecuteQuery(const std::shared_ptr<QueryOperationParams> operationParams,
                     const std::shared_ptr<BoundDatumSet> parameters,
                     std::shared_ptr<QueryResult>& result) override;
 

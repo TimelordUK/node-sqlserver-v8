@@ -69,7 +69,8 @@ class OdbcStatementLegacy : public IOdbcStatement {
   OdbcStatementLegacy(std::shared_ptr<IOdbcStatementHandle> statement,
                       std::shared_ptr<OdbcErrorHandler> errorHandler,
                       std::shared_ptr<IOdbcApi> odbcApi,
-                      StatementHandle handle);
+                      StatementHandle handle,
+                      const std::shared_ptr<QueryOperationParams> operationParams);
   virtual ~OdbcStatementLegacy();
   SQLLEN get_row_count() const {
     return _resultset != nullptr ? _resultset->row_count() : -1;
@@ -194,7 +195,7 @@ class OdbcStatementLegacy : public IOdbcStatement {
   std::shared_ptr<IOdbcApi> _odbcApi;  // Added IOdbcApi reference
   StatementHandle _handle;
   std::vector<std::shared_ptr<IOdbcRow>> _rows;
-
+  std::shared_ptr<QueryOperationParams> _operationParams;
   recursive_mutex g_i_mutex;
 
   const static size_t prepared_rows_to_bind = 50;

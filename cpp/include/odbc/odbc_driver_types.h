@@ -168,40 +168,14 @@ class QueryResult {
   StatementHandle handle_;
 };
 
-class QueryOperationParams {
- public:
-  shared_ptr<vector<uint16_t>> query_string() {
-    return _query_string;
-  }
-  int64_t id() {
-    return _id;
-  }
-  int32_t timeout() {
-    return _timeout;
-  }
-  int32_t query_tz_adjustment() {
-    return _query_tz_adjustment;
-  }
-  size_t max_prepared_column_size() {
-    return _max_prepared_column_size;
-  }
-  bool polling() {
-    return _polling;
-  }
-  bool numeric_string() {
-    return _numeric_string;
-  }
-
-  QueryOperationParams(int query_id, StatementHandle handle) : _id(query_id), _handle(handle) {}
-
-  shared_ptr<vector<uint16_t>> _query_string;
-  int32_t _timeout;
-  int32_t _query_tz_adjustment;
-  int64_t _id;
-  size_t _max_prepared_column_size;
-  bool _numeric_string;
-  bool _polling;
-  StatementHandle _handle;
+struct QueryOperationParams {
+  std::u16string query_string;
+  int32_t timeout;
+  int32_t query_tz_adjustment;
+  int64_t id;
+  size_t max_prepared_column_size;
+  bool numeric_string;
+  bool polling;
 };
 
 struct QueryOptions {

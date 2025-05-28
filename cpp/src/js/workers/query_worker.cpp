@@ -11,9 +11,9 @@ namespace mssql {
 
 QueryWorker::QueryWorker(Napi::Function& callback,
                          IOdbcConnection* connection,
-                         const std::u16string& sqlText,
+                         const std::shared_ptr<QueryOperationParams> q,
                          const Napi::Array& params)
-    : OdbcAsyncWorker(callback, connection), sqlText_(sqlText) {
+    : OdbcAsyncWorker(callback, connection), queryParams_(q) {
   // Convert JavaScript parameters to C++ parameters
   const uint32_t length = params.Length();
 
@@ -39,10 +39,10 @@ QueryWorker::QueryWorker(Napi::Function& callback,
 
 void QueryWorker::Execute() {
   try {
-    SQL_LOG_DEBUG_STREAM("Executing QueryWorker " << StringUtils::U16StringToUtf8(sqlText_));
+    // SQL_LOG_DEBUG_STREAM("Executing QueryWorker " << StringUtils::U16StringToUtf8(sqlText_));
     // This will need to be implemented in OdbcConnection
     // Here's a placeholder showing what it might look like
-    if (!connection_->ExecuteQuery(sqlText_, parameters_, result_)) {
+    if (!connection_->ExecuteQuery(queryParams_, parameters_, result_)) {
       const auto& errors = connection_->GetErrors();
       if (!errors.empty()) {
         const std::string errorMessage = errors[0]->message;

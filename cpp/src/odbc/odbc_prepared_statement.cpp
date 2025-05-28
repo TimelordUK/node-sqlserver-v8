@@ -9,7 +9,7 @@
 #include <core/bound_datum_set.h>
 namespace mssql {
 bool PreparedStatement::Prepare() {
-  SQL_LOG_TRACE_STREAM("PreparedStatement::Prepare - Preparing statement: " << query_);
+  // SQL_LOG_TRACE_STREAM("PreparedStatement::Prepare - Preparing statement: " << query_);
 
   if (isPrepared_) {
     SQL_LOG_TRACE("Statement already prepared");
@@ -18,33 +18,6 @@ bool PreparedStatement::Prepare() {
 
   state_ = State::STATEMENT_READING;
 
-  // Convert query to wide string
-  auto wideQuery = StringUtils::Utf8ToUtf16(query_);
-
-  // Make sure it's null-terminated
-  if (wideQuery->size() > 0 && (*wideQuery)[wideQuery->size() - 1] != L'\0') {
-    wideQuery->push_back(L'\0');
-  }
-
-  // Log only a reasonable portion of the query to avoid garbage in logs
-  std::string queryForLog =
-      StringUtils::SafeWideToUtf8ForLogging(reinterpret_cast<SQLWCHAR*>(wideQuery->data()));
-  SQL_LOG_TRACE_STREAM("Preparing query: " << queryForLog);
-
-  // Prepare the statement
-  auto ret = odbcApi_->SQLPrepareW(statement_->get_handle(),
-                                   reinterpret_cast<SQLWCHAR*>(wideQuery->data()),
-                                   SQL_NTS);  // Use SQL_NTS to indicate null-terminated string
-
-  if (!errorHandler_->CheckOdbcError(ret)) {
-    SQL_LOG_ERROR_STREAM("Statement preparation failed");
-    state_ = State::STATEMENT_ERROR;
-    return false;
-  }
-
-  SQL_LOG_TRACE("Statement prepared successfully");
-  isPrepared_ = true;
-  state_ = State::STATEMENT_PREPARED;
   return true;
 }
 

@@ -34,20 +34,11 @@ bool TvpStatement::Execute(const std::shared_ptr<BoundDatumSet> parameters,
   // Set the statement handle on the result
   result->setHandle(this->GetStatementHandle());
 
-  // TVP-specific execution logic would go here
-  // For now, we'll just implement a basic version to satisfy the interface
-
-  // Convert query to wide string
-  auto wideQuery = StringUtils::Utf8ToUtf16(query_);
-
-  // Make sure it's null-terminated
-  if (wideQuery->size() > 0 && (*wideQuery)[wideQuery->size() - 1] != L'\0') {
-    wideQuery->push_back(L'\0');
-  }
-
   // Execute directly
-  auto ret = odbcApi_->SQLExecDirectW(
-      statement_->get_handle(), reinterpret_cast<SQLWCHAR*>(wideQuery->data()), SQL_NTS);
+  auto ret =
+      odbcApi_->SQLExecDirectW(statement_->get_handle(),
+                               reinterpret_cast<SQLWCHAR*>(operationParams_->query_string.data()),
+                               SQL_NTS);
 
   if (!errorHandler_->CheckOdbcError(ret)) {
     SQL_LOG_ERROR_STREAM("TVP statement execution failed");

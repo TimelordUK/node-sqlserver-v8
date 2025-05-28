@@ -78,6 +78,19 @@ Napi::Object JsObjectMapper::fromStatementHandle(const Napi::Env& env, Statement
   return result;
 }
 
+std::shared_ptr<QueryOperationParams> JsObjectMapper::toQueryOperationParams(
+    const Napi::Object& jsObject) {
+  std::shared_ptr<QueryOperationParams> result = std::make_shared<QueryOperationParams>();
+  result->query_string = safeGetWideString(jsObject, "query_string");
+  result->timeout = safeGetInt32(jsObject, "timeout");
+  result->query_tz_adjustment = safeGetInt32(jsObject, "query_tz_adjustment");
+  result->id = safeGetInt64(jsObject, "id");
+  result->max_prepared_column_size = safeGetInt32(jsObject, "max_prepared_column_size");
+  result->numeric_string = safeGetBool(jsObject, "numeric_string");
+  result->polling = safeGetBool(jsObject, "polling");
+  return result;
+}
+
 NativeParam JsObjectMapper::toNativeParam(const Napi::Object& jsObject) {
   NativeParam result;
 

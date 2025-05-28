@@ -408,12 +408,13 @@ Napi::Value Connection::Query(const Napi::CallbackInfo& info) {
   }
 
   // Get SQL query text
-  if (info.Length() < 1 || !info[0].IsString()) {
-    Napi::TypeError::New(env, "SQL query text expected").ThrowAsJavaScriptException();
+  if (info.Length() < 1 || !info[0].IsObject()) {
+    Napi::TypeError::New(env, "query operations required").ThrowAsJavaScriptException();
     return env.Undefined();
   }
 
-  std::u16string sqlText = info[0].As<Napi::String>().Utf16Value();
+  std::shared_ptr<QueryOperationParams> operationParams =
+      JsObjectMapper::toQueryOperationParams(info[0].As<Napi::Object>());
 
   // Get parameters array (optional)
   Napi::Array params = Napi::Array::New(env, 0);
@@ -443,7 +444,7 @@ Napi::Value Connection::Query(const Napi::CallbackInfo& info) {
     });
 
     // Create and queue the worker
-    const auto worker = new QueryWorker(callback, odbcConnection_.get(), sqlText, params);
+    const auto worker = new QueryWorker(callback, odbcConnection_.get(), operationParams, params);
     worker->Queue();
 
     // Return the promise
@@ -451,7 +452,7 @@ Napi::Value Connection::Query(const Napi::CallbackInfo& info) {
   }
 
   // If we got here, we're using a callback
-  const auto worker = new QueryWorker(callback, odbcConnection_.get(), sqlText, params);
+  const auto worker = new QueryWorker(callback, odbcConnection_.get(), operationParams, params);
   worker->Queue();
 
   return env.Undefined();

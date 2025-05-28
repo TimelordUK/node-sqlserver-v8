@@ -8,7 +8,7 @@
 namespace mssql {
 
 class IOdbcRow;
-
+struct QueryOperationParams;
 // Create a utility class for different target containers
 
 class JsValueTarget {
@@ -72,6 +72,7 @@ class JsObjectMapper {
   static std::shared_ptr<SqlParameter> toSqlParameter(const Napi::Object& jsObject);
   static StatementHandle toStatementHandle(const Napi::Object& jsObject);
   static NativeParam toNativeParam(const Napi::Object& jsObject);
+  static std::shared_ptr<QueryOperationParams> toQueryOperationParams(const Napi::Object& jsObject);
 
   static Napi::Object fromColumnDefinition(const Napi::Env& env, const ColumnDefinition& colDef);
   static Napi::Array fromQueryResult(const Napi::Env& env, const QueryResult& result);

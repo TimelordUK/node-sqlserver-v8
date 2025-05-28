@@ -16,18 +16,12 @@ bool TransientStatement::Execute(const std::shared_ptr<BoundDatumSet> parameters
   state_ = State::STATEMENT_READING;
 
   // Convert query to wide string
-  auto wideQuery = StringUtils::Utf8ToUtf16(query_);
 
   result->setHandle(this->GetStatementHandle());
 
-  // Make sure it's null-terminated
-  if (wideQuery->size() > 0 && (*wideQuery)[wideQuery->size() - 1] != L'\0') {
-    wideQuery->push_back(L'\0');
-  }
-
   // Log only a reasonable portion of the query to avoid garbage in logs
-  std::string queryForLog =
-      StringUtils::SafeWideToUtf8ForLogging(reinterpret_cast<SQLWCHAR*>(wideQuery->data()));
+  std::string queryForLog = StringUtils::SafeWideToUtf8ForLogging(
+      reinterpret_cast<SQLWCHAR*>(operationParams_->query_string.data()));
   SQL_LOG_TRACE_STREAM("Query for execution: " << queryForLog);
 
   if (!bind_parameters(parameters)) {
@@ -39,9 +33,10 @@ bool TransientStatement::Execute(const std::shared_ptr<BoundDatumSet> parameters
   // Execute directly using SQL_NTS to indicate null-terminated string
   SQL_LOG_TRACE_STREAM(
       "Executing SQLExecDirectW on statement handle: " << statement_->get_handle());
-  auto ret = odbcApi_->SQLExecDirectW(statement_->get_handle(),
-                                      reinterpret_cast<SQLWCHAR*>(wideQuery->data()),
-                                      SQL_NTS);  // Use SQL_NTS instead of length
+  auto ret =
+      odbcApi_->SQLExecDirectW(statement_->get_handle(),
+                               reinterpret_cast<SQLWCHAR*>(operationParams_->query_string.data()),
+                               SQL_NTS);  // Use SQL_NTS instead of length
 
   if (!errorHandler_->CheckOdbcError(ret)) {
     SQL_LOG_ERROR_STREAM(

@@ -242,10 +242,11 @@ class TransientStatement : public OdbcStatement {
  public:
   TransientStatement(std::shared_ptr<IOdbcStatementHandle> statement,
                      std::shared_ptr<OdbcErrorHandler> errorHandler,
-                     const std::string& query,
+                     const std::shared_ptr<QueryOperationParams> operationParams,
                      std::shared_ptr<IOdbcApi> odbcApi,
                      StatementHandle handle)
-      : OdbcStatement(Type::Transient, statement, errorHandler, odbcApi, handle), query_(query) {}
+      : OdbcStatement(Type::Transient, statement, errorHandler, odbcApi, handle),
+        operationParams_(operationParams) {}
 
   // Core operations only
   bool Execute(const std::shared_ptr<BoundDatumSet> parameters,
@@ -258,7 +259,7 @@ class TransientStatement : public OdbcStatement {
   bool InitializeResultSet(std::shared_ptr<QueryResult>& result);
 
  private:
-  std::string query_;
+  std::shared_ptr<QueryOperationParams> operationParams_;
 };
 
 /**
@@ -268,10 +269,11 @@ class PreparedStatement : public OdbcStatement {
  public:
   PreparedStatement(std::shared_ptr<IOdbcStatementHandle> statement,
                     std::shared_ptr<OdbcErrorHandler> errorHandler,
-                    const std::string& query,
+                    const std::shared_ptr<QueryOperationParams> operationParams,
                     std::shared_ptr<IOdbcApi> odbcApi,
                     StatementHandle handle)
-      : OdbcStatement(Type::Prepared, statement, errorHandler, odbcApi, handle), query_(query) {}
+      : OdbcStatement(Type::Prepared, statement, errorHandler, odbcApi, handle),
+        operationParams_(operationParams) {}
 
   bool Execute(const std::shared_ptr<BoundDatumSet> parameters,
                std::shared_ptr<QueryResult>& result) override;
@@ -282,7 +284,7 @@ class PreparedStatement : public OdbcStatement {
   bool Prepare();
 
  private:
-  std::string query_;
+  std::shared_ptr<QueryOperationParams> operationParams_;
   bool isPrepared_ = false;
 };
 
@@ -293,13 +295,11 @@ class TvpStatement : public OdbcStatement {
  public:
   TvpStatement(std::shared_ptr<IOdbcStatementHandle> statement,
                std::shared_ptr<OdbcErrorHandler> errorHandler,
-               const std::string& query,
-               const std::string& tvpType,
+               const std::shared_ptr<QueryOperationParams> operationParams,
                std::shared_ptr<IOdbcApi> odbcApi,
                StatementHandle handle)
       : OdbcStatement(Type::Transient, statement, errorHandler, odbcApi, handle),
-        query_(query),
-        tvpType_(tvpType) {}
+        operationParams_(operationParams) {}
 
   bool Execute(const std::shared_ptr<BoundDatumSet> parameters,
                std::shared_ptr<QueryResult>& result) override;
@@ -310,8 +310,7 @@ class TvpStatement : public OdbcStatement {
   bool BindTvpColumns(const std::vector<std::string>& columnNames);
 
  private:
-  std::string query_;
-  std::string tvpType_;
+  std::shared_ptr<QueryOperationParams> operationParams_;
   bool isColumnsBound_ = false;
 };
 

@@ -188,20 +188,15 @@ bool OdbcConnection::RollbackTransaction() {
   return _transactionManager->RollbackTransaction();
 }
 
-std::shared_ptr<IOdbcStatement> OdbcConnection::CreateStatement(StatementType type,
-                                                                const std::u16string& query,
-                                                                const std::u16string& tvpType) {
+std::shared_ptr<IOdbcStatement> OdbcConnection::CreateStatement(
+    StatementType type, const std::shared_ptr<QueryOperationParams> operationParams) {
   if (connectionState != ConnectionOpen) {
     SQL_LOG_ERROR("Cannot create statement - connection is not open");
     return nullptr;
   }
 
-  // Convert from std::u16string to std::string using our proper conversion utility
-  std::string utf8Query = StringUtils::U16StringToUtf8(query);
-  std::string utf8TvpType = StringUtils::U16StringToUtf8(tvpType);
-
   // Create the statement using the factory
-  return _statementFactory->CreateStatement(_odbcApi, type, _errorHandler, utf8Query, utf8TvpType);
+  return _statementFactory->CreateStatement(_odbcApi, type, _errorHandler, operationParams);
 }
 
 std::shared_ptr<IOdbcStatement> OdbcConnection::GetPreparedStatement(
@@ -270,11 +265,11 @@ bool OdbcConnection::RemoveStatement(int statementId) {
   return true;
 }
 
-bool OdbcConnection::ExecuteQuery(const std::u16string& sqlText,
+bool OdbcConnection::ExecuteQuery(const std::shared_ptr<QueryOperationParams> operationParams,
                                   const std::shared_ptr<BoundDatumSet> parameters,
                                   std::shared_ptr<QueryResult>& result) {
   // Create a transient statement
-  auto statement = CreateStatement(OdbcStatement::Type::Legacy, sqlText);
+  auto statement = CreateStatement(OdbcStatement::Type::Legacy, operationParams);
   if (!statement) {
     return false;
   }

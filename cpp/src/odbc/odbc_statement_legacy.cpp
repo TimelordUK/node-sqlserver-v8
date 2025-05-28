@@ -15,6 +15,8 @@
 #include <common/numeric_utils.h>
 #include <odbc/bcp.h>
 #include <js/columns/result_set.h>
+#include <odbc/odbc_driver_types.h>
+
 const int SQL_SERVER_MAX_STRING_SIZE = 8000;
 
 // default size to retrieve from a LOB field and we don't know the size
@@ -87,23 +89,38 @@ std::vector<std::shared_ptr<IOdbcRow>>& OdbcStatementLegacy::GetRows() {
 }
 
 std::shared_ptr<QueryResult> OdbcStatementLegacy::GetMetaData() {
-  return nullptr;
+  auto res = make_shared<QueryResult>();
+  res->set_end_of_rows(false);
+  res->set_end_of_results(false);
+  auto ncols = this->_resultset->get_column_count();
+  for (size_t i = 0; i < ncols; i++) {
+    auto col = this->_resultset->get_meta_data(i);
+    res->addColumn(col);
+  }
+  return res;
 }
 
-bool OdbcStatementLegacy::TryReadRows(std::shared_ptr<QueryResult> result, const size_t number_rows) {
-  // Stub implementation
-  return false;
+bool OdbcStatementLegacy::TryReadRows(std::shared_ptr<QueryResult> result,
+                                      const size_t number_rows) {
+  auto res = try_read_columns(number_rows);
+  result->set_end_of_rows(this->_resultset->EndOfRows());
+  result->set_end_of_results(this->_endOfResults);
+  return res;
 }
 
 bool OdbcStatementLegacy::ReadNextResult(std::shared_ptr<QueryResult> result) {
-  // Stub implementation
-  return false;
+  auto res = try_read_next_result();
+  result->set_end_of_rows(this->_resultset->EndOfRows());
+  result->set_end_of_results(this->_endOfResults);
+  return res;
 }
 
-OdbcStatementLegacy::OdbcStatementLegacy(std::shared_ptr<IOdbcStatementHandle> statement,
-                                         std::shared_ptr<OdbcErrorHandler> errorHandler,
-                                         std::shared_ptr<IOdbcApi> odbcApi,
-                                         StatementHandle handle)
+OdbcStatementLegacy::OdbcStatementLegacy(
+    std::shared_ptr<IOdbcStatementHandle> statement,
+    std::shared_ptr<OdbcErrorHandler> errorHandler,
+    std::shared_ptr<IOdbcApi> odbcApi,
+    StatementHandle handle,
+    const std::shared_ptr<QueryOperationParams> operationParams)
     : _endOfResults(true),
       _prepared(false),
       _cancelRequested(false),
@@ -114,7 +131,8 @@ OdbcStatementLegacy::OdbcStatementLegacy(std::shared_ptr<IOdbcStatementHandle> s
       _statement(statement),
       _errorHandler(errorHandler),
       _odbcApi(odbcApi),
-      _handle(handle) {
+      _handle(handle),
+      _operationParams(operationParams) {
   // cerr << "OdbcStatement() " << _statementId << " " << endl;
   // fprintf(stderr, "OdbcStatement::OdbcStatement OdbcStatement ID = %ld\n ", statement_id);
 
@@ -653,11 +671,11 @@ bool OdbcStatementLegacy::try_prepare(const shared_ptr<QueryOperationParams>& q)
     return false;
   const auto& statement = *_statement;
   _query = q;
-  const auto query = q->query_string();
+  auto query = q->query_string;
   SQLSMALLINT num_cols = 0;
 
   auto ret =
-      SQLPrepare(statement.get_handle(), reinterpret_cast<SQLWCHAR*>(query->data()), query->size());
+      SQLPrepare(statement.get_handle(), reinterpret_cast<SQLWCHAR*>(query.data()), query.size());
   if (!check_odbc_error(ret))
     return false;
 
@@ -829,7 +847,7 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
   // cout << "id " << _statementId << " try_execute_direct" << endl;
   _errors->clear();
   _query = q;
-  const auto timeout = q->timeout();
+  const auto timeout = q->timeout;
   auto& pars = *param_set;
 
   if (pars.size() > 0) {
@@ -860,11 +878,11 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
                      0);
     }
   }
-  const auto query = q->query_string();
+  auto query = q->query_string;
 
   set_state(OdbcStatementState::STATEMENT_SUBMITTED);
   SQLRETURN ret = SQLExecDirect(
-      _statement->get_handle(), reinterpret_cast<SQLWCHAR*>(query->data()), query->size());
+      _statement->get_handle(), reinterpret_cast<SQLWCHAR*>(query.data()), query.size());
   {
     // we may have cancelled this query on a different thread
     // so only switch state if this query completed.
@@ -878,7 +896,7 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
   }
   if (polling_mode) {
     set_state(OdbcStatementState::STATEMENT_POLLING);
-    ret = poll_check(ret, query, true);
+    ret = poll_check(ret, make_shared<vector<uint16_t>>(query.begin(), query.end()), true);
   }
 
   // cerr << "ret = " << ret << endl;

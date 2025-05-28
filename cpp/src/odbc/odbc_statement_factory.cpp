@@ -16,8 +16,7 @@ std::shared_ptr<IOdbcStatement> OdbcStatementFactory::MakeStatement(
     std::shared_ptr<IOdbcApi> odbcApi,
     StatementType type,
     std::shared_ptr<OdbcErrorHandler> errorHandler,
-    const std::string& query,
-    const std::string& tvpType) {
+    const std::shared_ptr<QueryOperationParams> operationParams) {
   auto id = factory_.getNextId();
   SQL_LOG_DEBUG_STREAM("MakeStatement - create a new statement handle with id = " << id);
   auto handle = connectionHandles_->checkout(id);
@@ -30,19 +29,19 @@ std::shared_ptr<IOdbcStatement> OdbcStatementFactory::MakeStatement(
   switch (type) {
     case StatementType::Legacy:
       return std::make_shared<OdbcStatementLegacy>(
-          handle, errorHandler, odbcApi, statementHandle);
+          handle, errorHandler, odbcApi, statementHandle, operationParams);
 
     case StatementType::Transient:
       return std::make_shared<TransientStatement>(
-          handle, errorHandler, query, odbcApi, statementHandle);
+          handle, errorHandler, operationParams, odbcApi, statementHandle);
 
     case StatementType::Prepared:
       return std::make_shared<PreparedStatement>(
-          handle, errorHandler, query, odbcApi, statementHandle);
+          handle, errorHandler, operationParams, odbcApi, statementHandle);
 
     case StatementType::TVP:
       return std::make_shared<TvpStatement>(
-          handle, errorHandler, query, tvpType, odbcApi, statementHandle);
+          handle, errorHandler, operationParams, odbcApi, statementHandle);
 
     default:
       return nullptr;
@@ -68,11 +67,10 @@ std::shared_ptr<IOdbcStatement> OdbcStatementFactory::CreateStatement(
     std::shared_ptr<IOdbcApi> odbcApi,
     OdbcStatement::Type type,
     std::shared_ptr<OdbcErrorHandler> errorHandler,
-    const std::string& query,
-    const std::string& tvpType) {
+    const std::shared_ptr<QueryOperationParams> operationParams) {
   SQL_LOG_TRACE_STREAM("CreateStatement type " << (int)type);
 
-  auto statement = MakeStatement(odbcApi, type, errorHandler, query, tvpType);
+  auto statement = MakeStatement(odbcApi, type, errorHandler, operationParams);
   if (statement) {
     auto statementId = statement->GetStatementHandle().getStatementId();
     statements_[statementId] = statement;

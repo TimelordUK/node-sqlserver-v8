@@ -10,14 +10,14 @@ class QueryWorker : public OdbcAsyncWorker {
  public:
   QueryWorker(Napi::Function& callback,
               IOdbcConnection* connection,
-              const std::u16string& sqlText,
+              const std::shared_ptr<QueryOperationParams> q,
               const Napi::Array& params);
 
   void Execute() override;
   void OnOK() override;
 
  private:
-  std::u16string sqlText_;
+  std::shared_ptr<QueryOperationParams> queryParams_;
   std::shared_ptr<BoundDatumSet> parameters_;
 };
 }  // namespace mssql
