@@ -8,6 +8,7 @@
 #include "odbc_driver_types.h"
 #include "odbc_handles.h"
 #include "query_parameter.h"
+#include "js/columns/result_set.h"
 
 namespace mssql {
 class OdbcErrorHandler;
@@ -15,6 +16,7 @@ class IOdbcApi;
 class QueryResult;
 class IOdbcRow;
 class BoundDatumSet;
+
 /**
  * @brief Common statement types for OdbcStatement
  */
@@ -83,6 +85,7 @@ class IOdbcStatement {
 
   virtual std::vector<std::shared_ptr<IOdbcRow>>& GetRows() = 0;
   virtual std::shared_ptr<QueryResult> GetMetaData() = 0;
+  virtual std::shared_ptr<ResultSet> GetResultSet() = 0;
 
   /**
    * @brief Try to read rows from the result set
@@ -165,6 +168,10 @@ class OdbcStatement : public IOdbcStatement {
   }
   virtual std::shared_ptr<QueryResult> GetMetaData() override {
     return metaData_;
+  }
+
+  virtual std::shared_ptr<ResultSet> GetResultSet() override {
+    return std::make_shared<ResultSet>(0);
   }
 
   /**
@@ -303,7 +310,9 @@ class TvpStatement : public OdbcStatement {
 
   bool Execute(const std::shared_ptr<BoundDatumSet> parameters,
                std::shared_ptr<QueryResult>& result) override;
-
+  virtual std::shared_ptr<ResultSet> GetResultSet() override {
+    return std::make_shared<ResultSet>(0);
+  }
   /**
    * @brief Bind TVP columns
    */

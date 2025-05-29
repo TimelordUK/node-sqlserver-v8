@@ -23,17 +23,6 @@ QueryWorker::QueryWorker(Napi::Function& callback,
   // ParameterFactory::populateParameterSet(params, parameters_);
   parameters_->bind(params);
 
-  /*
-    for (uint32_t i = 0; i < length; i++) {
-      Napi::Value param = params[i];
-      if (param.IsObject()) {
-        const Napi::Object jsParam = param.As<Napi::Object>();
-        const std::shared_ptr<SqlParameter> sqlParam = JsObjectMapper::toSqlParameter(jsParam);
-        parameters_->add(sqlParam);
-      }
-    }
-  */
-
   result_ = std::make_shared<QueryResult>();
 }
 
@@ -66,7 +55,7 @@ void QueryWorker::OnOK() {
   SQL_LOG_DEBUG("QueryWorker::OnOK");
 
   try {
-    const auto metadata = GetMetadata();
+        const auto metadata = GetMetadata();
     Callback().Call({env.Null(), metadata});
   } catch (const std::exception& e) {
     // Call the callback with an error

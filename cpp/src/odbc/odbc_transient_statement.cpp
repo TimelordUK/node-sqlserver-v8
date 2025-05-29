@@ -95,8 +95,8 @@ bool TransientStatement::InitializeResultSet(std::shared_ptr<QueryResult>& resul
     // Let ODBC write directly to our struct members
     ret = odbcApi_->SQLDescribeCol(statement_->get_handle(),
                                    i,
-                                   colDef.colName,
-                                   sizeof(colDef.colName) / sizeof(SQLWCHAR),
+                                   colDef.name.data(),
+                                   sizeof(colDef.name.size()) / sizeof(SQLWCHAR),
                                    &colDef.colNameLen,
                                    &colDef.dataType,
                                    &colDef.columnSize,

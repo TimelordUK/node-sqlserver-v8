@@ -275,6 +275,7 @@ bool OdbcConnection::ExecuteQuery(const std::shared_ptr<QueryOperationParams> op
   }
 
   // Execute it
+  result->setHandle(statement->GetStatementHandle());
   return statement->Execute(parameters, result);
 }
 

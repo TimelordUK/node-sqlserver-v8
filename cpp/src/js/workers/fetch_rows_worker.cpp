@@ -50,6 +50,7 @@ void FetchRowsWorker::OnOK() {
 
   try {
     // Create a JavaScript array of rows
+    /*
     Napi::Array rows = Napi::Array::New(env);
     const auto& statement = GetStatement();
     const auto& nativeData = statement->GetRows();
@@ -68,7 +69,9 @@ void FetchRowsWorker::OnOK() {
     Napi::Object result = Napi::Object::New(env);
     result.Set("rows", rows);
     result.Set("endOfRows", Napi::Boolean::New(env, result_->is_end_of_rows()));
-
+*/
+    const auto resultset = GetStatement()->GetResultSet();
+    const auto result = JsObjectMapper::fromQueryResult(env, resultset);
     // Call the callback with the result
     Callback().Call({env.Null(), result});
   } catch (const std::exception& e) {

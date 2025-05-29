@@ -74,8 +74,8 @@ Napi::Object JsObjectMapper::fromQueryResult(const Napi::Env& env,
                                              const std::shared_ptr<ResultSet>& resultset) {
   const auto result = Napi::Object::New(env);
 
-  result.Set("end_rows", resultset->EndOfRows());
-  result.Set("end_results", resultset->EndOfResults());
+  result.Set("endOfRows", resultset->EndOfRows());
+  result.Set("endOfResults", resultset->EndOfResults());
   // cerr << " get_column_values " << endl;
   const auto number_rows = resultset->get_result_count();
   const auto column_count = static_cast<int>(resultset->get_column_count());
@@ -329,14 +329,17 @@ Napi::Object JsObjectMapper::fromColumnDefinition(const Napi::Env& env,
   // So we need to use proper conversion
   std::string colName;
   if (colDef.colNameLen > 0) {
-    colName = StringUtils::WideToUtf8(colDef.colName, colDef.colNameLen);
+    colName = StringUtils::WideToUtf8(colDef.name.data(), colDef.colNameLen);
   }
 
   std::string jsType = OdbcTypeMapper::MapSqlTypeToJsType(colDef.dataType);
 
+  auto name = Napi::String::New(
+      env, reinterpret_cast<const char16_t*>(colDef.name.data()), colDef.colNameLen);
+
   // Set properties on the JavaScript object
   // result.Set("size", Napi::Number::New(env, colDef.colNameLen));
-  result.Set("name", Napi::String::New(env, colName));
+  result.Set("name", name);
   result.Set("nullable", Napi::Boolean::New(env, colDef.nullable != 0));
   result.Set("type", Napi::String::New(env, jsType));
   result.Set("sqlType", Napi::Number::New(env, colDef.dataType));
@@ -969,7 +972,7 @@ Napi::Object JsObjectMapper::fromOdbcRow(const Napi::Env& env,
   for (size_t colIdx = 0; colIdx < columnCount; ++colIdx) {
     const auto& column = row->getColumn(colIdx);
     const auto& colDef = columnDefs.get(colIdx);
-    const auto colName = colDef.colNameUtf8();
+    const auto colName = StringUtils::WideToUtf8(colDef.name.data(), colDef.colNameLen);
     JsObjectTarget jsWriterTarget(jsWriter, colName);
     // Check for NULL
     if (column.isNull()) {

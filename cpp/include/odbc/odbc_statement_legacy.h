@@ -61,6 +61,10 @@ class OdbcStatementLegacy : public IOdbcStatement {
   virtual bool TryReadRows(std::shared_ptr<QueryResult> result, const size_t number_rows) override;
   virtual bool ReadNextResult(std::shared_ptr<QueryResult> result) override;
 
+  virtual std::shared_ptr<ResultSet> GetResultSet() override {
+    return _resultset;
+  }
+
   bool created() {
     return _statementState == OdbcStatementState::STATEMENT_CREATED;
   }

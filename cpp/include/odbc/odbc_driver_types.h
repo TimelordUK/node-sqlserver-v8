@@ -52,7 +52,7 @@ class StatementHandle {
 };
 
 struct ColumnDefinition {
-  SQLWCHAR colName[256];
+  // SQLWCHAR colName[256];
   SQLSMALLINT colNameLen;
   SQLSMALLINT dataType;
   SQLULEN columnSize;
@@ -62,10 +62,6 @@ struct ColumnDefinition {
   std::string udtTypeName;
   vector<SQLWCHAR> name;
 
-  std::string colNameUtf8() const {
-    return StringUtils::WideToUtf8(colName, colNameLen);
-  }
-
   // String representation for debugging
   std::string toString() const {
     std::string result = "Column: ";
@@ -73,7 +69,7 @@ struct ColumnDefinition {
     // Convert wide string to regular string for display
     std::string name(colNameLen, ' ');
     for (int i = 0; i < colNameLen; i++) {
-      name[i] = static_cast<char>(colName[i]);
+      name[i] = static_cast<char>(name[i]);
     }
 
     result += name;

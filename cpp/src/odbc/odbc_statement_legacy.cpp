@@ -46,6 +46,11 @@ OdbcStatementLegacy::~OdbcStatementLegacy() {
 bool OdbcStatementLegacy::Execute(const std::shared_ptr<BoundDatumSet> parameters,
                                   std::shared_ptr<QueryResult>& result) {
   auto res = try_execute_direct(_operationParams, parameters);
+  auto cols = _resultset->get_column_count();
+  for (size_t i = 0; i < cols; ++i) {
+    auto col = _resultset->get_meta_data(i);
+    result->addColumn(col);
+  }
   return res;
 }
 
@@ -583,14 +588,14 @@ bool OdbcStatementLegacy::read_next(const int column) {
                             index,
                             current.name.data(),
                             current.name.size(),
-                            &name_length,
+                            &current.colNameLen,
                             &current.dataType,
                             &current.columnSize,
                             &current.decimalDigits,
                             &current.nullable);
   if (!check_odbc_error(ret))
     return false;
-  current.name.resize(name_length);
+  current.name.resize(current.colNameLen);
 
   // wcerr << "read_next " << column << " name = " << current.name << endl;
   ret = read_col_attributes(current, column);
@@ -844,6 +849,7 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
       return false;
     }
 
+    _resultset = make_unique<ResultSet>(0);
     _resultset->_end_of_results = true;  // reset
     const auto ret = query_timeout(timeout);
     if (!check_odbc_error(ret))
@@ -881,7 +887,9 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
   if (ret == SQL_NO_DATA) {
     // cerr << "no data = " << ret << endl;
     start_reading_results();
-    _resultset = make_unique<ResultSet>(0);
+    if (!_resultset) {
+      _resultset = make_unique<ResultSet>(0);
+    }
     _resultset->_end_of_rows = true;
     return true;
   }
@@ -889,7 +897,9 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
   if (!SQL_SUCCEEDED(ret)) {
     // cerr << "SQL_SUCCEEDED = " << ret << endl;
     return_odbc_error();
-    _resultset = make_unique<ResultSet>(0);
+    if (!_resultset) {
+      _resultset = make_unique<ResultSet>(0);
+    }
     _resultset->_end_of_rows = true;
     return false;
   }
@@ -900,7 +910,9 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
     if (start_reading_results()) {
       _resultset->_end_of_rows = false;
     } else {
-      _resultset = make_unique<ResultSet>(0);
+      if (!_resultset) {
+        _resultset = make_unique<ResultSet>(0);
+      }
       _resultset->_end_of_rows = true;
     }
     // cout << "id " << _statementId << "SQL_SUCCESS_WITH_INFO = " << ret << endl;
