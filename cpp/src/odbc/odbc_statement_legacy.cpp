@@ -105,14 +105,14 @@ bool OdbcStatementLegacy::TryReadRows(std::shared_ptr<QueryResult> result,
                                       const size_t number_rows) {
   auto res = try_read_columns(number_rows);
   result->set_end_of_rows(this->_resultset->EndOfRows());
-  result->set_end_of_results(this->_endOfResults);
+  result->set_end_of_results(this->_resultset->EndOfResults());
   return res;
 }
 
 bool OdbcStatementLegacy::ReadNextResult(std::shared_ptr<QueryResult> result) {
   auto res = try_read_next_result();
   result->set_end_of_rows(this->_resultset->EndOfRows());
-  result->set_end_of_results(this->_endOfResults);
+  result->set_end_of_results(this->_resultset->EndOfResults());
   return res;
 }
 
@@ -122,8 +122,7 @@ OdbcStatementLegacy::OdbcStatementLegacy(
     std::shared_ptr<IOdbcApi> odbcApi,
     StatementHandle handle,
     const std::shared_ptr<QueryOperationParams> operationParams)
-    : _endOfResults(true),
-      _prepared(false),
+    : _prepared(false),
       _cancelRequested(false),
       _pollingEnabled(false),
       _numericStringEnabled(false),
@@ -217,28 +216,6 @@ bool OdbcStatementLegacy::prepared_read() {
   return res;
 }
 
-Napi::Object OdbcStatementLegacy::get_column_values(Napi::Env env) const {
-  const auto result = Napi::Object::New(env);
-  if (_resultset->EndOfRows()) {
-    result.Set("end_rows", true);
-  }
-  // cerr << " get_column_values " << endl;
-  const auto number_rows = _resultset->get_result_count();
-  const auto column_count = static_cast<int>(_resultset->get_column_count());
-  const auto results_array = Napi::Array::New(env, static_cast<int>(number_rows));
-  const auto data = Napi::String::New(env, "data");
-  result.Set(data, results_array);
-  for (size_t row_id = 0; row_id < number_rows; ++row_id) {
-    const auto row_array = Napi::Array::New(env, column_count);
-    results_array.Set(row_id, row_array);
-    for (auto c = 0; c < column_count; ++c) {
-      row_array.Set(c, _resultset->get_column(row_id, c)->ToValue(env));
-    }
-  }
-
-  return result;
-}
-
 bool OdbcStatementLegacy::apply_precision(const shared_ptr<BoundDatum>& datum,
                                           const int current_param) {
   /* Modify the fields in the implicit application parameter descriptor */
@@ -294,7 +271,7 @@ bool OdbcStatementLegacy::cancel() {
       cancel_handle();
       _resultset = make_unique<ResultSet>(0);
       _resultset->_end_of_rows = false;
-      _endOfResults = false;
+      _resultset->_end_of_results = false;
       return true;
     }
   }
@@ -522,11 +499,11 @@ Napi::Object OdbcStatementLegacy::get_meta_value(Napi::Env env) const {
 }
 
 bool OdbcStatementLegacy::end_of_results() const {
-  return _endOfResults;
+  return _resultset->EndOfResults();
 }
 
 Napi::Object OdbcStatementLegacy::handle_end_of_results(Napi::Env env) const {
-  return Napi::Boolean::New(env, _endOfResults).As<Napi::Object>();
+  return Napi::Boolean::New(env, _resultset->EndOfResults()).As<Napi::Object>();
 }
 
 Napi::Object OdbcStatementLegacy::end_of_rows(Napi::Env env) const {
@@ -759,7 +736,7 @@ SQLRETURN OdbcStatementLegacy::poll_check(SQLRETURN ret,
 bool OdbcStatementLegacy::raise_cancel() {
   _resultset = make_unique<ResultSet>(0);
   _resultset->_end_of_rows = true;
-  _endOfResults = true;  // reset
+  _resultset->_end_of_results = true;  // reset
   const string c_msg = "[Microsoft] Operation canceled";
   const string c_state = "U00000";
   const auto last = make_shared<OdbcError>(c_state.c_str(), c_msg.c_str(), 0, 0, "", "", 0);
@@ -867,7 +844,7 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
       return false;
     }
 
-    _endOfResults = true;  // reset
+    _resultset->_end_of_results = true;  // reset
     const auto ret = query_timeout(timeout);
     if (!check_odbc_error(ret))
       return false;
@@ -1844,7 +1821,7 @@ bool OdbcStatementLegacy::try_read_next_result() {
       state == OdbcStatementState::STATEMENT_CANCEL_HANDLE) {
     // fprintf(stderr, "TryReadNextResult - cancel mode.\n");
     _resultset->_end_of_rows = true;
-    _endOfResults = true;
+    _resultset->_end_of_results = true;
     set_state(OdbcStatementState::STATEMENT_ERROR);
     return false;
   }
@@ -1853,8 +1830,7 @@ bool OdbcStatementLegacy::try_read_next_result() {
   switch (ret) {
     case SQL_NO_DATA: {
       // fprintf(stderr, "SQL_NO_DATA\n");
-      _endOfResults = true;
-      _resultset->_end_of_rows = true;
+      _resultset->_end_of_results = true;
       if (_prepared) {
         SQLCloseCursor(statement.get_handle());
       }
@@ -1873,7 +1849,7 @@ bool OdbcStatementLegacy::try_read_next_result() {
     }
     default:;
   }
-  _endOfResults = false;
+  _resultset->_end_of_results = false;
   return start_reading_results();
 }
 }  // namespace mssql

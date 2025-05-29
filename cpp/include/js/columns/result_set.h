@@ -13,7 +13,7 @@ class ResultSet {
  public:
   typedef vector<shared_ptr<Column>> t_row;
 
-  ResultSet(int num_columns) : _row_count(0), _end_of_rows(true) {
+  ResultSet(int num_columns) : _row_count(0), _end_of_rows(true), _end_of_results(false) {
     _metadata.resize(num_columns);
   }
 
@@ -47,12 +47,17 @@ class ResultSet {
     return _end_of_rows;
   }
 
+  bool EndOfResults() const {
+    return _end_of_results;
+  }
+
  private:
   Napi::Object get_entry(const ColumnDefinition& definition);
   std::vector<ColumnDefinition> _metadata;
 
   SQLLEN _row_count;
   bool _end_of_rows;
+  bool _end_of_results;
   std::vector<t_row> _rows;
 
   friend class OdbcStatementLegacy;

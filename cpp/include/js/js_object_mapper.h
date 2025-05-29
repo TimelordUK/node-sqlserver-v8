@@ -9,6 +9,7 @@ namespace mssql {
 
 class IOdbcRow;
 struct QueryOperationParams;
+class ResultSet;
 // Create a utility class for different target containers
 
 class JsValueTarget {
@@ -111,6 +112,7 @@ class JsObjectMapper {
   static bool safeGetBool(const Napi::Object& obj,
                           const std::string& prop,
                           bool defaultVal = false);
+  static Napi::Object fromQueryResult(const Napi::Env&, const std::shared_ptr<ResultSet>& result);
 
  private:
   static bool handleColumn(const Napi::Env& env,

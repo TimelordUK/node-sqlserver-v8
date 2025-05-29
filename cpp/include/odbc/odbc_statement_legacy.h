@@ -92,7 +92,6 @@ class OdbcStatementLegacy : public IOdbcStatement {
   bool end_of_results() const;
   Napi::Object handle_end_of_results(Napi::Env env) const;
   Napi::Object end_of_rows(Napi::Env env) const;
-  Napi::Object get_column_values(Napi::Env env) const;
   bool set_polling(bool mode);
   bool get_polling();
   void set_state(const OdbcStatementState state);
@@ -175,7 +174,7 @@ class OdbcStatementLegacy : public IOdbcStatement {
 
   shared_ptr<vector<shared_ptr<OdbcError>>> _errors;
 
-  bool _endOfResults;
+  // bool _endOfResults;
   long _statementId;
   bool _prepared;
   bool _cancelRequested;

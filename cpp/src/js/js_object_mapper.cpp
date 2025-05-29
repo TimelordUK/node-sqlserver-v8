@@ -7,6 +7,7 @@
 #include <common/string_utils.h>
 #include <utils/Logger.h>
 #include <odbc/odbc_type_mapper.h>
+#include <js/columns/result_set.h>
 
 namespace mssql {
 // Helper methods implementation
@@ -67,6 +68,29 @@ bool JsObjectMapper::safeGetBool(const Napi::Object& obj,
     return obj.Get(prop).As<Napi::Boolean>().Value();
   }
   return defaultVal;
+}
+
+Napi::Object JsObjectMapper::fromQueryResult(const Napi::Env& env,
+                                             const std::shared_ptr<ResultSet>& resultset) {
+  const auto result = Napi::Object::New(env);
+
+  result.Set("end_rows", resultset->EndOfRows());
+  result.Set("end_results", resultset->EndOfResults());
+  // cerr << " get_column_values " << endl;
+  const auto number_rows = resultset->get_result_count();
+  const auto column_count = static_cast<int>(resultset->get_column_count());
+  const auto results_array = Napi::Array::New(env, static_cast<int>(number_rows));
+  const auto data = Napi::String::New(env, "data");
+  result.Set(data, results_array);
+  for (size_t row_id = 0; row_id < number_rows; ++row_id) {
+    const auto row_array = Napi::Array::New(env, column_count);
+    results_array.Set(row_id, row_array);
+    for (auto c = 0; c < column_count; ++c) {
+      row_array.Set(c, resultset->get_column(row_id, c)->ToValue(env));
+    }
+  }
+
+  return result;
 }
 
 // Convert to Napi::Object for returning to JavaScript
