@@ -78,8 +78,24 @@ void BoundDatum::reserve_null(const SQLLEN len) {
   buffer_len = 0;
   _indvec.resize(len);
   js_type = JS_NULL;
-  c_type = SQL_C_CHAR;
-  sql_type = SQL_CHAR;
+  
+  // Only set default types if not already set
+  if (c_type == 0) {
+    c_type = SQL_C_CHAR;
+  }
+  if (sql_type == 0) {
+    sql_type = SQL_CHAR;
+  }
+  
+  // For binary types, use appropriate C type
+  switch (sql_type) {
+    case SQL_BINARY:
+    case SQL_VARBINARY:
+    case SQL_LONGVARBINARY:
+      c_type = SQL_C_BINARY;
+      break;
+  }
+  
   param_size = 1;
   digits = 0;
   buffer = nullptr;
@@ -1749,107 +1765,130 @@ void BoundDatum::sql_varbinary(Napi::Object pp) {
 }
 
 bool BoundDatum::user_bind(const Napi::Object& p, const Napi::Object& v) {
-  const auto local_sql_type = v.Get("sql_type").ToNumber().Int32Value();
+  const auto local_sql_type = p.Get("sql_type").ToNumber().Int32Value();
   if (local_sql_type == 0)
     return false;
   sql_type = static_cast<SQLSMALLINT>(local_sql_type);
   param_type = SQL_PARAM_INPUT;
 
-  auto pp = p.Get("value").As<Napi::Object>();
+  auto pp = p.Get("value");
+  
+  // Check if value is null and handle it specially for binary types
+  if (pp.IsNull() || pp.IsUndefined()) {
+    switch (sql_type) {
+      case SQL_BINARY:
+      case SQL_VARBINARY:
+      case SQL_LONGVARBINARY:
+        bind_null(p);
+        return true;
+      default:
+        bind_null(p);
+        return true;
+    }
+  }
 
-  assign_precision(pp);
+  if (!pp.IsObject()) {
+    // For simple values (numbers, strings, etc), create a temp object
+    auto env = p.Env();
+    auto tempObj = Napi::Object::New(env);
+    tempObj.Set("value", pp);
+    pp = tempObj;
+  }
+  
+  auto pp_obj = pp.As<Napi::Object>();
+  assign_precision(pp_obj);
 
   switch (sql_type) {
     case SQL_LONGVARBINARY:
-      sql_longvarbinary(pp);
+      sql_longvarbinary(pp_obj);
       break;
 
     case SQL_BINARY: {
-      sql_binary(pp);
+      sql_binary(pp_obj);
       if (err)
         return false;
     } break;
 
     case SQL_VARBINARY: {
-      sql_varbinary(pp);
+      sql_varbinary(pp_obj);
       if (err)
         return false;
     } break;
 
     case SQL_INTEGER:
-      sql_integer(pp);
+      sql_integer(pp_obj);
       break;
 
     case SQL_VARCHAR:
-      sql_varchar(pp);
+      sql_varchar(pp_obj);
       break;
 
     case SQL_WVARCHAR:
-      sql_wvarchar(pp);
+      sql_wvarchar(pp_obj);
       break;
 
     case SQL_WLONGVARCHAR:
-      sql_wlongvarchar(pp);
+      sql_wlongvarchar(pp_obj);
       break;
 
     case SQL_BIT:
-      sql_bit(pp);
+      sql_bit(pp_obj);
       break;
 
     case SQL_BIGINT:
-      sql_bigint(pp);
+      sql_bigint(pp_obj);
       break;
 
     case SQL_DOUBLE:
-      sql_double(pp);
+      sql_double(pp_obj);
       break;
 
     case SQL_FLOAT:
-      sql_float(pp);
+      sql_float(pp_obj);
       break;
 
     case SQL_REAL:
-      sql_real(pp);
+      sql_real(pp_obj);
       break;
 
     case SQL_TINYINT:
-      sql_tinyint(pp);
+      sql_tinyint(pp_obj);
       break;
 
     case SQL_SMALLINT:
-      sql_smallint(pp);
+      sql_smallint(pp_obj);
       break;
 
     case SQL_DECIMAL:
-      sql_decimal(pp);
+      sql_decimal(pp_obj);
       break;
 
     case SQL_NUMERIC:
-      sql_numeric(pp);
+      sql_numeric(pp_obj);
       break;
 
     case SQL_CHAR:
-      sql_char(pp);
+      sql_char(pp_obj);
       break;
 
     case SQL_SS_TIME2:
-      sql_ss_time2(pp);
+      sql_ss_time2(pp_obj);
       break;
 
     case SQL_TYPE_DATE:
-      sql_type_date(pp);
+      sql_type_date(pp_obj);
       break;
 
     case SQL_TYPE_TIMESTAMP:
-      sql_type_timestamp(pp);
+      sql_type_timestamp(pp_obj);
       break;
 
     case SQL_DATETIME:
-      sql_type_timestamp(pp);
+      sql_type_timestamp(pp_obj);
       break;
 
     case SQL_SS_TIMESTAMPOFFSET:
-      sql_ss_timestampoffset(pp);
+      sql_ss_timestampoffset(pp_obj);
       break;
 
     case SQL_UNKNOWN_TYPE:
@@ -1870,7 +1909,7 @@ bool BoundDatum::bind_object(const Napi::Object& p) {
 
   v = get("sql_type", p);
   if (!v.IsUndefined()) {
-    return user_bind(p, v.As<Napi::Object>());
+    return user_bind(p, p);
   }
 
   const auto n = get_as_string(p, "name");
