@@ -306,7 +306,7 @@ void BoundDatum::bind_w_var_char_array(const Napi::Object& p) {
 }
 
 void BoundDatum::bind_w_var_char(const Napi::Object& p, const int precision) {
-  const size_t max_str_len = max(1, precision);
+  const size_t max_str_len = max(1, precision) + 1; // Add space for null terminator
   reserve_w_var_char_array(max_str_len, 1);
   _indvec[0] = SQL_NULL_DATA;
   if (!p.IsNull() && !p.IsUndefined() && p.IsString()) {
@@ -316,7 +316,9 @@ void BoundDatum::bind_w_var_char(const Napi::Object& p, const int precision) {
     auto* const first_p = _storage->uint16vec_ptr->data();
     const auto copy_len = min(utf16_str.size(), static_cast<size_t>(precision));
     memcpy(first_p, utf16_str.c_str(), copy_len * size);
-    buffer_len = static_cast<SQLLEN>(precision) * static_cast<SQLLEN>(size);
+    // Add null terminator
+    first_p[copy_len] = 0;
+    buffer_len = static_cast<SQLLEN>(max_str_len) * static_cast<SQLLEN>(size);
     _indvec[0] = static_cast<SQLLEN>(copy_len) * static_cast<SQLLEN>(size);
   }
 }
