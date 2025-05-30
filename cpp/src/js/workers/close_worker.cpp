@@ -37,6 +37,10 @@ void CloseWorker::OnOK() {
   Napi::HandleScope scope(env);
   SQL_LOG_DEBUG("CloseWorker::OnOK - setting connection state to closed");
   parent_->SetConnected(false);
+  
+  // Immediately release the native connection resources
+  SQL_LOG_DEBUG("CloseWorker::OnOK - releasing native connection resources");
+  parent_->ReleaseConnection();
 
   try {
     // Call the callback with the result

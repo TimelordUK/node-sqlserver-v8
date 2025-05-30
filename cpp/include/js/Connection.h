@@ -25,6 +25,11 @@ class Connection : public Napi::ObjectWrap<Connection> {
   inline void SetConnected(bool connected) {
     isConnected_ = connected;
   }
+  
+  // Release the native connection resources immediately
+  inline void ReleaseConnection() {
+    odbcConnection_.reset();
+  }
 
  private:
   // Static reference to constructor for creating new instances
