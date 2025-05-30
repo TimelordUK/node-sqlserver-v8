@@ -1040,4 +1040,61 @@ SQLRETURN RealOdbcApi::SQLSetDescField(SQLHDESC DescriptorHandle,
   return ret;
 }
 
+SQLRETURN RealOdbcApi::SQLRowCount(SQLHSTMT StatementHandle,
+                                   SQLLEN* RowCount) {
+  SQL_LOG_TRACE_STREAM("SQLRowCount called - Handle: " << StatementHandle);
+
+  SQLRETURN ret = ::SQLRowCount(StatementHandle, RowCount);
+  
+  if (SQL_SUCCEEDED(ret) && RowCount) {
+    SQL_LOG_TRACE_STREAM("SQLRowCount returned: " << GetSqlReturnCodeString(ret) 
+                         << ", RowCount: " << *RowCount);
+  } else {
+    SQL_LOG_TRACE_STREAM("SQLRowCount returned: " << GetSqlReturnCodeString(ret));
+  }
+
+  if (!SQL_SUCCEEDED(ret)) {
+    LogOdbcError(SQL_HANDLE_STMT, StatementHandle, "SQLRowCount failed");
+  }
+
+  return ret;
+}
+
+SQLRETURN RealOdbcApi::SQLBindCol(SQLHSTMT StatementHandle,
+                                  SQLUSMALLINT ColumnNumber,
+                                  SQLSMALLINT TargetType,
+                                  SQLPOINTER TargetValue,
+                                  SQLLEN BufferLength,
+                                  SQLLEN* StrLen_or_Ind) {
+  SQL_LOG_TRACE_STREAM("SQLBindCol called - Handle: " << StatementHandle
+                       << ", ColumnNumber: " << ColumnNumber
+                       << ", TargetType: " << TargetType
+                       << ", BufferLength: " << BufferLength);
+
+  SQLRETURN ret = ::SQLBindCol(StatementHandle, ColumnNumber, TargetType, 
+                               TargetValue, BufferLength, StrLen_or_Ind);
+  SQL_LOG_TRACE_STREAM("SQLBindCol returned: " << GetSqlReturnCodeString(ret));
+
+  if (!SQL_SUCCEEDED(ret)) {
+    LogOdbcError(SQL_HANDLE_STMT, StatementHandle, "SQLBindCol failed");
+  }
+
+  return ret;
+}
+
+SQLRETURN RealOdbcApi::SQLCancelHandle(SQLSMALLINT HandleType,
+                                       SQLHANDLE Handle) {
+  SQL_LOG_TRACE_STREAM("SQLCancelHandle called - HandleType: " << HandleType 
+                       << ", Handle: " << Handle);
+
+  SQLRETURN ret = ::SQLCancelHandle(HandleType, Handle);
+  SQL_LOG_TRACE_STREAM("SQLCancelHandle returned: " << GetSqlReturnCodeString(ret));
+
+  if (!SQL_SUCCEEDED(ret)) {
+    LogOdbcError(HandleType, Handle, "SQLCancelHandle failed");
+  }
+
+  return ret;
+}
+
 }  // namespace mssql

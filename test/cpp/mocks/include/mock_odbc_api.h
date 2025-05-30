@@ -145,5 +145,40 @@ namespace mssql
                  SQLSMALLINT *StringLengthPtr,
                  SQLLEN *NumericAttributePtr),
                 (override));
+
+    MOCK_METHOD(SQLRETURN, SQLGetStmtAttr,
+                (SQLHSTMT StatementHandle,
+                 SQLINTEGER Attribute,
+                 SQLPOINTER Value,
+                 SQLINTEGER BufferLength,
+                 SQLINTEGER *StringLength),
+                (override));
+
+    MOCK_METHOD(SQLRETURN, SQLSetDescField,
+                (SQLHDESC DescriptorHandle,
+                 SQLSMALLINT RecNumber,
+                 SQLSMALLINT FieldIdentifier,
+                 SQLPOINTER Value,
+                 SQLINTEGER BufferLength),
+                (override));
+
+    MOCK_METHOD(SQLRETURN, SQLRowCount,
+                (SQLHSTMT StatementHandle,
+                 SQLLEN *RowCount),
+                (override));
+
+    MOCK_METHOD(SQLRETURN, SQLBindCol,
+                (SQLHSTMT StatementHandle,
+                 SQLUSMALLINT ColumnNumber,
+                 SQLSMALLINT TargetType,
+                 SQLPOINTER TargetValue,
+                 SQLLEN BufferLength,
+                 SQLLEN *StrLen_or_Ind),
+                (override));
+
+    MOCK_METHOD(SQLRETURN, SQLCancelHandle,
+                (SQLSMALLINT HandleType,
+                 SQLHANDLE Handle),
+                (override));
   };
 }

@@ -140,7 +140,7 @@ OdbcStatementLegacy::OdbcStatementLegacy(
       _operationParams(operationParams) {
   // cerr << "OdbcStatement() " << _statementId << " " << endl;
   // fprintf(stderr, "OdbcStatement::OdbcStatement OdbcStatement ID = %ld\n ", statement_id);
-
+  _numericStringEnabled = _operationParams->numeric_string;
   _errors = make_shared<vector<shared_ptr<OdbcError>>>();
 }
 
@@ -198,7 +198,7 @@ bool OdbcStatementLegacy::prepared_read() {
   const auto& statement = *_statement;
   SQLSetStmtAttr(statement.get_handle(), SQL_ATTR_ROWS_FETCHED_PTR, &_resultset->_row_count, 0);
 
-  const auto ret = SQLFetchScroll(statement.get_handle(), SQL_FETCH_NEXT, 0);
+  const auto ret = _odbcApi->SQLFetchScroll(statement.get_handle(), SQL_FETCH_NEXT, 0);
   // cerr << " row_count " << row_count << endl;
   if (ret == SQL_NO_DATA) {
     _resultset->_end_of_rows = true;
@@ -226,39 +226,40 @@ bool OdbcStatementLegacy::apply_precision(const shared_ptr<BoundDatum>& datum,
   /* Modify the fields in the implicit application parameter descriptor */
   SQLHDESC hdesc = nullptr;
   const SQLINTEGER bufferLength = 0;
-  auto r = SQLGetStmtAttr(_statement->get_handle(), SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, nullptr);
+  auto r = _odbcApi->SQLGetStmtAttr(
+      _statement->get_handle(), SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, nullptr);
   if (!check_odbc_error(r)) {
     return false;
   }
-  r = SQLSetDescField(hdesc,
-                      current_param,
-                      SQL_DESC_TYPE,
-                      reinterpret_cast<SQLPOINTER>(datum->c_type),
-                      bufferLength);
+  r = _odbcApi->SQLSetDescField(hdesc,
+                                current_param,
+                                SQL_DESC_TYPE,
+                                reinterpret_cast<SQLPOINTER>(datum->c_type),
+                                bufferLength);
   if (!check_odbc_error(r)) {
     return false;
   }
-  r = SQLSetDescField(hdesc,
-                      current_param,
-                      SQL_DESC_PRECISION,
-                      reinterpret_cast<SQLPOINTER>(datum->param_size),
-                      bufferLength);
+  r = _odbcApi->SQLSetDescField(hdesc,
+                                current_param,
+                                SQL_DESC_PRECISION,
+                                reinterpret_cast<SQLPOINTER>(datum->param_size),
+                                bufferLength);
   if (!check_odbc_error(r)) {
     return false;
   }
-  r = SQLSetDescField(hdesc,
-                      current_param,
-                      SQL_DESC_SCALE,
-                      reinterpret_cast<SQLPOINTER>(datum->digits),
-                      bufferLength);
+  r = _odbcApi->SQLSetDescField(hdesc,
+                                current_param,
+                                SQL_DESC_SCALE,
+                                reinterpret_cast<SQLPOINTER>(datum->digits),
+                                bufferLength);
   if (!check_odbc_error(r)) {
     return false;
   }
-  r = SQLSetDescField(hdesc,
-                      current_param,
-                      SQL_DESC_DATA_PTR,
-                      static_cast<SQLPOINTER>(datum->buffer),
-                      bufferLength);
+  r = _odbcApi->SQLSetDescField(hdesc,
+                                current_param,
+                                SQL_DESC_DATA_PTR,
+                                static_cast<SQLPOINTER>(datum->buffer),
+                                bufferLength);
   if (!check_odbc_error(r)) {
     return false;
   }
@@ -330,7 +331,8 @@ bool OdbcStatementLegacy::bind_tvp(vector<tvp_t>& tvps) {
     return false;
   const auto& statement = *_statement;
   for (const auto& tvp : tvps) {
-    auto tvpret = SQLSetStmtAttr(statement.get_handle(),
+    auto tvpret =
+        _odbcApi->SQLSetStmtAttr(statement.get_handle(),
                                  SQL_SOPT_SS_PARAM_FOCUS,
                                  reinterpret_cast<SQLPOINTER>(static_cast<long long>(tvp.first)),
                                  SQL_IS_INTEGER);
@@ -343,10 +345,10 @@ bool OdbcStatementLegacy::bind_tvp(vector<tvp_t>& tvps) {
       bind_datum(current_param, col_itr);
       current_param++;
     }
-    tvpret = SQLSetStmtAttr(statement.get_handle(),
-                            SQL_SOPT_SS_PARAM_FOCUS,
-                            static_cast<SQLPOINTER>(nullptr),
-                            SQL_IS_INTEGER);
+    tvpret = _odbcApi->SQLSetStmtAttr(statement.get_handle(),
+                                      SQL_SOPT_SS_PARAM_FOCUS,
+                                      static_cast<SQLPOINTER>(nullptr),
+                                      SQL_IS_INTEGER);
     if (!check_odbc_error(tvpret)) {
       return false;
     }
@@ -359,16 +361,16 @@ bool OdbcStatementLegacy::bind_datum(const int current_param, const shared_ptr<B
     return false;
   const auto& statement = *_statement;
 
-  auto r = SQLBindParameter(statement.get_handle(),
-                            static_cast<SQLUSMALLINT>(current_param),
-                            datum->param_type,
-                            datum->c_type,
-                            datum->sql_type,
-                            datum->param_size,
-                            datum->digits,
-                            datum->buffer,
-                            datum->buffer_len,
-                            datum->get_ind_vec().data());
+  auto r = _odbcApi->SQLBindParameter(statement.get_handle(),
+                                      static_cast<SQLUSMALLINT>(current_param),
+                                      datum->param_type,
+                                      datum->c_type,
+                                      datum->sql_type,
+                                      datum->param_size,
+                                      datum->digits,
+                                      datum->buffer,
+                                      datum->buffer_len,
+                                      datum->get_ind_vec().data());
 
   if (!check_odbc_error(r)) {
     return false;
@@ -408,11 +410,12 @@ bool OdbcStatementLegacy::bind_datum(const int current_param, const shared_ptr<B
     SQLINTEGER string_length = 0;
     SQLHANDLE ipd = nullptr;
     auto* const name_ptr = const_cast<wchar_t*>(name.c_str());
-    r = SQLGetStmtAttr(
+    r = _odbcApi->SQLGetStmtAttr(
         statement.get_handle(), SQL_ATTR_IMP_PARAM_DESC, &ipd, SQL_IS_POINTER, &string_length);
     if (!check_odbc_error(r))
       return false;
-    SQLSetDescField(ipd, current_param, SQL_DESC_NAME, name_ptr, name.size() * sizeof(wchar_t));
+    r = _odbcApi->SQLSetDescField(
+        ipd, current_param, SQL_DESC_NAME, name_ptr, name.size() * sizeof(wchar_t));
     if (!check_odbc_error(r))
       return false;
   }
@@ -429,18 +432,18 @@ void OdbcStatementLegacy::queue_tvp(int current_param,
   SQLHANDLE ipd = nullptr;
   const auto& statement = *_statement;
   SQLINTEGER string_length = 0;
-  auto r = SQLGetStmtAttr(
+  auto r = _odbcApi->SQLGetStmtAttr(
       statement.get_handle(), SQL_ATTR_IMP_PARAM_DESC, &ipd, SQL_IS_POINTER, &string_length);
   if (!check_odbc_error(r))
     return;
   const auto& schema = datum->get_storage()->schema;
   if (!schema.empty()) {
     auto schema_vec = odbcstr::wstr2wcvec(schema);
-    r = SQLSetDescField(ipd,
-                        current_param,
-                        SQL_CA_SS_SCHEMA_NAME,
-                        reinterpret_cast<SQLPOINTER>(schema_vec.data()),
-                        schema_vec.size() * 2);
+    r = _odbcApi->SQLSetDescField(ipd,
+                                  current_param,
+                                  SQL_CA_SS_SCHEMA_NAME,
+                                  reinterpret_cast<SQLPOINTER>(schema_vec.data()),
+                                  schema_vec.size() * 2);
     if (!check_odbc_error(r))
       return;
   }
@@ -465,7 +468,7 @@ bool OdbcStatementLegacy::bind_params(const shared_ptr<BoundDatumSet>& params) {
     return true;
   const auto& statement = *_statement;
   if (size > 1) {
-    const auto ret = SQLSetStmtAttr(
+    const auto ret = _odbcApi->SQLSetStmtAttr(
         statement.get_handle(), SQL_ATTR_PARAMSET_SIZE, reinterpret_cast<SQLPOINTER>(size), 0);
     if (!check_odbc_error(ret)) {
       return false;
@@ -535,13 +538,13 @@ bool OdbcStatementLegacy::read_col_attributes(ColumnDefinition& current, const i
   vector<SQLWCHAR> type_name(l);
   SQLSMALLINT type_name_len = 0;
   const auto index = column + 1;
-  auto ret = SQLColAttribute(_statement->get_handle(),
-                             index,
-                             SQL_DESC_TYPE_NAME,
-                             type_name.data(),
-                             type_name.size(),
-                             &type_name_len,
-                             nullptr);
+  auto ret = _odbcApi->SQLColAttribute(_statement->get_handle(),
+                                       index,
+                                       SQL_DESC_TYPE_NAME,
+                                       type_name.data(),
+                                       type_name.size(),
+                                       &type_name_len,
+                                       nullptr);
   if (!check_odbc_error(ret))
     return false;
 
@@ -555,13 +558,13 @@ bool OdbcStatementLegacy::read_col_attributes(ColumnDefinition& current, const i
     case SQL_SS_UDT: {
       vector<SQLWCHAR> udt_type_name(l);
       SQLSMALLINT udt_type_name_len = 0;
-      ret = SQLColAttribute(_statement->get_handle(),
-                            index,
-                            SQL_CA_SS_UDT_TYPE_NAME,
-                            udt_type_name.data(),
-                            udt_type_name.size(),
-                            &udt_type_name_len,
-                            nullptr);
+      ret = _odbcApi->SQLColAttribute(_statement->get_handle(),
+                                      index,
+                                      SQL_CA_SS_UDT_TYPE_NAME,
+                                      udt_type_name.data(),
+                                      udt_type_name.size(),
+                                      &udt_type_name_len,
+                                      nullptr);
       if (!check_odbc_error(ret))
         return false;
       current.udtTypeName = odbcstr::swcvec2str(udt_type_name, udt_type_name_len);
@@ -584,15 +587,15 @@ bool OdbcStatementLegacy::read_next(const int column) {
   const auto l = name_length + static_cast<SQLSMALLINT>(1);
   current.name.reserve(l);
   current.name.resize(l);
-  auto ret = SQLDescribeCol(statement.get_handle(),
-                            index,
-                            current.name.data(),
-                            current.name.size(),
-                            &current.colNameLen,
-                            &current.dataType,
-                            &current.columnSize,
-                            &current.decimalDigits,
-                            &current.nullable);
+  auto ret = _odbcApi->SQLDescribeCol(statement.get_handle(),
+                                      index,
+                                      current.name.data(),
+                                      current.name.size(),
+                                      &current.colNameLen,
+                                      &current.dataType,
+                                      &current.columnSize,
+                                      &current.decimalDigits,
+                                      &current.nullable);
   if (!check_odbc_error(ret))
     return false;
   current.name.resize(current.colNameLen);
@@ -616,7 +619,7 @@ bool OdbcStatementLegacy::start_reading_results() {
 
   SQLSMALLINT columns = 0;
   const auto& statement = *_statement;
-  auto ret = SQLNumResultCols(statement.get_handle(), &columns);
+  auto ret = _odbcApi->SQLNumResultCols(statement.get_handle(), &columns);
   if (!check_odbc_error(ret))
     return false;
 
@@ -630,7 +633,7 @@ bool OdbcStatementLegacy::start_reading_results() {
     }
   }
 
-  ret = SQLRowCount(statement.get_handle(), &_resultset->_row_count);
+  ret = _odbcApi->SQLRowCount(statement.get_handle(), &_resultset->_row_count);
   // cerr << "start_reading_results. row count = " << _resultset->_row_count << " " << endl;
   return check_odbc_error(ret);
 }
@@ -639,10 +642,12 @@ SQLRETURN OdbcStatementLegacy::query_timeout(const int timeout) {
   const auto& statement = *_statement;
   if (timeout > 0) {
     auto* const to = reinterpret_cast<SQLPOINTER>(static_cast<long long>(timeout));
-    const auto ret = SQLSetStmtAttr(statement.get_handle(), SQL_QUERY_TIMEOUT, to, SQL_IS_UINTEGER);
+    auto ret =
+        _odbcApi->SQLSetStmtAttr(statement.get_handle(), SQL_QUERY_TIMEOUT, to, SQL_IS_UINTEGER);
     if (!check_odbc_error(ret))
       return false;
-    SQLSetStmtAttr(statement.get_handle(), SQL_ATTR_QUERY_TIMEOUT, to, SQL_IS_UINTEGER);
+    ret = _odbcApi->SQLSetStmtAttr(
+        statement.get_handle(), SQL_ATTR_QUERY_TIMEOUT, to, SQL_IS_UINTEGER);
     if (!check_odbc_error(ret))
       return false;
   }
@@ -657,12 +662,12 @@ bool OdbcStatementLegacy::try_prepare(const shared_ptr<QueryOperationParams>& q)
   auto query = q->query_string;
   SQLSMALLINT num_cols = 0;
 
-  auto ret =
-      SQLPrepare(statement.get_handle(), reinterpret_cast<SQLWCHAR*>(query.data()), query.size());
+  auto ret = _odbcApi->SQLPrepare(
+      statement.get_handle(), reinterpret_cast<SQLWCHAR*>(query.data()), query.size());
   if (!check_odbc_error(ret))
     return false;
 
-  ret = SQLNumResultCols(statement.get_handle(), &num_cols);
+  ret = _odbcApi->SQLNumResultCols(statement.get_handle(), &num_cols);
   if (!check_odbc_error(ret))
     return false;
 
@@ -673,20 +678,20 @@ bool OdbcStatementLegacy::try_prepare(const shared_ptr<QueryOperationParams>& q)
     read_next(i);
   }
 
-  SQLSetStmtAttr(statement.get_handle(),
-                 SQL_ATTR_ROW_ARRAY_SIZE,
-                 reinterpret_cast<SQLPOINTER>(prepared_rows_to_bind),
-                 0);
+  ret = _odbcApi->SQLSetStmtAttr(statement.get_handle(),
+                                 SQL_ATTR_ROW_ARRAY_SIZE,
+                                 reinterpret_cast<SQLPOINTER>(prepared_rows_to_bind),
+                                 0);
   _preparedStorage->reserve(_resultset->get_metadata(), prepared_rows_to_bind);
 
   auto i = 0;
   for (const auto& datum : *_preparedStorage) {
-    ret = SQLBindCol(statement.get_handle(),
-                     static_cast<SQLUSMALLINT>(i + 1),
-                     datum->c_type,
-                     datum->buffer,
-                     datum->buffer_len,
-                     datum->get_ind_vec().data());
+    ret = _odbcApi->SQLBindCol(statement.get_handle(),
+                               static_cast<SQLUSMALLINT>(i + 1),
+                               datum->c_type,
+                               datum->buffer,
+                               datum->buffer_len,
+                               datum->get_ind_vec().data());
     if (!check_odbc_error(ret))
       return false;
     ++i;
@@ -708,10 +713,10 @@ SQLRETURN OdbcStatementLegacy::poll_check(SQLRETURN ret,
   if (ret == SQL_STILL_EXECUTING) {
     while (true) {
       if (direct) {
-        ret = SQLExecDirect(
+        ret = _odbcApi->SQLExecDirect(
             statement.get_handle(), reinterpret_cast<SQLWCHAR*>(query->data()), SQL_NTS);
       } else {
-        ret = SQLExecute(statement.get_handle());
+        ret = _odbcApi->SQLExecute(statement.get_handle());
       }
 
       bool submit_cancel;
@@ -782,7 +787,7 @@ bool OdbcStatementLegacy::bind_fetch(const shared_ptr<BoundDatumSet>& param_set)
     }
   }
 
-  auto ret = SQLExecute(statement.get_handle());
+  auto ret = _odbcApi->SQLExecute(statement.get_handle());
   if (polling_mode) {
     const auto vec = make_shared<vector<uint16_t>>();
     ret = poll_check(ret, vec, false);
@@ -801,7 +806,7 @@ bool OdbcStatementLegacy::bind_fetch(const shared_ptr<BoundDatumSet>& param_set)
   if (!check_odbc_error(ret))
     return false;
 
-  ret = SQLRowCount(statement.get_handle(), &_resultset->_row_count);
+  ret = _odbcApi->SQLRowCount(statement.get_handle(), &_resultset->_row_count);
   return check_odbc_error(ret);
 }
 
@@ -809,7 +814,7 @@ bool OdbcStatementLegacy::cancel_handle() {
   if (!_statement)
     return false;
   const auto& hnd = *_statement;
-  const auto ret2 = SQLCancelHandle(SQL_HANDLE_STMT, hnd.get_handle());
+  const auto ret2 = _odbcApi->SQLCancelHandle(SQL_HANDLE_STMT, hnd.get_handle());
   if (!check_odbc_error(ret2)) {
     // fprintf(stderr, "cancel req failed state %d %ld \n", _statementState, _statementId);
     return false;
@@ -856,16 +861,16 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
       return false;
 
     if (polling_mode) {
-      SQLSetStmtAttr(_statement->get_handle(),
-                     SQL_ATTR_ASYNC_ENABLE,
-                     reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON),
-                     0);
+      auto ret = _odbcApi->SQLSetStmtAttr(_statement->get_handle(),
+                                          SQL_ATTR_ASYNC_ENABLE,
+                                          reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON),
+                                          0);
     }
   }
   auto query = q->query_string;
 
   set_state(OdbcStatementState::STATEMENT_SUBMITTED);
-  SQLRETURN ret = SQLExecDirect(
+  SQLRETURN ret = _odbcApi->SQLExecDirect(
       _statement->get_handle(), reinterpret_cast<SQLWCHAR*>(query.data()), query.size());
   {
     // we may have cancelled this query on a different thread
@@ -1109,18 +1114,18 @@ bool OdbcStatementLegacy::d_variant(const size_t row_id, const size_t column) {
   SQLLEN iv = 0;
   char b = 0;
   // Figure out the length
-  auto ret = SQLGetData(
+  auto ret = _odbcApi->SQLGetData(
       statement.get_handle(), static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY, &b, 0, &iv);
   if (!check_odbc_error(ret))
     return false;
   // Figure out the type
-  ret = SQLColAttribute(statement.get_handle(),
-                        column + 1,
-                        SQL_CA_SS_VARIANT_TYPE,
-                        nullptr,
-                        0,
-                        nullptr,
-                        &variant_type);
+  ret = _odbcApi->SQLColAttribute(statement.get_handle(),
+                                  column + 1,
+                                  SQL_CA_SS_VARIANT_TYPE,
+                                  nullptr,
+                                  0,
+                                  nullptr,
+                                  &variant_type);
   if (!check_odbc_error(ret))
     return false;
   // set the definiton to actual data underlying data type.
@@ -1136,20 +1141,20 @@ bool OdbcStatementLegacy::d_time(const size_t row_id, const size_t column) {
   SQL_SS_TIME2_STRUCT time = {};
   SQLLEN precision = 0;
   SQLLEN colscale = 0;
-  const auto ret2 = SQLColAttribute(
+  const auto ret2 = _odbcApi->SQLColAttribute(
       statement.get_handle(), column + 1, SQL_COLUMN_PRECISION, nullptr, 0, nullptr, &precision);
   if (!check_odbc_error(ret2))
     return false;
-  const auto ret3 = SQLColAttribute(
+  const auto ret3 = _odbcApi->SQLColAttribute(
       statement.get_handle(), column + 1, SQL_COLUMN_SCALE, nullptr, 0, nullptr, &colscale);
   if (!check_odbc_error(ret3))
     return false;
-  const auto ret = SQLGetData(statement.get_handle(),
-                              static_cast<SQLSMALLINT>(column + 1),
-                              SQL_C_BINARY,
-                              &time,
-                              sizeof(time),
-                              &str_len_or_ind_ptr);
+  const auto ret = _odbcApi->SQLGetData(statement.get_handle(),
+                                        static_cast<SQLSMALLINT>(column + 1),
+                                        SQL_C_BINARY,
+                                        &time,
+                                        sizeof(time),
+                                        &str_len_or_ind_ptr);
 
   if (!check_odbc_error(ret))
     return false;
@@ -1178,12 +1183,12 @@ bool OdbcStatementLegacy::get_data_timestamp_offset(const size_t row_id, const s
   storage->ReserveTimestampOffset(1);
   SQLLEN str_len_or_ind_ptr = 0;
 
-  const auto ret = SQLGetData(statement.get_handle(),
-                              static_cast<SQLSMALLINT>(column + 1),
-                              SQL_C_DEFAULT,
-                              storage->timestampoffsetvec_ptr->data(),
-                              sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT),
-                              &str_len_or_ind_ptr);
+  const auto ret = _odbcApi->SQLGetData(statement.get_handle(),
+                                        static_cast<SQLSMALLINT>(column + 1),
+                                        SQL_C_DEFAULT,
+                                        storage->timestampoffsetvec_ptr->data(),
+                                        sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT),
+                                        &str_len_or_ind_ptr);
   if (!check_odbc_error(ret))
     return false;
   if (str_len_or_ind_ptr == SQL_NULL_DATA) {
@@ -1198,12 +1203,12 @@ bool OdbcStatementLegacy::get_data_timestamp(const size_t row_id, const size_t c
   const auto& statement = *_statement;
   SQLLEN str_len_or_ind_ptr = 0;
   TIMESTAMP_STRUCT v;
-  const auto ret = SQLGetData(statement.get_handle(),
-                              static_cast<SQLSMALLINT>(column + 1),
-                              SQL_C_TIMESTAMP,
-                              &v,
-                              sizeof(TIMESTAMP_STRUCT),
-                              &str_len_or_ind_ptr);
+  const auto ret = _odbcApi->SQLGetData(statement.get_handle(),
+                                        static_cast<SQLSMALLINT>(column + 1),
+                                        SQL_C_TIMESTAMP,
+                                        &v,
+                                        sizeof(TIMESTAMP_STRUCT),
+                                        &str_len_or_ind_ptr);
   if (!check_odbc_error(ret))
     return false;
   if (str_len_or_ind_ptr == SQL_NULL_DATA) {
@@ -1218,12 +1223,12 @@ bool OdbcStatementLegacy::get_data_big_int(const size_t row_id, const size_t col
   const auto& statement = *_statement;
   DatumStorageLegacy::bigint_t v = 0;
   SQLLEN str_len_or_ind_ptr = 0;
-  const auto ret = SQLGetData(statement.get_handle(),
-                              static_cast<SQLSMALLINT>(column + 1),
-                              SQL_C_SBIGINT,
-                              &v,
-                              sizeof(DatumStorageLegacy::bigint_t),
-                              &str_len_or_ind_ptr);
+  const auto ret = _odbcApi->SQLGetData(statement.get_handle(),
+                                        static_cast<SQLSMALLINT>(column + 1),
+                                        SQL_C_SBIGINT,
+                                        &v,
+                                        sizeof(DatumStorageLegacy::bigint_t),
+                                        &str_len_or_ind_ptr);
   if (!check_odbc_error(ret))
     return false;
   if (str_len_or_ind_ptr == SQL_NULL_DATA) {
@@ -1243,12 +1248,12 @@ bool OdbcStatementLegacy::get_data_long(const size_t row_id, const size_t column
 
   long v = 0;
   SQLLEN str_len_or_ind_ptr = 0;
-  const auto ret = SQLGetData(statement.get_handle(),
-                              static_cast<SQLSMALLINT>(column + 1),
-                              SQL_C_SLONG,
-                              &v,
-                              sizeof(int64_t),
-                              &str_len_or_ind_ptr);
+  const auto ret = _odbcApi->SQLGetData(statement.get_handle(),
+                                        static_cast<SQLSMALLINT>(column + 1),
+                                        SQL_C_SLONG,
+                                        &v,
+                                        sizeof(int64_t),
+                                        &str_len_or_ind_ptr);
   if (!check_odbc_error(ret))
     return false;
   if (str_len_or_ind_ptr == SQL_NULL_DATA) {
@@ -1267,12 +1272,12 @@ bool OdbcStatementLegacy::get_data_bit(const size_t row_id, const size_t column)
   const auto& statement = *_statement;
   char v = 0;
   SQLLEN str_len_or_ind_ptr = 0;
-  const auto ret = SQLGetData(statement.get_handle(),
-                              static_cast<SQLSMALLINT>(column + 1),
-                              SQL_C_BIT,
-                              &v,
-                              sizeof(char),
-                              &str_len_or_ind_ptr);
+  const auto ret = _odbcApi->SQLGetData(statement.get_handle(),
+                                        static_cast<SQLSMALLINT>(column + 1),
+                                        SQL_C_BIT,
+                                        &v,
+                                        sizeof(char),
+                                        &str_len_or_ind_ptr);
   if (!check_odbc_error(ret))
     return false;
   if (str_len_or_ind_ptr == SQL_NULL_DATA) {
@@ -1514,12 +1519,12 @@ bool OdbcStatementLegacy::get_data_binary(const size_t row_id, const size_t colu
   const auto& char_data = storage->charvec_ptr;
   auto* write_ptr = char_data->data();
   SQLLEN total_bytes_to_read = 0;
-  auto r = SQLGetData(statement.get_handle(),
-                      static_cast<SQLSMALLINT>(column + 1),
-                      SQL_C_BINARY,
-                      write_ptr,
-                      bytes_to_read,
-                      &total_bytes_to_read);
+  auto r = _odbcApi->SQLGetData(statement.get_handle(),
+                                static_cast<SQLSMALLINT>(column + 1),
+                                SQL_C_BINARY,
+                                write_ptr,
+                                bytes_to_read,
+                                &total_bytes_to_read);
   if (!check_odbc_error(r))
     return false;
   if (total_bytes_to_read == SQL_NULL_DATA) {
@@ -1540,12 +1545,12 @@ bool OdbcStatementLegacy::get_data_binary(const size_t row_id, const size_t colu
   write_ptr += bytes_to_read;
   while (more) {
     bytes_to_read = min(static_cast<SQLLEN>(atomic_read), total_bytes_to_read);
-    r = SQLGetData(statement.get_handle(),
-                   static_cast<SQLSMALLINT>(column + 1),
-                   SQL_C_BINARY,
-                   write_ptr,
-                   bytes_to_read,
-                   &total_bytes_to_read);
+    r = _odbcApi->SQLGetData(statement.get_handle(),
+                             static_cast<SQLSMALLINT>(column + 1),
+                             SQL_C_BINARY,
+                             write_ptr,
+                             bytes_to_read,
+                             &total_bytes_to_read);
     if (!check_odbc_error(r))
       return false;
     more = check_more_read(r, status);
@@ -1566,14 +1571,14 @@ bool OdbcStatementLegacy::check_more_read(SQLRETURN r, bool& status) {
   SQLSMALLINT text_length = 0;
   auto res = false;
   if (r == SQL_SUCCESS_WITH_INFO) {
-    r = SQLGetDiagRec(SQL_HANDLE_STMT,
-                      statement.get_handle(),
-                      1,
-                      sql_state.data(),
-                      &native_error,
-                      nullptr,
-                      0,
-                      &text_length);
+    r = _odbcApi->SQLGetDiagRec(SQL_HANDLE_STMT,
+                                statement.get_handle(),
+                                1,
+                                sql_state.data(),
+                                &native_error,
+                                nullptr,
+                                0,
+                                &text_length);
     if (!check_odbc_error(r)) {
       status = false;
       return false;
@@ -1655,12 +1660,12 @@ bool OdbcStatementLegacy::lob(const size_t row_id, size_t column) {
   // cerr << "lob ..... " << endl;
   const auto& statement = *_statement;
   lob_capture capture;
-  auto r = SQLGetData(statement.get_handle(),
-                      static_cast<SQLSMALLINT>(column + 1),
-                      SQL_C_WCHAR,
-                      capture.write_ptr,
-                      capture.bytes_to_read + capture.item_size,
-                      &capture.total_bytes_to_read);
+  auto r = _odbcApi->SQLGetData(statement.get_handle(),
+                                static_cast<SQLSMALLINT>(column + 1),
+                                SQL_C_WCHAR,
+                                capture.write_ptr,
+                                capture.bytes_to_read + capture.item_size,
+                                &capture.total_bytes_to_read);
   if (capture.total_bytes_to_read == SQL_NULL_DATA) {
     // cerr << "lob NullColumn " << endl;
     _resultset->add_column(row_id, make_shared<NullColumn>(column));
@@ -1677,12 +1682,12 @@ bool OdbcStatementLegacy::lob(const size_t row_id, size_t column) {
   capture.on_first_read();
   while (more) {
     capture.bytes_to_read = min(capture.atomic_read_bytes, capture.total_bytes_to_read);
-    r = SQLGetData(statement.get_handle(),
-                   static_cast<SQLSMALLINT>(column + 1),
-                   SQL_C_WCHAR,
-                   capture.write_ptr,
-                   capture.bytes_to_read + capture.item_size,
-                   &capture.total_bytes_to_read);
+    r = _odbcApi->SQLGetData(statement.get_handle(),
+                             static_cast<SQLSMALLINT>(column + 1),
+                             SQL_C_WCHAR,
+                             capture.write_ptr,
+                             capture.bytes_to_read + capture.item_size,
+                             &capture.total_bytes_to_read);
     capture.on_next_read();
     if (!check_odbc_error(r)) {
       // cerr << "lob error " << endl;
@@ -1773,12 +1778,12 @@ bool OdbcStatementLegacy::bounded_string(SQLLEN display_size, const size_t row_i
 
   display_size++;
   storage->ReserveUint16(display_size);  // increment for null terminator
-  const auto r = SQLGetData(_statement->get_handle(),
-                            static_cast<SQLSMALLINT>(column + 1),
-                            SQL_C_WCHAR,
-                            storage->uint16vec_ptr->data(),
-                            display_size * size,
-                            &value_len);
+  const auto r = _odbcApi->SQLGetData(_statement->get_handle(),
+                                      static_cast<SQLSMALLINT>(column + 1),
+                                      SQL_C_WCHAR,
+                                      storage->uint16vec_ptr->data(),
+                                      display_size * size,
+                                      &value_len);
 
   if (r != SQL_NO_DATA && !check_odbc_error(r))
     return false;
@@ -1801,13 +1806,13 @@ bool OdbcStatementLegacy::bounded_string(SQLLEN display_size, const size_t row_i
 bool OdbcStatementLegacy::try_read_string(bool binary, const size_t row_id, const size_t column) {
   SQLLEN display_size = 0;
   // cerr << " try_read_string row_id = " << row_id << " column = " << column;
-  const auto r = SQLColAttribute(_statement->get_handle(),
-                                 column + 1,
-                                 SQL_DESC_DISPLAY_SIZE,
-                                 nullptr,
-                                 0,
-                                 nullptr,
-                                 &display_size);
+  const auto r = _odbcApi->SQLColAttribute(_statement->get_handle(),
+                                           column + 1,
+                                           SQL_DESC_DISPLAY_SIZE,
+                                           nullptr,
+                                           0,
+                                           nullptr,
+                                           &display_size);
   if (!check_odbc_error(r))
     return false;
 
@@ -1838,7 +1843,7 @@ bool OdbcStatementLegacy::try_read_next_result() {
     return false;
   }
   const auto& statement = *_statement;
-  const auto ret = SQLMoreResults(statement.get_handle());
+  const auto ret = _odbcApi->SQLMoreResults(statement.get_handle());
   switch (ret) {
     case SQL_NO_DATA: {
       // fprintf(stderr, "SQL_NO_DATA\n");
