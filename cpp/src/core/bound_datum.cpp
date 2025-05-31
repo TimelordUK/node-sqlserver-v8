@@ -322,8 +322,13 @@ void BoundDatum::bind_w_var_char_array(const Napi::Object& p) {
 }
 
 void BoundDatum::bind_w_var_char(const Napi::Object& p, const int precision) {
-  const size_t max_str_len = max(1, precision) + 1; // Add space for null terminator
-  reserve_w_var_char_array(max_str_len, 1);
+  // Note: We need to allocate buffer space for null terminator, but param_size should not include it
+  const size_t buffer_size = max(1, precision) + 1; // Buffer needs space for null terminator
+  reserve_w_var_char_array(buffer_size, 1);
+  
+  // Override param_size to be the actual data length without null terminator
+  param_size = precision;
+  
   _indvec[0] = SQL_NULL_DATA;
   if (!p.IsNull() && !p.IsUndefined() && p.IsString()) {
     constexpr auto size = sizeof(uint16_t);
@@ -334,7 +339,7 @@ void BoundDatum::bind_w_var_char(const Napi::Object& p, const int precision) {
     memcpy(first_p, utf16_str.c_str(), copy_len * size);
     // Add null terminator
     first_p[copy_len] = 0;
-    buffer_len = static_cast<SQLLEN>(max_str_len) * static_cast<SQLLEN>(size);
+    buffer_len = static_cast<SQLLEN>(buffer_size) * static_cast<SQLLEN>(size);
     _indvec[0] = static_cast<SQLLEN>(copy_len) * static_cast<SQLLEN>(size);
   }
 }

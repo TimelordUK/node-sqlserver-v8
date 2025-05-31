@@ -76,12 +76,14 @@ Napi::Object JsObjectMapper::fromQueryResult(const Napi::Env& env,
 
   result.Set("endOfRows", resultset->EndOfRows());
   result.Set("endOfResults", resultset->EndOfResults());
-  // cerr << " get_column_values " << endl;
+  
   const auto number_rows = resultset->get_result_count();
   const auto column_count = static_cast<int>(resultset->get_column_count());
   const auto results_array = Napi::Array::New(env, static_cast<int>(number_rows));
-  const auto data = Napi::String::New(env, "data");
-  result.Set(data, results_array);
+  
+  // The JavaScript layer expects "data" property containing array of rows
+  result.Set("data", results_array);
+  
   for (size_t row_id = 0; row_id < number_rows; ++row_id) {
     const auto row_array = Napi::Array::New(env, column_count);
     results_array.Set(row_id, row_array);
