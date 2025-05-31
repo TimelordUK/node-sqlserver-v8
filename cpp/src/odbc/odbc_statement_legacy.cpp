@@ -271,8 +271,9 @@ bool OdbcStatementLegacy::apply_precision(const shared_ptr<BoundDatum>& datum,
 }
 
 // this will show on a different thread to the current executing query.
-bool OdbcStatementLegacy::cancel() {
+bool OdbcStatementLegacy::Cancel() {
   {
+    set_polling(true);
     lock_guard<recursive_mutex> lock(g_i_mutex);
     const auto state = get_state();
     if (!_pollingEnabled && state == OdbcStatementState::STATEMENT_SUBMITTED) {

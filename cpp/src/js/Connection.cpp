@@ -18,6 +18,7 @@
 #include <js/workers/open_worker.h>
 #include <js/workers/query_worker.h>
 #include <js/workers/release_worker.h>
+#include <js/workers/cancel_worker.h>
 #include <js/workers/worker_base.h>
 #include <odbc/odbc_connection.h>
 #include <odbc/odbc_connection_factory.h>
@@ -83,20 +84,21 @@ Connection::~Connection() {
 // ConnectionWorkerBase class has been moved to worker_base.h
 
 // Generic worker factory for callback/promise handling
-template<typename WorkerType, typename... Args>
-Napi::Value Connection::CreateWorkerWithCallbackOrPromise(const Napi::CallbackInfo& info, Args&&... args) {
+template <typename WorkerType, typename... Args>
+Napi::Value Connection::CreateWorkerWithCallbackOrPromise(const Napi::CallbackInfo& info,
+                                                          Args&&... args) {
   const Napi::Env env = info.Env();
-  
+
   // Check for callback (last argument)
   Napi::Function callback;
 
   if (info.Length() > 1 && info[info.Length() - 1].IsFunction()) {
     callback = info[info.Length() - 1].As<Napi::Function>();
-    
+
     // Create and queue the worker with callback
     auto worker = new WorkerType(callback, std::forward<Args>(args)...);
     worker->Queue();
-    
+
     return env.Undefined();
   } else {
     // No callback provided, we'll use a Promise
@@ -244,6 +246,7 @@ struct InfoParser {
   StatementHandle statementHandle;
   InfoParser(bool isConnected) : isConnected_(isConnected) {}
   QueryOptions options;
+  std::shared_ptr<QueryOperationParams> operationParams;
   bool isConnected_;
 
   bool throwIfNotConnected(const Napi::CallbackInfo& info) {
@@ -290,6 +293,24 @@ struct InfoParser {
 
     return true;
   }
+
+  bool parseOperationParams(const Napi::CallbackInfo& info) {
+    const Napi::Env env = info.Env();
+    if (!throwIfNotConnected(info)) {
+      return false;
+    }
+
+    if (info.Length() < 1 || !info[0].IsObject()) {
+      Napi::TypeError::New(env, "Operation params expected").ThrowAsJavaScriptException();
+      return false;
+    }
+
+    // Get the statement handle from the first parameter
+    Napi::Object handleObj = info[0].As<Napi::Object>();
+    operationParams = JsObjectMapper::toQueryOperationParams(handleObj);
+
+    return true;
+  }
 };
 
 Napi::Value Connection::FetchRows(const Napi::CallbackInfo& info) {
@@ -308,69 +329,53 @@ Napi::Value Connection::FetchRows(const Napi::CallbackInfo& info) {
   const auto options = parser.options;
 
   // Use the generic worker factory
-  return CreateWorkerWithCallbackOrPromise<FetchRowsWorker>(info, odbcConnection_.get(), statementHandle, options);
+  return CreateWorkerWithCallbackOrPromise<FetchRowsWorker>(
+      info, odbcConnection_.get(), statementHandle, options);
 }
 
 Napi::Value Connection::NextResultSet(const Napi::CallbackInfo& info) {
   const Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  // Check if we have a connection
-  if (!isConnected_) {
-    Napi::Error::New(env, "Connection is not open").ThrowAsJavaScriptException();
+  InfoParser parser(isConnected_);
+  if (!parser.parseStatementHandle(info)) {
     return env.Undefined();
   }
-
-  // Validate statement handle
-  if (info.Length() < 1 || !info[0].IsObject()) {
-    Napi::TypeError::New(env, "Statement handle expected").ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-
-  // Get the statement handle from the first parameter
-  Napi::Object handleObj = info[0].As<Napi::Object>();
-  StatementHandle statementHandle = JsObjectMapper::toStatementHandle(handleObj);
-
-  if (!statementHandle.isValid()) {
-    Napi::Error::New(env, "Invalid statement handle").ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
+  const auto statementHandle = parser.statementHandle;
 
   // Use the generic worker factory
-  return CreateWorkerWithCallbackOrPromise<NextResultWorker>(info, odbcConnection_.get(), statementHandle);
+  return CreateWorkerWithCallbackOrPromise<NextResultWorker>(
+      info, odbcConnection_.get(), statementHandle);
 }
 
 Napi::Value Connection::CancelStatement(const Napi::CallbackInfo& info) {
-  return Stubbed(info);
+  const Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
+
+  InfoParser parser(isConnected_);
+  if (!parser.parseStatementHandle(info)) {
+    return env.Undefined();
+  }
+  const auto statementHandle = parser.statementHandle;
+
+  // Use the generic worker factory
+  return CreateWorkerWithCallbackOrPromise<CancelWorker>(
+      info, odbcConnection_.get(), statementHandle);
 }
 
 Napi::Value Connection::ReleaseStatement(const Napi::CallbackInfo& info) {
   const Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  // Check if we have a connection
-  if (!isConnected_) {
-    Napi::Error::New(env, "Connection is not open").ThrowAsJavaScriptException();
+  InfoParser parser(isConnected_);
+  if (!parser.parseStatementHandle(info)) {
     return env.Undefined();
   }
-
-  // Validate statement handle
-  if (info.Length() < 1 || !info[0].IsObject()) {
-    Napi::TypeError::New(env, "Statement handle expected").ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-
-  // Get the statement handle from the first parameter
-  Napi::Object handleObj = info[0].As<Napi::Object>();
-  StatementHandle statementHandle = JsObjectMapper::toStatementHandle(handleObj);
-
-  if (!statementHandle.isValid()) {
-    Napi::Error::New(env, "Invalid statement handle").ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
+  const auto statementHandle = parser.statementHandle;
 
   // Use the generic worker factory
-  return CreateWorkerWithCallbackOrPromise<ReleaseWorker>(info, odbcConnection_.get(), statementHandle);
+  return CreateWorkerWithCallbackOrPromise<ReleaseWorker>(
+      info, odbcConnection_.get(), statementHandle);
 }
 
 // Implement Query method
@@ -378,20 +383,11 @@ Napi::Value Connection::Query(const Napi::CallbackInfo& info) {
   const Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  // Check if we have a connection
-  if (!isConnected_) {
-    Napi::Error::New(env, "Connection is not open").ThrowAsJavaScriptException();
+  InfoParser parser(isConnected_);
+  if (!parser.parseOperationParams(info)) {
     return env.Undefined();
   }
-
-  // Get SQL query text
-  if (info.Length() < 1 || !info[0].IsObject()) {
-    Napi::TypeError::New(env, "query operations required").ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-
-  std::shared_ptr<QueryOperationParams> operationParams =
-      JsObjectMapper::toQueryOperationParams(info[0].As<Napi::Object>());
+  const auto operationParams = parser.operationParams;
 
   // Get parameters array (optional)
   Napi::Array params = Napi::Array::New(env, 0);
@@ -400,6 +396,7 @@ Napi::Value Connection::Query(const Napi::CallbackInfo& info) {
   }
 
   // Use the generic worker factory
-  return CreateWorkerWithCallbackOrPromise<QueryWorker>(info, odbcConnection_.get(), operationParams, params);
+  return CreateWorkerWithCallbackOrPromise<QueryWorker>(
+      info, odbcConnection_.get(), operationParams, params);
 }
 }  // namespace mssql

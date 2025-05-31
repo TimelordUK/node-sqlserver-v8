@@ -53,4 +53,5 @@ bool TvpStatement::Execute(const std::shared_ptr<BoundDatumSet> parameters,
   // Process results
   return true;
 }
+
 }  // namespace mssql

@@ -101,6 +101,8 @@ class IOdbcStatement {
    * @return true if successful, false otherwise
    */
   virtual bool ReadNextResult(std::shared_ptr<QueryResult> result) = 0;
+
+  virtual bool Cancel() = 0;
 };
 
 /**
@@ -180,6 +182,10 @@ class OdbcStatement : public IOdbcStatement {
    * @return true if successful, false otherwise
    */
   virtual bool ReadNextResult(std::shared_ptr<QueryResult> result) override;
+
+  virtual bool Cancel() override {
+    return false;
+  }
 
  protected:
   OdbcStatement(Type type,
@@ -284,7 +290,9 @@ class PreparedStatement : public OdbcStatement {
 
   bool Execute(const std::shared_ptr<BoundDatumSet> parameters,
                std::shared_ptr<QueryResult>& result) override;
-
+  bool Cancel() override {
+    return false;
+  }
   /**
    * @brief Prepare the statement
    */
@@ -317,6 +325,10 @@ class TvpStatement : public OdbcStatement {
    * @brief Bind TVP columns
    */
   bool BindTvpColumns(const std::vector<std::string>& columnNames);
+
+  bool Cancel() override {
+    return false;
+  }
 
  private:
   std::shared_ptr<QueryOperationParams> operationParams_;

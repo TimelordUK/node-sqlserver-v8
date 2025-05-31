@@ -68,7 +68,7 @@ class OdbcStatementLegacy : public IOdbcStatement {
   bool created() {
     return _statementState == OdbcStatementState::STATEMENT_CREATED;
   }
-  bool cancel();
+  bool Cancel() override;
 
   OdbcStatementLegacy(std::shared_ptr<IOdbcStatementHandle> statement,
                       std::shared_ptr<OdbcErrorHandler> errorHandler,

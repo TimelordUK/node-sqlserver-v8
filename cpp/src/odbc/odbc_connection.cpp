@@ -149,7 +149,7 @@ bool OdbcConnection::Close() {
       // to prevent use-after-free errors
       SQL_LOG_DEBUG("Clearing statement handles before disconnect");
       _connectionHandles->clear();
-      
+
       const auto connection = _connectionHandles->connectionHandle();
       if (connection) {
         SQL_LOG_DEBUG("SQLDisconnect");
@@ -267,6 +267,24 @@ bool OdbcConnection::RemoveStatement(int statementId) {
   // Ask the factory to remove the statement
   _statementFactory->RemoveStatement(statementId);
   return true;
+}
+
+bool OdbcConnection::CancelStatement(int statementId) {
+  std::lock_guard lock(_statementMutex);
+  auto statement = _statementFactory->GetStatement(statementId);
+  if (statement) {
+    // Remove from prepared statements if it exists
+    for (auto it = _preparedStatements.begin(); it != _preparedStatements.end(); ++it) {
+      if (it->second == statement) {
+        _preparedStatements.erase(it);
+        break;
+      }
+    }
+  }
+  auto res = statement->Cancel();
+  SQL_LOG_DEBUG_STREAM("CancelStatement ID = " << statementId << " - " << res);
+  // Ask the factory to remove the statement
+  return res;
 }
 
 bool OdbcConnection::ExecuteQuery(const std::shared_ptr<QueryOperationParams> operationParams,
