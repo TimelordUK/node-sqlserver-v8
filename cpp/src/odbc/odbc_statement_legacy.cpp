@@ -46,10 +46,13 @@ OdbcStatementLegacy::~OdbcStatementLegacy() {
 bool OdbcStatementLegacy::Execute(const std::shared_ptr<BoundDatumSet> parameters,
                                   std::shared_ptr<QueryResult>& result) {
   auto res = try_execute_direct(_operationParams, parameters);
-  auto cols = _resultset->get_column_count();
-  for (size_t i = 0; i < cols; ++i) {
-    auto col = _resultset->get_meta_data(i);
-    result->addColumn(col);
+  // Check if _resultset was initialized (it may be null if bind_params failed)
+  if (_resultset != nullptr) {
+    auto cols = _resultset->get_column_count();
+    for (size_t i = 0; i < cols; ++i) {
+      auto col = _resultset->get_meta_data(i);
+      result->addColumn(col);
+    }
   }
   return res;
 }
@@ -848,13 +851,16 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
   {
     lock_guard<recursive_mutex> lock(g_i_mutex);
     set_state(OdbcStatementState::STATEMENT_BINDING);
+    // Initialize _resultset before bind_params to ensure it's always available
+    _resultset = make_unique<ResultSet>(0);
+    
     const auto bound = bind_params(param_set);
     if (!bound) {
       // error already set in BindParams
+      _resultset->_end_of_rows = true;
+      _resultset->_end_of_results = true;
       return false;
     }
-
-    _resultset = make_unique<ResultSet>(0);
     _resultset->_end_of_results = true;  // reset
     const auto ret = query_timeout(timeout);
     if (!check_odbc_error(ret))

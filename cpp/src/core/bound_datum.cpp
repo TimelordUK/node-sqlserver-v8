@@ -104,7 +104,8 @@ void BoundDatum::reserve_null(const SQLLEN len) {
 void BoundDatum::bind_w_long_var_char(const Napi::Object& p) {
   bind_w_var_char(p);
   sql_type = SQL_WLONGVARCHAR;
-  param_size = buffer_len;
+  // For SQL_WLONGVARCHAR (varchar(max)), use 0 to indicate unlimited length
+  param_size = 0;
 }
 
 void BoundDatum::bind_w_var_char(const Napi::Object& p) {
@@ -242,7 +243,8 @@ void BoundDatum::bind_var_char_array(const Napi::Object& p) {
 void BoundDatum::reserve_w_var_char_array(const size_t max_str_len, const size_t array_len) {
   js_type = JS_STRING;
   c_type = SQL_C_WCHAR;
-  sql_type = max_str_len > 2000 && max_str_len < 4000 ? SQL_WLONGVARCHAR : SQL_WVARCHAR;
+  // Use SQL_WLONGVARCHAR for strings that need unlimited length (>= 4000 chars)
+  sql_type = max_str_len >= 4000 ? SQL_WLONGVARCHAR : SQL_WVARCHAR;
   constexpr auto size = sizeof(uint16_t);
   _indvec.resize(array_len);
   _storage->ReserveUint16(array_len * max_str_len);
