@@ -1,9 +1,11 @@
 
+
 #include <algorithm>
 
 #include <iostream>
 #include <utility>
 #include <odbc/bcp.h>
+#include <odbc/iodbc_api.h>
 #include <core/bound_datum_set.h>
 #include <core/bound_datum.h>
 #include <odbc/odbc_driver_types.h>
@@ -166,8 +168,10 @@ typedef storage_jagged_t<uint16_t> storage_uint16;
 typedef storage_jagged_t<char> storage_binary;
 typedef storage_value_t<SQL_SS_TIME2_STRUCT> storage_time2;
 
-bcp::bcp(const shared_ptr<BoundDatumSet> param_set, shared_ptr<IOdbcConnectionHandle> h)
-    : _ch(std::move(h)), _param_set(param_set) {
+bcp::bcp(std::shared_ptr<IOdbcApi> odbcApiPtr,
+         const shared_ptr<BoundDatumSet> param_set,
+         shared_ptr<IOdbcConnectionHandle> h)
+    : _ch(std::move(h)), _param_set(param_set), _odbcApi(odbcApiPtr) {
   _errors = make_shared<vector<shared_ptr<OdbcError>>>();
 }
 
@@ -191,7 +195,7 @@ bool bcp::init() {
   vec.push_back(static_cast<uint16_t>(0));
   const auto retcode = plugin.bcp_init(ch.get_handle(), vec.data(), nullptr, nullptr, DB_IN);
   if ((retcode != SUCCEED)) {
-    ch.read_errors(_errors);
+    ch.read_errors(_odbcApi, _errors);
     return false;
   }
   return true;
@@ -247,7 +251,7 @@ bool bcp::bind() {
                           static_cast<int>(p->bcp_terminator_len),
                           p->sql_type,
                           static_cast<int>(p->ordinal_position)) == FAIL) {
-        ch.read_errors(_errors);
+        ch.read_errors(_odbcApi, _errors);
         return false;
       }
     } else {
@@ -266,7 +270,7 @@ bool bcp::send() {
         return false;
     }
     if (plugin.bcp_sendrow(ch.get_handle()) == FAIL) {
-      ch.read_errors(_errors);
+      ch.read_errors(_odbcApi, _errors);
       return false;
     }
   }
@@ -277,7 +281,7 @@ int bcp::done() {
   DBINT n_rows_processed;
   const auto& ch = *_ch;
   if ((n_rows_processed = plugin.bcp_done(ch.get_handle())) == -1) {
-    ch.read_errors(_errors);
+    ch.read_errors(_odbcApi, _errors);
     if (_errors->empty()) {
       const string msg =
           "bcp failed in step `done` yet no error was returned. No rows have likely been inserted";

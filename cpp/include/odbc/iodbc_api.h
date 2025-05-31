@@ -133,8 +133,7 @@ class IOdbcApi {
                                     SQLINTEGER BufferLength) = 0;
 
   // Add SQLRowCount to the interface
-  virtual SQLRETURN SQLRowCount(SQLHSTMT StatementHandle,
-                                SQLLEN* RowCount) = 0;
+  virtual SQLRETURN SQLRowCount(SQLHSTMT StatementHandle, SQLLEN* RowCount) = 0;
 
   // Add SQLBindCol to the interface
   virtual SQLRETURN SQLBindCol(SQLHSTMT StatementHandle,
@@ -145,8 +144,16 @@ class IOdbcApi {
                                SQLLEN* StrLen_or_Ind) = 0;
 
   // Add SQLCancelHandle to the interface
-  virtual SQLRETURN SQLCancelHandle(SQLSMALLINT HandleType,
-                                    SQLHANDLE Handle) = 0;
+  virtual SQLRETURN SQLCancelHandle(SQLSMALLINT HandleType, SQLHANDLE Handle) = 0;
+
+  // Add SQLGetDiagField to the interface
+  virtual SQLRETURN SQLGetDiagField(SQLSMALLINT HandleType,
+                                    SQLHANDLE Handle,
+                                    SQLSMALLINT RecNumber,
+                                    SQLSMALLINT DiagIdentifier,
+                                    SQLPOINTER DiagInfo,
+                                    SQLSMALLINT BufferLength,
+                                    SQLSMALLINT* StringLength) = 0;
 
   // Method to retrieve diagnostic information
   virtual std::vector<DiagnosticInfo> GetDiagnostics() const = 0;
@@ -247,8 +254,7 @@ class RealOdbcApi : public IOdbcApi {
                             SQLPOINTER Value,
                             SQLINTEGER BufferLength) override;
 
-  SQLRETURN SQLRowCount(SQLHSTMT StatementHandle,
-                        SQLLEN* RowCount) override;
+  SQLRETURN SQLRowCount(SQLHSTMT StatementHandle, SQLLEN* RowCount) override;
 
   SQLRETURN SQLBindCol(SQLHSTMT StatementHandle,
                        SQLUSMALLINT ColumnNumber,
@@ -257,8 +263,15 @@ class RealOdbcApi : public IOdbcApi {
                        SQLLEN BufferLength,
                        SQLLEN* StrLen_or_Ind) override;
 
-  SQLRETURN SQLCancelHandle(SQLSMALLINT HandleType,
-                            SQLHANDLE Handle) override;
+  SQLRETURN SQLCancelHandle(SQLSMALLINT HandleType, SQLHANDLE Handle) override;
+
+  SQLRETURN SQLGetDiagField(SQLSMALLINT HandleType,
+                            SQLHANDLE Handle,
+                            SQLSMALLINT RecNumber,
+                            SQLSMALLINT DiagIdentifier,
+                            SQLPOINTER DiagInfo,
+                            SQLSMALLINT BufferLength,
+                            SQLSMALLINT* StringLength) override;
 
   // Diagnostic methods
   std::vector<DiagnosticInfo> GetDiagnostics() const override;

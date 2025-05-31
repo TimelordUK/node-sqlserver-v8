@@ -57,9 +57,10 @@ std::shared_ptr<IOdbcEnvironmentHandle> OdbcEnvironment::GetEnvironmentHandle() 
   return environment_;
 }
 
-void OdbcEnvironment::ReadErrors(std::shared_ptr<std::vector<std::shared_ptr<OdbcError>>> errors) {
+void OdbcEnvironment::ReadErrors(std::shared_ptr<IOdbcApi> odbcApiPtr,
+                                 std::shared_ptr<std::vector<std::shared_ptr<OdbcError>>> errors) {
   if (environment_) {
-    environment_->read_errors(errors);
+    environment_->read_errors(odbcApiPtr, errors);
   }
 }
 

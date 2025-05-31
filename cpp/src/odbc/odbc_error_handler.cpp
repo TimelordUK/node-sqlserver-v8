@@ -5,8 +5,9 @@
 
 namespace mssql {
 
-OdbcErrorHandler::OdbcErrorHandler(std::shared_ptr<ConnectionHandles> connectionHandles)
-    : _connectionHandles(connectionHandles) {
+OdbcErrorHandler::OdbcErrorHandler(std::shared_ptr<ConnectionHandles> connectionHandles,
+                                   std::shared_ptr<IOdbcApi> odbcApiPtr)
+    : _connectionHandles(connectionHandles), _odbcApi(odbcApiPtr) {
   _errors = std::make_shared<std::vector<std::shared_ptr<OdbcError>>>();
 }
 
@@ -23,7 +24,7 @@ bool OdbcErrorHandler::ReturnOdbcError() {
   if (_connectionHandles) {
     const auto connection = _connectionHandles->connectionHandle();
     if (connection) {
-      connection->read_errors(_errors);
+      connection->read_errors(_odbcApi, _errors);
     }
   }
 

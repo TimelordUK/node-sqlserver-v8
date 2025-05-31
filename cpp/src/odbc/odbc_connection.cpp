@@ -45,7 +45,7 @@ OdbcConnection::OdbcConnection(std::shared_ptr<IOdbcEnvironment> environment,
   _connectionHandles = std::make_shared<ConnectionHandles>(environment_->GetEnvironmentHandle());
 
   // Create error handler with the connection handles
-  _errorHandler = std::make_shared<OdbcErrorHandler>(_connectionHandles);
+  _errorHandler = std::make_shared<OdbcErrorHandler>(_connectionHandles, _odbcApi);
 
   // Create statement factory
   _statementFactory = std::make_shared<OdbcStatementFactory>(_connectionId, _connectionHandles);
@@ -117,7 +117,7 @@ bool OdbcConnection::Open(const std::u16string& connectionString, int timeout) {
   if (!environment_->Initialize()) {
     SQL_LOG_ERROR("Failed to initialize ODBC environment");
     auto errors = std::make_shared<std::vector<std::shared_ptr<OdbcError>>>();
-    environment_->ReadErrors(errors);
+    environment_->ReadErrors(_odbcApi, errors);
     return false;
   }
 
@@ -126,7 +126,7 @@ bool OdbcConnection::Open(const std::u16string& connectionString, int timeout) {
   if (result) {
     SQL_LOG_INFO("Connection successfully opened");
     // Initialize transaction manager after successful connection
-    _transactionManager = std::make_shared<OdbcTransactionManager>(_connectionHandles);
+    _transactionManager = std::make_shared<OdbcTransactionManager>(_connectionHandles, _odbcApi);
   } else {
     SQL_LOG_ERROR("Failed to open connection");
   }
@@ -320,7 +320,7 @@ bool OdbcConnection::try_open(const std::u16string& connection_string, const int
   if (connection == nullptr) {
     _errorHandler->ClearErrors();
     auto errors = std::make_shared<std::vector<std::shared_ptr<OdbcError>>>();
-    environment_->ReadErrors(errors);
+    environment_->ReadErrors(_odbcApi, errors);
     return false;
   }
 

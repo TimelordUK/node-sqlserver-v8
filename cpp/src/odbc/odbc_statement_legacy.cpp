@@ -16,6 +16,7 @@
 #include <odbc/bcp.h>
 #include <js/columns/result_set.h>
 #include <odbc/odbc_driver_types.h>
+#include <utils/Logger.h>
 
 const int SQL_SERVER_MAX_STRING_SIZE = 8000;
 
@@ -524,7 +525,7 @@ Napi::Object OdbcStatementLegacy::end_of_rows(Napi::Env env) const {
 bool OdbcStatementLegacy::return_odbc_error() {
   if (!_statement)
     return false;
-  _statement->read_errors(_errors);
+  _statement->read_errors(_odbcApi, _errors);
   return false;
 }
 
@@ -853,7 +854,7 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
     set_state(OdbcStatementState::STATEMENT_BINDING);
     // Initialize _resultset before bind_params to ensure it's always available
     _resultset = make_unique<ResultSet>(0);
-    
+
     const auto bound = bind_params(param_set);
     if (!bound) {
       // error already set in BindParams
@@ -1677,10 +1678,10 @@ bool OdbcStatementLegacy::lob(const size_t row_id, size_t column) {
     _resultset->add_column(row_id, make_shared<NullColumn>(column));
     return true;
   }
-  
+
   // Track the total actual bytes of data we've read
   SQLLEN total_bytes_read = 0;
-  
+
   if (!check_odbc_error(r))
     return false;
   auto status = false;
@@ -1689,7 +1690,7 @@ bool OdbcStatementLegacy::lob(const size_t row_id, size_t column) {
     // cerr << "lob check_more_read " << endl;
     return false;
   }
-  
+
   // For the first read, if all data fit, total_bytes_to_read contains the actual byte count
   if (!more) {
     // All data fit in first read
@@ -1698,7 +1699,7 @@ bool OdbcStatementLegacy::lob(const size_t row_id, size_t column) {
     // Data didn't fit, we need to read in chunks
     total_bytes_read = capture.bytes_to_read;
   }
-  
+
   capture.on_first_read();
   while (more) {
     // Handle SQL_NO_TOTAL (-4) case - use atomic_read_bytes when total is negative
@@ -1718,27 +1719,27 @@ bool OdbcStatementLegacy::lob(const size_t row_id, size_t column) {
       // cerr << "lob error " << endl;
       return false;
     }
-    
+
     // Add the bytes from this chunk
     total_bytes_read += capture.bytes_to_read;
-    
+
     more = check_more_read(r, status);
     if (!status) {
       // cerr << "lob status " << endl;
       return false;
     }
   }
-  
+
   // Trim trailing zeros if this was a varchar(max) field
   capture.trim();
-  
+
   // Calculate actual string length in UTF-16 code units
   // After trimming, use the actual size of the vector
   const size_t actual_char_count = capture.src_data->size();
-  
+
   // cerr << "lob add StringColumn column " << endl;
-  _resultset->add_column(
-      row_id, make_shared<StringColumn>(column, capture.src_data, actual_char_count));
+  _resultset->add_column(row_id,
+                         make_shared<StringColumn>(column, capture.src_data, actual_char_count));
   return true;
 }
 
@@ -1814,7 +1815,7 @@ bool OdbcStatementLegacy::bounded_string(SQLLEN display_size, const size_t row_i
 
   display_size++;
   storage->ReserveUint16(display_size);  // increment for null terminator
-  
+
   // IMPORTANT: After ReserveUint16, the vector has size=display_size filled with zeros
   // We need to get a pointer to write data into this pre-allocated space
   const auto r = _odbcApi->SQLGetData(_statement->get_handle(),

@@ -195,7 +195,7 @@ class OdbcStatementLegacy : public IOdbcStatement {
 
   std::shared_ptr<IOdbcStatementHandle> _statement;
   std::shared_ptr<OdbcErrorHandler> _errorHandler;
-  std::shared_ptr<IOdbcApi> _odbcApi;  // Added IOdbcApi reference
+  std::shared_ptr<IOdbcApi> _odbcApi;
   StatementHandle _handle;
   std::vector<std::shared_ptr<IOdbcRow>> _rows;
   std::shared_ptr<QueryOperationParams> _operationParams;

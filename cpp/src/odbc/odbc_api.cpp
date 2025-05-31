@@ -979,9 +979,9 @@ SQLRETURN RealOdbcApi::SQLGetStmtAttr(SQLHSTMT StatementHandle,
       attributeName = "Unknown(" + std::to_string(Attribute) + ")";
   }
 
-  SQL_LOG_TRACE_STREAM("SQLGetStmtAttr called - Handle: "
-                       << StatementHandle << ", Attribute: " << attributeName
-                       << ", BufferLength: " << BufferLength);
+  SQL_LOG_TRACE_STREAM("SQLGetStmtAttr called - Handle: " << StatementHandle
+                                                          << ", Attribute: " << attributeName
+                                                          << ", BufferLength: " << BufferLength);
 
   SQLRETURN ret = ::SQLGetStmtAttr(StatementHandle, Attribute, Value, BufferLength, StringLength);
   SQL_LOG_TRACE_STREAM("SQLGetStmtAttr returned: " << GetSqlReturnCodeString(ret));
@@ -1026,11 +1026,13 @@ SQLRETURN RealOdbcApi::SQLSetDescField(SQLHDESC DescriptorHandle,
       fieldIdStr = "Unknown(" + std::to_string(FieldIdentifier) + ")";
   }
 
-  SQL_LOG_TRACE_STREAM("SQLSetDescField called - Handle: "
-                       << DescriptorHandle << ", RecNumber: " << RecNumber
-                       << ", FieldIdentifier: " << fieldIdStr << ", BufferLength: " << BufferLength);
+  SQL_LOG_TRACE_STREAM("SQLSetDescField called - Handle: " << DescriptorHandle
+                                                           << ", RecNumber: " << RecNumber
+                                                           << ", FieldIdentifier: " << fieldIdStr
+                                                           << ", BufferLength: " << BufferLength);
 
-  SQLRETURN ret = ::SQLSetDescField(DescriptorHandle, RecNumber, FieldIdentifier, Value, BufferLength);
+  SQLRETURN ret =
+      ::SQLSetDescField(DescriptorHandle, RecNumber, FieldIdentifier, Value, BufferLength);
   SQL_LOG_TRACE_STREAM("SQLSetDescField returned: " << GetSqlReturnCodeString(ret));
 
   if (!SQL_SUCCEEDED(ret)) {
@@ -1040,15 +1042,14 @@ SQLRETURN RealOdbcApi::SQLSetDescField(SQLHDESC DescriptorHandle,
   return ret;
 }
 
-SQLRETURN RealOdbcApi::SQLRowCount(SQLHSTMT StatementHandle,
-                                   SQLLEN* RowCount) {
+SQLRETURN RealOdbcApi::SQLRowCount(SQLHSTMT StatementHandle, SQLLEN* RowCount) {
   SQL_LOG_TRACE_STREAM("SQLRowCount called - Handle: " << StatementHandle);
 
   SQLRETURN ret = ::SQLRowCount(StatementHandle, RowCount);
-  
+
   if (SQL_SUCCEEDED(ret) && RowCount) {
-    SQL_LOG_TRACE_STREAM("SQLRowCount returned: " << GetSqlReturnCodeString(ret) 
-                         << ", RowCount: " << *RowCount);
+    SQL_LOG_TRACE_STREAM("SQLRowCount returned: " << GetSqlReturnCodeString(ret)
+                                                  << ", RowCount: " << *RowCount);
   } else {
     SQL_LOG_TRACE_STREAM("SQLRowCount returned: " << GetSqlReturnCodeString(ret));
   }
@@ -1066,13 +1067,12 @@ SQLRETURN RealOdbcApi::SQLBindCol(SQLHSTMT StatementHandle,
                                   SQLPOINTER TargetValue,
                                   SQLLEN BufferLength,
                                   SQLLEN* StrLen_or_Ind) {
-  SQL_LOG_TRACE_STREAM("SQLBindCol called - Handle: " << StatementHandle
-                       << ", ColumnNumber: " << ColumnNumber
-                       << ", TargetType: " << TargetType
-                       << ", BufferLength: " << BufferLength);
+  SQL_LOG_TRACE_STREAM("SQLBindCol called - Handle: "
+                       << StatementHandle << ", ColumnNumber: " << ColumnNumber
+                       << ", TargetType: " << TargetType << ", BufferLength: " << BufferLength);
 
-  SQLRETURN ret = ::SQLBindCol(StatementHandle, ColumnNumber, TargetType, 
-                               TargetValue, BufferLength, StrLen_or_Ind);
+  SQLRETURN ret = ::SQLBindCol(
+      StatementHandle, ColumnNumber, TargetType, TargetValue, BufferLength, StrLen_or_Ind);
   SQL_LOG_TRACE_STREAM("SQLBindCol returned: " << GetSqlReturnCodeString(ret));
 
   if (!SQL_SUCCEEDED(ret)) {
@@ -1082,16 +1082,103 @@ SQLRETURN RealOdbcApi::SQLBindCol(SQLHSTMT StatementHandle,
   return ret;
 }
 
-SQLRETURN RealOdbcApi::SQLCancelHandle(SQLSMALLINT HandleType,
-                                       SQLHANDLE Handle) {
-  SQL_LOG_TRACE_STREAM("SQLCancelHandle called - HandleType: " << HandleType 
-                       << ", Handle: " << Handle);
+SQLRETURN RealOdbcApi::SQLCancelHandle(SQLSMALLINT HandleType, SQLHANDLE Handle) {
+  SQL_LOG_TRACE_STREAM("SQLCancelHandle called - HandleType: " << HandleType
+                                                               << ", Handle: " << Handle);
 
   SQLRETURN ret = ::SQLCancelHandle(HandleType, Handle);
   SQL_LOG_TRACE_STREAM("SQLCancelHandle returned: " << GetSqlReturnCodeString(ret));
 
   if (!SQL_SUCCEEDED(ret)) {
     LogOdbcError(HandleType, Handle, "SQLCancelHandle failed");
+  }
+
+  return ret;
+}
+
+SQLRETURN RealOdbcApi::SQLGetDiagField(SQLSMALLINT HandleType,
+                                       SQLHANDLE Handle,
+                                       SQLSMALLINT RecNumber,
+                                       SQLSMALLINT DiagIdentifier,
+                                       SQLPOINTER DiagInfo,
+                                       SQLSMALLINT BufferLength,
+                                       SQLSMALLINT* StringLength) {
+  SQL_LOG_TRACE_STREAM("SQLGetDiagField called - HandleType: "
+                       << HandleType << ", Handle: " << Handle << ", RecNumber: " << RecNumber
+                       << ", DiagIdentifier: " << DiagIdentifier
+                       << ", BufferLength: " << BufferLength);
+
+  SQLRETURN ret = ::SQLGetDiagField(
+      HandleType, Handle, RecNumber, DiagIdentifier, DiagInfo, BufferLength, StringLength);
+
+  // Log diagnostic field info based on identifier
+  if (SQL_SUCCEEDED(ret)) {
+    std::string diagFieldName;
+    switch (DiagIdentifier) {
+      case SQL_DIAG_SS_SEVERITY:
+        diagFieldName = "SQL_DIAG_SS_SEVERITY";
+        if (DiagInfo) {
+          SQL_LOG_TRACE_STREAM("SQLGetDiagField(" << diagFieldName
+                                                  << ") value: " << *static_cast<int*>(DiagInfo));
+        }
+        break;
+      case SQL_DIAG_SS_SRVNAME:
+        diagFieldName = "SQL_DIAG_SS_SRVNAME";
+        if (DiagInfo && StringLength && *StringLength > 0) {
+          SQL_LOG_TRACE_STREAM("SQLGetDiagField("
+                               << diagFieldName << ") value: "
+                               << WideToUtf8(static_cast<SQLWCHAR*>(DiagInfo), *StringLength));
+        }
+        break;
+      case SQL_DIAG_SS_PROCNAME:
+        diagFieldName = "SQL_DIAG_SS_PROCNAME";
+        if (DiagInfo && StringLength && *StringLength > 0) {
+          SQL_LOG_TRACE_STREAM("SQLGetDiagField("
+                               << diagFieldName << ") value: "
+                               << WideToUtf8(static_cast<SQLWCHAR*>(DiagInfo), *StringLength));
+        }
+        break;
+      case SQL_DIAG_SS_LINE:
+        diagFieldName = "SQL_DIAG_SS_LINE";
+        if (DiagInfo) {
+          SQL_LOG_TRACE_STREAM("SQLGetDiagField(" << diagFieldName << ") value: "
+                                                  << *static_cast<unsigned int*>(DiagInfo));
+        }
+        break;
+      case SQL_DIAG_MESSAGE_TEXT:
+        diagFieldName = "SQL_DIAG_MESSAGE_TEXT";
+        if (DiagInfo && StringLength && *StringLength > 0) {
+          SQL_LOG_TRACE_STREAM("SQLGetDiagField("
+                               << diagFieldName << ") value: "
+                               << WideToUtf8(static_cast<SQLWCHAR*>(DiagInfo), *StringLength));
+        }
+        break;
+      case SQL_DIAG_NATIVE:
+        diagFieldName = "SQL_DIAG_NATIVE";
+        if (DiagInfo) {
+          SQL_LOG_TRACE_STREAM("SQLGetDiagField(" << diagFieldName << ") value: "
+                                                  << *static_cast<SQLINTEGER*>(DiagInfo));
+        }
+        break;
+      case SQL_DIAG_SQLSTATE:
+        diagFieldName = "SQL_DIAG_SQLSTATE";
+        if (DiagInfo && StringLength && *StringLength > 0) {
+          SQL_LOG_TRACE_STREAM("SQLGetDiagField("
+                               << diagFieldName << ") value: "
+                               << WideToUtf8(static_cast<SQLWCHAR*>(DiagInfo), *StringLength));
+        }
+        break;
+      default:
+        diagFieldName = "Unknown(" + std::to_string(DiagIdentifier) + ")";
+    }
+
+    SQL_LOG_TRACE_STREAM("SQLGetDiagField returned: " << GetSqlReturnCodeString(ret) << " for "
+                                                      << diagFieldName);
+  } else {
+    SQL_LOG_TRACE_STREAM("SQLGetDiagField returned: " << GetSqlReturnCodeString(ret));
+    if (ret != SQL_NO_DATA) {
+      LogOdbcError(HandleType, Handle, "SQLGetDiagField failed");
+    }
   }
 
   return ret;

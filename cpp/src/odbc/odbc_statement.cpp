@@ -45,7 +45,7 @@ bool OdbcStatement::try_read_rows(std::shared_ptr<QueryResult> result, const siz
 }
 
 bool OdbcStatement::check_odbc_error(const SQLRETURN ret) {
-  statement_->read_errors(errors_);
+  statement_->read_errors(odbcApi_, errors_);
   if (errors_->size() > 0) {
     SQL_LOG_TRACE_STREAM("check_odbc_error: error in statement " << errors_->size());
     for (const auto& error : *errors_) {
@@ -89,8 +89,8 @@ bool OdbcStatement::fetch_read(std::shared_ptr<QueryResult> result, const size_t
   return res;
 }
 
-struct lob_capture {
-  lob_capture(mssql::DatumStorage& storage)
+struct lob_capture_ {
+  lob_capture_(mssql::DatumStorage& storage)
       : reads(1),
         n_items(0),
         maxvarchar(false),
@@ -166,7 +166,7 @@ bool OdbcStatement::lob_wchar(const size_t row_id, size_t column) {
   const auto& statement = statement_->get_handle();
   auto row = rows_[row_id];
   auto& column_data = row->getColumn(column);
-  lob_capture capture(column_data);
+  lob_capture_ capture(column_data);
 
   // Mark this as a Unicode/wide string type for consistent handling in JS
   column_data.setType(DatumStorage::SqlType::NVarChar);

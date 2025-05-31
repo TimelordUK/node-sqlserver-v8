@@ -1,5 +1,5 @@
 #pragma once
-
+#include <platform.h>
 #include <common/odbc_common.h>
 
 #include <functional>
@@ -74,7 +74,9 @@ struct basestorage {
 };
 
 struct bcp {
-  bcp(const shared_ptr<BoundDatumSet> param_set, shared_ptr<IOdbcConnectionHandle> h);
+  bcp(std::shared_ptr<IOdbcApi> odbcApiPtr,
+      const shared_ptr<BoundDatumSet> param_set,
+      shared_ptr<IOdbcConnectionHandle> h);
   int insert(int version = 17);
   bool init();
   bool bind();
@@ -91,6 +93,7 @@ struct bcp {
   shared_ptr<IOdbcConnectionHandle> _ch;
   shared_ptr<BoundDatumSet> _param_set;
   shared_ptr<vector<shared_ptr<OdbcError>>> _errors;
+  shared_ptr<IOdbcApi> _odbcApi;
   vector<shared_ptr<basestorage>> _storage;
   plugin_bcp plugin;
 };

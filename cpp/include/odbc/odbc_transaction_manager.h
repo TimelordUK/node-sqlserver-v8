@@ -8,7 +8,8 @@ namespace mssql {
 
 class OdbcTransactionManager {
  public:
-  explicit OdbcTransactionManager(std::shared_ptr<ConnectionHandles> connectionHandles);
+  explicit OdbcTransactionManager(std::shared_ptr<ConnectionHandles> connectionHandles,
+                                  std::shared_ptr<IOdbcApi> odbcApi);
 
   bool BeginTransaction();
   bool CommitTransaction();
@@ -21,6 +22,7 @@ class OdbcTransactionManager {
 
   std::shared_ptr<ConnectionHandles> _connectionHandles;
   std::shared_ptr<std::vector<std::shared_ptr<OdbcError>>> _errors;
+  std::shared_ptr<IOdbcApi> _odbcApi;
 };
 
 }  // namespace mssql
