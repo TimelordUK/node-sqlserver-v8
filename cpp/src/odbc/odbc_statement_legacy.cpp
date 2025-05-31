@@ -1701,7 +1701,12 @@ bool OdbcStatementLegacy::lob(const size_t row_id, size_t column) {
   
   capture.on_first_read();
   while (more) {
-    capture.bytes_to_read = min(capture.atomic_read_bytes, capture.total_bytes_to_read);
+    // Handle SQL_NO_TOTAL (-4) case - use atomic_read_bytes when total is negative
+    if (capture.total_bytes_to_read < 0) {
+      capture.bytes_to_read = capture.atomic_read_bytes;
+    } else {
+      capture.bytes_to_read = min(capture.atomic_read_bytes, capture.total_bytes_to_read);
+    }
     r = _odbcApi->SQLGetData(statement.get_handle(),
                              static_cast<SQLSMALLINT>(column + 1),
                              SQL_C_WCHAR,
@@ -1724,8 +1729,12 @@ bool OdbcStatementLegacy::lob(const size_t row_id, size_t column) {
     }
   }
   
+  // Trim trailing zeros if this was a varchar(max) field
+  capture.trim();
+  
   // Calculate actual string length in UTF-16 code units
-  const size_t actual_char_count = total_bytes_read / sizeof(uint16_t);
+  // After trimming, use the actual size of the vector
+  const size_t actual_char_count = capture.src_data->size();
   
   // cerr << "lob add StringColumn column " << endl;
   _resultset->add_column(
