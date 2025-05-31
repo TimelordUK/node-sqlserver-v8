@@ -624,7 +624,7 @@ bool OdbcStatement::get_data_int(const size_t row_id, const size_t column) {
 bool OdbcStatement::get_data_long(const size_t row_id, const size_t column) {
   SQL_LOG_TRACE_STREAM("get_data_long: row_id " << row_id << " column " << column);
   const auto& statement = statement_->get_handle();
-  long v = 0;
+  int32_t v = 0;
   SQLLEN str_len_or_ind_ptr = 0;
   const auto row = rows_[row_id];
   auto& column_data = row->getColumn(column);
@@ -640,7 +640,7 @@ bool OdbcStatement::get_data_long(const size_t row_id, const size_t column) {
                                         static_cast<SQLSMALLINT>(column + 1),
                                         SQL_C_SLONG,
                                         &v,
-                                        sizeof(long),
+                                        sizeof(int32_t),
                                         &str_len_or_ind_ptr);
   if (!check_odbc_error(ret)) {
     column_data.setNull();
@@ -652,6 +652,8 @@ bool OdbcStatement::get_data_long(const size_t row_id, const size_t column) {
     return true;
   }
 
+  SQL_LOG_DEBUG_STREAM("get_data_long: value read = " << v);
+
   // Set the correct type based on the original SQL type
   // For any other case, use BigInt as the default
   auto datumType = DatumStorage::SqlType::BigInt;
@@ -659,7 +661,8 @@ bool OdbcStatement::get_data_long(const size_t row_id, const size_t column) {
   column_data.addValue(static_cast<int64_t>(v));
 
   SQL_LOG_DEBUG_STREAM(
-      "get_data_long: Mapped to DatumStorage type: " << static_cast<int>(datumType));
+      "get_data_long: Mapped to DatumStorage type: " << static_cast<int>(datumType) 
+      << ", stored value: " << static_cast<int64_t>(v));
 
   return true;
 }

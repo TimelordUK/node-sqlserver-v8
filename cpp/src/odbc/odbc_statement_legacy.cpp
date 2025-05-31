@@ -580,6 +580,7 @@ bool OdbcStatementLegacy::read_col_attributes(ColumnDefinition& current, const i
   // wcerr << "type_name_len " << current.dataTypeName << endl;
   switch (current.dataType) {
     case SQL_SS_VARIANT: {
+      SQL_LOG_DEBUG_STREAM("read_col_attributes: SQL_SS_VARIANT");
       // dispatch as variant type which reads underlying column type and re-reads correctly.
     } break;
 
@@ -594,7 +595,8 @@ bool OdbcStatementLegacy::read_col_attributes(ColumnDefinition& current, const i
                                       &udt_type_name_len,
                                       nullptr);
       if (!check_odbc_error(ret)) {
-        SQL_LOG_DEBUG_STREAM("read_col_attributes failed to get udt type name");
+        SQL_LOG_DEBUG_STREAM(
+            "read_col_attributes failed to get udt type name SQL_CA_SS_UDT_TYPE_NAME");
         return false;
       }
       current.udtTypeName = odbcstr::swcvec2str(udt_type_name, udt_type_name_len);
@@ -643,10 +645,13 @@ bool OdbcStatementLegacy::read_next(const int column) {
 }
 
 bool OdbcStatementLegacy::start_reading_results() {
-  if (!_statement)
+  if (!_statement) {
+    SQL_LOG_DEBUG_STREAM("start_reading_results: no statement");
     return false;
+  }
 
   if (_cancelRequested) {
+    SQL_LOG_DEBUG_STREAM("start_reading_results: cancel requested");
     _resultset = make_unique<ResultSet>(0);
     return true;
   }
@@ -665,6 +670,7 @@ bool OdbcStatementLegacy::start_reading_results() {
   // cerr << "start_reading_results. cols = " << cols << " " << endl;
   while (column < cols) {
     if (!read_next(column++)) {
+      SQL_LOG_DEBUG_STREAM("start_reading_results failed to read next column " << column);
       return false;
     }
   }
@@ -1333,13 +1339,13 @@ bool OdbcStatementLegacy::get_data_big_int(const size_t row_id, const size_t col
 bool OdbcStatementLegacy::get_data_long(const size_t row_id, const size_t column) {
   const auto& statement = *_statement;
 
-  long v = 0;
+  int32_t v = 0;
   SQLLEN str_len_or_ind_ptr = 0;
   const auto ret = _odbcApi->SQLGetData(statement.get_handle(),
                                         static_cast<SQLSMALLINT>(column + 1),
                                         SQL_C_SLONG,
                                         &v,
-                                        sizeof(int64_t),
+                                        sizeof(int32_t),
                                         &str_len_or_ind_ptr);
   if (!check_odbc_error(ret)) {
     SQL_LOG_DEBUG_STREAM("get_data_long failed to get data");
@@ -1349,6 +1355,7 @@ bool OdbcStatementLegacy::get_data_long(const size_t row_id, const size_t column
     _resultset->add_column(row_id, make_shared<NullColumn>(column));
     return true;
   }
+  SQL_LOG_DEBUG_STREAM("get_data_long: value read = " << v);
   const auto col = make_shared<IntColumn>(column, v);
   if (_numericStringEnabled) {
     col->AsString();
