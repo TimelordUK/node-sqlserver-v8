@@ -61,7 +61,7 @@ class ConnectionHandles {
                                          shared_ptr<IOdbcStatementHandle> handle);
   shared_ptr<IOdbcStatementHandle> find(const long statement_id);
   std::map<long, std::shared_ptr<SafeHandle<IOdbcStatementHandle>>> _statementHandles;
-  std::shared_ptr<SafeHandle<IOdbcEnvironmentHandle>> envHandle_;
+  std::shared_ptr<IOdbcEnvironmentHandle> rawEnvHandle_;  // Raw handle - not wrapped in SafeHandle
   std::shared_ptr<SafeHandle<IOdbcConnectionHandle>> connectionHandle_;
 };
 }  // namespace mssql

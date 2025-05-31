@@ -15,18 +15,15 @@
 
 namespace mssql {
 ConnectionHandles::ConnectionHandles(std::shared_ptr<IOdbcEnvironmentHandle> env)
-    : envHandle_(nullptr), connectionHandle_(nullptr) {
+    : connectionHandle_(nullptr), rawEnvHandle_(env) {
   if (!env) {
     SQL_LOG_ERROR("ConnectionHandles constructor received null environment handle");
     return;
   }
 
-  // The environment handle is already allocated, so we don't wrap it in SafeHandle
-  // as it's managed externally
-  envHandle_ = std::make_shared<SafeHandle<IOdbcEnvironmentHandle>>("Environment", env);
-
-  // Mark the environment handle as already allocated since it comes pre-allocated
-  envHandle_->markAsAllocated();
+  // Store the raw environment handle without wrapping it in SafeHandle
+  // The environment is shared and managed externally, so we must not free it
+  // when this ConnectionHandles instance is destroyed
 
   // Create and allocate the connection handle
   auto connHandle = create_connection_handle();
