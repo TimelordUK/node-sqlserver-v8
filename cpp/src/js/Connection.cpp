@@ -82,6 +82,47 @@ Connection::~Connection() {
 
 // ConnectionWorkerBase class has been moved to worker_base.h
 
+// Generic worker factory for callback/promise handling
+template<typename WorkerType, typename... Args>
+Napi::Value Connection::CreateWorkerWithCallbackOrPromise(const Napi::CallbackInfo& info, Args&&... args) {
+  const Napi::Env env = info.Env();
+  
+  // Check for callback (last argument)
+  Napi::Function callback;
+
+  if (info.Length() > 1 && info[info.Length() - 1].IsFunction()) {
+    callback = info[info.Length() - 1].As<Napi::Function>();
+    
+    // Create and queue the worker with callback
+    auto worker = new WorkerType(callback, std::forward<Args>(args)...);
+    worker->Queue();
+    
+    return env.Undefined();
+  } else {
+    // No callback provided, we'll use a Promise
+    // Create a deferred Promise
+    Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
+
+    // Create a callback that resolves/rejects the promise
+    callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo& info) {
+      const Napi::Env env = info.Env();
+      if (info[0].IsNull() || info[0].IsUndefined()) {
+        deferred.Resolve(info[1]);
+      } else {
+        deferred.Reject(info[0]);
+      }
+      return env.Undefined();
+    });
+
+    // Create and queue the worker with promise callback
+    auto worker = new WorkerType(callback, std::forward<Args>(args)...);
+    worker->Queue();
+
+    // Return the promise
+    return deferred.Promise();
+  }
+}
+
 // Open connection method - supports both callback and Promise
 Napi::Value Connection::Open(const Napi::CallbackInfo& info) {
   SQL_LOG_DEBUG("Connection::Open");
@@ -199,75 +240,75 @@ Napi::Value Stubbed(const Napi::CallbackInfo& info) {
   return env.Undefined();
 }
 
+struct InfoParser {
+  StatementHandle statementHandle;
+  InfoParser(bool isConnected) : isConnected_(isConnected) {}
+  QueryOptions options;
+  bool isConnected_;
+
+  bool throwIfNotConnected(const Napi::CallbackInfo& info) {
+    const Napi::Env env = info.Env();
+    if (!isConnected_) {
+      Napi::Error::New(env, "Connection is not open").ThrowAsJavaScriptException();
+      return false;
+    }
+    return true;
+  }
+
+  bool parseQueryOptions(const Napi::CallbackInfo& info) {
+    const Napi::Env env = info.Env();
+
+    if (info.Length() < 1 || !info[1].IsObject()) {
+      Napi::TypeError::New(env, "query options expected").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    // Get the statement handle from the first parameter
+    Napi::Object optionsObj = info[1].As<Napi::Object>();
+    options = JsObjectMapper::toQueryOptions(optionsObj);
+    return true;
+  }
+
+  bool parseStatementHandle(const Napi::CallbackInfo& info) {
+    const Napi::Env env = info.Env();
+    if (!throwIfNotConnected(info)) {
+      return false;
+    }
+
+    if (info.Length() < 1 || !info[0].IsObject()) {
+      Napi::TypeError::New(env, "Statement handle expected").ThrowAsJavaScriptException();
+      return false;
+    }
+
+    // Get the statement handle from the first parameter
+    Napi::Object handleObj = info[0].As<Napi::Object>();
+    statementHandle = JsObjectMapper::toStatementHandle(handleObj);
+    if (!statementHandle.isValid()) {
+      Napi::Error::New(env, "Invalid statement handle").ThrowAsJavaScriptException();
+      return false;
+    }
+
+    return true;
+  }
+};
+
 Napi::Value Connection::FetchRows(const Napi::CallbackInfo& info) {
   const Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  // Check if we have a connection
-  if (!isConnected_) {
-    Napi::Error::New(env, "Connection is not open").ThrowAsJavaScriptException();
+  InfoParser parser(isConnected_);
+  if (!parser.parseStatementHandle(info)) {
     return env.Undefined();
   }
+  const auto statementHandle = parser.statementHandle;
 
-  // Validate statement handle
-  if (info.Length() < 1 || !info[0].IsObject()) {
-    Napi::TypeError::New(env, "Statement handle expected").ThrowAsJavaScriptException();
+  if (!parser.parseQueryOptions(info)) {
     return env.Undefined();
   }
+  const auto options = parser.options;
 
-  // Get the statement handle from the first parameter
-  Napi::Object handleObj = info[0].As<Napi::Object>();
-  StatementHandle statementHandle = JsObjectMapper::toStatementHandle(handleObj);
-
-  if (!statementHandle.isValid()) {
-    Napi::Error::New(env, "Invalid statement handle").ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-
-  // Validate statement handle
-  if (info.Length() < 1 || !info[1].IsObject()) {
-    Napi::TypeError::New(env, "query options expected").ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-
-  // Get the statement handle from the first parameter
-  Napi::Object optionsObj = info[1].As<Napi::Object>();
-  QueryOptions options = JsObjectMapper::toQueryOptions(optionsObj);
-
-  // Check for callback (last argument)
-  Napi::Function callback;
-
-  if (info.Length() > 1 && info[info.Length() - 1].IsFunction()) {
-    callback = info[info.Length() - 1].As<Napi::Function>();
-  } else {
-    // No callback provided, we'll use a Promise
-    // Create a deferred Promise
-    Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
-
-    // Create a callback that resolves/rejects the promise
-    callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo& info) {
-      const Napi::Env env = info.Env();
-      if (info[0].IsNull() || info[0].IsUndefined()) {
-        deferred.Resolve(info[1]);
-      } else {
-        deferred.Reject(info[0]);
-      }
-      return env.Undefined();
-    });
-
-    // Create and queue the worker
-    auto worker = new FetchRowsWorker(callback, odbcConnection_.get(), statementHandle, options);
-    worker->Queue();
-
-    // Return the promise
-    return deferred.Promise();
-  }
-
-  // If we got here, we're using a callback
-  auto worker = new FetchRowsWorker(callback, odbcConnection_.get(), statementHandle, options);
-  worker->Queue();
-
-  return env.Undefined();
+  // Use the generic worker factory
+  return CreateWorkerWithCallbackOrPromise<FetchRowsWorker>(info, odbcConnection_.get(), statementHandle, options);
 }
 
 Napi::Value Connection::NextResultSet(const Napi::CallbackInfo& info) {
@@ -295,40 +336,8 @@ Napi::Value Connection::NextResultSet(const Napi::CallbackInfo& info) {
     return env.Undefined();
   }
 
-  // Check for callback (last argument)
-  Napi::Function callback;
-
-  if (info.Length() > 1 && info[info.Length() - 1].IsFunction()) {
-    callback = info[info.Length() - 1].As<Napi::Function>();
-  } else {
-    // No callback provided, we'll use a Promise
-    // Create a deferred Promise
-    Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
-
-    // Create a callback that resolves/rejects the promise
-    callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo& info) {
-      const Napi::Env env = info.Env();
-      if (info[0].IsNull() || info[0].IsUndefined()) {
-        deferred.Resolve(info[1]);
-      } else {
-        deferred.Reject(info[0]);
-      }
-      return env.Undefined();
-    });
-
-    // Create and queue the worker
-    auto worker = new NextResultWorker(callback, odbcConnection_.get(), statementHandle);
-    worker->Queue();
-
-    // Return the promise
-    return deferred.Promise();
-  }
-
-  // If we got here, we're using a callback
-  auto worker = new NextResultWorker(callback, odbcConnection_.get(), statementHandle);
-  worker->Queue();
-
-  return env.Undefined();
+  // Use the generic worker factory
+  return CreateWorkerWithCallbackOrPromise<NextResultWorker>(info, odbcConnection_.get(), statementHandle);
 }
 
 Napi::Value Connection::CancelStatement(const Napi::CallbackInfo& info) {
@@ -360,40 +369,8 @@ Napi::Value Connection::ReleaseStatement(const Napi::CallbackInfo& info) {
     return env.Undefined();
   }
 
-  // Check for callback (last argument)
-  Napi::Function callback;
-
-  if (info.Length() > 1 && info[info.Length() - 1].IsFunction()) {
-    callback = info[info.Length() - 1].As<Napi::Function>();
-  } else {
-    // No callback provided, we'll use a Promise
-    // Create a deferred Promise
-    Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
-
-    // Create a callback that resolves/rejects the promise
-    callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo& info) {
-      const Napi::Env env = info.Env();
-      if (info[0].IsNull() || info[0].IsUndefined()) {
-        deferred.Resolve(info[1]);
-      } else {
-        deferred.Reject(info[0]);
-      }
-      return env.Undefined();
-    });
-
-    // Create and queue the worker
-    auto worker = new ReleaseWorker(callback, odbcConnection_.get(), statementHandle);
-    worker->Queue();
-
-    // Return the promise
-    return deferred.Promise();
-  }
-
-  // If we got here, we're using a callback
-  auto worker = new ReleaseWorker(callback, odbcConnection_.get(), statementHandle);
-  worker->Queue();
-
-  return env.Undefined();
+  // Use the generic worker factory
+  return CreateWorkerWithCallbackOrPromise<ReleaseWorker>(info, odbcConnection_.get(), statementHandle);
 }
 
 // Implement Query method
@@ -422,39 +399,7 @@ Napi::Value Connection::Query(const Napi::CallbackInfo& info) {
     params = info[1].As<Napi::Array>();
   }
 
-  // Check for callback (last argument)
-  Napi::Function callback;
-
-  if (info.Length() > 1 && info[info.Length() - 1].IsFunction()) {
-    callback = info[info.Length() - 1].As<Napi::Function>();
-  } else {
-    // No callback provided, we'll use a Promise
-    // Create a deferred Promise
-    Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
-
-    // Create a callback that resolves/rejects the promise
-    callback = Napi::Function::New(env, [deferred](const Napi::CallbackInfo& info) {
-      const Napi::Env env = info.Env();
-      if (info[0].IsNull() || info[0].IsUndefined()) {
-        deferred.Resolve(info[1]);
-      } else {
-        deferred.Reject(info[0]);
-      }
-      return env.Undefined();
-    });
-
-    // Create and queue the worker
-    const auto worker = new QueryWorker(callback, odbcConnection_.get(), operationParams, params);
-    worker->Queue();
-
-    // Return the promise
-    return deferred.Promise();
-  }
-
-  // If we got here, we're using a callback
-  const auto worker = new QueryWorker(callback, odbcConnection_.get(), operationParams, params);
-  worker->Queue();
-
-  return env.Undefined();
+  // Use the generic worker factory
+  return CreateWorkerWithCallbackOrPromise<QueryWorker>(info, odbcConnection_.get(), operationParams, params);
 }
 }  // namespace mssql

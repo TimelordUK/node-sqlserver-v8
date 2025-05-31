@@ -44,6 +44,10 @@ class Connection : public Napi::ObjectWrap<Connection> {
   Napi::Value CancelStatement(const Napi::CallbackInfo& info);
   Napi::Value ReleaseStatement(const Napi::CallbackInfo& info);
 
+  // Generic worker factory for callback/promise handling
+  template<typename WorkerType, typename... Args>
+  Napi::Value CreateWorkerWithCallbackOrPromise(const Napi::CallbackInfo& info, Args&&... args);
+
   // Internal state
   std::shared_ptr<IOdbcConnection> odbcConnection_;
   bool isConnected_ = false;
