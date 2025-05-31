@@ -145,12 +145,16 @@ bool OdbcConnection::Close() {
 
   if (connectionState != ConnectionClosed) {
     if (_connectionHandles) {
+      // CRITICAL: Free all statement handles BEFORE disconnecting the connection
+      // to prevent use-after-free errors
+      SQL_LOG_DEBUG("Clearing statement handles before disconnect");
+      _connectionHandles->clear();
+      
       const auto connection = _connectionHandles->connectionHandle();
       if (connection) {
         SQL_LOG_DEBUG("SQLDisconnect");
         _odbcApi->SQLDisconnect(connection->get_handle());
       }
-      _connectionHandles->clear();
     }
 
     connectionState = ConnectionClosed;

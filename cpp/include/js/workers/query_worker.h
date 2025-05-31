@@ -19,5 +19,6 @@ class QueryWorker : public OdbcAsyncWorker {
  private:
   std::shared_ptr<QueryOperationParams> queryParams_;
   std::shared_ptr<BoundDatumSet> parameters_;
+  bool has_error_ = false;
 };
 }  // namespace mssql

@@ -21,12 +21,26 @@ QueryWorker::QueryWorker(Napi::Function& callback,
   SQL_LOG_DEBUG_STREAM("Processing " << length << " parameters");
   parameters_ = std::make_shared<BoundDatumSet>();
   // ParameterFactory::populateParameterSet(params, parameters_);
-  parameters_->bind(params);
+  if (!parameters_->bind(params)) {
+    SQL_LOG_ERROR_STREAM("Failed to bind parameters: " << parameters_->err);
+    
+    // Format error message to match legacy driver format
+    std::string formatted_error = "IMNOD: [msnodesql] Parameter " + 
+                                  std::to_string(parameters_->first_error + 1) + ": " + 
+                                  parameters_->err;
+    SetError(formatted_error);
+    has_error_ = true;
+  }
 
   result_ = std::make_shared<QueryResult>();
 }
 
 void QueryWorker::Execute() {
+  if (has_error_) {
+    SQL_LOG_ERROR_STREAM("Error in QueryWorker::Execute: ");
+    return;
+  }
+
   try {
     // SQL_LOG_DEBUG_STREAM("Executing QueryWorker " << StringUtils::U16StringToUtf8(sqlText_));
     // This will need to be implemented in OdbcConnection
@@ -55,7 +69,7 @@ void QueryWorker::OnOK() {
   SQL_LOG_DEBUG("QueryWorker::OnOK");
 
   try {
-        const auto metadata = GetMetadata();
+    const auto metadata = GetMetadata();
     Callback().Call({env.Null(), metadata});
   } catch (const std::exception& e) {
     // Call the callback with an error
