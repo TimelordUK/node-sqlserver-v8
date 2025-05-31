@@ -361,8 +361,10 @@ bool OdbcStatementLegacy::bind_tvp(vector<tvp_t>& tvps) {
 }
 
 bool OdbcStatementLegacy::bind_datum(const int current_param, const shared_ptr<BoundDatum>& datum) {
-  if (!_statement)
+  if (!_statement) {
+    SQL_LOG_DEBUG_STREAM("bind_datum: no statement");
     return false;
+  }
   const auto& statement = *_statement;
 
   auto r = _odbcApi->SQLBindParameter(statement.get_handle(),
@@ -377,6 +379,7 @@ bool OdbcStatementLegacy::bind_datum(const int current_param, const shared_ptr<B
                                       datum->get_ind_vec().data());
 
   if (!check_odbc_error(r)) {
+    SQL_LOG_DEBUG_STREAM("bind_datum failed to bind parameter " << current_param);
     return false;
   }
   /*
@@ -406,6 +409,7 @@ bool OdbcStatementLegacy::bind_datum(const int current_param, const shared_ptr<B
   */
   if (datum->get_defined_precision()) {
     if (!apply_precision(datum, current_param)) {
+      SQL_LOG_DEBUG_STREAM("bind_datum failed to apply precision");
       return false;
     }
   }
@@ -416,12 +420,16 @@ bool OdbcStatementLegacy::bind_datum(const int current_param, const shared_ptr<B
     auto* const name_ptr = const_cast<wchar_t*>(name.c_str());
     r = _odbcApi->SQLGetStmtAttr(
         statement.get_handle(), SQL_ATTR_IMP_PARAM_DESC, &ipd, SQL_IS_POINTER, &string_length);
-    if (!check_odbc_error(r))
+    if (!check_odbc_error(r)) {
+      SQL_LOG_DEBUG_STREAM("bind_datum failed to get stmt attr SQL_ATTR_IMP_PARAM_DESC");
       return false;
+    }
     r = _odbcApi->SQLSetDescField(
         ipd, current_param, SQL_DESC_NAME, name_ptr, name.size() * sizeof(wchar_t));
-    if (!check_odbc_error(r))
+    if (!check_odbc_error(r)) {
+      SQL_LOG_DEBUG_STREAM("bind_datum failed to set desc field SQL_DESC_NAME");
       return false;
+    }
   }
 
   return true;
@@ -467,8 +475,10 @@ void OdbcStatementLegacy::queue_tvp(int current_param,
 
 // bind all the parameters in the array
 bool OdbcStatementLegacy::bind_params(const shared_ptr<BoundDatumSet>& params) {
-  if (!_statement)
+  if (!_statement) {
+    SQL_LOG_DEBUG_STREAM("bind_params: no statement");
     return false;
+  }
   auto& ps = *params;
   // fprintf(stderr, "bind_params\n");
   const auto size = get_size(ps);
@@ -488,6 +498,7 @@ bool OdbcStatementLegacy::bind_params(const shared_ptr<BoundDatumSet>& params) {
   for (auto itr = ps.begin(); itr != ps.end(); ++itr) {
     auto& datum = *itr;
     if (!bind_datum(current_param, datum)) {
+      SQL_LOG_DEBUG_STREAM("bind_params failed to bind datum " << current_param);
       return false;
     }
     if (datum->is_tvp) {
@@ -527,8 +538,10 @@ Napi::Object OdbcStatementLegacy::end_of_rows(Napi::Env env) const {
 }
 
 bool OdbcStatementLegacy::return_odbc_error() {
-  if (!_statement)
+  if (!_statement) {
+    SQL_LOG_DEBUG_STREAM("return_odbc_error: no statement");
     return false;
+  }
   _statement->read_errors(_odbcApi, _errors);
   SQL_LOG_DEBUG_STREAM("return_odbc_error: " << _errors->size());
   for (const auto& error : *_errors) {
@@ -539,6 +552,7 @@ bool OdbcStatementLegacy::return_odbc_error() {
 
 bool OdbcStatementLegacy::check_odbc_error(const SQLRETURN ret) {
   if (!SQL_SUCCEEDED(ret)) {
+    SQL_LOG_DEBUG_STREAM("check_odbc_error failed: " << ret);
     set_state(OdbcStatementState::STATEMENT_ERROR);
     return return_odbc_error();
   }
@@ -814,10 +828,10 @@ bool OdbcStatementLegacy::bind_fetch(const shared_ptr<BoundDatumSet>& param_set)
     return false;
   }
   if (polling_mode) {
-    const auto s = SQLSetStmtAttr(statement.get_handle(),
-                                  SQL_ATTR_ASYNC_ENABLE,
-                                  reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON),
-                                  0);
+    const auto s = _odbcApi->SQLSetStmtAttr(statement.get_handle(),
+                                            SQL_ATTR_ASYNC_ENABLE,
+                                            reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON),
+                                            0);
     if (!check_odbc_error(s)) {
       SQL_LOG_DEBUG_STREAM("bind_fetch failed to set stmt attr");
       return false;
@@ -954,6 +968,7 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
   }
 
   if (!SQL_SUCCEEDED(ret)) {
+    SQL_LOG_DEBUG_STREAM("try_execute_direct failed to execute: " << ret);
     // cerr << "SQL_SUCCEEDED = " << ret << endl;
     return_odbc_error();
     if (!_resultset) {

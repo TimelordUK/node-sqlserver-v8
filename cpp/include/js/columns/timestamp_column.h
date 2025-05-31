@@ -44,7 +44,9 @@ class TimestampColumn : public Column {
   }
 
   Napi::Object ToNative(Napi::Env env) override {
-    return Napi::Date::New(env, milliseconds).As<Napi::Object>();
+    auto date = Napi::Date::New(env, milliseconds).As<Napi::Object>();
+    date.Set("nanosecondsDelta", nanoseconds_delta);
+    return date;
   }
 
   void to_timestamp_offset(SQL_SS_TIMESTAMPOFFSET_STRUCT& date) const {
