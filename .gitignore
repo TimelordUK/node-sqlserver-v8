@@ -55,18 +55,14 @@ prebuilds/
 **/.cmake/
 **/_CPack_Packages/
 
-# TypeScript output directories
+# Build output directories
 lib/
 dist/
 out/
-*.tsbuildinfo
 
 # Dependency directories
 node_modules/
 jspm_packages/
-
-# TypeScript cache
-*.tsbuildinfo
 
 # Optional npm cache directory
 .npm
@@ -107,15 +103,13 @@ jspm_packages/
 .next
 out
 
-# Compiled JavaScript files
-**/*.js
+# Source maps and TypeScript definition files (if any remain)
 **/*.js.map
 **/*.d.ts
-# Exception for JS config files
-!*.config.js
-!jest.config.js
-!.eslintrc.js
-!.mocharc.js
+
+# Compiled/built JavaScript (only for specific output directories)
+lib/**/*.js
+dist/**/*.js
 
 # Editor directories and files
 .idea/
