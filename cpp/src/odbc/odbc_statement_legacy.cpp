@@ -438,8 +438,10 @@ void OdbcStatementLegacy::queue_tvp(int current_param,
   SQLINTEGER string_length = 0;
   auto r = _odbcApi->SQLGetStmtAttr(
       statement.get_handle(), SQL_ATTR_IMP_PARAM_DESC, &ipd, SQL_IS_POINTER, &string_length);
-  if (!check_odbc_error(r))
+  if (!check_odbc_error(r)) {
+    SQL_LOG_DEBUG_STREAM("queue_tvp failed to get stmt attr");
     return;
+  }
   const auto& schema = datum->get_storage()->schema;
   if (!schema.empty()) {
     auto schema_vec = odbcstr::wstr2wcvec(schema);
@@ -448,8 +450,10 @@ void OdbcStatementLegacy::queue_tvp(int current_param,
                                   SQL_CA_SS_SCHEMA_NAME,
                                   reinterpret_cast<SQLPOINTER>(schema_vec.data()),
                                   schema_vec.size() * 2);
-    if (!check_odbc_error(r))
+    if (!check_odbc_error(r)) {
+      SQL_LOG_DEBUG_STREAM("queue_tvp failed to set desc field");
       return;
+    }
   }
   tvp_t tvp;
   const auto cols = make_shared<BoundDatumSet::param_bindings>();
@@ -526,6 +530,10 @@ bool OdbcStatementLegacy::return_odbc_error() {
   if (!_statement)
     return false;
   _statement->read_errors(_odbcApi, _errors);
+  SQL_LOG_DEBUG_STREAM("return_odbc_error: " << _errors->size());
+  for (const auto& error : *_errors) {
+    _errorHandler->AddError(error);
+  }
   return false;
 }
 
@@ -549,8 +557,10 @@ bool OdbcStatementLegacy::read_col_attributes(ColumnDefinition& current, const i
                                        type_name.size(),
                                        &type_name_len,
                                        nullptr);
-  if (!check_odbc_error(ret))
+  if (!check_odbc_error(ret)) {
+    SQL_LOG_DEBUG_STREAM("read_col_attributes failed to get col attribute");
     return false;
+  }
 
   current.dataTypeName = odbcstr::swcvec2str(type_name, type_name_len);
   // wcerr << "type_name_len " << current.dataTypeName << endl;
@@ -569,8 +579,10 @@ bool OdbcStatementLegacy::read_col_attributes(ColumnDefinition& current, const i
                                       udt_type_name.size(),
                                       &udt_type_name_len,
                                       nullptr);
-      if (!check_odbc_error(ret))
+      if (!check_odbc_error(ret)) {
+        SQL_LOG_DEBUG_STREAM("read_col_attributes failed to get udt type name");
         return false;
+      }
       current.udtTypeName = odbcstr::swcvec2str(udt_type_name, udt_type_name_len);
     } break;
 
@@ -600,14 +612,18 @@ bool OdbcStatementLegacy::read_next(const int column) {
                                       &current.columnSize,
                                       &current.decimalDigits,
                                       &current.nullable);
-  if (!check_odbc_error(ret))
+  if (!check_odbc_error(ret)) {
+    SQL_LOG_DEBUG_STREAM("read_next failed to describe col");
     return false;
+  }
   current.name.resize(current.colNameLen);
 
   // wcerr << "read_next " << column << " name = " << current.name << endl;
   ret = read_col_attributes(current, column);
-  if (!check_odbc_error(ret))
+  if (!check_odbc_error(ret)) {
+    SQL_LOG_DEBUG_STREAM("read_next failed to read col attributes");
     return false;
+  }
 
   return ret;
 }
@@ -624,8 +640,10 @@ bool OdbcStatementLegacy::start_reading_results() {
   SQLSMALLINT columns = 0;
   const auto& statement = *_statement;
   auto ret = _odbcApi->SQLNumResultCols(statement.get_handle(), &columns);
-  if (!check_odbc_error(ret))
+  if (!check_odbc_error(ret)) {
+    SQL_LOG_DEBUG_STREAM("start_reading_results failed to get num result cols");
     return false;
+  }
 
   auto column = 0;
   _resultset = make_unique<ResultSet>(columns);
@@ -639,7 +657,11 @@ bool OdbcStatementLegacy::start_reading_results() {
 
   ret = _odbcApi->SQLRowCount(statement.get_handle(), &_resultset->_row_count);
   // cerr << "start_reading_results. row count = " << _resultset->_row_count << " " << endl;
-  return check_odbc_error(ret);
+  auto result = check_odbc_error(ret);
+  if (!result) {
+    SQL_LOG_DEBUG_STREAM("start_reading_results failed to get row count");
+  }
+  return result;
 }
 
 SQLRETURN OdbcStatementLegacy::query_timeout(const int timeout) {
@@ -648,12 +670,16 @@ SQLRETURN OdbcStatementLegacy::query_timeout(const int timeout) {
     auto* const to = reinterpret_cast<SQLPOINTER>(static_cast<long long>(timeout));
     auto ret =
         _odbcApi->SQLSetStmtAttr(statement.get_handle(), SQL_QUERY_TIMEOUT, to, SQL_IS_UINTEGER);
-    if (!check_odbc_error(ret))
+    if (!check_odbc_error(ret)) {
+      SQL_LOG_DEBUG_STREAM("query_timeout failed to set stmt attr");
       return false;
+    }
     ret = _odbcApi->SQLSetStmtAttr(
         statement.get_handle(), SQL_ATTR_QUERY_TIMEOUT, to, SQL_IS_UINTEGER);
-    if (!check_odbc_error(ret))
-      return false;
+    if (!check_odbc_error(ret)) {
+      SQL_LOG_DEBUG_STREAM("query_timeout failed to set stmt attr");
+    }
+    return false;
   }
   return true;
 }
@@ -668,12 +694,16 @@ bool OdbcStatementLegacy::try_prepare(const shared_ptr<QueryOperationParams>& q)
 
   auto ret = _odbcApi->SQLPrepare(
       statement.get_handle(), reinterpret_cast<SQLWCHAR*>(query.data()), query.size());
-  if (!check_odbc_error(ret))
+  if (!check_odbc_error(ret)) {
+    SQL_LOG_DEBUG_STREAM("try_prepare failed to prepare");
     return false;
+  }
 
   ret = _odbcApi->SQLNumResultCols(statement.get_handle(), &num_cols);
-  if (!check_odbc_error(ret))
+  if (!check_odbc_error(ret)) {
+    SQL_LOG_DEBUG_STREAM("try_prepare failed to get num result cols");
     return false;
+  }
 
   _preparedStorage = make_shared<BoundDatumSet>(q);
   _resultset = make_unique<ResultSet>(num_cols);
@@ -696,8 +726,10 @@ bool OdbcStatementLegacy::try_prepare(const shared_ptr<QueryOperationParams>& q)
                                datum->buffer,
                                datum->buffer_len,
                                datum->get_ind_vec().data());
-    if (!check_odbc_error(ret))
+    if (!check_odbc_error(ret)) {
+      SQL_LOG_DEBUG_STREAM("try_prepare failed to bind col");
       return false;
+    }
     ++i;
   }
 
@@ -787,6 +819,7 @@ bool OdbcStatementLegacy::bind_fetch(const shared_ptr<BoundDatumSet>& param_set)
                                   reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON),
                                   0);
     if (!check_odbc_error(s)) {
+      SQL_LOG_DEBUG_STREAM("bind_fetch failed to set stmt attr");
       return false;
     }
   }
@@ -807,11 +840,17 @@ bool OdbcStatementLegacy::bind_fetch(const shared_ptr<BoundDatumSet>& param_set)
     return true;
   }
 
-  if (!check_odbc_error(ret))
+  if (!check_odbc_error(ret)) {
+    SQL_LOG_DEBUG_STREAM("bind_fetch failed to execute");
     return false;
+  }
 
   ret = _odbcApi->SQLRowCount(statement.get_handle(), &_resultset->_row_count);
-  return check_odbc_error(ret);
+  auto result = check_odbc_error(ret);
+  if (!result) {
+    SQL_LOG_DEBUG_STREAM("bind_fetch failed to get row count");
+  }
+  return result;
 }
 
 bool OdbcStatementLegacy::cancel_handle() {
@@ -820,7 +859,7 @@ bool OdbcStatementLegacy::cancel_handle() {
   const auto& hnd = *_statement;
   const auto ret2 = _odbcApi->SQLCancelHandle(SQL_HANDLE_STMT, hnd.get_handle());
   if (!check_odbc_error(ret2)) {
-    // fprintf(stderr, "cancel req failed state %d %ld \n", _statementState, _statementId);
+    SQL_LOG_DEBUG_STREAM("cancel_handle failed to cancel handle");
     return false;
   }
   {
@@ -833,8 +872,10 @@ bool OdbcStatementLegacy::cancel_handle() {
 
 bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationParams>& q,
                                              const shared_ptr<BoundDatumSet>& param_set) {
-  if (!_statement)
+  if (!_statement) {
+    SQL_LOG_DEBUG_STREAM("try_execute_direct: no statement");
     return false;
+  }
 
   // cout << "id " << _statementId << " try_execute_direct" << endl;
   _errors->clear();
@@ -864,14 +905,20 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
     }
     _resultset->_end_of_results = true;  // reset
     const auto ret = query_timeout(timeout);
-    if (!check_odbc_error(ret))
+    if (!check_odbc_error(ret)) {
+      SQL_LOG_DEBUG_STREAM("try_execute_direct failed to set stmt attr");
       return false;
+    }
 
     if (polling_mode) {
       auto ret = _odbcApi->SQLSetStmtAttr(_statement->get_handle(),
                                           SQL_ATTR_ASYNC_ENABLE,
                                           reinterpret_cast<SQLPOINTER>(SQL_ASYNC_ENABLE_ON),
                                           0);
+      if (!check_odbc_error(ret)) {
+        SQL_LOG_DEBUG_STREAM("try_execute_direct failed to set stmt attr");
+        return false;
+      }
     }
   }
   auto query = q->query_string;
@@ -1019,8 +1066,10 @@ bool OdbcStatementLegacy::dispatch_prepared(const SQLSMALLINT t,
 }
 
 bool OdbcStatementLegacy::dispatch(const SQLSMALLINT t, const size_t row_id, const size_t column) {
-  if (!_statement)
+  if (!_statement) {
+    SQL_LOG_DEBUG_STREAM("dispatch: no statement");
     return false;
+  }
   // cerr << " dispatch row = " << row_id << endl;
   bool res;
   switch (t) {
@@ -1123,8 +1172,10 @@ bool OdbcStatementLegacy::d_variant(const size_t row_id, const size_t column) {
   // Figure out the length
   auto ret = _odbcApi->SQLGetData(
       statement.get_handle(), static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY, &b, 0, &iv);
-  if (!check_odbc_error(ret))
+  if (!check_odbc_error(ret)) {
+    SQL_LOG_DEBUG_STREAM("d_variant failed to get data");
     return false;
+  }
   // Figure out the type
   ret = _odbcApi->SQLColAttribute(statement.get_handle(),
                                   column + 1,
@@ -1133,8 +1184,10 @@ bool OdbcStatementLegacy::d_variant(const size_t row_id, const size_t column) {
                                   0,
                                   nullptr,
                                   &variant_type);
-  if (!check_odbc_error(ret))
+  if (!check_odbc_error(ret)) {
+    SQL_LOG_DEBUG_STREAM("d_variant failed to get variant type");
     return false;
+  }
   // set the definiton to actual data underlying data type.
   auto& definition = _resultset->get_meta_data(static_cast<int>(column));
   definition.dataType = static_cast<SQLSMALLINT>(variant_type);
@@ -1150,12 +1203,16 @@ bool OdbcStatementLegacy::d_time(const size_t row_id, const size_t column) {
   SQLLEN colscale = 0;
   const auto ret2 = _odbcApi->SQLColAttribute(
       statement.get_handle(), column + 1, SQL_COLUMN_PRECISION, nullptr, 0, nullptr, &precision);
-  if (!check_odbc_error(ret2))
+  if (!check_odbc_error(ret2)) {
+    SQL_LOG_DEBUG_STREAM("d_variant failed to get col attribute precision");
     return false;
+  }
   const auto ret3 = _odbcApi->SQLColAttribute(
       statement.get_handle(), column + 1, SQL_COLUMN_SCALE, nullptr, 0, nullptr, &colscale);
-  if (!check_odbc_error(ret3))
+  if (!check_odbc_error(ret3)) {
+    SQL_LOG_DEBUG_STREAM("d_variant failed to get col attribute scale");
     return false;
+  }
   const auto ret = _odbcApi->SQLGetData(statement.get_handle(),
                                         static_cast<SQLSMALLINT>(column + 1),
                                         SQL_C_BINARY,
@@ -1163,8 +1220,10 @@ bool OdbcStatementLegacy::d_time(const size_t row_id, const size_t column) {
                                         sizeof(time),
                                         &str_len_or_ind_ptr);
 
-  if (!check_odbc_error(ret))
+  if (!check_odbc_error(ret)) {
+    SQL_LOG_DEBUG_STREAM("d_variant failed to get data");
     return false;
+  }
 
   if (str_len_or_ind_ptr == SQL_NULL_DATA) {
     _resultset->add_column(row_id, make_shared<NullColumn>(column));
@@ -1196,8 +1255,10 @@ bool OdbcStatementLegacy::get_data_timestamp_offset(const size_t row_id, const s
                                         storage->timestampoffsetvec_ptr->data(),
                                         sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT),
                                         &str_len_or_ind_ptr);
-  if (!check_odbc_error(ret))
+  if (!check_odbc_error(ret)) {
+    SQL_LOG_DEBUG_STREAM("get_data_timestamp_offset failed to get data");
     return false;
+  }
   if (str_len_or_ind_ptr == SQL_NULL_DATA) {
     _resultset->add_column(row_id, make_shared<NullColumn>(column));
     return true;  // break
@@ -1216,8 +1277,10 @@ bool OdbcStatementLegacy::get_data_timestamp(const size_t row_id, const size_t c
                                         &v,
                                         sizeof(TIMESTAMP_STRUCT),
                                         &str_len_or_ind_ptr);
-  if (!check_odbc_error(ret))
+  if (!check_odbc_error(ret)) {
+    SQL_LOG_DEBUG_STREAM("get_data_timestamp failed to get data");
     return false;
+  }
   if (str_len_or_ind_ptr == SQL_NULL_DATA) {
     _resultset->add_column(row_id, make_shared<NullColumn>(column));
     return true;  // break
@@ -1236,8 +1299,10 @@ bool OdbcStatementLegacy::get_data_big_int(const size_t row_id, const size_t col
                                         &v,
                                         sizeof(DatumStorageLegacy::bigint_t),
                                         &str_len_or_ind_ptr);
-  if (!check_odbc_error(ret))
+  if (!check_odbc_error(ret)) {
+    SQL_LOG_DEBUG_STREAM("get_data_big_int failed to get data");
     return false;
+  }
   if (str_len_or_ind_ptr == SQL_NULL_DATA) {
     _resultset->add_column(row_id, make_shared<NullColumn>(column));
     return true;
@@ -1261,8 +1326,10 @@ bool OdbcStatementLegacy::get_data_long(const size_t row_id, const size_t column
                                         &v,
                                         sizeof(int64_t),
                                         &str_len_or_ind_ptr);
-  if (!check_odbc_error(ret))
+  if (!check_odbc_error(ret)) {
+    SQL_LOG_DEBUG_STREAM("get_data_long failed to get data");
     return false;
+  }
   if (str_len_or_ind_ptr == SQL_NULL_DATA) {
     _resultset->add_column(row_id, make_shared<NullColumn>(column));
     return true;
@@ -1285,8 +1352,10 @@ bool OdbcStatementLegacy::get_data_bit(const size_t row_id, const size_t column)
                                         &v,
                                         sizeof(char),
                                         &str_len_or_ind_ptr);
-  if (!check_odbc_error(ret))
+  if (!check_odbc_error(ret)) {
+    SQL_LOG_DEBUG_STREAM("get_data_bit failed to get data");
     return false;
+  }
   if (str_len_or_ind_ptr == SQL_NULL_DATA) {
     _resultset->add_column(row_id, make_shared<NullColumn>(column));
     return true;
@@ -1452,8 +1521,10 @@ bool OdbcStatementLegacy::get_data_numeric(const size_t row_id, const size_t col
                               &v,
                               sizeof(SQL_NUMERIC_STRUCT),
                               &str_len_or_ind_ptr);
-  if (!check_odbc_error(ret))
+  if (!check_odbc_error(ret)) {
+    SQL_LOG_DEBUG_STREAM("get_data_numeric failed to get data");
     return false;
+  }
   if (str_len_or_ind_ptr == SQL_NULL_DATA) {
     _resultset->add_column(row_id, make_shared<NullColumn>(column));
     return true;
@@ -1488,8 +1559,10 @@ bool OdbcStatementLegacy::get_data_decimal(const size_t row_id, const size_t col
                               &v,
                               sizeof(double),
                               &str_len_or_ind_ptr);
-  if (!check_odbc_error(ret))
+  if (!check_odbc_error(ret)) {
+    SQL_LOG_DEBUG_STREAM("get_data_decimal failed to get data");
     return false;
+  }
   if (str_len_or_ind_ptr == SQL_NULL_DATA) {
     _resultset->add_column(row_id, make_shared<NullColumn>(column));
     return true;
@@ -1532,8 +1605,10 @@ bool OdbcStatementLegacy::get_data_binary(const size_t row_id, const size_t colu
                                 write_ptr,
                                 bytes_to_read,
                                 &total_bytes_to_read);
-  if (!check_odbc_error(r))
+  if (!check_odbc_error(r)) {
+    SQL_LOG_DEBUG_STREAM("get_data_binary failed to get data");
     return false;
+  }
   if (total_bytes_to_read == SQL_NULL_DATA) {
     _resultset->add_column(row_id, make_shared<NullColumn>(column));
     return true;  // break
@@ -1558,8 +1633,10 @@ bool OdbcStatementLegacy::get_data_binary(const size_t row_id, const size_t colu
                              write_ptr,
                              bytes_to_read,
                              &total_bytes_to_read);
-    if (!check_odbc_error(r))
+    if (!check_odbc_error(r)) {
+      SQL_LOG_DEBUG_STREAM("get_data_binary failed to get data");
       return false;
+    }
     more = check_more_read(r, status);
     if (!status) {
       return false;
@@ -1587,6 +1664,7 @@ bool OdbcStatementLegacy::check_more_read(SQLRETURN r, bool& status) {
                                 0,
                                 &text_length);
     if (!check_odbc_error(r)) {
+      SQL_LOG_DEBUG_STREAM("check_more_read failed to get diag rec");
       status = false;
       return false;
     }
@@ -1716,6 +1794,7 @@ bool OdbcStatementLegacy::lob(const size_t row_id, size_t column) {
                              &capture.total_bytes_to_read);
     capture.on_next_read();
     if (!check_odbc_error(r)) {
+      SQL_LOG_DEBUG_STREAM("lob failed to get data");
       // cerr << "lob error " << endl;
       return false;
     }
@@ -1855,8 +1934,10 @@ bool OdbcStatementLegacy::try_read_string(bool binary, const size_t row_id, cons
                                            0,
                                            nullptr,
                                            &display_size);
-  if (!check_odbc_error(r))
+  if (!check_odbc_error(r)) {
+    SQL_LOG_DEBUG_STREAM("try_read_string failed to get col attribute");
     return false;
+  }
 
   // when a field type is LOB, we read a packet at time and pass that back.
   if (display_size == 0 || display_size == numeric_limits<int>::max() ||
