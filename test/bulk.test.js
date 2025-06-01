@@ -1,7 +1,10 @@
 'use strict'
 
 const sql = require('../lib/sql')
-const assert = require('chai').assert
+
+const chai = require('chai')
+const assert = chai.assert
+const expect = chai.expect
 const { TestEnv } = require('./env/test-env')
 
 const totalObjectsForInsert = 10
@@ -69,7 +72,11 @@ describe('bulk', function () {
     assert.deepStrictEqual(res, expected)
   }
 
-  it(`bulk insert/select numeric column batchSize ${test2BatchSize}`, async function handler () {
+  it(`bulk insert/select numeric column batchSize1 ${test1BatchSize}`, async function handler () {
+    await numericTest(test1BatchSize, true, false, false)
+  })
+
+  it(`bulk insert/select numeric column batchSize2 ${test2BatchSize}`, async function handler () {
     await numericTest(test2BatchSize, true, false, false)
   })
 
@@ -127,10 +134,6 @@ describe('bulk', function () {
     const timeHelper = env.timeHelper
     const testDate = timeHelper.getUTCTime1970HHMMSS()
     await t3(env.theConnection, testDate)
-  })
-
-  it(`bulk insert/select numeric column batchSize1 ${test1BatchSize}`, async function handler () {
-    await numericTest(test1BatchSize, true, false, false)
   })
 
   it(`bulk insert/select/delete numeric column batchSize2 ${test2BatchSize}`, async function handler () {

@@ -83,8 +83,8 @@
               // "test/napi/compound-query.test"
               // "test/params.test"
               // "test/pause.test"
-              // "test/bulk.test"
-              "test/query.test"
+              "test/bulk.test"
+              // "test/query.test"
               // "test/connection-improved.test"
             ],
             "stopAtEntry": false,

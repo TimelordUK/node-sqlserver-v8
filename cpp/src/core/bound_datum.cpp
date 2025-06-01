@@ -78,7 +78,7 @@ void BoundDatum::reserve_null(const SQLLEN len) {
   buffer_len = 0;
   _indvec.resize(len);
   js_type = JS_NULL;
-  
+
   // Only set default types if not already set
   if (c_type == 0) {
     c_type = SQL_C_CHAR;
@@ -86,7 +86,7 @@ void BoundDatum::reserve_null(const SQLLEN len) {
   if (sql_type == 0) {
     sql_type = SQL_CHAR;
   }
-  
+
   // For binary types, use appropriate C type
   switch (sql_type) {
     case SQL_BINARY:
@@ -95,7 +95,7 @@ void BoundDatum::reserve_null(const SQLLEN len) {
       c_type = SQL_C_BINARY;
       break;
   }
-  
+
   param_size = 1;
   digits = 0;
   buffer = nullptr;
@@ -324,13 +324,14 @@ void BoundDatum::bind_w_var_char_array(const Napi::Object& p) {
 }
 
 void BoundDatum::bind_w_var_char(const Napi::Object& p, const int precision) {
-  // Note: We need to allocate buffer space for null terminator, but param_size should not include it
-  const size_t buffer_size = max(1, precision) + 1; // Buffer needs space for null terminator
+  // Note: We need to allocate buffer space for null terminator, but param_size should not include
+  // it
+  const size_t buffer_size = max(1, precision) + 1;  // Buffer needs space for null terminator
   reserve_w_var_char_array(buffer_size, 1);
-  
+
   // Override param_size to be the actual data length without null terminator
   param_size = precision;
-  
+
   _indvec[0] = SQL_NULL_DATA;
   if (!p.IsNull() && !p.IsUndefined() && p.IsString()) {
     constexpr auto size = sizeof(uint16_t);
@@ -1779,7 +1780,7 @@ bool BoundDatum::user_bind(const Napi::Object& p, const Napi::Object& v) {
   param_type = SQL_PARAM_INPUT;
 
   auto pp = p.Get("value");
-  
+
   // Check if value is null and handle it specially for binary types
   if (pp.IsNull() || pp.IsUndefined()) {
     switch (sql_type) {
@@ -1801,9 +1802,10 @@ bool BoundDatum::user_bind(const Napi::Object& p, const Napi::Object& v) {
     tempObj.Set("value", pp);
     pp = tempObj;
   }
-  
+
+  Napi::Object p_obj = p.As<Napi::Object>();
   auto pp_obj = pp.As<Napi::Object>();
-  assign_precision(pp_obj);
+  assign_precision(p_obj);
 
   switch (sql_type) {
     case SQL_LONGVARBINARY:

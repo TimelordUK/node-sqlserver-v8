@@ -23,10 +23,10 @@ QueryWorker::QueryWorker(Napi::Function& callback,
   // ParameterFactory::populateParameterSet(params, parameters_);
   if (!parameters_->bind(params)) {
     SQL_LOG_ERROR_STREAM("Failed to bind parameters: " << parameters_->err);
-    
+
     // Format error message to match legacy driver format
-    std::string formatted_error = "IMNOD: [msnodesql] Parameter " + 
-                                  std::to_string(parameters_->first_error + 1) + ": " + 
+    std::string formatted_error = "IMNOD: [msnodesql] Parameter " +
+                                  std::to_string(parameters_->first_error + 1) + ": " +
                                   parameters_->err;
     SetError(formatted_error);
     has_error_ = true;
@@ -52,6 +52,7 @@ void QueryWorker::Execute() {
         errorDetails_ = errors;
         const std::string errorMessage = errors[0]->message;
         SetError(errorMessage);
+        has_error_ = true;
       } else {
         SetError("Unknown error occurred during query execution");
       }

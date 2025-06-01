@@ -529,6 +529,7 @@ bool OdbcStatementLegacy::bind_params(const shared_ptr<BoundDatumSet>& params) {
     const auto ret = _odbcApi->SQLSetStmtAttr(
         statement.get_handle(), SQL_ATTR_PARAMSET_SIZE, reinterpret_cast<SQLPOINTER>(size), 0);
     if (!check_odbc_error(ret)) {
+      SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] bind_params failed to set stmt attr");
       return false;
     }
   }
