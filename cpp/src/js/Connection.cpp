@@ -51,6 +51,7 @@ Napi::Object Connection::Init(Napi::Env env, Napi::Object exports) {
                       InstanceMethod("nextResultSet", &Connection::NextResultSet),
                       InstanceMethod("cancelStatement", &Connection::CancelStatement),
                       InstanceMethod("releaseStatement", &Connection::ReleaseStatement),
+                      InstanceMethod("cancelQuery", &Connection::CancelQuery),
                   });
 
   // Create persistent reference to constructor
@@ -359,6 +360,22 @@ Napi::Value Connection::CancelStatement(const Napi::CallbackInfo& info) {
   const auto statementHandle = parser.statementHandle;
 
   // Use the generic worker factory
+  return CreateWorkerWithCallbackOrPromise<CancelWorker>(
+      info, odbcConnection_.get(), statementHandle);
+}
+
+Napi::Value Connection::CancelQuery(const Napi::CallbackInfo& info) {
+  const Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
+
+  InfoParser parser(isConnected_);
+  if (!parser.parseStatementHandle(info)) {
+    return env.Undefined();
+  }
+  const auto statementHandle = parser.statementHandle;
+
+  // Use the generic worker factory
+
   return CreateWorkerWithCallbackOrPromise<CancelWorker>(
       info, odbcConnection_.get(), statementHandle);
 }

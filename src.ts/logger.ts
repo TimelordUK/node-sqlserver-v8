@@ -77,12 +77,11 @@ export class FileAppender implements LogAppender {
 export class Logger {
   private static instance: Logger
   private appenders: LogAppender[] = []
-  private minLevel: LogLevel = LogLevel.INFO
+  private minLevel: LogLevel = LogLevel.SILENT
   private contextProvider?: () => Record<string, any>
 
   private constructor () {
-    // Default appender
-    this.appenders.push(new ConsoleAppender())
+    // Default: no appenders for silent mode
   }
 
   public static getInstance (): Logger {

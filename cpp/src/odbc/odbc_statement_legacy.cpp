@@ -273,12 +273,19 @@ bool OdbcStatementLegacy::apply_precision(const shared_ptr<BoundDatum>& datum,
 // this will show on a different thread to the current executing query.
 bool OdbcStatementLegacy::Cancel() {
   {
-    set_polling(true);
+    SQL_LOG_DEBUG_STREAM("cancel "
+                         << OdbcStatementStateToString(OdbcStatementState::STATEMENT_CANCEL_HANDLE)
+                         << " " << _statementId << " " << _pollingEnabled << " state"
+                         << OdbcStatementStateToString(_statementState));
+
     lock_guard<recursive_mutex> lock(g_i_mutex);
     const auto state = get_state();
-    if (!_pollingEnabled && state == OdbcStatementState::STATEMENT_SUBMITTED) {
+    if (!_pollingEnabled && (state == OdbcStatementState::STATEMENT_SUBMITTED ||
+                             state == OdbcStatementState::STATEMENT_READING)) {
       set_state(OdbcStatementState::STATEMENT_CANCEL_HANDLE);
-      // cerr << " cancel STATEMENT_CANCEL_HANDLE " << endl;
+      SQL_LOG_DEBUG_STREAM(
+          "cancel handle" << OdbcStatementStateToString(OdbcStatementState::STATEMENT_CANCEL_HANDLE)
+                          << " " << _statementId);
       cancel_handle();
       _resultset = make_unique<ResultSet>(0);
       _resultset->_end_of_rows = false;
@@ -300,6 +307,9 @@ bool OdbcStatementLegacy::Cancel() {
 
 void OdbcStatementLegacy::set_state(const OdbcStatementState state) {
   lock_guard<recursive_mutex> lock(g_i_mutex);
+  SQL_LOG_DEBUG_STREAM("set_state " << _statementId << " "
+                                    << OdbcStatementStateToString(_statementState) << " -> "
+                                    << OdbcStatementStateToString(state));
   _statementState = state;
 }
 
@@ -879,10 +889,18 @@ bool OdbcStatementLegacy::cancel_handle() {
     return false;
   const auto& hnd = *_statement;
   const auto ret2 = _odbcApi->SQLCancelHandle(SQL_HANDLE_STMT, hnd.get_handle());
-  if (!check_odbc_error(ret2)) {
+
+  if (ret2 == SQL_SUCCESS_WITH_INFO) {
+    return_odbc_error();
+    _resultset->_end_of_rows = false;
+    _resultset->_end_of_results = true;
+  }
+
+  else if (!check_odbc_error(ret2)) {
     SQL_LOG_DEBUG_STREAM("cancel_handle failed to cancel handle");
     return false;
   }
+
   {
     lock_guard<recursive_mutex> lock(g_i_mutex);
     _cancelRequested = false;

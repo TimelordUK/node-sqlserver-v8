@@ -25,7 +25,7 @@ class Connection : public Napi::ObjectWrap<Connection> {
   inline void SetConnected(bool connected) {
     isConnected_ = connected;
   }
-  
+
   // Release the native connection resources immediately
   inline void ReleaseConnection() {
     odbcConnection_.reset();
@@ -43,9 +43,10 @@ class Connection : public Napi::ObjectWrap<Connection> {
   Napi::Value NextResultSet(const Napi::CallbackInfo& info);
   Napi::Value CancelStatement(const Napi::CallbackInfo& info);
   Napi::Value ReleaseStatement(const Napi::CallbackInfo& info);
+  Napi::Value CancelQuery(const Napi::CallbackInfo& info);
 
   // Generic worker factory for callback/promise handling
-  template<typename WorkerType, typename... Args>
+  template <typename WorkerType, typename... Args>
   Napi::Value CreateWorkerWithCallbackOrPromise(const Napi::CallbackInfo& info, Args&&... args);
 
   // Internal state

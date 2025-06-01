@@ -270,9 +270,11 @@ bool OdbcConnection::RemoveStatement(int statementId) {
 }
 
 bool OdbcConnection::CancelStatement(int statementId) {
+  SQL_LOG_DEBUG_STREAM("CancelStatement called for ID = " << statementId);
   std::lock_guard lock(_statementMutex);
   auto statement = _statementFactory->GetStatement(statementId);
   if (statement) {
+    SQL_LOG_DEBUG_STREAM("Found statement for ID = " << statementId);
     // Remove from prepared statements if it exists
     for (auto it = _preparedStatements.begin(); it != _preparedStatements.end(); ++it) {
       if (it->second == statement) {
@@ -280,11 +282,13 @@ bool OdbcConnection::CancelStatement(int statementId) {
         break;
       }
     }
+    auto res = statement->Cancel();
+    SQL_LOG_DEBUG_STREAM("CancelStatement ID = " << statementId << " - result = " << res);
+    return res;
+  } else {
+    SQL_LOG_WARNING_STREAM("Statement not found for ID = " << statementId);
+    return false;
   }
-  auto res = statement->Cancel();
-  SQL_LOG_DEBUG_STREAM("CancelStatement ID = " << statementId << " - " << res);
-  // Ask the factory to remove the statement
-  return res;
 }
 
 bool OdbcConnection::ExecuteQuery(const std::shared_ptr<QueryOperationParams> operationParams,

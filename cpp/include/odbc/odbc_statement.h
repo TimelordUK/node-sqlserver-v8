@@ -42,6 +42,39 @@ enum class OdbcStatementState {
   STATEMENT_BINDING = 9,
   STATEMENT_POLLING = 10,
 };
+
+/**
+ * @brief Convert OdbcStatementState enum to string for logging
+ * @param state The state to convert
+ * @return String representation of the state
+ */
+inline std::string OdbcStatementStateToString(OdbcStatementState state) {
+  switch (state) {
+    case OdbcStatementState::STATEMENT_CREATED:
+      return "STATEMENT_CREATED";
+    case OdbcStatementState::STATEMENT_PREPARED:
+      return "STATEMENT_PREPARED";
+    case OdbcStatementState::STATEMENT_SUBMITTED:
+      return "STATEMENT_SUBMITTED";
+    case OdbcStatementState::STATEMENT_READING:
+      return "STATEMENT_READING";
+    case OdbcStatementState::STATEMENT_CANCEL_HANDLE:
+      return "STATEMENT_CANCEL_HANDLE";
+    case OdbcStatementState::STATEMENT_CANCELLED:
+      return "STATEMENT_CANCELLED";
+    case OdbcStatementState::STATEMENT_ERROR:
+      return "STATEMENT_ERROR";
+    case OdbcStatementState::STATEMENT_CLOSED:
+      return "STATEMENT_CLOSED";
+    case OdbcStatementState::STATEMENT_BINDING:
+      return "STATEMENT_BINDING";
+    case OdbcStatementState::STATEMENT_POLLING:
+      return "STATEMENT_POLLING";
+    default:
+      return "UNKNOWN_STATE";
+  }
+}
+
 class BoundDatumSet;
 /**
  * @brief Interface for ODBC statements

@@ -1,5 +1,9 @@
 'use strict'
 
+const sql = require('../lib/sql')
+sql.logger.setLogLevel(sql.LogLevel.TRACE)
+sql.logger.setConsoleLogging(true)
+
 const assert = require('chai').assert
 
 /* globals describe it */
@@ -21,6 +25,25 @@ describe('pause', function () {
   this.afterEach(done => {
     env.close().then(() => { done() }).catch(e => {
       console.error(e)
+    })
+  })
+
+  it('pause a large query and cancel without resume', testDone => {
+    let rows = 0
+    const q = env.theConnection.query('select top 3000 * from syscolumns')
+    q.on('error', (e) => {
+      assert.ifError(e)
+    })
+    q.on('row', () => {
+      ++rows
+      if (rows % 100 === 0) {
+        q.pauseQuery()
+        setTimeout(() => {
+          q.cancelQuery(() => {
+            testDone()
+          })
+        }, 50)
+      }
     })
   })
 
@@ -84,25 +107,6 @@ describe('pause', function () {
     q.on('done', () => {
       assert.strictEqual(expected, rows)
       testDone()
-    })
-  })
-
-  it('pause a large query and cancel without resume', testDone => {
-    let rows = 0
-    const q = env.theConnection.query('select top 3000 * from syscolumns')
-    q.on('error', (e) => {
-      assert.ifError(e)
-    })
-    q.on('row', () => {
-      ++rows
-      if (rows % 100 === 0) {
-        q.pauseQuery()
-        setTimeout(() => {
-          q.cancelQuery(() => {
-            testDone()
-          })
-        }, 50)
-      }
     })
   })
 
@@ -239,7 +243,7 @@ describe('pause', function () {
 
   it('close connection with paused query pending a resume', testDone => {
     env.sql.open(env.connectionString, (err, newConn) => {
-      assert(err === false)
+      assert.ifError(err)
       const q = newConn.query('select top 3000 * from syscolumns')
       q.pauseQuery()
       let rows = 0
@@ -259,7 +263,7 @@ describe('pause', function () {
     })
   })
 
-  it('pause a large query and cancel without resume - submit new query', testDone => {
+  it('pause a large query and cancel - submit new query', testDone => {
     let rows = 0
     const q = env.theConnection.query('select top 3000 * from syscolumns')
     q.on('error', (e) => {

@@ -64,14 +64,41 @@ class Logger {
   std::mutex mutex_;
 };
 
-// Convenience macros
-// In Logger.h, replace your existing macros with these:
-#define SQL_LOG_ERROR(msg) mssql::Logger::GetInstance().Error(std::string(__func__) + ": " + msg)
-#define SQL_LOG_WARNING(msg) \
-  mssql::Logger::GetInstance().Warning(std::string(__func__) + ": " + msg)
-#define SQL_LOG_INFO(msg) mssql::Logger::GetInstance().Info(std::string(__func__) + ": " + msg)
-#define SQL_LOG_DEBUG(msg) mssql::Logger::GetInstance().Debug(std::string(__func__) + ": " + msg)
-#define SQL_LOG_TRACE(msg) mssql::Logger::GetInstance().Trace(std::string(__func__) + ": " + msg)
+// Convenience macros with lazy evaluation
+#define SQL_LOG_ERROR(msg)                                                \
+  do {                                                                    \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Error)) { \
+      mssql::Logger::GetInstance().Error(std::string(__func__) + ": " + msg); \
+    }                                                                     \
+  } while (0)
+
+#define SQL_LOG_WARNING(msg)                                                \
+  do {                                                                      \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Warning)) { \
+      mssql::Logger::GetInstance().Warning(std::string(__func__) + ": " + msg); \
+    }                                                                       \
+  } while (0)
+
+#define SQL_LOG_INFO(msg)                                                \
+  do {                                                                   \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Info)) { \
+      mssql::Logger::GetInstance().Info(std::string(__func__) + ": " + msg); \
+    }                                                                    \
+  } while (0)
+
+#define SQL_LOG_DEBUG(msg)                                                \
+  do {                                                                    \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Debug)) { \
+      mssql::Logger::GetInstance().Debug(std::string(__func__) + ": " + msg); \
+    }                                                                     \
+  } while (0)
+
+#define SQL_LOG_TRACE(msg)                                                \
+  do {                                                                    \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Trace)) { \
+      mssql::Logger::GetInstance().Trace(std::string(__func__) + ": " + msg); \
+    }                                                                     \
+  } while (0)
 // Add stream-style macros:
 #define SQL_LOG_ERROR_STREAM(expr)                                        \
   do {                                                                    \

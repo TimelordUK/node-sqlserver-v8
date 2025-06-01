@@ -14,24 +14,26 @@ class CancelWorker : public OdbcAsyncWorker {
       : OdbcAsyncWorker(callback, connection), statementHandle_(statementHandle), success_(false) {}
 
   void Execute() override {
-    SQL_LOG_DEBUG_STREAM("Cancelling statement " << statementHandle_.getStatementId());
+    SQL_LOG_DEBUG_STREAM("CancelWorker::Execute() called for statement ID: " << statementHandle_.getStatementId() 
+                         << ", Connection ID: " << statementHandle_.getConnectionId()
+                         << ", Statement valid: " << statementHandle_.isValid());
 
     try {
-      // Actually remove the statement from the connection
+      // Actually cancel the statement
       success_ = connection_->CancelStatement(statementHandle_.getStatementId());
 
       if (success_) {
         SQL_LOG_DEBUG_STREAM("Statement " << statementHandle_.getStatementId()
-                                          << " successfully released");
+                                          << " successfully cancelled");
       } else {
-        errorMessage_ = "Failed to remove statement";
+        errorMessage_ = "Failed to cancel statement";
         SQL_LOG_WARNING_STREAM("Statement " << statementHandle_.getStatementId()
-                                            << " could not be removed");
+                                            << " could not be cancelled");
       }
     } catch (const std::exception& e) {
       success_ = false;
       errorMessage_ = e.what();
-      SQL_LOG_ERROR_STREAM("Error releasing statement: " << e.what());
+      SQL_LOG_ERROR_STREAM("Error cancelling statement: " << e.what());
     }
   }
 
