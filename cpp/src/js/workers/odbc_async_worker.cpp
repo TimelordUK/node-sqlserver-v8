@@ -17,14 +17,18 @@ void OdbcAsyncWorker::OnError(const Napi::Error& error) {
   const Napi::Env env = Env();
   Napi::HandleScope scope(env);
 
-  // Create a detailed error object with ODBC specifics
-  Napi::Object errorObj = Napi::Object::New(env);
-  errorObj.Set("message", error.Message());
+  // Create a JavaScript Error object (not just a plain object)
+  Napi::Error jsError = Napi::Error::New(env, error.Message());
 
   if (!errorDetails_.empty()) {
-    // Add SQLSTATE and native error code from the first error
-    errorObj.Set("sqlState", Napi::String::New(env, errorDetails_[0]->sqlstate));
-    errorObj.Set("code", Napi::Number::New(env, errorDetails_[0]->code));
+    const auto& firstError = errorDetails_[0];
+    // Add ODBC-specific properties to the Error object
+    jsError.Set("sqlstate", Napi::String::New(env, firstError->sqlstate));
+    jsError.Set("code", Napi::Number::New(env, firstError->code));
+    jsError.Set("severity", Napi::Number::New(env, firstError->severity));
+    jsError.Set("serverName", Napi::String::New(env, firstError->serverName));
+    jsError.Set("procName", Napi::String::New(env, firstError->procName));
+    jsError.Set("lineNumber", Napi::Number::New(env, firstError->lineNumber));
 
     // Add all errors as an array of details
     Napi::Array details = Napi::Array::New(env);
@@ -33,10 +37,10 @@ void OdbcAsyncWorker::OnError(const Napi::Error& error) {
       Napi::Object detail = JsObjectMapper::fromOdbcError(env, *err);
       details.Set(i, detail);
     }
-    errorObj.Set("details", details);
+    jsError.Set("details", details);
   }
 
-  // Call the callback with the enhanced error object and null result
-  Callback().Call({errorObj, env.Null()});
+  // Call the callback with the Error object and null result
+  Callback().Call({jsError.Value(), env.Null()});
 }
 }  // namespace mssql

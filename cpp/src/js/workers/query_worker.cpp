@@ -48,6 +48,8 @@ void QueryWorker::Execute() {
     if (!connection_->ExecuteQuery(queryParams_, parameters_, result_)) {
       const auto& errors = connection_->GetErrors();
       if (!errors.empty()) {
+        // Populate errorDetails_ with all ODBC errors
+        errorDetails_ = errors;
         const std::string errorMessage = errors[0]->message;
         SetError(errorMessage);
       } else {
