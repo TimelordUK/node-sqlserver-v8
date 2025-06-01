@@ -1,20 +1,25 @@
 /* globals describe it */
 
-const chai = require('chai')
-const assert = chai.assert
-const expect = chai.expect
+const sql = require('../lib/sql')
+const assert = require('chai').assert
 const { TestEnv } = require('./env/test-env')
-const env = new TestEnv()
 
-describe('connection-pool', function () {
-  this.timeout(25000)
+describe('pool', function () {
+  this.timeout(100000)
 
-  this.beforeEach(done => {
-    env.open().then(() => { done() })
+  const env = new TestEnv()
+
+  beforeEach(async function () {
+    // Disable logging for tests unless debugging
+    if (!process.env.DEBUG_TESTS) {
+      sql.logger.setLogLevel(sql.LogLevel.TRACE)
+      sql.logger.setConsoleLogging(true)
+    }
+    await env.open()
   })
 
-  this.afterEach(done => {
-    env.close().then(() => { done() })
+  afterEach(async function () {
+    await env.close()
   })
 
   it('open close pool with promises', async function handler () {
@@ -150,7 +155,7 @@ describe('connection-pool', function () {
     await pool.promises.close()
   })
 
-  async function getDescription(pool, tableName) {
+  async function getDescription (pool, tableName) {
     const pp = await pool.promises
     const drop = env.dropTableSql(tableName)
     await env.theConnection.promises.query(drop)
@@ -166,7 +171,7 @@ describe('connection-pool', function () {
     await pp.open()
     const t1 = await getDescription(pool, tableName)
     await t1.connection.promises.query(`insert into ${tableName} values (1, 5)`)
-    await pp.commitTransaction(t1);
+    await pp.commitTransaction(t1)
     const res = await pp.query(`select * from ${tableName}`)
     expect(res.first).to.not.be.null
     expect(res.first.length).to.equal(2)
@@ -182,7 +187,7 @@ describe('connection-pool', function () {
     await pp.open()
     const t1 = await getDescription(pool, tableName)
     await t1.connection.promises.query(`insert into ${tableName} values (1, 5)`)
-    await pp.rollbackTransaction(t1);
+    await pp.rollbackTransaction(t1)
     const res = await pp.query(`select * from ${tableName}`)
     expect(res.first).to.not.be.null
     expect(res.first.length).to.equal(1)

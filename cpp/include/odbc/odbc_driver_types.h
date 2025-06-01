@@ -41,8 +41,7 @@ class StatementHandle {
 
   // String representation for debugging
   std::string toString() const {
-    return "Connection: " + std::to_string(connection_id) +
-           ", Statement: " + std::to_string(statement_id);
+    return "CID: " + std::to_string(connection_id) + ", STMT: " + std::to_string(statement_id);
   }
 
   // Add a method to check if the handle is valid

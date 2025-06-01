@@ -278,7 +278,7 @@ function DemoSupport (native) {
         },
 
         function (asyncDone) {
-          const dropSql = 'DROP TABLE ' + tableName
+          const dropSql = `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL DROP TABLE ${tableName};`
           if (verbose) console.log(dropSql)
           conn.query(dropSql, function () {
             asyncDone()

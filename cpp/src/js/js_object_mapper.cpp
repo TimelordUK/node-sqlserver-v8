@@ -367,8 +367,10 @@ Napi::Array JsObjectMapper::fromQueryResult(const Napi::Env& env, const QueryRes
   return columns;
 }
 
-Napi::Object JsObjectMapper::fromOdbcError(const Napi::Env& env, const OdbcError& error) {
-  Napi::Object result = Napi::Object::New(env);
+Napi::Error JsObjectMapper::fromOdbcError(const Napi::Env& env, const OdbcError& error) {
+  Napi::Error result = Napi::Error::New(env);
+
+  // Add ODBC-specific properties to the Error object
 
   result.Set("sqlstate", Napi::String::New(env, error.sqlstate));
   result.Set("message", Napi::String::New(env, error.message));

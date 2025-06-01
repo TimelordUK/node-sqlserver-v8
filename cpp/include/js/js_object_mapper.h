@@ -78,7 +78,7 @@ class JsObjectMapper {
   static Napi::Object fromColumnDefinition(const Napi::Env& env, const ColumnDefinition& colDef);
   static Napi::Array fromQueryResult(const Napi::Env& env, const QueryResult& result);
   static Napi::Object fromStatementHandle(const Napi::Env& env, StatementHandle handle);
-  static Napi::Object fromOdbcError(const Napi::Env& env, const OdbcError& error);
+  static Napi::Error fromOdbcError(const Napi::Env& env, const OdbcError& error);
   // Reverse mapping (C++ to JS)
   static Napi::Object fromProcedureParamMeta(const Napi::Env& env, const ProcedureParamMeta& param);
   static Napi::Object fromSqlParameter(const Napi::Env& env, const SqlParameter& param);

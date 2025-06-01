@@ -3,6 +3,7 @@
 /* globals describe it */
 import { createRequire } from 'module'
 import chaiAsPromised from 'chai-as-promised'
+import sql from '../lib/sql'
 const require = createRequire(import.meta.url)
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
@@ -16,6 +17,9 @@ describe('bcp', function () {
 
   this.beforeEach(done => {
     env.open().then(() => { done() })
+    const sql = require('../lib/sql')
+    sql.logger.setLogLevel(sql.LogLevel.TRACE)
+    sql.logger.setConsoleLogging(true)
   })
 
   this.afterEach(done => {

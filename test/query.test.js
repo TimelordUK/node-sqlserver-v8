@@ -47,6 +47,45 @@ describe('query', function () {
     })
   })
 
+  it('query with errors', done => {
+    const expectedError = new Error('[Microsoft][' + env.driver + '][SQL Server]Unclosed quotation mark after the character string \'m with NOBODY\'.')
+    expectedError.sqlstate = '42000'
+    expectedError.code = 105
+    expectedError.severity = 15
+    expectedError.procName = ''
+    expectedError.lineNumber = 1
+    const fns = [
+      asyncDone => {
+        assert.doesNotThrow(() => {
+          env.theConnection.queryRaw('I\'m with NOBODY', e => {
+            assert(e instanceof Error)
+            assert(e.serverName.length > 0)
+            delete e.serverName
+            assert(e.message.includes('Unclosed quotation mark after the character'))
+            asyncDone()
+          })
+        })
+      },
+
+      asyncDone => {
+        assert.doesNotThrow(() => {
+          const s = env.theConnection.queryRaw('I\'m with NOBODY')
+          s.on('error', e => {
+            assert(e instanceof Error)
+            assert(e.serverName.length > 0)
+            delete e.serverName
+            assert(e.message.includes('Unclosed quotation mark after the character'))
+            asyncDone()
+          })
+        })
+      }
+    ]
+
+    env.async.series(fns, () => {
+      done()
+    })
+  })
+
   it('multiple results from query in callback', done => {
     let moreShouldBe = true
     let called = 0
@@ -250,45 +289,6 @@ describe('query', function () {
     })
     stmt.on('error', e => {
       assert.ifError(e)
-    })
-  })
-
-  it('query with errors', done => {
-    const expectedError = new Error('[Microsoft][' + env.driver + '][SQL Server]Unclosed quotation mark after the character string \'m with NOBODY\'.')
-    expectedError.sqlstate = '42000'
-    expectedError.code = 105
-    expectedError.severity = 15
-    expectedError.procName = ''
-    expectedError.lineNumber = 1
-    const fns = [
-      asyncDone => {
-        assert.doesNotThrow(() => {
-          env.theConnection.queryRaw('I\'m with NOBODY', e => {
-            assert(e instanceof Error)
-            assert(e.serverName.length > 0)
-            delete e.serverName
-            assert(e.message.includes('Unclosed quotation mark after the character'))
-            asyncDone()
-          })
-        })
-      },
-
-      asyncDone => {
-        assert.doesNotThrow(() => {
-          const s = env.theConnection.queryRaw('I\'m with NOBODY')
-          s.on('error', e => {
-            assert(e instanceof Error)
-            assert(e.serverName.length > 0)
-            delete e.serverName
-            assert(e.message.includes('Unclosed quotation mark after the character'))
-            asyncDone()
-          })
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      done()
     })
   })
 

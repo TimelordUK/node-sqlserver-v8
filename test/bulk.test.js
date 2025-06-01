@@ -1,30 +1,29 @@
 'use strict'
 
-import { createRequire } from 'module'
-import chaiAsPromised from 'chai-as-promised'
-
-/* globals describe it */
+const sql = require('../lib/sql')
+const assert = require('chai').assert
+const { TestEnv } = require('./env/test-env')
 
 const totalObjectsForInsert = 10
 const test1BatchSize = 1
 const test2BatchSize = 10
-const require = createRequire(import.meta.url)
-const { TestEnv } = require('./env/test-env')
-const env = new TestEnv()
-const chai = require('chai')
-chai.use(chaiAsPromised)
-const expect = chai.expect
-const assert = chai.assert
 
 describe('bulk', function () {
   this.timeout(100000)
 
-  this.beforeEach(done => {
-    env.open().then(() => { done() })
+  const env = new TestEnv()
+
+  beforeEach(async function () {
+    // Disable logging for tests unless debugging
+    if (!process.env.DEBUG_TESTS) {
+      sql.logger.setLogLevel(sql.LogLevel.TRACE)
+      sql.logger.setConsoleLogging(true)
+    }
+    await env.open()
   })
 
-  this.afterEach(done => {
-    env.close().then(() => { done() })
+  afterEach(async function () {
+    await env.close()
   })
 
   function getInsertVector (count) {
@@ -69,6 +68,10 @@ describe('bulk', function () {
 
     assert.deepStrictEqual(res, expected)
   }
+
+  it(`bulk insert/select numeric column batchSize ${test2BatchSize}`, async function handler () {
+    await numericTest(test2BatchSize, true, false, false)
+  })
 
   it('connection: use tableMgr bulk insert vector non UTC based time(7) with time col - no MS', async function handler () {
     t3Size = 10
@@ -126,19 +129,15 @@ describe('bulk', function () {
     await t3(env.theConnection, testDate)
   })
 
-  it(`bulk insert/select numeric column batchSize ${test1BatchSize}`, async function handler () {
+  it(`bulk insert/select numeric column batchSize1 ${test1BatchSize}`, async function handler () {
     await numericTest(test1BatchSize, true, false, false)
   })
 
-  it(`bulk insert/select numeric column batchSize ${test2BatchSize}`, async function handler () {
-    await numericTest(test2BatchSize, true, false, false)
-  })
-
-  it(`bulk insert/select/delete numeric column batchSize ${test2BatchSize}`, async function handler () {
+  it(`bulk insert/select/delete numeric column batchSize2 ${test2BatchSize}`, async function handler () {
     await numericTest(test2BatchSize, true, true, false)
   })
 
-  it(`bulk insert/update/select numeric column batchSize ${test2BatchSize}`, async function handler () {
+  it(`bulk insert/update/select numeric column batchSize2 ${test2BatchSize}`, async function handler () {
     await numericTest(test2BatchSize, true, false, true)
   })
 

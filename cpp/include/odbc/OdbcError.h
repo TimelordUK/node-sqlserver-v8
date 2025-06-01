@@ -1,5 +1,6 @@
 #pragma once
 #include <platform.h>
+#include <common/odbc_common.h>
 
 namespace mssql {
 using namespace std;
