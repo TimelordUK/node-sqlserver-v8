@@ -76,14 +76,15 @@ Napi::Object JsObjectMapper::fromQueryResult(const Napi::Env& env,
 
   result.Set("endOfRows", resultset->EndOfRows());
   result.Set("endOfResults", resultset->EndOfResults());
-  
+  result.Set("rowCount", resultset->row_count());
+
   const auto number_rows = resultset->get_result_count();
   const auto column_count = static_cast<int>(resultset->get_column_count());
   const auto results_array = Napi::Array::New(env, static_cast<int>(number_rows));
-  
+
   // The JavaScript layer expects "data" property containing array of rows
   result.Set("data", results_array);
-  
+
   for (size_t row_id = 0; row_id < number_rows; ++row_id) {
     const auto row_array = Napi::Array::New(env, column_count);
     results_array.Set(row_id, row_array);
@@ -347,6 +348,9 @@ Napi::Object JsObjectMapper::fromColumnDefinition(const Napi::Env& env,
   result.Set("sqlType", Napi::Number::New(env, colDef.dataType));
   result.Set("size", Napi::Number::New(env, colDef.columnSize));
   result.Set("sqlType", Napi::String::New(env, colDef.dataTypeName));
+  if (colDef.dataType == SQL_SS_UDT) {
+    result.Set("udtType", Napi::String::New(env, colDef.udtTypeName));
+  }
   // result.Set("decimalDigits", Napi::Number::New(env, colDef.decimalDigits));
 
   return result;
@@ -394,6 +398,7 @@ Napi::Object JsObjectMapper::fromNativeQueryResult(const Napi::Env& env,
   metadata.Set("handle", handle);
   metadata.Set("endOfRows", Napi::Boolean::New(env, queryResult->is_end_of_rows()));
   metadata.Set("endOfResults", Napi::Boolean::New(env, queryResult->is_end_of_results()));
+  metadata.Set("rowCount", Napi::Number::New(env, queryResult->get_row_count()));
 
   return metadata;
 }

@@ -15,7 +15,7 @@
 
 namespace mssql {
 ConnectionHandles::ConnectionHandles(std::shared_ptr<IOdbcEnvironmentHandle> env)
-    : connectionHandle_(nullptr), rawEnvHandle_(env) {
+    : rawEnvHandle_(env), connectionHandle_(nullptr) {
   if (!env) {
     SQL_LOG_ERROR("ConnectionHandles constructor received null environment handle");
     return;

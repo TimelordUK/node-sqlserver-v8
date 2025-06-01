@@ -113,15 +113,37 @@ std::shared_ptr<QueryResult> OdbcStatementLegacy::GetMetaData() {
 bool OdbcStatementLegacy::TryReadRows(std::shared_ptr<QueryResult> result,
                                       const size_t number_rows) {
   auto res = try_read_columns(number_rows);
-  result->set_end_of_rows(this->_resultset->EndOfRows());
-  result->set_end_of_results(this->_resultset->EndOfResults());
+  if (_resultset != nullptr) {
+    result->set_end_of_rows(this->_resultset->EndOfRows());
+    result->set_end_of_results(this->_resultset->EndOfResults());
+    auto raw_row_count = this->_resultset->row_count();
+    result->set_row_count(raw_row_count >= 0 ? static_cast<size_t>(raw_row_count) : 0);
+    auto cols = _resultset->get_column_count();
+    for (size_t i = 0; i < cols; ++i) {
+      auto col = _resultset->get_meta_data(i);
+      result->addColumn(col);
+    }
+    SQL_LOG_DEBUG_STREAM("TryReadRows result = " << result->toString());
+  }
+
   return res;
 }
 
 bool OdbcStatementLegacy::ReadNextResult(std::shared_ptr<QueryResult> result) {
   auto res = try_read_next_result();
-  result->set_end_of_rows(this->_resultset->EndOfRows());
-  result->set_end_of_results(this->_resultset->EndOfResults());
+
+  if (_resultset != nullptr) {
+    result->set_end_of_rows(this->_resultset->EndOfRows());
+    result->set_end_of_results(this->_resultset->EndOfResults());
+    auto raw_row_count = this->_resultset->row_count();
+    result->set_row_count(raw_row_count >= 0 ? static_cast<size_t>(raw_row_count) : 0);
+    auto cols = _resultset->get_column_count();
+    for (size_t i = 0; i < cols; ++i) {
+      auto col = _resultset->get_meta_data(i);
+      result->addColumn(col);
+    }
+    SQL_LOG_DEBUG_STREAM("ReadNextResult result = " << result->toString());
+  }
   return res;
 }
 
@@ -687,7 +709,6 @@ bool OdbcStatementLegacy::start_reading_results() {
   }
 
   ret = _odbcApi->SQLRowCount(statement.get_handle(), &_resultset->_row_count);
-  // cerr << "start_reading_results. row count = " << _resultset->_row_count << " " << endl;
   auto result = check_odbc_error(ret);
   if (!result) {
     SQL_LOG_DEBUG_STREAM("start_reading_results failed to get row count");

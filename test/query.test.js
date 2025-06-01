@@ -25,12 +25,15 @@ const chai = require('chai')
 const assert = chai.assert
 const expect = chai.expect
 const { TestEnv } = require('./env/test-env')
+const sql = require('../lib/sql')
 const env = new TestEnv()
 
 describe('query', function () {
   this.timeout(30000)
 
   this.beforeEach(done => {
+    sql.logger.setLogLevel(sql.LogLevel.TRACE)
+    sql.logger.setConsoleLogging(true)
     env.open().then(() => {
       done()
     }).catch(e => {
@@ -42,45 +45,6 @@ describe('query', function () {
     env.close().then(() => { done() }).catch(e => {
       console.error(e)
     })
-  })
-
-  it('simple query with a promise open-query-close-resolve var%', async function handler () {
-    const like = 'var%'
-    const results = await env.sql.promises.query(env.connectionString, 'SELECT name FROM sys.types WHERE name LIKE ?', [like])
-    for (let row = 0; row < results.first.length; ++row) {
-      assert(results.first[row].name.substring(0, 3) === 'var')
-    }
-    return null
-  })
-
-  it('test retrieving a string with null embedded', async function handler () {
-    const embeddedNull = String.fromCharCode(65, 66, 67, 68, 0, 69, 70)
-    const tableName = 'null_in_string_test'
-    const promises = env.theConnection.promises
-    await promises.query(env.dropTableSql(tableName))
-    await promises.query(`CREATE TABLE ${tableName} (id int IDENTITY, null_in_string varchar(100) NOT NULL)`)
-    await promises.query(env.dropIndexSql(tableName))
-    await promises.query(`CREATE CLUSTERED INDEX ix_${tableName} ON ${tableName} (id)`)
-    await promises.query(`INSERT INTO ${tableName} (null_in_string) VALUES (?)`, [embeddedNull])
-    const res = await promises.query(`SELECT null_in_string FROM ${tableName}`, [], { raw: true })
-    expect(res.first[0][0]).is.equal(embeddedNull)
-  })
-
-  it('test retrieving a large decimal as a string 2', async function handler () {
-    const precision = 21
-    const scale = 7
-    const numString = '1234567891011.1213141'
-    const tableName = 'TestLargeDecimal'
-    const promises = env.theConnection.promises
-    await promises.query(env.dropTableSql(tableName))
-    await promises.query(`CREATE TABLE ${tableName} (
-          id VARCHAR(12) NOT NULL,
-          testfield DECIMAL(${precision},${scale}) NOT NULL,
-          PRIMARY KEY (id)
-          )`)
-    await promises.query(`INSERT INTO [dbo].[${tableName}] (id, testfield) VALUES (1, ${numString})`)
-    const res = await promises.query(`select id, cast(testfield as varchar(${numString.length})) as big_d_as_s from ${tableName}`, [], { raw: true })
-    expect(res.first[0][1]).is.equal(numString)
   })
 
   it('multiple results from query in callback', done => {
@@ -122,6 +86,45 @@ describe('query', function () {
           done()
         }
       })
+  })
+
+  it('simple query with a promise open-query-close-resolve var%', async function handler () {
+    const like = 'var%'
+    const results = await env.sql.promises.query(env.connectionString, 'SELECT name FROM sys.types WHERE name LIKE ?', [like])
+    for (let row = 0; row < results.first.length; ++row) {
+      assert(results.first[row].name.substring(0, 3) === 'var')
+    }
+    return null
+  })
+
+  it('test retrieving a string with null embedded', async function handler () {
+    const embeddedNull = String.fromCharCode(65, 66, 67, 68, 0, 69, 70)
+    const tableName = 'null_in_string_test'
+    const promises = env.theConnection.promises
+    await promises.query(env.dropTableSql(tableName))
+    await promises.query(`CREATE TABLE ${tableName} (id int IDENTITY, null_in_string varchar(100) NOT NULL)`)
+    await promises.query(env.dropIndexSql(tableName))
+    await promises.query(`CREATE CLUSTERED INDEX ix_${tableName} ON ${tableName} (id)`)
+    await promises.query(`INSERT INTO ${tableName} (null_in_string) VALUES (?)`, [embeddedNull])
+    const res = await promises.query(`SELECT null_in_string FROM ${tableName}`, [], { raw: true })
+    expect(res.first[0][0]).is.equal(embeddedNull)
+  })
+
+  it('test retrieving a large decimal as a string 2', async function handler () {
+    const precision = 21
+    const scale = 7
+    const numString = '1234567891011.1213141'
+    const tableName = 'TestLargeDecimal'
+    const promises = env.theConnection.promises
+    await promises.query(env.dropTableSql(tableName))
+    await promises.query(`CREATE TABLE ${tableName} (
+          id VARCHAR(12) NOT NULL,
+          testfield DECIMAL(${precision},${scale}) NOT NULL,
+          PRIMARY KEY (id)
+          )`)
+    await promises.query(`INSERT INTO [dbo].[${tableName}] (id, testfield) VALUES (1, ${numString})`)
+    const res = await promises.query(`select id, cast(testfield as varchar(${numString.length})) as big_d_as_s from ${tableName}`, [], { raw: true })
+    expect(res.first[0][1]).is.equal(numString)
   })
 
   it('verify empty results retrieved properly 2', async function handler () {
