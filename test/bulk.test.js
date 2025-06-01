@@ -72,6 +72,10 @@ describe('bulk', function () {
     assert.deepStrictEqual(res, expected)
   }
 
+  it('connection: use tableMgr bulk insert single non UTC based date with DATETIMEOFFSET col', async function handler () {
+    await t5(env.theConnection)
+  })
+
   it('connection: use tableMgr bulk insert varchar vector - exactly 4001 chars', async function handler () {
     await runVarCharMaxWithChars(4001, env.theConnection)
   })
@@ -354,10 +358,6 @@ describe('bulk', function () {
   async function t5 (proxy) {
     await t4typed(proxy, 'DATETIMEOFFSET')
   }
-
-  it('connection: use tableMgr bulk insert single non UTC based date with DATETIMEOFFSET col', async function handler () {
-    await t5(env.theConnection)
-  })
 
   it('pool: use tableMgr bulk insert single non UTC based date with DATETIMEOFFSET col', async function handler () {
     await env.asPool(t5)

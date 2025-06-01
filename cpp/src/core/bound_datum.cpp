@@ -1072,6 +1072,7 @@ void BoundDatum::bind_time_stamp_offset_array(const Napi::Object& p) {
       const auto d = elem.ToNumber().DoubleValue();
       auto& ts = vec[i];
       TimeUtils::createTimestampOffsetStruct(d, 0, offset / 1000, ts);
+      _indvec[i] = sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT);
     }
   }
 }

@@ -220,7 +220,7 @@ class TestEnv {
   }
 
   async asPool (fn) {
-    const pool = this.pool(4)
+    const pool = this.pool(2)
     await pool.open()
     await fn(pool)
     await pool.close()
