@@ -72,6 +72,10 @@ describe('bulk', function () {
     assert.deepStrictEqual(res, expected)
   }
 
+  it('connection: use tableMgr bulk insert varchar vector - exactly 4001 chars', async function handler () {
+    await runVarCharMaxWithChars(4001, env.theConnection)
+  })
+
   it(`bulk insert/select numeric column batchSize1 ${test1BatchSize}`, async function handler () {
     await numericTest(test1BatchSize, true, false, false)
   })
@@ -368,10 +372,6 @@ describe('bulk', function () {
     const res = await table.promises.select(expected)
     assert.deepStrictEqual(res, expected)
   }
-
-  it('connection: use tableMgr bulk insert varchar vector - exactly 4001 chars', async function handler () {
-    await runVarCharMaxWithChars(4001, env.theConnection)
-  })
 
   it('connection: use tableMgr bulk insert varchar vector - exactly 4000 chars', async function handler () {
     await runVarCharMaxWithChars(4000, env.theConnection)

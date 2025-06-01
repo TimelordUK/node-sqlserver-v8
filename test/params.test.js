@@ -216,6 +216,19 @@ describe('params', function () {
       })
   }
 
+  it('verify empty string is sent as empty string, not null', async function handler () {
+    const res = await env.theConnection.promises.query('declare @s NVARCHAR(MAX) = ?; select @s as data', [''])
+    const expected = [{
+      data: ''
+    }]
+    assert.deepStrictEqual(res.first, expected)
+  })
+
+  it('large string into nvarchar(max)', async function handler () {
+    // eslint-disable-next-line no-loss-of-precision
+    await insertSelectType(env.repeat('A', 10000), 'nvarchar(max)')
+  })
+
   it('insert largest negative int as parameter', async function handler () {
     await insertSelectType(-0x80000000, 'int', MetaTypes.int)
   })
@@ -459,14 +472,6 @@ describe('params', function () {
     it('insert string 60 x 1024 in varchar(max)', async function handler () {
       await runTestAsync('varchar(max)', 60 * 1024)
     })
-
-    it('verify empty string is sent as empty string, not null', async function handler () {
-      const res = await env.theConnection.promises.query('declare @s NVARCHAR(MAX) = ?; select @s as data', [''])
-      const expected = [{
-        data: ''
-      }]
-      assert.deepStrictEqual(res.first, expected)
-    })
   })
 
   it('verify Buffer objects as input parameters', async function handler () {
@@ -656,11 +661,6 @@ describe('params', function () {
   it('verify empty string inserted into nvarchar field', async function handler () {
     // eslint-disable-next-line no-loss-of-precision
     await insertSelectType('', 'nvarchar(1)')
-  })
-
-  it('large string into nvarchar(max)', async function handler () {
-    // eslint-disable-next-line no-loss-of-precision
-    await insertSelectType(env.repeat('A', 10000), 'nvarchar(max)')
   })
 
   it('bind a Buffer([0,1,2,3])] to binary', async function handler () {

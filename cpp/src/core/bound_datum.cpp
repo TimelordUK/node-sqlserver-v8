@@ -104,14 +104,14 @@ void BoundDatum::reserve_null(const SQLLEN len) {
 void BoundDatum::bind_w_long_var_char(const Napi::Object& p) {
   bind_w_var_char(p);
   sql_type = SQL_WLONGVARCHAR;
-  // For SQL_WLONGVARCHAR (varchar(max)), use 0 to indicate unlimited length
-  param_size = 0;
 }
 
 void BoundDatum::bind_w_var_char(const Napi::Object& p) {
   if (p.IsString()) {
     const auto str_param = p.As<Napi::String>();
-    bind_w_var_char(p, str_param.Utf16Value().length());
+    const auto utf16_str = str_param.Utf16Value();
+    const auto length = utf16_str.length();
+    bind_w_var_char(p, length);
   } else {
     bind_w_var_char(p, 0);
   }
@@ -243,8 +243,7 @@ void BoundDatum::bind_var_char_array(const Napi::Object& p) {
 void BoundDatum::reserve_w_var_char_array(const size_t max_str_len, const size_t array_len) {
   js_type = JS_STRING;
   c_type = SQL_C_WCHAR;
-  // Use SQL_WLONGVARCHAR for strings that need unlimited length (>= 4000 chars)
-  sql_type = max_str_len >= 4000 ? SQL_WLONGVARCHAR : SQL_WVARCHAR;
+  sql_type = max_str_len > 2000 && max_str_len < 4000 ? SQL_WLONGVARCHAR : SQL_WVARCHAR;
   constexpr auto size = sizeof(uint16_t);
   _indvec.resize(array_len);
   _storage->ReserveUint16(array_len * max_str_len);
@@ -326,11 +325,8 @@ void BoundDatum::bind_w_var_char_array(const Napi::Object& p) {
 void BoundDatum::bind_w_var_char(const Napi::Object& p, const int precision) {
   // Note: We need to allocate buffer space for null terminator, but param_size should not include
   // it
-  const size_t buffer_size = max(1, precision) + 1;  // Buffer needs space for null terminator
+  const size_t buffer_size = max(1, precision);  // Buffer needs space for null terminator
   reserve_w_var_char_array(buffer_size, 1);
-
-  // Override param_size to be the actual data length without null terminator
-  param_size = precision;
 
   _indvec[0] = SQL_NULL_DATA;
   if (!p.IsNull() && !p.IsUndefined() && p.IsString()) {
@@ -340,10 +336,8 @@ void BoundDatum::bind_w_var_char(const Napi::Object& p, const int precision) {
     auto* const first_p = _storage->uint16vec_ptr->data();
     const auto copy_len = min(utf16_str.size(), static_cast<size_t>(precision));
     memcpy(first_p, utf16_str.c_str(), copy_len * size);
-    // Add null terminator
-    first_p[copy_len] = 0;
-    buffer_len = static_cast<SQLLEN>(buffer_size) * static_cast<SQLLEN>(size);
-    _indvec[0] = static_cast<SQLLEN>(copy_len) * static_cast<SQLLEN>(size);
+    buffer_len = static_cast<SQLLEN>(precision) * static_cast<SQLLEN>(size);
+    _indvec[0] = buffer_len;
   }
 }
 
