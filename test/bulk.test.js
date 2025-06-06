@@ -1,11 +1,14 @@
 'use strict'
 
-const sql = require('../lib/sql')
-
-const chai = require('chai')
-const assert = chai.assert
-const expect = chai.expect
+import { createRequire } from 'module'
+import chaiAsPromised from 'chai-as-promised'
+const require = createRequire(import.meta.url)
 const { TestEnv } = require('./env/test-env')
+const env = new TestEnv()
+const chai = require('chai')
+chai.use(chaiAsPromised)
+const expect = chai.expect
+const assert = chai.assert
 
 const totalObjectsForInsert = 10
 const test1BatchSize = 1
@@ -13,15 +16,14 @@ const test2BatchSize = 10
 
 describe('bulk', function () {
   this.timeout(100000)
-
-  const env = new TestEnv()
-
   beforeEach(async function () {
-    // Disable logging for tests unless debugging
-    if (!process.env.DEBUG_TESTS) {
-      sql.logger.setLogLevel(sql.LogLevel.TRACE)
-      sql.logger.setConsoleLogging(true)
-    }
+    // Enable trace-level logging for debugging test failures
+    const sql = require('../lib/sql')
+    sql.logger.setLogLevel(sql.LogLevel.TRACE)
+    sql.logger.setConsoleLogging(true)
+    // Optionally enable file logging for detailed debugging
+    sql.logger.setLogFile('/tmp/msnodesqlv8-params-test.log')
+    console.log('Logger configured for params.test.js:', sql.logger.getConfiguration())
     await env.open()
   })
 
@@ -71,6 +73,26 @@ describe('bulk', function () {
 
     assert.deepStrictEqual(res, expected)
   }
+
+  async function doesThrow (sql, message, connection) {
+    const proxy = connection || env.theConnection
+    await expect(proxy.promises.query(sql)).to.be.rejectedWith(message)
+  }
+
+  it('bulk insert condition failure', async function handler () {
+    const createTableSql = 'CREATE TABLE Persons (Name varchar(255) NOT NULL)'
+    await env.theConnection.promises.query(env.dropTableSql('Persons'))
+    await env.theConnection.promises.query(createTableSql)
+
+    const johnNullSql = 'INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (N\'John\'), (null)'
+    const nullSql = 'INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (null)'
+    const nullJohn = 'INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (null), (N\'John\')'
+    const error = 'Cannot insert the value NULL into column'
+
+    await doesThrow(johnNullSql, error)
+    await doesThrow(nullSql, error)
+    await doesThrow(nullJohn, error)
+  })
 
   it('connection: use tableMgr bulk insert single non UTC based date with DATETIMEOFFSET col', async function handler () {
     await t5(env.theConnection)
@@ -862,26 +884,6 @@ describe('bulk', function () {
     await setupSimpleType(conn, tableName)
     const table = conn.promises.getTable(tableName)
     assert(table !== null)
-  })
-
-  async function doesThrow (sql, message, connection) {
-    const proxy = connection || env.theConnection
-    await expect(proxy.promises.query(sql)).to.be.rejectedWith(message)
-  }
-
-  it('bulk insert condition failure', async function handler () {
-    const createTableSql = 'CREATE TABLE Persons (Name varchar(255) NOT NULL)'
-    await env.theConnection.promises.query(env.dropTableSql('Persons'))
-    await env.theConnection.promises.query(createTableSql)
-
-    const johnNullSql = 'INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (N\'John\'), (null)'
-    const nullSql = 'INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (null)'
-    const nullJohn = 'INSERT INTO [Persons] ([Name]) OUTPUT INSERTED.* VALUES (null), (N\'John\')'
-    const error = 'Cannot insert the value NULL into column'
-
-    await doesThrow(johnNullSql, error)
-    await doesThrow(nullSql, error)
-    await doesThrow(nullJohn, error)
   })
 
   it('non null varchar write empty string', async function handler () {

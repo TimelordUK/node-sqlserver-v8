@@ -1,13 +1,14 @@
 #include <odbc/odbc_error_handler.h>
-
 #include <odbc/connection_handles.h>
+#include <odbc/odbc_environment.h>
 #include <odbc/odbc_error.h>
 
 namespace mssql {
 
 OdbcErrorHandler::OdbcErrorHandler(std::shared_ptr<ConnectionHandles> connectionHandles,
+                                   std::shared_ptr<IOdbcEnvironment> environment,
                                    std::shared_ptr<IOdbcApi> odbcApiPtr)
-    : _connectionHandles(connectionHandles), _odbcApi(odbcApiPtr) {
+    : _connectionHandles(connectionHandles), _environment(environment), _odbcApi(odbcApiPtr) {
   _errors = std::make_shared<std::vector<std::shared_ptr<OdbcError>>>();
 }
 
@@ -25,6 +26,9 @@ bool OdbcErrorHandler::ReturnOdbcError() {
     const auto connection = _connectionHandles->connectionHandle();
     if (connection) {
       connection->read_errors(_odbcApi, _errors);
+    }
+    if (_errors->empty()) {
+      _environment->ReadErrors(_odbcApi, _errors);
     }
   }
 

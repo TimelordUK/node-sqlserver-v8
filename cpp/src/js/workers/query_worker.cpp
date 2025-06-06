@@ -67,6 +67,11 @@ void QueryWorker::Execute() {
 }
 
 void QueryWorker::OnOK() {
+  if (has_error_) {
+    SQL_LOG_ERROR_STREAM("Error in QueryWorker::OnOK: ");
+    return;
+  }
+
   const Napi::Env env = Env();
   Napi::HandleScope scope(env);
   SQL_LOG_DEBUG("QueryWorker::OnOK");

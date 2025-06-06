@@ -45,7 +45,7 @@ OdbcConnection::OdbcConnection(std::shared_ptr<IOdbcEnvironment> environment,
   _connectionHandles = std::make_shared<ConnectionHandles>(environment_->GetEnvironmentHandle());
 
   // Create error handler with the connection handles
-  _errorHandler = std::make_shared<OdbcErrorHandler>(_connectionHandles, _odbcApi);
+  _errorHandler = std::make_shared<OdbcErrorHandler>(_connectionHandles, environment_, _odbcApi);
 
   // Create statement factory
   _statementFactory = std::make_shared<OdbcStatementFactory>(_connectionId, _connectionHandles);

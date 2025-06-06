@@ -22,5 +22,6 @@ class FetchRowsWorker : public OdbcAsyncWorker {
  private:
   StatementHandle statementHandle_;
   QueryOptions options_;
+  bool has_error_ = false;
 };
 }  // namespace mssql

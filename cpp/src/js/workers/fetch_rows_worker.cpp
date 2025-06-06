@@ -33,7 +33,19 @@ void FetchRowsWorker::Execute() {
       SetError("Statement not found");
       return;
     }
-    statement->TryReadRows(result_, options_.batch_size);
+
+    if (!statement->TryReadRows(result_, options_.batch_size)) {
+      const auto& errors = connection_->GetErrors();
+      if (!errors.empty()) {
+        // Populate errorDetails_ with all ODBC errors
+        errorDetails_ = errors;
+        const std::string errorMessage = errors[0]->message;
+        SetError(errorMessage);
+        has_error_ = true;
+      } else {
+        SetError("Unknown error occurred during query execution");
+      }
+    }
   } catch (const std::exception& e) {
     SQL_LOG_ERROR("Exception in FetchRowsWorker::Execute: " + std::string(e.what()));
     SetError("Exception occurred: " + std::string(e.what()));
@@ -44,6 +56,11 @@ void FetchRowsWorker::Execute() {
 }
 
 void FetchRowsWorker::OnOK() {
+  if (has_error_) {
+    SQL_LOG_ERROR_STREAM("Error in FetchRowsWorker::OnOK: terminating due to error");
+    return;
+  }
+
   const Napi::Env env = Env();
   Napi::HandleScope scope(env);
   SQL_LOG_DEBUG("FetchRowsWorker::OnOK");
