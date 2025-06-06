@@ -1,7 +1,5 @@
 'use strict'
 
-/* globals describe it */
-
 import { createRequire } from 'module'
 import chaiAsPromised from 'chai-as-promised'
 const require = createRequire(import.meta.url)
@@ -15,18 +13,19 @@ const assert = chai.assert
 describe('userbind', function () {
   this.timeout(30000)
 
-  this.beforeEach(done => {
-    env.open().then(() => {
-      done()
-    }).catch(e => {
-      console.error(e)
-    })
+  beforeEach(async function () {
+    // Enable trace-level logging for debugging test failures
+    const sql = require('../lib/sql')
+    sql.logger.setLogLevel(sql.LogLevel.TRACE)
+    sql.logger.setConsoleLogging(true)
+    // Optionally enable file logging for detailed debugging
+    sql.logger.setLogFile('/tmp/msnodesqlv8-params-test.log')
+    console.log('Logger configured for params.test.js:', sql.logger.getConfiguration())
+    await env.open()
   })
 
-  this.afterEach(done => {
-    env.close().then(() => { done() }).catch(e => {
-      console.error(e)
-    })
+  afterEach(async function () {
+    await env.close()
   })
 
   async function testUserBindAsync (params) {
@@ -57,6 +56,19 @@ describe('userbind', function () {
 
     expect(res).to.deep.equal(expected)
   }
+
+  it('user bind UniqueIdentifier', async function handler () {
+    const params = {
+      query: 'declare @v uniqueidentifier = ?; select @v as v',
+      min: 'F01251E5-96A3-448D-981E-0F99D789110D',
+      max: '45E8F437-670D-4409-93CB-F9424A40D6EE',
+      setter: v => {
+        return env.sql.UniqueIdentifier(v)
+      }
+    }
+    const res = await testUserBindAsync(params)
+    compare(params, res)
+  })
 
   it('user bind time', async function handler () {
     const timeOnly = env.timeHelper.getUTCTime1970HHMMSSMS()
@@ -288,19 +300,6 @@ describe('userbind', function () {
       max: now,
       setter: v => {
         return env.sql.DateTime(v)
-      }
-    }
-    const res = await testUserBindAsync(params)
-    compare(params, res)
-  })
-
-  it('user bind UniqueIdentifier', async function handler () {
-    const params = {
-      query: 'declare @v uniqueidentifier = ?; select @v as v',
-      min: 'F01251E5-96A3-448D-981E-0F99D789110D',
-      max: '45E8F437-670D-4409-93CB-F9424A40D6EE',
-      setter: v => {
-        return env.sql.UniqueIdentifier(v)
       }
     }
     const res = await testUserBindAsync(params)

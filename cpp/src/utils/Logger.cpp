@@ -94,7 +94,7 @@ void Logger::Log(LogLevel level, const std::string& message) {
 
   std::string levelStr = LevelToString(level);
   std::ostringstream logLine;
-  logLine << "[" << timestamp.str() << "] [" << levelStr << "] " << message;
+  logLine << "[" << timestamp.str() << "] [CPP] [" << levelStr << "] " << message;
 
   if (logToConsole_) {
     std::cout << logLine.str() << std::endl;
