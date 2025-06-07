@@ -1790,109 +1790,226 @@ bool BoundDatum::user_bind(const Napi::Object& p, const Napi::Object& v) {
     }
   }
 
-  if (!pp.IsObject()) {
-    // For simple values (numbers, strings, etc), create a temp object
-    auto env = p.Env();
-    auto tempObj = Napi::Object::New(env);
-    tempObj.Set("value", pp);
-    pp = tempObj;
-  }
-
   Napi::Object p_obj = p.As<Napi::Object>();
-  auto pp_obj = pp.As<Napi::Object>();
   assign_precision(p_obj);
 
   switch (sql_type) {
     case SQL_LONGVARBINARY:
-      sql_longvarbinary(pp_obj);
+      if (pp.IsObject()) {
+        sql_longvarbinary(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_BINARY: {
-      sql_binary(pp_obj);
+      if (pp.IsObject()) {
+        sql_binary(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       if (err)
         return false;
     } break;
 
     case SQL_VARBINARY: {
-      sql_varbinary(pp_obj);
+      if (pp.IsObject()) {
+        sql_varbinary(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       if (err)
         return false;
     } break;
 
     case SQL_INTEGER:
-      sql_integer(pp_obj);
+      if (pp.IsNumber()) {
+        bind_int32(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_integer(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_VARCHAR:
-      sql_varchar(pp_obj);
+      if (pp.IsString()) {
+        bind_var_char(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_varchar(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_WVARCHAR:
-      sql_wvarchar(pp_obj);
+      if (pp.IsString()) {
+        bind_w_var_char(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_wvarchar(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_WLONGVARCHAR:
-      sql_wlongvarchar(pp_obj);
+      if (pp.IsString()) {
+        bind_w_long_var_char(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_wlongvarchar(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_BIT:
-      sql_bit(pp_obj);
+      if (pp.IsBoolean()) {
+        bind_boolean(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_bit(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_BIGINT:
-      sql_bigint(pp_obj);
+      if (pp.IsNumber()) {
+        bind_integer(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_bigint(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_DOUBLE:
-      sql_double(pp_obj);
+      if (pp.IsNumber()) {
+        bind_double(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_double(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_FLOAT:
-      sql_float(pp_obj);
+      if (pp.IsNumber()) {
+        bind_float(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_float(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_REAL:
-      sql_real(pp_obj);
+      if (pp.IsNumber()) {
+        bind_real(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_real(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_TINYINT:
-      sql_tinyint(pp_obj);
+      if (pp.IsNumber()) {
+        bind_tiny_int(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_tinyint(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_SMALLINT:
-      sql_smallint(pp_obj);
+      if (pp.IsNumber()) {
+        bind_small_int(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_smallint(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_DECIMAL:
-      sql_decimal(pp_obj);
+      if (pp.IsNumber()) {
+        bind_decimal(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_decimal(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_NUMERIC:
-      sql_numeric(pp_obj);
+      if (pp.IsNumber()) {
+        bind_numeric(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_numeric(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_CHAR:
-      sql_char(pp_obj);
+      if (pp.IsString()) {
+        bind_char(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_char(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_SS_TIME2:
-      sql_ss_time2(pp_obj);
+      if (pp.IsDate()) {
+        bind_time(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_ss_time2(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_TYPE_DATE:
-      sql_type_date(pp_obj);
+      if (pp.IsDate()) {
+        bind_date(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_type_date(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_TYPE_TIMESTAMP:
-      sql_type_timestamp(pp_obj);
+      if (pp.IsDate()) {
+        bind_time_stamp(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_type_timestamp(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_DATETIME:
-      sql_type_timestamp(pp_obj);
+      if (pp.IsDate()) {
+        bind_time_stamp(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_type_timestamp(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_SS_TIMESTAMPOFFSET:
-      sql_ss_timestampoffset(pp_obj);
+      if (pp.IsDate()) {
+        bind_time_stamp_offset(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_ss_timestampoffset(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+      }
       break;
 
     case SQL_UNKNOWN_TYPE:
