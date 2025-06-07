@@ -1312,7 +1312,7 @@ bool OdbcStatement::apply_precision(const std::shared_ptr<SqlParameter>& datum,
   r = odbcApi_->SQLSetDescField(hdesc,
                                 current_param,
                                 SQL_DESC_PRECISION,
-                                reinterpret_cast<SQLPOINTER>(datum->param_size),
+                                reinterpret_cast<SQLPOINTER>(static_cast<SQLUINTEGER>(datum->param_size)),
                                 bufferLength);
   if (!check_odbc_error(r)) {
     return false;
@@ -1320,7 +1320,7 @@ bool OdbcStatement::apply_precision(const std::shared_ptr<SqlParameter>& datum,
   r = odbcApi_->SQLSetDescField(hdesc,
                                 current_param,
                                 SQL_DESC_SCALE,
-                                reinterpret_cast<SQLPOINTER>(datum->digits),
+                                reinterpret_cast<SQLPOINTER>(static_cast<SQLUINTEGER>(datum->digits)),
                                 bufferLength);
   if (!check_odbc_error(r)) {
     return false;
