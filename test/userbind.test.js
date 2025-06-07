@@ -15,12 +15,7 @@ describe('userbind', function () {
 
   beforeEach(async function () {
     // Enable trace-level logging for debugging test failures
-    const sql = require('../lib/sql')
-    sql.logger.setLogLevel(sql.LogLevel.TRACE)
-    sql.logger.setConsoleLogging(true)
-    // Optionally enable file logging for detailed debugging
-    sql.logger.setLogFile('/tmp/msnodesqlv8-params-test.log')
-    console.log('Logger configured for params.test.js:', sql.logger.getConfiguration())
+    const { configureTestLogging } = require('./common/logging-helper')
     await env.open()
   })
 

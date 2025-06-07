@@ -18,7 +18,6 @@ describe('bulk', function () {
   this.timeout(100000)
   beforeEach(async function () {
     // Enable trace-level logging for debugging test failures
-    const sql = require('../lib/sql')
     const { configureTestLogging } = require('./common/logging-helper')
     await env.open()
   })

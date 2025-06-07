@@ -243,7 +243,7 @@ void BoundDatum::bind_var_char_array(const Napi::Object& p) {
 void BoundDatum::reserve_w_var_char_array(const size_t max_str_len, const size_t array_len) {
   js_type = JS_STRING;
   c_type = SQL_C_WCHAR;
-  sql_type = max_str_len > 2000 && max_str_len < 4000 ? SQL_WLONGVARCHAR : SQL_WVARCHAR;
+  sql_type = max_str_len > 4000 ? SQL_WLONGVARCHAR : SQL_WVARCHAR;
   constexpr auto size = sizeof(uint16_t);
   _indvec.resize(array_len);
   _storage->ReserveUint16(array_len * max_str_len);
@@ -252,8 +252,9 @@ void BoundDatum::reserve_w_var_char_array(const size_t max_str_len, const size_t
   if (max_length > 0) {
     param_size = max_length / 2;
   } else if (param_size <= 0) {
-    if (max_str_len >= 4000) {
-      param_size = 0;
+    if (max_str_len > 4000) {
+      // For WLongVarChar (NVARCHAR(MAX)), use the actual string length
+      param_size = max_str_len;
     } else {
       param_size = max(buffer_len / 2, static_cast<SQLLEN>(1));
     }
@@ -1595,7 +1596,17 @@ void BoundDatum::sql_wlongvarchar(const Napi::Object pp) {
   if (pp.IsArray()) {
     bind_w_var_char_array(pp);
   } else {
-    bind_w_long_var_char(pp);
+    // Check if pp has a "value" property (from the temp object)
+    if (pp.Has("value")) {
+      auto val = pp.Get("value");
+      if (val.IsString()) {
+        bind_w_long_var_char(val.As<Napi::Object>());
+      } else {
+        bind_w_long_var_char(pp);
+      }
+    } else {
+      bind_w_long_var_char(pp);
+    }
   }
 }
 
@@ -1853,10 +1864,14 @@ bool BoundDatum::user_bind(const Napi::Object& p, const Napi::Object& v) {
       break;
 
     case SQL_WLONGVARCHAR:
-      if (pp.IsString()) {
-        bind_w_long_var_char(pp.As<Napi::Object>());
-      } else if (pp.IsObject()) {
+      if (pp.IsObject()) {
         sql_wlongvarchar(pp.As<Napi::Object>());
+      } else if (pp.IsString()) {
+        // For WLongVarChar, we need to go through sql_wlongvarchar to handle precision properly
+        auto env = p.Env();
+        auto tempObj = Napi::Object::New(env);
+        tempObj.Set("value", pp);
+        sql_wlongvarchar(tempObj);
       } else {
         bind_null(p);
       }
