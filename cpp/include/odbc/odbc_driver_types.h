@@ -163,7 +163,8 @@ class QueryResult {
   StatementHandle handle_;
 };
 
-struct QueryOperationParams {
+class QueryOperationParams {
+ public:
   std::u16string query_string;
   int32_t timeout;
   int32_t query_tz_adjustment;

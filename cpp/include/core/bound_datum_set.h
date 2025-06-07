@@ -34,7 +34,7 @@
 
 namespace mssql {
 class QueryResult;
-struct QueryOperationParams;
+class QueryOperationParams;
 
 class BoundDatumSet {
  public:

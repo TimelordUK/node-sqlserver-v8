@@ -174,7 +174,7 @@ bool OdbcStatement::lob_wchar(const size_t row_id, size_t column) {
   SQL_LOG_TRACE_STREAM("lob_wchar: calling SQLGetData for row_id " << row_id << " column "
                                                                    << column);
   auto r = odbcApi_->SQLGetData(statement,
-                                static_cast<SQLSMALLINT>(column + 1),
+                                static_cast<SQLUSMALLINT>(column + 1),
                                 SQL_C_WCHAR,
                                 capture.write_ptr,
                                 capture.bytes_to_read + capture.item_size,
@@ -201,7 +201,7 @@ bool OdbcStatement::lob_wchar(const size_t row_id, size_t column) {
 
     SQL_LOG_TRACE_STREAM("lob_wchar: calling SQLGetData for additional data");
     r = odbcApi_->SQLGetData(statement,
-                             static_cast<SQLSMALLINT>(column + 1),
+                             static_cast<SQLUSMALLINT>(column + 1),
                              SQL_C_WCHAR,
                              capture.write_ptr,
                              capture.bytes_to_read + capture.item_size,
@@ -309,7 +309,7 @@ bool OdbcStatement::lob_char(const size_t row_id, size_t column) {
   SQL_LOG_TRACE_STREAM("lob_char: calling SQLGetData for row_id " << row_id << " column "
                                                                   << column);
   auto r = odbcApi_->SQLGetData(statement,
-                                static_cast<SQLSMALLINT>(column + 1),
+                                static_cast<SQLUSMALLINT>(column + 1),
                                 SQL_C_CHAR,
                                 capture.write_ptr,
                                 capture.bytes_to_read + capture.item_size,
@@ -335,7 +335,7 @@ bool OdbcStatement::lob_char(const size_t row_id, size_t column) {
 
     SQL_LOG_TRACE_STREAM("lob_char: calling SQLGetData for additional data");
     r = odbcApi_->SQLGetData(statement,
-                             static_cast<SQLSMALLINT>(column + 1),
+                             static_cast<SQLUSMALLINT>(column + 1),
                              SQL_C_CHAR,
                              capture.write_ptr,
                              capture.bytes_to_read + capture.item_size,
@@ -526,7 +526,7 @@ bool OdbcStatement::get_data_tiny(const size_t row_id, const size_t column) {
 
   SQL_LOG_TRACE_STREAM("get_data_tiny: calling SQLGetData");
   const auto ret = odbcApi_->SQLGetData(statement,
-                                        static_cast<SQLSMALLINT>(column + 1),
+                                        static_cast<SQLUSMALLINT>(column + 1),
                                         SQL_C_SLONG,
                                         &v,
                                         sizeof(long),
@@ -558,7 +558,7 @@ bool OdbcStatement::get_data_small_int(const size_t row_id, const size_t column)
 
   SQL_LOG_TRACE_STREAM("get_data_small_int: calling SQLGetData");
   const auto ret = odbcApi_->SQLGetData(statement,
-                                        static_cast<SQLSMALLINT>(column + 1),
+                                        static_cast<SQLUSMALLINT>(column + 1),
                                         SQL_C_SHORT,
                                         &v,
                                         sizeof(int16_t),
@@ -596,7 +596,7 @@ bool OdbcStatement::get_data_int(const size_t row_id, const size_t column) {
 
   SQL_LOG_TRACE_STREAM("get_data_int: calling SQLGetData");
   const auto ret = odbcApi_->SQLGetData(statement,
-                                        static_cast<SQLSMALLINT>(column + 1),
+                                        static_cast<SQLUSMALLINT>(column + 1),
                                         SQL_INTEGER,
                                         &v,
                                         sizeof(int32_t),
@@ -637,7 +637,7 @@ bool OdbcStatement::get_data_long(const size_t row_id, const size_t column) {
 
   SQL_LOG_TRACE_STREAM("get_data_long: calling SQLGetData");
   const auto ret = odbcApi_->SQLGetData(statement,
-                                        static_cast<SQLSMALLINT>(column + 1),
+                                        static_cast<SQLUSMALLINT>(column + 1),
                                         SQL_C_SLONG,
                                         &v,
                                         sizeof(int32_t),
@@ -660,9 +660,9 @@ bool OdbcStatement::get_data_long(const size_t row_id, const size_t column) {
   column_data.setType(datumType);
   column_data.addValue(static_cast<int64_t>(v));
 
-  SQL_LOG_DEBUG_STREAM(
-      "get_data_long: Mapped to DatumStorage type: " << static_cast<int>(datumType) 
-      << ", stored value: " << static_cast<int64_t>(v));
+  SQL_LOG_DEBUG_STREAM("get_data_long: Mapped to DatumStorage type: " << static_cast<int>(datumType)
+                                                                      << ", stored value: "
+                                                                      << static_cast<int64_t>(v));
 
   return true;
 }
@@ -677,7 +677,7 @@ bool OdbcStatement::get_data_big_int(const size_t row_id, const size_t column) {
 
   SQL_LOG_TRACE_STREAM("get_data_big_int: calling SQLGetData");
   const auto ret = odbcApi_->SQLGetData(statement,
-                                        static_cast<SQLSMALLINT>(column + 1),
+                                        static_cast<SQLUSMALLINT>(column + 1),
                                         SQL_C_SBIGINT,
                                         &v,
                                         sizeof(DatumStorage::bigint_t),
@@ -721,7 +721,7 @@ bool OdbcStatement::get_data_decimal(const size_t row_id, const size_t column) {
 
   SQL_LOG_TRACE_STREAM("get_data_decimal: calling SQLGetData");
   const auto ret = odbcApi_->SQLGetData(statement,
-                                        static_cast<SQLSMALLINT>(column + 1),
+                                        static_cast<SQLUSMALLINT>(column + 1),
                                         SQL_C_DOUBLE,
                                         &v,
                                         sizeof(double),
@@ -774,7 +774,7 @@ bool OdbcStatement::get_data_bit(const size_t row_id, const size_t column) {
 
   SQL_LOG_TRACE_STREAM("get_data_bit: calling SQLGetData");
   const auto ret = odbcApi_->SQLGetData(statement,
-                                        static_cast<SQLSMALLINT>(column + 1),
+                                        static_cast<SQLUSMALLINT>(column + 1),
                                         SQL_C_BIT,
                                         &v,
                                         sizeof(char),
@@ -806,7 +806,7 @@ bool OdbcStatement::d_variant(const size_t row_id, const size_t column) {
   // Figure out the length
   SQL_LOG_TRACE_STREAM("d_variant: calling SQLGetData to get length");
   auto ret = odbcApi_->SQLGetData(
-      statement, static_cast<SQLSMALLINT>(column + 1), SQL_C_BINARY, &b, 0, &iv);
+      statement, static_cast<SQLUSMALLINT>(column + 1), SQL_C_BINARY, &b, 0, &iv);
   if (!check_odbc_error(ret)) {
     column_data.setNull();
     return false;
@@ -860,7 +860,7 @@ bool OdbcStatement::bounded_string_wchar(size_t display_size,
 
   SQL_LOG_TRACE_STREAM("bounded_string_wchar: calling SQLGetData");
   const auto r = odbcApi_->SQLGetData(statement_->get_handle(),
-                                      static_cast<SQLSMALLINT>(column + 1),
+                                      static_cast<SQLUSMALLINT>(column + 1),
                                       SQL_C_WCHAR,
                                       src_data,
                                       display_size * size,
@@ -905,10 +905,10 @@ bool OdbcStatement::bounded_string_char(size_t display_size,
 
   SQL_LOG_TRACE_STREAM("bounded_string_char: calling SQLGetData");
   const auto r = odbcApi_->SQLGetData(statement_->get_handle(),
-                                      static_cast<SQLSMALLINT>(column + 1),
+                                      static_cast<SQLUSMALLINT>(column + 1),
                                       SQL_C_CHAR,
                                       src_data,
-                                      display_size * size,
+                                      static_cast<SQLLEN>(display_size * size),
                                       &value_len);
 
   if (r != SQL_NO_DATA && !check_odbc_error(r)) {
@@ -969,7 +969,7 @@ bool OdbcStatement::try_read_string(const bool is_variant,
 
   SQL_LOG_TRACE_STREAM("try_read_string: calling SQLColAttribute for SQL_DESC_DISPLAY_SIZE");
   const auto r = odbcApi_->SQLColAttributeW(statement_->get_handle(),
-                                            column + 1,
+                                            static_cast<SQLUSMALLINT>(column + 1),
                                             SQL_DESC_DISPLAY_SIZE,
                                             nullptr,
                                             0,
@@ -1021,7 +1021,7 @@ bool OdbcStatement::get_data_binary(const size_t row_id, const size_t column) {
   SQLLEN total_bytes_to_read = 0;
   SQL_LOG_TRACE_STREAM("get_data_binary: calling SQLGetData for first chunk");
   auto r = odbcApi_->SQLGetData(statement,
-                                static_cast<SQLSMALLINT>(column + 1),
+                                static_cast<SQLUSMALLINT>(column + 1),
                                 SQL_C_BINARY,
                                 write_ptr,
                                 bytes_to_read,
@@ -1113,7 +1113,7 @@ bool OdbcStatement::get_data_binary(const size_t row_id, const size_t column) {
 
         SQL_LOG_TRACE_STREAM("get_data_binary: calling SQLGetData for additional chunk");
         r = odbcApi_->SQLGetData(statement,
-                                 static_cast<SQLSMALLINT>(column + 1),
+                                 static_cast<SQLUSMALLINT>(column + 1),
                                  SQL_C_BINARY,
                                  write_ptr,
                                  bytes_to_read,
@@ -1174,7 +1174,7 @@ bool OdbcStatement::get_data_timestamp_offset(const size_t row_id, const size_t 
 
   SQL_LOG_TRACE_STREAM("get_data_timestamp_offset: calling SQLGetData");
   const auto ret = odbcApi_->SQLGetData(statement,
-                                        static_cast<SQLSMALLINT>(column + 1),
+                                        static_cast<SQLUSMALLINT>(column + 1),
                                         SQL_C_DEFAULT,
                                         &ts_offset,
                                         sizeof(SQL_SS_TIMESTAMPOFFSET_STRUCT),
@@ -1205,16 +1205,26 @@ bool OdbcStatement::d_time(const size_t row_id, const size_t column) {
   SQLLEN colscale = 0;
 
   SQL_LOG_TRACE_STREAM("d_time: calling SQLColAttribute for SQL_COLUMN_PRECISION");
-  const auto ret2 = odbcApi_->SQLColAttributeW(
-      statement, column + 1, SQL_COLUMN_PRECISION, nullptr, 0, nullptr, &precision);
+  const auto ret2 = odbcApi_->SQLColAttributeW(statement,
+                                               static_cast<SQLUSMALLINT>(column + 1),
+                                               SQL_COLUMN_PRECISION,
+                                               nullptr,
+                                               0,
+                                               nullptr,
+                                               &precision);
   if (!check_odbc_error(ret2)) {
     column_data.setNull();
     return false;
   }
 
   SQL_LOG_TRACE_STREAM("d_time: calling SQLColAttribute for SQL_COLUMN_SCALE");
-  const auto ret3 = odbcApi_->SQLColAttributeW(
-      statement, column + 1, SQL_COLUMN_SCALE, nullptr, 0, nullptr, &colscale);
+  const auto ret3 = odbcApi_->SQLColAttributeW(statement,
+                                               static_cast<SQLUSMALLINT>(column + 1),
+                                               SQL_COLUMN_SCALE,
+                                               nullptr,
+                                               0,
+                                               nullptr,
+                                               &colscale);
   if (!check_odbc_error(ret3)) {
     column_data.setNull();
     return false;
@@ -1222,7 +1232,7 @@ bool OdbcStatement::d_time(const size_t row_id, const size_t column) {
 
   SQL_LOG_TRACE_STREAM("d_time: calling SQLGetData");
   const auto ret = odbcApi_->SQLGetData(statement,
-                                        static_cast<SQLSMALLINT>(column + 1),
+                                        static_cast<SQLUSMALLINT>(column + 1),
                                         SQL_C_BINARY,
                                         &time,
                                         sizeof(time),
@@ -1263,7 +1273,7 @@ bool OdbcStatement::get_data_timestamp(const size_t row_id, const size_t column)
 
   SQL_LOG_TRACE_STREAM("get_data_timestamp: calling SQLGetData");
   const auto ret = odbcApi_->SQLGetData(statement,
-                                        static_cast<SQLSMALLINT>(column + 1),
+                                        static_cast<SQLUSMALLINT>(column + 1),
                                         SQL_C_TIMESTAMP,
                                         &ts,
                                         sizeof(TIMESTAMP_STRUCT),

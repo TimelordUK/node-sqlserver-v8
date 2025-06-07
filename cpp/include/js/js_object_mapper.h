@@ -8,7 +8,7 @@
 namespace mssql {
 
 class IOdbcRow;
-struct QueryOperationParams;
+class QueryOperationParams;
 class ResultSet;
 // Create a utility class for different target containers
 
