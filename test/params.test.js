@@ -10,13 +10,15 @@ chai.use(chaiAsPromised)
 const expect = chai.expect
 const assert = chai.assert
 
-// Enable trace-level logging for debugging test failures
 const sql = require('../lib/sql')
-sql.logger.setLogLevel(sql.LogLevel.TRACE)
-sql.logger.setConsoleLogging(true)
-// Optionally enable file logging for detailed debugging
-sql.logger.setLogFile('/tmp/msnodesqlv8-params-test.log')
-console.log('Logger configured for params.test.js:', sql.logger.getConfiguration())
+const { configureTestLogging } = require('./common/logging-helper')
+
+// Configure logging based on environment variables
+// By default, tests run silently. To enable logging:
+// - MSNODESQLV8_TEST_VERBOSE=true npm test  (for full trace logging)
+// - MSNODESQLV8_TEST_LOG_LEVEL=DEBUG MSNODESQLV8_TEST_LOG_CONSOLE=true npm test
+// - MSNODESQLV8_TEST_LOG_LEVEL=INFO MSNODESQLV8_TEST_LOG_FILE=/tmp/test.log npm test
+configureTestLogging(sql)
 
 /* globals describe it */
 
@@ -30,7 +32,7 @@ describe('params', function () {
       done()
     }).catch(e => {
       sql.logger.error(`Failed to open test environment: ${e}`, 'params.test.beforeEach')
-      console.error(e)
+      sql.logger.error(e)
     })
   })
 
@@ -41,7 +43,7 @@ describe('params', function () {
       done()
     }).catch(e => {
       sql.logger.error(`Failed to close test environment: ${e}`, 'params.test.afterEach')
-      console.error(e)
+      sql.logger.error(e)
     })
   })
 
@@ -150,7 +152,7 @@ describe('params', function () {
       },
       async function handler () {
         const r = await env.theConnection.promises.query('SELECT large_insert FROM test_large_insert')
-        console.log('Query result:', JSON.stringify({
+        sql.logger.debug('Query result:', JSON.stringify({
           hasFirst: !!r.first,
           firstLength: r.first ? r.first.length : 'no first',
           firstRow: r.first?.[0] ? r.first[0] : 'no row',
@@ -391,7 +393,7 @@ describe('params', function () {
 
   it('bind a null to binary using sqlTypes.asVarBinary(null)', async function handler () {
     const varbinaryParam = env.sql.VarBinary(null)
-    console.log('VarBinary param:', JSON.stringify(varbinaryParam, null, 2))
+    sql.logger.debug('VarBinary param:', JSON.stringify(varbinaryParam, null, 2))
     const res = await env.theConnection.promises.query('declare @bin binary(4) = ?; select @bin as bin', [varbinaryParam])
     const expected = [{
       bin: null

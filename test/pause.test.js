@@ -28,10 +28,7 @@ describe('pause', function () {
 
   beforeEach(async function () {
     // Disable logging for tests unless debugging
-    if (!process.env.DEBUG_TESTS) {
-      sql.logger.setLogLevel(sql.LogLevel.SILENT)
-      sql.logger.setConsoleLogging(false)
-    }
+    const { configureTestLogging } = require('./common/logging-helper')
     await env.open()
   })
 

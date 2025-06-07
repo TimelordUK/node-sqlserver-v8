@@ -32,8 +32,7 @@ describe('query', function () {
   this.timeout(30000)
 
   this.beforeEach(done => {
-    sql.logger.setLogLevel(sql.LogLevel.TRACE)
-    sql.logger.setConsoleLogging(true)
+    const { configureTestLogging } = require('./common/logging-helper')
     env.open().then(() => {
       done()
     }).catch(e => {
