@@ -84,9 +84,10 @@
               // "test/params.test"
               // "test/pause.test"
               // "test/bulk.test"
-              "test/userbind.test"
+              // "test/userbind.test"
               // "test/query.test"
               // "test/connection-improved.test"
+               "test/querycancel.test"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

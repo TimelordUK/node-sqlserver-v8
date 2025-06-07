@@ -18,7 +18,7 @@ BoundDatumSet::BoundDatumSet()
   _bindings = make_shared<param_bindings>();
 }
 
-BoundDatumSet::BoundDatumSet(shared_ptr<QueryOperationParams> params) : BoundDatumSet() {
+BoundDatumSet::BoundDatumSet(std::shared_ptr<QueryOperationParams> params) : BoundDatumSet() {
   _params = std::move(params);
 }
 

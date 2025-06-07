@@ -34,13 +34,13 @@
 
 namespace mssql {
 class QueryResult;
-class QueryOperationParams;
+struct QueryOperationParams;
 
 class BoundDatumSet {
  public:
   typedef std::vector<std::shared_ptr<BoundDatum>> param_bindings;
   BoundDatumSet();
-  BoundDatumSet(const std::shared_ptr<QueryOperationParams> params);
+  BoundDatumSet(std::shared_ptr<QueryOperationParams> params);
   bool reserve(const std::vector<ColumnDefinition>& set, size_t row_count) const;
   bool bind(const Napi::Array& node_params);
   Napi::Array unbind(Napi::Env& env) const;
