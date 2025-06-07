@@ -111,10 +111,10 @@ std::shared_ptr<QueryOperationParams> JsObjectMapper::toQueryOperationParams(
   result->query_string = safeGetWideString(jsObject, "query_str");
   result->timeout = safeGetInt32(jsObject, "timeout");
   result->query_tz_adjustment = safeGetInt32(jsObject, "query_tz_adjustment");
-  result->id = safeGetInt64(jsObject, "id");
+  result->id = safeGetInt64(jsObject, "query_id");
   result->max_prepared_column_size = safeGetInt32(jsObject, "max_prepared_column_size");
   result->numeric_string = safeGetBool(jsObject, "numeric_string");
-  result->polling = safeGetBool(jsObject, "polling");
+  result->polling = safeGetBool(jsObject, "query_polling");
   return result;
 }
 

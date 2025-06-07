@@ -200,7 +200,17 @@ std::shared_ptr<IOdbcStatement> OdbcConnection::CreateStatement(
   }
 
   // Create the statement using the factory
-  return _statementFactory->CreateStatement(_odbcApi, type, _errorHandler, operationParams);
+  SQL_LOG_DEBUG_STREAM("OdbcConnection::CreateStatement: " << operationParams->toString());
+  const auto statement =
+      _statementFactory->CreateStatement(_odbcApi, type, _errorHandler, operationParams);
+
+  // have to create map bewteen query id and statement handle
+  _queryIdToStatementHandle[operationParams->id] = statement->GetStatementHandle();
+  SQL_LOG_DEBUG_STREAM("OdbcConnection::CreateStatement: "
+                       << statement->GetStatementHandle().toString() << " query id "
+                       << operationParams->id << " size " << _queryIdToStatementHandle.size());
+
+  return statement;
 }
 
 std::shared_ptr<IOdbcStatement> OdbcConnection::GetPreparedStatement(
@@ -270,11 +280,11 @@ bool OdbcConnection::RemoveStatement(int statementId) {
 }
 
 bool OdbcConnection::CancelStatement(int statementId) {
-  SQL_LOG_DEBUG_STREAM("CancelStatement called for ID = " << statementId);
+  SQL_LOG_DEBUG_STREAM("OdbcConnection::CancelStatement called for ID = " << statementId);
   std::lock_guard lock(_statementMutex);
   auto statement = _statementFactory->GetStatement(statementId);
   if (statement) {
-    SQL_LOG_DEBUG_STREAM("Found statement for ID = " << statementId);
+    SQL_LOG_DEBUG_STREAM("OdbcConnection::Found statement for ID = " << statementId);
     // Remove from prepared statements if it exists
     for (auto it = _preparedStatements.begin(); it != _preparedStatements.end(); ++it) {
       if (it->second == statement) {
@@ -283,10 +293,11 @@ bool OdbcConnection::CancelStatement(int statementId) {
       }
     }
     auto res = statement->Cancel();
-    SQL_LOG_DEBUG_STREAM("CancelStatement ID = " << statementId << " - result = " << res);
+    SQL_LOG_DEBUG_STREAM("OdbcConnection::CancelStatement ID = " << statementId
+                                                                 << " - result = " << res);
     return res;
   } else {
-    SQL_LOG_WARNING_STREAM("Statement not found for ID = " << statementId);
+    SQL_LOG_WARNING_STREAM("OdbcConnection::Statement not found for ID = " << statementId);
     return false;
   }
 }
@@ -308,7 +319,7 @@ bool OdbcConnection::ExecuteQuery(const std::shared_ptr<QueryOperationParams> op
 bool OdbcConnection::TryReadNextResult(int statementId, std::shared_ptr<QueryResult>& result) {
   // fprintf(stderr, "TryReadNextResult\n");
   // fprintf(stderr, "TryReadNextResult ID = %llu\n ", get_statement_id());
-  SQL_LOG_DEBUG_STREAM("TryReadNextResult ID = " << statementId);
+  SQL_LOG_DEBUG_STREAM("OdbcConnection::TryReadNextResult ID = " << statementId);
   std::lock_guard lock(_connectionMutex);
 
   if (connectionState != ConnectionOpen) {
@@ -318,12 +329,14 @@ bool OdbcConnection::TryReadNextResult(int statementId, std::shared_ptr<QueryRes
 
   const auto& statement = GetStatement(statementId);
   if (!statement) {
-    SQL_LOG_DEBUG_STREAM("TryReadNextResult ID = " << statementId << " - statement not found");
+    SQL_LOG_DEBUG_STREAM("OdbcConnection::TryReadNextResult ID = " << statementId
+                                                                   << " - statement not found");
     result->set_end_of_results(true);
     return false;
   }
 
-  SQL_LOG_DEBUG_STREAM("TryReadNextResult ID = " << statementId << " - calling ReadNextResult");
+  SQL_LOG_DEBUG_STREAM("OdbcConnection::TryReadNextResult ID = " << statementId
+                                                                 << " - calling ReadNextResult");
   return statement->ReadNextResult(result);
 }
 
@@ -339,8 +352,8 @@ bool OdbcConnection::try_open(const std::u16string& connection_string, const int
   _errorHandler->ClearErrors();
 
   // Simple logging for connection attempt
-  SQL_LOG_DEBUG_STREAM("Opening connection with " << connection_string.size()
-                                                  << " UTF-16 characters");
+  SQL_LOG_DEBUG_STREAM("OdbcConnection::try_open: Opening connection with "
+                       << connection_string.size() << " UTF-16 characters");
 
   const auto connection = _connectionHandles->connectionHandle();
   if (connection == nullptr) {
@@ -357,7 +370,7 @@ bool OdbcConnection::try_open(const std::u16string& connection_string, const int
                                   reinterpret_cast<SQLPOINTER>(static_cast<intptr_t>(timeout)),
                                   SQL_IS_INTEGER);
   if (!_errorHandler->CheckOdbcError(ret)) {
-    SQL_LOG_ERROR("Failed to set connection timeout");
+    SQL_LOG_ERROR("OdbcConnection::try_open: Failed to set connection timeout");
     return false;
   }
 
@@ -367,7 +380,7 @@ bool OdbcConnection::try_open(const std::u16string& connection_string, const int
                                     reinterpret_cast<SQLPOINTER>(static_cast<intptr_t>(timeout)),
                                     SQL_IS_INTEGER);
   if (!_errorHandler->CheckOdbcError(ret)) {
-    SQL_LOG_ERROR("Failed to set login timeout");
+    SQL_LOG_ERROR("OdbcConnection::try_open: Failed to set login timeout");
     return false;
   }
 
@@ -377,7 +390,9 @@ bool OdbcConnection::try_open(const std::u16string& connection_string, const int
                                     reinterpret_cast<SQLPOINTER>(SQL_BCP_ON),
                                     SQL_IS_INTEGER);
   if (!_errorHandler->CheckOdbcError(ret)) {
-    SQL_LOG_WARNING("Failed to set BCP option - this might be expected for non-SQL Server drivers");
+    SQL_LOG_WARNING(
+        "OdbcConnection::try_open: Failed to set BCP option - this might be expected "
+        "for non-SQL Server drivers");
   }
 
   // Already added sanitized connection string logging above
@@ -395,7 +410,7 @@ bool OdbcConnection::try_open(const std::u16string& connection_string, const int
       SQL_DRIVER_NOPROMPT);
 
   if (!SQL_SUCCEEDED(ret)) {
-    SQL_LOG_ERROR("SQLDriverConnect failed");
+    SQL_LOG_ERROR("OdbcConnection::try_open: SQLDriverConnect failed");
 
     // Get ODBC diagnostic records
     auto diagnostics = _odbcApi->GetDiagnostics();
@@ -407,9 +422,9 @@ bool OdbcConnection::try_open(const std::u16string& connection_string, const int
             std::make_shared<OdbcError>(diag.sqlState, diag.message, diag.nativeError);
         _errorHandler->AddError(error);
 
-        SQL_LOG_ERROR_STREAM("ODBC Error: SQLSTATE=" << diag.sqlState
-                                                     << ", Native Error=" << diag.nativeError
-                                                     << ", Message=" << diag.message);
+        SQL_LOG_ERROR_STREAM("OdbcConnection::try_open: ODBC Error: SQLSTATE="
+                             << diag.sqlState << ", Native Error=" << diag.nativeError
+                             << ", Message=" << diag.message);
       }
     } else {
       // No diagnostics available, create a generic error

@@ -10,12 +10,20 @@ chai.use(chaiAsPromised)
 const expect = chai.expect
 const assert = chai.assert
 
+const sql = require('../lib/sql')
+const { configureTestLogging } = require('./common/logging-helper')
+
+// Configure logging based on environment variables
+// By default, tests run silently. To enable logging:
+// - MSNODESQLV8_TEST_VERBOSE=true npm test  (for full trace logging)
+// - MSNODESQLV8_TEST_LOG_LEVEL=DEBUG MSNODESQLV8_TEST_LOG_CONSOLE=true npm test
+// - MSNODESQLV8_TEST_LOG_LEVEL=INFO MSNODESQLV8_TEST_LOG_FILE=/tmp/test.log npm test
+configureTestLogging(sql)
+
 describe('userbind', function () {
   this.timeout(30000)
 
   beforeEach(async function () {
-    // Enable trace-level logging for debugging test failures
-    const { configureTestLogging } = require('./common/logging-helper')
     await env.open()
   })
 

@@ -7,6 +7,7 @@
 #include <iostream>
 #include <locale>
 #include <sstream>
+#include <thread>
 
 namespace mssql {
 
@@ -92,9 +93,13 @@ void Logger::Log(LogLevel level, const std::string& message) {
   timestamp << std::put_time(&tm_buf, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0')
             << std::setw(3) << ms.count() << 'Z';
 
+  // Get thread ID
+  std::ostringstream threadId;
+  threadId << std::this_thread::get_id();
+
   std::string levelStr = LevelToString(level);
   std::ostringstream logLine;
-  logLine << "[" << timestamp.str() << "] [CPP] [" << levelStr << "] " << message;
+  logLine << "[" << timestamp.str() << "] [CPP] [" << threadId.str() << "] [" << levelStr << "] " << message;
 
   if (logToConsole_) {
     std::cout << logLine.str() << std::endl;

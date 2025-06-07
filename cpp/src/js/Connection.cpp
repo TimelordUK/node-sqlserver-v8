@@ -247,6 +247,7 @@ struct InfoParser {
   StatementHandle statementHandle;
   InfoParser(bool isConnected) : isConnected_(isConnected) {}
   QueryOptions options;
+  int queryId;
   std::shared_ptr<QueryOperationParams> operationParams;
   bool isConnected_;
 
@@ -301,13 +302,17 @@ struct InfoParser {
       return false;
     }
 
-    if (info.Length() < 1 || !info[0].IsObject()) {
+    if (info.Length() > 0 && info[0].IsNumber()) {
+      queryId = info[0].As<Napi::Number>().Int32Value();
+    }
+
+    if (info.Length() < 2 || !info[1].IsObject()) {
       Napi::TypeError::New(env, "Operation params expected").ThrowAsJavaScriptException();
       return false;
     }
 
     // Get the statement handle from the first parameter
-    Napi::Object handleObj = info[0].As<Napi::Object>();
+    Napi::Object handleObj = info[1].As<Napi::Object>();
     operationParams = JsObjectMapper::toQueryOperationParams(handleObj);
 
     return true;
@@ -404,13 +409,18 @@ Napi::Value Connection::Query(const Napi::CallbackInfo& info) {
   if (!parser.parseOperationParams(info)) {
     return env.Undefined();
   }
+
   const auto operationParams = parser.operationParams;
+  operationParams->id = parser.queryId;
 
   // Get parameters array (optional)
   Napi::Array params = Napi::Array::New(env, 0);
-  if (info.Length() > 1 && info[1].IsArray()) {
-    params = info[1].As<Napi::Array>();
+  if (info.Length() > 2 && info[2].IsArray()) {
+    params = info[2].As<Napi::Array>();
   }
+
+  SQL_LOG_DEBUG_STREAM("Connection::Query: " + operationParams->toString()
+                       << " number params " << params.Length());
 
   // Use the generic worker factory
   return CreateWorkerWithCallbackOrPromise<QueryWorker>(

@@ -30,6 +30,7 @@ class StatementHandle {
   int getConnectionId() const {
     return connection_id;
   }
+
   int getStatementId() const {
     return statement_id;
   }
@@ -168,10 +169,22 @@ class QueryOperationParams {
   std::u16string query_string;
   int32_t timeout;
   int32_t query_tz_adjustment;
-  int64_t id;
+  int32_t id;
   size_t max_prepared_column_size;
   bool numeric_string;
   bool polling;
+
+  std::string toString() const {
+    std::string result = "QueryOperationParams: ";
+    result += "query_string: [ " + StringUtils::U16StringToUtf8(query_string) + " ]";
+    result += ", timeout: " + std::to_string(timeout);
+    result += ", query_tz_adjustment: " + std::to_string(query_tz_adjustment);
+    result += ", id: " + std::to_string(id);
+    result += ", max_prepared_column_size: " + std::to_string(max_prepared_column_size);
+    result += ", numeric_string: " + std::to_string(numeric_string);
+    result += ", polling: " + std::to_string(polling);
+    return result;
+  }
 };
 
 struct QueryOptions {

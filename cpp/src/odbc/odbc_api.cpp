@@ -68,8 +68,15 @@ void LogOdbcError(SQLSMALLINT handleType, SQLHANDLE handle, const std::string& c
       handleType, handle, 1, sqlState, &nativeError, message, SQL_MAX_MESSAGE_LENGTH, &length);
 
   if (SQL_SUCCEEDED(ret)) {
-    SQL_LOG_ERROR_STREAM(context << " - SQLSTATE: " << WideToUtf8(sqlState) << ", Native Error: "
-                                 << nativeError << ", Message: " << WideToUtf8(message));
+    std::string stateTxt = WideToUtf8(sqlState);
+    // SQLSTATE codes starting with "01" are warnings/info, not errors
+    if (stateTxt.size() >= 2 && stateTxt.substr(0, 2) == "01") {
+      SQL_LOG_INFO_STREAM(context << " - SQLSTATE: " << stateTxt << ", Native Error: "
+                                  << nativeError << ", Message: " << WideToUtf8(message));
+    } else {
+      SQL_LOG_ERROR_STREAM(context << " - SQLSTATE: " << stateTxt << ", Native Error: "
+                                   << nativeError << ", Message: " << WideToUtf8(message));
+    }
   } else {
     SQL_LOG_ERROR_STREAM(context << " - Error getting diagnostic info: "
                                  << GetSqlReturnCodeString(ret));
@@ -274,7 +281,7 @@ SQLRETURN RealOdbcApi::SQLDriverConnect(SQLHDBC ConnectionHandle,
 
   SQL_LOG_DEBUG_STREAM("SQLDriverConnect returned: " << GetSqlReturnCodeString(ret));
 
-  // Detailed error diagnostics regardless of return code
+  // Retrieve and log all diagnostics (errors, warnings, and info messages)
   SQLWCHAR sqlState[SQL_SQLSTATE_SIZE + 1];
   SQLWCHAR message[SQL_MAX_MESSAGE_LENGTH];
   SQLINTEGER nativeError;
@@ -295,9 +302,16 @@ SQLRETURN RealOdbcApi::SQLDriverConnect(SQLHDBC ConnectionHandle,
     std::string stateTxt = WideToUtf8(sqlState);
     std::string msgTxt = WideToUtf8(message);
 
-    SQL_LOG_ERROR_STREAM("ODBC Diagnostic #" << recNumber << " - SQLSTATE: " << stateTxt
-                                             << ", Native Error: " << nativeError
-                                             << ", Message: " << msgTxt);
+    // SQLSTATE codes starting with "01" are warnings/info, not errors
+    if (stateTxt.size() >= 2 && stateTxt.substr(0, 2) == "01") {
+      SQL_LOG_INFO_STREAM("ODBC Diagnostic #" << recNumber << " - SQLSTATE: " << stateTxt
+                                              << ", Native Error: " << nativeError
+                                              << ", Message: " << msgTxt);
+    } else {
+      SQL_LOG_ERROR_STREAM("ODBC Diagnostic #" << recNumber << " - SQLSTATE: " << stateTxt
+                                               << ", Native Error: " << nativeError
+                                               << ", Message: " << msgTxt);
+    }
 
     // Store diagnostics for error propagation
     DiagnosticInfo diag;
