@@ -1035,7 +1035,7 @@ void BoundDatum::bind_time_stamp_offset(const Napi::Object& p) {
     const auto d = p.ToNumber().DoubleValue();
     // dates in JS are stored internally as ms count from Jan 1, 1970
     auto& ts = (*_storage->timestampoffsetvec_ptr)[0];
-    TimeUtils::createTimestampOffsetStruct(d, 0, offset / 1000, ts);
+    TimeUtils::createTimestampOffsetStruct(d, 0, offset, ts);
     _indvec[0] = buffer_len;
   }
 }

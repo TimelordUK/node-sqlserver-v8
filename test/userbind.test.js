@@ -52,6 +52,29 @@ describe('userbind', function () {
     expect(res).to.deep.equal(expected)
   }
 
+  it('user bind DateTimeOffset to sql type DateTimeOffset - provide offset of 60 minutes', async function handler () {
+    const offset = 60
+    const scale = 7
+    const smalldt = env.timeHelper.getUTCTodayHHMSS(14, 0, 0)
+    const expected = new Date(smalldt.getTime() - offset * 60000)
+    expected.nanosecondsDelta = 0
+
+    const params = {
+      query: 'declare @v DateTimeOffset = ?; select @v as v',
+      min: smalldt,
+      max: smalldt,
+      expected: [
+        expected,
+        expected
+      ],
+      setter: v => {
+        return env.sql.DateTimeOffset(v, scale, offset)
+      }
+    }
+    const res = await testUserBindAsync(params)
+    compare(params, res)
+  })
+
   it('user bind UniqueIdentifier', async function handler () {
     const params = {
       query: 'declare @v uniqueidentifier = ?; select @v as v',
@@ -129,29 +152,6 @@ describe('userbind', function () {
 
   it('user bind time(3)', async function handler () {
     await timeTest(3)
-  })
-
-  it('user bind DateTimeOffset to sql type DateTimeOffset - provide offset of 60 minutes', async function handler () {
-    const offset = 60
-    const scale = 7
-    const smalldt = env.timeHelper.getUTCTodayHHMSS(14, 0, 0)
-    const expected = new Date(smalldt.getTime() - offset * 60000)
-    expected.nanosecondsDelta = 0
-
-    const params = {
-      query: 'declare @v DateTimeOffset = ?; select @v as v',
-      min: smalldt,
-      max: smalldt,
-      expected: [
-        expected,
-        expected
-      ],
-      setter: v => {
-        return env.sql.DateTimeOffset(v, scale, offset)
-      }
-    }
-    const res = await testUserBindAsync(params)
-    compare(params, res)
   })
 
   it('user bind DateTime2 to sql type datetime2(7) - with scale set to illegal value, should error', async function handler () {
