@@ -95,16 +95,8 @@ std::u16string OdbcConnection::ConvertConnectionString(const std::string& connec
 bool OdbcConnection::Open(const std::u16string& connectionString, int timeout) {
   SQL_LOG_INFO("Opening connection");
 
-  // Create a simple ASCII representation of the connection string for logging
-  std::string logStr;
-  logStr.reserve(30);
-  for (size_t i = 0; i < std::min(connectionString.size(), static_cast<size_t>(30)); i++) {
-    char c = static_cast<char>(connectionString[i] & 0xFF);
-    if (c >= 32 && c <= 126) {
-      logStr.push_back(c);
-    }
-  }
-  SQL_LOG_DEBUG_STREAM("Connection string (partial): " << logStr << "...");
+  SQL_LOG_DEBUG_STREAM("Connection string " << StringUtils::U16StringToUtf8(connectionString)
+                                            << "...");
 
   std::lock_guard lock(_connectionMutex);
 
@@ -279,9 +271,19 @@ bool OdbcConnection::RemoveStatement(int statementId) {
   return true;
 }
 
-bool OdbcConnection::CancelStatement(int statementId) {
-  SQL_LOG_DEBUG_STREAM("OdbcConnection::CancelStatement called for ID = " << statementId);
+bool OdbcConnection::CancelStatement(int queryId) {
+  SQL_LOG_DEBUG_STREAM("OdbcConnection::CancelStatement called for ID = " << queryId);
   std::lock_guard lock(_statementMutex);
+
+  auto it = _queryIdToStatementHandle.find(queryId);
+  if (it != _queryIdToStatementHandle.end()) {
+    SQL_LOG_DEBUG_STREAM("OdbcConnection::Found statement for ID = " << queryId);
+  } else {
+    SQL_LOG_WARNING_STREAM("OdbcConnection::Statement not found for ID = " << queryId);
+    return false;
+  }
+
+  const auto statementId = it->second.getStatementId();
   auto statement = _statementFactory->GetStatement(statementId);
   if (statement) {
     SQL_LOG_DEBUG_STREAM("OdbcConnection::Found statement for ID = " << statementId);

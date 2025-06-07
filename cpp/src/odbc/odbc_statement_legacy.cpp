@@ -38,8 +38,8 @@ size_t get_size(BoundDatumSet& params) {
 }
 
 OdbcStatementLegacy::~OdbcStatementLegacy() {
-  // cerr << "~OdbcStatement() " << _statementId << " " << endl;
-  if (get_state() == OdbcStatementState::STATEMENT_CLOSED) {
+  SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] ~OdbcStatementLegacy");
+  if (get_state() != OdbcStatementState::STATEMENT_CLOSED) {
     set_state(OdbcStatementState::STATEMENT_CLOSED);
   }
 }
@@ -297,11 +297,9 @@ bool OdbcStatementLegacy::apply_precision(const shared_ptr<BoundDatum>& datum,
 // this will show on a different thread to the current executing query.
 bool OdbcStatementLegacy::Cancel() {
   {
-    SQL_LOG_DEBUG_STREAM(
-        "[" << _handle.toString() << "] cancel "
-            << OdbcStatementStateToString(OdbcStatementState::STATEMENT_CANCEL_HANDLE) << " "
-            << _statementId << " " << _pollingEnabled << " state"
-            << OdbcStatementStateToString(_statementState));
+    SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] cancel " << _statementId << " "
+                             << _pollingEnabled << " state"
+                             << OdbcStatementStateToString(_statementState));
 
     lock_guard<recursive_mutex> lock(g_i_mutex);
     const auto state = get_state();

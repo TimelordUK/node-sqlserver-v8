@@ -273,6 +273,21 @@ struct InfoParser {
     return true;
   }
 
+  bool parseQueryId(const Napi::CallbackInfo& info) {
+    const Napi::Env env = info.Env();
+    if (!throwIfNotConnected(info)) {
+      return false;
+    }
+
+    if (info.Length() > 0 && info[0].IsNumber()) {
+      queryId = info[0].As<Napi::Number>().Int32Value();
+    } else {
+      Napi::TypeError::New(env, "query id expected").ThrowAsJavaScriptException();
+    }
+
+    return true;
+  }
+
   bool parseStatementHandle(const Napi::CallbackInfo& info) {
     const Napi::Env env = info.Env();
     if (!throwIfNotConnected(info)) {
@@ -362,15 +377,14 @@ Napi::Value Connection::CancelQuery(const Napi::CallbackInfo& info) {
   Napi::HandleScope scope(env);
 
   InfoParser parser(isConnected_);
-  if (!parser.parseStatementHandle(info)) {
+  if (!parser.parseQueryId(info)) {
     return env.Undefined();
   }
-  const auto statementHandle = parser.statementHandle;
+  const auto queryId = parser.queryId;
 
   // Use the generic worker factory
 
-  return CreateWorkerWithCallbackOrPromise<CancelWorker>(
-      info, odbcConnection_.get(), statementHandle);
+  return CreateWorkerWithCallbackOrPromise<CancelWorker>(info, odbcConnection_.get(), queryId);
 }
 
 Napi::Value Connection::ReleaseStatement(const Napi::CallbackInfo& info) {

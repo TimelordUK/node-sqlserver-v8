@@ -8,27 +8,21 @@ namespace mssql {
 
 class CancelWorker : public OdbcAsyncWorker {
  public:
-  CancelWorker(Napi::Function& callback,
-               IOdbcConnection* connection,
-               const StatementHandle& statementHandle)
-      : OdbcAsyncWorker(callback, connection), statementHandle_(statementHandle), success_(false) {}
+  CancelWorker(Napi::Function& callback, IOdbcConnection* connection, const int queryId)
+      : OdbcAsyncWorker(callback, connection), queryId_(queryId), success_(false) {}
 
   void Execute() override {
-    SQL_LOG_DEBUG_STREAM("CancelWorker::Execute() called for statement ID: " << statementHandle_.getStatementId() 
-                         << ", Connection ID: " << statementHandle_.getConnectionId()
-                         << ", Statement valid: " << statementHandle_.isValid());
+    SQL_LOG_DEBUG_STREAM("CancelWorker::Execute() called for query ID: " << queryId_);
 
     try {
       // Actually cancel the statement
-      success_ = connection_->CancelStatement(statementHandle_.getStatementId());
+      success_ = connection_->CancelStatement(queryId_);
 
       if (success_) {
-        SQL_LOG_DEBUG_STREAM("Statement " << statementHandle_.getStatementId()
-                                          << " successfully cancelled");
+        SQL_LOG_DEBUG_STREAM("Query " << queryId_ << " successfully cancelled");
       } else {
         errorMessage_ = "Failed to cancel statement";
-        SQL_LOG_WARNING_STREAM("Statement " << statementHandle_.getStatementId()
-                                            << " could not be cancelled");
+        SQL_LOG_WARNING_STREAM("Query " << queryId_ << " could not be cancelled");
       }
     } catch (const std::exception& e) {
       success_ = false;
@@ -48,7 +42,7 @@ class CancelWorker : public OdbcAsyncWorker {
   }
 
  private:
-  StatementHandle statementHandle_;
+  int queryId_;
   bool success_;
   std::string errorMessage_;
 };
