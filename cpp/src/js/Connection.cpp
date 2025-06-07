@@ -262,13 +262,13 @@ struct InfoParser {
   bool parseQueryOptions(const Napi::CallbackInfo& info) {
     const Napi::Env env = info.Env();
 
-    if (info.Length() < 1 || !info[1].IsObject()) {
+    if (info.Length() < 2 || !info[2].IsObject()) {
       Napi::TypeError::New(env, "query options expected").ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
     // Get the statement handle from the first parameter
-    Napi::Object optionsObj = info[1].As<Napi::Object>();
+    Napi::Object optionsObj = info[2].As<Napi::Object>();
     options = JsObjectMapper::toQueryOptions(optionsObj);
     return true;
   }
@@ -279,13 +279,17 @@ struct InfoParser {
       return false;
     }
 
-    if (info.Length() < 1 || !info[0].IsObject()) {
+    if (info.Length() > 0 && info[0].IsNumber()) {
+      queryId = info[0].As<Napi::Number>().Int32Value();
+    }
+
+    if (info.Length() < 2 || !info[1].IsObject()) {
       Napi::TypeError::New(env, "Statement handle expected").ThrowAsJavaScriptException();
       return false;
     }
 
     // Get the statement handle from the first parameter
-    Napi::Object handleObj = info[0].As<Napi::Object>();
+    Napi::Object handleObj = info[1].As<Napi::Object>();
     statementHandle = JsObjectMapper::toStatementHandle(handleObj);
     if (!statementHandle.isValid()) {
       Napi::Error::New(env, "Invalid statement handle").ThrowAsJavaScriptException();
