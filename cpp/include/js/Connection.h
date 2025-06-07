@@ -41,7 +41,6 @@ class Connection : public Napi::ObjectWrap<Connection> {
   Napi::Value Query(const Napi::CallbackInfo& info);
   Napi::Value FetchRows(const Napi::CallbackInfo& info);
   Napi::Value NextResultSet(const Napi::CallbackInfo& info);
-  Napi::Value CancelStatement(const Napi::CallbackInfo& info);
   Napi::Value ReleaseStatement(const Napi::CallbackInfo& info);
   Napi::Value CancelQuery(const Napi::CallbackInfo& info);
 
