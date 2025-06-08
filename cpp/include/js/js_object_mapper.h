@@ -74,17 +74,17 @@ class JsObjectMapper {
   static StatementHandle toStatementHandle(const Napi::Object& jsObject);
   static NativeParam toNativeParam(const Napi::Object& jsObject);
   static std::shared_ptr<QueryOperationParams> toQueryOperationParams(const Napi::Object& jsObject);
-
   static Napi::Object fromColumnDefinition(const Napi::Env& env, const ColumnDefinition& colDef);
   static Napi::Array fromQueryResult(const Napi::Env& env, const QueryResult& result);
   static Napi::Object fromStatementHandle(const Napi::Env& env, StatementHandle handle);
   static Napi::Error fromOdbcError(const Napi::Env& env, const OdbcError& error);
   // Reverse mapping (C++ to JS)
+  static Napi::Object fromStatementStateChange(const Napi::Env& env,
+                                               const StatementStateChange& stateChange);
   static Napi::Object fromProcedureParamMeta(const Napi::Env& env, const ProcedureParamMeta& param);
   static Napi::Object fromSqlParameter(const Napi::Env& env, const SqlParameter& param);
   static Napi::Object fromNativeQueryResult(const Napi::Env& env,
                                             const std::shared_ptr<QueryResult> queryResult);
-  static Napi::Object fromNativeParam(const Napi::Env& env, const NativeParam& param);
 
   // New method to convert an OdbcRow to a JavaScript object
   static Napi::Array fromOdbcRowAsArray(const Napi::Env& env,

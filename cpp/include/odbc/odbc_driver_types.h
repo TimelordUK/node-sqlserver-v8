@@ -164,6 +164,18 @@ class QueryResult {
   StatementHandle handle_;
 };
 
+class StatementStateChange {
+ public:
+  StatementHandle statementHandle;
+  std::string oldState;
+  std::string newState;
+
+  std::string toString() const {
+    return "StatementStateChange: " + statementHandle.toString() + " " + oldState + " -> " +
+           newState;
+  }
+};
+
 class QueryOperationParams {
  public:
   std::u16string query_string;

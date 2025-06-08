@@ -31,11 +31,7 @@ async function trackStatementStates() {
     
     // Subscribe to state change events
     queryStream.on('stateChange', (stateInfo) => {
-      console.log(`[State Change] Query ${stateInfo.queryId}:`)
-      console.log(`  Statement ID: ${stateInfo.statementId}`)
-      console.log(`  Transition: ${stateInfo.oldState} -> ${stateInfo.newState}`)
-      console.log(`  Timestamp: ${stateInfo.timestamp.toISOString()}`)
-      console.log('')
+      console.log('State change:', JSON.stringify(stateInfo, null, 2))
     })
     
     // Track other query events

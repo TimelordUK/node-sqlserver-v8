@@ -70,7 +70,7 @@ class OdbcStatementLegacy : public IOdbcStatement {
     return _statementState == OdbcStatementState::STATEMENT_CREATED;
   }
   bool Cancel() override;
-  
+
   /**
    * @brief Set the state change notifier
    * @param notifier The notifier to receive state change events
@@ -192,7 +192,7 @@ class OdbcStatementLegacy : public IOdbcStatement {
   bool _pollingEnabled;
   bool _numericStringEnabled;
 
-  OdbcStatementState _statementState = OdbcStatementState::STATEMENT_CREATED;
+  OdbcStatementState _statementState = OdbcStatementState::STATEMENT_IDLE;
 
   // set binary true if a binary Buffer should be returned instead of a JS string
 
@@ -207,7 +207,7 @@ class OdbcStatementLegacy : public IOdbcStatement {
   std::vector<std::shared_ptr<IOdbcRow>> _rows;
   std::shared_ptr<QueryOperationParams> _operationParams;
   recursive_mutex g_i_mutex;
-  
+
   // State change notifier
   std::unique_ptr<WeakStateNotifier> _stateNotifier;
 

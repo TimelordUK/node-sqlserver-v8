@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <memory>
+#include <odbc/odbc_driver_types.h>
 
 namespace mssql {
 
@@ -12,29 +13,29 @@ enum class OdbcStatementState;
 class IOdbcStateNotifier {
  public:
   virtual ~IOdbcStateNotifier() = default;
-  
+
   // Called when statement state changes
-  virtual void OnStateChange(int statementId, 
-                            OdbcStatementState oldState, 
-                            OdbcStatementState newState) = 0;
+  virtual void OnStateChange(StatementHandle statementHandle,
+                             OdbcStatementState oldState,
+                             OdbcStatementState newState) = 0;
 };
 
 // Thread-safe notifier that can be passed between C++ threads
 class OdbcStateNotifier : public IOdbcStateNotifier {
  public:
-  using StateChangeCallback = std::function<void(int, OdbcStatementState, OdbcStatementState)>;
-  
-  explicit OdbcStateNotifier(StateChangeCallback callback) 
-    : callback_(std::move(callback)) {}
-  
-  void OnStateChange(int statementId, 
-                    OdbcStatementState oldState, 
-                    OdbcStatementState newState) override {
+  using StateChangeCallback =
+      std::function<void(StatementHandle, OdbcStatementState, OdbcStatementState)>;
+
+  explicit OdbcStateNotifier(StateChangeCallback callback) : callback_(std::move(callback)) {}
+
+  void OnStateChange(StatementHandle statementHandle,
+                     OdbcStatementState oldState,
+                     OdbcStatementState newState) override {
     if (callback_) {
-      callback_(statementId, oldState, newState);
+      callback_(statementHandle, oldState, newState);
     }
   }
-  
+
  private:
   StateChangeCallback callback_;
 };
@@ -43,16 +44,16 @@ class OdbcStateNotifier : public IOdbcStateNotifier {
 class WeakStateNotifier {
  public:
   explicit WeakStateNotifier(std::weak_ptr<IOdbcStateNotifier> notifier)
-    : notifier_(std::move(notifier)) {}
-  
-  void NotifyStateChange(int statementId, 
-                        OdbcStatementState oldState, 
-                        OdbcStatementState newState) {
+      : notifier_(std::move(notifier)) {}
+
+  void NotifyStateChange(StatementHandle statementHandle,
+                         OdbcStatementState oldState,
+                         OdbcStatementState newState) {
     if (auto strong = notifier_.lock()) {
-      strong->OnStateChange(statementId, oldState, newState);
+      strong->OnStateChange(statementHandle, oldState, newState);
     }
   }
-  
+
  private:
   std::weak_ptr<IOdbcStateNotifier> notifier_;
 };

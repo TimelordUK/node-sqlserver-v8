@@ -35,7 +35,7 @@ void OdbcStatement::SetState(State newState) {
   State oldState = state_;
   state_ = newState;
   if (stateNotifier_) {
-    stateNotifier_->NotifyStateChange(handle_.getStatementId(), oldState, newState);
+    stateNotifier_->NotifyStateChange(handle_, oldState, newState);
   }
 }
 
@@ -1326,19 +1326,21 @@ bool OdbcStatement::apply_precision(const std::shared_ptr<SqlParameter>& datum,
   if (!check_odbc_error(r)) {
     return false;
   }
-  r = odbcApi_->SQLSetDescField(hdesc,
-                                current_param,
-                                SQL_DESC_PRECISION,
-                                reinterpret_cast<SQLPOINTER>(static_cast<SQLUINTEGER>(datum->param_size)),
-                                bufferLength);
+  r = odbcApi_->SQLSetDescField(
+      hdesc,
+      current_param,
+      SQL_DESC_PRECISION,
+      reinterpret_cast<SQLPOINTER>(static_cast<SQLUINTEGER>(datum->param_size)),
+      bufferLength);
   if (!check_odbc_error(r)) {
     return false;
   }
-  r = odbcApi_->SQLSetDescField(hdesc,
-                                current_param,
-                                SQL_DESC_SCALE,
-                                reinterpret_cast<SQLPOINTER>(static_cast<SQLUINTEGER>(datum->digits)),
-                                bufferLength);
+  r = odbcApi_->SQLSetDescField(
+      hdesc,
+      current_param,
+      SQL_DESC_SCALE,
+      reinterpret_cast<SQLPOINTER>(static_cast<SQLUINTEGER>(datum->digits)),
+      bufferLength);
   if (!check_odbc_error(r)) {
     return false;
   }

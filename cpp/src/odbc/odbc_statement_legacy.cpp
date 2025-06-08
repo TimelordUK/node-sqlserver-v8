@@ -174,6 +174,7 @@ OdbcStatementLegacy::OdbcStatementLegacy(
       _odbcApi(odbcApi),
       _handle(handle),
       _operationParams(operationParams) {
+  set_state(OdbcStatementState::STATEMENT_CREATED);
   // cerr << "OdbcStatement() " << _statementId << " " << endl;
   // fprintf(stderr, "OdbcStatement::OdbcStatement OdbcStatement ID = %ld\n ", statement_id);
   _numericStringEnabled = _operationParams->numeric_string;
@@ -353,10 +354,10 @@ void OdbcStatementLegacy::set_state(const OdbcStatementState state) {
                            << OdbcStatementStateToString(state));
   OdbcStatementState oldState = _statementState;
   _statementState = state;
-  
+
   // Notify state change if we have a notifier
   if (_stateNotifier) {
-    _stateNotifier->NotifyStateChange(_statementId, oldState, state);
+    _stateNotifier->NotifyStateChange(_handle, oldState, state);
   }
 }
 

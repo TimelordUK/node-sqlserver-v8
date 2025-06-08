@@ -303,6 +303,16 @@ std::shared_ptr<SqlParameter> JsObjectMapper::toSqlParameter(const Napi::Object&
   return result;
 }
 
+Napi::Object JsObjectMapper::fromStatementStateChange(const Napi::Env& env,
+                                                      const StatementStateChange& stateChange) {
+  Napi::Object result = Napi::Object::New(env);
+  result.Set("handle", fromStatementHandle(env, stateChange.statementHandle));
+  result.Set("oldState", Napi::String::New(env, stateChange.oldState));
+  result.Set("newState", Napi::String::New(env, stateChange.newState));
+
+  return result;
+}
+
 Napi::Object JsObjectMapper::fromProcedureParamMeta(const Napi::Env& env,
                                                     const ProcedureParamMeta& param) {
   Napi::Object result = Napi::Object::New(env);

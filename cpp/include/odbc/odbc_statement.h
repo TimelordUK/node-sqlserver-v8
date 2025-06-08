@@ -42,6 +42,7 @@ enum class OdbcStatementState {
   STATEMENT_CLOSED = 8,
   STATEMENT_BINDING = 9,
   STATEMENT_POLLING = 10,
+  STATEMENT_IDLE = 11,
 };
 
 /**
@@ -71,6 +72,8 @@ inline std::string OdbcStatementStateToString(OdbcStatementState state) {
       return "STATEMENT_BINDING";
     case OdbcStatementState::STATEMENT_POLLING:
       return "STATEMENT_POLLING";
+    case OdbcStatementState::STATEMENT_IDLE:
+      return "STATEMENT_IDLE";
     default:
       return "UNKNOWN_STATE";
   }
@@ -137,7 +140,7 @@ class IOdbcStatement {
   virtual bool ReadNextResult(std::shared_ptr<QueryResult> result) = 0;
 
   virtual bool Cancel() = 0;
-  
+
   /**
    * @brief Set the state change notifier
    * @param notifier The notifier to receive state change events
@@ -226,7 +229,7 @@ class OdbcStatement : public IOdbcStatement {
   virtual bool Cancel() override {
     return false;
   }
-  
+
   /**
    * @brief Set the state change notifier
    * @param notifier The notifier to receive state change events
@@ -292,10 +295,10 @@ class OdbcStatement : public IOdbcStatement {
   bool check_more_read(SQLRETURN r, bool& status);
   std::vector<std::shared_ptr<IOdbcRow>> rows_;
   std::shared_ptr<std::vector<shared_ptr<OdbcError>>> errors_;
-  
+
   // State change notifier
   std::unique_ptr<WeakStateNotifier> stateNotifier_;
-  
+
   // Helper method to set state with notification
   void SetState(State newState);
 };
