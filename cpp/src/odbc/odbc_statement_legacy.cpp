@@ -53,7 +53,7 @@ bool OdbcStatementLegacy::Execute(const std::shared_ptr<BoundDatumSet> parameter
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Execute [" << _handle.toString() << "] Enter Execute");
   auto res = try_execute_direct(_operationParams, parameters);
   // Check if _resultset was initialized (it may be null if bind_params failed)
-  if (_resultset != nullptr) {
+  if (res && _resultset != nullptr) {
     auto cols = _resultset->get_column_count();
     for (size_t i = 0; i < cols; ++i) {
       auto col = _resultset->get_meta_data(i);
@@ -373,8 +373,8 @@ void OdbcStatementLegacy::set_state(const OdbcStatementState state) {
                                                             << "] NotifyStateChange ");
     _stateNotifier->NotifyStateChange(_handle, oldState, state);
   } else if (oldState == state) {
-    SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::set_state [" << _handle.toString()
-                                                            << "] No state change - skipping notification");
+    SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::set_state ["
+                         << _handle.toString() << "] No state change - skipping notification");
   }
 }
 
@@ -631,9 +631,9 @@ bool OdbcStatementLegacy::return_odbc_error() {
   if (_errorHandler->HasErrors()) {
     SQL_LOG_DEBUG_STREAM("return_odbc_error: has errors");
     set_state(OdbcStatementState::STATEMENT_ERROR);
-    return true;
+    return false;
   }
-  return false;
+  return true;
 }
 
 bool OdbcStatementLegacy::check_odbc_error(const SQLRETURN ret) {
