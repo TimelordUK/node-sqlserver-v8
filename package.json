@@ -107,7 +107,10 @@
     "build:debug:verbose": "node-gyp rebuild --debug --verbose --loglevel=verbose",
     "build:release": "node-gyp rebuild --release --verbose",
     "build:release:verbose": "node-gyp rebuild --release --verbose --loglevel=verbose",
-    "build:clean": "node-gyp clean && node-gyp configure && node-gyp rebuild"
+    "build:clean": "node-gyp clean && node-gyp configure && node-gyp rebuild",
+    "bench-comments": "node dist/test/env/cmd-test.js -t benchmark --repeats=5 --delay=4500 2>&1",
+    "bench-columns": "node dist/test/env/cmd-test.js -t benchmark --table=syscolumns --repeats=5 --delay=5000 2>&1",
+    "bench-objects": "node dist/test/env/cmd-test.js -t benchmark --table=sysobjects --delay=250 --repeats=20 2>&1"
   },
   "directories": {}
 }
