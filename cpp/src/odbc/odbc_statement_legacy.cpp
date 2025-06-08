@@ -205,7 +205,7 @@ bool OdbcStatementLegacy::fetch_read(const size_t number_rows) {
   const auto& statement = *_statement;
   auto res = false;
   for (size_t row_id = 0; row_id < number_rows; ++row_id) {
-    const auto ret = SQLFetch(statement.get_handle());
+    const auto ret = _odbcApi->SQLFetch(statement.get_handle());
     if (ret == SQL_NO_DATA) {
       SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] fetch_read SQL_NO_DATA " << ret);
       _resultset->_end_of_rows = true;
@@ -236,7 +236,7 @@ bool OdbcStatementLegacy::prepared_read() {
     return false;
   // fprintf(stderr, "prepared_read");
   const auto& statement = *_statement;
-  SQLSetStmtAttr(statement.get_handle(), SQL_ATTR_ROWS_FETCHED_PTR, &_resultset->_row_count, 0);
+  _odbcApi->SQLSetStmtAttrW(statement.get_handle(), SQL_ATTR_ROWS_FETCHED_PTR, &_resultset->_row_count, 0);
 
   const auto ret = _odbcApi->SQLFetchScroll(statement.get_handle(), SQL_FETCH_NEXT, 0);
   // cerr << " row_count " << row_count << endl;
@@ -467,20 +467,20 @@ bool OdbcStatementLegacy::bind_datum(const int current_param, const shared_ptr<B
     : (SQLPOINTER)SQL_SS_TYPE_MONEY;
 
     int   x = 0;
-    r = SQLGetStmtAttr(statement.get_handle(), SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, nullptr);
+    r = _odbcApi->SQLGetStmtAttr(statement.get_handle(), SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, nullptr);
 
-    r = SQLGetDescField( hdesc, current_param, SQL_DESC_PRECISION, (SQLPOINTER)&x, sizeof(x), 0);
-    r = SQLGetDescField( hdesc, current_param, SQL_DESC_TYPE, (SQLPOINTER)&x, sizeof(x), 0);
+    r = _odbcApi->SQLGetDescField(hdesc, current_param, SQL_DESC_PRECISION, (SQLPOINTER)&x, sizeof(x), 0);
+    r = _odbcApi->SQLGetDescField(hdesc, current_param, SQL_DESC_TYPE, (SQLPOINTER)&x, sizeof(x), 0);
 
-    r = SQLSetDescField(hdesc, current_param,
+    r = _odbcApi->SQLSetDescField(hdesc, current_param,
     SQL_CA_SS_SERVER_TYPE,
     SQL_SS_TYPE_DEFAULT,
     SQL_IS_INTEGER);
 
-    SQLGetStmtAttr(statement.get_handle(), SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, NULL);
-    SQLSetDescField(hdesc, current_param, SQL_DESC_PRECISION, (SQLPOINTER)(datum->param_size), 0);
-    SQLSetDescField(hdesc, current_param, SQL_DESC_SCALE, (SQLPOINTER)(datum->digits), 0);
-    SQLSetDescField(hdesc, current_param, SQL_DESC_DATA_PTR, &var, 0);
+    _odbcApi->SQLGetStmtAttr(statement.get_handle(), SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, NULL);
+    _odbcApi->SQLSetDescField(hdesc, current_param, SQL_DESC_PRECISION, (SQLPOINTER)(datum->param_size), 0);
+    _odbcApi->SQLSetDescField(hdesc, current_param, SQL_DESC_SCALE, (SQLPOINTER)(datum->digits), 0);
+    _odbcApi->SQLSetDescField(hdesc, current_param, SQL_DESC_DATA_PTR, &var, 0);
   }
   */
   if (datum->get_defined_precision()) {
@@ -1648,12 +1648,12 @@ bool OdbcStatementLegacy::get_data_numeric(const size_t row_id, const size_t col
   const auto& statement = *_statement;
   SQLLEN str_len_or_ind_ptr = 0;
   SQL_NUMERIC_STRUCT v;
-  const auto ret = SQLGetData(statement.get_handle(),
-                              static_cast<SQLSMALLINT>(column + 1),
-                              SQL_C_NUMERIC,
-                              &v,
-                              sizeof(SQL_NUMERIC_STRUCT),
-                              &str_len_or_ind_ptr);
+  const auto ret = _odbcApi->SQLGetData(statement.get_handle(),
+                                        static_cast<SQLSMALLINT>(column + 1),
+                                        SQL_C_NUMERIC,
+                                        &v,
+                                        sizeof(SQL_NUMERIC_STRUCT),
+                                        &str_len_or_ind_ptr);
   if (!check_odbc_error(ret)) {
     SQL_LOG_DEBUG_STREAM("get_data_numeric failed to get data");
     return false;
@@ -1686,12 +1686,12 @@ bool OdbcStatementLegacy::get_data_decimal(const size_t row_id, const size_t col
   const auto& statement = *_statement;
   SQLLEN str_len_or_ind_ptr = 0;
   double v = NAN;
-  const auto ret = SQLGetData(statement.get_handle(),
-                              static_cast<SQLSMALLINT>(column + 1),
-                              SQL_C_DOUBLE,
-                              &v,
-                              sizeof(double),
-                              &str_len_or_ind_ptr);
+  const auto ret = _odbcApi->SQLGetData(statement.get_handle(),
+                                        static_cast<SQLSMALLINT>(column + 1),
+                                        SQL_C_DOUBLE,
+                                        &v,
+                                        sizeof(double),
+                                        &str_len_or_ind_ptr);
   if (!check_odbc_error(ret)) {
     SQL_LOG_DEBUG_STREAM("get_data_decimal failed to get data");
     return false;
@@ -2119,7 +2119,7 @@ bool OdbcStatementLegacy::try_read_next_result() {
                            << _handle.toString() << "] try_read_next_result SQL_NO_DATA " << ret);
       _resultset->_end_of_results = true;
       if (_prepared) {
-        SQLCloseCursor(statement.get_handle());
+        _odbcApi->SQLCloseCursor(statement.get_handle());
       }
       return true;
     }

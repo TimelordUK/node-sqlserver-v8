@@ -21,6 +21,7 @@
 
 import { createRequire } from 'module'
 import chaiAsPromised from 'chai-as-promised'
+
 const require = createRequire(import.meta.url)
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
@@ -31,10 +32,14 @@ const assert = chai.assert
 
 // Enable trace-level logging for debugging test failures
 const sql = require('../lib/sql')
-sql.logger.setLogLevel(sql.LogLevel.TRACE)
-sql.logger.setConsoleLogging(true)
-sql.logger.setLogFile('/tmp/msnodesqlv8-params-test.log')
-console.log('Logger configured for params.test.js:', sql.logger.getConfiguration())
+const { configureTestLogging } = require('./common/logging-helper')
+
+// Configure logging based on environment variables
+// By default, tests run silently. To enable logging:
+// - MSNODESQLV8_TEST_VERBOSE=true npm test  (for full trace logging)
+// - MSNODESQLV8_TEST_LOG_LEVEL=DEBUG MSNODESQLV8_TEST_LOG_CONSOLE=true npm test
+// - MSNODESQLV8_TEST_LOG_LEVEL=INFO MSNODESQLV8_TEST_LOG_FILE=/tmp/test.log npm test
+configureTestLogging(sql)
 
 /* globals describe it */
 
@@ -791,7 +796,6 @@ describe('Parameter Tests', function () {
 
     it('should handle null binary using sqlTypes.asVarBinary(null)', async function () {
       const varbinaryParam = env.sql.VarBinary(TestData.nullValues.null)
-      console.log('VarBinary param:', JSON.stringify(varbinaryParam, null, 2))
       const result = await env.theConnection.promises.query(
         'declare @bin binary(4) = ?; select @bin as bin',
         [varbinaryParam]

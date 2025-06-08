@@ -90,7 +90,7 @@ class IOdbcApi {
                                    SQLSMALLINT FetchOrientation,
                                    SQLLEN FetchOffset) = 0;
 
-  // Add SQLSetStmtAttr if not already present
+  // Use SQLSetStmtAttrW for consistency across platforms
   virtual SQLRETURN SQLSetStmtAttrW(SQLHSTMT StatementHandle,
                                     SQLINTEGER Attribute,
                                     SQLPOINTER Value,
@@ -154,6 +154,17 @@ class IOdbcApi {
                                     SQLPOINTER DiagInfo,
                                     SQLSMALLINT BufferLength,
                                     SQLSMALLINT* StringLength) = 0;
+
+  // Add SQLCloseCursor to the interface
+  virtual SQLRETURN SQLCloseCursor(SQLHSTMT StatementHandle) = 0;
+
+  // Add SQLGetDescField to the interface
+  virtual SQLRETURN SQLGetDescField(SQLHDESC DescriptorHandle,
+                                    SQLSMALLINT RecNumber,
+                                    SQLSMALLINT FieldIdentifier,
+                                    SQLPOINTER Value,
+                                    SQLINTEGER BufferLength,
+                                    SQLINTEGER* StringLength) = 0;
 
   // Method to retrieve diagnostic information
   virtual std::vector<DiagnosticInfo> GetDiagnostics() const = 0;
@@ -272,6 +283,16 @@ class RealOdbcApi : public IOdbcApi {
                             SQLPOINTER DiagInfo,
                             SQLSMALLINT BufferLength,
                             SQLSMALLINT* StringLength) override;
+
+  SQLRETURN SQLCloseCursor(SQLHSTMT StatementHandle) override;
+
+  SQLRETURN SQLGetDescField(SQLHDESC DescriptorHandle,
+                            SQLSMALLINT RecNumber,
+                            SQLSMALLINT FieldIdentifier,
+                            SQLPOINTER Value,
+                            SQLINTEGER BufferLength,
+                            SQLINTEGER* StringLength) override;
+
 
   // Diagnostic methods
   std::vector<DiagnosticInfo> GetDiagnostics() const override;

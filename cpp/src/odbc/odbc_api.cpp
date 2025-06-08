@@ -1198,4 +1198,39 @@ SQLRETURN RealOdbcApi::SQLGetDiagField(SQLSMALLINT HandleType,
   return ret;
 }
 
+SQLRETURN RealOdbcApi::SQLCloseCursor(SQLHSTMT StatementHandle) {
+  SQL_LOG_TRACE_STREAM("SQLCloseCursor called - Handle: " << StatementHandle);
+  
+  SQLRETURN ret = ::SQLCloseCursor(StatementHandle);
+  SQL_LOG_TRACE_STREAM("SQLCloseCursor returned: " << GetSqlReturnCodeString(ret));
+  
+  if (!SQL_SUCCEEDED(ret) && ret != SQL_NO_DATA) {
+    LogOdbcError(SQL_HANDLE_STMT, StatementHandle, "SQLCloseCursor failed");
+  }
+  
+  return ret;
+}
+
+SQLRETURN RealOdbcApi::SQLGetDescField(SQLHDESC DescriptorHandle,
+                                      SQLSMALLINT RecNumber,
+                                      SQLSMALLINT FieldIdentifier,
+                                      SQLPOINTER Value,
+                                      SQLINTEGER BufferLength,
+                                      SQLINTEGER* StringLength) {
+  SQL_LOG_TRACE_STREAM("SQLGetDescField called - Handle: " << DescriptorHandle
+                                                          << ", RecNumber: " << RecNumber
+                                                          << ", FieldIdentifier: " << FieldIdentifier);
+  
+  SQLRETURN ret = ::SQLGetDescField(DescriptorHandle, RecNumber, FieldIdentifier, 
+                                   Value, BufferLength, StringLength);
+  SQL_LOG_TRACE_STREAM("SQLGetDescField returned: " << GetSqlReturnCodeString(ret));
+  
+  if (!SQL_SUCCEEDED(ret)) {
+    LogOdbcError(SQL_HANDLE_DESC, DescriptorHandle, "SQLGetDescField failed");
+  }
+  
+  return ret;
+}
+
+
 }  // namespace mssql
