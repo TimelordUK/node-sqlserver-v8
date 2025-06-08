@@ -34,7 +34,8 @@ Napi::FunctionReference Connection::constructor;
 // Initialize the class and export it to the module
 Napi::Object Connection::Init(Napi::Env env, Napi::Object exports) {
   // Initialize ODBC environment
-  if (!OdbcConnection::InitializeEnvironment()) {
+  auto odbcApi = std::make_shared<RealOdbcApi>();
+  if (!OdbcConnection::InitializeEnvironment(odbcApi)) {
     Napi::Error::New(env, "Failed to initialize ODBC environment").ThrowAsJavaScriptException();
     return exports;
   }

@@ -37,7 +37,7 @@ OdbcConnection::OdbcConnection(std::shared_ptr<IOdbcEnvironment> environment,
     environment_ = sharedEnvironment_;
   } else {
     environment_ = OdbcEnvironmentFactory::CreateEnvironment();
-    if (!environment_->Initialize()) {
+    if (!environment_->Initialize(_odbcApi)) {
       SQL_LOG_ERROR("Failed to initialize ODBC environment");
     }
   }
@@ -56,7 +56,7 @@ OdbcConnection::~OdbcConnection() {
   Close();
 }
 
-bool OdbcConnection::InitializeEnvironment() {
+bool OdbcConnection::InitializeEnvironment(std::shared_ptr<IOdbcApi> odbcApiPtr) {
   SQL_LOG_INFO("Initializing shared ODBC environment");
 
   if (!sharedEnvironment_) {
@@ -65,7 +65,7 @@ bool OdbcConnection::InitializeEnvironment() {
 
     if (!sharedEnvironment_) {
       sharedEnvironment_ = OdbcEnvironmentFactory::CreateEnvironment();
-      if (!sharedEnvironment_->Initialize()) {
+      if (!sharedEnvironment_->Initialize(odbcApiPtr)) {
         SQL_LOG_ERROR("Failed to initialize shared ODBC environment");
         return false;
       }
@@ -107,7 +107,7 @@ bool OdbcConnection::Open(const std::u16string& connectionString, int timeout) {
     return false;
   }
 
-  if (!environment_->Initialize()) {
+  if (!environment_->Initialize(_odbcApi)) {
     SQL_LOG_ERROR("Failed to initialize ODBC environment");
     auto errors = std::make_shared<std::vector<std::shared_ptr<OdbcError>>>();
     environment_->ReadErrors(_odbcApi, errors);
@@ -259,7 +259,7 @@ bool OdbcConnection::RemoveStatement(int statementId) {
   if (statement) {
     // Set CLOSED state before destroying statement (while JS context is still valid)
     statement->Close();
-    
+
     // Remove from prepared statements if it exists
     for (auto it = _preparedStatements.begin(); it != _preparedStatements.end(); ++it) {
       if (it->second == statement) {

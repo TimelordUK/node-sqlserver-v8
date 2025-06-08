@@ -179,6 +179,38 @@ void RealOdbcApi::DiagnoseConnectionString(const std::wstring& connectionString)
   }
 }
 
+SQLRETURN RealOdbcApi::SQLSetEnvAttr(SQLHENV EnvironmentHandle,
+                                    SQLINTEGER Attribute,
+                                    SQLPOINTER Value,
+                                    SQLINTEGER StringLength) {
+  SQL_LOG_TRACE_STREAM("SQLSetEnvAttr called - Handle: " << EnvironmentHandle
+                                                        << ", Attribute: " << Attribute
+                                                        << ", StringLength: " << StringLength);
+  
+  // Log specific attributes for debugging
+  switch (Attribute) {
+    case SQL_ATTR_ODBC_VERSION:
+      if (Value) {
+        SQL_LOG_TRACE_STREAM("  Setting ODBC version to: " << reinterpret_cast<intptr_t>(Value));
+      }
+      break;
+    case SQL_ATTR_CONNECTION_POOLING:
+      SQL_LOG_TRACE("  Setting connection pooling");
+      break;
+    default:
+      SQL_LOG_TRACE_STREAM("  Setting attribute: " << Attribute);
+  }
+  
+  SQLRETURN ret = ::SQLSetEnvAttr(EnvironmentHandle, Attribute, Value, StringLength);
+  SQL_LOG_TRACE_STREAM("SQLSetEnvAttr returned: " << GetSqlReturnCodeString(ret));
+  
+  if (!SQL_SUCCEEDED(ret)) {
+    LogOdbcError(SQL_HANDLE_ENV, EnvironmentHandle, "SQLSetEnvAttr failed");
+  }
+  
+  return ret;
+}
+
 SQLRETURN RealOdbcApi::SQLDisconnect(SQLHDBC ConnectionHandle) {
   SQL_LOG_TRACE_STREAM("SQLDisconnect called for handle: " << ConnectionHandle);
   SQLRETURN ret = ::SQLDisconnect(ConnectionHandle);

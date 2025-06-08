@@ -31,6 +31,12 @@ class IOdbcApi {
  public:
   virtual ~IOdbcApi() = default;
 
+  // Environment methods
+  virtual SQLRETURN SQLSetEnvAttr(SQLHENV EnvironmentHandle,
+                                  SQLINTEGER Attribute,
+                                  SQLPOINTER Value,
+                                  SQLINTEGER StringLength) = 0;
+
   // Connection methods
   virtual SQLRETURN SQLDisconnect(SQLHDBC ConnectionHandle) = 0;
 
@@ -178,6 +184,12 @@ class RealOdbcApi : public IOdbcApi {
  public:
   RealOdbcApi();
   ~RealOdbcApi();
+
+  // Environment methods
+  SQLRETURN SQLSetEnvAttr(SQLHENV EnvironmentHandle,
+                          SQLINTEGER Attribute,
+                          SQLPOINTER Value,
+                          SQLINTEGER StringLength) override;
 
   // Connection methods
   SQLRETURN SQLDisconnect(SQLHDBC ConnectionHandle) override;

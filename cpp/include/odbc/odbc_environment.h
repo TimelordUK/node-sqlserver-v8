@@ -10,7 +10,7 @@ class IOdbcApi;
 class IOdbcEnvironment {
  public:
   virtual ~IOdbcEnvironment() = default;
-  virtual bool Initialize() = 0;
+  virtual bool Initialize(std::shared_ptr<IOdbcApi> odbcApiPtr) = 0;
   virtual std::shared_ptr<IOdbcEnvironmentHandle> GetEnvironmentHandle() = 0;
   virtual void ReadErrors(std::shared_ptr<IOdbcApi> odbcApiPtr,
                           std::shared_ptr<std::vector<std::shared_ptr<OdbcError>>> errors) = 0;
@@ -22,7 +22,7 @@ class OdbcEnvironment : public IOdbcEnvironment {
   OdbcEnvironment();
   ~OdbcEnvironment() override;
 
-  bool Initialize() override;
+  bool Initialize(std::shared_ptr<IOdbcApi> odbcApiPt) override;
   std::shared_ptr<IOdbcEnvironmentHandle> GetEnvironmentHandle() override;
   void ReadErrors(std::shared_ptr<IOdbcApi> odbcApiPtr,
                   std::shared_ptr<std::vector<std::shared_ptr<OdbcError>>> errors) override;

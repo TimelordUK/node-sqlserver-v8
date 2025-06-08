@@ -85,7 +85,7 @@ class OdbcConnection : public IOdbcConnection {
   ~OdbcConnection() override;
 
   // Static method to initialize a shared ODBC environment (legacy compatibility)
-  static bool InitializeEnvironment();
+  static bool InitializeEnvironment(std::shared_ptr<IOdbcApi> odbcApiPtr);
 
   // Open a connection to the database
   bool Open(const std::u16string& connectionString, int timeout = 0) override;
