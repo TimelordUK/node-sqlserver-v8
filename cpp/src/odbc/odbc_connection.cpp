@@ -107,6 +107,7 @@ bool OdbcConnection::Open(const std::u16string& connectionString, int timeout) {
     return false;
   }
 
+  // Ensure environment is initialized (thread-safe)
   if (!environment_->Initialize(_odbcApi)) {
     SQL_LOG_ERROR("Failed to initialize ODBC environment");
     auto errors = std::make_shared<std::vector<std::shared_ptr<OdbcError>>>();

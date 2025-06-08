@@ -1,5 +1,7 @@
 #pragma once
+#include <atomic>
 #include <memory>
+#include <mutex>
 #include <vector>
 #include <odbc/odbc_handles.h>
 #include <odbc/odbc_error.h>
@@ -29,6 +31,8 @@ class OdbcEnvironment : public IOdbcEnvironment {
 
  private:
   std::shared_ptr<IOdbcEnvironmentHandle> environment_;
+  std::atomic<bool> initialized_{false};
+  std::mutex init_mutex_;
 };
 
 // Factory for creating environment instances

@@ -13,6 +13,21 @@ OdbcEnvironment::~OdbcEnvironment() {
 }
 
 bool OdbcEnvironment::Initialize(std::shared_ptr<IOdbcApi> odbcApiPtr) {
+  // Quick check without lock
+  if (initialized_.load()) {
+    SQL_LOG_DEBUG("ODBC environment already initialized");
+    return true;
+  }
+
+  // Thread-safe initialization
+  std::lock_guard<std::mutex> lock(init_mutex_);
+  
+  // Double-check pattern
+  if (initialized_.load()) {
+    SQL_LOG_DEBUG("ODBC environment already initialized (double-check)");
+    return true;
+  }
+
   SQL_LOG_INFO("Initializing ODBC environment");
 
   // Set up connection pooling - using nullptr directly as it's a global attribute
@@ -49,6 +64,7 @@ bool OdbcEnvironment::Initialize(std::shared_ptr<IOdbcApi> odbcApiPtr) {
     return false;
   }
 
+  initialized_.store(true);
   SQL_LOG_INFO("ODBC environment successfully initialized");
   return true;
 }
