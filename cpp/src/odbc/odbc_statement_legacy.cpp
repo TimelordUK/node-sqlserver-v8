@@ -207,7 +207,7 @@ bool OdbcStatementLegacy::fetch_read(const size_t number_rows) {
   for (size_t row_id = 0; row_id < number_rows; ++row_id) {
     const auto ret = SQLFetch(statement.get_handle());
     if (ret == SQL_NO_DATA) {
-      // fprintf(stderr, "fetch_read SQL_NO_DATA\n");
+      SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] fetch_read SQL_NO_DATA " << ret);
       _resultset->_end_of_rows = true;
       return true;
     }
@@ -1068,9 +1068,8 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
     ret = poll_check(ret, make_shared<vector<uint16_t>>(query.begin(), query.end()), true);
   }
 
-  // cerr << "ret = " << ret << endl;
   if (ret == SQL_NO_DATA) {
-    // cerr << "no data = " << ret << endl;
+    SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] try_execute_direct SQL_NO_DATA " << ret);
     start_reading_results();
     if (!_resultset) {
       _resultset = make_unique<ResultSet>(0);
@@ -1092,6 +1091,8 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
   }
 
   if (ret == SQL_SUCCESS_WITH_INFO) {
+    SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] try_execute_direct SQL_SUCCESS_WITH_INFO "
+                             << ret);
     return_odbc_error();
     _boundParamsSet = param_set;
     if (start_reading_results()) {
@@ -1861,6 +1862,12 @@ struct lob_capture {
     write_ptr += bytes_to_read / item_size;
   }
 
+  void print_state() const {
+    SQL_LOG_DEBUG_STREAM("lob_capture state " << reads << " " << n_items << " " << maxvarchar << " "
+                                              << total_bytes_to_read << " " << bytes_to_read << " "
+                                              << atomic_read_bytes << " " << item_size);
+  }
+
   SQLLEN reads = 1;
   size_t n_items = 0;
   bool maxvarchar;
@@ -1892,8 +1899,10 @@ bool OdbcStatementLegacy::lob(const size_t row_id, size_t column) {
   // Track the total actual bytes of data we've read
   SQLLEN total_bytes_read = 0;
 
-  if (!check_odbc_error(r))
+  if (!check_odbc_error(r)) {
+    SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] lob failed to get data " << r);
     return false;
+  }
   auto status = false;
   auto more = check_more_read(r, status);
   if (!status) {
@@ -2086,6 +2095,11 @@ bool OdbcStatementLegacy::try_read_string(bool binary, const size_t row_id, cons
 }
 
 bool OdbcStatementLegacy::try_read_next_result() {
+  if (!_statement) {
+    SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::try_read_next_result ["
+                         << _handle.toString() << "] try_read_next_result no statement");
+    return false;
+  }
   // fprintf(stderr, "TryReadNextResult\n");
   // fprintf(stderr, "TryReadNextResult ID = %llu\n ", get_statement_id());
   const auto state = get_state();
@@ -2101,7 +2115,8 @@ bool OdbcStatementLegacy::try_read_next_result() {
   const auto ret = _odbcApi->SQLMoreResults(statement.get_handle());
   switch (ret) {
     case SQL_NO_DATA: {
-      // fprintf(stderr, "SQL_NO_DATA\n");
+      SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::try_read_next_result ["
+                           << _handle.toString() << "] try_read_next_result SQL_NO_DATA " << ret);
       _resultset->_end_of_results = true;
       if (_prepared) {
         SQLCloseCursor(statement.get_handle());
@@ -2110,6 +2125,9 @@ bool OdbcStatementLegacy::try_read_next_result() {
     }
 
     case SQL_SUCCESS_WITH_INFO: {
+      SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::try_read_next_result ["
+                           << _handle.toString() << "] try_read_next_result SQL_SUCCESS_WITH_INFO "
+                           << ret);
       return_odbc_error();
       const auto res = start_reading_results();
       if (res) {

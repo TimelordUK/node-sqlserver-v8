@@ -6,6 +6,15 @@ const { TestEnv } = require('./env/test-env')
 
 /* globals describe it beforeEach afterEach */
 
+const { configureTestLogging } = require('./common/logging-helper')
+
+// Configure logging based on environment variables
+// By default, tests run silently. To enable logging:
+// - MSNODESQLV8_TEST_VERBOSE=true npm test  (for full trace logging)
+// - MSNODESQLV8_TEST_LOG_LEVEL=DEBUG MSNODESQLV8_TEST_LOG_CONSOLE=true npm test
+// - MSNODESQLV8_TEST_LOG_LEVEL=INFO MSNODESQLV8_TEST_LOG_FILE=/tmp/test.log npm test
+configureTestLogging(sql)
+
 describe('pause', function () {
   // Test configuration
   const TIMEOUT = 30000
@@ -26,14 +35,26 @@ describe('pause', function () {
 
   this.timeout(TIMEOUT)
 
-  beforeEach(async function () {
-    // Disable logging for tests unless debugging
-    const { configureTestLogging } = require('./common/logging-helper')
-    await env.open()
+  this.beforeEach(done => {
+    sql.logger.info('Starting test setup', 'params.test.beforeEach')
+    env.open().then(() => {
+      sql.logger.info('Test environment opened successfully', 'params.test.beforeEach')
+      done()
+    }).catch(e => {
+      sql.logger.error(`Failed to open test environment: ${e}`, 'params.test.beforeEach')
+      sql.logger.error(e)
+    })
   })
 
-  afterEach(async function () {
-    await env.close()
+  this.afterEach(done => {
+    sql.logger.info('Starting test cleanup', 'params.test.afterEach')
+    env.close().then(() => {
+      sql.logger.info('Test environment closed successfully', 'params.test.afterEach')
+      done()
+    }).catch(e => {
+      sql.logger.error(`Failed to close test environment: ${e}`, 'params.test.afterEach')
+      sql.logger.error(e)
+    })
   })
 
   // Helper function to count rows from a query
