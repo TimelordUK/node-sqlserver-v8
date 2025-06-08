@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <atomic>
 
 #include "odbc_common.h"
 #include "odbc_driver_types.h"
@@ -192,7 +193,7 @@ class OdbcStatementLegacy : public IOdbcStatement {
   bool _pollingEnabled;
   bool _numericStringEnabled;
 
-  OdbcStatementState _statementState = OdbcStatementState::STATEMENT_IDLE;
+  std::atomic<OdbcStatementState> _statementState{OdbcStatementState::STATEMENT_IDLE};
 
   // set binary true if a binary Buffer should be returned instead of a JS string
 

@@ -305,31 +305,35 @@ bool OdbcStatementLegacy::apply_precision(const shared_ptr<BoundDatum>& datum,
 
 // this will show on a different thread to the current executing query.
 bool OdbcStatementLegacy::Cancel() {
-  {
-    // lock_guard<recursive_mutex> lock(g_i_mutex);
-    SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Cancel Enter ["
-                         << _handle.toString() << "] cancel " << _statementId << " "
-                         << _pollingEnabled << " state "
-                         << OdbcStatementStateToString(_statementState));
+  // Get current state atomically - no mutex needed
+  const auto state = _statementState.load();
+  
+  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Cancel Enter ["
+                       << _handle.toString() << "] cancel " << _statementId << " "
+                       << _pollingEnabled << " state "
+                       << OdbcStatementStateToString(state));
 
-    const auto state = _statementState;
-    if (!_pollingEnabled && (state == OdbcStatementState::STATEMENT_SUBMITTED ||
-                             state == OdbcStatementState::STATEMENT_READING)) {
-      cancel_handle();
-      set_state(OdbcStatementState::STATEMENT_CANCEL_HANDLE);
-      SQL_LOG_DEBUG_STREAM(
-          "OdbcStatementLegacy::Cancel ["
-          << _handle.toString() << "] cancel handle"
-          << OdbcStatementStateToString(OdbcStatementState::STATEMENT_CANCEL_HANDLE) << " "
-          << _statementId);
+  if (!_pollingEnabled && (state == OdbcStatementState::STATEMENT_SUBMITTED ||
+                           state == OdbcStatementState::STATEMENT_READING)) {
+    cancel_handle();
+    set_state(OdbcStatementState::STATEMENT_CANCEL_HANDLE);
+    SQL_LOG_DEBUG_STREAM(
+        "OdbcStatementLegacy::Cancel ["
+        << _handle.toString() << "] cancel handle"
+        << OdbcStatementStateToString(OdbcStatementState::STATEMENT_CANCEL_HANDLE) << " "
+        << _statementId);
 
+    // Use lock only for _resultset modification (non-atomic)
+    {
+      lock_guard<recursive_mutex> lock(g_i_mutex);
       _resultset = make_unique<ResultSet>(0);
       _resultset->_end_of_rows = false;
       _resultset->_end_of_results = false;
-      SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Cancel Exit [" << _handle.toString()
-                                                                << "] cancel handle");
-      return true;
     }
+    
+    SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Cancel Exit [" << _handle.toString()
+                                                              << "] cancel handle");
+    return true;
   }
   if (get_polling()) {
     _cancelRequested = true;
@@ -349,23 +353,22 @@ void OdbcStatementLegacy::SetStateNotifier(std::shared_ptr<IOdbcStateNotifier> n
 }
 
 void OdbcStatementLegacy::set_state(const OdbcStatementState state) {
-  lock_guard<recursive_mutex> lock(g_i_mutex);
+  // Use atomic exchange to get old state and set new state atomically
+  OdbcStatementState oldState = _statementState.exchange(state);
+  
   SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] set_state " << _statementId << " "
-                           << OdbcStatementStateToString(_statementState) << " -> "
+                           << OdbcStatementStateToString(oldState) << " -> "
                            << OdbcStatementStateToString(state));
-  OdbcStatementState oldState = _statementState;
-  _statementState = state;
 
-  // Notify state change if we have a notifier
+  // Notify state change if we have a notifier (this is thread-safe)
   if (_stateNotifier) {
     _stateNotifier->NotifyStateChange(_handle, oldState, state);
   }
 }
 
 OdbcStatementState OdbcStatementLegacy::get_state() {
-  lock_guard<recursive_mutex> lock(g_i_mutex);
-  const auto state = _statementState;
-  return state;
+  // Atomic load - no mutex needed
+  return _statementState.load();
 }
 
 bool OdbcStatementLegacy::set_polling(const bool mode) {
