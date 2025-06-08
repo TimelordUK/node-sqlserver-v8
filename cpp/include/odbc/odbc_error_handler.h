@@ -18,6 +18,7 @@ class OdbcErrorHandler {
   virtual bool CheckOdbcError(SQLRETURN ret);
   virtual bool ReturnOdbcError();
   virtual const std::vector<std::shared_ptr<OdbcError>>& GetErrors() const;
+  virtual bool HasErrors() const;
   virtual void ClearErrors();
   virtual void AddError(std::shared_ptr<OdbcError> error) {
     _errors->push_back(error);

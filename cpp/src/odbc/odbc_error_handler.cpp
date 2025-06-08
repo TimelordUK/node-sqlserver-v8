@@ -35,6 +35,10 @@ bool OdbcErrorHandler::ReturnOdbcError() {
   return false;
 }
 
+bool OdbcErrorHandler::HasErrors() const {
+  return !_errors->empty();
+}
+
 const std::vector<std::shared_ptr<OdbcError>>& OdbcErrorHandler::GetErrors() const {
   return *_errors;
 }

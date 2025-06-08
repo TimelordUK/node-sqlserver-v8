@@ -306,22 +306,23 @@ bool OdbcStatementLegacy::apply_precision(const shared_ptr<BoundDatum>& datum,
 // this will show on a different thread to the current executing query.
 bool OdbcStatementLegacy::Cancel() {
   {
-    lock_guard<recursive_mutex> lock(g_i_mutex);
+    // lock_guard<recursive_mutex> lock(g_i_mutex);
     SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Cancel Enter ["
                          << _handle.toString() << "] cancel " << _statementId << " "
-                         << _pollingEnabled << " state"
+                         << _pollingEnabled << " state "
                          << OdbcStatementStateToString(_statementState));
 
-    const auto state = get_state();
+    const auto state = _statementState;
     if (!_pollingEnabled && (state == OdbcStatementState::STATEMENT_SUBMITTED ||
                              state == OdbcStatementState::STATEMENT_READING)) {
+      cancel_handle();
       set_state(OdbcStatementState::STATEMENT_CANCEL_HANDLE);
       SQL_LOG_DEBUG_STREAM(
           "OdbcStatementLegacy::Cancel ["
           << _handle.toString() << "] cancel handle"
           << OdbcStatementStateToString(OdbcStatementState::STATEMENT_CANCEL_HANDLE) << " "
           << _statementId);
-      cancel_handle();
+
       _resultset = make_unique<ResultSet>(0);
       _resultset->_end_of_rows = false;
       _resultset->_end_of_results = false;
@@ -611,6 +612,11 @@ bool OdbcStatementLegacy::return_odbc_error() {
   _errorHandler->ClearErrors();
   for (const auto& error : *_errors) {
     _errorHandler->AddError(error);
+  }
+  if (_errorHandler->HasErrors()) {
+    SQL_LOG_DEBUG_STREAM("return_odbc_error: has errors");
+    set_state(OdbcStatementState::STATEMENT_ERROR);
+    return true;
   }
   return false;
 }
@@ -943,8 +949,10 @@ bool OdbcStatementLegacy::bind_fetch(const shared_ptr<BoundDatumSet>& param_set)
 }
 
 bool OdbcStatementLegacy::cancel_handle() {
-  if (!_statement)
+  if (!_statement) {
+    SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] cancel_handle: no statement");
     return false;
+  }
   const auto& hnd = *_statement;
   const auto ret2 = _odbcApi->SQLCancelHandle(SQL_HANDLE_STMT, hnd.get_handle());
 
