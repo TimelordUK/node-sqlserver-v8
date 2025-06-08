@@ -1,4 +1,4 @@
-version: 1.0.{build}
+qversion: 1.0.{build}
 
 image:
   - Visual Studio 2022
@@ -9,7 +9,7 @@ platform:
 
 environment:
   matrix:
-    - nodejs_version: 24
+    - nodejs_version: 23
     - nodejs_version: 22
 
 test_script:
