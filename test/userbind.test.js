@@ -60,6 +60,20 @@ describe('userbind', function () {
     expect(res).to.deep.equal(expected)
   }
 
+  it('user bind DateTime2 to sql type datetime2(7) - with scale set to illegal value, should error', async function handler () {
+    const now = new Date()
+    const params = {
+      query: 'declare @v DATETIME2(7) = ?; select @v as v',
+      min: now,
+      max: now,
+      setter: v => {
+        return env.sql.DateTime2(v, 8) // set scale illegal
+      }
+    }
+    await expect(testUserBindAsync(params))
+      .to.be.rejectedWith('Invalid precision value')
+  })
+
   it('user bind DateTimeOffset to sql type DateTimeOffset - provide offset of 60 minutes', async function handler () {
     const offset = 60
     const scale = 7
@@ -160,20 +174,6 @@ describe('userbind', function () {
 
   it('user bind time(3)', async function handler () {
     await timeTest(3)
-  })
-
-  it('user bind DateTime2 to sql type datetime2(7) - with scale set to illegal value, should error', async function handler () {
-    const now = new Date()
-    const params = {
-      query: 'declare @v DATETIME2(7) = ?; select @v as v',
-      min: now,
-      max: now,
-      setter: v => {
-        return env.sql.DateTime2(v, 8) // set scale illegal
-      }
-    }
-    await expect(testUserBindAsync(params))
-      .to.be.rejectedWith('Invalid precision value')
   })
 
   it('user bind DateTime2 to sql type datetime2(7) - with scale set too low, should error', async function handler () {
