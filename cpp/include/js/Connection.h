@@ -38,6 +38,8 @@ class Connection : public Napi::ObjectWrap<Connection> {
   // JavaScript-accessible methods
   Napi::Value Open(const Napi::CallbackInfo& info);
   Napi::Value Close(const Napi::CallbackInfo& info);
+  Napi::Value Prepare(const Napi::CallbackInfo& info);
+  Napi::Value BindQuery(const Napi::CallbackInfo& info);
   Napi::Value Query(const Napi::CallbackInfo& info);
   Napi::Value FetchRows(const Napi::CallbackInfo& info);
   Napi::Value NextResultSet(const Napi::CallbackInfo& info);

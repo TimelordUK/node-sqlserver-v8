@@ -64,6 +64,23 @@ bool OdbcStatementLegacy::Execute(const std::shared_ptr<BoundDatumSet> parameter
   return res;
 }
 
+bool OdbcStatementLegacy::Prepare(const std::shared_ptr<BoundDatumSet> parameters,
+                                  std::shared_ptr<QueryResult>& result) {
+  lock_guard<recursive_mutex> lock(g_i_mutex);
+  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Prepare [" << _handle.toString() << "] Enter Prepare");
+  auto res = try_prepare(_operationParams);
+  // Check if _resultset was initialized (it may be null if bind_params failed)
+  if (res && _resultset != nullptr) {
+    auto cols = _resultset->get_column_count();
+    for (size_t i = 0; i < cols; ++i) {
+      auto col = _resultset->get_meta_data(i);
+      result->addColumn(col);
+    }
+  }
+  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Prepare [" << _handle.toString() << "] Exit Execute");
+  return res;
+}
+
 /**
  * @brief Get the statement type
  */
@@ -236,7 +253,8 @@ bool OdbcStatementLegacy::prepared_read() {
     return false;
   // fprintf(stderr, "prepared_read");
   const auto& statement = *_statement;
-  _odbcApi->SQLSetStmtAttrW(statement.get_handle(), SQL_ATTR_ROWS_FETCHED_PTR, &_resultset->_row_count, 0);
+  _odbcApi->SQLSetStmtAttrW(
+      statement.get_handle(), SQL_ATTR_ROWS_FETCHED_PTR, &_resultset->_row_count, 0);
 
   const auto ret = _odbcApi->SQLFetchScroll(statement.get_handle(), SQL_FETCH_NEXT, 0);
   // cerr << " row_count " << row_count << endl;
@@ -467,10 +485,12 @@ bool OdbcStatementLegacy::bind_datum(const int current_param, const shared_ptr<B
     : (SQLPOINTER)SQL_SS_TYPE_MONEY;
 
     int   x = 0;
-    r = _odbcApi->SQLGetStmtAttr(statement.get_handle(), SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, nullptr);
+    r = _odbcApi->SQLGetStmtAttr(statement.get_handle(), SQL_ATTR_APP_PARAM_DESC, &hdesc, 0,
+  nullptr);
 
-    r = _odbcApi->SQLGetDescField(hdesc, current_param, SQL_DESC_PRECISION, (SQLPOINTER)&x, sizeof(x), 0);
-    r = _odbcApi->SQLGetDescField(hdesc, current_param, SQL_DESC_TYPE, (SQLPOINTER)&x, sizeof(x), 0);
+    r = _odbcApi->SQLGetDescField(hdesc, current_param, SQL_DESC_PRECISION, (SQLPOINTER)&x,
+  sizeof(x), 0); r = _odbcApi->SQLGetDescField(hdesc, current_param, SQL_DESC_TYPE, (SQLPOINTER)&x,
+  sizeof(x), 0);
 
     r = _odbcApi->SQLSetDescField(hdesc, current_param,
     SQL_CA_SS_SERVER_TYPE,
@@ -478,9 +498,10 @@ bool OdbcStatementLegacy::bind_datum(const int current_param, const shared_ptr<B
     SQL_IS_INTEGER);
 
     _odbcApi->SQLGetStmtAttr(statement.get_handle(), SQL_ATTR_APP_PARAM_DESC, &hdesc, 0, NULL);
-    _odbcApi->SQLSetDescField(hdesc, current_param, SQL_DESC_PRECISION, (SQLPOINTER)(datum->param_size), 0);
-    _odbcApi->SQLSetDescField(hdesc, current_param, SQL_DESC_SCALE, (SQLPOINTER)(datum->digits), 0);
-    _odbcApi->SQLSetDescField(hdesc, current_param, SQL_DESC_DATA_PTR, &var, 0);
+    _odbcApi->SQLSetDescField(hdesc, current_param, SQL_DESC_PRECISION,
+  (SQLPOINTER)(datum->param_size), 0); _odbcApi->SQLSetDescField(hdesc, current_param,
+  SQL_DESC_SCALE, (SQLPOINTER)(datum->digits), 0); _odbcApi->SQLSetDescField(hdesc, current_param,
+  SQL_DESC_DATA_PTR, &var, 0);
   }
   */
   if (datum->get_defined_precision()) {

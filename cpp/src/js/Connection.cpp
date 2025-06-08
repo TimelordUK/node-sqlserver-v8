@@ -17,6 +17,7 @@
 #include <js/workers/next_result_worker.h>
 #include <js/workers/open_worker.h>
 #include <js/workers/query_worker.h>
+#include <js/workers/prepare_worker.h>
 #include <js/workers/release_worker.h>
 #include <js/workers/cancel_worker.h>
 #include <js/workers/worker_base.h>
@@ -48,6 +49,8 @@ Napi::Object Connection::Init(Napi::Env env, Napi::Object exports) {
                       InstanceMethod("open", &Connection::Open),
                       InstanceMethod("close", &Connection::Close),
                       InstanceMethod("query", &Connection::Query),
+                      InstanceMethod("bindQuery", &Connection::BindQuery),
+                      InstanceMethod("prepare", &Connection::Prepare),
                       InstanceMethod("fetchRows", &Connection::FetchRows),
                       InstanceMethod("nextResultSet", &Connection::NextResultSet),
                       InstanceMethod("releaseStatement", &Connection::ReleaseStatement),
@@ -401,6 +404,61 @@ Napi::Value Connection::ReleaseStatement(const Napi::CallbackInfo& info) {
   // Use the generic worker factory
   return CreateWorkerWithCallbackOrPromise<ReleaseWorker>(
       info, odbcConnection_.get(), statementHandle);
+}
+
+Napi::Value Connection::Prepare(const Napi::CallbackInfo& info) {
+  const Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
+
+  InfoParser parser(isConnected_);
+  if (!parser.parseOperationParams(info)) {
+    return env.Undefined();
+  }
+
+  const auto operationParams = parser.operationParams;
+  operationParams->id = parser.queryId;
+
+  // Get parameters array (optional)
+  Napi::Array params = Napi::Array::New(env, 0);
+  if (info.Length() > 2 && info[2].IsArray()) {
+    params = info[2].As<Napi::Array>();
+  }
+
+  // Check for state change callback in the operation params object
+  Napi::Function stateChangeCallback;
+  if (info.Length() > 1 && info[1].IsObject()) {
+    Napi::Object paramsObj = info[1].As<Napi::Object>();
+    if (paramsObj.Has("stateChangeCallback") && paramsObj.Get("stateChangeCallback").IsFunction()) {
+      stateChangeCallback = paramsObj.Get("stateChangeCallback").As<Napi::Function>();
+      SQL_LOG_DEBUG("Found state change callback in query params");
+    }
+  }
+
+  SQL_LOG_DEBUG_STREAM("Connection::Prepare: " + operationParams->toString()
+                       << " number params " << params.Length());
+
+  // Use the generic worker factory
+  return CreateWorkerWithCallbackOrPromise<PrepareWorker>(
+      info, odbcConnection_.get(), operationParams, params, stateChangeCallback);
+}
+
+Napi::Value Connection::BindQuery(const Napi::CallbackInfo& info) {
+  const Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
+
+  InfoParser parser(isConnected_);
+  if (!parser.parseOperationParams(info)) {
+    return env.Undefined();
+  }
+
+  const auto operationParams = parser.operationParams;
+  operationParams->id = parser.queryId;
+
+  // Get parameters array (optional)
+  Napi::Array params = Napi::Array::New(env, 0);
+  if (info.Length() > 2 && info[2].IsArray()) {
+    params = info[2].As<Napi::Array>();
+  }
 }
 
 // Implement Query method

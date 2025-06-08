@@ -21,6 +21,13 @@ bool PreparedStatement::Prepare() {
   return true;
 }
 
+bool PreparedStatement::Prepare(const std::shared_ptr<BoundDatumSet> parameters,
+                                std::shared_ptr<QueryResult>& result) {
+  SQL_LOG_TRACE_STREAM("PreparedStatement::Prepare - Preparing prepared statement with "
+                       << parameters->size() << " parameters");
+  return true;
+}
+
 bool PreparedStatement::Execute(const std::shared_ptr<BoundDatumSet> parameters,
                                 std::shared_ptr<QueryResult>& result) {
   SQL_LOG_TRACE_STREAM("PreparedStatement::Execute - Executing prepared statement with "

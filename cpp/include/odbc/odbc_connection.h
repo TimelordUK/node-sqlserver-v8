@@ -70,6 +70,11 @@ class IOdbcConnection {
                             std::shared_ptr<QueryResult>& result,
                             std::shared_ptr<IOdbcStateNotifier> stateNotifier = nullptr) = 0;
 
+  virtual bool PrepareQuery(const std::shared_ptr<QueryOperationParams> operationParams,
+                            const std::shared_ptr<BoundDatumSet> parameters,
+                            std::shared_ptr<QueryResult>& result,
+                            std::shared_ptr<IOdbcStateNotifier> stateNotifier = nullptr) = 0;
+
   virtual const std::vector<std::shared_ptr<OdbcError>>& GetErrors() const = 0;
 
   virtual bool TryReadNextResult(int statementId, std::shared_ptr<QueryResult>& result) = 0;
@@ -119,6 +124,11 @@ class OdbcConnection : public IOdbcConnection {
 
   // Legacy ExecuteQuery implementation
   bool ExecuteQuery(const std::shared_ptr<QueryOperationParams> operationParams,
+                    const std::shared_ptr<BoundDatumSet> parameters,
+                    std::shared_ptr<QueryResult>& result,
+                    std::shared_ptr<IOdbcStateNotifier> stateNotifier = nullptr) override;
+
+  bool PrepareQuery(const std::shared_ptr<QueryOperationParams> operationParams,
                     const std::shared_ptr<BoundDatumSet> parameters,
                     std::shared_ptr<QueryResult>& result,
                     std::shared_ptr<IOdbcStateNotifier> stateNotifier = nullptr) override;

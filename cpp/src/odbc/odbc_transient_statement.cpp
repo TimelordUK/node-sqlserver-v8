@@ -9,6 +9,11 @@
 
 namespace mssql {
 
+bool TransientStatement::Prepare(const std::shared_ptr<BoundDatumSet> parameters,
+                                 std::shared_ptr<QueryResult>& result) {
+  return true;
+}
+
 bool TransientStatement::Execute(const std::shared_ptr<BoundDatumSet> parameters,
                                  std::shared_ptr<QueryResult>& result) {
   // SQL_LOG_TRACE_STREAM("TransientStatement::Execute - Starting execution with "

@@ -329,6 +329,26 @@ bool OdbcConnection::ExecuteQuery(const std::shared_ptr<QueryOperationParams> op
   return statement->Execute(parameters, result);
 }
 
+bool OdbcConnection::PrepareQuery(const std::shared_ptr<QueryOperationParams> operationParams,
+                                  const std::shared_ptr<BoundDatumSet> parameters,
+                                  std::shared_ptr<QueryResult>& result,
+                                  std::shared_ptr<IOdbcStateNotifier> stateNotifier) {
+  // Create a transient statement
+  auto statement = CreateStatement(StatementType::Legacy, operationParams);
+  if (!statement) {
+    return false;
+  }
+
+  // Set the state notifier if provided
+  if (stateNotifier) {
+    statement->SetStateNotifier(stateNotifier);
+  }
+
+  // Execute it
+  result->setHandle(statement->GetStatementHandle());
+  return statement->Prepare(parameters, result);
+}
+
 bool OdbcConnection::TryReadNextResult(int statementId, std::shared_ptr<QueryResult>& result) {
   // fprintf(stderr, "TryReadNextResult\n");
   // fprintf(stderr, "TryReadNextResult ID = %llu\n ", get_statement_id());
