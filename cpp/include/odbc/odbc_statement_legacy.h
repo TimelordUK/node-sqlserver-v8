@@ -73,6 +73,13 @@ class OdbcStatementLegacy : public IOdbcStatement {
   bool Cancel() override;
 
   /**
+   * @brief Close the statement and set CLOSED state
+   */
+  virtual void Close() override {
+    set_state(OdbcStatementState::STATEMENT_CLOSED);
+  }
+
+  /**
    * @brief Set the state change notifier
    * @param notifier The notifier to receive state change events
    */

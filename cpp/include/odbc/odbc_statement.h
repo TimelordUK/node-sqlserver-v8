@@ -140,6 +140,11 @@ class IOdbcStatement {
   virtual bool ReadNextResult(std::shared_ptr<QueryResult> result) = 0;
 
   virtual bool Cancel() = 0;
+  
+  /**
+   * @brief Close the statement and set CLOSED state
+   */
+  virtual void Close() = 0;
 
   /**
    * @brief Set the state change notifier
@@ -228,6 +233,13 @@ class OdbcStatement : public IOdbcStatement {
 
   virtual bool Cancel() override {
     return false;
+  }
+
+  /**
+   * @brief Close the statement and set CLOSED state
+   */
+  virtual void Close() override {
+    SetState(State::STATEMENT_CLOSED);
   }
 
   /**

@@ -15,6 +15,7 @@
 #include <odbc/odbc_error_handler.h>
 #include <odbc/odbc_handles.h>
 #include <odbc/odbc_statement_factory.h>
+#include <odbc/odbc_statement_legacy.h>
 #include <odbc/odbc_transaction_manager.h>
 
 namespace mssql {
@@ -256,6 +257,9 @@ bool OdbcConnection::RemoveStatement(int statementId) {
   // First get the statement from the factory
   auto statement = _statementFactory->GetStatement(statementId);
   if (statement) {
+    // Set CLOSED state before destroying statement (while JS context is still valid)
+    statement->Close();
+    
     // Remove from prepared statements if it exists
     for (auto it = _preparedStatements.begin(); it != _preparedStatements.end(); ++it) {
       if (it->second == statement) {
