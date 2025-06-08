@@ -367,14 +367,11 @@ void OdbcStatementLegacy::set_state(const OdbcStatementState state) {
                        << OdbcStatementStateToString(oldState) << " -> "
                        << OdbcStatementStateToString(state));
 
-  // Only notify if state actually changed and we have a notifier (this is thread-safe)
-  if (_stateNotifier && oldState != state) {
+  // Notify state change if we have a notifier (this is thread-safe)
+  if (_stateNotifier) {
     SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::set_state [" << _handle.toString()
                                                             << "] NotifyStateChange ");
     _stateNotifier->NotifyStateChange(_handle, oldState, state);
-  } else if (oldState == state) {
-    SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::set_state [" << _handle.toString()
-                                                            << "] No state change - skipping notification");
   }
 }
 
