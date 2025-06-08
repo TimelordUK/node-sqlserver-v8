@@ -64,7 +64,7 @@ std::shared_ptr<IOdbcStatement> OdbcStatementFactory::GetStatement(int statement
 
 std::shared_ptr<IOdbcStatement> OdbcStatementFactory::CreateStatement(
     std::shared_ptr<IOdbcApi> odbcApi,
-    OdbcStatement::Type type,
+    StatementType type,
     std::shared_ptr<OdbcErrorHandler> errorHandler,
     const std::shared_ptr<QueryOperationParams> operationParams) {
   SQL_LOG_TRACE_STREAM("CreateStatement type " << (int)type);
@@ -78,4 +78,5 @@ std::shared_ptr<IOdbcStatement> OdbcStatementFactory::CreateStatement(
   }
   return statement;
 }
+
 }  // namespace mssql

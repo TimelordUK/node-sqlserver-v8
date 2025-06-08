@@ -24,6 +24,7 @@ namespace mssql {
 enum class ExecutionState { Initial, Prepared, Executed, Completed, Error };
 
 void OdbcStatement::SetStateNotifier(std::shared_ptr<IOdbcStateNotifier> notifier) {
+  stateNotifierShared_ = notifier;  // Keep the shared_ptr alive
   if (notifier) {
     stateNotifier_ = std::make_unique<WeakStateNotifier>(notifier);
   } else {
@@ -32,9 +33,11 @@ void OdbcStatement::SetStateNotifier(std::shared_ptr<IOdbcStateNotifier> notifie
 }
 
 void OdbcStatement::SetState(State newState) {
-  State oldState = state_;
-  state_ = newState;
-  if (stateNotifier_) {
+  // Use atomic exchange to get old state and set new state atomically
+  State oldState = state_.exchange(newState);
+  
+  // Only notify if state actually changed
+  if (oldState != newState && stateNotifier_) {
     stateNotifier_->NotifyStateChange(handle_, oldState, newState);
   }
 }

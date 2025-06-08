@@ -42,6 +42,9 @@ OdbcStatementLegacy::~OdbcStatementLegacy() {
   if (get_state() != OdbcStatementState::STATEMENT_CLOSED) {
     set_state(OdbcStatementState::STATEMENT_CLOSED);
   }
+  // Clean up notifier
+  _stateNotifier.reset();
+  _stateNotifierShared.reset();
 }
 
 bool OdbcStatementLegacy::Execute(const std::shared_ptr<BoundDatumSet> parameters,
@@ -307,21 +310,19 @@ bool OdbcStatementLegacy::apply_precision(const shared_ptr<BoundDatum>& datum,
 bool OdbcStatementLegacy::Cancel() {
   // Get current state atomically - no mutex needed
   const auto state = _statementState.load();
-  
+
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Cancel Enter ["
                        << _handle.toString() << "] cancel " << _statementId << " "
-                       << _pollingEnabled << " state "
-                       << OdbcStatementStateToString(state));
+                       << _pollingEnabled << " state " << OdbcStatementStateToString(state));
 
   if (!_pollingEnabled && (state == OdbcStatementState::STATEMENT_SUBMITTED ||
                            state == OdbcStatementState::STATEMENT_READING)) {
     cancel_handle();
     set_state(OdbcStatementState::STATEMENT_CANCEL_HANDLE);
-    SQL_LOG_DEBUG_STREAM(
-        "OdbcStatementLegacy::Cancel ["
-        << _handle.toString() << "] cancel handle"
-        << OdbcStatementStateToString(OdbcStatementState::STATEMENT_CANCEL_HANDLE) << " "
-        << _statementId);
+    SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Cancel ["
+                         << _handle.toString() << "] cancel handle"
+                         << OdbcStatementStateToString(OdbcStatementState::STATEMENT_CANCEL_HANDLE)
+                         << " " << _statementId);
 
     // Use lock only for _resultset modification (non-atomic)
     {
@@ -330,7 +331,7 @@ bool OdbcStatementLegacy::Cancel() {
       _resultset->_end_of_rows = false;
       _resultset->_end_of_results = false;
     }
-    
+
     SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Cancel Exit [" << _handle.toString()
                                                               << "] cancel handle");
     return true;
@@ -349,20 +350,31 @@ bool OdbcStatementLegacy::Cancel() {
 
 void OdbcStatementLegacy::SetStateNotifier(std::shared_ptr<IOdbcStateNotifier> notifier) {
   lock_guard<recursive_mutex> lock(g_i_mutex);
-  _stateNotifier = std::make_unique<WeakStateNotifier>(notifier);
+  _stateNotifierShared = notifier;  // Keep the shared_ptr alive
+  if (notifier) {
+    _stateNotifier = std::make_unique<WeakStateNotifier>(notifier);
+  } else {
+    _stateNotifier.reset();
+  }
 }
 
 void OdbcStatementLegacy::set_state(const OdbcStatementState state) {
   // Use atomic exchange to get old state and set new state atomically
   OdbcStatementState oldState = _statementState.exchange(state);
-  
-  SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] set_state " << _statementId << " "
-                           << OdbcStatementStateToString(oldState) << " -> "
-                           << OdbcStatementStateToString(state));
 
-  // Notify state change if we have a notifier (this is thread-safe)
-  if (_stateNotifier) {
+  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::set_state ["
+                       << _handle.toString() << "] set_state " << _statementId << " "
+                       << OdbcStatementStateToString(oldState) << " -> "
+                       << OdbcStatementStateToString(state));
+
+  // Only notify if state actually changed and we have a notifier (this is thread-safe)
+  if (_stateNotifier && oldState != state) {
+    SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::set_state [" << _handle.toString()
+                                                            << "] NotifyStateChange ");
     _stateNotifier->NotifyStateChange(_handle, oldState, state);
+  } else if (oldState == state) {
+    SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::set_state [" << _handle.toString()
+                                                            << "] No state change - skipping notification");
   }
 }
 

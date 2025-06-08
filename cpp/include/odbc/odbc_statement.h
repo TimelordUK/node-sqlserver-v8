@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <string>
 #include <vector>
@@ -202,7 +203,7 @@ class OdbcStatement : public IOdbcStatement {
    * @return Current state
    */
   virtual OdbcStatementState GetState() const override {
-    return state_;
+    return state_.load();
   }
 
   /**
@@ -298,7 +299,7 @@ class OdbcStatement : public IOdbcStatement {
   std::shared_ptr<IOdbcApi> odbcApi_;  // Added IOdbcApi reference
   StatementHandle handle_;
   bool numericStringEnabled_;
-  State state_;
+  std::atomic<State> state_;
   bool hasMoreResults_;
   bool endOfRows_;
   std::shared_ptr<QueryResult> metaData_;
@@ -308,7 +309,8 @@ class OdbcStatement : public IOdbcStatement {
   std::vector<std::shared_ptr<IOdbcRow>> rows_;
   std::shared_ptr<std::vector<shared_ptr<OdbcError>>> errors_;
 
-  // State change notifier
+  // State change notifier - store both the shared_ptr and weak wrapper
+  std::shared_ptr<IOdbcStateNotifier> stateNotifierShared_;
   std::unique_ptr<WeakStateNotifier> stateNotifier_;
 
   // Helper method to set state with notification

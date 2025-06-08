@@ -313,7 +313,7 @@ bool OdbcConnection::ExecuteQuery(const std::shared_ptr<QueryOperationParams> op
                                   std::shared_ptr<QueryResult>& result,
                                   std::shared_ptr<IOdbcStateNotifier> stateNotifier) {
   // Create a transient statement
-  auto statement = CreateStatement(OdbcStatement::Type::Legacy, operationParams);
+  auto statement = CreateStatement(StatementType::Legacy, operationParams);
   if (!statement) {
     return false;
   }

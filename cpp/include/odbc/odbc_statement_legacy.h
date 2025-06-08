@@ -216,7 +216,8 @@ class OdbcStatementLegacy : public IOdbcStatement {
   std::shared_ptr<QueryOperationParams> _operationParams;
   recursive_mutex g_i_mutex;
 
-  // State change notifier
+  // State change notifier - store both the shared_ptr and weak wrapper
+  std::shared_ptr<IOdbcStateNotifier> _stateNotifierShared;
   std::unique_ptr<WeakStateNotifier> _stateNotifier;
 
   const static size_t prepared_rows_to_bind = 50;

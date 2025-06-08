@@ -3,6 +3,7 @@
 #include <functional>
 #include <memory>
 #include <odbc/odbc_driver_types.h>
+#include <utils/Logger.h>
 
 namespace mssql {
 
@@ -50,7 +51,12 @@ class WeakStateNotifier {
                          OdbcStatementState oldState,
                          OdbcStatementState newState) {
     if (auto strong = notifier_.lock()) {
+      SQL_LOG_DEBUG_STREAM("WeakStateNotifier::NotifyStateChange [" << statementHandle.toString()
+                                                                    << "] ");
       strong->OnStateChange(statementHandle, oldState, newState);
+    } else {
+      SQL_LOG_DEBUG_STREAM("WeakStateNotifier::NotifyStateChange [" << statementHandle.toString()
+                                                                    << "] notifier is expired");
     }
   }
 
