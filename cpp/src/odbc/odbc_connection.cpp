@@ -306,11 +306,17 @@ bool OdbcConnection::CancelStatement(int queryId) {
 
 bool OdbcConnection::ExecuteQuery(const std::shared_ptr<QueryOperationParams> operationParams,
                                   const std::shared_ptr<BoundDatumSet> parameters,
-                                  std::shared_ptr<QueryResult>& result) {
+                                  std::shared_ptr<QueryResult>& result,
+                                  std::shared_ptr<IOdbcStateNotifier> stateNotifier) {
   // Create a transient statement
   auto statement = CreateStatement(OdbcStatement::Type::Legacy, operationParams);
   if (!statement) {
     return false;
+  }
+
+  // Set the state notifier if provided
+  if (stateNotifier) {
+    statement->SetStateNotifier(stateNotifier);
   }
 
   // Execute it

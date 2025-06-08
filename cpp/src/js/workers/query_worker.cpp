@@ -12,8 +12,14 @@ namespace mssql {
 QueryWorker::QueryWorker(Napi::Function& callback,
                          IOdbcConnection* connection,
                          const std::shared_ptr<QueryOperationParams> q,
-                         const Napi::Array& params)
+                         const Napi::Array& params,
+                         Napi::Function stateChangeCallback)
     : OdbcAsyncWorker(callback, connection), queryParams_(q) {
+  
+  // Create state notifier if callback is provided
+  if (!stateChangeCallback.IsEmpty()) {
+    stateNotifier_ = std::make_shared<JsStateNotifier>(Env(), stateChangeCallback);
+  }
   // Convert JavaScript parameters to C++ parameters
   const uint32_t length = params.Length();
 
@@ -45,7 +51,7 @@ void QueryWorker::Execute() {
     // SQL_LOG_DEBUG_STREAM("Executing QueryWorker " << StringUtils::U16StringToUtf8(sqlText_));
     // This will need to be implemented in OdbcConnection
     // Here's a placeholder showing what it might look like
-    if (!connection_->ExecuteQuery(queryParams_, parameters_, result_)) {
+    if (!connection_->ExecuteQuery(queryParams_, parameters_, result_, stateNotifier_)) {
       const auto& errors = connection_->GetErrors();
       if (!errors.empty()) {
         // Populate errorDetails_ with all ODBC errors

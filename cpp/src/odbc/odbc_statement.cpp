@@ -1,5 +1,6 @@
 #include <platform.h>
 #include <odbc/odbc_statement.h>
+#include <odbc/odbc_state_notifier.h>
 
 #include <cstring>  // For std::memcpy
 
@@ -21,6 +22,22 @@ const int LOB_PACKET_SIZE = 8192;
 
 namespace mssql {
 enum class ExecutionState { Initial, Prepared, Executed, Completed, Error };
+
+void OdbcStatement::SetStateNotifier(std::shared_ptr<IOdbcStateNotifier> notifier) {
+  if (notifier) {
+    stateNotifier_ = std::make_unique<WeakStateNotifier>(notifier);
+  } else {
+    stateNotifier_.reset();
+  }
+}
+
+void OdbcStatement::SetState(State newState) {
+  State oldState = state_;
+  state_ = newState;
+  if (stateNotifier_) {
+    stateNotifier_->NotifyStateChange(handle_.getStatementId(), oldState, newState);
+  }
+}
 
 bool OdbcStatement::ReadNextResult(std::shared_ptr<QueryResult> result) {
   SQL_LOG_TRACE_STREAM("ReadNextResult: " << result->toString());

@@ -421,11 +421,21 @@ Napi::Value Connection::Query(const Napi::CallbackInfo& info) {
     params = info[2].As<Napi::Array>();
   }
 
+  // Check for state change callback in the operation params object
+  Napi::Function stateChangeCallback;
+  if (info.Length() > 1 && info[1].IsObject()) {
+    Napi::Object paramsObj = info[1].As<Napi::Object>();
+    if (paramsObj.Has("stateChangeCallback") && paramsObj.Get("stateChangeCallback").IsFunction()) {
+      stateChangeCallback = paramsObj.Get("stateChangeCallback").As<Napi::Function>();
+      SQL_LOG_DEBUG("Found state change callback in query params");
+    }
+  }
+
   SQL_LOG_DEBUG_STREAM("Connection::Query: " + operationParams->toString()
                        << " number params " << params.Length());
 
   // Use the generic worker factory
   return CreateWorkerWithCallbackOrPromise<QueryWorker>(
-      info, odbcConnection_.get(), operationParams, params);
+      info, odbcConnection_.get(), operationParams, params, stateChangeCallback);
 }
 }  // namespace mssql

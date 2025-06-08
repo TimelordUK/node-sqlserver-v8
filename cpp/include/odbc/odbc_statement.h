@@ -9,6 +9,7 @@
 #include "odbc_handles.h"
 #include "query_parameter.h"
 #include "js/columns/result_set.h"
+#include "odbc_state_notifier.h"
 
 namespace mssql {
 class OdbcErrorHandler;
@@ -136,6 +137,12 @@ class IOdbcStatement {
   virtual bool ReadNextResult(std::shared_ptr<QueryResult> result) = 0;
 
   virtual bool Cancel() = 0;
+  
+  /**
+   * @brief Set the state change notifier
+   * @param notifier The notifier to receive state change events
+   */
+  virtual void SetStateNotifier(std::shared_ptr<IOdbcStateNotifier> notifier) = 0;
 };
 
 /**
@@ -219,6 +226,12 @@ class OdbcStatement : public IOdbcStatement {
   virtual bool Cancel() override {
     return false;
   }
+  
+  /**
+   * @brief Set the state change notifier
+   * @param notifier The notifier to receive state change events
+   */
+  virtual void SetStateNotifier(std::shared_ptr<IOdbcStateNotifier> notifier) override;
 
  protected:
   OdbcStatement(Type type,
@@ -279,6 +292,12 @@ class OdbcStatement : public IOdbcStatement {
   bool check_more_read(SQLRETURN r, bool& status);
   std::vector<std::shared_ptr<IOdbcRow>> rows_;
   std::shared_ptr<std::vector<shared_ptr<OdbcError>>> errors_;
+  
+  // State change notifier
+  std::unique_ptr<WeakStateNotifier> stateNotifier_;
+  
+  // Helper method to set state with notification
+  void SetState(State newState);
 };
 
 /**

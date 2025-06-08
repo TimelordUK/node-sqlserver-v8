@@ -12,6 +12,7 @@
 #include "query_parameter.h"
 #include <js/columns/result_set.h>
 #include <odbc/odbc_statement.h>
+#include <odbc/odbc_state_notifier.h>
 
 namespace mssql {
 class BoundDatum;
@@ -69,6 +70,12 @@ class OdbcStatementLegacy : public IOdbcStatement {
     return _statementState == OdbcStatementState::STATEMENT_CREATED;
   }
   bool Cancel() override;
+  
+  /**
+   * @brief Set the state change notifier
+   * @param notifier The notifier to receive state change events
+   */
+  virtual void SetStateNotifier(std::shared_ptr<IOdbcStateNotifier> notifier) override;
 
   OdbcStatementLegacy(std::shared_ptr<IOdbcStatementHandle> statement,
                       std::shared_ptr<OdbcErrorHandler> errorHandler,
@@ -200,6 +207,9 @@ class OdbcStatementLegacy : public IOdbcStatement {
   std::vector<std::shared_ptr<IOdbcRow>> _rows;
   std::shared_ptr<QueryOperationParams> _operationParams;
   recursive_mutex g_i_mutex;
+  
+  // State change notifier
+  std::unique_ptr<WeakStateNotifier> _stateNotifier;
 
   const static size_t prepared_rows_to_bind = 50;
 };

@@ -46,6 +46,8 @@ OdbcStatementLegacy::~OdbcStatementLegacy() {
 
 bool OdbcStatementLegacy::Execute(const std::shared_ptr<BoundDatumSet> parameters,
                                   std::shared_ptr<QueryResult>& result) {
+  lock_guard<recursive_mutex> lock(g_i_mutex);
+  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Execute [" << _handle.toString() << "] Enter Execute");
   auto res = try_execute_direct(_operationParams, parameters);
   // Check if _resultset was initialized (it may be null if bind_params failed)
   if (_resultset != nullptr) {
@@ -55,6 +57,7 @@ bool OdbcStatementLegacy::Execute(const std::shared_ptr<BoundDatumSet> parameter
       result->addColumn(col);
     }
   }
+  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Execute [" << _handle.toString() << "] Exit Execute");
   return res;
 }
 
@@ -112,6 +115,8 @@ std::shared_ptr<QueryResult> OdbcStatementLegacy::GetMetaData() {
 
 bool OdbcStatementLegacy::TryReadRows(std::shared_ptr<QueryResult> result,
                                       const size_t number_rows) {
+  lock_guard<recursive_mutex> lock(g_i_mutex);
+  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::TryReadRows [" << _handle.toString() << "] Enter");
   auto res = try_read_columns(number_rows);
   if (_resultset != nullptr) {
     result->set_end_of_rows(this->_resultset->EndOfRows());
@@ -123,16 +128,17 @@ bool OdbcStatementLegacy::TryReadRows(std::shared_ptr<QueryResult> result,
       auto col = _resultset->get_meta_data(i);
       result->addColumn(col);
     }
-    SQL_LOG_DEBUG_STREAM("[" << _handle.toString()
-                             << "] TryReadRows result = " << result->toString());
+    SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::TryReadRows ["
+                         << _handle.toString() << "] TryReadRows result = " << result->toString());
   }
-
+  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::TryReadRows [" << _handle.toString() << "] Exit");
   return res;
 }
 
 bool OdbcStatementLegacy::ReadNextResult(std::shared_ptr<QueryResult> result) {
+  lock_guard<recursive_mutex> lock(g_i_mutex);
   auto res = try_read_next_result();
-
+  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::ReadNextResult [" << _handle.toString() << "] Enter");
   if (_resultset != nullptr) {
     result->set_end_of_rows(this->_resultset->EndOfRows());
     result->set_end_of_results(this->_resultset->EndOfResults());
@@ -143,9 +149,11 @@ bool OdbcStatementLegacy::ReadNextResult(std::shared_ptr<QueryResult> result) {
       auto col = _resultset->get_meta_data(i);
       result->addColumn(col);
     }
-    SQL_LOG_DEBUG_STREAM("[" << _handle.toString()
-                             << "] ReadNextResult result = " << result->toString());
+    SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::ReadNextResult ["
+                         << _handle.toString()
+                         << "] ReadNextResult result = " << result->toString());
   }
+  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::ReadNextResult [" << _handle.toString() << "] Exit");
   return res;
 }
 
@@ -297,23 +305,27 @@ bool OdbcStatementLegacy::apply_precision(const shared_ptr<BoundDatum>& datum,
 // this will show on a different thread to the current executing query.
 bool OdbcStatementLegacy::Cancel() {
   {
-    SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] cancel " << _statementId << " "
-                             << _pollingEnabled << " state"
-                             << OdbcStatementStateToString(_statementState));
-
     lock_guard<recursive_mutex> lock(g_i_mutex);
+    SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Cancel Enter ["
+                         << _handle.toString() << "] cancel " << _statementId << " "
+                         << _pollingEnabled << " state"
+                         << OdbcStatementStateToString(_statementState));
+
     const auto state = get_state();
     if (!_pollingEnabled && (state == OdbcStatementState::STATEMENT_SUBMITTED ||
                              state == OdbcStatementState::STATEMENT_READING)) {
       set_state(OdbcStatementState::STATEMENT_CANCEL_HANDLE);
       SQL_LOG_DEBUG_STREAM(
-          "[" << _handle.toString() << "] cancel handle"
-              << OdbcStatementStateToString(OdbcStatementState::STATEMENT_CANCEL_HANDLE) << " "
-              << _statementId);
+          "OdbcStatementLegacy::Cancel ["
+          << _handle.toString() << "] cancel handle"
+          << OdbcStatementStateToString(OdbcStatementState::STATEMENT_CANCEL_HANDLE) << " "
+          << _statementId);
       cancel_handle();
       _resultset = make_unique<ResultSet>(0);
       _resultset->_end_of_rows = false;
       _resultset->_end_of_results = false;
+      SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Cancel Exit [" << _handle.toString()
+                                                                << "] cancel handle");
       return true;
     }
   }
@@ -329,12 +341,23 @@ bool OdbcStatementLegacy::Cancel() {
   return false;
 }
 
+void OdbcStatementLegacy::SetStateNotifier(std::shared_ptr<IOdbcStateNotifier> notifier) {
+  lock_guard<recursive_mutex> lock(g_i_mutex);
+  _stateNotifier = std::make_unique<WeakStateNotifier>(notifier);
+}
+
 void OdbcStatementLegacy::set_state(const OdbcStatementState state) {
   lock_guard<recursive_mutex> lock(g_i_mutex);
   SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] set_state " << _statementId << " "
                            << OdbcStatementStateToString(_statementState) << " -> "
                            << OdbcStatementStateToString(state));
+  OdbcStatementState oldState = _statementState;
   _statementState = state;
+  
+  // Notify state change if we have a notifier
+  if (_stateNotifier) {
+    _stateNotifier->NotifyStateChange(_statementId, oldState, state);
+  }
 }
 
 OdbcStatementState OdbcStatementLegacy::get_state() {
