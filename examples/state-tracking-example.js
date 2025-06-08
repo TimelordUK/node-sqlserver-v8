@@ -7,7 +7,19 @@
 
 const sql = require('msnodesqlv8')
 
+// Configure logging for development
+sql.logger.configureForInfoConsole()
 
+// Or configure manually:
+// sql.logger.setLogLevel(sql.LogLevel.TRACE)  // Set to TRACE for maximum verbosity
+// sql.logger.setConsoleLogging(true)          // Enable console output
+// sql.logger.setLogFile('/tmp/msnodesqlv8.log') // Enable file logging
+
+// Log current configuration
+console.log('Logger configuration:', sql.logger.getConfiguration())
+
+// Example of using the logger in your code
+sql.logger.info('Starting SQL Server connection test')
 // Connection string - adjust to your SQL Server instance
 const connectionString = 'Driver={ODBC Driver 18 for SQL Server};Server=127.0.0.1,1433;Database=node;UID=node_user;PWD=StrongPassword123!;TrustServerCertificate=yes;;Connect Timeout=10'
 
