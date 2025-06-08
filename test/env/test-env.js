@@ -189,7 +189,7 @@ class TestEnv {
   }
 
   pool (size) {
-    size = size || 4
+    size = size || 2
     return new this.sql.Pool({
       connectionString: this.connectionString,
       ceiling: size
