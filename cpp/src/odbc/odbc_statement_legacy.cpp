@@ -2014,9 +2014,13 @@ bool OdbcStatementLegacy::reserved_chars(const size_t row_count,
       continue;
     }
     auto offset = (column_size + 1) * row_id;
-    size_t actual_size = ind[row_id] / size;
-    auto to_read = min(actual_size, column_size);
-    const auto value = make_shared<CharColumn>(column, storage->charvec_ptr, offset, to_read);
+    const auto u8_store = storage->charvec_ptr;
+    size_t actual_size = str_len_or_ind_ptr / size;
+    auto to_read = column_size > 0 ? min(actual_size, column_size) : actual_size;
+    if (actual_size + offset > u8_store->capacity()) {
+      u8_store->reserve(actual_size + offset);
+    }
+    const auto value = make_shared<CharColumn>(column, u8_store, offset, to_read);
     _resultset->add_column(row_id, value);
   }
   return true;
@@ -2038,6 +2042,10 @@ bool OdbcStatementLegacy::reserved_string(const size_t row_count,
     auto offset = (column_size + 1) * row_id;
     size_t actual_size = ind[row_id] / size;
     const auto uint16_store = storage->uint16vec_ptr;
+    // Exclude null terminator from the size passed to JavaScript
+    if (actual_size > 0 && uint16_store->at(offset + actual_size - 1) == 0) {
+      actual_size--;
+    }
     if (actual_size > uint16_store->capacity()) {
       uint16_store->reserve(actual_size);
     }
@@ -2054,6 +2062,7 @@ bool OdbcStatementLegacy::reserved_binary(const size_t row_count,
   const auto& bound_datum = _preparedStorage->atIndex(static_cast<int>(column));
   auto& ind = bound_datum->get_ind_vec();
   const auto storage = bound_datum->get_storage();
+  const auto uint8_store = storage->charvec_ptr;
   for (size_t row_id = 0; row_id < row_count; ++row_id) {
     const auto str_len_or_ind_ptr = ind[row_id];
     if (str_len_or_ind_ptr == SQL_NULL_DATA) {
@@ -2061,7 +2070,10 @@ bool OdbcStatementLegacy::reserved_binary(const size_t row_count,
       continue;
     }
     auto offset = column_size * row_id;
-    const auto value = make_shared<BinaryColumn>(column, storage, offset, ind[row_id]);
+    if (str_len_or_ind_ptr + offset > uint8_store->capacity()) {
+      uint8_store->reserve(str_len_or_ind_ptr + offset);
+    }
+    const auto value = make_shared<BinaryColumn>(column, storage, offset, str_len_or_ind_ptr);
     _resultset->add_column(row_id, value);
   }
   return true;

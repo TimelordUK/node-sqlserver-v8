@@ -2221,7 +2221,7 @@ const Napi::Date BoundDatum::unbind_date(const Napi::Env& env) const {
 size_t BoundDatum::get_default_size(size_t len) const {
   if (len != 0)
     return len;
-  const uint32_t defaultSize = 0;  // _params->max_prepared_column_size();
+  const uint32_t defaultSize = _params->max_prepared_column_size;
   len = defaultSize > 0 ? defaultSize : 8 * 1024;
   return len;
 }

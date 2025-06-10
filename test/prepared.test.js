@@ -56,6 +56,45 @@ describe('prepared', function () {
       .then(() => { done() }).catch((err) => { done(err) })
   })
 
+  it('use prepared statement with params returning 0 rows. - expect no error', async function handler () {
+    const select = prepared.select
+    const meta = select.getMeta()
+    const id1 = -1
+
+    assert.isTrue(meta.length > 0)
+    const res = await select.promises.query([id1])
+    assert(res != null)
+    assert.deepStrictEqual(res.first.length, 0)
+  })
+
+  describe('default max prepared size', () => {
+    it('use prepared and select nvarchar max with max default size on connection', async function handler () {
+      if (env.isEncryptedConnection()) return
+      const s = 'hello'
+      const max = 4
+      const q = `DECLARE @v NVARCHAR(MAX) = '${s}'; SELECT @v AS v`
+      env.theConnection.setMaxPreparedColumnSize(max)
+      const prepared = await env.theConnection.promises.prepare(q)
+      const res = await prepared.promises.query([])
+      assert.deepStrictEqual(res.first[0].v, s.slice(0, 4))
+      await prepared.promises.free()
+    })
+
+    it('use prepared and select nvarchar max with max default size on query', async function handler () {
+      if (env.isEncryptedConnection()) return
+      const s = 'hello'
+      const max = 4
+      const q = {
+        query_str: `DECLARE @v NVARCHAR(MAX) = '${s}'; SELECT @v AS v`,
+        max_prepared_column_size: max
+      }
+      const prepared = await env.theConnection.promises.prepare(q)
+      const res = await prepared.promises.query([])
+      assert.deepStrictEqual(res.first[0].v, s.slice(0, 4))
+      await prepared.promises.free()
+    })
+  })
+
   it('use prepared and select nvarchar(max)', async function handler () {
     if (env.isEncryptedConnection()) return
     const s = 'hello'
@@ -63,32 +102,6 @@ describe('prepared', function () {
     const prepared = await env.theConnection.promises.prepare(q)
     const res = await prepared.promises.query([])
     assert.deepStrictEqual(res.first[0].v, s)
-    await prepared.promises.free()
-  })
-
-  it('use prepared and select nvarchar max with max default size on connection', async function handler () {
-    if (env.isEncryptedConnection()) return
-    const s = 'hello'
-    const max = 4
-    const q = `DECLARE @v NVARCHAR(MAX) = '${s}'; SELECT @v AS v`
-    env.theConnection.setMaxPreparedColumnSize(max)
-    const prepared = await env.theConnection.promises.prepare(q)
-    const res = await prepared.promises.query([])
-    assert.deepStrictEqual(res.first[0].v, s.slice(0, 4))
-    await prepared.promises.free()
-  })
-
-  it('use prepared and select nvarchar max with max default size on query', async function handler () {
-    if (env.isEncryptedConnection()) return
-    const s = 'hello'
-    const max = 4
-    const q = {
-      query_str: `DECLARE @v NVARCHAR(MAX) = '${s}'; SELECT @v AS v`,
-      max_prepared_column_size: max
-    }
-    const prepared = await env.theConnection.promises.prepare(q)
-    const res = await prepared.promises.query([])
-    assert.deepStrictEqual(res.first[0].v, s.slice(0, 4))
     await prepared.promises.free()
   })
 
@@ -131,17 +144,6 @@ describe('prepared', function () {
       }).catch(err => {
         testDone(err)
       })
-  })
-
-  it('use prepared statement with params returning 0 rows. - expect no error', async function handler () {
-    const select = prepared.select
-    const meta = select.getMeta()
-    const id1 = -1
-
-    assert(meta.length > 0)
-    const res = await select.promises.query([id1])
-    assert(res != null)
-    assert.deepStrictEqual(res.first.length, 0)
   })
 
   it('use prepared statement with params updating 0 rows - expect no error', async function handler () {
