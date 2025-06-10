@@ -329,6 +329,24 @@ bool OdbcConnection::ExecuteQuery(const std::shared_ptr<QueryOperationParams> op
   return statement->Execute(parameters, result);
 }
 
+bool OdbcConnection::BindQuery(int queryId,
+                               const std::shared_ptr<BoundDatumSet> parameters,
+                               std::shared_ptr<QueryResult>& result) {
+  auto it = _queryIdToStatementHandle.find(queryId);
+  if (it == _queryIdToStatementHandle.end()) {
+    SQL_LOG_ERROR_STREAM("OdbcConnection::BindQuery ID = " << queryId << " - statement not found");
+    return false;
+  }
+
+  const auto statementId = it->second.getStatementId();
+  auto statement = _statementFactory->GetStatement(statementId);
+  SQL_LOG_DEBUG_STREAM("OdbcConnection::BindQuery ID = " << statementId);
+  if (statement) {
+    result->setHandle(statement->GetStatementHandle());
+    return statement->BindExecute(parameters, result);
+  }
+}
+
 bool OdbcConnection::PrepareQuery(const std::shared_ptr<QueryOperationParams> operationParams,
                                   const std::shared_ptr<BoundDatumSet> parameters,
                                   std::shared_ptr<QueryResult>& result,
@@ -346,6 +364,8 @@ bool OdbcConnection::PrepareQuery(const std::shared_ptr<QueryOperationParams> op
 
   // Execute it
   result->setHandle(statement->GetStatementHandle());
+  SQL_LOG_DEBUG_STREAM(
+      "OdbcConnection::PrepareQuery ID = " << statement->GetStatementHandle().toString());
   return statement->Prepare(parameters, result);
 }
 

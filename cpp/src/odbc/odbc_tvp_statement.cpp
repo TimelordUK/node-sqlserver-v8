@@ -24,6 +24,11 @@ bool TvpStatement::BindTvpColumns(const std::vector<std::string>& columnNames) {
   return true;
 }
 
+bool TvpStatement::BindExecute(const std::shared_ptr<BoundDatumSet> parameters,
+                               std::shared_ptr<QueryResult>& result) {
+  return true;
+}
+
 bool TvpStatement::Prepare(const std::shared_ptr<BoundDatumSet> parameters,
                            std::shared_ptr<QueryResult>& result) {
   SQL_LOG_TRACE_STREAM("TvpStatement::Prepare - Starting preparation with " << parameters->size()

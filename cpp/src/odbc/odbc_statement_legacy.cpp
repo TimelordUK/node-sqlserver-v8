@@ -64,6 +64,22 @@ bool OdbcStatementLegacy::Execute(const std::shared_ptr<BoundDatumSet> parameter
   return res;
 }
 
+bool OdbcStatementLegacy::BindExecute(const std::shared_ptr<BoundDatumSet> parameters,
+                                      std::shared_ptr<QueryResult>& result) {
+  lock_guard<recursive_mutex> lock(g_i_mutex);
+  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::BindExecute [" << _handle.toString()
+                                                            << "] Enter BindExecute");
+  auto res = bind_fetch(parameters);
+  auto cols = _resultset->get_column_count();
+  for (size_t i = 0; i < cols; ++i) {
+    auto col = _resultset->get_meta_data(i);
+    result->addColumn(col);
+  }
+  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::BindExecute [" << _handle.toString()
+                                                            << "] Exit BindExecute");
+  return res;
+}
+
 bool OdbcStatementLegacy::Prepare(const std::shared_ptr<BoundDatumSet> parameters,
                                   std::shared_ptr<QueryResult>& result) {
   lock_guard<recursive_mutex> lock(g_i_mutex);
@@ -2021,8 +2037,12 @@ bool OdbcStatementLegacy::reserved_string(const size_t row_count,
     }
     auto offset = (column_size + 1) * row_id;
     size_t actual_size = ind[row_id] / size;
-    auto to_read = min(actual_size, column_size);
-    const auto value = make_shared<StringColumn>(column, storage->uint16vec_ptr, offset, to_read);
+    const auto uint16_store = storage->uint16vec_ptr;
+    if (actual_size > uint16_store->capacity()) {
+      uint16_store->reserve(actual_size);
+    }
+    auto to_read = column_size > 0 ? min(actual_size, column_size) : actual_size;
+    const auto value = make_shared<StringColumn>(column, uint16_store, offset, to_read);
     _resultset->add_column(row_id, value);
   }
   return true;

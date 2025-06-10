@@ -102,6 +102,12 @@ class IOdbcStatement {
                        std::shared_ptr<QueryResult>& result) = 0;
 
   /**
+   * @brief Bind the statement with given parameters
+   */
+  virtual bool BindExecute(const std::shared_ptr<BoundDatumSet> parameters,
+                           std::shared_ptr<QueryResult>& result) = 0;
+
+  /**
    * @brief Get the statement type
    */
   virtual StatementType GetType() const = 0;
@@ -343,6 +349,9 @@ class TransientStatement : public OdbcStatement {
   bool Prepare(const std::shared_ptr<BoundDatumSet> parameters,
                std::shared_ptr<QueryResult>& result) override;
 
+  bool BindExecute(const std::shared_ptr<BoundDatumSet> parameters,
+                   std::shared_ptr<QueryResult>& result) override;
+
   bool ReadNextResult(std::shared_ptr<QueryResult> result) override;
 
  protected:
@@ -370,6 +379,9 @@ class PreparedStatement : public OdbcStatement {
                std::shared_ptr<QueryResult>& result) override;
   bool Prepare(const std::shared_ptr<BoundDatumSet> parameters,
                std::shared_ptr<QueryResult>& result) override;
+  bool BindExecute(const std::shared_ptr<BoundDatumSet> parameters,
+                   std::shared_ptr<QueryResult>& result) override;
+
   bool Cancel() override {
     return false;
   }
@@ -400,6 +412,9 @@ class TvpStatement : public OdbcStatement {
                std::shared_ptr<QueryResult>& result) override;
   bool Prepare(const std::shared_ptr<BoundDatumSet> parameters,
                std::shared_ptr<QueryResult>& result) override;
+  bool BindExecute(const std::shared_ptr<BoundDatumSet> parameters,
+                   std::shared_ptr<QueryResult>& result) override;
+
   virtual std::shared_ptr<ResultSet> GetResultSet() override {
     return std::make_shared<ResultSet>(0);
   }
