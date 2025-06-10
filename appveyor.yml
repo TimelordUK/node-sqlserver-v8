@@ -56,7 +56,7 @@ for:
 
     test_script:
       - sh: "sleep 4"
-      - sh: "./node_modules/.bin/env-cmd -e appv-ubuntu ./node_modules/.bin/mocha test/params.test.js test/parsing.test.js test/bulk.test.js test/query.test.js test/pause.test.js test/userbind.test.js  2>&1"
+      - sh: "./node_modules/.bin/env-cmd -e appv-ubuntu ./node_modules/.bin/mocha test/prepared.test.js test/params.test.js test/parsing.test.js test/bulk.test.js test/query.test.js test/pause.test.js test/userbind.test.js  2>&1"
 
     install:
       - nvm install $nodejs_version

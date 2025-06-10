@@ -456,8 +456,8 @@ Napi::Value Connection::BindQuery(const Napi::CallbackInfo& info) {
 
   // Get parameters array (optional)
   Napi::Array params = Napi::Array::New(env, 0);
-  if (info.Length() > 2 && info[2].IsArray()) {
-    params = info[2].As<Napi::Array>();
+  if (info.Length() > 1 && info[1].IsArray()) {
+    params = info[1].As<Napi::Array>();
   }
 
   SQL_LOG_DEBUG_STREAM("Connection::BindQuery: " << queryId << " number params "
