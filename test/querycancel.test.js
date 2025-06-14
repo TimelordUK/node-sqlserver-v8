@@ -20,23 +20,23 @@ describe('querycancel', function () {
   this.timeout(30000)
 
   this.beforeEach(done => {
-    sql.logger.info('Starting test setup', 'params.test.beforeEach')
+    sql.logger.info('Starting test setup', 'querycancel.test.beforeEach')
     env.open().then(() => {
-      sql.logger.info('Test environment opened successfully', 'params.test.beforeEach')
+      sql.logger.info('Test environment opened successfully', 'querycancel.test.beforeEach')
       done()
     }).catch(e => {
-      sql.logger.error(`Failed to open test environment: ${e}`, 'params.test.beforeEach')
+      sql.logger.error(`Failed to open test environment: ${e}`, 'querycancel.test.beforeEach')
       sql.logger.error(e)
     })
   })
 
   this.afterEach(done => {
-    sql.logger.info('Starting test cleanup', 'params.test.afterEach')
+    sql.logger.info('Starting test cleanup', 'querycancel.test.afterEach')
     env.close().then(() => {
-      sql.logger.info('Test environment closed successfully', 'params.test.afterEach')
+      sql.logger.info('Test environment closed successfully', 'querycancel.test.afterEach')
       done()
     }).catch(e => {
-      sql.logger.error(`Failed to close test environment: ${e}`, 'params.test.afterEach')
+      sql.logger.error(`Failed to close test environment: ${e}`, 'querycancel.test.afterEach')
       sql.logger.error(e)
     })
   })
