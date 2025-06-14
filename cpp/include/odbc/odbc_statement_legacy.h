@@ -202,8 +202,8 @@ class OdbcStatementLegacy : public IOdbcStatement {
   // bool _endOfResults;
   long _statementId;
   bool _prepared;
-  bool _cancelRequested;
-  bool _pollingEnabled;
+  std::atomic<bool> _cancelRequested;
+  std::atomic<bool> _pollingEnabled;
   bool _numericStringEnabled;
 
   std::atomic<OdbcStatementState> _statementState{OdbcStatementState::STATEMENT_IDLE};

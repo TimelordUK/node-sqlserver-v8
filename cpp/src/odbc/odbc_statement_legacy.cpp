@@ -371,7 +371,7 @@ bool OdbcStatementLegacy::Cancel() {
     return true;
   }
   if (get_polling()) {
-    _cancelRequested = true;
+    _cancelRequested.store(true);
     return true;
   }
   SQLINTEGER native_error = -1;
@@ -423,14 +423,12 @@ bool OdbcStatementLegacy::set_polling(const bool mode) {
       _statementState == OdbcStatementState::STATEMENT_SUBMITTED) {
     return true;
   }
-  _pollingEnabled = mode;
+  _pollingEnabled.store(mode);
   return true;
 }
 
 bool OdbcStatementLegacy::get_polling() {
-  lock_guard<recursive_mutex> lock(g_i_mutex);
-  const auto polling = _pollingEnabled;
-  return polling;
+  return _pollingEnabled.load();
 }
 
 bool OdbcStatementLegacy::set_numeric_string(const bool mode) {
@@ -636,7 +634,7 @@ Napi::Array OdbcStatementLegacy::unbind_params(Napi::Env env) const {
 }
 
 Napi::Object OdbcStatementLegacy::get_meta_value(Napi::Env env) const {
-  if (_cancelRequested || _resultset == nullptr) {
+  if (_cancelRequested.load() || _resultset == nullptr) {
     return Napi::Object::New(env);
   }
   return _resultset->meta_to_value(env);
@@ -774,7 +772,7 @@ bool OdbcStatementLegacy::start_reading_results() {
     return false;
   }
 
-  if (_cancelRequested) {
+  if (_cancelRequested.load()) {
     SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] start_reading_results: cancel requested");
     _resultset = make_unique<ResultSet>(0);
     return true;
@@ -915,7 +913,7 @@ SQLRETURN OdbcStatementLegacy::poll_check(SQLRETURN ret,
 #endif
       {
         lock_guard<recursive_mutex> lock(g_i_mutex);
-        submit_cancel = _cancelRequested;
+        submit_cancel = _cancelRequested.load();
       }
 
       if (submit_cancel) {
@@ -971,6 +969,7 @@ bool OdbcStatementLegacy::bind_fetch(const shared_ptr<BoundDatumSet>& param_set)
     }
   }
 
+  set_state(OdbcStatementState::STATEMENT_SUBMITTED);
   auto ret = _odbcApi->SQLExecute(statement.get_handle());
   if (polling_mode) {
     const auto vec = make_shared<vector<uint16_t>>();
@@ -1021,7 +1020,7 @@ bool OdbcStatementLegacy::cancel_handle() {
 
   {
     lock_guard<recursive_mutex> lock(g_i_mutex);
-    _cancelRequested = false;
+    _cancelRequested.store(false);
   }
   // set_state(OdbcStatementState::STATEMENT_CANCELLED);
   return true;
