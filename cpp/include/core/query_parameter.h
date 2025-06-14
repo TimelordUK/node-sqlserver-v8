@@ -77,6 +77,16 @@ class QueryParameter {
 
   SQLSMALLINT c_type;
   SQLSMALLINT sql_type;
+  
+  /**
+   * @brief Map DatumStorage SQL type to ODBC C and SQL type constants
+   */
+  void mapStorageTypeToOdbc();
+  
+  /**
+   * @brief Infer the SQL type from the actual storage data when type is Unknown
+   */
+  DatumStorage::SqlType inferTypeFromStorage();
   SQLULEN param_size;
   SQLULEN max_length;
   SQLSMALLINT digits;

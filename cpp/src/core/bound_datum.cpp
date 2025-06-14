@@ -1449,6 +1449,17 @@ bool BoundDatum::bind_datum_type(const Napi::Object& p) {
     return false;
   }
 
+  // Ensure c_type and sql_type are set to non-zero values
+  if (c_type == 0 || sql_type == 0) {
+    // Fallback to safe defaults if types weren't set
+    if (c_type == 0) {
+      c_type = SQL_C_CHAR;
+    }
+    if (sql_type == 0) {
+      sql_type = SQL_VARCHAR;
+    }
+  }
+
   return true;
 }
 
@@ -2030,6 +2041,68 @@ bool BoundDatum::user_bind(const Napi::Object& p, const Napi::Object& v) {
     case SQL_UNKNOWN_TYPE:
     default:
       return false;
+  }
+
+  // Ensure c_type is set based on sql_type if it wasn't set properly
+  if (c_type == 0) {
+    switch (sql_type) {
+      case SQL_CHAR:
+      case SQL_VARCHAR:
+      case SQL_LONGVARCHAR:
+        c_type = SQL_C_CHAR;
+        break;
+      case SQL_WCHAR:
+      case SQL_WVARCHAR:
+      case SQL_WLONGVARCHAR:
+        c_type = SQL_C_WCHAR;
+        break;
+      case SQL_TINYINT:
+        c_type = SQL_C_TINYINT;
+        break;
+      case SQL_SMALLINT:
+        c_type = SQL_C_SHORT;
+        break;
+      case SQL_INTEGER:
+        c_type = SQL_C_LONG;
+        break;
+      case SQL_BIGINT:
+        c_type = SQL_C_SBIGINT;
+        break;
+      case SQL_REAL:
+        c_type = SQL_C_FLOAT;
+        break;
+      case SQL_FLOAT:
+      case SQL_DOUBLE:
+        c_type = SQL_C_DOUBLE;
+        break;
+      case SQL_DECIMAL:
+      case SQL_NUMERIC:
+        c_type = SQL_C_NUMERIC;
+        break;
+      case SQL_BIT:
+        c_type = SQL_C_BIT;
+        break;
+      case SQL_BINARY:
+      case SQL_VARBINARY:
+      case SQL_LONGVARBINARY:
+        c_type = SQL_C_BINARY;
+        break;
+      case SQL_TYPE_DATE:
+        c_type = SQL_C_TYPE_DATE;
+        break;
+      case SQL_TYPE_TIME:
+      case SQL_SS_TIME2:
+        c_type = SQL_C_TYPE_TIME;
+        break;
+      case SQL_TYPE_TIMESTAMP:
+      case SQL_DATETIME:
+      case SQL_SS_TIMESTAMPOFFSET:
+        c_type = SQL_C_TYPE_TIMESTAMP;
+        break;
+      default:
+        c_type = SQL_C_CHAR; // Safe default
+        break;
+    }
   }
 
   return true;
