@@ -15,6 +15,7 @@ const { configureTestLogging } = require('./common/logging-helper')
 // - MSNODESQLV8_TEST_LOG_LEVEL=DEBUG MSNODESQLV8_TEST_LOG_CONSOLE=true npm test
 // - MSNODESQLV8_TEST_LOG_LEVEL=INFO MSNODESQLV8_TEST_LOG_FILE=/tmp/test.log npm test
 configureTestLogging(sql)
+sql.logger.configureForDevelopment()
 
 describe('querycancel', function () {
   this.timeout(30000)
@@ -38,6 +39,28 @@ describe('querycancel', function () {
     }).catch(e => {
       sql.logger.error(`Failed to close test environment: ${e}`, 'querycancel.test.afterEach')
       sql.logger.error(e)
+    })
+  })
+
+  it('cancel a prepared call that waits refactor', testDone => {
+    const s = 'waitfor delay ?;'
+    let prepared
+
+    env.theConnection.prepare(env.sql.PollingQuery(s), (err, pq) => {
+      assert(!err)
+      prepared = pq
+
+      const q = prepared.preparedQuery(['00:00:20'], err => {
+        assert(err)
+        assert(err.message.indexOf('Operation canceled') > 0)
+        testDone()
+      })
+
+      q.on('submitted', () => {
+        q.cancelQuery(err => {
+          assert(!err)
+        })
+      })
     })
   })
 
