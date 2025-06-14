@@ -1,9 +1,9 @@
 'use strict'
-
-/* globals describe it */
+'use strict'
 
 import { createRequire } from 'module'
 import chaiAsPromised from 'chai-as-promised'
+
 const require = createRequire(import.meta.url)
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
@@ -12,23 +12,16 @@ chai.use(chaiAsPromised)
 const expect = chai.expect
 const assert = chai.assert
 
-describe('sproc', function () {
-  this.timeout(30000)
+// Enable trace-level logging for debugging test failures
+const sql = require('../lib/sql')
+const { configureTestLogging } = require('./common/logging-helper')
 
-  this.beforeEach(done => {
-    env.open().then(() => {
-      done()
-    }).catch(e => {
-      console.error(e)
-    })
-  })
-
-  this.afterEach(done => {
-    env.close().then(() => { done() }).catch(e => {
-      console.error(e)
-    })
-  })
-
+// Configure logging based on environment variables
+// By default, tests run silently. To enable logging:
+// - MSNODESQLV8_TEST_VERBOSE=true npm test  (for full trace logging)
+// - MSNODESQLV8_TEST_LOG_LEVEL=DEBUG MSNODESQLV8_TEST_LOG_CONSOLE=true npm test
+// - MSNODESQLV8_TEST_LOG_LEVEL=INFO MSNODESQLV8_TEST_LOG_FILE=/tmp/test.log npm test
+configureTestLogging(sql)
   // this will be either Pool or connection
   async function promisedCallProc (connectionProxy, spName, o) {
     return new Promise((resolve, reject) => {
