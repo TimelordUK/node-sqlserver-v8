@@ -63,6 +63,7 @@ class IOdbcConnection {
   // Remove a statement and free its resources
   virtual bool RemoveStatement(int statementId) = 0;
   virtual bool CancelStatement(int statementId) = 0;
+  virtual std::shared_ptr<BoundDatumSet> UnbindStatement(int statementId) = 0;
 
   // Legacy ExecuteQuery for backward compatibility
   virtual bool ExecuteQuery(const std::shared_ptr<QueryOperationParams> operationParams,
@@ -124,6 +125,7 @@ class OdbcConnection : public IOdbcConnection {
 
   bool RemoveStatement(int statementId) override;
   bool CancelStatement(int statementId) override;
+  std::shared_ptr<BoundDatumSet> UnbindStatement(int statementId) override;
   bool RemoveStatement(const std::shared_ptr<OdbcStatement>& statement);
 
   // Legacy ExecuteQuery implementation

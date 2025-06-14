@@ -38,6 +38,8 @@ class OdbcStatementLegacy : public IOdbcStatement {
   virtual bool BindExecute(const std::shared_ptr<BoundDatumSet> parameters,
                            std::shared_ptr<QueryResult>& result) override;
 
+  virtual std::shared_ptr<BoundDatumSet> Unbind() override;
+
   /**
    * @brief Get the statement type
    */

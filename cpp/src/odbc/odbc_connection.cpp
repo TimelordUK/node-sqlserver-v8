@@ -309,6 +309,39 @@ bool OdbcConnection::CancelStatement(int queryId) {
   }
 }
 
+std::shared_ptr<BoundDatumSet> OdbcConnection::UnbindStatement(int queryId) {
+  SQL_LOG_DEBUG_STREAM("OdbcConnection::CancelStatement called for ID = " << queryId);
+  std::lock_guard lock(_statementMutex);
+
+  auto it = _queryIdToStatementHandle.find(queryId);
+  if (it != _queryIdToStatementHandle.end()) {
+    SQL_LOG_DEBUG_STREAM("OdbcConnection::Found statement for ID = " << queryId);
+  } else {
+    SQL_LOG_WARNING_STREAM("OdbcConnection::Statement not found for ID = " << queryId);
+    return nullptr;
+  }
+
+  const auto statementId = it->second.getStatementId();
+  auto statement = _statementFactory->GetStatement(statementId);
+  if (statement) {
+    SQL_LOG_DEBUG_STREAM("OdbcConnection::Found statement for ID = " << statementId);
+    // Remove from prepared statements if it exists
+    for (auto it = _preparedStatements.begin(); it != _preparedStatements.end(); ++it) {
+      if (it->second == statement) {
+        _preparedStatements.erase(it);
+        break;
+      }
+    }
+    auto res = statement->Unbind();
+    SQL_LOG_DEBUG_STREAM("OdbcConnection::UnbindStatement ID = " << statementId
+                                                                 << " - result = " << res);
+    return res;
+  } else {
+    SQL_LOG_WARNING_STREAM("OdbcConnection::Statement not found for ID = " << statementId);
+    return nullptr;
+  }
+}
+
 bool OdbcConnection::ExecuteQuery(const std::shared_ptr<QueryOperationParams> operationParams,
                                   const std::shared_ptr<BoundDatumSet> parameters,
                                   std::shared_ptr<QueryResult>& result,

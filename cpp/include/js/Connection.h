@@ -46,6 +46,7 @@ class Connection : public Napi::ObjectWrap<Connection> {
   Napi::Value ReleaseStatement(const Napi::CallbackInfo& info);
   Napi::Value CancelQuery(const Napi::CallbackInfo& info);
   Napi::Value CallProc(const Napi::CallbackInfo& info);
+  Napi::Value Unbind(const Napi::CallbackInfo& info);
 
   // Generic worker factory for callback/promise handling
   template <typename WorkerType, typename... Args>

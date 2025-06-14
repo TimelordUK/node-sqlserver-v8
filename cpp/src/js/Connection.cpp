@@ -21,6 +21,7 @@
 #include <js/workers/prepare_worker.h>
 #include <js/workers/release_worker.h>
 #include <js/workers/cancel_worker.h>
+#include <js/workers/unbind_worker.h>
 #include <js/workers/worker_base.h>
 #include <odbc/odbc_connection.h>
 #include <odbc/odbc_connection_factory.h>
@@ -57,6 +58,7 @@ Napi::Object Connection::Init(Napi::Env env, Napi::Object exports) {
                       InstanceMethod("releaseStatement", &Connection::ReleaseStatement),
                       InstanceMethod("cancelQuery", &Connection::CancelQuery),
                       InstanceMethod("callProcedure", &Connection::Query),
+                      InstanceMethod("unbind", &Connection::Unbind),
                   });
 
   // Create persistent reference to constructor
@@ -527,5 +529,19 @@ Napi::Value Connection::Query(const Napi::CallbackInfo& info) {
   // Use the generic worker factory
   return CreateWorkerWithCallbackOrPromise<QueryWorker>(
       info, odbcConnection_.get(), operationParams, params, stateChangeCallback);
+}
+
+Napi::Value Connection::Unbind(const Napi::CallbackInfo& info) {
+  const Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
+
+  InfoParser parser(isConnected_);
+
+  if (!parser.parseQueryId(info)) {
+    return env.Undefined();
+  }
+  const auto queryId = parser.queryId;
+  // Use the generic worker factory
+  return CreateWorkerWithCallbackOrPromise<UnbindWorker>(info, odbcConnection_.get(), queryId);
 }
 }  // namespace mssql

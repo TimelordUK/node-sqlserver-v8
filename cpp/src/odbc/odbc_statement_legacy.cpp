@@ -64,6 +64,10 @@ bool OdbcStatementLegacy::Execute(const std::shared_ptr<BoundDatumSet> parameter
   return res;
 }
 
+std::shared_ptr<BoundDatumSet> OdbcStatementLegacy::Unbind() {
+  return _boundParamsSet;
+}
+
 bool OdbcStatementLegacy::BindExecute(const std::shared_ptr<BoundDatumSet> parameters,
                                       std::shared_ptr<QueryResult>& result) {
   lock_guard<recursive_mutex> lock(g_i_mutex);
