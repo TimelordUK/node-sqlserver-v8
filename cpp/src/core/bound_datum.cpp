@@ -1490,9 +1490,10 @@ inline Napi::Value get(const char* key, const Napi::Object& local_object) {
 }
 
 bool BoundDatum::proc_bind(const Napi::Env& env, const Napi::Object& p, const Napi::Object& v) {
-  const auto is_output = v.Get("is_output").ToNumber().Int32Value();
+  const auto is_output_val = p.Get("is_output");
+  const auto is_output = is_output_val.IsBoolean() ? is_output_val.As<Napi::Boolean>().Value() : false;
   const auto size = get("max_length", p).ToNumber().Int32Value();
-  const auto pval = p.Has("value") ? p.Get("value") : env.Null();
+  const auto pval = p.Has("val") ? p.Get("val") : env.Null();
 
   Napi::Value pval_value;
   if (pval.IsObject()) {
@@ -1502,7 +1503,7 @@ bool BoundDatum::proc_bind(const Napi::Env& env, const Napi::Object& p, const Na
     pval_value = pval;
   }
 
-  if (is_output != 0) {
+  if (is_output) {
     if (pval_value.IsNull()) {
       param_type = SQL_PARAM_OUTPUT;
       pval_value = reserve_output_param(env, p, size);
@@ -1517,7 +1518,7 @@ bool BoundDatum::proc_bind(const Napi::Env& env, const Napi::Object& p, const Na
     const auto as_pval_object = pval.As<Napi::Object>();
     auto user_type_val = get("sql_type", as_pval_object);
     if (!user_type_val.IsUndefined()) {
-      if (!sql_type_s_maps_to_tvp(p) && param_type == SQL_PARAM_INPUT) {
+      if (!sql_type_s_maps_to_tvp(p)) {
         return user_bind(as_pval_object, user_type_val.As<Napi::Object>());
       }
     }
@@ -1794,7 +1795,6 @@ bool BoundDatum::user_bind(const Napi::Object& p, const Napi::Object& v) {
   if (local_sql_type == 0)
     return false;
   sql_type = static_cast<SQLSMALLINT>(local_sql_type);
-  param_type = SQL_PARAM_INPUT;
 
   auto pp = p.Get("value");
 
@@ -2113,7 +2113,7 @@ bool BoundDatum::bind_object(const Napi::Object& p) {
 
   auto v = get("is_output", p);
   if (!v.IsUndefined()) {
-    return proc_bind(p.Env(), p, v.As<Napi::Object>());
+    return proc_bind(p.Env(), p, p);
   }
 
   v = get("sql_type", p);
