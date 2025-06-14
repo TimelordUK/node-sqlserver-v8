@@ -1,10 +1,13 @@
 'use strict'
 
-/* globals describe it */
-
-const assert = require('chai').assert
+import { createRequire } from 'module'
+import chaiAsPromised from 'chai-as-promised'
+const require = createRequire(import.meta.url)
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
+const chai = require('chai')
+chai.use(chaiAsPromised)
+const assert = chai.assert
 
 const sql = require('../lib/sql')
 const { configureTestLogging } = require('./common/logging-helper')
@@ -45,21 +48,44 @@ describe('querycancel', function () {
   it('cancel a prepared call that waits refactor', testDone => {
     const s = 'waitfor delay ?;'
     let prepared
+    let cancelCalled = false
+    let queryCompleted = false
 
     env.theConnection.prepare(env.sql.PollingQuery(s), (err, pq) => {
+      console.log('AppVeyor Debug: prepare callback, err=', err)
       assert(!err)
       prepared = pq
 
-      const q = prepared.preparedQuery(['00:00:20'], err => {
-        assert(err)
-        assert(err.message.indexOf('Operation canceled') > 0)
+      const q = prepared.preparedQuery(['00:00:30'], err => {
+        queryCompleted = true
+        console.log('AppVeyor Debug: query completed, err=', err)
+        console.log('AppVeyor Debug: cancelCalled=', cancelCalled)
+        if (err) {
+          console.log('AppVeyor Debug: error message=', err.message)
+          console.log('AppVeyor Debug: error stack=', err.stack)
+        } else {
+          console.log('AppVeyor Debug: ERROR - query completed successfully without cancellation!')
+        }
+        assert(err, 'Expected query to be cancelled but it completed successfully')
+        assert(err.message.indexOf('Operation canceled') > 0, `Expected "Operation canceled" but got "${err.message}"`)
         testDone()
       })
 
       q.on('submitted', () => {
-        q.cancelQuery(err => {
-          assert(!err)
-        })
+        console.log('AppVeyor Debug: query submitted, cancelling...')
+        console.log('AppVeyor Debug: q.polling =', q.polling)
+        // Add a small delay to ensure the query has started executing
+        setTimeout(() => {
+          cancelCalled = true
+          console.log('AppVeyor Debug: about to cancel query')
+          q.cancelQuery(err => {
+            console.log('AppVeyor Debug: cancelQuery callback, err=', err)
+            if (err) {
+              console.log('AppVeyor Debug: cancel error message=', err.message)
+            }
+            assert(!err)
+          })
+        }, 100)
       })
     })
   })
