@@ -99,7 +99,8 @@ bool OdbcStatement::fetch_read(std::shared_ptr<QueryResult> result, const size_t
     rows_.push_back(row);
     for (auto c = 0; c < column_count; ++c) {
       const auto& definition = metaData_->get(c);
-      res = dispatch(definition.dataType, row_id, c);
+      // Use the actual index of the row we just added, not the loop index
+      res = dispatch(definition.dataType, rows_.size() - 1, c);
       if (!res) {
         SQL_LOG_DEBUG_STREAM("terminating early : fetch_read column " << c);
         break;
