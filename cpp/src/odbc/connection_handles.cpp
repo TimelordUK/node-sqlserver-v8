@@ -7,6 +7,8 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <chrono>
+#include <thread>
 
 #include <odbc/odbc_handles.h>
 #include <odbc/safe_handle.h>
@@ -50,6 +52,27 @@ void ConnectionHandles::clear() {
   for (const auto& [id, safeHandle] : _statementHandles) {
     SQL_LOG_DEBUG_STREAM("destruct OdbcStatementCache - free statement " << id);
     if (safeHandle) {
+      auto handle = safeHandle->get();
+      if (handle) {
+        // Cancel any pending operations before freeing the handle
+        // This is critical for statements that may have timed out or are still executing
+        SQL_LOG_DEBUG_STREAM("ConnectionHandles::clear - cancelling statement " << id);
+        
+        // First try SQLCancel for older ODBC compatibility
+        auto cancelResult = SQLCancel(handle->get_handle());
+        SQL_LOG_DEBUG_STREAM("ConnectionHandles::clear - SQLCancel result for statement " << id << ": " << cancelResult);
+        
+        // Also try SQLCancelHandle which is more robust for newer drivers
+        cancelResult = SQLCancelHandle(SQL_HANDLE_STMT, handle->get_handle());
+        SQL_LOG_DEBUG_STREAM("ConnectionHandles::clear - SQLCancelHandle result for statement " << id << ": " << cancelResult);
+        
+        // Give a small delay to allow cancellation to complete
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        
+        // Also try to explicitly close the cursor/statement
+        SQLCloseCursor(handle->get_handle());
+        SQLFreeStmt(handle->get_handle(), SQL_CLOSE);
+      }
       // During connection cleanup, we need to force-free handles
       // Reset references first to avoid warning about freeing referenced handles
       safeHandle->resetReferences();

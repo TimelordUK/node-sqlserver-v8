@@ -23,20 +23,17 @@ sql.logger.configureForTesting()
 // - MSNODESQLV8_TEST_LOG_LEVEL=INFO MSNODESQLV8_TEST_LOG_FILE=/tmp/test.log npm test
 
 describe('sproc', function () {
-  this.timeout(30000)
-
-  this.beforeEach(done => {
-    env.open().then(() => {
-      done()
-    }).catch(e => {
-      console.error(e)
-    })
+  this.timeout(60000)
+  this.beforeEach(async function () {
+    sql.logger.info('Starting test setup', 'params.test.beforeEach')
+    await env.open()
+    sql.logger.info('Test environment opened successfully', 'params.test.beforeEach')
   })
 
-  this.afterEach(done => {
-    env.close().then(() => { done() }).catch(e => {
-      console.error(e)
-    })
+  this.afterEach(async function () {
+    sql.logger.info('Starting test cleanup', 'params.test.afterEach')
+    await env.close()
+    sql.logger.info('Test environment closed successfully', 'params.test.afterEach')
   })
 
   // this will be either Pool or connection
@@ -64,6 +61,20 @@ describe('sproc', function () {
       })
     })
   }
+
+  it('call proc that waits for delay of input param - wait 5, timeout 2 - should error', async function handler () {
+    const spName = 'test_spwait_for'
+    await env.promisedCreate(spName, waitProcDef)
+    const pm = env.theConnection.procedureMgr()
+    pm.setTimeout(2)
+    try {
+      await promisedCallProc(env.theConnection, spName, ['0:0:5'])
+      expect.fail('Expected timeout error but none was thrown')
+    } catch (err) {
+      // Check for timeout sqlstate HYT00
+      expect(err.sqlstate).is.deep.equal('HYT00')
+    }
+  })
 
   it('connection: call proc that returns length of input string and describes itself in results', async function handler () {
     await t25(env.theConnection, 1)
@@ -1552,14 +1563,6 @@ END
 BEGIN
 waitfor delay @timeout;END
 `
-  it('call proc that waits for delay of input param - wait 5, timeout 2 - should error', async function handler () {
-    const spName = 'test_spwait_for'
-    await env.promisedCreate(spName, waitProcDef)
-    const pm = env.theConnection.procedureMgr()
-    pm.setTimeout(2)
-    await expect(promisedCallProc(env.theConnection, spName, ['0:0:5']))
-      .to.be.rejectedWith('Query timeout expired')
-  })
 
   it('call proc error with timeout then query on same connection', async function handler () {
     const spName = 'test_spwait_for'

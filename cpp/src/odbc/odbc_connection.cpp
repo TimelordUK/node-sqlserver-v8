@@ -137,13 +137,15 @@ bool OdbcConnection::Close() {
     _preparedStatements.clear();
   }
 
+  _statementFactory.reset();
+  _transactionManager.reset();
+
   if (connectionState != ConnectionClosed) {
     if (_connectionHandles) {
       // CRITICAL: Free all statement handles BEFORE disconnecting the connection
       // to prevent use-after-free errors
       SQL_LOG_DEBUG("Clearing statement handles before disconnect");
       _connectionHandles->clear();
-
       const auto connection = _connectionHandles->connectionHandle();
       if (connection) {
         SQL_LOG_DEBUG("SQLDisconnect");
@@ -152,7 +154,6 @@ bool OdbcConnection::Close() {
     }
 
     connectionState = ConnectionClosed;
-    _transactionManager.reset();
   }
 
   return true;
@@ -359,7 +360,28 @@ bool OdbcConnection::ExecuteQuery(const std::shared_ptr<QueryOperationParams> op
 
   // Execute it
   result->setHandle(statement->GetStatementHandle());
-  return statement->Execute(parameters, result);
+  const bool executeResult = statement->Execute(parameters, result);
+
+  // For transient statements that failed (especially due to timeout),
+  // ensure they are properly cleaned up to prevent hanging on connection close
+  /*
+  if (!executeResult) {
+    SQL_LOG_DEBUG_STREAM("ExecuteQuery failed for query ID " << operationParams->id
+                                                             << ", cleaning up statement");
+    // Remove from query ID mapping
+    _queryIdToStatementHandle.erase(operationParams->id);
+
+    // Also explicitly remove the statement from connection handles if it exists
+    const auto statementHandle = statement->GetStatementHandle();
+    if (_connectionHandles && _connectionHandles->exists(statementHandle.getStatementId())) {
+      SQL_LOG_DEBUG_STREAM("Removing failed statement " << statementHandle.getStatementId()
+                                                        << " from connection handles");
+      _connectionHandles->checkin(statementHandle.getStatementId());
+    }
+  }
+  */
+
+  return executeResult;
 }
 
 bool OdbcConnection::BindQuery(int queryId,

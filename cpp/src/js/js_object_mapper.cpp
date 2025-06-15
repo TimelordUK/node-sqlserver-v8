@@ -109,7 +109,7 @@ std::shared_ptr<QueryOperationParams> JsObjectMapper::toQueryOperationParams(
     const Napi::Object& jsObject) {
   std::shared_ptr<QueryOperationParams> result = std::make_shared<QueryOperationParams>();
   result->query_string = safeGetWideString(jsObject, "query_str");
-  result->timeout = safeGetInt32(jsObject, "timeout");
+  result->timeout = safeGetInt32(jsObject, "query_timeout");
   result->query_tz_adjustment = safeGetInt32(jsObject, "query_tz_adjustment");
   result->id = safeGetInt64(jsObject, "query_id");
   result->max_prepared_column_size = safeGetInt32(jsObject, "max_prepared_column_size");
