@@ -2184,7 +2184,15 @@ const Napi::String BoundDatum::unbind_string(const Napi::Env& env) const {
 
   // Convert UTF-16 to UTF-8 for N-API
   const auto* utf16_data = _storage->uint16vec_ptr->data();
-  const auto len = _storage->uint16vec_ptr->size();
+  
+  // For output parameters, use the indicator to determine actual string length
+  size_t len = _storage->uint16vec_ptr->size();
+  if (param_type == SQL_PARAM_OUTPUT || param_type == SQL_PARAM_INPUT_OUTPUT) {
+    if (!_indvec.empty() && _indvec[0] > 0) {
+      // The indicator contains the byte count, we need character count for UTF-16
+      len = _indvec[0] / sizeof(uint16_t);
+    }
+  }
 
   // Create u16string from the data
   std::u16string u16str(reinterpret_cast<const char16_t*>(utf16_data), len);
