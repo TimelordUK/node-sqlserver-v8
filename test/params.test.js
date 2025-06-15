@@ -1,4 +1,3 @@
-
 'use strict'
 
 import { createRequire } from 'module'
@@ -961,7 +960,7 @@ describe('Parameter Tests', function () {
       ).to.be.rejectedWith('IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
     })
 
-    it.skip('should reject non-Buffer object parameter', async function () {
+    it('should reject non-Buffer object parameter', async function () {
       if (env.isEncryptedConnection()) return
 
       const o = { field1: 'value1', field2: -1 }
