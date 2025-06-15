@@ -237,4 +237,48 @@ class Logger {
     }                                                                     \
   } while (0)
 
+// Function entry/exit logging helpers
+#define SQL_LOG_FUNC_ENTRY()                                              \
+  do {                                                                    \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Trace)) { \
+      std::ostringstream oss;                                             \
+      oss << ">> Entering " << __func__;                                  \
+      mssql::Logger::GetInstance().Trace(oss.str());                      \
+    }                                                                     \
+  } while (0)
+
+#define SQL_LOG_FUNC_EXIT()                                               \
+  do {                                                                    \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Trace)) { \
+      std::ostringstream oss;                                             \
+      oss << "<< Leaving " << __func__;                                   \
+      mssql::Logger::GetInstance().Trace(oss.str());                      \
+    }                                                                     \
+  } while (0)
+
+// RAII class for automatic function entry/exit logging
+class FunctionTracer {
+ public:
+  explicit FunctionTracer(const char* funcName) : funcName_(funcName) {
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Trace)) {
+      std::ostringstream oss;
+      oss << ">> Entering " << funcName_;
+      mssql::Logger::GetInstance().Trace(oss.str());
+    }
+  }
+  
+  ~FunctionTracer() {
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Trace)) {
+      std::ostringstream oss;
+      oss << "<< Leaving " << funcName_;
+      mssql::Logger::GetInstance().Trace(oss.str());
+    }
+  }
+  
+ private:
+  const char* funcName_;
+};
+
+#define SQL_LOG_FUNC_TRACER() mssql::FunctionTracer _funcTracer(__func__)
+
 }  // namespace mssql

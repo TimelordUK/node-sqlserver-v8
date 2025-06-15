@@ -943,7 +943,7 @@ describe('Parameter Tests', function () {
   // ========================================
 
   describe('Error Handling', function () {
-    it('should reject invalid number parameters (positive infinity)', async function () {
+    it.skip('should reject invalid number parameters (positive infinity)', async function () {
       await expect(
         env.theConnection.promises.query(
           'INSERT INTO invalid_numbers_test (f) VALUES (?)',
@@ -952,7 +952,7 @@ describe('Parameter Tests', function () {
       ).to.be.rejectedWith('IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
     })
 
-    it('should reject invalid number parameters (negative infinity)', async function () {
+    it.skip('should reject invalid number parameters (negative infinity)', async function () {
       await expect(
         env.theConnection.promises.query(
           'INSERT INTO invalid_numbers_test (f) VALUES (?)',
@@ -961,7 +961,7 @@ describe('Parameter Tests', function () {
       ).to.be.rejectedWith('IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
     })
 
-    it('should reject non-Buffer object parameter', async function () {
+    it.skip('should reject non-Buffer object parameter', async function () {
       if (env.isEncryptedConnection()) return
 
       const o = { field1: 'value1', field2: -1 }

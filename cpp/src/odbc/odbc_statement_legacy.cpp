@@ -49,6 +49,7 @@ OdbcStatementLegacy::~OdbcStatementLegacy() {
 
 bool OdbcStatementLegacy::Execute(const std::shared_ptr<BoundDatumSet> parameters,
                                   std::shared_ptr<QueryResult>& result) {
+  SQL_LOG_FUNC_TRACER();
   lock_guard<recursive_mutex> lock(g_i_mutex);
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Execute [" << _handle.toString() << "] Enter Execute");
   auto res = try_execute_direct(_operationParams, parameters);
@@ -76,6 +77,7 @@ std::shared_ptr<BoundDatumSet> OdbcStatementLegacy::Unbind() {
 
 bool OdbcStatementLegacy::BindExecute(const std::shared_ptr<BoundDatumSet> parameters,
                                       std::shared_ptr<QueryResult>& result) {
+  SQL_LOG_FUNC_TRACER();
   lock_guard<recursive_mutex> lock(g_i_mutex);
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::BindExecute [" << _handle.toString()
                                                             << "] Enter BindExecute");
@@ -92,6 +94,7 @@ bool OdbcStatementLegacy::BindExecute(const std::shared_ptr<BoundDatumSet> param
 
 bool OdbcStatementLegacy::Prepare(const std::shared_ptr<BoundDatumSet> parameters,
                                   std::shared_ptr<QueryResult>& result) {
+  SQL_LOG_FUNC_TRACER();
   lock_guard<recursive_mutex> lock(g_i_mutex);
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Prepare [" << _handle.toString() << "] Enter Prepare");
   auto res = try_prepare(_operationParams);
@@ -161,6 +164,7 @@ std::shared_ptr<QueryResult> OdbcStatementLegacy::GetMetaData() {
 
 bool OdbcStatementLegacy::TryReadRows(std::shared_ptr<QueryResult> result,
                                       const size_t number_rows) {
+  SQL_LOG_FUNC_TRACER();
   lock_guard<recursive_mutex> lock(g_i_mutex);
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::TryReadRows [" << _handle.toString() << "] Enter");
   auto res = try_read_columns(number_rows);
@@ -182,6 +186,7 @@ bool OdbcStatementLegacy::TryReadRows(std::shared_ptr<QueryResult> result,
 }
 
 bool OdbcStatementLegacy::ReadNextResult(std::shared_ptr<QueryResult> result) {
+  SQL_LOG_FUNC_TRACER();
   lock_guard<recursive_mutex> lock(g_i_mutex);
   auto res = try_read_next_result();
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::ReadNextResult [" << _handle.toString() << "] Enter");
@@ -253,9 +258,6 @@ bool OdbcStatementLegacy::fetch_read(const size_t number_rows) {
       SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] fetch_read SQL_NO_DATA " << ret);
       _resultset->_end_of_rows = true;
       return true;
-    }
-    if (ret == -1) {
-      int c = 0;
     }
     if (!check_odbc_error(ret)) {
       _resultset->_end_of_rows = true;
