@@ -14,7 +14,7 @@ const sql = require('../lib/sql')
 const { configureTestLogging } = require('./common/logging-helper')
 
 configureTestLogging(sql)
-sql.logger.configureForTesting()
+// sql.logger.configureForTesting()
 
 // Configure logging based on environment variables
 // By default, tests run silently. To enable logging:
