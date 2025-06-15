@@ -13,25 +13,22 @@ Napi::Object OdbcAsyncWorker::GetMetadata() {
   return metadata;
 }
 
+Napi::Value OdbcAsyncWorker::GetErrors(const Napi::Env env) {
+  Napi::Array details = Napi::Array::New(env);
+  for (size_t i = 0; i < errorDetails_.size(); i++) {
+    const auto& err = errorDetails_[i];
+    const auto jsErrorObj = JsObjectMapper::fromOdbcError(env, *err);
+    details.Set(i, jsErrorObj.Value());
+  }
+  return details;
+}
+
 void OdbcAsyncWorker::OnError(const Napi::Error& error) {
   const Napi::Env env = Env();
   Napi::HandleScope scope(env);
 
-  Napi::Value errorArg;
+  Napi::Value errorArg = errorDetails_.empty() ? error.Value() : GetErrors(env);
 
-  if (!errorDetails_.empty()) {
-    // Return array of error objects
-    Napi::Array details = Napi::Array::New(env);
-    for (size_t i = 0; i < errorDetails_.size(); i++) {
-      const auto& err = errorDetails_[i];
-      const auto jsErrorObj = JsObjectMapper::fromOdbcError(env, *err);
-      details.Set(i, jsErrorObj.Value());
-    }
-    errorArg = details;
-  } else {
-    // Single error case - use the Napi::Error
-    errorArg = error.Value();
-  }
   const auto meta = GetMetadata();
   // Call the callback with the error(s) and null result
   Callback().Call({errorArg, meta, Napi::Boolean::New(env, !result_->is_end_of_results())});

@@ -65,39 +65,39 @@ class Logger {
 };
 
 // Convenience macros with lazy evaluation
-#define SQL_LOG_ERROR(msg)                                                \
-  do {                                                                    \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Error)) { \
+#define SQL_LOG_ERROR(msg)                                                    \
+  do {                                                                        \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Error)) {     \
       mssql::Logger::GetInstance().Error(std::string(__func__) + ": " + msg); \
-    }                                                                     \
+    }                                                                         \
   } while (0)
 
-#define SQL_LOG_WARNING(msg)                                                \
-  do {                                                                      \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Warning)) { \
+#define SQL_LOG_WARNING(msg)                                                    \
+  do {                                                                          \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Warning)) {     \
       mssql::Logger::GetInstance().Warning(std::string(__func__) + ": " + msg); \
-    }                                                                       \
+    }                                                                           \
   } while (0)
 
-#define SQL_LOG_INFO(msg)                                                \
-  do {                                                                   \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Info)) { \
+#define SQL_LOG_INFO(msg)                                                    \
+  do {                                                                       \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Info)) {     \
       mssql::Logger::GetInstance().Info(std::string(__func__) + ": " + msg); \
-    }                                                                    \
+    }                                                                        \
   } while (0)
 
-#define SQL_LOG_DEBUG(msg)                                                \
-  do {                                                                    \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Debug)) { \
+#define SQL_LOG_DEBUG(msg)                                                    \
+  do {                                                                        \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Debug)) {     \
       mssql::Logger::GetInstance().Debug(std::string(__func__) + ": " + msg); \
-    }                                                                     \
+    }                                                                         \
   } while (0)
 
-#define SQL_LOG_TRACE(msg)                                                \
-  do {                                                                    \
-    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Trace)) { \
+#define SQL_LOG_TRACE(msg)                                                    \
+  do {                                                                        \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Trace)) {     \
       mssql::Logger::GetInstance().Trace(std::string(__func__) + ": " + msg); \
-    }                                                                     \
+    }                                                                         \
   } while (0)
 // Add stream-style macros:
 #define SQL_LOG_ERROR_STREAM(expr)                                        \
@@ -262,19 +262,19 @@ class FunctionTracer {
   explicit FunctionTracer(const char* funcName) : funcName_(funcName) {
     if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Trace)) {
       std::ostringstream oss;
-      oss << ">> Entering " << funcName_;
+      oss << "  >> Entering " << funcName_;
       mssql::Logger::GetInstance().Trace(oss.str());
     }
   }
-  
+
   ~FunctionTracer() {
     if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Trace)) {
       std::ostringstream oss;
-      oss << "<< Leaving " << funcName_;
+      oss << "  << Leaving " << funcName_;
       mssql::Logger::GetInstance().Trace(oss.str());
     }
   }
-  
+
  private:
   const char* funcName_;
 };

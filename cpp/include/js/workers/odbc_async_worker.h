@@ -19,6 +19,7 @@ class OdbcAsyncWorker : public Napi::AsyncWorker {
   IOdbcConnection* connection_;
   std::shared_ptr<QueryResult> result_;
   std::vector<std::shared_ptr<OdbcError>> errorDetails_;
+  Napi::Value GetErrors(const Napi::Env env);
 
   void OnError(const Napi::Error& error) override;
 
