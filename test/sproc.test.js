@@ -65,6 +65,10 @@ describe('sproc', function () {
     })
   }
 
+  it('connection: call proc that returns length of input string and describes itself in results', async function handler () {
+    await t25(env.theConnection, 1)
+  })
+
   it('connection: call proc 2 null warnings', async function handler () {
     const spName = 'test_sp_missing'
     const tableName = '#Dummy'
@@ -382,10 +386,6 @@ describe('sproc', function () {
     expect(res.meta).is.deep.equal(expectedMeta)
     expect(res.info).is.deep.equal(expectedInfo)
     // console.log(JSON.stringify(res, null, 4))
-  })
-
-  it('connection: call proc that returns length of input string and describes itself in results', async function handler () {
-    await t25(env.theConnection, 1)
   })
 
   async function t1 (connectionProxy, iterations) {

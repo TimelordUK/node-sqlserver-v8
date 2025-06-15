@@ -119,7 +119,7 @@ Napi::Array BoundDatumSet::unbind(Napi::Env& env) const {
           case SQL_PARAM_OUTPUT:
           case SQL_PARAM_INPUT_OUTPUT: {
             const auto v = param->unbind(env);
-            arr[i++] = v;
+            arr.Set(i++, v);
           } break;
 
           default:

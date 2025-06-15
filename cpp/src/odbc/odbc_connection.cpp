@@ -310,7 +310,7 @@ bool OdbcConnection::CancelStatement(int queryId) {
 }
 
 std::shared_ptr<BoundDatumSet> OdbcConnection::UnbindStatement(int queryId) {
-  SQL_LOG_DEBUG_STREAM("OdbcConnection::CancelStatement called for ID = " << queryId);
+  SQL_LOG_DEBUG_STREAM("OdbcConnection::UnbindStatement called for ID = " << queryId);
   std::lock_guard lock(_statementMutex);
 
   auto it = _queryIdToStatementHandle.find(queryId);
