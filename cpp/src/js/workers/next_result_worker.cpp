@@ -24,15 +24,13 @@ void NextResultWorker::Execute() {
       if (!errors.empty()) {
         const std::string errorMessage = errors[0]->message;
         SetError(errorMessage);
-      } else {
-        SetError("Unknown error occurred during query execution");
       }
     }
   } catch (const std::exception& e) {
-    SQL_LOG_ERROR("Exception in QueryWorker::Execute: " + std::string(e.what()));
+    SQL_LOG_ERROR("Exception in NextResultWorker::Execute: " + std::string(e.what()));
     SetError("Exception occurred: " + std::string(e.what()));
   } catch (...) {
-    SQL_LOG_ERROR("Unknown exception in QueryWorker::Execute");
+    SQL_LOG_ERROR("Unknown exception in NextResultWorker::Execute");
     SetError("Unknown exception occurred");
   }
 }

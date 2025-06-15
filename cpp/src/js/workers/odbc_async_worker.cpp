@@ -32,8 +32,8 @@ void OdbcAsyncWorker::OnError(const Napi::Error& error) {
     // Single error case - use the Napi::Error
     errorArg = error.Value();
   }
-
+  const auto meta = GetMetadata();
   // Call the callback with the error(s) and null result
-  Callback().Call({errorArg, env.Null(), Napi::Boolean::New(env, result_->is_end_of_rows())});
+  Callback().Call({errorArg, meta, Napi::Boolean::New(env, !result_->is_end_of_results())});
 }
 }  // namespace mssql

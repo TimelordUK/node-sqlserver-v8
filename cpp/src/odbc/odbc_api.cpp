@@ -180,13 +180,13 @@ void RealOdbcApi::DiagnoseConnectionString(const std::wstring& connectionString)
 }
 
 SQLRETURN RealOdbcApi::SQLSetEnvAttr(SQLHENV EnvironmentHandle,
-                                    SQLINTEGER Attribute,
-                                    SQLPOINTER Value,
-                                    SQLINTEGER StringLength) {
+                                     SQLINTEGER Attribute,
+                                     SQLPOINTER Value,
+                                     SQLINTEGER StringLength) {
   SQL_LOG_TRACE_STREAM("SQLSetEnvAttr called - Handle: " << EnvironmentHandle
-                                                        << ", Attribute: " << Attribute
-                                                        << ", StringLength: " << StringLength);
-  
+                                                         << ", Attribute: " << Attribute
+                                                         << ", StringLength: " << StringLength);
+
   // Log specific attributes for debugging
   switch (Attribute) {
     case SQL_ATTR_ODBC_VERSION:
@@ -200,14 +200,14 @@ SQLRETURN RealOdbcApi::SQLSetEnvAttr(SQLHENV EnvironmentHandle,
     default:
       SQL_LOG_TRACE_STREAM("  Setting attribute: " << Attribute);
   }
-  
+
   SQLRETURN ret = ::SQLSetEnvAttr(EnvironmentHandle, Attribute, Value, StringLength);
   SQL_LOG_TRACE_STREAM("SQLSetEnvAttr returned: " << GetSqlReturnCodeString(ret));
-  
+
   if (!SQL_SUCCEEDED(ret)) {
     LogOdbcError(SQL_HANDLE_ENV, EnvironmentHandle, "SQLSetEnvAttr failed");
   }
-  
+
   return ret;
 }
 
@@ -1232,37 +1232,36 @@ SQLRETURN RealOdbcApi::SQLGetDiagField(SQLSMALLINT HandleType,
 
 SQLRETURN RealOdbcApi::SQLCloseCursor(SQLHSTMT StatementHandle) {
   SQL_LOG_TRACE_STREAM("SQLCloseCursor called - Handle: " << StatementHandle);
-  
+
   SQLRETURN ret = ::SQLCloseCursor(StatementHandle);
   SQL_LOG_TRACE_STREAM("SQLCloseCursor returned: " << GetSqlReturnCodeString(ret));
-  
+
   if (!SQL_SUCCEEDED(ret) && ret != SQL_NO_DATA) {
     LogOdbcError(SQL_HANDLE_STMT, StatementHandle, "SQLCloseCursor failed");
   }
-  
+
   return ret;
 }
 
 SQLRETURN RealOdbcApi::SQLGetDescField(SQLHDESC DescriptorHandle,
-                                      SQLSMALLINT RecNumber,
-                                      SQLSMALLINT FieldIdentifier,
-                                      SQLPOINTER Value,
-                                      SQLINTEGER BufferLength,
-                                      SQLINTEGER* StringLength) {
-  SQL_LOG_TRACE_STREAM("SQLGetDescField called - Handle: " << DescriptorHandle
-                                                          << ", RecNumber: " << RecNumber
-                                                          << ", FieldIdentifier: " << FieldIdentifier);
-  
-  SQLRETURN ret = ::SQLGetDescField(DescriptorHandle, RecNumber, FieldIdentifier, 
-                                   Value, BufferLength, StringLength);
+                                       SQLSMALLINT RecNumber,
+                                       SQLSMALLINT FieldIdentifier,
+                                       SQLPOINTER Value,
+                                       SQLINTEGER BufferLength,
+                                       SQLINTEGER* StringLength) {
+  SQL_LOG_TRACE_STREAM("SQLGetDescField called - Handle: "
+                       << DescriptorHandle << ", RecNumber: " << RecNumber
+                       << ", FieldIdentifier: " << FieldIdentifier);
+
+  SQLRETURN ret = ::SQLGetDescField(
+      DescriptorHandle, RecNumber, FieldIdentifier, Value, BufferLength, StringLength);
   SQL_LOG_TRACE_STREAM("SQLGetDescField returned: " << GetSqlReturnCodeString(ret));
-  
+
   if (!SQL_SUCCEEDED(ret)) {
     LogOdbcError(SQL_HANDLE_DESC, DescriptorHandle, "SQLGetDescField failed");
   }
-  
+
   return ret;
 }
-
 
 }  // namespace mssql

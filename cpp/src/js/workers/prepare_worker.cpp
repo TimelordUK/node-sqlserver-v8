@@ -59,7 +59,7 @@ void PrepareWorker::Execute() {
         SetError(errorMessage);
         has_error_ = true;
       } else {
-        SetError("Unknown error occurred during query execution");
+        SetError("Unknown error occurred during PrepareWorker execution");
       }
     }
   } catch (const std::exception& e) {

@@ -28,9 +28,13 @@ class ResultSet {
   size_t get_column_count() const {
     return _metadata.size();
   }
+
   void start_results() {
     _rows.clear();
+    _end_of_rows = false;
+    _end_of_results = false;
   }
+
   Napi::Array meta_to_value(Napi::Env env);
   void add_column(size_t row_id, const shared_ptr<Column>& column);
   Napi::Object get_entry(Napi::Env env, const ColumnDefinition& definition);

@@ -151,6 +151,7 @@ class OdbcStatementLegacy : public IOdbcStatement {
   bool get_data_bit(size_t row_id, size_t column);
   bool get_data_timestamp(size_t row_id, size_t column);
   bool get_data_long(size_t row_id, size_t column);
+  bool get_data_tiny(size_t row_id, size_t column);
   bool get_data_big_int(size_t row_id, size_t column);
   bool get_data_timestamp_offset(size_t row_id, size_t column);
 

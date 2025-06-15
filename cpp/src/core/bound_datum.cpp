@@ -1491,7 +1491,8 @@ inline Napi::Value get(const char* key, const Napi::Object& local_object) {
 
 bool BoundDatum::proc_bind(const Napi::Env& env, const Napi::Object& p, const Napi::Object& v) {
   const auto is_output_val = p.Get("is_output");
-  const auto is_output = is_output_val.IsBoolean() ? is_output_val.As<Napi::Boolean>().Value() : false;
+  const auto is_output =
+      is_output_val.IsBoolean() ? is_output_val.As<Napi::Boolean>().Value() : false;
   const auto size = get("max_length", p).ToNumber().Int32Value();
   const auto pval = p.Has("val") ? p.Get("val") : env.Null();
 
@@ -1518,7 +1519,7 @@ bool BoundDatum::proc_bind(const Napi::Env& env, const Napi::Object& p, const Na
     const auto as_pval_object = pval.As<Napi::Object>();
     auto user_type_val = get("sql_type", as_pval_object);
     if (!user_type_val.IsUndefined()) {
-      if (!sql_type_s_maps_to_tvp(p)) {
+      if (!sql_type_s_maps_to_tvp(p) && param_type == SQL_PARAM_INPUT) {
         return user_bind(as_pval_object, user_type_val.As<Napi::Object>());
       }
     }
@@ -2100,7 +2101,7 @@ bool BoundDatum::user_bind(const Napi::Object& p, const Napi::Object& v) {
         c_type = SQL_C_TYPE_TIMESTAMP;
         break;
       default:
-        c_type = SQL_C_CHAR; // Safe default
+        c_type = SQL_C_CHAR;  // Safe default
         break;
     }
   }

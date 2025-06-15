@@ -15,7 +15,6 @@ QueryWorker::QueryWorker(Napi::Function& callback,
                          const Napi::Array& params,
                          Napi::Function stateChangeCallback)
     : OdbcAsyncWorker(callback, connection), queryParams_(q) {
-  
   // Create state notifier if callback is provided
   if (!stateChangeCallback.IsEmpty()) {
     stateNotifier_ = std::make_shared<JsStateNotifier>(Env(), stateChangeCallback);
@@ -59,8 +58,6 @@ void QueryWorker::Execute() {
         const std::string errorMessage = errors[0]->message;
         SetError(errorMessage);
         has_error_ = true;
-      } else {
-        SetError("Unknown error occurred during query execution");
       }
     }
   } catch (const std::exception& e) {
@@ -84,7 +81,7 @@ void QueryWorker::OnOK() {
 
   try {
     const auto metadata = GetMetadata();
-    Callback().Call({env.Null(), metadata});
+    Callback().Call({env.Null(), metadata, Napi::Boolean::New(env, !result_->is_end_of_results())});
   } catch (const std::exception& e) {
     // Call the callback with an error
     Callback().Call({Napi::Error::New(env, e.what()).Value(), env.Null()});

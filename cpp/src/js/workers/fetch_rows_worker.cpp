@@ -42,8 +42,6 @@ void FetchRowsWorker::Execute() {
         const std::string errorMessage = errors[0]->message;
         SetError(errorMessage);
         has_error_ = true;
-      } else {
-        SetError("Unknown error occurred during query execution");
       }
     }
   } catch (const std::exception& e) {

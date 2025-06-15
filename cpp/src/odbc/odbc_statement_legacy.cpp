@@ -53,12 +53,18 @@ bool OdbcStatementLegacy::Execute(const std::shared_ptr<BoundDatumSet> parameter
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Execute [" << _handle.toString() << "] Enter Execute");
   auto res = try_execute_direct(_operationParams, parameters);
   // Check if _resultset was initialized (it may be null if bind_params failed)
-  if (res && _resultset != nullptr) {
+  if (_resultset != nullptr) {
     auto cols = _resultset->get_column_count();
+    SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Execute [" << _handle.toString() << "] columns "
+                                                          << cols << " res " << res);
     for (size_t i = 0; i < cols; ++i) {
       auto col = _resultset->get_meta_data(i);
       result->addColumn(col);
     }
+    result->set_end_of_rows(this->_resultset->EndOfRows());
+    result->set_end_of_results(this->_resultset->EndOfResults());
+    auto raw_row_count = this->_resultset->row_count();
+    result->set_row_count(raw_row_count >= 0 ? static_cast<size_t>(raw_row_count) : 0);
   }
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Execute [" << _handle.toString() << "] Exit Execute");
   return res;
@@ -248,7 +254,12 @@ bool OdbcStatementLegacy::fetch_read(const size_t number_rows) {
       _resultset->_end_of_rows = true;
       return true;
     }
+    if (ret == -1) {
+      int c = 0;
+    }
     if (!check_odbc_error(ret)) {
+      _resultset->_end_of_rows = true;
+      SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] fetch_read check_odbc_error " << ret);
       // fprintf(stderr, "fetch_read check_odbc_error\n");
       return false;
     }
@@ -672,7 +683,7 @@ bool OdbcStatementLegacy::return_odbc_error() {
     set_state(OdbcStatementState::STATEMENT_ERROR);
     return false;
   }
-  return true;
+  return false;
 }
 
 bool OdbcStatementLegacy::check_odbc_error(const SQLRETURN ret) {
@@ -1261,15 +1272,22 @@ bool OdbcStatementLegacy::dispatch(const SQLSMALLINT t, const size_t row_id, con
       res = get_data_bit(row_id, column);
       break;
 
-    case SQL_SMALLINT:
     case SQL_TINYINT:
+    case SQL_C_UTINYINT:
+      if (_numericStringEnabled) {
+        res = try_read_string(false, row_id, column);
+      } else {
+        res = get_data_long(row_id, column);
+      }
+      break;
+
+    case SQL_SMALLINT:
     case SQL_INTEGER:
     case SQL_C_SLONG:
     case SQL_C_SSHORT:
     case SQL_C_STINYINT:
     case SQL_C_ULONG:
     case SQL_C_USHORT:
-    case SQL_C_UTINYINT:
       if (_numericStringEnabled) {
         res = try_read_string(false, row_id, column);
       } else {
@@ -1480,6 +1498,34 @@ bool OdbcStatementLegacy::get_data_big_int(const size_t row_id, const size_t col
     return true;
   }
   const auto col = make_shared<BigIntColumn>(column, v);
+  if (_numericStringEnabled) {
+    col->AsString();
+  }
+  _resultset->add_column(row_id, col);
+  return true;
+}
+
+bool OdbcStatementLegacy::get_data_tiny(const size_t row_id, const size_t column) {
+  const auto& statement = *_statement;
+
+  int8_t v = 0;
+  SQLLEN str_len_or_ind_ptr = 0;
+  const auto ret = _odbcApi->SQLGetData(statement.get_handle(),
+                                        static_cast<SQLSMALLINT>(column + 1),
+                                        SQL_C_TINYINT,
+                                        &v,
+                                        sizeof(int8_t),
+                                        &str_len_or_ind_ptr);
+  if (!check_odbc_error(ret)) {
+    SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] get_data_tiny failed to get data");
+    return false;
+  }
+  if (str_len_or_ind_ptr == SQL_NULL_DATA) {
+    _resultset->add_column(row_id, make_shared<NullColumn>(column));
+    return true;
+  }
+  SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] get_data_tiny: value read = " << v);
+  const auto col = make_shared<IntColumn>(column, v);
   if (_numericStringEnabled) {
     col->AsString();
   }
@@ -2174,6 +2220,7 @@ bool OdbcStatementLegacy::try_read_next_result() {
       SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::try_read_next_result ["
                            << _handle.toString() << "] try_read_next_result SQL_NO_DATA " << ret);
       _resultset->_end_of_results = true;
+      _resultset->_end_of_rows = true;
       if (_prepared) {
         _odbcApi->SQLCloseCursor(statement.get_handle());
       }

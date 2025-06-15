@@ -10,10 +10,6 @@ chai.use(chaiAsPromised)
 const expect = chai.expect
 const assert = chai.assert
 
-const totalObjectsForInsert = 10
-const test1BatchSize = 1
-const test2BatchSize = 10
-
 const sql = require('../lib/sql')
 const { configureTestLogging } = require('./common/logging-helper')
 
