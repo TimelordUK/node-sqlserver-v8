@@ -47,27 +47,29 @@ OdbcStatementLegacy::~OdbcStatementLegacy() {
   _stateNotifierShared.reset();
 }
 
+void OdbcStatementLegacy::assign_result(std::shared_ptr<QueryResult>& result,
+                                        std::shared_ptr<ResultSet> resultset) {
+  auto cols = _resultset->get_column_count();
+  for (size_t i = 0; i < cols; ++i) {
+    auto col = _resultset->get_meta_data(i);
+    result->addColumn(col);
+  }
+  result->set_end_of_rows(this->_resultset->EndOfRows());
+  result->set_end_of_results(this->_resultset->EndOfResults());
+  auto raw_row_count = this->_resultset->row_count();
+  result->set_row_count(raw_row_count >= 0 ? static_cast<size_t>(raw_row_count) : 0);
+  auto e0 = _errors->size() > 0 ? _errors->at(0)->message.c_str() : "no errors";
+  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::assign_result ["
+                       << _handle.toString() << "] result = " << result->toString()
+                       << " error count " << _errors->size() << " cols " << cols << " e0 " << e0);
+}
+
 bool OdbcStatementLegacy::Execute(const std::shared_ptr<BoundDatumSet> parameters,
                                   std::shared_ptr<QueryResult>& result) {
   SQL_LOG_FUNC_TRACER();
   lock_guard<recursive_mutex> lock(g_i_mutex);
-  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Execute [" << _handle.toString() << "] Enter Execute");
   auto res = try_execute_direct(_operationParams, parameters);
-  // Check if _resultset was initialized (it may be null if bind_params failed)
-  if (_resultset != nullptr) {
-    auto cols = _resultset->get_column_count();
-    SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Execute [" << _handle.toString() << "] columns "
-                                                          << cols << " res " << res);
-    for (size_t i = 0; i < cols; ++i) {
-      auto col = _resultset->get_meta_data(i);
-      result->addColumn(col);
-    }
-    result->set_end_of_rows(this->_resultset->EndOfRows());
-    result->set_end_of_results(this->_resultset->EndOfResults());
-    auto raw_row_count = this->_resultset->row_count();
-    result->set_row_count(raw_row_count >= 0 ? static_cast<size_t>(raw_row_count) : 0);
-  }
-  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Execute [" << _handle.toString() << "] Exit Execute");
+  assign_result(result, _resultset);
   return res;
 }
 
@@ -166,22 +168,9 @@ bool OdbcStatementLegacy::TryReadRows(std::shared_ptr<QueryResult> result,
                                       const size_t number_rows) {
   SQL_LOG_FUNC_TRACER();
   lock_guard<recursive_mutex> lock(g_i_mutex);
-  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::TryReadRows [" << _handle.toString() << "] Enter");
+  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::TryReadRows [" << _handle.toString() << "]");
   auto res = try_read_columns(number_rows);
-  if (_resultset != nullptr) {
-    result->set_end_of_rows(this->_resultset->EndOfRows());
-    result->set_end_of_results(this->_resultset->EndOfResults());
-    auto raw_row_count = this->_resultset->row_count();
-    result->set_row_count(raw_row_count >= 0 ? static_cast<size_t>(raw_row_count) : 0);
-    auto cols = _resultset->get_column_count();
-    for (size_t i = 0; i < cols; ++i) {
-      auto col = _resultset->get_meta_data(i);
-      result->addColumn(col);
-    }
-    SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::TryReadRows ["
-                         << _handle.toString() << "] TryReadRows result = " << result->toString());
-  }
-  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::TryReadRows [" << _handle.toString() << "] Exit");
+  assign_result(result, _resultset);
   return res;
 }
 
@@ -189,22 +178,8 @@ bool OdbcStatementLegacy::ReadNextResult(std::shared_ptr<QueryResult> result) {
   SQL_LOG_FUNC_TRACER();
   lock_guard<recursive_mutex> lock(g_i_mutex);
   auto res = try_read_next_result();
-  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::ReadNextResult [" << _handle.toString() << "] Enter");
-  if (_resultset != nullptr) {
-    result->set_end_of_rows(this->_resultset->EndOfRows());
-    result->set_end_of_results(this->_resultset->EndOfResults());
-    auto raw_row_count = this->_resultset->row_count();
-    result->set_row_count(raw_row_count >= 0 ? static_cast<size_t>(raw_row_count) : 0);
-    auto cols = _resultset->get_column_count();
-    for (size_t i = 0; i < cols; ++i) {
-      auto col = _resultset->get_meta_data(i);
-      result->addColumn(col);
-    }
-    SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::ReadNextResult ["
-                         << _handle.toString()
-                         << "] ReadNextResult result = " << result->toString());
-  }
-  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::ReadNextResult [" << _handle.toString() << "] Exit");
+  SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::ReadNextResult [" << _handle.toString() << "]");
+  assign_result(result, _resultset);
   return res;
 }
 
@@ -520,8 +495,8 @@ bool OdbcStatementLegacy::bind_datum(const int current_param, const shared_ptr<B
   nullptr);
 
     r = _odbcApi->SQLGetDescField(hdesc, current_param, SQL_DESC_PRECISION, (SQLPOINTER)&x,
-  sizeof(x), 0); r = _odbcApi->SQLGetDescField(hdesc, current_param, SQL_DESC_TYPE, (SQLPOINTER)&x,
-  sizeof(x), 0);
+  sizeof(x), 0); r = _odbcApi->SQLGetDescField(hdesc, current_param, SQL_DESC_TYPE,
+  (SQLPOINTER)&x, sizeof(x), 0);
 
     r = _odbcApi->SQLSetDescField(hdesc, current_param,
     SQL_CA_SS_SERVER_TYPE,
@@ -1052,6 +1027,7 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
 
   // cout << "id " << _statementId << " try_execute_direct" << endl;
   _errors->clear();
+  _errorHandler->ClearErrors();
   _query = q;
   const auto timeout = q->timeout;
   auto& pars = *param_set;

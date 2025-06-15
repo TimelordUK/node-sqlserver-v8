@@ -29,6 +29,8 @@ class OdbcStatementLegacy : public IOdbcStatement {
  public:
   mutex _statement_mutex;
 
+  void assign_result(std::shared_ptr<QueryResult>& result, std::shared_ptr<ResultSet> resultset);
+
   virtual bool Execute(const std::shared_ptr<BoundDatumSet> parameters,
                        std::shared_ptr<QueryResult>& result) override;
 
