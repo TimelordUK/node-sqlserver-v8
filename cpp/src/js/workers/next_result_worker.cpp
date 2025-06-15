@@ -19,10 +19,11 @@ NextResultWorker::NextResultWorker(Napi::Function& callback,
 void NextResultWorker::Execute() {
   try {
     SQL_LOG_DEBUG_STREAM("Executing NextResult ");
-    if (!connection_->TryReadNextResult(statementHandle_.getStatementId(), result_)) {
-      const auto& errors = connection_->GetErrors();
-      if (!errors.empty()) {
-        const std::string errorMessage = errors[0]->message;
+    const auto res = connection_->TryReadNextResult(statementHandle_.getStatementId(), result_);
+    errorDetails_ = connection_->GetErrors();
+    if (!res) {
+      if (!errorDetails_.empty()) {
+        const std::string errorMessage = errorDetails_[0]->message;
         SetError(errorMessage);
       }
     }
@@ -43,7 +44,14 @@ void NextResultWorker::OnOK() {
 
   try {
     const auto metadata = GetMetadata();
-    Callback().Call({env.Null(), metadata});
+    const auto errorArg = GetErrors(env);
+    if (errorDetails_.empty()) {
+      SQL_LOG_DEBUG("NextResultWorker::OnOK: result with no errors");
+      Callback().Call({env.Null(), metadata});
+    } else {
+      SQL_LOG_DEBUG("NextResultWorker::OnOK: result with errors: ");
+      Callback().Call({errorArg, metadata});
+    }
   } catch (const std::exception& e) {
     // Call the callback with an error
     Callback().Call({Napi::Error::New(env, e.what()).Value(), env.Null()});

@@ -177,6 +177,8 @@ bool OdbcStatementLegacy::TryReadRows(std::shared_ptr<QueryResult> result,
 bool OdbcStatementLegacy::ReadNextResult(std::shared_ptr<QueryResult> result) {
   SQL_LOG_FUNC_TRACER();
   lock_guard<recursive_mutex> lock(g_i_mutex);
+  _errors->clear();
+  _errorHandler->ClearErrors();
   auto res = try_read_next_result();
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::ReadNextResult [" << _handle.toString() << "]");
   assign_result(result, _resultset);
