@@ -45,7 +45,7 @@ class TimestampColumn : public Column {
 
   Napi::Object ToNative(Napi::Env env) override {
     auto date = Napi::Date::New(env, milliseconds).As<Napi::Object>();
-    date.Set("nanosecondsDelta", nanoseconds_delta);
+    date.Set("nanosecondsDelta", nanoseconds_delta / 1e9);
     return date;
   }
 
