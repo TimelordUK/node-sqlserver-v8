@@ -1,25 +1,45 @@
 'use strict'
 
-/* globals describe it */
-const chai = require('chai')
-const expect = chai.expect
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
+const chai = require('chai')
+const assert = chai.assert
+const expect = chai.expect
+const sql = require('../lib/sql')
+
+/* globals describe it beforeEach afterEach */
+
+const { configureTestLogging } = require('./common/logging-helper')
+
+// Configure logging based on environment variables
+// By default, tests run silently. To enable logging:
+// - MSNODESQLV8_TEST_VERBOSE=true npm test  (for full trace logging)
+// - MSNODESQLV8_TEST_LOG_LEVEL=DEBUG MSNODESQLV8_TEST_LOG_CONSOLE=true npm test
+// - MSNODESQLV8_TEST_LOG_LEVEL=INFO MSNODESQLV8_TEST_LOG_FILE=/tmp/test.log npm test
+configureTestLogging(sql)
 
 describe('json', function () {
   this.timeout(30000)
 
   this.beforeEach(done => {
+    sql.logger.info('Starting test setup', 'json.test.beforeEach')
     env.open().then(() => {
+      sql.logger.info('Test environment opened successfully', 'json.test.beforeEach')
       done()
     }).catch(e => {
-      console.error(e)
+      sql.logger.error(`Failed to open test environment: ${e}`, 'json.test.beforeEach')
+      sql.logger.error(e)
     })
   })
 
   this.afterEach(done => {
-    env.close().then(() => { done() }).catch(e => {
-      console.error(e)
+    sql.logger.info('Starting test cleanup', 'json.test.afterEach')
+    env.close().then(() => {
+      sql.logger.info('Test environment closed successfully', 'json.test.afterEach')
+      done()
+    }).catch(e => {
+      sql.logger.error(`Failed to close test environment: ${e}`, 'json.test.afterEach')
+      sql.logger.error(e)
     })
   })
 
