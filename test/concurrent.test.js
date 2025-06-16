@@ -1,20 +1,35 @@
 'use strict'
 
-/* globals describe it */
-
-const assert = require('chai').assert
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
+const chai = require('chai')
+const assert = chai.assert
+const expect = chai.expect
+const sql = require('../lib/sql')
+
+const { configureTestLogging } = require('./common/logging-helper')
+
+// Configure logging based on environment variables
+// By default, tests run silently. To enable logging:
+// - MSNODESQLV8_TEST_VERBOSE=true npm test  (for full trace logging)
+// - MSNODESQLV8_TEST_LOG_LEVEL=DEBUG MSNODESQLV8_TEST_LOG_CONSOLE=true npm test
+// - MSNODESQLV8_TEST_LOG_LEVEL=INFO MSNODESQLV8_TEST_LOG_FILE=/tmp/test.log npm test
+
+configureTestLogging(sql)
 
 describe('concurrent', function () {
   this.timeout(10000)
 
-  this.beforeEach(done => {
-    env.open().then(() => { done() })
+  this.beforeEach(async function () {
+    sql.logger.info('Starting test setup', 'concurrent.test.beforeEach')
+    await env.open()
+    sql.logger.info('Test environment opened successfully', 'concurrent.test.beforeEach')
   })
 
-  this.afterEach(done => {
-    env.close().then(() => { done() })
+  this.afterEach(async function () {
+    sql.logger.info('Starting test cleanup', 'concurrent.test.afterEach')
+    await env.close()
+    sql.logger.info('Test environment closed successfully', 'concurrent.test.afterEach')
   })
 
   function checkClean (connections, testDone) {
@@ -67,7 +82,7 @@ describe('concurrent', function () {
 
   const open = done => {
     env.sql.open(env.connectionString, (err, conn) => {
-      assert(err === false)
+      assert.ifError(err)
       done(conn)
     })
   }
