@@ -1,26 +1,31 @@
-'use strict'
-/* globals describe it */
-
-const chai = require('chai')
-const expect = chai.expect
+import { createRequire } from 'module'
+import chaiAsPromised from 'chai-as-promised'
+const require = createRequire(import.meta.url)
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
+const chai = require('chai')
+chai.use(chaiAsPromised)
+const expect = chai.expect
+const assert = chai.assert
+
+const sql = require('../lib/sql')
+const { configureTestLogging } = require('./common/logging-helper')
+
+configureTestLogging(sql)
 
 describe('tvp', function () {
   this.timeout(30000)
 
-  this.beforeEach(done => {
-    env.open().then(() => {
-      done()
-    }).catch(e => {
-      console.error(e)
-    })
+  this.beforeEach(async function () {
+    sql.logger.info('Starting test setup', 'params.test.beforeEach')
+    await env.open()
+    sql.logger.info('Test environment opened successfully', 'params.test.beforeEach')
   })
 
-  this.afterEach(done => {
-    env.close().then(() => { done() }).catch(e => {
-      console.error(e)
-    })
+  this.afterEach(async function () {
+    sql.logger.info('Starting test cleanup', 'params.test.afterEach')
+    await env.close()
+    sql.logger.info('Test environment closed successfully', 'params.test.afterEach')
   })
 
   async function checkTxt (tableName, vec) {
