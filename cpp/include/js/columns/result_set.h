@@ -33,6 +33,7 @@ class ResultSet {
     _rows.clear();
     _end_of_rows = false;
     _end_of_results = false;
+    _row_count = 0;
   }
 
   Napi::Array meta_to_value(Napi::Env env);

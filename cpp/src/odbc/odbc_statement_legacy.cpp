@@ -84,11 +84,7 @@ bool OdbcStatementLegacy::BindExecute(const std::shared_ptr<BoundDatumSet> param
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::BindExecute [" << _handle.toString()
                                                             << "] Enter BindExecute");
   auto res = bind_fetch(parameters);
-  auto cols = _resultset->get_column_count();
-  for (size_t i = 0; i < cols; ++i) {
-    auto col = _resultset->get_meta_data(i);
-    result->addColumn(col);
-  }
+  assign_result(result, _resultset);
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::BindExecute [" << _handle.toString()
                                                             << "] Exit BindExecute");
   return res;
@@ -100,14 +96,7 @@ bool OdbcStatementLegacy::Prepare(const std::shared_ptr<BoundDatumSet> parameter
   lock_guard<recursive_mutex> lock(g_i_mutex);
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Prepare [" << _handle.toString() << "] Enter Prepare");
   auto res = try_prepare(_operationParams);
-  // Check if _resultset was initialized (it may be null if bind_params failed)
-  if (res && _resultset != nullptr) {
-    auto cols = _resultset->get_column_count();
-    for (size_t i = 0; i < cols; ++i) {
-      auto col = _resultset->get_meta_data(i);
-      result->addColumn(col);
-    }
-  }
+  assign_result(result, _resultset);
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Prepare [" << _handle.toString() << "] Exit Execute");
   return res;
 }
@@ -179,6 +168,7 @@ bool OdbcStatementLegacy::ReadNextResult(std::shared_ptr<QueryResult> result) {
   lock_guard<recursive_mutex> lock(g_i_mutex);
   _errors->clear();
   _errorHandler->ClearErrors();
+
   auto res = try_read_next_result();
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::ReadNextResult [" << _handle.toString() << "]");
   assign_result(result, _resultset);
@@ -933,7 +923,7 @@ bool OdbcStatementLegacy::try_bcp(const shared_ptr<BoundDatumSet>& param_set, in
   // cerr << "bcp version " << version << endl;
   if (version == 0)
     version = 17;
-  // bcp b(param_set, _connection->get_handle());
+  // bcp b(_odbcApi, param_set, _connection->get_handle());
   // const auto ret = b.insert(version);
   _resultset = make_unique<ResultSet>(0);
   _resultset->_end_of_rows = true;
@@ -1031,6 +1021,7 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
   _errors->clear();
   _errorHandler->ClearErrors();
   _query = q;
+
   const auto timeout = q->timeout;
   auto& pars = *param_set;
 
