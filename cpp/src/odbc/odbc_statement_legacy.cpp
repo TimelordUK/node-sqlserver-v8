@@ -56,7 +56,7 @@ void OdbcStatementLegacy::assign_result(std::shared_ptr<QueryResult>& result,
   }
   result->set_end_of_rows(this->_resultset->EndOfRows());
   result->set_end_of_results(this->_resultset->EndOfResults());
-  auto raw_row_count = this->_resultset->row_count();
+  auto raw_row_count = this->_resultset->_row_count;
   result->set_row_count(raw_row_count >= 0 ? static_cast<size_t>(raw_row_count) : 0);
   auto e0 = _errors->size() > 0 ? _errors->at(0)->message.c_str() : "no errors";
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::assign_result ["
@@ -145,6 +145,8 @@ std::shared_ptr<QueryResult> OdbcStatementLegacy::GetMetaData() {
   auto res = make_shared<QueryResult>();
   res->set_end_of_rows(false);
   res->set_end_of_results(false);
+  res->set_row_count(_resultset->_row_count);
+
   auto ncols = this->_resultset->get_column_count();
   for (size_t i = 0; i < ncols; i++) {
     auto col = this->_resultset->get_meta_data(i);
@@ -789,6 +791,8 @@ bool OdbcStatementLegacy::start_reading_results() {
     SQL_LOG_DEBUG_STREAM("[" << _handle.toString()
                              << "] start_reading_results failed to get row count");
   }
+  SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] start_reading_results row count "
+                           << _resultset->_row_count << " columns " << cols);
   return result;
 }
 

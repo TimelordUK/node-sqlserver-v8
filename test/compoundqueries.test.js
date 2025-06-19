@@ -63,6 +63,22 @@ describe('compoundqueries', function () {
     }
   }
 
+  it('check row count emission is as expected for compound queries 3 inserts, update all', testDone => {
+    const expected = [1, 1, 1, 3]
+    const tableName = 'rowsAffectedTest'
+    const cmd = [
+      `IF OBJECT_ID('${tableName}', 'U') IS NOT NULL DROP TABLE ${tableName}`,
+      'create table rowsAffectedTest (id int)',
+      'insert into rowsAffectedTest values (1)',
+      'insert into rowsAffectedTest values (1)',
+      'insert into rowsAffectedTest values (1)',
+      'update rowsAffectedTest set id = 1',
+      'drop table rowsAffectedTest'
+    ]
+    const batcher = new Batcher()
+    batcher.send(cmd, expected, testDone)
+  })
+
   it('check row count emission is as expected for compound queries 1 insert', testDone => {
     const cmd = [
       'create table rowsAffectedTest (id int, val int)',
@@ -154,21 +170,6 @@ describe('compoundqueries', function () {
       done()
     }) // end of async.series()
   }) // end of it()
-
-  it('check row count emission is as expected for compound queries 3 inserts, update all', testDone => {
-    const expected = [1, 1, 1, 3]
-
-    const cmd = [
-      'create table rowsAffectedTest (id int)',
-      'insert into rowsAffectedTest values (1)',
-      'insert into rowsAffectedTest values (1)',
-      'insert into rowsAffectedTest values (1)',
-      'update rowsAffectedTest set id = 1',
-      'drop table rowsAffectedTest'
-    ]
-    const batcher = new Batcher()
-    batcher.send(cmd, expected, testDone)
-  })
 
   it('check row count emission is as expected for compound queries 4 inserts, 2 updates, 2 updates, update all', testDone => {
     const expected = [1, 1, 1, 1, 2, 2, 4]

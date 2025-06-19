@@ -261,7 +261,7 @@ describe('promises', function () {
     }])
   })
 
-  it.skip('query aggregator: 4 inserts, 2 updates, 2 updates, update all', async function handler () {
+  it('query aggregator: 4 inserts, 2 updates, 2 updates, update all', async function handler () {
     const tableName = 'rowsAffectedTest'
     const sql = `if exists(select * from information_schema.tables
           where table_name = '${tableName}' and TABLE_SCHEMA='dbo')
