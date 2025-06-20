@@ -33,6 +33,10 @@ BindQueryWorker::BindQueryWorker(Napi::Function& callback,
   }
 
   result_ = std::make_shared<QueryResult>();
+  if (has_error_) {
+    result_->set_end_of_results(true);
+    result_->set_end_of_rows(true);
+  }
 }
 
 void BindQueryWorker::Execute() {

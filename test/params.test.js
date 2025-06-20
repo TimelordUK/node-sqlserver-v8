@@ -2,7 +2,6 @@
 
 import { createRequire } from 'module'
 import chaiAsPromised from 'chai-as-promised'
-
 const require = createRequire(import.meta.url)
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
@@ -11,7 +10,6 @@ chai.use(chaiAsPromised)
 const expect = chai.expect
 const assert = chai.assert
 
-// Enable trace-level logging for debugging test failures
 const sql = require('../lib/sql')
 const { configureTestLogging } = require('./common/logging-helper')
 
@@ -20,12 +18,22 @@ const { configureTestLogging } = require('./common/logging-helper')
 // - MSNODESQLV8_TEST_VERBOSE=true npm test  (for full trace logging)
 // - MSNODESQLV8_TEST_LOG_LEVEL=DEBUG MSNODESQLV8_TEST_LOG_CONSOLE=true npm test
 // - MSNODESQLV8_TEST_LOG_LEVEL=INFO MSNODESQLV8_TEST_LOG_FILE=/tmp/test.log npm test
+
 configureTestLogging(sql)
 
-/* globals describe it */
+describe('bulk', function () {
+  this.timeout(50000)
+  this.beforeEach(async function () {
+    sql.logger.info('Starting test setup', 'params.test.beforeEach')
+    await env.open()
+    sql.logger.info('Test environment opened successfully', 'params.test.beforeEach')
+  })
 
-describe('Parameter Tests', function () {
-  this.timeout(60000)
+  this.afterEach(async function () {
+    sql.logger.info('Starting test cleanup', 'params.test.afterEach')
+    await env.close()
+    sql.logger.info('Test environment closed successfully', 'params.test.afterEach')
+  })
 
   // ========================================
   // TEST DATA DEFINITIONS
@@ -942,7 +950,7 @@ describe('Parameter Tests', function () {
   // ========================================
 
   describe('Error Handling', function () {
-    it.skip('should reject invalid number parameters (positive infinity)', async function () {
+    it('should reject invalid number parameters (positive infinity)', async function () {
       await expect(
         env.theConnection.promises.query(
           'INSERT INTO invalid_numbers_test (f) VALUES (?)',
@@ -951,7 +959,7 @@ describe('Parameter Tests', function () {
       ).to.be.rejectedWith('IMNOD: [msnodesql] Parameter 1: Invalid number parameter')
     })
 
-    it.skip('should reject invalid number parameters (negative infinity)', async function () {
+    it('should reject invalid number parameters (negative infinity)', async function () {
       await expect(
         env.theConnection.promises.query(
           'INSERT INTO invalid_numbers_test (f) VALUES (?)',
