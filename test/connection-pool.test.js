@@ -298,7 +298,7 @@ describe('pool', function () {
     })
   })
 
-  it('submit error queries with callback for results', testDone => {
+  it('submit error queries with callback for results - close and check', testDone => {
     const size = 4
     const iterations = 4
     const pool = env.pool(size)
