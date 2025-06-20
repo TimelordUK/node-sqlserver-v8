@@ -18,7 +18,6 @@ const { configureTestLogging } = require('./common/logging-helper')
 // - MSNODESQLV8_TEST_LOG_LEVEL=DEBUG MSNODESQLV8_TEST_LOG_CONSOLE=true npm test
 // - MSNODESQLV8_TEST_LOG_LEVEL=INFO MSNODESQLV8_TEST_LOG_FILE=/tmp/test.log npm test
 configureTestLogging(sql)
-sql.logger.configureForDevelopment()
 
 describe('querycancel', function () {
   this.timeout(30000)
@@ -296,7 +295,7 @@ describe('querycancel', function () {
     })
   })
 
-  it.skip('cancel a call to proc that waits for delay of input param. (PENDING: Stored proc support not yet implemented)', testDone => {
+  it('cancel a call to proc that waits for delay of input param.', testDone => {
     const spName = 'test_spwait_for'
 
     const def = 'alter PROCEDURE <name>' +
