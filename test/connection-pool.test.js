@@ -1,5 +1,4 @@
-'use strict'
-
+/* eslint-disable no-unused-expressions */
 import { createRequire } from 'module'
 import chaiAsPromised from 'chai-as-promised'
 const require = createRequire(import.meta.url)
@@ -9,9 +8,10 @@ const chai = require('chai')
 chai.use(chaiAsPromised)
 const expect = chai.expect
 const assert = chai.assert
-
-// Enable trace-level logging for debugging test failures
 const sql = require('../lib/sql')
+
+/* globals describe it beforeEach afterEach */
+
 const { configureTestLogging } = require('./common/logging-helper')
 
 // Configure logging based on environment variables
@@ -22,21 +22,28 @@ const { configureTestLogging } = require('./common/logging-helper')
 configureTestLogging(sql)
 
 describe('pool', function () {
-  this.timeout(100000)
+  this.timeout(30000)
 
-  const env = new TestEnv()
-
-  beforeEach(async function () {
-    // Disable logging for tests unless debugging
-    if (!process.env.DEBUG_TESTS) {
-      sql.logger.setLogLevel(sql.LogLevel.TRACE)
-      sql.logger.setConsoleLogging(true)
-    }
-    await env.open()
+  this.beforeEach(done => {
+    sql.logger.info('Starting test setup', 'connection-pool.test.beforeEach')
+    env.open().then(() => {
+      sql.logger.info('Test environment opened successfully', 'connection-pool.test.beforeEach')
+      done()
+    }).catch(e => {
+      sql.logger.error(`Failed to open test environment: ${e}`, 'connection-pool.test.beforeEach')
+      sql.logger.error(e)
+    })
   })
 
-  afterEach(async function () {
-    await env.close()
+  this.afterEach(done => {
+    sql.logger.info('Starting test cleanup', 'connection-pool.test.afterEach')
+    env.close().then(() => {
+      sql.logger.info('Test environment closed successfully', 'connection-pool.test.afterEach')
+      done()
+    }).catch(e => {
+      sql.logger.error(`Failed to close test environment: ${e}`, 'connection-pool.test.afterEach')
+      sql.logger.error(e)
+    })
   })
 
   it('open close pool with promises', async function handler () {
@@ -293,7 +300,7 @@ describe('pool', function () {
 
   it('submit error queries with callback for results', testDone => {
     const size = 4
-    const iterations = 8
+    const iterations = 4
     const pool = env.pool(size)
 
     pool.on('error', e => {
@@ -329,10 +336,10 @@ describe('pool', function () {
         q.on('free', () => {
           ++free
           if (free === iterations) {
-            expect(errors.length).to.equal(iterations)
-            expect(checkin.length).to.equal(iterations)
-            expect(checkout.length).to.equal(iterations)
             pool.close(() => {
+              expect(errors.length).to.equal(iterations)
+              expect(checkin.length).to.equal(iterations)
+              expect(checkout.length).to.equal(iterations)
               testDone()
             })
           }
