@@ -38,7 +38,6 @@ ConnectionHandles::ConnectionHandles(std::shared_ptr<IOdbcEnvironmentHandle> env
 
 ConnectionHandles::~ConnectionHandles() {
   SQL_LOG_DEBUG_STREAM("ConnectionHandles::~ConnectionHandles - free connection handle");
-  clear();
   if (connectionHandle_) {
     connectionHandle_->free();
   }
@@ -57,18 +56,20 @@ void ConnectionHandles::clear() {
         // Cancel any pending operations before freeing the handle
         // This is critical for statements that may have timed out or are still executing
         SQL_LOG_DEBUG_STREAM("ConnectionHandles::clear - cancelling statement " << id);
-        
+
         // First try SQLCancel for older ODBC compatibility
         auto cancelResult = SQLCancel(handle->get_handle());
-        SQL_LOG_DEBUG_STREAM("ConnectionHandles::clear - SQLCancel result for statement " << id << ": " << cancelResult);
-        
+        SQL_LOG_DEBUG_STREAM("ConnectionHandles::clear - SQLCancel result for statement "
+                             << id << ": " << cancelResult);
+
         // Also try SQLCancelHandle which is more robust for newer drivers
         cancelResult = SQLCancelHandle(SQL_HANDLE_STMT, handle->get_handle());
-        SQL_LOG_DEBUG_STREAM("ConnectionHandles::clear - SQLCancelHandle result for statement " << id << ": " << cancelResult);
-        
+        SQL_LOG_DEBUG_STREAM("ConnectionHandles::clear - SQLCancelHandle result for statement "
+                             << id << ": " << cancelResult);
+
         // Give a small delay to allow cancellation to complete
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        
+
         // Also try to explicitly close the cursor/statement
         SQLCloseCursor(handle->get_handle());
         SQLFreeStmt(handle->get_handle(), SQL_CLOSE);

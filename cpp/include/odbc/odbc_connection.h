@@ -190,7 +190,6 @@ class OdbcConnection : public IOdbcConnection {
   std::shared_ptr<OdbcStatementFactory> _statementFactory;
 
   // Statement management
-  std::unordered_map<std::string, std::shared_ptr<IOdbcStatement>> _preparedStatements;
   std::mutex _statementMutex;
 
   // Helper methods

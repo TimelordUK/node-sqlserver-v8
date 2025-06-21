@@ -131,12 +131,6 @@ bool OdbcConnection::Open(const std::u16string& connectionString, int timeout) {
 bool OdbcConnection::Close() {
   std::lock_guard lock(_connectionMutex);
 
-  // First release all prepared statements
-  {
-    std::lock_guard stmtLock(_statementMutex);
-    _preparedStatements.clear();
-  }
-
   _statementFactory.reset();
   _transactionManager.reset();
 
@@ -238,43 +232,8 @@ std::shared_ptr<IOdbcStatement> OdbcConnection::CreateStatement(
   return statement;
 }
 
-std::shared_ptr<IOdbcStatement> OdbcConnection::GetPreparedStatement(
-    const std::string& statementId) {
-  std::lock_guard lock(_statementMutex);
-  auto it = _preparedStatements.find(statementId);
-  return it != _preparedStatements.end() ? it->second : nullptr;
-}
-
-std::shared_ptr<IOdbcStatement> OdbcConnection::GetStatement(const StatementHandle& handle) {
-  std::lock_guard lock(_statementMutex);
-
-  // Find statement by handle
-  for (const auto& pair : _preparedStatements) {
-    if (pair.second->GetStatementHandle() == handle) {
-      return pair.second;
-    }
-  }
-
-  // Statement not found
-  return nullptr;
-}
-
-bool OdbcConnection::ReleasePreparedStatement(const std::string& statementId) {
-  std::lock_guard lock(_statementMutex);
-  return _preparedStatements.erase(statementId) > 0;
-}
-
 bool OdbcConnection::RemoveStatement(const std::shared_ptr<OdbcStatement>& statement) {
   std::lock_guard lock(_statementMutex);
-
-  // Remove from prepared statements if it exists
-  for (auto it = _preparedStatements.begin(); it != _preparedStatements.end(); ++it) {
-    if (it->second == statement) {
-      _preparedStatements.erase(it);
-      break;
-    }
-  }
-
   // Ask the factory to remove the statement
   if (statement) {
     _statementFactory->RemoveStatement(statement->GetStatementHandle().getStatementId());
@@ -291,14 +250,6 @@ bool OdbcConnection::RemoveStatement(int statementId) {
   if (statement) {
     // Set CLOSED state before destroying statement (while JS context is still valid)
     statement->Close();
-
-    // Remove from prepared statements if it exists
-    for (auto it = _preparedStatements.begin(); it != _preparedStatements.end(); ++it) {
-      if (it->second == statement) {
-        _preparedStatements.erase(it);
-        break;
-      }
-    }
   }
 
   SQL_LOG_DEBUG_STREAM("RemoveStatement ID = " << statementId);
@@ -323,13 +274,7 @@ bool OdbcConnection::CancelStatement(int queryId) {
   auto statement = _statementFactory->GetStatement(statementId);
   if (statement) {
     SQL_LOG_DEBUG_STREAM("OdbcConnection::Found statement for ID = " << statementId);
-    // Remove from prepared statements if it exists
-    for (auto it = _preparedStatements.begin(); it != _preparedStatements.end(); ++it) {
-      if (it->second == statement) {
-        _preparedStatements.erase(it);
-        break;
-      }
-    }
+
     auto res = statement->Cancel();
     SQL_LOG_DEBUG_STREAM("OdbcConnection::CancelStatement ID = " << statementId
                                                                  << " - result = " << res);
@@ -356,13 +301,7 @@ std::shared_ptr<BoundDatumSet> OdbcConnection::UnbindStatement(int queryId) {
   auto statement = _statementFactory->GetStatement(statementId);
   if (statement) {
     SQL_LOG_DEBUG_STREAM("OdbcConnection::Found statement for ID = " << statementId);
-    // Remove from prepared statements if it exists
-    for (auto it = _preparedStatements.begin(); it != _preparedStatements.end(); ++it) {
-      if (it->second == statement) {
-        _preparedStatements.erase(it);
-        break;
-      }
-    }
+
     auto res = statement->Unbind();
     SQL_LOG_DEBUG_STREAM("OdbcConnection::UnbindStatement ID = " << statementId
                                                                  << " - result = " << res);
@@ -411,6 +350,9 @@ bool OdbcConnection::BindQuery(int queryId,
     result->setHandle(statement->GetStatementHandle());
     return statement->BindExecute(parameters, result);
   }
+  SQL_LOG_ERROR_STREAM("OdbcConnection::BindQuery ID = " << statementId
+                                                         << " - statement not found");
+  return false;
 }
 
 bool OdbcConnection::PrepareQuery(const std::shared_ptr<QueryOperationParams> operationParams,
@@ -436,8 +378,6 @@ bool OdbcConnection::PrepareQuery(const std::shared_ptr<QueryOperationParams> op
 }
 
 bool OdbcConnection::TryReadNextResult(int statementId, std::shared_ptr<QueryResult>& result) {
-  // fprintf(stderr, "TryReadNextResult\n");
-  // fprintf(stderr, "TryReadNextResult ID = %llu\n ", get_statement_id());
   SQL_LOG_DEBUG_STREAM("OdbcConnection::TryReadNextResult ID = " << statementId);
   std::lock_guard lock(_connectionMutex);
 
