@@ -195,8 +195,11 @@ bool bcp::init() {
   vec.push_back(static_cast<uint16_t>(0));
   const auto retcode = plugin.bcp_init(ch.get_handle(), vec.data(), nullptr, nullptr, DB_IN);
   if ((retcode != SUCCEED)) {
+    SQL_LOG_ERROR_STREAM("bcp failed in step `init` with error code " << retcode);
     ch.read_errors(_odbcApi, _errors);
     return false;
+  } else {
+    SQL_LOG_DEBUG_WSTREAM("bcp init succeeded for table " << tn);
   }
   return true;
 }

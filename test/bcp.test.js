@@ -28,261 +28,6 @@ describe('bcp', function () {
     sql.logger.info('Test environment closed successfully', 'bcp.test.afterEach')
   })
 
-  it('bcp nchar(1)', async function handler () {
-    const bcp = env.bcpEntry({
-      tableName: 'test_table_bcp',
-      columns: [
-        {
-          name: 'id',
-          type: 'INT PRIMARY KEY'
-        },
-        {
-          name: 's1',
-          type: 'nchar(1)'
-        }]
-    }, i => {
-      return {
-        id: i,
-        s1: 's'
-      }
-    }
-    , dateTimeCompare)
-    await bcp.runner()
-  })
-
-  it('bcp employee', async function handler () {
-    const employee = env.employee
-    const table = await employee.create()
-    const records = employee.make(200)
-    /*
-    const recs = records.map(r => {
-      const { rowguid, OrganizationLevel, OrganizationNode, ...rest } = r
-      return rest
-    }) */
-    const res = await employee.insertSelect(table, records)
-    assert.deepStrictEqual(res, records)
-  })
-
-  it('bcp date', async function handler () {
-    const testDate = env.timeHelper.getUTCDate()
-    const bcp = env.bcpEntry({
-      tableName: 'test_table_bcp',
-      columns: [
-        {
-          name: 'id',
-          type: 'INT PRIMARY KEY'
-        },
-        {
-          name: 'd1',
-          type: 'datetime'
-        }]
-    }, i => {
-      return {
-        id: i,
-        d1: testDate
-      }
-    }
-    , dateTimeCompare)
-    await bcp.runner()
-  })
-
-  it('bcp datetime - mix with nulls', async function handler () {
-    const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
-    const bcp = env.bcpEntry({
-      tableName: 'test_table_bcp',
-      columns: [
-        {
-          name: 'id',
-          type: 'INT PRIMARY KEY'
-        },
-        {
-          name: 'd1',
-          type: 'datetime'
-        },
-        {
-          name: 'd2',
-          type: 'datetime'
-        }]
-    }, i => timeFactory(testDate, i)
-    , dateTimeCompare)
-    await bcp.runner()
-  })
-
-  it('bcp time', async function handler () {
-    const timeHelper = env.timeHelper
-    const testDate = timeHelper.parseTime('16:47:04')
-    const rows = 2000
-
-    const bcp = env.bcpEntry({
-      tableName: 'test_table_bcp',
-      columns: [
-        {
-          name: 'id',
-          type: 'INT PRIMARY KEY'
-        },
-        {
-          name: 't1',
-          type: 'time'
-        }]
-    }, i => {
-      return {
-        id: i,
-        t1: testDate
-      }
-    }, (actual, expected) => {
-      assert.deepStrictEqual(actual.length, expected.length)
-      actual.forEach(a => {
-        a.t1 = timeHelper.getUTCTime(a.t1)
-      })
-      expected.forEach(a => {
-        a.t1 = timeHelper.getUTCTime(a.t1)
-        return a
-      })
-      assert.deepStrictEqual(actual, expected)
-    })
-    await bcp.runner(rows)
-  })
-
-  it('bcp datetime timestamp - no null', async function handler () {
-    const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
-    const bcp = env.bcpEntry({
-      tableName: 'test_table_bcp',
-      columns: [
-        {
-          name: 'id',
-          type: 'INT PRIMARY KEY'
-        },
-        {
-          name: 'd1',
-          type: 'datetime'
-        },
-        {
-          name: 'd2',
-          type: 'datetime'
-        }]
-    }, i => {
-      return {
-        id: i,
-        d1: new Date(testDate.getTime() + i * 60 * 60 * 1000),
-        d2: new Date(testDate.getTime() - i * 60 * 60 * 1000)
-      }
-    }, dateTimeCompare)
-    await bcp.runner()
-  })
-
-  it('bcp 7 column mixed table ', async function handler () {
-    function getNumeric (i) {
-      const v = Math.sqrt(i + 1)
-      return Math.round(v * 1e6) / 1e6
-    }
-    const bcp = env.bcpEntry({
-      tableName: 'test_table_7_bcp',
-      columns: [
-        {
-          name: 'id',
-          type: 'INT PRIMARY KEY'
-        },
-        {
-          name: 's1',
-          type: 'VARCHAR (255) NULL'
-        },
-        {
-          name: 's2',
-          type: 'VARCHAR (100) NULL'
-        },
-        {
-          name: 'i1',
-          type: 'int null'
-        },
-        {
-          name: 'i2',
-          type: 'int NULL'
-        },
-        {
-          name: 'n1',
-          type: 'numeric(18,6) NULL'
-        },
-        {
-          name: 'n2',
-          type: 'numeric(18,6) NULL'
-        }]
-    }, i => {
-      return {
-        id: i,
-        s1: i % 2 === 0 ? null : `column1${i}`,
-        s2: `testing${i + 1}2Data`,
-        i1: i * 5,
-        i2: i * 9,
-        n1: getNumeric(i),
-        n2: getNumeric(i)
-      }
-    }, (actual, expected) => {
-      assert.deepStrictEqual(actual.length, expected.length)
-      for (let i = 0; i < actual.length; ++i) {
-        const lhs = actual[i]
-        const rhs = expected[i]
-        assert.deepStrictEqual(lhs.id, rhs.id)
-        assert.deepStrictEqual(lhs.s1, rhs.s1)
-        assert.deepStrictEqual(lhs.s2, rhs.s2)
-        assert.deepStrictEqual(lhs.i1, rhs.i1)
-        assert.deepStrictEqual(lhs.i2, rhs.i2)
-        assert(Math.abs(lhs.n1 - rhs.n1) < 1e-5)
-        assert(Math.abs(lhs.n2 - rhs.n2) < 1e-5)
-      }
-    })
-    await bcp.runner(1000)
-  })
-
-  it('bcp expect error null in non null column', async function handler () {
-    const rows = 10
-    const bcp = env.bcpEntry({
-      tableName: 'test_table_bcp',
-      columns: [
-        {
-          name: 'id',
-          type: 'INT PRIMARY KEY'
-        },
-        {
-          name: 'n1',
-          type: 'smallint not NULL'
-        }]
-    }, i => {
-      return {
-        id: i,
-        n1: i % 2 === 0 ? Math.pow(2, 10) + i : null
-      }
-    })
-    await expect(bcp.runner(rows)).to.be.rejectedWith('Cannot insert the value NULL into column')
-  })
-  /*
-''[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Cannot insert the value NULL into column 'n1', table 'node.dbo.test_table_bcp'; column does not allow nulls. INSERT fails.''
-    */
-
-  it('bcp expect error duplicate primary key', async function handler () {
-    const rows = 10
-    const bcp = env.bcpEntry({
-      tableName: 'test_table_bcp',
-      columns: [
-        {
-          name: 'id',
-          type: 'INT PRIMARY KEY'
-        },
-        {
-          name: 'n1',
-          type: 'smallint'
-        }]
-    }, i => {
-      return {
-        id: i % 5,
-        n1: i % 2 === 0 ? Math.pow(2, 10) + i : -Math.pow(2, 10) - i
-      }
-    })
-    await expect(bcp.runner(rows)).to.be.rejectedWith('Violation of PRIMARY KEY constraint')
-    /*
-'[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Violation of PRIMARY KEY constraint 'PK__test_tab__3213E83F11822873'. Cannot insert duplicate key in object 'dbo.test_table_bcp'. The duplicate key value is (0).'
-    */
-  })
-
   it('bcp recovery from error.', async function handler () {
     const rows = 10
     const name = 'test_table_bcp'
@@ -305,13 +50,268 @@ describe('bcp', function () {
       }
     })
 
+    it('bcp nchar(1)', async function handler () {
+      const bcp = env.bcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 's1',
+            type: 'nchar(1)'
+          }]
+      }, i => {
+        return {
+          id: i,
+          s1: 's'
+        }
+      }
+      , dateTimeCompare)
+      await bcp.runner()
+    })
+
+    it('bcp employee', async function handler () {
+      const employee = env.employee
+      const table = await employee.create()
+      const records = employee.make(200)
+      /*
+    const recs = records.map(r => {
+      const { rowguid, OrganizationLevel, OrganizationNode, ...rest } = r
+      return rest
+    }) */
+      const res = await employee.insertSelect(table, records)
+      assert.deepStrictEqual(res, records)
+    })
+
+    it('bcp date', async function handler () {
+      const testDate = env.timeHelper.getUTCDate()
+      const bcp = env.bcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'd1',
+            type: 'datetime'
+          }]
+      }, i => {
+        return {
+          id: i,
+          d1: testDate
+        }
+      }
+      , dateTimeCompare)
+      await bcp.runner()
+    })
+
+    it('bcp datetime - mix with nulls', async function handler () {
+      const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
+      const bcp = env.bcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'd1',
+            type: 'datetime'
+          },
+          {
+            name: 'd2',
+            type: 'datetime'
+          }]
+      }, i => timeFactory(testDate, i)
+      , dateTimeCompare)
+      await bcp.runner()
+    })
+
+    it('bcp time', async function handler () {
+      const timeHelper = env.timeHelper
+      const testDate = timeHelper.parseTime('16:47:04')
+      const rows = 2000
+
+      const bcp = env.bcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 't1',
+            type: 'time'
+          }]
+      }, i => {
+        return {
+          id: i,
+          t1: testDate
+        }
+      }, (actual, expected) => {
+        assert.deepStrictEqual(actual.length, expected.length)
+        actual.forEach(a => {
+          a.t1 = timeHelper.getUTCTime(a.t1)
+        })
+        expected.forEach(a => {
+          a.t1 = timeHelper.getUTCTime(a.t1)
+          return a
+        })
+        assert.deepStrictEqual(actual, expected)
+      })
+      await bcp.runner(rows)
+    })
+
+    it('bcp datetime timestamp - no null', async function handler () {
+      const testDate = new Date('Mon Apr 26 2021 22:05:38 GMT-0500 (Central Daylight Time)')
+      const bcp = env.bcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'd1',
+            type: 'datetime'
+          },
+          {
+            name: 'd2',
+            type: 'datetime'
+          }]
+      }, i => {
+        return {
+          id: i,
+          d1: new Date(testDate.getTime() + i * 60 * 60 * 1000),
+          d2: new Date(testDate.getTime() - i * 60 * 60 * 1000)
+        }
+      }, dateTimeCompare)
+      await bcp.runner()
+    })
+
+    it('bcp 7 column mixed table ', async function handler () {
+      function getNumeric (i) {
+        const v = Math.sqrt(i + 1)
+        return Math.round(v * 1e6) / 1e6
+      }
+      const bcp = env.bcpEntry({
+        tableName: 'test_table_7_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 's1',
+            type: 'VARCHAR (255) NULL'
+          },
+          {
+            name: 's2',
+            type: 'VARCHAR (100) NULL'
+          },
+          {
+            name: 'i1',
+            type: 'int null'
+          },
+          {
+            name: 'i2',
+            type: 'int NULL'
+          },
+          {
+            name: 'n1',
+            type: 'numeric(18,6) NULL'
+          },
+          {
+            name: 'n2',
+            type: 'numeric(18,6) NULL'
+          }]
+      }, i => {
+        return {
+          id: i,
+          s1: i % 2 === 0 ? null : `column1${i}`,
+          s2: `testing${i + 1}2Data`,
+          i1: i * 5,
+          i2: i * 9,
+          n1: getNumeric(i),
+          n2: getNumeric(i)
+        }
+      }, (actual, expected) => {
+        assert.deepStrictEqual(actual.length, expected.length)
+        for (let i = 0; i < actual.length; ++i) {
+          const lhs = actual[i]
+          const rhs = expected[i]
+          assert.deepStrictEqual(lhs.id, rhs.id)
+          assert.deepStrictEqual(lhs.s1, rhs.s1)
+          assert.deepStrictEqual(lhs.s2, rhs.s2)
+          assert.deepStrictEqual(lhs.i1, rhs.i1)
+          assert.deepStrictEqual(lhs.i2, rhs.i2)
+          assert(Math.abs(lhs.n1 - rhs.n1) < 1e-5)
+          assert(Math.abs(lhs.n2 - rhs.n2) < 1e-5)
+        }
+      })
+      await bcp.runner(1000)
+    })
+
+    it('bcp expect error null in non null column', async function handler () {
+      const rows = 10
+      const bcp = env.bcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'n1',
+            type: 'smallint not NULL'
+          }]
+      }, i => {
+        return {
+          id: i,
+          n1: i % 2 === 0 ? Math.pow(2, 10) + i : null
+        }
+      })
+      await expect(bcp.runner(rows)).to.be.rejectedWith('Cannot insert the value NULL into column')
+    })
+    /*
+''[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Cannot insert the value NULL into column 'n1', table 'node.dbo.test_table_bcp'; column does not allow nulls. INSERT fails.''
+    */
+
+    it('bcp expect error duplicate primary key', async function handler () {
+      const rows = 10
+      const bcp = env.bcpEntry({
+        tableName: 'test_table_bcp',
+        columns: [
+          {
+            name: 'id',
+            type: 'INT PRIMARY KEY'
+          },
+          {
+            name: 'n1',
+            type: 'smallint'
+          }]
+      }, i => {
+        return {
+          id: i % 5,
+          n1: i % 2 === 0 ? Math.pow(2, 10) + i : -Math.pow(2, 10) - i
+        }
+      })
+      await expect(bcp.runner(rows)).to.be.rejectedWith('Violation of PRIMARY KEY constraint')
+    /*
+'[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Violation of PRIMARY KEY constraint 'PK__test_tab__3213E83F11822873'. Cannot insert duplicate key in object 'dbo.test_table_bcp'. The duplicate key value is (0).'
+    */
+    })
+
     /*
 '[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Violation of PRIMARY KEY constraint 'PK__test_tab__3213E83F11822873'. Cannot insert duplicate key in object 'dbo.test_table_bcp'. The duplicate key value is (0).'
     */
 
     await expect(bcp.runner(rows)).to.be.rejectedWith('Violation of PRIMARY KEY constraint')
     const res = await env.theConnection.promises.query(`select count(*) as count from ${name}`)
-    assert.deepStrictEqual(res.first[0].count, 5)
+    assert.deepStrictEqual(res.first[0].count, 0)
   })
 
   it('bcp hierarchyid binary', async function handler () {

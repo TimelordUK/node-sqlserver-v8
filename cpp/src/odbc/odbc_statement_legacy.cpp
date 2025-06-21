@@ -930,12 +930,26 @@ bool OdbcStatementLegacy::try_bcp(const shared_ptr<BoundDatumSet>& param_set, in
   if (version == 0)
     version = 17;
   bcp b(_odbcApi, param_set, _connectionHandle);
-  // const auto ret = b.insert(version);
+  const auto ret = b.insert(version);
   _resultset = make_unique<ResultSet>(0);
   _resultset->_end_of_rows = true;
+  _resultset->_end_of_results = true;
+  _resultset->_row_count = ret;
   _errors->clear();
+  SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] try_bcp: bcp errors size "
+                           << b._errors->size() << " ret " << ret);
   copy(b._errors->begin(), b._errors->end(), back_inserter(*_errors));
-  return false;
+  for (const auto& error : *_errors) {
+    _errorHandler->AddError(error);
+  }
+  SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] try_bcp: errors size " << _errors->size());
+
+  // If there are errors, return false to indicate failure
+  if (!_errors->empty()) {
+    return false;
+  }
+
+  return ret;
 }
 
 bool OdbcStatementLegacy::bind_fetch(const shared_ptr<BoundDatumSet>& param_set) {
@@ -1034,6 +1048,8 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
   if (pars.size() > 0) {
     const auto& first = param_set->atIndex(0);
     if (first->is_bcp) {
+      SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] try_execute_direct: trying bcp version "
+                               << first->bcp_version);
       return try_bcp(param_set, first->bcp_version);
     }
   }

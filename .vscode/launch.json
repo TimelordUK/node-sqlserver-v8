@@ -89,7 +89,9 @@
               // "test/query.test"
               // "test/connection-improved.test"
               // "test/querycancel.test"
-              "test/sproc.test"
+              // "test/sproc.test"
+              "test/bcp.test"
+              //"test/txn.test"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
