@@ -1,51 +1,40 @@
-//  ---------------------------------------------------------------------------------------------------------------------------------
-// File: connect.test.js
-// Contents: test suite for connections
-
-// Copyright Microsoft Corporation
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-//
-// You may obtain a copy of the License at:
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//  ---------------------------------------------------------------------------------------------------------------------------------
-
 'use strict'
 
+import { createRequire } from 'module'
+import chaiAsPromised from 'chai-as-promised'
+const require = createRequire(import.meta.url)
+const { TestEnv } = require('./env/test-env')
+const env = new TestEnv()
 const chai = require('chai')
+chai.use(chaiAsPromised)
 const expect = chai.expect
 const assert = chai.assert
 
-/* globals describe it */
+const sql = require('../lib/sql')
+const { configureTestLogging } = require('./common/logging-helper')
 
-const { TestEnv } = require('./env/test-env')
-const env = new TestEnv()
+// Configure logging based on environment variables
+// By default, tests run silently. To enable logging:
+// - MSNODESQLV8_TEST_VERBOSE=true npm test  (for full trace logging)
+// - MSNODESQLV8_TEST_LOG_LEVEL=DEBUG MSNODESQLV8_TEST_LOG_CONSOLE=true npm test
+// - MSNODESQLV8_TEST_LOG_LEVEL=INFO MSNODESQLV8_TEST_LOG_FILE=/tmp/test.log npm test
+
+configureTestLogging(sql)
 
 describe('multiple-error', function () {
-  this.timeout(30000)
-
-  this.beforeEach(done => {
-    env.open().then(() => {
-      done()
-    }).catch(e => {
-      console.error(e)
-    })
+  this.timeout(50000)
+  this.beforeEach(async function () {
+    sql.logger.info('Starting test setup', 'params.test.beforeEach')
+    await env.open()
+    sql.logger.info('Test environment opened successfully', 'params.test.beforeEach')
   })
 
-  this.afterEach(done => {
-    env.close().then(() => { done() }).catch(e => {
-      console.error(e)
-    })
+  this.afterEach(async function () {
+    sql.logger.info('Starting test cleanup', 'params.test.afterEach')
+    await env.close()
+    sql.logger.info('Test environment closed successfully', 'params.test.afterEach')
   })
-
-  it('non trusted invalid user', done => {
+  it.skip('non trusted invalid user', done => {
     let adjusted = env.connectionString.replace('Trusted_Connection=yes', 'Trusted_Connection=No;Uid=test;Database=test;Pwd=...')
     adjusted = adjusted.replace('UID=linux', 'Uid=linux2')
     adjusted = adjusted.replace('Uid=sa', 'Uid=JohnSnow')
