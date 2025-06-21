@@ -52,8 +52,6 @@ class IOdbcConnection {
   virtual std::shared_ptr<IOdbcStatement> CreateStatement(
       StatementType type, const std::shared_ptr<QueryOperationParams> operationParam) = 0;
 
-  virtual std::shared_ptr<IOdbcStatement> GetStatement(const StatementHandle& handle) = 0;
-
   virtual std::shared_ptr<IOdbcStatement> GetStatement(int statementId) const = 0;
 
   // Remove a statement and free its resources
@@ -112,8 +110,6 @@ class OdbcConnection : public IOdbcConnection {
   // Statement management
   std::shared_ptr<IOdbcStatement> CreateStatement(
       StatementType type, const std::shared_ptr<QueryOperationParams> operationParam) override;
-
-  std::shared_ptr<IOdbcStatement> GetStatement(const StatementHandle& handle) override;
 
   bool RemoveStatement(int statementId) override;
   bool CancelStatement(int statementId) override;
