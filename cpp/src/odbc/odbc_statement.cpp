@@ -35,7 +35,7 @@ void OdbcStatement::SetStateNotifier(std::shared_ptr<IOdbcStateNotifier> notifie
 void OdbcStatement::SetState(State newState) {
   // Use atomic exchange to get old state and set new state atomically
   State oldState = state_.exchange(newState);
-  
+
   // Only notify if state actually changed
   if (oldState != newState && stateNotifier_) {
     stateNotifier_->NotifyStateChange(handle_, oldState, newState);
@@ -1325,17 +1325,20 @@ bool OdbcStatement::apply_precision(const std::shared_ptr<SqlParameter>& datum,
   if (!check_odbc_error(r)) {
     return false;
   }
-  r = odbcApi_->SQLSetDescField(
-      hdesc, current_param, SQL_DESC_TYPE, reinterpret_cast<SQLPOINTER>(c_type), bufferLength);
+  r = odbcApi_->SQLSetDescField(hdesc,
+                                current_param,
+                                SQL_DESC_TYPE,
+                                reinterpret_cast<SQLPOINTER>(static_cast<uintptr_t>(c_type)),
+                                bufferLength);
   if (!check_odbc_error(r)) {
     return false;
   }
-  r = odbcApi_->SQLSetDescField(
-      hdesc,
-      current_param,
-      SQL_DESC_PRECISION,
-      reinterpret_cast<SQLPOINTER>(static_cast<SQLUINTEGER>(datum->param_size)),
-      bufferLength);
+  r = odbcApi_->SQLSetDescField(hdesc,
+                                current_param,
+                                SQL_DESC_PRECISION,
+                                reinterpret_cast<SQLPOINTER>(static_cast<uintptr_t>(
+                                    static_cast<SQLUINTEGER>(datum->param_size))),
+                                bufferLength);
   if (!check_odbc_error(r)) {
     return false;
   }
@@ -1343,7 +1346,7 @@ bool OdbcStatement::apply_precision(const std::shared_ptr<SqlParameter>& datum,
       hdesc,
       current_param,
       SQL_DESC_SCALE,
-      reinterpret_cast<SQLPOINTER>(static_cast<SQLUINTEGER>(datum->digits)),
+      reinterpret_cast<SQLPOINTER>(static_cast<uintptr_t>(static_cast<SQLUINTEGER>(datum->digits))),
       bufferLength);
   if (!check_odbc_error(r)) {
     return false;
