@@ -168,7 +168,17 @@ bool OdbcConnection::BeginTransaction() {
   if (connectionState != ConnectionOpen) {
     return false;
   }
-  return _transactionManager->BeginTransaction();
+  bool result = _transactionManager->BeginTransaction();
+  if (!result) {
+    // Copy errors from transaction manager to error handler
+    auto txnErrors = _transactionManager->GetErrors();
+    if (txnErrors) {
+      for (const auto& error : *txnErrors) {
+        _errorHandler->AddError(error);
+      }
+    }
+  }
+  return result;
 }
 
 bool OdbcConnection::CommitTransaction() {
@@ -176,7 +186,17 @@ bool OdbcConnection::CommitTransaction() {
   if (connectionState != ConnectionOpen) {
     return false;
   }
-  return _transactionManager->CommitTransaction();
+  bool result = _transactionManager->CommitTransaction();
+  if (!result) {
+    // Copy errors from transaction manager to error handler
+    auto txnErrors = _transactionManager->GetErrors();
+    if (txnErrors) {
+      for (const auto& error : *txnErrors) {
+        _errorHandler->AddError(error);
+      }
+    }
+  }
+  return result;
 }
 
 bool OdbcConnection::RollbackTransaction() {
@@ -184,7 +204,17 @@ bool OdbcConnection::RollbackTransaction() {
   if (connectionState != ConnectionOpen) {
     return false;
   }
-  return _transactionManager->RollbackTransaction();
+  bool result = _transactionManager->RollbackTransaction();
+  if (!result) {
+    // Copy errors from transaction manager to error handler
+    auto txnErrors = _transactionManager->GetErrors();
+    if (txnErrors) {
+      for (const auto& error : *txnErrors) {
+        _errorHandler->AddError(error);
+      }
+    }
+  }
+  return result;
 }
 
 std::shared_ptr<IOdbcStatement> OdbcConnection::CreateStatement(

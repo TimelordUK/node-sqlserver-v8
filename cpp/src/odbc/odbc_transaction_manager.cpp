@@ -31,7 +31,7 @@ bool OdbcTransactionManager::try_begin_tran() {
 
   auto* const acoff = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_OFF);
   const auto ret =
-      SQLSetConnectAttr(connection->get_handle(), SQL_ATTR_AUTOCOMMIT, acoff, SQL_IS_UINTEGER);
+      _odbcApi->SQLSetConnectAttr(connection->get_handle(), SQL_ATTR_AUTOCOMMIT, acoff, SQL_IS_UINTEGER);
   return CheckOdbcError(ret);
 }
 
@@ -50,7 +50,7 @@ bool OdbcTransactionManager::try_end_tran(const SQLSMALLINT completion_type) {
 
   // Put the connection back into auto commit mode
   auto* const acon = reinterpret_cast<SQLPOINTER>(SQL_AUTOCOMMIT_ON);
-  ret = SQLSetConnectAttr(connection->get_handle(), SQL_ATTR_AUTOCOMMIT, acon, SQL_IS_UINTEGER);
+  ret = _odbcApi->SQLSetConnectAttr(connection->get_handle(), SQL_ATTR_AUTOCOMMIT, acon, SQL_IS_UINTEGER);
   return CheckOdbcError(ret);
 }
 

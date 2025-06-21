@@ -14,6 +14,8 @@ class OdbcTransactionManager {
   bool BeginTransaction();
   bool CommitTransaction();
   bool RollbackTransaction();
+  
+  std::shared_ptr<std::vector<std::shared_ptr<OdbcError>>> GetErrors() const { return _errors; }
 
  private:
   bool try_begin_tran();

@@ -22,6 +22,9 @@
 #include <js/workers/release_worker.h>
 #include <js/workers/cancel_worker.h>
 #include <js/workers/unbind_worker.h>
+#include <js/workers/begin_transaction_worker.h>
+#include <js/workers/commit_worker.h>
+#include <js/workers/rollback_worker.h>
 #include <js/workers/worker_base.h>
 #include <odbc/odbc_connection.h>
 #include <odbc/odbc_connection_factory.h>
@@ -59,6 +62,9 @@ Napi::Object Connection::Init(Napi::Env env, Napi::Object exports) {
                       InstanceMethod("cancelQuery", &Connection::CancelQuery),
                       InstanceMethod("callProcedure", &Connection::Query),
                       InstanceMethod("unbind", &Connection::Unbind),
+                      InstanceMethod("beginTransaction", &Connection::BeginTransaction),
+                      InstanceMethod("commit", &Connection::Commit),
+                      InstanceMethod("rollback", &Connection::Rollback),
                   });
 
   // Create persistent reference to constructor
@@ -100,7 +106,7 @@ Napi::Value Connection::CreateWorkerWithCallbackOrPromise(const Napi::CallbackIn
   // Check for callback (last argument)
   Napi::Function callback;
 
-  if (info.Length() > 1 && info[info.Length() - 1].IsFunction()) {
+  if (info.Length() > 0 && info[info.Length() - 1].IsFunction()) {
     callback = info[info.Length() - 1].As<Napi::Function>();
 
     // Create and queue the worker with callback
@@ -156,7 +162,7 @@ Napi::Value Connection::Open(const Napi::CallbackInfo& info) {
   // Check for callback (last argument)
   Napi::Function callback;
 
-  if (info.Length() > 1 && info[info.Length() - 1].IsFunction()) {
+  if (info.Length() > 0 && info[info.Length() - 1].IsFunction()) {
     callback = info[info.Length() - 1].As<Napi::Function>();
   } else {
     // No callback provided, we'll use a Promise
@@ -241,7 +247,7 @@ Napi::Value Connection::Close(const Napi::CallbackInfo& info) {
 Napi::Value Stubbed(const Napi::CallbackInfo& info) {
   const Napi::Env env = info.Env();
 
-  if (info.Length() > 1 && info[info.Length() - 1].IsFunction()) {
+  if (info.Length() > 0 && info[info.Length() - 1].IsFunction()) {
     const auto callback = info[info.Length() - 1].As<Napi::Function>();
     Napi::Object rows = Napi::Object::New(env);
     callback.Call({env.Null(), rows});
@@ -543,5 +549,53 @@ Napi::Value Connection::Unbind(const Napi::CallbackInfo& info) {
   const auto queryId = parser.queryId;
   // Use the generic worker factory
   return CreateWorkerWithCallbackOrPromise<UnbindWorker>(info, odbcConnection_.get(), queryId);
+}
+
+Napi::Value Connection::BeginTransaction(const Napi::CallbackInfo& info) {
+  const Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
+
+  if (!isConnected_) {
+    Napi::TypeError::New(env, "Connection is closed").ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  SQL_LOG_DEBUG("Connection::BeginTransaction");
+
+  // Use the generic worker factory
+  return CreateWorkerWithCallbackOrPromise<BeginTransactionWorker>(
+      info, odbcConnection_.get(), this);
+}
+
+Napi::Value Connection::Commit(const Napi::CallbackInfo& info) {
+  const Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
+
+  if (!isConnected_) {
+    Napi::TypeError::New(env, "Connection is closed").ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  SQL_LOG_DEBUG("Connection::Commit");
+
+  // Use the generic worker factory
+  return CreateWorkerWithCallbackOrPromise<CommitWorker>(
+      info, odbcConnection_.get(), this);
+}
+
+Napi::Value Connection::Rollback(const Napi::CallbackInfo& info) {
+  const Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
+
+  if (!isConnected_) {
+    Napi::TypeError::New(env, "Connection is closed").ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  SQL_LOG_DEBUG("Connection::Rollback");
+
+  // Use the generic worker factory
+  return CreateWorkerWithCallbackOrPromise<RollbackWorker>(
+      info, odbcConnection_.get(), this);
 }
 }  // namespace mssql
