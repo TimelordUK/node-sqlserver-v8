@@ -260,7 +260,7 @@ struct InfoParser {
   StatementHandle statementHandle;
   InfoParser(bool isConnected) : isConnected_(isConnected) {}
   QueryOptions options;
-  int queryId;
+  int queryId = 0;
   std::shared_ptr<QueryOperationParams> operationParams;
   bool isConnected_;
 
@@ -394,6 +394,7 @@ Napi::Value Connection::CallProc(const Napi::CallbackInfo& info) {
   if (!parser.parseOperationParams(info)) {
     return env.Undefined();
   }
+  return env.Undefined();
 }
 
 Napi::Value Connection::CancelQuery(const Napi::CallbackInfo& info) {
@@ -579,8 +580,7 @@ Napi::Value Connection::Commit(const Napi::CallbackInfo& info) {
   SQL_LOG_DEBUG("Connection::Commit");
 
   // Use the generic worker factory
-  return CreateWorkerWithCallbackOrPromise<CommitWorker>(
-      info, odbcConnection_.get(), this);
+  return CreateWorkerWithCallbackOrPromise<CommitWorker>(info, odbcConnection_.get(), this);
 }
 
 Napi::Value Connection::Rollback(const Napi::CallbackInfo& info) {
@@ -595,7 +595,6 @@ Napi::Value Connection::Rollback(const Napi::CallbackInfo& info) {
   SQL_LOG_DEBUG("Connection::Rollback");
 
   // Use the generic worker factory
-  return CreateWorkerWithCallbackOrPromise<RollbackWorker>(
-      info, odbcConnection_.get(), this);
+  return CreateWorkerWithCallbackOrPromise<RollbackWorker>(info, odbcConnection_.get(), this);
 }
 }  // namespace mssql
