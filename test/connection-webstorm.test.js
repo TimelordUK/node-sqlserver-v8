@@ -58,9 +58,9 @@ describe('Connection Tests - WebStorm Enhanced', function () {
 
       // Test simple query
       const result = await conn.promises.query('SELECT 1 as test')
-      assert.isArray(result, 'Result should be an array')
-      assert.lengthOf(result, 1, 'Should return one row')
-      assert.deepEqual(result[0], { test: 1 })
+      assert.isArray(result.first, 'Result should be an array')
+      assert.lengthOf(result.first, 1, 'Should return one row')
+      assert.deepEqual(result.first[0], { test: 1 })
     } catch (err) {
       assert.fail(`Connection test failed: ${err.message}\n${err.stack}`)
     } finally {
@@ -110,7 +110,7 @@ describe('Connection Tests - WebStorm Enhanced', function () {
       ])
 
       assert.exists(result, 'Should get result before timeout')
-      assert.deepEqual(result[0], { value: 1 })
+      assert.deepEqual(result.first[0], { value: 1 })
     } catch (err) {
       assert.fail(`Test failed: ${err.message}`)
     } finally {

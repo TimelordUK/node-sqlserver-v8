@@ -81,7 +81,7 @@
   "scripts": {
     "build": "tsc",
     "build:test": "tsc -p tsconfig.test.json",
-    "test": "mocha test/**/*.js",
+    "test": "mocha test/**/*.test.js",
     "test:improved": "mocha test/connection-improved.test.js --reporter spec",
     "test:webstorm": "mocha test/connection-webstorm.test.js --config test/.mocharc.webstorm.js",
     "test:connection": "mocha test/connect*.js --reporter spec --timeout 30000",
