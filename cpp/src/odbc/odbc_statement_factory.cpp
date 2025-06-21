@@ -12,6 +12,7 @@ std::shared_ptr<IOdbcStatementHandle> OdbcStatementHandleFactory::createStatemen
 }
 
 std::shared_ptr<IOdbcStatement> OdbcStatementFactory::MakeStatement(
+    std::shared_ptr<IOdbcConnectionHandle> connectionHandle,
     std::shared_ptr<IOdbcApi> odbcApi,
     StatementType type,
     std::shared_ptr<OdbcErrorHandler> errorHandler,
@@ -28,7 +29,7 @@ std::shared_ptr<IOdbcStatement> OdbcStatementFactory::MakeStatement(
   switch (type) {
     case StatementType::Legacy:
       return std::make_shared<OdbcStatementLegacy>(
-          handle, errorHandler, odbcApi, statementHandle, operationParams);
+          connectionHandle, handle, errorHandler, odbcApi, statementHandle, operationParams);
 
     case StatementType::Transient:
       return std::make_shared<TransientStatement>(
@@ -63,13 +64,14 @@ std::shared_ptr<IOdbcStatement> OdbcStatementFactory::GetStatement(int statement
 }
 
 std::shared_ptr<IOdbcStatement> OdbcStatementFactory::CreateStatement(
+    std::shared_ptr<IOdbcConnectionHandle> connectionHandle,
     std::shared_ptr<IOdbcApi> odbcApi,
     StatementType type,
     std::shared_ptr<OdbcErrorHandler> errorHandler,
     const std::shared_ptr<QueryOperationParams> operationParams) {
   SQL_LOG_TRACE_STREAM("CreateStatement type " << (int)type);
 
-  auto statement = MakeStatement(odbcApi, type, errorHandler, operationParams);
+  auto statement = MakeStatement(connectionHandle, odbcApi, type, errorHandler, operationParams);
   if (statement) {
     auto statementId = statement->GetStatementHandle().getStatementId();
     statements_[statementId] = statement;

@@ -178,6 +178,7 @@ bool OdbcStatementLegacy::ReadNextResult(std::shared_ptr<QueryResult> result) {
 }
 
 OdbcStatementLegacy::OdbcStatementLegacy(
+    std::shared_ptr<IOdbcConnectionHandle> connectionHandle,
     std::shared_ptr<IOdbcStatementHandle> statement,
     std::shared_ptr<OdbcErrorHandler> errorHandler,
     std::shared_ptr<IOdbcApi> odbcApi,
@@ -193,7 +194,8 @@ OdbcStatementLegacy::OdbcStatementLegacy(
       _errorHandler(errorHandler),
       _odbcApi(odbcApi),
       _handle(handle),
-      _operationParams(operationParams) {
+      _operationParams(operationParams),
+      _connectionHandle(connectionHandle) {
   set_state(OdbcStatementState::STATEMENT_CREATED);
   // cerr << "OdbcStatement() " << _statementId << " " << endl;
   // fprintf(stderr, "OdbcStatement::OdbcStatement OdbcStatement ID = %ld\n ", statement_id);
@@ -927,12 +929,12 @@ bool OdbcStatementLegacy::try_bcp(const shared_ptr<BoundDatumSet>& param_set, in
   // cerr << "bcp version " << version << endl;
   if (version == 0)
     version = 17;
-  // bcp b(_odbcApi, param_set, _connection->get_handle());
+  bcp b(_odbcApi, param_set, _connectionHandle);
   // const auto ret = b.insert(version);
   _resultset = make_unique<ResultSet>(0);
   _resultset->_end_of_rows = true;
   _errors->clear();
-  // copy(b._errors->begin(), b._errors->end(), back_inserter(*_errors));
+  copy(b._errors->begin(), b._errors->end(), back_inserter(*_errors));
   return false;
 }
 

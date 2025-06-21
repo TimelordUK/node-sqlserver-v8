@@ -25,6 +25,7 @@ class OdbcStatementFactory {
       : connectionId_(connectionId), connectionHandles_(connectionHandles) {}
 
   std::shared_ptr<IOdbcStatement> CreateStatement(
+      std::shared_ptr<IOdbcConnectionHandle> connectionHandle,
       std::shared_ptr<IOdbcApi> odbcApi,
       StatementType type,
       std::shared_ptr<OdbcErrorHandler> errorHandler,
@@ -41,6 +42,7 @@ class OdbcStatementFactory {
 
  private:
   std::shared_ptr<IOdbcStatement> MakeStatement(
+      std::shared_ptr<IOdbcConnectionHandle> connectionHandle,
       std::shared_ptr<IOdbcApi> odbcApi,
       OdbcStatement::Type type,
       std::shared_ptr<OdbcErrorHandler> errorHandler,

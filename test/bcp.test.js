@@ -1,9 +1,5 @@
-'use strict'
-
-/* globals describe it */
 import { createRequire } from 'module'
 import chaiAsPromised from 'chai-as-promised'
-import sql from '../lib/sql'
 const require = createRequire(import.meta.url)
 const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
@@ -12,18 +8,24 @@ chai.use(chaiAsPromised)
 const expect = chai.expect
 const assert = chai.assert
 
-describe('bcp', function () {
-  this.timeout(100000)
+const sql = require('../lib/sql')
+const { configureTestLogging } = require('./common/logging-helper')
 
-  this.beforeEach(done => {
-    env.open().then(() => { done() })
-    const sql = require('../lib/sql')
-    sql.logger.setLogLevel(sql.LogLevel.TRACE)
-    sql.logger.setConsoleLogging(true)
+configureTestLogging(sql)
+
+describe('bcp', function () {
+  this.timeout(30000)
+
+  this.beforeEach(async function () {
+    sql.logger.info('Starting test setup', 'bcp.test.beforeEach')
+    await env.open()
+    sql.logger.info('Test environment opened successfully', 'bcp.test.beforeEach')
   })
 
-  this.afterEach(done => {
-    env.close().then(() => { done() })
+  this.afterEach(async function () {
+    sql.logger.info('Starting test cleanup', 'bcp.test.afterEach')
+    await env.close()
+    sql.logger.info('Test environment closed successfully', 'bcp.test.afterEach')
   })
 
   it('bcp nchar(1)', async function handler () {

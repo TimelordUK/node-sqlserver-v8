@@ -226,8 +226,8 @@ std::shared_ptr<IOdbcStatement> OdbcConnection::CreateStatement(
 
   // Create the statement using the factory
   SQL_LOG_DEBUG_STREAM("OdbcConnection::CreateStatement: " << operationParams->toString());
-  const auto statement =
-      _statementFactory->CreateStatement(_odbcApi, type, _errorHandler, operationParams);
+  const auto statement = _statementFactory->CreateStatement(
+      _connectionHandles->connectionHandle(), _odbcApi, type, _errorHandler, operationParams);
 
   // have to create map bewteen query id and statement handle
   _queryIdToStatementHandle[operationParams->id] = statement->GetStatementHandle();
@@ -391,25 +391,6 @@ bool OdbcConnection::ExecuteQuery(const std::shared_ptr<QueryOperationParams> op
   // Execute it
   result->setHandle(statement->GetStatementHandle());
   const bool executeResult = statement->Execute(parameters, result);
-
-  // For transient statements that failed (especially due to timeout),
-  // ensure they are properly cleaned up to prevent hanging on connection close
-  /*
-  if (!executeResult) {
-    SQL_LOG_DEBUG_STREAM("ExecuteQuery failed for query ID " << operationParams->id
-                                                             << ", cleaning up statement");
-    // Remove from query ID mapping
-    _queryIdToStatementHandle.erase(operationParams->id);
-
-    // Also explicitly remove the statement from connection handles if it exists
-    const auto statementHandle = statement->GetStatementHandle();
-    if (_connectionHandles && _connectionHandles->exists(statementHandle.getStatementId())) {
-      SQL_LOG_DEBUG_STREAM("Removing failed statement " << statementHandle.getStatementId()
-                                                        << " from connection handles");
-      _connectionHandles->checkin(statementHandle.getStatementId());
-    }
-  }
-  */
 
   return executeResult;
 }

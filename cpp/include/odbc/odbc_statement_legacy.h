@@ -20,7 +20,6 @@ class BoundDatum;
 class BoundDatumSet;
 class DatumStorage;
 class QueryOperationParams;
-class ConnectionHandles;
 class OdbcError;
 
 using namespace std;
@@ -95,7 +94,8 @@ class OdbcStatementLegacy : public IOdbcStatement {
    */
   virtual void SetStateNotifier(std::shared_ptr<IOdbcStateNotifier> notifier) override;
 
-  OdbcStatementLegacy(std::shared_ptr<IOdbcStatementHandle> statement,
+  OdbcStatementLegacy(std::shared_ptr<IOdbcConnectionHandle> connectionHandle,
+                      std::shared_ptr<IOdbcStatementHandle> statement,
                       std::shared_ptr<OdbcErrorHandler> errorHandler,
                       std::shared_ptr<IOdbcApi> odbcApi,
                       StatementHandle handle,
@@ -232,6 +232,7 @@ class OdbcStatementLegacy : public IOdbcStatement {
   std::unique_ptr<WeakStateNotifier> _stateNotifier;
 
   const static size_t prepared_rows_to_bind = 50;
+  std::shared_ptr<IOdbcConnectionHandle> _connectionHandle;
 };
 
 struct OdbcStatementGuard {
