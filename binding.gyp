@@ -159,6 +159,8 @@
                         },
                         "defines": ["LINUX_BUILD", "UNICODE"],
                         "cflags_cc": ["<(cflags_cpp)"],
+                        "cflags": ["-U_FORTIFY_SOURCE", "-fno-lto"],
+                        "ldflags": ["-fno-lto"],
                         "include_dirs": [
                             "<!@(node -p \"'<(msodbc_include_folders)'.split(' ').join(' ')\")",
                             "/usr/include/",
