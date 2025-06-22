@@ -57,6 +57,7 @@ OdbcConnection::~OdbcConnection() {
 }
 
 bool OdbcConnection::InitializeEnvironment(std::shared_ptr<IOdbcApi> odbcApiPtr) {
+  SQL_LOG_FUNC_TRACER();
   SQL_LOG_INFO("Initializing shared ODBC environment");
 
   if (!sharedEnvironment_) {
@@ -75,25 +76,8 @@ bool OdbcConnection::InitializeEnvironment(std::shared_ptr<IOdbcApi> odbcApiPtr)
   return true;
 }
 
-std::u16string OdbcConnection::ConvertConnectionString(const std::string& connectionString) {
-  // Simple direct conversion to UCS2/UTF-16
-  // This matches the approach used in the legacy driver
-  std::u16string result;
-  size_t len = connectionString.length();
-
-  // Reserve space to hold the characters
-  result.reserve(len);
-
-  // Copy each ASCII/UTF-8 character directly to UTF-16
-  // This is simplistic but works for common connection string characters
-  for (size_t i = 0; i < len; i++) {
-    result.push_back(static_cast<char16_t>(connectionString[i] & 0xFF));
-  }
-
-  return result;
-}
-
 bool OdbcConnection::Open(const std::u16string& connectionString, int timeout) {
+  SQL_LOG_FUNC_TRACER();
   SQL_LOG_INFO("Opening connection");
 
   SQL_LOG_DEBUG_STREAM("Connection string " << StringUtils::U16StringToUtf8(connectionString)
@@ -129,10 +113,8 @@ bool OdbcConnection::Open(const std::u16string& connectionString, int timeout) {
 }
 
 bool OdbcConnection::Close() {
+  SQL_LOG_FUNC_TRACER();
   std::lock_guard lock(_connectionMutex);
-
-  _statementFactory.reset();
-  _transactionManager.reset();
 
   if (connectionState != ConnectionClosed) {
     if (_connectionHandles) {
@@ -145,8 +127,12 @@ bool OdbcConnection::Close() {
         SQL_LOG_DEBUG("SQLDisconnect");
         _odbcApi->SQLDisconnect(connection->get_handle());
       }
+      _connectionHandles.reset();
+      _connectionHandles = nullptr;
     }
-
+    _statementFactory.reset();
+    _transactionManager.reset();
+    _errorHandler.reset();
     connectionState = ConnectionClosed;
   }
 
@@ -158,6 +144,7 @@ bool OdbcConnection::IsConnected() const {
 }
 
 bool OdbcConnection::BeginTransaction() {
+  SQL_LOG_FUNC_TRACER();
   std::lock_guard lock(_connectionMutex);
   if (connectionState != ConnectionOpen) {
     return false;
@@ -176,6 +163,7 @@ bool OdbcConnection::BeginTransaction() {
 }
 
 bool OdbcConnection::CommitTransaction() {
+  SQL_LOG_FUNC_TRACER();
   std::lock_guard lock(_connectionMutex);
   if (connectionState != ConnectionOpen) {
     return false;
@@ -194,6 +182,7 @@ bool OdbcConnection::CommitTransaction() {
 }
 
 bool OdbcConnection::RollbackTransaction() {
+  SQL_LOG_FUNC_TRACER();
   std::lock_guard lock(_connectionMutex);
   if (connectionState != ConnectionOpen) {
     return false;
@@ -259,6 +248,7 @@ bool OdbcConnection::RemoveStatement(int statementId) {
 }
 
 bool OdbcConnection::CancelStatement(int queryId) {
+  SQL_LOG_FUNC_TRACER();
   SQL_LOG_DEBUG_STREAM("OdbcConnection::CancelStatement called for ID = " << queryId);
   std::lock_guard lock(_statementMutex);
 
@@ -286,6 +276,7 @@ bool OdbcConnection::CancelStatement(int queryId) {
 }
 
 std::shared_ptr<BoundDatumSet> OdbcConnection::UnbindStatement(int queryId) {
+  SQL_LOG_FUNC_TRACER();
   SQL_LOG_DEBUG_STREAM("OdbcConnection::UnbindStatement called for ID = " << queryId);
   std::lock_guard lock(_statementMutex);
 
@@ -317,6 +308,7 @@ bool OdbcConnection::ExecuteQuery(const std::shared_ptr<QueryOperationParams> op
                                   std::shared_ptr<QueryResult>& result,
                                   std::shared_ptr<IOdbcStateNotifier> stateNotifier) {
   // Create a transient statement
+  SQL_LOG_FUNC_TRACER();
   auto statement = CreateStatement(StatementType::Legacy, operationParams);
   if (!statement) {
     return false;

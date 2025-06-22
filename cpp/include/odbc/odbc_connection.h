@@ -189,8 +189,5 @@ class OdbcConnection : public IOdbcConnection {
   bool try_begin_tran();
   bool try_end_tran(SQLSMALLINT completion_type);
   std::unordered_map<int, StatementHandle> _queryIdToStatementHandle;
-
-  // Convert UTF-8 connection string to std::u16string
-  std::u16string ConvertConnectionString(const std::string& connectionString);
 };
 }  // namespace mssql

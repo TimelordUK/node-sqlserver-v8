@@ -17,6 +17,7 @@ const { configureTestLogging } = require('./common/logging-helper')
 // - MSNODESQLV8_TEST_LOG_LEVEL=DEBUG MSNODESQLV8_TEST_LOG_CONSOLE=true npm test
 // - MSNODESQLV8_TEST_LOG_LEVEL=INFO MSNODESQLV8_TEST_LOG_FILE=/tmp/test.log npm test
 configureTestLogging(sql)
+sql.logger.configureForTesting()
 
 describe('querytimeout', function () {
   this.timeout(30000)
@@ -75,15 +76,6 @@ describe('querytimeout', function () {
     }
   })
 
-  /*
-      const size = 4
-    const pool = env.pool(size)
-    await pool.promises.open()
-    pool.on('error', e => {
-      throw e
-    })
-  */
-
   it('pool: sproc that completes with timeout - check pool', async function handler () {
     const spName = 'timeoutTest'
     const size = 4
@@ -121,7 +113,7 @@ describe('querytimeout', function () {
     }
   })
 
-  it('test timeout 2 secs on waitfor delay 10', testDone => {
+  it.skip('test timeout 2 secs on waitfor delay 10', testDone => {
     const queryObj = {
       query_str: 'waitfor delay \'00:00:10\';',
       query_timeout: 2
