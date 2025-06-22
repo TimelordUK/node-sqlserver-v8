@@ -31,89 +31,86 @@
 typedef CRITICAL_SECTION PlatformMutex;
 
 // Platform-specific mutex initialization
-inline void InitializeMutex(PlatformMutex *mutex)
-{
+inline void InitializeMutex(PlatformMutex* mutex) {
   InitializeCriticalSection(mutex);
 }
 
 // Platform-specific mutex destruction
-inline void DestroyMutex(PlatformMutex *mutex)
-{
+inline void DestroyMutex(PlatformMutex* mutex) {
   DeleteCriticalSection(mutex);
 }
 
 // Platform-specific mutex locking
-inline void LockMutex(PlatformMutex *mutex)
-{
+inline void LockMutex(PlatformMutex* mutex) {
   EnterCriticalSection(mutex);
 }
 
 // Platform-specific mutex unlocking
-inline void UnlockMutex(PlatformMutex *mutex)
-{
+inline void UnlockMutex(PlatformMutex* mutex) {
   LeaveCriticalSection(mutex);
 }
 
 #elif defined(PLATFORM_LINUX) || defined(PLATFORM_MACOS)
 #include <pthread.h>
+#include <unistd.h>
 typedef pthread_mutex_t PlatformMutex;
 
-inline void InitializeMutex(PlatformMutex *mutex)
-{
+inline void InitializeMutex(PlatformMutex* mutex) {
   pthread_mutex_init(mutex, nullptr);
 }
 
-inline void DestroyMutex(PlatformMutex *mutex)
-{
+inline void DestroyMutex(PlatformMutex* mutex) {
   pthread_mutex_destroy(mutex);
 }
 
-inline void LockMutex(PlatformMutex *mutex)
-{
+inline void LockMutex(PlatformMutex* mutex) {
   pthread_mutex_lock(mutex);
 }
 
-inline void UnlockMutex(PlatformMutex *mutex)
-{
+inline void UnlockMutex(PlatformMutex* mutex) {
   pthread_mutex_unlock(mutex);
 }
 #endif
 
 // Platform-independent mutex wrapper
-class Mutex
-{
-public:
-  Mutex() { InitializeMutex(&mutex_); }
-  ~Mutex() { DestroyMutex(&mutex_); }
+class Mutex {
+ public:
+  Mutex() {
+    InitializeMutex(&mutex_);
+  }
+  ~Mutex() {
+    DestroyMutex(&mutex_);
+  }
 
-  void lock() { LockMutex(&mutex_); }
-  void unlock() { UnlockMutex(&mutex_); }
+  void lock() {
+    LockMutex(&mutex_);
+  }
+  void unlock() {
+    UnlockMutex(&mutex_);
+  }
 
-private:
+ private:
   PlatformMutex mutex_;
 
   // Prevent copying
-  Mutex(const Mutex &) = delete;
-  Mutex &operator=(const Mutex &) = delete;
+  Mutex(const Mutex&) = delete;
+  Mutex& operator=(const Mutex&) = delete;
 };
 
 // Platform-independent scoped lock
-class ScopedLock
-{
-public:
-  explicit ScopedLock(Mutex &mutex) : mutex_(mutex)
-  {
+class ScopedLock {
+ public:
+  explicit ScopedLock(Mutex& mutex) : mutex_(mutex) {
     mutex_.lock();
   }
-  ~ScopedLock()
-  {
+  ~ScopedLock() {
     mutex_.unlock();
   }
 
-private:
-  Mutex &mutex_;
+ private:
+  Mutex& mutex_;
 
   // Prevent copying
-  ScopedLock(const ScopedLock &) = delete;
-  ScopedLock &operator=(const ScopedLock &) = delete;
+  ScopedLock(const ScopedLock&) = delete;
+  ScopedLock& operator=(const ScopedLock&) = delete;
 };
