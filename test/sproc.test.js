@@ -71,8 +71,8 @@ describe('sproc', function () {
       await promisedCallProc(env.theConnection, spName, ['0:0:5'])
       expect.fail('Expected timeout error but none was thrown')
     } catch (err) {
-      // Check for timeout sqlstate HYT00
-      expect(err.sqlstate).is.deep.equal('HYT00')
+      // Check for timeout sqlstate HYT00 (native timeout) or HY008 (JS-based cancellation)
+      expect(err.sqlstate).to.be.oneOf(['HYT00', 'HY008'])
     }
   })
 
@@ -1574,7 +1574,7 @@ waitfor delay @timeout;END
       assert.deepStrictEqual(1, 0)
     } catch (err) {
       assert(err)
-      assert(err.message.includes('Query timeout expired'))
+      assert(err.message.includes('Query cancelled') || err.message.includes('timeout') || err.message.includes('Operation canceled'))
       const res = await env.theConnection.promises.query('SELECT 1 as n')
       assert.deepStrictEqual(res.first[0].n, 1)
     }

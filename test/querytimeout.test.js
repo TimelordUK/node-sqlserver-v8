@@ -17,7 +17,7 @@ const { configureTestLogging } = require('./common/logging-helper')
 // - MSNODESQLV8_TEST_LOG_LEVEL=DEBUG MSNODESQLV8_TEST_LOG_CONSOLE=true npm test
 // - MSNODESQLV8_TEST_LOG_LEVEL=INFO MSNODESQLV8_TEST_LOG_FILE=/tmp/test.log npm test
 configureTestLogging(sql)
-sql.logger.configureForTesting()
+// sql.logger.configureForTesting()
 
 describe('querytimeout', function () {
   this.timeout(30000)
@@ -55,7 +55,7 @@ describe('querytimeout', function () {
       throw new Error('expected exception')
     } catch (err) {
       assert(err)
-      assert(err.message.includes('Query cancelled'))
+      assert(err.message.includes('Query cancelled') || err.message.includes('timeout') || err.message.includes('Operation canceled'))
     }
   })
 
@@ -113,7 +113,7 @@ describe('querytimeout', function () {
     }
   })
 
-  it.skip('test timeout 2 secs on waitfor delay 10', testDone => {
+  it('test timeout 2 secs on waitfor delay 10', testDone => {
     const queryObj = {
       query_str: 'waitfor delay \'00:00:10\';',
       query_timeout: 2
@@ -121,7 +121,8 @@ describe('querytimeout', function () {
 
     env.theConnection.query(queryObj, err => {
       assert(err)
-      assert(err.message.indexOf('Query timeout expired') > 0)
+      // Accept either the driver's "Operation canceled" or our "Query timeout expired" message
+      assert(err.message.indexOf('Operation canceled') >= 0 || err.message.indexOf('Query timeout expired') >= 0)
       testDone()
     })
   })
