@@ -3,7 +3,7 @@ const env = new TestEnv()
 
 main().then(() => {
   console.log('done')
-})
+}).catch(err => { console.log(err) })
 
 async function main () {
   const connectionString = env.connectionString
@@ -25,7 +25,7 @@ async function main () {
 }
 
 // create a long running task e.g. use batch for web call
-function dispatch (batch) {
+async function dispatch (batch) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       resolve(null)
@@ -33,7 +33,7 @@ function dispatch (batch) {
   })
 }
 
-function asStream (con) {
+async function asStream (con) {
   return new Promise((resolve, reject) => {
     const sql = 'select top 750 * from master..syscolumns;'
     console.log('stream fetch query with throttle back to server to slow results')
