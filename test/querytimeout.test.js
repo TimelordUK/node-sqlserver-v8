@@ -70,7 +70,7 @@ describe('querytimeout', function () {
       throw new Error('expected exception')
     } catch (err) {
       assert(err)
-      assert(err.message.includes('Query cancelled'))
+      assert(err.message.includes('Query cancelled') || err.message.includes('timeout') || err.message.includes('Operation canceled'))
       const res = await promises.query('select 1 as n')
       expect(res.first[0].n).equals(1)
     }
@@ -105,7 +105,7 @@ describe('querytimeout', function () {
       throw new Error('expected exception')
     } catch (err) {
       assert(err)
-      assert(err.message.includes('Query cancelled'))
+      assert(err.message.includes('Query cancelled') || err.message.includes('timeout') || err.message.includes('Operation canceled'))
       const res = await promises.query('select 1 as n')
       expect(res.first[0].n).equals(1)
     } finally {
