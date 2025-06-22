@@ -110,7 +110,7 @@ bool BoundDatumSet::bind(const Napi::Array& node_params) {
 }
 
 Napi::Array BoundDatumSet::unbind(Napi::Env& env) const {
-  const auto arr = Napi::Array::New(env, _output_param_count);
+  auto arr = Napi::Array::New(env, _output_param_count);
   auto i = 0;
 
   std::for_each(
@@ -119,7 +119,7 @@ Napi::Array BoundDatumSet::unbind(Napi::Env& env) const {
           case SQL_PARAM_OUTPUT:
           case SQL_PARAM_INPUT_OUTPUT: {
             const auto v = param->unbind(env);
-            arr.Set(i++, v);
+            arr.Set(static_cast<uint32_t>(i++), v);
           } break;
 
           default:
