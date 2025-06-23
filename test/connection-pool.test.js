@@ -9,6 +9,7 @@ chai.use(chaiAsPromised)
 const expect = chai.expect
 const assert = chai.assert
 const sql = require('../lib/sql')
+const { logger } = require('../lib/logger')
 
 /* globals describe it beforeEach afterEach */
 
@@ -303,15 +304,18 @@ describe('pool', function () {
     const iterations = 4
     const pool = env.pool(size)
 
+    const checkin = []
+    const checkout = []
+    const errors = []
+
     pool.on('error', e => {
       assert.ifError(e)
       errors.push(e)
     })
+    pool.on('debug', s => {
+      logger.debugLazy(() => s, 'Pool')
+    })
     pool.open()
-
-    const checkin = []
-    const checkout = []
-    const errors = []
     pool.on('open', () => {
       pool.on('status', s => {
         switch (s.op) {
@@ -327,24 +331,35 @@ describe('pool', function () {
 
     let done = 0
     let free = 0
+    let submissions = 0
     function submit (sql) {
-      const q = pool.query(sql, (e) => {
+      const q = pool.query(sql)
+
+      q.on('error', e => {
         errors.push(e)
       })
+
+      // Register all event handlers immediately to avoid race conditions
       q.on('submitted', () => {
-        q.on('done', () => ++done)
-        q.on('free', () => {
-          ++free
-          if (free === iterations) {
-            pool.close(() => {
-              expect(errors.length).to.equal(iterations)
-              expect(checkin.length).to.equal(iterations)
-              expect(checkout.length).to.equal(iterations)
-              testDone()
-            })
-          }
-        })
+        ++submissions
       })
+
+      q.on('done', () => {
+        ++done
+      })
+
+      q.on('free', () => {
+        ++free
+        if (free === iterations) {
+          pool.close(() => {
+            expect(errors.length).to.equal(iterations)
+            expect(checkin.length).to.equal(iterations)
+            expect(checkout.length).to.equal(iterations)
+            testDone()
+          })
+        }
+      })
+
       return q
     }
     const testSql = 'select a;'
