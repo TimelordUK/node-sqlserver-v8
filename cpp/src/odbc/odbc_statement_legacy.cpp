@@ -96,7 +96,9 @@ bool OdbcStatementLegacy::Prepare(const std::shared_ptr<BoundDatumSet> parameter
   lock_guard<recursive_mutex> lock(g_i_mutex);
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Prepare [" << _handle.toString() << "] Enter Prepare");
   auto res = try_prepare(_operationParams);
-  assign_result(result, _resultset);
+  if (res) {
+    assign_result(result, _resultset);
+  }
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Prepare [" << _handle.toString() << "] Exit Execute");
   return res;
 }

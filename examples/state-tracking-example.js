@@ -8,7 +8,8 @@
 const sql = require('msnodesqlv8')
 
 // Configure logging for development
-sql.logger.configureForInfoConsole()
+sql.logger.setLogLevel(sql.LogLevel.TRACE)
+sql.logger.setConsoleLogging(true)
 
 // Or configure manually:
 // sql.logger.setLogLevel(sql.LogLevel.TRACE)  // Set to TRACE for maximum verbosity
