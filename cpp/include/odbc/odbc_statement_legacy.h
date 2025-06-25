@@ -163,8 +163,8 @@ class OdbcStatementLegacy : public IOdbcStatement {
   bool d_time(size_t row_id, size_t column);
   bool bounded_string(SQLLEN display_size, size_t row, size_t column);
   bool reserved_chars(const size_t row_count, const size_t column_size, size_t const column) const;
-  bool reserved_string(const size_t row_count, const size_t column_size, size_t const column) const;
-  bool reserved_binary(const size_t row_count, const size_t column_size, size_t const column) const;
+  bool reserved_string(const size_t row_count, const size_t column_size, const int column) const;
+  bool reserved_binary(const size_t row_count, const size_t column_size, const int column) const;
   bool reserved_bit(const size_t row_count, const size_t column) const;
   bool reserved_int(const size_t row_count, const size_t column) const;
   bool reserved_big_int(const size_t row_count, const size_t column) const;

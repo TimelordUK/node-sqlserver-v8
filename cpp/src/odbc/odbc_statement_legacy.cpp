@@ -2072,7 +2072,7 @@ bool OdbcStatementLegacy::reserved_chars(const size_t row_count,
 
 bool OdbcStatementLegacy::reserved_string(const size_t row_count,
                                           const size_t column_size,
-                                          const size_t column) const {
+                                          const int column) const {
   const auto& bound_datum = _preparedStorage->atIndex(static_cast<int>(column));
   const auto& ind = bound_datum->get_ind_vec();
   const auto storage = bound_datum->get_storage();
@@ -2102,7 +2102,7 @@ bool OdbcStatementLegacy::reserved_string(const size_t row_count,
 
 bool OdbcStatementLegacy::reserved_binary(const size_t row_count,
                                           const size_t column_size,
-                                          const size_t column) const {
+                                          const int column) const {
   const auto& bound_datum = _preparedStorage->atIndex(static_cast<int>(column));
   auto& ind = bound_datum->get_ind_vec();
   const auto storage = bound_datum->get_storage();
