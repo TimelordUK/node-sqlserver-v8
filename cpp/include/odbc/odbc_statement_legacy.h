@@ -30,49 +30,49 @@ class OdbcStatementLegacy : public IOdbcStatement {
 
   void assign_result(std::shared_ptr<QueryResult>& result, std::shared_ptr<ResultSet> resultset);
 
-  virtual bool Execute(const std::shared_ptr<BoundDatumSet> parameters,
-                       std::shared_ptr<QueryResult>& result) override;
+  bool Execute(const std::shared_ptr<BoundDatumSet> parameters,
+               std::shared_ptr<QueryResult>& result) override;
 
-  virtual bool Prepare(const std::shared_ptr<BoundDatumSet> parameters,
-                       std::shared_ptr<QueryResult>& result) override;
+  bool Prepare(const std::shared_ptr<BoundDatumSet> parameters,
+               std::shared_ptr<QueryResult>& result) override;
 
-  virtual bool BindExecute(const std::shared_ptr<BoundDatumSet> parameters,
-                           std::shared_ptr<QueryResult>& result) override;
+  bool BindExecute(const std::shared_ptr<BoundDatumSet> parameters,
+                   std::shared_ptr<QueryResult>& result) override;
 
-  virtual std::shared_ptr<BoundDatumSet> Unbind() override;
+  std::shared_ptr<BoundDatumSet> Unbind() override;
 
   /**
    * @brief Get the statement type
    */
-  virtual StatementType GetType() const override;
+  StatementType GetType() const override;
 
   /**
    * @brief Get the native ODBC statement handle
    */
-  virtual SQLHSTMT GetHandle() const override;
+  SQLHSTMT GetHandle() const override;
 
   /**
    * @brief Get the statement handle (our wrapper type)
    */
-  virtual StatementHandle GetStatementHandle() const override;
+  StatementHandle GetStatementHandle() const override;
 
   /**
    * @brief Check if numeric string mode is enabled
    */
-  virtual bool IsNumericStringEnabled() const override;
+  bool IsNumericStringEnabled() const override;
 
   /**
    * @brief Get the current state of the statement
    * @return Current state
    */
-  virtual OdbcStatementState GetState() const override;
+  OdbcStatementState GetState() const override;
 
-  virtual std::vector<std::shared_ptr<IOdbcRow>>& GetRows() override;
-  virtual std::shared_ptr<QueryResult> GetMetaData() override;
-  virtual bool TryReadRows(std::shared_ptr<QueryResult> result, const size_t number_rows) override;
-  virtual bool ReadNextResult(std::shared_ptr<QueryResult> result) override;
+  std::vector<std::shared_ptr<IOdbcRow>>& GetRows() override;
+  std::shared_ptr<QueryResult> GetMetaData() override;
+  bool TryReadRows(std::shared_ptr<QueryResult> result, const size_t number_rows) override;
+  bool ReadNextResult(std::shared_ptr<QueryResult> result) override;
 
-  virtual std::shared_ptr<ResultSet> GetResultSet() override {
+  std::shared_ptr<ResultSet> GetResultSet() override {
     return _resultset;
   }
 
@@ -84,7 +84,7 @@ class OdbcStatementLegacy : public IOdbcStatement {
   /**
    * @brief Close the statement and set CLOSED state
    */
-  virtual void Close() override {
+  void Close() override {
     set_state(OdbcStatementState::STATEMENT_CLOSED);
   }
 
@@ -92,7 +92,7 @@ class OdbcStatementLegacy : public IOdbcStatement {
    * @brief Set the state change notifier
    * @param notifier The notifier to receive state change events
    */
-  virtual void SetStateNotifier(std::shared_ptr<IOdbcStateNotifier> notifier) override;
+  void SetStateNotifier(std::shared_ptr<IOdbcStateNotifier> notifier) override;
 
   OdbcStatementLegacy(std::shared_ptr<IOdbcConnectionHandle> connectionHandle,
                       std::shared_ptr<IOdbcStatementHandle> statement,
