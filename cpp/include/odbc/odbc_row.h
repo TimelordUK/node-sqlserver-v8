@@ -89,7 +89,7 @@ class OdbcRow : public IOdbcRow {
   /**
    * @brief Destructor
    */
-  ~OdbcRow() = default;
+  ~OdbcRow() override = default;
 
   /**
    * @brief Get a DatumStorage for a column by index

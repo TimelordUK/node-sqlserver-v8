@@ -14,7 +14,7 @@ namespace mssql {
 
 class StringColumn : public Column {
  public:
-  virtual ~StringColumn() {}
+  ~StringColumn() override {}
 
   StringColumn(int id, shared_ptr<DatumStorageLegacy> s, size_t size)
       : Column(id), size(size), storage(s->uint16vec_ptr) {}

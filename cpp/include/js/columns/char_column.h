@@ -13,7 +13,7 @@ namespace mssql {
 
 class CharColumn : public Column {
  public:
-  virtual ~CharColumn() {}
+  ~CharColumn() override {}
 
   CharColumn(int id, shared_ptr<DatumStorageLegacy> s, size_t size)
       : Column(id), size(size), storage(s->charvec_ptr) {}

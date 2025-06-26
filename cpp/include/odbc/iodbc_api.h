@@ -183,7 +183,7 @@ class IOdbcApi {
 class RealOdbcApi : public IOdbcApi {
  public:
   RealOdbcApi();
-  ~RealOdbcApi();
+  ~RealOdbcApi() override;
 
   // Environment methods
   SQLRETURN SQLSetEnvAttr(SQLHENV EnvironmentHandle,
