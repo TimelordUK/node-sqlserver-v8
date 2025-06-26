@@ -62,9 +62,9 @@
 #include "odbc_constants.h"
 
 // Buffer size constants
-#define MSSQL_MAX_SERVERNAME_SIZE 128
-#define MSSQL_MAX_ERROR_SIZE 1024
-#define MSSQL_MAX_COLUMN_SIZE 256
+constexpr size_t MSSQL_MAX_SERVERNAME_SIZE = 128;
+constexpr size_t MSSQL_MAX_ERROR_SIZE = 1024;
+constexpr size_t MSSQL_MAX_COLUMN_SIZE = 256;
 
 // Common ODBC utility functions and constants
 namespace mssql {
@@ -165,12 +165,13 @@ class odbcstr {
 };
 
 // SQL Server constants
-#define SQL_SERVER_DEFAULT_YEAR 1900
-#define SQL_SERVER_DEFAULT_MONTH 1  // JS months are 0 based, SQL Server months are 1 based
-#define SQL_SERVER_DEFAULT_DAY 1
-#define JS_DEFAULT_YEAR 1970
+constexpr int SQL_SERVER_DEFAULT_YEAR = 1900;
+constexpr int SQL_SERVER_DEFAULT_MONTH = 1;  // JS months are 0 based, SQL Server months are 1 based
+constexpr int SQL_SERVER_DEFAULT_DAY = 1;
+constexpr int JS_DEFAULT_YEAR = 1970;
 
 // Error handling macro
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define ErrorIf(x) \
   if (x)           \
     goto Error;

@@ -65,6 +65,11 @@ class Logger {
 };
 
 // Convenience macros with lazy evaluation
+// NOLINTBEGIN(cppcoreguidelines-macro-usage)
+// Logging macros need to be macros for:
+// 1. Lazy evaluation (only construct strings when logging is enabled)
+// 2. Capture of __func__ at call site
+// 3. Minimal performance overhead when logging is disabled
 #define SQL_LOG_ERROR(msg)                                                    \
   do {                                                                        \
     if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Error)) {     \
@@ -280,5 +285,6 @@ class FunctionTracer {
 };
 
 #define SQL_LOG_FUNC_TRACER() mssql::FunctionTracer _funcTracer(__func__)
+// NOLINTEND(cppcoreguidelines-macro-usage)
 
 }  // namespace mssql
