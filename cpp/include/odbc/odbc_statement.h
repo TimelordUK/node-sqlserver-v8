@@ -190,7 +190,7 @@ class OdbcStatement : public IOdbcStatement {
   /**
    * @brief Unbind the statement
    */
-  virtual std::shared_ptr<BoundDatumSet> Unbind() override = 0;
+  std::shared_ptr<BoundDatumSet> Unbind() override = 0;
 
   /**
    * @brief Get the statement type
@@ -224,7 +224,7 @@ class OdbcStatement : public IOdbcStatement {
    * @brief Get the current state of the statement
    * @return Current state
    */
-  virtual OdbcStatementState GetState() const override {
+  OdbcStatementState GetState() const override {
     return state_.load();
   }
 
@@ -234,16 +234,16 @@ class OdbcStatement : public IOdbcStatement {
    * @param number_rows Number of rows to read
    * @return true if successful, false otherwise
    */
-  virtual bool TryReadRows(std::shared_ptr<QueryResult> result, const size_t number_rows) override;
+  bool TryReadRows(std::shared_ptr<QueryResult> result, const size_t number_rows) override;
 
-  virtual std::vector<std::shared_ptr<IOdbcRow>>& GetRows() override {
+  std::vector<std::shared_ptr<IOdbcRow>>& GetRows() override {
     return rows_;
   }
-  virtual std::shared_ptr<QueryResult> GetMetaData() override {
+  std::shared_ptr<QueryResult> GetMetaData() override {
     return metaData_;
   }
 
-  virtual std::shared_ptr<ResultSet> GetResultSet() override {
+  std::shared_ptr<ResultSet> GetResultSet() override {
     return std::make_shared<ResultSet>(0);
   }
 
@@ -252,16 +252,16 @@ class OdbcStatement : public IOdbcStatement {
    * @param result Result object to store row data
    * @return true if successful, false otherwise
    */
-  virtual bool ReadNextResult(std::shared_ptr<QueryResult> result) override;
+  bool ReadNextResult(std::shared_ptr<QueryResult> result) override;
 
-  virtual bool Cancel() override {
+  bool Cancel() override {
     return false;
   }
 
   /**
    * @brief Close the statement and set CLOSED state
    */
-  virtual void Close() override {
+  void Close() override {
     SetState(State::STATEMENT_CLOSED);
   }
 
@@ -269,7 +269,7 @@ class OdbcStatement : public IOdbcStatement {
    * @brief Set the state change notifier
    * @param notifier The notifier to receive state change events
    */
-  virtual void SetStateNotifier(std::shared_ptr<IOdbcStateNotifier> notifier) override;
+  void SetStateNotifier(std::shared_ptr<IOdbcStateNotifier> notifier) override;
 
  protected:
   OdbcStatement(Type type,
@@ -437,7 +437,7 @@ class TvpStatement : public OdbcStatement {
     return nullptr;
   }
 
-  virtual std::shared_ptr<ResultSet> GetResultSet() override {
+  std::shared_ptr<ResultSet> GetResultSet() override {
     return std::make_shared<ResultSet>(0);
   }
   /**
