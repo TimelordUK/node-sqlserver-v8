@@ -1160,7 +1160,7 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
 bool OdbcStatementLegacy::dispatch_prepared(const SQLSMALLINT t,
                                             const size_t column_size,
                                             const size_t rows_read,
-                                            const size_t column) const {
+                                            const size_t column) const { // NOLINT(bugprone-easily-swappable-parameters)
   auto res = false;
   switch (t) {
     case SQL_SS_VARIANT:
@@ -1240,7 +1240,7 @@ bool OdbcStatementLegacy::dispatch_prepared(const SQLSMALLINT t,
   return res;
 }
 
-bool OdbcStatementLegacy::dispatch(const SQLSMALLINT t, const size_t row_id, const size_t column) {
+bool OdbcStatementLegacy::dispatch(const SQLSMALLINT t, const size_t row_id, const size_t column) { // NOLINT(bugprone-easily-swappable-parameters)
   if (!_statement) {
     SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] dispatch: no statement");
     return false;
@@ -1346,7 +1346,7 @@ bool OdbcStatementLegacy::dispatch(const SQLSMALLINT t, const size_t row_id, con
   return res;
 }
 
-bool OdbcStatementLegacy::d_variant(const size_t row_id, const size_t column) {
+bool OdbcStatementLegacy::d_variant(const size_t row_id, const size_t column) { // NOLINT(bugprone-easily-swappable-parameters)
   const auto& statement = *_statement;
   SQLLEN variant_type = 0;
   SQLLEN iv = 0;
@@ -1377,7 +1377,7 @@ bool OdbcStatementLegacy::d_variant(const size_t row_id, const size_t column) {
   return res;
 }
 
-bool OdbcStatementLegacy::d_time(const size_t row_id, const size_t column) {
+bool OdbcStatementLegacy::d_time(const size_t row_id, const size_t column) { // NOLINT(bugprone-easily-swappable-parameters)
   const auto& statement = *_statement;
   SQLLEN str_len_or_ind_ptr = 0;
   SQL_SS_TIME2_STRUCT time = {};
@@ -1427,7 +1427,7 @@ bool OdbcStatementLegacy::d_time(const size_t row_id, const size_t column) {
   return true;
 }
 
-bool OdbcStatementLegacy::get_data_timestamp_offset(const size_t row_id, const size_t column) {
+bool OdbcStatementLegacy::get_data_timestamp_offset(const size_t row_id, const size_t column) { // NOLINT(bugprone-easily-swappable-parameters)
   const auto& statement = *_statement;
   const auto storage = make_shared<DatumStorageLegacy>();
   storage->ReserveTimestampOffset(1);
@@ -1452,7 +1452,7 @@ bool OdbcStatementLegacy::get_data_timestamp_offset(const size_t row_id, const s
   return true;
 }
 
-bool OdbcStatementLegacy::get_data_timestamp(const size_t row_id, const size_t column) {
+bool OdbcStatementLegacy::get_data_timestamp(const size_t row_id, const size_t column) { // NOLINT(bugprone-easily-swappable-parameters)
   const auto& statement = *_statement;
   SQLLEN str_len_or_ind_ptr = 0;
   TIMESTAMP_STRUCT v;
@@ -1474,7 +1474,7 @@ bool OdbcStatementLegacy::get_data_timestamp(const size_t row_id, const size_t c
   return true;
 }
 
-bool OdbcStatementLegacy::get_data_big_int(const size_t row_id, const size_t column) {
+bool OdbcStatementLegacy::get_data_big_int(const size_t row_id, const size_t column) { // NOLINT(bugprone-easily-swappable-parameters)
   const auto& statement = *_statement;
   DatumStorageLegacy::bigint_t v = 0;
   SQLLEN str_len_or_ind_ptr = 0;
@@ -1500,7 +1500,7 @@ bool OdbcStatementLegacy::get_data_big_int(const size_t row_id, const size_t col
   return true;
 }
 
-bool OdbcStatementLegacy::get_data_tiny(const size_t row_id, const size_t column) {
+bool OdbcStatementLegacy::get_data_tiny(const size_t row_id, const size_t column) { // NOLINT(bugprone-easily-swappable-parameters)
   const auto& statement = *_statement;
 
   int8_t v = 0;
