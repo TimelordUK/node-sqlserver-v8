@@ -90,8 +90,8 @@ describe('compoundqueries', function () {
     batcher.send(cmd, expected, testDone)
   })
 
-  testname = 'test 001 - batched query: SELECT....; INSERT ....; SELECT....;'
-  it(testname, done => {
+  it('test 001 - batched query: SELECT....; INSERT ....; SELECT....;', done => {
+    testname = 'test 001 - batched query: SELECT....; INSERT ....; SELECT....;'
     const testcolumnsize = 100
     const testcolumntype = ' varchar(' + testcolumnsize + ')'
     const testcolumnclienttype = 'text'
@@ -122,8 +122,8 @@ describe('compoundqueries', function () {
     const expected2 = {
       meta:
         null,
-      rowcount:
-        -1
+      rowCount:
+        1
     }
 
     const expected3 = {
@@ -258,8 +258,8 @@ describe('compoundqueries', function () {
   }) // end of it()
 */
 
-  testname = 'test 003 - batched query: SELECT....; SELECT (with no results) ....; SELECT....;'
-  it(testname, done => {
+  it('test 003 - batched query: SELECT....; SELECT (with no results) ....; SELECT....;', done => {
+    testname = 'test 003 - batched query: SELECT....; SELECT (with no results) ....; SELECT....;'
     const testcolumnsize = 100
     const testcolumntype = ` varchar(${testcolumnsize})`
     const testcolumnclienttype = 'text'
@@ -331,8 +331,8 @@ describe('compoundqueries', function () {
     }) // end of async.series()
   }) // end of it()
 
-  testname = 'test 004 - batched query: SELECT....; INSERT (invalid...should fail) ....; SELECT....;'
-  it(testname, done => {
+  it('test 004 - batched query: SELECT....; INSERT (invalid...should fail) ....; SELECT....;', done => {
+    testname = 'test 004 - batched query: SELECT....; INSERT (invalid...should fail) ....; SELECT....;'
     const invalidtablename = `invalid${tablename}`
     const testcolumnsize = 100
     const testcolumntype = ` varchar(${testcolumnsize})`
