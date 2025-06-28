@@ -14,8 +14,8 @@ jobs:
       fail-fast: false
       matrix:
         node: [20, 22]
-    runs-on: ubuntu-20.04
-    
+    runs-on: ubuntu-latest
+
     services:
       sqlserver:
         image: mcr.microsoft.com/mssql/server:2022-latest
@@ -30,20 +30,20 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    
+
     steps:
     - name: Create directory structure
       run: mkdir -p node_modules
-    
+
     - uses: actions/checkout@v4
       with:
         path: node_modules/msnodesqlv8
-    
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node }}
-    
+
     - name: Install Linux dependencies
       run: |
         curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
@@ -52,33 +52,33 @@ jobs:
         sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18 unixodbc-dev gcc-10 g++-10
         echo "CC=gcc-10" >> $GITHUB_ENV
         echo "CXX=g++-10" >> $GITHUB_ENV
-    
+
     - name: Install dependencies
       working-directory: node_modules/msnodesqlv8
       run: npm install
-    
+
     - name: Build TypeScript
       working-directory: node_modules/msnodesqlv8
       run: npm run build
-    
+
     - name: Build test TypeScript
       working-directory: node_modules/msnodesqlv8
       run: npm run build:test
-    
+
     - name: Create test databases
       run: |
         # Wait for SQL Server to be ready
         sleep 10
-        
+
         # Create test databases
         /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -C -Q "CREATE DATABASE [node];"
         /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -C -Q "CREATE DATABASE [scratch];"
-    
+
     - name: Run tests
       working-directory: node_modules/msnodesqlv8
       run: ./node_modules/.bin/env-cmd -e github-linux npm test
       timeout-minutes: 30
-    
+
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
@@ -95,20 +95,20 @@ jobs:
       matrix:
         node: [20, 22]
     runs-on: windows-2022
-    
+
     steps:
     - name: Create directory structure
       run: mkdir node_modules
-    
+
     - uses: actions/checkout@v4
       with:
         path: node_modules/msnodesqlv8
-    
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node }}
-    
+
     - name: Install SQL Server
       uses: potatoqualitee/mssqlsuite@v1.7
       with:
@@ -116,34 +116,34 @@ jobs:
         version: 2019
         sa-password: Password12
         show-log: true
-    
+
     - name: Create test databases
       shell: powershell
       run: |
         # Wait for SQL Server to be ready
         Start-Sleep -Seconds 10
-        
+
         # Create test databases
         sqlcmd -S localhost -U sa -P Password12 -Q "CREATE DATABASE [node];"
         sqlcmd -S localhost -U sa -P Password12 -Q "CREATE DATABASE [scratch];"
-    
+
     - name: Install dependencies
       working-directory: node_modules/msnodesqlv8
       run: npm install
-    
+
     - name: Build TypeScript
       working-directory: node_modules/msnodesqlv8
       run: npm run build
-    
+
     - name: Build test TypeScript
       working-directory: node_modules/msnodesqlv8
       run: npm run build:test
-    
+
     - name: Run tests
       working-directory: node_modules/msnodesqlv8
       run: ./node_modules/.bin/env-cmd -e github-windows npm test
       timeout-minutes: 30
-    
+
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
