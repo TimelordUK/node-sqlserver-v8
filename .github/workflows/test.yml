@@ -16,21 +16,6 @@ jobs:
         node: [20, 22]
     runs-on: ubuntu-latest
 
-    services:
-      sqlserver:
-        image: mcr.microsoft.com/mssql/server:2022-latest
-        env:
-          ACCEPT_EULA: Y
-          SA_PASSWORD: YourStrong!Passw0rd
-          MSSQL_PID: Developer
-        ports:
-          - 1433:1433
-        options: >-
-          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -Q 'SELECT 1'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
-
     steps:
     - name: Create directory structure
       run: mkdir -p node_modules
@@ -53,6 +38,20 @@ jobs:
         echo "CC=gcc-10" >> $GITHUB_ENV
         echo "CXX=g++-10" >> $GITHUB_ENV
 
+    - name: Run SQL Server
+      uses: potatoqualitee/mssqlsuite@v1.7
+      with:
+        install: sqlengine, sqlclient
+        version: 2022
+        sa-password: YourStrong!Passw0rd
+        show-log: true
+
+    - name: Create test databases
+      run: |
+        # Wait for SQL Server to be ready and create databases
+        sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -Q "CREATE DATABASE [node];"
+        sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -Q "CREATE DATABASE [scratch];"
+
     - name: Install dependencies
       working-directory: node_modules/msnodesqlv8
       run: npm install
@@ -64,15 +63,6 @@ jobs:
     - name: Build test TypeScript
       working-directory: node_modules/msnodesqlv8
       run: npm run build:test
-
-    - name: Create test databases
-      run: |
-        # Wait for SQL Server to be ready
-        sleep 10
-
-        # Create test databases
-        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -C -Q "CREATE DATABASE [node];"
-        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -C -Q "CREATE DATABASE [scratch];"
 
     - name: Run tests
       working-directory: node_modules/msnodesqlv8
