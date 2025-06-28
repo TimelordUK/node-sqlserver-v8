@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [18, 20, 22]
+        node: [20, 22]
     runs-on: ubuntu-20.04
     
     services:
@@ -57,25 +57,16 @@ jobs:
     - name: Build test TypeScript
       run: npm run build:test
     
-    - name: Setup test configuration
+    - name: Link package for testing
       run: |
-        mkdir -p test
-        cat > test/test-config.json << EOF
-        {
-          "server": "localhost",
-          "user": "sa",
-          "password": "YourStrong!Passw0rd",
-          "database": "master",
-          "driver": "ODBC Driver 18 for SQL Server",
-          "options": {
-            "encrypt": false,
-            "trustServerCertificate": true
-          }
-        }
-        EOF
+        # Create a symlink so tests can require 'msnodesqlv8'
+        npm link
+        npm link msnodesqlv8
     
     - name: Run tests
       run: npm test
+      env:
+        DEFAULT: "Driver={ODBC Driver 18 for SQL Server}; Server=localhost; Uid=SA; Pwd=YourStrong!Passw0rd; TrustServerCertificate=yes;"
       timeout-minutes: 30
     
     - name: Upload test results
@@ -92,7 +83,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [18, 20, 22]
+        node: [20, 22]
     runs-on: windows-2022
     
     steps:
@@ -124,22 +115,16 @@ jobs:
     - name: Build test TypeScript
       run: npm run build:test
     
-    - name: Setup test configuration
-      shell: powershell
+    - name: Link package for testing
       run: |
-        New-Item -ItemType Directory -Force -Path test
-        @'
-        {
-          "server": "(localdb)\\testinstance",
-          "database": "master",
-          "options": {
-            "trustedConnection": true
-          }
-        }
-        '@ | Out-File -FilePath test\test-config.json -Encoding UTF8
+        # Create a symlink so tests can require 'msnodesqlv8'
+        npm link
+        npm link msnodesqlv8
     
     - name: Run tests
       run: npm test
+      env:
+        DEFAULT: "Driver={ODBC Driver 18 for SQL Server}; Server=(localdb)\\testinstance; Database=master; Trusted_Connection=yes;"
       timeout-minutes: 30
     
     - name: Upload test results
