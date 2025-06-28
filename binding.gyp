@@ -52,6 +52,9 @@
                 }
             },
             "target_name": "sqlserver",
+            "make_global_settings": [
+                ["make_flags", "-j2"]
+            ],
             "defines": [
                  "NAPI_DISABLE_CPP_EXCEPTIONS",
                 # Uncomment the next line to use Node-API instead of NAN
@@ -133,9 +136,18 @@
             "actions": [
                 {
                     "action_name": "print_variables",
-                    "action": [
-                        "echo",
-                        "cflags_cpp <(cflags_cpp) | arch: <(arch) | link_path: <(link_path) | msodbc_include_folders <(msodbc_include_folders) | fileset <(fileset)",
+                    "conditions": [
+                        ['OS=="win"', {
+                            "action": [
+                                "echo",
+                                "compiler: MSVC | cflags_cpp <(cflags_cpp) | arch: <(arch) | link_path: <(link_path) | msodbc_include_folders <(msodbc_include_folders) | fileset <(fileset)",
+                            ],
+                        }, {
+                            "action": [
+                                "echo", 
+                                "compiler: <!(echo ${CC:-gcc}) <!(echo ${CXX:-g++}) | cflags_cpp <(cflags_cpp) | arch: <(arch) | link_path: <(link_path) | msodbc_include_folders <(msodbc_include_folders) | fileset <(fileset)",
+                            ],
+                        }]
                     ],
                     "inputs": [],
                     "outputs": ["<!@(node -p \"'<(fileset)'.split(' ')[0]\")"],
@@ -191,6 +203,14 @@
                         "defines": ["LINUX_BUILD", "UNICODE","NAPI_CPP_EXCEPTIONS"],
                         "cflags_cc": ["<(cflags_cpp)"],
                         "cflags": ["-U_FORTIFY_SOURCE", "-fno-lto"],
+                        "conditions": [
+                            ['<!(which gcc-10 2>/dev/null && echo 1 || echo 0)'=='1', {
+                                "make_global_settings": [
+                                    ["CC", "gcc-10"],
+                                    ["CXX", "g++-10"]
+                                ]
+                            }]
+                        ],
                         "include_dirs": [
                             "<!@(node -p \"'<(msodbc_include_folders)'.split(' ').join(' ')\")",
                             "/usr/include/",
