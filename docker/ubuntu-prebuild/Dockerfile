@@ -88,8 +88,10 @@ echo "Prebuild complete!"
 EOF
 
 RUN chmod +x /home/apprunner/clone_and_build.sh /home/apprunner/prebuild.sh
+RUN chown apprunner:apprunner /home/apprunner/clone_and_build.sh /home/apprunner/prebuild.sh
 
 # Create build directory
 RUN mkdir -p /home/apprunner/build
+RUN chown apprunner:apprunner /home/apprunner/build
 
 CMD ["/home/apprunner/prebuild.sh"]
