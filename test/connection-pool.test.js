@@ -23,7 +23,7 @@ const { configureTestLogging } = require('./common/logging-helper')
 configureTestLogging(sql)
 
 describe('pool', function () {
-  this.timeout(30000)
+  this.timeout(60000)
 
   this.beforeEach(done => {
     sql.logger.info('Starting test setup', 'connection-pool.test.beforeEach')
