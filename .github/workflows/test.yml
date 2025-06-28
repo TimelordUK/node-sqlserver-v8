@@ -109,21 +109,23 @@ jobs:
       with:
         node-version: ${{ matrix.node }}
     
-    - name: Install SQL Server LocalDB
+    - name: Install SQL Server
+      uses: potatoqualitee/mssqlsuite@v1.7
+      with:
+        install: sqlengine, sqlclient
+        version: 2019
+        sa-password: Password12
+        show-log: true
+    
+    - name: Create test databases
       shell: powershell
       run: |
-        Write-Host "Installing SQL Server 2022 LocalDB..."
-        $ProgressPreference = 'SilentlyContinue'
-        Invoke-WebRequest -Uri https://download.microsoft.com/download/3/8/d/38de7036-2433-4207-8eae-06e247e17b25/SqlLocalDB.msi -OutFile SqlLocalDB.msi
-        Start-Process msiexec.exe -Wait -ArgumentList '/i SqlLocalDB.msi /quiet /qn IACCEPTSQLLOCALDBLICENSETERMS=YES'
-        
-        # Create and start LocalDB instance
-        & "C:\Program Files\Microsoft SQL Server\160\Tools\Binn\SqlLocalDB.exe" create "testinstance" -s
-        & "C:\Program Files\Microsoft SQL Server\160\Tools\Binn\SqlLocalDB.exe" info "testinstance"
+        # Wait for SQL Server to be ready
+        Start-Sleep -Seconds 10
         
         # Create test databases
-        sqlcmd -S "(localdb)\testinstance" -Q "CREATE DATABASE [node];"
-        sqlcmd -S "(localdb)\testinstance" -Q "CREATE DATABASE [scratch];"
+        sqlcmd -S localhost -U sa -P Password12 -Q "CREATE DATABASE [node];"
+        sqlcmd -S localhost -U sa -P Password12 -Q "CREATE DATABASE [scratch];"
     
     - name: Install dependencies
       working-directory: node_modules/msnodesqlv8
