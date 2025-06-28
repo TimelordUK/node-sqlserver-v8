@@ -94,4 +94,4 @@ RUN chown apprunner:apprunner /home/apprunner/clone_and_build.sh /home/apprunner
 RUN mkdir -p /home/apprunner/build
 RUN chown apprunner:apprunner /home/apprunner/build
 
-CMD ["/home/apprunner/prebuild.sh"]
+CMD ["bash", "-c", "ls -la /home/apprunner/prebuild.sh && cat /home/apprunner/prebuild.sh && /home/apprunner/prebuild.sh"]
