@@ -49,8 +49,8 @@ jobs:
     - name: Create test databases
       run: |
         # Wait for SQL Server to be ready and create databases
-        sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -Q "CREATE DATABASE [node];"
-        sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -Q "CREATE DATABASE [scratch];"
+        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -C -Q "CREATE DATABASE [node];"
+        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -C -Q "CREATE DATABASE [scratch];"
 
     - name: Install dependencies
       working-directory: node_modules/msnodesqlv8
