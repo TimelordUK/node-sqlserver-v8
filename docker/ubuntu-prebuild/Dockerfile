@@ -38,10 +38,23 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | b
 RUN export NVM_DIR="$HOME/.nvm" && . $HOME/.nvm/nvm.sh; nvm install 22
 
 WORKDIR /home/apprunner/build
-COPY --chown=apprunner:apprunner . .
 
-# Install dependencies
-RUN . ${HOME}/.nvm/nvm.sh && npm install
+# Create build script that clones the repo
+RUN cat > clone_and_build.sh << 'EOF'
+#!/bin/bash
+set -e
+
+REPO_URL="https://github.com/TimelordUK/node-sqlserver-v8.git"
+BRANCH_NAME=${BRANCH:-master}
+
+echo "Cloning repository..."
+git clone --depth 1 --branch $BRANCH_NAME $REPO_URL .
+
+echo "Installing dependencies..."
+. ${HOME}/.nvm/nvm.sh && npm install
+EOF
+
+RUN chmod +x clone_and_build.sh
 
 # Create prebuild script
 RUN cat > prebuild.sh << 'EOF'
@@ -53,13 +66,22 @@ if [ -z "$GITHUB_TOKEN" ]; then
     exit 1
 fi
 
+# Clone and setup first
+./clone_and_build.sh
+
+BRANCH_FLAG=""
+if [ ! -z "$BRANCH" ]; then
+    BRANCH_FLAG="--tag-prefix $BRANCH-"
+    echo "Using branch: $BRANCH"
+fi
+
 . ${HOME}/.nvm/nvm.sh
 
 echo "Building Node.js prebuilds..."
-CC=gcc-10 CXX=g++-10 node_modules/.bin/prebuild -t 18.0.0 -t 20.0.0 -t 22.0.0 -t 23.0.0 -t 24.0.0 --strip -u $GITHUB_TOKEN
+CC=gcc-10 CXX=g++-10 node_modules/.bin/prebuild -t 18.0.0 -t 20.0.0 -t 22.0.0 -t 23.0.0 -t 24.0.0 --strip -u $GITHUB_TOKEN $BRANCH_FLAG
 
 echo "Building Electron prebuilds..."
-CC=gcc-10 CXX=g++-10 node_modules/.bin/prebuild -t 32.0.0 -t 33.0.0 -t 34.0.0 -t 35.0.0 -t 36.0.0 -r electron --strip -u $GITHUB_TOKEN
+CC=gcc-10 CXX=g++-10 node_modules/.bin/prebuild -t 32.0.0 -t 33.0.0 -t 34.0.0 -t 35.0.0 -t 36.0.0 -r electron --strip -u $GITHUB_TOKEN $BRANCH_FLAG
 
 echo "Prebuild complete!"
 EOF

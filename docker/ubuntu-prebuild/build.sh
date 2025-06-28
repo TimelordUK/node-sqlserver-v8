@@ -12,6 +12,6 @@ echo "Building Docker image..."
 docker build -t msnodesqlv8-prebuild .
 
 echo "Running prebuild in container..."
-docker run --rm -e GITHUB_TOKEN="$GITHUB_TOKEN" -v $(pwd)/prebuilds:/home/apprunner/build/prebuilds msnodesqlv8-prebuild
+docker run --rm -e GITHUB_TOKEN="$GITHUB_TOKEN" -e BRANCH="$BRANCH" -v $(pwd)/prebuilds:/home/apprunner/build/prebuilds msnodesqlv8-prebuild
 
 echo "Prebuild artifacts should now be in ./prebuilds/"
