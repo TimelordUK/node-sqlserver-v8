@@ -1,0 +1,146 @@
+name: Test Driver
+
+on:
+  push:
+    branches: [n_api, master]
+  pull_request:
+    branches: [n_api, master]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test Node ${{ matrix.node }} on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04, windows-2022]
+        node: [18, 20, 22]
+    runs-on: ${{ matrix.os }}
+    
+    services:
+      # SQL Server service for Linux
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          SA_PASSWORD: ${{ secrets.SA_PASSWORD || 'YourStrong!Passw0rd' }}
+          MSSQL_PID: Developer
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        # Only run SQL Server container on Linux
+        if: runner.os == 'Linux'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node }}
+    
+    # Linux setup
+    - name: Install Linux dependencies
+      if: runner.os == 'Linux'
+      run: |
+        curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
+        curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+        sudo apt-get update
+        sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18 unixodbc-dev gcc-10 g++-10
+        echo "CC=gcc-10" >> $GITHUB_ENV
+        echo "CXX=g++-10" >> $GITHUB_ENV
+    
+    # Windows setup - Install SQL Server LocalDB
+    - name: Install SQL Server (Windows)
+      if: runner.os == 'Windows'
+      shell: powershell
+      run: |
+        Write-Host "Installing SQL Server 2022 LocalDB..."
+        $ProgressPreference = 'SilentlyContinue'
+        Invoke-WebRequest -Uri https://download.microsoft.com/download/3/8/d/38de7036-2433-4207-8eae-06e247e17b25/SqlLocalDB.msi -OutFile SqlLocalDB.msi
+        Start-Process msiexec.exe -Wait -ArgumentList '/i SqlLocalDB.msi /quiet /qn IACCEPTSQLLOCALDBLICENSETERMS=YES'
+        
+        # Verify installation
+        & "C:\Program Files\Microsoft SQL Server\160\Tools\Binn\SqlLocalDB.exe" info
+    
+    - name: Create LocalDB instance (Windows)
+      if: runner.os == 'Windows'
+      shell: powershell
+      run: |
+        & "C:\Program Files\Microsoft SQL Server\160\Tools\Binn\SqlLocalDB.exe" create "testinstance" -s
+        & "C:\Program Files\Microsoft SQL Server\160\Tools\Binn\SqlLocalDB.exe" start "testinstance"
+        & "C:\Program Files\Microsoft SQL Server\160\Tools\Binn\SqlLocalDB.exe" info "testinstance"
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Build TypeScript
+      run: npm run build
+    
+    - name: Build test TypeScript
+      run: npm run build:test
+    
+    # Linux test configuration
+    - name: Setup Linux test environment
+      if: runner.os == 'Linux'
+      run: |
+        echo "Setting up test configuration for Linux"
+        cat > test/test-config.json << EOF
+        {
+          "server": "localhost",
+          "user": "sa",
+          "password": "YourStrong!Passw0rd",
+          "database": "master",
+          "driver": "ODBC Driver 18 for SQL Server",
+          "options": {
+            "encrypt": false,
+            "trustServerCertificate": true
+          }
+        }
+        EOF
+    
+    # Windows test configuration  
+    - name: Setup Windows test environment
+      if: runner.os == 'Windows'
+      shell: powershell
+      run: |
+        Write-Host "Setting up test configuration for Windows"
+        @'
+        {
+          "server": "(localdb)\\testinstance",
+          "database": "master",
+          "options": {
+            "trustedConnection": true
+          }
+        }
+        '@ | Out-File -FilePath test\test-config.json -Encoding UTF8
+    
+    - name: Run tests
+      run: npm test
+      env:
+        JUNIT_REPORT_PATH: test-results/
+        JUNIT_REPORT_NAME: test-results.xml
+      timeout-minutes: 30
+    
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ matrix.os }}-node${{ matrix.node }}
+        path: |
+          test-results/
+          mochawesome-report/
+    
+    # Optional: Add test reporting
+    - name: Report test results
+      if: always()
+      uses: dorny/test-reporter@v1
+      with:
+        name: Tests - ${{ matrix.os }} - Node ${{ matrix.node }}
+        path: 'test-results/*.xml'
+        reporter: java-junit
+        fail-on-error: false
