@@ -4,7 +4,7 @@ RUN echo 'APT::Install-Recommends "0";' >> /etc/apt/apt.conf.d/00-docker
 
 RUN DEBIAN_FRONTEND=noninteractive \
   apt-get update \
-  && apt-get install -y vim git build-essential curl perl dialog apt-utils ca-certificates apt-transport-https locales gnupg2 openssl lsb-release gcc-10 g++-10
+  && apt-get install -y vim git build-essential curl perl dialog apt-utils ca-certificates apt-transport-https locales gnupg2 openssl lsb-release gcc-10 g++-10 dos2unix
 
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | tee | apt-key add -
 RUN curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list > /etc/apt/sources.list.d/mssql-release.list
@@ -89,9 +89,11 @@ EOF
 
 RUN chmod +x /home/apprunner/clone_and_build.sh /home/apprunner/prebuild.sh
 RUN chown apprunner:apprunner /home/apprunner/clone_and_build.sh /home/apprunner/prebuild.sh
+# Fix line endings with dos2unix
+RUN dos2unix /home/apprunner/clone_and_build.sh /home/apprunner/prebuild.sh
 
 # Create build directory
 RUN mkdir -p /home/apprunner/build
 RUN chown apprunner:apprunner /home/apprunner/build
 
-CMD ["bash", "-c", "ls -la /home/apprunner/prebuild.sh && cat /home/apprunner/prebuild.sh && /home/apprunner/prebuild.sh"]
+CMD ["/home/apprunner/prebuild.sh"]
