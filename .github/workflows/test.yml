@@ -32,9 +32,12 @@ jobs:
           --health-retries 5
     
     steps:
+    - name: Create directory structure
+      run: mkdir -p node_modules
+    
     - uses: actions/checkout@v4
       with:
-        path: msnodesqlv8
+        path: node_modules/msnodesqlv8
     
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -51,19 +54,19 @@ jobs:
         echo "CXX=g++-10" >> $GITHUB_ENV
     
     - name: Install dependencies
-      working-directory: msnodesqlv8
+      working-directory: node_modules/msnodesqlv8
       run: npm install
     
     - name: Build TypeScript
-      working-directory: msnodesqlv8
+      working-directory: node_modules/msnodesqlv8
       run: npm run build
     
     - name: Build test TypeScript
-      working-directory: msnodesqlv8
+      working-directory: node_modules/msnodesqlv8
       run: npm run build:test
     
     - name: Run tests
-      working-directory: msnodesqlv8
+      working-directory: node_modules/msnodesqlv8
       run: npm test
       env:
         DEFAULT: "Driver={ODBC Driver 18 for SQL Server}; Server=localhost; Uid=SA; Pwd=YourStrong!Passw0rd; TrustServerCertificate=yes;"
@@ -75,8 +78,8 @@ jobs:
       with:
         name: test-results-linux-node${{ matrix.node }}
         path: |
-          test-results/
-          mochawesome-report/
+          node_modules/msnodesqlv8/test-results/
+          node_modules/msnodesqlv8/mochawesome-report/
 
   test-windows:
     name: Test Windows - Node ${{ matrix.node }}
@@ -87,9 +90,12 @@ jobs:
     runs-on: windows-2022
     
     steps:
+    - name: Create directory structure
+      run: mkdir node_modules
+    
     - uses: actions/checkout@v4
       with:
-        path: msnodesqlv8
+        path: node_modules/msnodesqlv8
     
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -109,19 +115,19 @@ jobs:
         & "C:\Program Files\Microsoft SQL Server\160\Tools\Binn\SqlLocalDB.exe" info "testinstance"
     
     - name: Install dependencies
-      working-directory: msnodesqlv8
+      working-directory: node_modules/msnodesqlv8
       run: npm install
     
     - name: Build TypeScript
-      working-directory: msnodesqlv8
+      working-directory: node_modules/msnodesqlv8
       run: npm run build
     
     - name: Build test TypeScript
-      working-directory: msnodesqlv8
+      working-directory: node_modules/msnodesqlv8
       run: npm run build:test
     
     - name: Run tests
-      working-directory: msnodesqlv8
+      working-directory: node_modules/msnodesqlv8
       run: npm test
       env:
         DEFAULT: "Driver={ODBC Driver 18 for SQL Server}; Server=(localdb)\\testinstance; Database=master; Trusted_Connection=yes;"
@@ -133,5 +139,5 @@ jobs:
       with:
         name: test-results-windows-node${{ matrix.node }}
         path: |
-          test-results/
-          mochawesome-report/
+          node_modules/msnodesqlv8/test-results/
+          node_modules/msnodesqlv8/mochawesome-report/
