@@ -40,7 +40,7 @@ for:
   -
     matrix:
       only:
-        - image: Ubuntu2004
+        - image: Ubuntu2204
           platform: x64
 
     services:
