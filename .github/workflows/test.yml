@@ -65,11 +65,18 @@ jobs:
       working-directory: node_modules/msnodesqlv8
       run: npm run build:test
     
+    - name: Create test databases
+      run: |
+        # Wait for SQL Server to be ready
+        sleep 10
+        
+        # Create test databases
+        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -C -Q "CREATE DATABASE [node];"
+        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -C -Q "CREATE DATABASE [scratch];"
+    
     - name: Run tests
       working-directory: node_modules/msnodesqlv8
-      run: npm test
-      env:
-        DEFAULT: "Driver={ODBC Driver 18 for SQL Server}; Server=localhost; Uid=SA; Pwd=YourStrong!Passw0rd; TrustServerCertificate=yes;"
+      run: ./node_modules/.bin/env-cmd -e github-linux npm test
       timeout-minutes: 30
     
     - name: Upload test results
@@ -113,6 +120,10 @@ jobs:
         # Create and start LocalDB instance
         & "C:\Program Files\Microsoft SQL Server\160\Tools\Binn\SqlLocalDB.exe" create "testinstance" -s
         & "C:\Program Files\Microsoft SQL Server\160\Tools\Binn\SqlLocalDB.exe" info "testinstance"
+        
+        # Create test databases
+        sqlcmd -S "(localdb)\testinstance" -Q "CREATE DATABASE [node];"
+        sqlcmd -S "(localdb)\testinstance" -Q "CREATE DATABASE [scratch];"
     
     - name: Install dependencies
       working-directory: node_modules/msnodesqlv8
@@ -128,9 +139,7 @@ jobs:
     
     - name: Run tests
       working-directory: node_modules/msnodesqlv8
-      run: npm test
-      env:
-        DEFAULT: "Driver={ODBC Driver 18 for SQL Server}; Server=(localdb)\\testinstance; Database=master; Trusted_Connection=yes;"
+      run: ./node_modules/.bin/env-cmd -e github-windows npm test
       timeout-minutes: 30
     
     - name: Upload test results
