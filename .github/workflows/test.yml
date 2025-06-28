@@ -33,6 +33,8 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+      with:
+        path: msnodesqlv8
     
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -49,21 +51,19 @@ jobs:
         echo "CXX=g++-10" >> $GITHUB_ENV
     
     - name: Install dependencies
+      working-directory: msnodesqlv8
       run: npm install
     
     - name: Build TypeScript
+      working-directory: msnodesqlv8
       run: npm run build
     
     - name: Build test TypeScript
+      working-directory: msnodesqlv8
       run: npm run build:test
     
-    - name: Link package for testing
-      run: |
-        # Create a symlink so tests can require 'msnodesqlv8'
-        npm link
-        npm link msnodesqlv8
-    
     - name: Run tests
+      working-directory: msnodesqlv8
       run: npm test
       env:
         DEFAULT: "Driver={ODBC Driver 18 for SQL Server}; Server=localhost; Uid=SA; Pwd=YourStrong!Passw0rd; TrustServerCertificate=yes;"
@@ -88,6 +88,8 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+      with:
+        path: msnodesqlv8
     
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -107,21 +109,19 @@ jobs:
         & "C:\Program Files\Microsoft SQL Server\160\Tools\Binn\SqlLocalDB.exe" info "testinstance"
     
     - name: Install dependencies
+      working-directory: msnodesqlv8
       run: npm install
     
     - name: Build TypeScript
+      working-directory: msnodesqlv8
       run: npm run build
     
     - name: Build test TypeScript
+      working-directory: msnodesqlv8
       run: npm run build:test
     
-    - name: Link package for testing
-      run: |
-        # Create a symlink so tests can require 'msnodesqlv8'
-        npm link
-        npm link msnodesqlv8
-    
     - name: Run tests
+      working-directory: msnodesqlv8
       run: npm test
       env:
         DEFAULT: "Driver={ODBC Driver 18 for SQL Server}; Server=(localdb)\\testinstance; Database=master; Trusted_Connection=yes;"
