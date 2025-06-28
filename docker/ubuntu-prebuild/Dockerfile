@@ -37,27 +37,26 @@ USER apprunner
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
 RUN export NVM_DIR="$HOME/.nvm" && . $HOME/.nvm/nvm.sh; nvm install 22
 
-WORKDIR /home/apprunner/build
+WORKDIR /home/apprunner
 
-# Create build script that clones the repo
-RUN cat > clone_and_build.sh << 'EOF'
+# Create scripts in home directory first
+RUN cat > /home/apprunner/clone_and_build.sh << 'EOF'
 #!/bin/bash
 set -e
+
+cd /home/apprunner/build
 
 REPO_URL="https://github.com/TimelordUK/node-sqlserver-v8.git"
 BRANCH_NAME=${BRANCH:-master}
 
-echo "Cloning repository..."
+echo "Cloning repository from branch: $BRANCH_NAME"
 git clone --depth 1 --branch $BRANCH_NAME $REPO_URL .
 
 echo "Installing dependencies..."
 . ${HOME}/.nvm/nvm.sh && npm install
 EOF
 
-RUN chmod +x clone_and_build.sh
-
-# Create prebuild script
-RUN cat > prebuild.sh << 'EOF'
+RUN cat > /home/apprunner/prebuild.sh << 'EOF'
 #!/bin/bash
 set -e
 
@@ -67,12 +66,14 @@ if [ -z "$GITHUB_TOKEN" ]; then
 fi
 
 # Clone and setup first
-./clone_and_build.sh
+/home/apprunner/clone_and_build.sh
+
+cd /home/apprunner/build
 
 BRANCH_FLAG=""
 if [ ! -z "$BRANCH" ]; then
     BRANCH_FLAG="--tag-prefix $BRANCH-"
-    echo "Using branch: $BRANCH"
+    echo "Using branch: $BRANCH for tagging"
 fi
 
 . ${HOME}/.nvm/nvm.sh
@@ -86,6 +87,9 @@ CC=gcc-10 CXX=g++-10 node_modules/.bin/prebuild -t 32.0.0 -t 33.0.0 -t 34.0.0 -t
 echo "Prebuild complete!"
 EOF
 
-RUN chmod +x prebuild.sh
+RUN chmod +x /home/apprunner/clone_and_build.sh /home/apprunner/prebuild.sh
 
-CMD ["./prebuild.sh"]
+# Create build directory
+RUN mkdir -p /home/apprunner/build
+
+CMD ["/home/apprunner/prebuild.sh"]
