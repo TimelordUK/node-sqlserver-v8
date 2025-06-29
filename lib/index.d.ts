@@ -355,9 +355,9 @@ declare namespace MsNodeSqlV8 {
      * @param cb callback related to event subscribed
      */
     on (event: string, cb?: sqlPoolEventType): void
-    beginTransaction(cb: TransactionCb): Query
-    commitTransaction(description: PoolDescription, cb?: QueryRawCb): void
-    rollbackTransaction(description: PoolDescription, cb?: QueryRawCb): void
+    beginTransaction (cb: TransactionCb): Query
+    commitTransaction (description: PoolDescription, cb?: QueryRawCb): void
+    rollbackTransaction (description: PoolDescription, cb?: QueryRawCb): void
   }
 
   export interface PoolChunky {
@@ -373,7 +373,7 @@ declare namespace MsNodeSqlV8 {
     cancelQuery (cb?: StatusCb): void
     pauseQuery (): void
     resumeQuery (): void
-    setQueryObj (q: Query, chunky: PoolChunky ): void
+    setQueryObj (q: Query, chunky: PoolChunky): void
     isPrepared (): false
     /**
      * event subscription
@@ -1680,6 +1680,11 @@ declare namespace MsNodeSqlV8 {
     value?: sqlQueryParamType
   }
 
+  export class ConnectionHandle {
+    connectionId: number
+    statementId: number
+  }
+
   export class NativeConnection {
     constructor ()
 
@@ -1721,7 +1726,7 @@ declare namespace MsNodeSqlV8 {
   export interface PoolWorkItem {
     id: number
     sql: string
-    paramsOrCallback: sqlQueryParamType[] | QueryCb | QueryRawCb | CallProcedureCb | TransactionCb,
+    paramsOrCallback: sqlQueryParamType[] | QueryCb | QueryRawCb | CallProcedureCb | TransactionCb
     callback: QueryCb | QueryRawCb | CallProcedureCb | TransactionCb
     poolNotifier: PoolEventCaster
     workType: workTypeEnum

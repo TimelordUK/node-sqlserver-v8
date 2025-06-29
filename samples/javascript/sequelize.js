@@ -87,8 +87,18 @@ async function userModel () {
   console.log(updated)
 }
 
-userModel().then(() => {
-  sequelize.close().then(() => {
-    console.log('done')
+async function run () {
+  await userModel().then(async () => {
+    await sequelize.close().then(() => {
+      console.log('closed')
+    }).catch(err => {
+      console.error(err)
+    })
   })
+}
+
+run().then(() => {
+  console.log('done')
+}).catch(err => {
+  console.error(err)
 })

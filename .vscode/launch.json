@@ -4,76 +4,95 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-    {
-        "name": "Node Cmd Test",
-        "program": "${workspaceFolder}/unit.tests/cmd-test.js",
-        "args": [
-            "-t", 
-            "memory"
-        ],
-        "request": "launch",
-        "skipFiles": [
-            "<node_internals>/**"
-        ],
-        "cwd": "${workspaceFolder}",
-        "type": "pwa-node"
-    },
-        
         {
-            "name": "(Windows) Launch",
+            "name": "Node Cmd Test",
+            "program": "${workspaceFolder}/unit.tests/cmd-test.js",
+            "args": [
+                "-t",
+                "memory"
+            ],
+            "request": "launch",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "cwd": "${workspaceFolder}",
+            "type": "pwa-node"
+        },
+        {
+            "name": "Debug C++ Tests",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "C:/Program Files/nodejs/node.exe",
-            "args": [
-                "samples/javascript/streaming.js"
-               // "./node_modules/mocha/bin/mocha.js",
-               // "test/sproc"
-               // "test/table-builder"
-               // "simple-demo"
-               // "runtest", "-k", "linux", 
-               // "runtest", "-k", "linux",
-               // "runtest",
-               // "-t", "table-builder.js",
-               // "-t", "querycancel",
-               // "-t", "pause"
-               // "-t", "prepared",
-               // "-t", "compoundqueries",
-               // "-t", "query",
-               // "-t", "multiple-errors", 
-               // "-t", "geography",
-               // "-t", "tvp",
-               //"-t", "warnings",
-               // "-t", "txn",
-               // "-t", "datatypes",
-               // "-t", "sproc"
-               //"-t", "params"
-               // "-t", "bulk",
-               // "-t", "bcp"
-               // "-t", "json"
-               // "-t", "promises" 
-            ],
+            "program": "${workspaceFolder}/test/cpp/build/Debug/cpp_tests.exe",
+            "args": [],
             "stopAtEntry": false,
-           // "cwd": "${workspaceFolder}/samples/javascript",
-             "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}",
             "environment": [],
             "console": "integratedTerminal"
         },
-       
+        {
+            "name": "(Windows) typescript tests",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "C:\\nvm4w\\nodejs\\node.exe",
+            "args": [
+                //"samples/javascript/streaming.js"
+                "./node_modules/mocha/bin/mocha.js",
+                "test/cancel.test"
+                // "test/params.test"
+                // "test/napi/open"
+                // "test/sproc"
+                // "test/table-builder"
+                // "simple-demo"
+                // "runtest", "-k", "linux", 
+                // "runtest", "-k", "linux",
+                // "runtest",
+                // "-t", "table-builder.js",
+                // "-t", "querycancel",
+                // "-t", "pause"
+                // "-t", "prepared",
+                // "-t", "compoundqueries",
+                // "-t", "query",
+                // "-t", "multiple-errors", 
+                // "-t", "geography",
+                // "-t", "tvp",
+                //"-t", "warnings",
+                // "-t", "txn",
+                // "-t", "datatypes",
+                // "-t", "sproc"
+                //"-t", "params"
+                // "-t", "bulk",
+                // "-t", "bcp"
+                
+                // "-t", "json"
+                // "-t", "promises" 
+            ],
+            "stopAtEntry": false,
+            // "cwd": "${workspaceFolder}/samples/javascript",
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "integratedTerminal"
+        },
         {
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "C:/ProgramData/nvm/v22.5.1/node",
+            "program": "/home/me/.nvm/versions/node/v22.15.0/bin/node",
             "args": [
-                "samples/javascript/streaming.js",
-                // "-t", "prepared", 
-                // "-t", "warnings", 
-                // "-t", "bulk", 
-                // "-t", "querycancel",
-                // "-t", "pause",
-                // "-t", "datatypes",
-                // "-t", "query",
-                // "-t", "tvp"
+              "examples/state-tracking-example.js"
+             //   "./node_modules/mocha/bin/mocha.js",
+              //  "test/bind-table.test",
+              // "test/napi/compound-query.test"
+             // "test/params.test"
+              // "test/pause.test"
+              // "test/bulk.test"
+              //"test/userbind.test"
+              // "test/prepared.test"
+              // "test/query.test"
+              // "test/connection-improved.test"
+              // "test/querycancel.test"
+              // "test/sproc.test"
+              //"test/bcp.test"
+              //"test/txn.test"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -88,7 +107,6 @@
                 }
             ]
         },
-        
         {
             "cwd": "${workspaceFolder}/samples/typescript",
             "type": "node",
@@ -96,7 +114,18 @@
             "name": "Launch Node TS",
             "program": "dist/promises.js",
             // "preLaunchTask": "tsc: build tsconfig.json",
-            "outFiles": ["${workspaceFolder}/samples/typescript/dist/**/*.js"]
-          }
+            "outFiles": [
+                "${workspaceFolder}/samples/typescript/dist/**/*.js"
+            ]
+        },
+        
+            {
+              "type": "node",
+              "request": "launch",
+              "name": "Run TS Tests",
+              "program": "${workspaceFolder}/run-tests.js",
+              "skipFiles": ["<node_internals>/**"]
+            }
+         
     ]
 }

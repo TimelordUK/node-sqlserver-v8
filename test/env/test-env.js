@@ -189,7 +189,7 @@ class TestEnv {
   }
 
   pool (size) {
-    size = size || 4
+    size = size || 2
     return new this.sql.Pool({
       connectionString: this.connectionString,
       ceiling: size
@@ -220,7 +220,7 @@ class TestEnv {
   }
 
   async asPool (fn) {
-    const pool = this.pool(4)
+    const pool = this.pool(2)
     await pool.open()
     await fn(pool)
     await pool.close()

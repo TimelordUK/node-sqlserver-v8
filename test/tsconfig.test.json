@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+      "target": "es2018",
+      "module": "commonjs",
+      "declaration": true,
+      "sourceMap": true,
+      "outDir": "../dist/test",
+      "rootDir": "./",
+      "strict": true,
+      "noImplicitAny": true,
+      "strictNullChecks": true,
+      "esModuleInterop": true,
+      "forceConsistentCasingInFileNames": true,
+      "types": ["node", "mocha", "chai"],
+      "resolveJsonModule": true
+    },
+  "include": [
+    "./**/*.test.ts"
+  ],
+  "exclude": [
+    "../lib",
+    "../node_modules",
+    "../build",
+    "../**/build/**",
+    "../**/CMakeFiles/**",
+    "../**/compiler_depend.ts"
+  ]
+}

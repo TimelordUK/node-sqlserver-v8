@@ -20,7 +20,7 @@
 
 const sql = require('msnodesqlv8')
 const assert = require('assert')
-const supp = require('msnodesqlv8/samples/typescript/demo-support')
+const supp = require('../../samples/typescript/demo-support')
 const util = require('util')
 
 // Need to change this to false when parameters are supported

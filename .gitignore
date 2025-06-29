@@ -5,6 +5,7 @@ tmp.txt
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
 
 # Runtime data
 pids
@@ -17,6 +18,7 @@ lib-cov
 
 # Coverage directory used by tools like istanbul
 coverage
+*.lcov
 
 # nyc test coverage
 .nyc_output
@@ -32,19 +34,50 @@ bower_components
 
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 build/Release
+build/Debug
+build/
+build-test/
+prebuilds/
+
+# CMake build directories
+**/CMakeFiles/
+**/cmake-build*/
+**/build/
+**/test/cpp/build/
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/install_manifest.txt
+**/compile_commands.json
+**/*.cmake
+**/Makefile
+!**/CMakeLists.txt
+**/*.cbp
+**/.cmake/
+**/_CPack_Packages/
+
+# Build output directories
+lib/
+dist/
+out/
 
 # Dependency directories
 node_modules/
 jspm_packages/
-
-# Typescript v1 declaration files
-typings/
 
 # Optional npm cache directory
 .npm
 
 # Optional eslint cache
 .eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
 
 # Optional REPL history
 .node_repl_history
@@ -55,27 +88,112 @@ typings/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
+# dotenv environment variable files
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# next.js build output
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
 .next
+out
 
-# compiled javascript
-dist/
+# Source maps and TypeScript definition files (if any remain)
+**/*.js.map
+**/*.d.ts
 
-# Prebuilds
-prebuilds/
-build/
+# Compiled/built JavaScript (only for specific output directories)
+lib/**/*.js
+dist/**/*.js
 
-# Mac
+# Editor directories and files
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 .DS_Store
 tags
 tags.lock
 tags.temp
+
+# Test output
+/mochawesome-report/
+test-results/
 runtest-linux
-.gitignore
 runtest-win.exe
 runtest-macos
-/mochawesome-report/
-.idea/
+
+# C++ object files and libraries
+**/*.o
+**/*.obj
+**/*.a
+**/*.lib
+**/*.so
+**/*.so.*
+**/*.dylib
+**/*.dll
+**/*.exe
+**/*.out
+**/*.app
+**/*.node
+**/.deps/
+**/.libs/
+
+# Generated test binaries
+**/cpp_tests
+**/cpp_tests.exe
+**/test_*/
+**/test/cpp/**/Testing/
+**/GoogleTest*
+**/_deps/
+
+# Local build scripts
+lib/index.d.ts
+
+# IDE specific files
+**/.vs/
+**/.vscode/ipch/
+**/.vscode/c_cpp_properties.json.bak
+**/ipch/
+**/*.ipch
+**/*.VC.db
+**/*.VC.VC.opendb
+**/*.sdf
+**/*.opensdf
+**/*.aps
+**/*.ncb
+**/*.psess
+**/*.vsp
+**/*.vspx
+**/*.vsps
+**/*.qbs.user
+**/*.user
+**/*.userprefs
+**/*CMakeSettings.json
+**/.idea/workspace.xml
+**/.idea/tasks.xml
+**/.idea/usage.statistics.xml
+**/.idea/shelf/
+**/.kate-swp
+**/.kdev4/
+**/*.kdev4
+**/*.clangd
+**/*.cache/
+**/*.clangd/
+**/*.ccls-cache/
+
+**/.claude/settings.local.json
+tidy.txt
+.env.example

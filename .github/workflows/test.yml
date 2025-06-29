@@ -1,0 +1,144 @@
+name: Test Driver
+
+on:
+  push:
+    branches: [n_api, master]
+  pull_request:
+    branches: [n_api, master]
+  workflow_dispatch:
+
+jobs:
+  test-linux:
+    name: Test Linux - Node ${{ matrix.node }}
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Create directory structure
+      run: mkdir -p node_modules
+
+    - uses: actions/checkout@v4
+      with:
+        path: node_modules/msnodesqlv8
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node }}
+
+    - name: Install Linux dependencies
+      run: |
+        curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
+        curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+        sudo apt-get update
+        sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18 unixodbc-dev gcc-10 g++-10
+        echo "CC=gcc-10" >> $GITHUB_ENV
+        echo "CXX=g++-10" >> $GITHUB_ENV
+
+    - name: Run SQL Server
+      uses: potatoqualitee/mssqlsuite@v1.7
+      with:
+        install: sqlengine, sqlclient
+        version: 2022
+        sa-password: YourStrong!Passw0rd
+        show-log: true
+
+    - name: Create test databases
+      run: |
+        # Wait for SQL Server to be ready and create databases
+        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -C -Q "CREATE DATABASE [node];"
+        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -C -Q "CREATE DATABASE [scratch];"
+
+    - name: Install dependencies
+      working-directory: node_modules/msnodesqlv8
+      run: npm install
+
+    - name: Build TypeScript
+      working-directory: node_modules/msnodesqlv8
+      run: npm run build
+
+    - name: Build test TypeScript
+      working-directory: node_modules/msnodesqlv8
+      run: npm run build:test
+
+    - name: Run tests
+      working-directory: node_modules/msnodesqlv8
+      run: ./node_modules/.bin/env-cmd -e github-linux npm test
+      timeout-minutes: 30
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-linux-node${{ matrix.node }}
+        path: |
+          node_modules/msnodesqlv8/test-results/
+          node_modules/msnodesqlv8/mochawesome-report/
+
+  test-windows:
+    name: Test Windows - Node ${{ matrix.node }}
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+    runs-on: windows-2022
+
+    steps:
+    - name: Create directory structure
+      run: mkdir node_modules
+
+    - uses: actions/checkout@v4
+      with:
+        path: node_modules/msnodesqlv8
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node }}
+
+    - name: Install SQL Server
+      uses: potatoqualitee/mssqlsuite@v1.7
+      with:
+        install: sqlengine, sqlclient
+        version: 2019
+        sa-password: Password12
+        show-log: true
+
+    - name: Create test databases
+      shell: powershell
+      run: |
+        # Wait for SQL Server to be ready
+        Start-Sleep -Seconds 10
+
+        # Create test databases
+        sqlcmd -S localhost -U sa -P Password12 -Q "CREATE DATABASE [node];"
+        sqlcmd -S localhost -U sa -P Password12 -Q "CREATE DATABASE [scratch];"
+
+    - name: Install dependencies
+      working-directory: node_modules/msnodesqlv8
+      run: npm install
+
+    - name: Build TypeScript
+      working-directory: node_modules/msnodesqlv8
+      run: npm run build
+
+    - name: Build test TypeScript
+      working-directory: node_modules/msnodesqlv8
+      run: npm run build:test
+
+    - name: Run tests
+      working-directory: node_modules/msnodesqlv8
+      run: ./node_modules/.bin/env-cmd -e github-windows npm test
+      timeout-minutes: 30
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-windows-node${{ matrix.node }}
+        path: |
+          node_modules/msnodesqlv8/test-results/
+          node_modules/msnodesqlv8/mochawesome-report/

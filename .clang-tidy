@@ -1,0 +1,4 @@
+Checks: 'clang-analyzer-*,bugprone-*,cppcoreguidelines-*'
+WarningsAsErrors: ''
+HeaderFilterRegex: '.*'
+FormatStyle: none

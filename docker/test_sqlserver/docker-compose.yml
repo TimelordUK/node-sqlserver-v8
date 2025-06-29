@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrongPassword123!
+      - MSSQL_PID=Developer
+    volumes:
+      - c:/Users/sjame/data/sql_server/data:/var/opt/mssql/data
+      - c:/Users/sjame/data/sql_server/log:/var/opt/mssql/log
+      - c:/Users/sjame/data/sql_server/secrets:/var/opt/mssql/secrets
+    restart: unless-stopped

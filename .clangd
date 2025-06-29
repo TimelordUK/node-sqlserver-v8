@@ -1,0 +1,20 @@
+CompileFlags:
+  Add: [
+    "-I/home/me/dev/js/sql/v8/node_modules/msnodesqlv8/cpp",
+    "-I/home/me/dev/js/sql/v8/node_modules/msnodesqlv8/cpp/include",
+    "-I/home/me/dev/js/sql/v8/node_modules/msnodesqlv8/cpp/include/common",
+    "-I/home/me/dev/js/sql/v8/node_modules/msnodesqlv8/cpp/include/core",
+    "-I/home/me/dev/js/sql/v8/node_modules/msnodesqlv8/cpp/include/js",
+    "-I/home/me/dev/js/sql/v8/node_modules/msnodesqlv8/cpp/include/js/workers",
+    "-I/home/me/dev/js/sql/v8/node_modules/msnodesqlv8/cpp/include/odbc",
+    "-I/home/me/dev/js/sql/v8/node_modules/msnodesqlv8/cpp/include/utils",
+    "-I/home/me/dev/js/sql/v8/node_modules/msnodesqlv8/node_modules/node-addon-api",
+    "-I/opt/microsoft/msodbcsql18/include",
+    "-I/opt/microsoft/msodbcsql17/include",
+    "-I/usr/include",
+    "-I/home/me/.cache/node-gyp/22.15.0/include/node",
+    "-DLINUX_BUILD",
+    "-DUNICODE",
+    "-DNAPI_CPP_EXCEPTIONS",
+    "-DBUILDING_NODE_EXTENSION"
+  ]

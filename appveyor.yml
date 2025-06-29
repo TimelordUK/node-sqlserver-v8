@@ -2,7 +2,7 @@ version: 1.0.{build}
 
 image:
   - Visual Studio 2022
-  - Ubuntu2004
+  - Ubuntu2204
 
 platform:
   - x64
@@ -40,7 +40,7 @@ for:
   -
     matrix:
       only:
-        - image: Ubuntu2004
+        - image: Ubuntu2204
           platform: x64
 
     services:
@@ -56,7 +56,7 @@ for:
 
     test_script:
       - sh: "sleep 4"
-      - sh: "./node_modules/.bin/env-cmd -e appv-ubuntu ./node_modules/.bin/mocha 2>&1"
+      - sh: "./node_modules/.bin/env-cmd -e appv-ubuntu npm run test 2>&1"
 
     install:
       - nvm install $nodejs_version

@@ -37,6 +37,17 @@
             "problemMatcher": [],
             "label": "npm: prebuild-node",
             "detail": "prebuild -t 10.16.0 -t 11.15.0 -t 12.18.3 -t 13.14.0 -t 14.14.0 -t 15.11.0 -t 16.13.0 -t 17.0.1 -t 18.7.0 -t 19.2.0 --strip "
-        }
+        },
+            {
+              "type": "typescript",
+              "tsconfig": "tsconfig.json",
+              "option": "watch",
+              "problemMatcher": ["$tsc-watch"],
+              "group": {
+                "kind": "build",
+                "isDefault": true
+              },
+              "label": "tsc: watch - tsconfig.json"
+            }
     ]
 }

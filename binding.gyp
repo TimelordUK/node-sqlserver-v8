@@ -11,7 +11,7 @@
             'OS=="linux"',
             {
                 "variables": {
-                    "cflags_cpp": "-std=c++20",
+                    "cflags_cpp": "-std=c++20 -fexceptions",
                     "arch%": "<!(uname -m)",
                 }
             },
@@ -45,10 +45,22 @@
             "msvs_settings": {
                 "VCCLCompilerTool": {
                     "ExceptionHandling": 1,
-                    "AdditionalOptions": ["/std:c++20"],
+                    "AdditionalOptions": [
+                        "/std:c++20",
+                        "/D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS"
+                    ],
                 }
             },
-            "target_name": "sqlserverv8",
+            "target_name": "sqlserver",
+            "make_global_settings": [
+                ["make_flags", "-j2"]
+            ],
+            "defines": [
+                # "NAPI_DISABLE_CPP_EXCEPTIONS",
+                # Uncomment the next line to use Node-API instead of NAN
+                # "CONNECTION_USE_NODE_API",
+                 "BOUNDDATUM_USE_NODE_API",
+            ],
             "variables": {
                 # Set the target variable only if it is not passed in by prebuild
                 "target%": '<!(node -e "console.log(process.versions.node)")',
@@ -89,26 +101,53 @@
                 # enumerate the cpp src files rather than name them.
                 "fileset%": [
                     '<!@(node -p "'
-                    "require('fs')"
-                    ".readdirSync('./src')"
+                    "['cpp/binding.cpp']"
+                    ".concat("
+                    "require('fs').readdirSync('./cpp/src/common').map(f => 'cpp/src/common/'+f),"
+                    "require('fs').readdirSync('./cpp/src/core').map(f => 'cpp/src/core/'+f),"
+                    "require('fs').readdirSync('./cpp/src/js').map(f => 'cpp/src/js/'+f),"
+                    "require('fs').readdirSync('./cpp/src/js/workers').map(f => 'cpp/src/js/workers/'+f),"
+                    "require('fs').readdirSync('./cpp/src/js/columns').map(f => 'cpp/src/js/columns/'+f),"
+                    "require('fs').readdirSync('./cpp/src/odbc').map(f => 'cpp/src/odbc/'+f),"
+                    "require('fs').readdirSync('./cpp/src/utils').map(f => 'cpp/src/utils/'+f)"
+                    ")"
                     ".filter(x => x.endsWith('<(ext)'))"
-                    ".map(f => 'src/'+f)"
                     ".join(' ')"
                     '")'
                 ],
             },
             "sources": ["<!@(node -p \"'<(fileset)'" ".split(' ')" ".join(' ')\")"],
             "include_dirs": [
-                "<!(node -e \"require('nan')\")",
-                "src",
+                "<!(node -p \"require('node-addon-api').include_dir\")",
+                "cpp",
+                "cpp/include",
+                "cpp/include/common",
+                "cpp/include/core",
+                "cpp/include/js",
+                "cpp/include/js/workers",
+                "cpp/include/js/columns",
+                "cpp/include/odbc",
+                "cpp/include/utils",
             ],
-            "defines": ["NODE_GYP_V4"],
+            "defines": [
+            "NODE_GYP_V4",
+
+            ],
             "actions": [
                 {
                     "action_name": "print_variables",
-                    "action": [
-                        "echo",
-                        "cflags_cpp <(cflags_cpp) | arch: <(arch) | link_path: <(link_path) | msodbc_include_folders <(msodbc_include_folders) | fileset <(fileset)",
+                    "conditions": [
+                        ['OS=="win"', {
+                            "action": [
+                                "echo",
+                                "compiler: MSVC | cflags_cpp <(cflags_cpp) | arch: <(arch) | link_path: <(link_path) | msodbc_include_folders <(msodbc_include_folders) | fileset <(fileset)",
+                            ],
+                        }, {
+                            "action": [
+                                "echo", 
+                                "compiler: <!(echo ${CC:-gcc}) <!(echo ${CXX:-g++}) | cflags_cpp <(cflags_cpp) | arch: <(arch) | link_path: <(link_path) | msodbc_include_folders <(msodbc_include_folders) | fileset <(fileset)",
+                            ],
+                        }]
                     ],
                     "inputs": [],
                     "outputs": ["<!@(node -p \"'<(fileset)'.split(' ')[0]\")"],
@@ -145,6 +184,10 @@
                         "defines": [
                             "UNICODE=1",
                             "WINDOWS_BUILD",
+                            "_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS",
+                            # "BOUNDDATUM_USE_NODE_API",
+                                # Uncomment the next line to use Node-API instead of NAN
+                            # "CONNECTION_USE_NODE_API",
                         ],
                     },
                 ],
@@ -157,10 +200,17 @@
                                 "<(linuxodbc)",
                             ],
                         },
-                        "defines": ["LINUX_BUILD", "UNICODE"],
+                        "defines": ["LINUX_BUILD", "UNICODE","NAPI_CPP_EXCEPTIONS"],
                         "cflags_cc": ["<(cflags_cpp)"],
                         "cflags": ["-U_FORTIFY_SOURCE", "-fno-lto"],
-                        "ldflags": ["-fno-lto"],
+                        "conditions": [
+                            ['<!(which gcc-10 2>/dev/null && echo 1 || echo 0)'=='1', {
+                                "make_global_settings": [
+                                    ["CC", "gcc-10"],
+                                    ["CXX", "g++-10"]
+                                ]
+                            }]
+                        ],
                         "include_dirs": [
                             "<!@(node -p \"'<(msodbc_include_folders)'.split(' ').join(' ')\")",
                             "/usr/include/",
@@ -177,9 +227,12 @@
                                 #'-lodbc'
                             ],
                         },
-                        "defines": ["LINUX_BUILD", "UNICODE"],
+                        "defines": ["LINUX_BUILD", "UNICODE", "NAPI_CPP_EXCEPTIONS"],
                         "xcode_settings": {
-                            "CLANG_CXX_LANGUAGE_STANDARD": "<(cflags_cpp)"
+                            "CLANG_CXX_LANGUAGE_STANDARD": "<(cflags_cpp)",
+                            "GCC_ENABLE_CPP_EXCEPTIONS": "YES",
+                            "GCC_ENABLE_CPP_RTTI": "YES",
+                            "OTHER_CPLUSPLUSFLAGS": ["-fexceptions"]
                         },
                         "include_dirs": [
                             "<!@(node -p \"'<(msodbc_include_folders)'.split(' ').join(' ')\")",
