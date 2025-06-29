@@ -170,6 +170,13 @@ class StatementStateChange {
   std::string oldState;
   std::string newState;
 
+  // Default constructor
+  StatementStateChange() = default;
+
+  // Constructor with parameters
+  StatementStateChange(const StatementHandle& handle, const std::string& old_state, const std::string& new_state)
+      : statementHandle(handle), oldState(old_state), newState(new_state) {}
+
   std::string toString() const {
     return "StatementStateChange: " + statementHandle.toString() + " " + oldState + " -> " +
            newState;

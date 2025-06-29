@@ -26,10 +26,10 @@ class OdbcAsyncWorker : public Napi::AsyncWorker {
   Napi::Object GetMetadata();
 
   // Pure virtual method that derived classes must implement
-  virtual void Execute() = 0;
+  void Execute() override = 0;
 
   // Common implementation of OnOK that can be overridden if needed
-  virtual void OnOK() = 0;
+  void OnOK() override = 0;
 
   // Common implementation of OnError that can be overridden if needed
 };
