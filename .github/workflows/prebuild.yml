@@ -1,18 +1,19 @@
 name: Prebuild Binaries
 
 on:
-  push:
-    branches: [n_api, master]
-    tags:
-      - 'v*'
-  pull_request:
-    branches: [n_api, master]
   workflow_dispatch:  # Allow manual triggering
     inputs:
       release_tag:
         description: 'Release tag to upload prebuilds to (e.g., v5.0.0)'
         required: false
         type: string
+
+#  push:
+ #   branches: [n_api, master]
+#  tags:
+#      - 'v*'
+#  pull_request:
+#    branches: [n_api, master]
 
 jobs:
   prebuild-node:
@@ -240,6 +241,14 @@ jobs:
         TOTAL=$(find prebuilds-artifacts -name "*.node" -o -name "*.tar.gz" | wc -l)
         echo "Total prebuilds created: $TOTAL"
 
+    # Show input parameters
+    - name: Show Workflow Inputs
+      run: |
+        echo "=== Workflow dispatch inputs ==="
+        echo "Event name: ${{ github.event_name }}"
+        echo "Release tag input: '${{ github.event.inputs.release_tag }}'"
+        echo "Will upload to release: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag != '' }}"
+
     # Upload to existing release when manually triggered with a release tag
     - name: Upload to Existing Release
       if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag != ''
@@ -252,12 +261,18 @@ jobs:
         mkdir -p upload-staging
         find prebuilds-artifacts -name "*.tar.gz" -exec cp {} upload-staging/ \;
         
+        # List files to upload
+        echo "Files to upload:"
+        ls -la upload-staging/
+        
         # Upload each file to the release
         cd upload-staging
         for file in *.tar.gz; do
           echo "Uploading $file..."
           gh release upload "${{ github.event.inputs.release_tag }}" "$file" --clobber
         done
+        
+        echo "Upload complete!"
         
     # Create a draft release for testing (when no release tag specified)
     - name: Create Draft Release with Prebuilds
