@@ -187,14 +187,25 @@ jobs:
       working-directory: node_modules/msnodesqlv8
       run: |
         echo "Testing basic module loading on macOS..."
+        echo "Checking directory structure..."
+        ls -la
+        ls -la lib/ || echo "lib directory not found"
         node -e "
         try {
-          const sql = require('./lib/sqlserver.js');
+          const sql = require('./lib/index.js');
           console.log('✅ Module loaded successfully on macOS');
-          console.log('Native addon loaded:', !!sql.driver);
+          console.log('Module exports:', Object.keys(sql));
         } catch (err) {
           console.error('❌ Module load failed:', err.message);
-          process.exit(1);
+          console.error('Trying alternative path...');
+          try {
+            const sql2 = require('./');
+            console.log('✅ Module loaded via package.json main');
+            console.log('Module exports:', Object.keys(sql2));
+          } catch (err2) {
+            console.error('❌ Alternative load failed:', err2.message);
+            process.exit(1);
+          }
         }
         "
 
