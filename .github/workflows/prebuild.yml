@@ -27,7 +27,7 @@ jobs:
     name: Prebuild Node ${{ matrix.node }} on ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-2022, macos-latest]
+        os: [ubuntu-22.04, windows-2022, macos-latest]
         node: [20, 22, 23, 24]
     runs-on: ${{ matrix.os }}
 
@@ -120,7 +120,7 @@ jobs:
     name: Prebuild Electron ${{ matrix.electron }} on ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-2022, macos-latest]
+        os: [ubuntu-22.04, windows-2022, macos-latest]
         electron: [32, 33, 34, 35, 36]
     runs-on: ${{ matrix.os }}
 
@@ -288,7 +288,7 @@ jobs:
         echo ""
         echo "📋 Automated prebuilds uploaded for:"
         echo "   • Windows (win32-x64)"
-        echo "   • Linux glibc 2.31+ (linux-x64, built on Ubuntu 20.04)" 
+        echo "   • Linux glibc 2.35+ (linux-x64, built on Ubuntu 22.04)" 
         echo "   • macOS Apple Silicon (darwin-arm64)"
         echo "   • Node.js versions: 20, 22, 23, 24"
         echo "   • Electron versions: 32, 33, 34, 35, 36"
