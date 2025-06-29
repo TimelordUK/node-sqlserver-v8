@@ -1,0 +1,19 @@
+name: Test Manual Trigger
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_input:
+        description: 'Test input'
+        required: false
+        type: string
+        default: 'hello'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test
+        run: |
+          echo "Test input: ${{ inputs.test_input }}"
+          echo "Manual trigger works!"
