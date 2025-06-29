@@ -1,14 +1,54 @@
+# IDE files
 .idea/
 .vscode/
+
+# Test and coverage files
 .nyc_output/
 coverage/
-dist/
 mochawesome-report/
-build/
-prebuilds/
-samples/
 test/
+runtest.js
+
+# Build artifacts
+build/
+dist/
+prebuilds/
+
+# Dependencies (not needed in published package)
+node_modules/
+
+# Sample code and tools
+samples/
 tool/
+
+# CI/Development files
 .npmignore
 appveyor.yml
-runtest.js
+.github/
+
+# Log files
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+
+# Build artifacts (Windows)
+*.obj
+*.tlog
+*.pdb
+*.ilk
+*.exp
+*.idb
+
+# Documentation build
+docs/

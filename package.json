@@ -26,8 +26,8 @@
   },
   "files": [
     "lib/",
-    "build/Release/",
-    "binding.gyp"
+    "binding.gyp",
+    "cpp/"
   ],
   "maintainers": [
     {
