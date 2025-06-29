@@ -5,7 +5,7 @@
             {
                 "variables": {
                     "arch%": "<!(uname -m)",
-                    "cflags_cpp": "gnu++20",
+                    "cflags_cpp": "-std=gnu++20 -fexceptions",
                 }
             },
             'OS=="linux"',
@@ -56,7 +56,7 @@
                 ["make_flags", "-j2"]
             ],
             "defines": [
-                 "NAPI_DISABLE_CPP_EXCEPTIONS",
+                # "NAPI_DISABLE_CPP_EXCEPTIONS",
                 # Uncomment the next line to use Node-API instead of NAN
                 # "CONNECTION_USE_NODE_API",
                  "BOUNDDATUM_USE_NODE_API",
@@ -227,9 +227,12 @@
                                 #'-lodbc'
                             ],
                         },
-                        "defines": ["LINUX_BUILD", "UNICODE"],
+                        "defines": ["LINUX_BUILD", "UNICODE", "NAPI_CPP_EXCEPTIONS"],
                         "xcode_settings": {
-                            "CLANG_CXX_LANGUAGE_STANDARD": "<(cflags_cpp)"
+                            "CLANG_CXX_LANGUAGE_STANDARD": "<(cflags_cpp)",
+                            "GCC_ENABLE_CPP_EXCEPTIONS": "YES",
+                            "GCC_ENABLE_CPP_RTTI": "YES",
+                            "OTHER_CPLUSPLUSFLAGS": ["-fexceptions"]
                         },
                         "include_dirs": [
                             "<!@(node -p \"'<(msodbc_include_folders)'.split(' ').join(' ')\")",
