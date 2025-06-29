@@ -46,6 +46,11 @@
 #include <sqltypes.h>
 #include <sqlucode.h>
 #include <msodbcsql.h>  // For SQL_SS_* types
+
+// Define DBBIT for macOS (not defined in standard ODBC headers)
+#ifndef DBBIT
+typedef unsigned char DBBIT;
+#endif
 #endif
 
 // SQL Server specific types that might not be defined in older headers
