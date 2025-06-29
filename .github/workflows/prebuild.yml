@@ -14,18 +14,18 @@ jobs:
     name: Prebuild Node ${{ matrix.node }} on ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-2022, macos-12]
+        os: [ubuntu-latest, windows-2022, macos-15]
         node: [20, 22, 23, 24]
     runs-on: ${{ matrix.os }}
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node }}
-    
+
     # Linux specific setup
     - name: Install Linux dependencies
       if: runner.os == 'Linux'
@@ -33,16 +33,16 @@ jobs:
         # Add Microsoft repository
         curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
         curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
-        
+
         # Install dependencies
         sudo apt-get update
         sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18 unixodbc-dev gcc-10 g++-10
-        
+
         # Set compiler
         echo "CC=gcc-10" >> $GITHUB_ENV
         echo "CXX=g++-10" >> $GITHUB_ENV
-    
-    # Windows specific setup  
+
+    # Windows specific setup
     - name: Install Windows dependencies
       if: runner.os == 'Windows'
       shell: powershell
@@ -50,9 +50,9 @@ jobs:
         # ODBC Driver 18 for SQL Server should already be installed on Windows runners
         # Just verify it exists
         Get-OdbcDriver -Name "*SQL Server*"
-    
+
     # macOS specific setup
-    - name: Install macOS dependencies  
+    - name: Install macOS dependencies
       if: runner.os == 'macOS'
       run: |
         brew install unixodbc
@@ -60,19 +60,19 @@ jobs:
         brew tap microsoft/mssql-release https://github.com/Microsoft/homebrew-mssql-release
         brew update
         ACCEPT_EULA=Y brew install msodbcsql18 mssql-tools18
-    
+
     - name: Install npm dependencies
       run: npm install
-    
+
     - name: Prebuild binaries
       run: npx prebuild --strip
-    
+
     - name: Upload to GitHub Release
       if: startsWith(github.ref, 'refs/tags/')
       run: npx prebuild --upload-all -u ${{ secrets.GITHUB_TOKEN }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -86,15 +86,15 @@ jobs:
         os: [ubuntu-20.04, windows-2022, macos-12]
         electron: [32, 33, 34, 35, 36]
     runs-on: ${{ matrix.os }}
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: 20  # Use a stable Node version for Electron builds
-    
+
     # Linux specific setup (same as above)
     - name: Install Linux dependencies
       if: runner.os == 'Linux'
@@ -105,33 +105,33 @@ jobs:
         sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18 unixodbc-dev gcc-10 g++-10
         echo "CC=gcc-10" >> $GITHUB_ENV
         echo "CXX=g++-10" >> $GITHUB_ENV
-    
+
     - name: Install Windows dependencies
       if: runner.os == 'Windows'
       shell: powershell
       run: |
         Get-OdbcDriver -Name "*SQL Server*"
-    
-    - name: Install macOS dependencies  
+
+    - name: Install macOS dependencies
       if: runner.os == 'macOS'
       run: |
         brew install unixodbc
         brew tap microsoft/mssql-release https://github.com/Microsoft/homebrew-mssql-release
         brew update
         ACCEPT_EULA=Y brew install msodbcsql18 mssql-tools18
-    
+
     - name: Install npm dependencies
       run: npm install
-    
+
     - name: Prebuild Electron binaries
       run: npx prebuild -r electron -t ${{ matrix.electron }}.0.0 --strip
-    
+
     - name: Upload to GitHub Release
       if: startsWith(github.ref, 'refs/tags/')
       run: npx prebuild -r electron --upload-all -u ${{ secrets.GITHUB_TOKEN }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -141,21 +141,21 @@ jobs:
   test-prebuilds:
     name: Test prebuilds
     needs: [prebuild-node, prebuild-electron]
-    runs-on: ubuntu-20.04
-    
+    runs-on: ubuntu-latest
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Download all artifacts
       uses: actions/download-artifact@v4
       with:
         path: prebuilds-artifacts/
-    
+
     - name: List all prebuilds
       run: |
         echo "=== All prebuild artifacts ==="
         find prebuilds-artifacts -name "*.node" -o -name "*.tar.gz" | sort
-        
+
     - name: Count prebuilds
       run: |
         TOTAL=$(find prebuilds-artifacts -name "*.node" -o -name "*.tar.gz" | wc -l)
