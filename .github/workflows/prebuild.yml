@@ -1,12 +1,14 @@
 name: Prebuild Binaries
 
+# Allow manual triggering
 on:
-  workflow_dispatch:  # Allow manual triggering
+  workflow_dispatch:
     inputs:
       release_tag:
         description: 'Release tag to upload prebuilds to (e.g., v5.0.0)'
-        required: true
+        required: false
         type: string
+        default: 'v5.0.0'
 
 #  push:
  #   branches: [n_api, master]
