@@ -2,6 +2,7 @@
 
 #include <utils/Logger.h>
 #include <common/odbc_common.h>
+#include <common/string_utils.h>
 #include <js/Connection.h>
 #include <js/js_object_mapper.h>
 #include <odbc/odbc_connection.h>
@@ -17,12 +18,20 @@ OpenWorker::OpenWorker(Napi::Function& callback,
       parent_(parent),
       connectionString_(connectionString),
       connectionId_(-1) {
+#ifdef __APPLE__
+  SQL_LOG_DEBUG_U16STREAM("OpenWorker constructor for connection: " << StringUtils::U16StringToUtf8(connectionString_));
+#else
   SQL_LOG_DEBUG_U16STREAM("OpenWorker constructor for connection: " << connectionString_);
+#endif
 }
 
 void OpenWorker::Execute() {
   try {
+#ifdef __APPLE__
+    SQL_LOG_DEBUG_U16STREAM("Executing OpenWorker for connection: " << StringUtils::U16StringToUtf8(connectionString_));
+#else
     SQL_LOG_DEBUG_U16STREAM("Executing OpenWorker for connection: " << connectionString_);
+#endif
 
     if (!connection_->Open(connectionString_, 0)) {
       SetError("Failed to open connection");

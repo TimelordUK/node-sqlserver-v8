@@ -215,6 +215,17 @@ class Logger {
     }                                                                       \
   } while (0)
 
+#ifdef __APPLE__
+// macOS doesn't support std::ctype<char16_t>, so convert to regular string
+#define SQL_LOG_INFO_U16STREAM(expr)                                     \
+  do {                                                                   \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Info)) { \
+      std::ostringstream oss;                                             \
+      oss << expr;                                                        \
+      mssql::Logger::GetInstance().Info(oss.str());                       \
+    }                                                                    \
+  } while (0)
+#else
 #define SQL_LOG_INFO_U16STREAM(expr)                                     \
   do {                                                                   \
     if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Info)) { \
@@ -223,7 +234,18 @@ class Logger {
       mssql::Logger::GetInstance().Info(u16oss.str());                   \
     }                                                                    \
   } while (0)
+#endif
 
+#ifdef __APPLE__
+#define SQL_LOG_DEBUG_U16STREAM(expr)                                     \
+  do {                                                                    \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Debug)) { \
+      std::ostringstream oss;                                             \
+      oss << expr;                                                        \
+      mssql::Logger::GetInstance().Debug(oss.str());                      \
+    }                                                                     \
+  } while (0)
+#else
 #define SQL_LOG_DEBUG_U16STREAM(expr)                                     \
   do {                                                                    \
     if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Debug)) { \
@@ -232,7 +254,18 @@ class Logger {
       mssql::Logger::GetInstance().Debug(u16oss.str());                   \
     }                                                                     \
   } while (0)
+#endif
 
+#ifdef __APPLE__
+#define SQL_LOG_TRACE_U16STREAM(expr)                                     \
+  do {                                                                    \
+    if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Trace)) { \
+      std::ostringstream oss;                                             \
+      oss << expr;                                                        \
+      mssql::Logger::GetInstance().Trace(oss.str());                      \
+    }                                                                     \
+  } while (0)
+#else
 #define SQL_LOG_TRACE_U16STREAM(expr)                                     \
   do {                                                                    \
     if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Trace)) { \
@@ -241,6 +274,7 @@ class Logger {
       mssql::Logger::GetInstance().Trace(u16oss.str());                   \
     }                                                                     \
   } while (0)
+#endif
 
 // Function entry/exit logging helpers
 #define SQL_LOG_FUNC_ENTRY()                                              \

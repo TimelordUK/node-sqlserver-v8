@@ -89,7 +89,7 @@ jobs:
     name: Prebuild Electron ${{ matrix.electron }} on ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-2022, macos-latest]
+        os: [ubuntu-latest, windows-2022, macos-latest]
         electron: [32, 33, 34, 35, 36]
     runs-on: ${{ matrix.os }}
 
