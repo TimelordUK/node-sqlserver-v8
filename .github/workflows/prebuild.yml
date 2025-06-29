@@ -8,6 +8,11 @@ on:
   pull_request:
     branches: [n_api, master]
   workflow_dispatch:  # Allow manual triggering
+    inputs:
+      release_tag:
+        description: 'Release tag to upload prebuilds to (e.g., v5.0.0)'
+        required: false
+        type: string
 
 jobs:
   prebuild-node:
@@ -86,9 +91,27 @@ jobs:
           Write-Host "prebuilds directory not found"
         }
 
+    - name: Debug GitHub ref
+      run: |
+        echo "GitHub ref: ${{ github.ref }}"
+        echo "Is tag: ${{ startsWith(github.ref, 'refs/tags/') }}"
+        echo "GitHub event name: ${{ github.event_name }}"
+
     - name: Upload to GitHub Release
       if: startsWith(github.ref, 'refs/tags/')
-      run: npx prebuild --upload-all
+      run: |
+        echo "Uploading prebuilds to GitHub release..."
+        echo "Current tag: ${{ github.ref_name }}"
+        npx prebuild --upload-all --tag-prefix v
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    # Alternative: Upload to a specific release when running manually
+    - name: Upload to Specific Release (Manual)
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag != ''
+      run: |
+        echo "Uploading prebuilds to release: ${{ github.event.inputs.release_tag }}"
+        npx prebuild --upload-all --tag-prefix v --target ${{ github.event.inputs.release_tag }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -164,9 +187,27 @@ jobs:
           Write-Host "prebuilds directory not found"
         }
 
+    - name: Debug GitHub ref (Electron)
+      run: |
+        echo "GitHub ref: ${{ github.ref }}"
+        echo "Is tag: ${{ startsWith(github.ref, 'refs/tags/') }}"
+        echo "GitHub event name: ${{ github.event_name }}"
+
     - name: Upload to GitHub Release
       if: startsWith(github.ref, 'refs/tags/')
-      run: npx prebuild -r electron --upload-all
+      run: |
+        echo "Uploading Electron prebuilds to GitHub release..."
+        echo "Current tag: ${{ github.ref_name }}"
+        npx prebuild -r electron --upload-all --tag-prefix v
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    # Alternative: Upload to a specific release when running manually
+    - name: Upload to Specific Release (Manual)
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag != ''
+      run: |
+        echo "Uploading Electron prebuilds to release: ${{ github.event.inputs.release_tag }}"
+        npx prebuild -r electron --upload-all --tag-prefix v --target ${{ github.event.inputs.release_tag }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -198,3 +239,39 @@ jobs:
       run: |
         TOTAL=$(find prebuilds-artifacts -name "*.node" -o -name "*.tar.gz" | wc -l)
         echo "Total prebuilds created: $TOTAL"
+
+    # Upload to existing release when manually triggered with a release tag
+    - name: Upload to Existing Release
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag != ''
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "Uploading prebuilds to existing release: ${{ github.event.inputs.release_tag }}"
+        
+        # Create a temporary directory and copy all tar.gz files
+        mkdir -p upload-staging
+        find prebuilds-artifacts -name "*.tar.gz" -exec cp {} upload-staging/ \;
+        
+        # Upload each file to the release
+        cd upload-staging
+        for file in *.tar.gz; do
+          echo "Uploading $file..."
+          gh release upload "${{ github.event.inputs.release_tag }}" "$file" --clobber
+        done
+        
+    # Create a draft release for testing (when no release tag specified)
+    - name: Create Draft Release with Prebuilds
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag == ''
+      uses: softprops/action-gh-release@v1
+      with:
+        draft: true
+        tag_name: test-${{ github.run_number }}
+        name: Test Release ${{ github.run_number }}
+        files: prebuilds-artifacts/**/*.tar.gz
+        body: |
+          This is a test release created by workflow run #${{ github.run_number }}.
+          
+          ## Prebuilds included:
+          - Node.js versions: 20, 22, 23, 24
+          - Electron versions: 32, 33, 34, 35, 36
+          - Platforms: Windows, Linux, macOS
