@@ -5,7 +5,7 @@
             {
                 "variables": {
                     "arch%": "<!(uname -m)",
-                    "cflags_cpp": "-std=gnu++20 -fexceptions",
+                    "cflags_cpp": "gnu++20",
                 }
             },
             'OS=="linux"',
