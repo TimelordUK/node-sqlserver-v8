@@ -10,7 +10,7 @@ on:
         type: string
         default: 'v5.0.0'
       create_release:
-        description: 'Create new release if it doesn\'t exist'
+        description: "Create new release if it doesn't exist"
         required: false
         type: boolean
         default: true
