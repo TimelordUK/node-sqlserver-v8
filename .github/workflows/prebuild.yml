@@ -285,6 +285,17 @@ jobs:
         fi
         
         echo "Upload complete! Uploaded $FILE_COUNT prebuilds."
+        echo ""
+        echo "📋 Automated prebuilds uploaded for:"
+        echo "   • Windows (win32-x64)"
+        echo "   • Linux glibc (linux-x64)" 
+        echo "   • macOS (darwin-arm64)"
+        echo "   • Node.js versions: 20, 22, 23, 24"
+        echo "   • Electron versions: 32, 33, 34, 35, 36"
+        echo ""
+        echo "ℹ️  Alpine Linux (musl) prebuilds must be built manually:"
+        echo "   npx prebuild --target alpine"
+        echo "   gh release upload ${{ github.event.inputs.release_tag }} *.tar.gz"
         
     # Create a draft release for testing (when no release tag specified)
     - name: Create Draft Release with Prebuilds
