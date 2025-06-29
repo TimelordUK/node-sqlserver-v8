@@ -67,11 +67,24 @@ jobs:
     - name: Prebuild binaries
       run: npx prebuild --strip
 
-    - name: List generated prebuilds
+    - name: List generated prebuilds (Unix)
+      if: runner.os != 'Windows'
       run: |
         echo "=== Generated prebuilds ==="
         find prebuilds -type f -name "*.tar.gz" 2>/dev/null || echo "No tar.gz files found"
         ls -la prebuilds/ || echo "prebuilds directory not found"
+
+    - name: List generated prebuilds (Windows)
+      if: runner.os == 'Windows'
+      shell: powershell
+      run: |
+        Write-Host "=== Generated prebuilds ==="
+        if (Test-Path prebuilds) {
+          Get-ChildItem -Path prebuilds -Filter "*.tar.gz" -Recurse | ForEach-Object { $_.FullName }
+          Get-ChildItem -Path prebuilds
+        } else {
+          Write-Host "prebuilds directory not found"
+        }
 
     - name: Upload to GitHub Release
       if: startsWith(github.ref, 'refs/tags/')
@@ -132,11 +145,24 @@ jobs:
     - name: Prebuild Electron binaries
       run: npx prebuild -r electron -t ${{ matrix.electron }}.0.0 --strip
 
-    - name: List generated Electron prebuilds
+    - name: List generated Electron prebuilds (Unix)
+      if: runner.os != 'Windows'
       run: |
         echo "=== Generated Electron prebuilds ==="
         find prebuilds -type f -name "*.tar.gz" 2>/dev/null || echo "No tar.gz files found"
         ls -la prebuilds/ || echo "prebuilds directory not found"
+
+    - name: List generated Electron prebuilds (Windows)
+      if: runner.os == 'Windows'
+      shell: powershell
+      run: |
+        Write-Host "=== Generated Electron prebuilds ==="
+        if (Test-Path prebuilds) {
+          Get-ChildItem -Path prebuilds -Filter "*.tar.gz" -Recurse | ForEach-Object { $_.FullName }
+          Get-ChildItem -Path prebuilds
+        } else {
+          Write-Host "prebuilds directory not found"
+        }
 
     - name: Upload to GitHub Release
       if: startsWith(github.ref, 'refs/tags/')

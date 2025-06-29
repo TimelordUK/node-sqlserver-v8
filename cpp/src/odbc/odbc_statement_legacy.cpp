@@ -21,7 +21,7 @@
 const int SQL_SERVER_MAX_STRING_SIZE = 8000;
 
 // default size to retrieve from a LOB field and we don't know the size
-const int LOB_PACKET_SIZE = 8192;
+// const int LOB_PACKET_SIZE = 8192;  // Currently unused
 
 namespace mssql {
 
@@ -1988,7 +1988,7 @@ bool OdbcStatementLegacy::lob(const size_t row_id, size_t column) {
   }
 
   // Track the total actual bytes of data we've read
-  SQLLEN total_bytes_read = 0;
+  // SQLLEN total_bytes_read = 0;  // Currently unused but kept for potential future use
 
   if (!check_odbc_error(r)) {
     SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] lob failed to get data " << r);
@@ -2004,10 +2004,10 @@ bool OdbcStatementLegacy::lob(const size_t row_id, size_t column) {
   // For the first read, if all data fit, total_bytes_to_read contains the actual byte count
   if (!more) {
     // All data fit in first read
-    total_bytes_read = capture.total_bytes_to_read;
+    // total_bytes_read = capture.total_bytes_to_read;
   } else {
     // Data didn't fit, we need to read in chunks
-    total_bytes_read = capture.bytes_to_read;
+    // total_bytes_read = capture.bytes_to_read;
   }
 
   capture.on_first_read();
@@ -2032,7 +2032,7 @@ bool OdbcStatementLegacy::lob(const size_t row_id, size_t column) {
     }
 
     // Add the bytes from this chunk
-    total_bytes_read += capture.bytes_to_read;
+    // total_bytes_read += capture.bytes_to_read;
 
     more = check_more_read(r, status);
     if (!status) {

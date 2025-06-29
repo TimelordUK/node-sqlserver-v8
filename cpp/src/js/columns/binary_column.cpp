@@ -19,7 +19,7 @@ Napi::Object BinaryColumn::ToString(Napi::Env env) {
   hex.reserve(len * 2);
   for (size_t i = 0; i < len; ++i) {
     char buf[3];
-    sprintf(buf, "%02X", static_cast<unsigned char>(s[i]));
+    snprintf(buf, sizeof(buf), "%02X", static_cast<unsigned char>(s[i]));
     hex += buf;
   }
   return Napi::String::New(env, hex).As<Napi::Object>();
