@@ -270,18 +270,25 @@ jobs:
             gh release upload "${{ github.event.inputs.release_tag }}" "$file" --clobber
           done
           
-          # Update release notes with auto-generated changelog
-          echo "Updating release notes..."
-          gh release edit "${{ github.event.inputs.release_tag }}" --generate-notes
+          # Note: Auto-generated notes only work when creating new releases
+          echo "Prebuilds uploaded to existing release (release notes unchanged)"
           
         else
           # Create new release with auto-generated notes and upload files
           echo "Creating new release with auto-generated notes..."
           cd upload-staging
-          gh release create "${{ github.event.inputs.release_tag }}" \
+          if gh release create "${{ github.event.inputs.release_tag }}" \
             --title "Release ${{ github.event.inputs.release_tag }}" \
             --generate-notes \
-            *.tar.gz
+            *.tar.gz 2>/dev/null; then
+            echo "Release created with auto-generated notes"
+          else
+            echo "Auto-generated notes not supported, creating release without notes..."
+            gh release create "${{ github.event.inputs.release_tag }}" \
+              --title "Release ${{ github.event.inputs.release_tag }}" \
+              --notes "Release ${{ github.event.inputs.release_tag }}" \
+              *.tar.gz
+          fi
         fi
         
         echo "Upload complete! Uploaded $FILE_COUNT prebuilds."
