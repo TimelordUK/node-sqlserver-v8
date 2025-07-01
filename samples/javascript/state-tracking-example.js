@@ -21,8 +21,10 @@ console.log('Logger configuration:', sql.logger.getConfiguration())
 
 // Example of using the logger in your code
 sql.logger.info('Starting SQL Server connection test')
-// Connection string - adjust to your SQL Server instance
-const connectionString = 'Driver={ODBC Driver 18 for SQL Server};Server=127.0.0.1,1433;Database=node;UID=node_user;PWD=StrongPassword123!;TrustServerCertificate=yes;;Connect Timeout=10'
+
+const { TestEnv } = require('../../test/env/test-env')
+const env = new TestEnv()
+const connectionString = env.connectionString
 
 async function trackStatementStates() {
   console.log('Opening connection...')
