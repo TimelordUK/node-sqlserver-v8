@@ -1,6 +1,6 @@
 'use strict'
 
-const sql = require('../lib/sql')
+const sql = require('../../lib/sql')
 
 // Example 1: Enable trace logging for debugging
 // This will show all JavaScript and C++ debug messages
@@ -19,7 +19,10 @@ sql.logger.setConsoleLogging(true)
 // sql.logger.setLogLevel(sql.LogLevel.SILENT)
 
 // Now all SQL operations will use the configured logging
-const connectionString = 'your-connection-string-here'
+
+const { TestEnv } = require('../../test/env/test-env')
+const env = new TestEnv()
+const connectionString = env.connectionString
 
 sql.open(connectionString, (err, conn) => {
   if (err) {
