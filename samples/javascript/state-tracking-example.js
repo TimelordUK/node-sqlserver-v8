@@ -76,6 +76,8 @@ async function trackStatementStates () {
       queryStream.on('error', reject)
     })
 
+    const res = await connection.promises.query(query)
+    console.log(`${JSON.stringify(res.states, null, 2)}`)
     // Example with prepared statement to see different state transitions
     console.log('\n--- Prepared Statement Example ---')
     const ps = await connection.promises.prepare('select len(convert(varchar, ?)) as len')
