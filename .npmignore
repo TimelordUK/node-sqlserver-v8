@@ -28,15 +28,14 @@ appveyor.yml
 
 # Log files
 *.log
+**/*.log
 
 # CMake build artifacts
-CMakeFiles/
-CMakeCache.txt
-cmake_install.cmake
 cpp/CMakeFiles/
-cpp/CMakeCache.txt
-cpp/cmake_install.cmake
-cpp/CMakeTmp/
+CMakeFiles/
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/CMakeTmp/**
 
 # Temporary files
 tmp/
