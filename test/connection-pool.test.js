@@ -242,6 +242,245 @@ describe('pool', function () {
     await pp.close()
   })
 
+  describe('transactions', function () {
+    it('pool.beginTransaction with callback', function handler (done) {
+      const pool = env.pool(4)
+      const tableName = 'poolTranCallbackTest'
+
+      pool.open(() => {
+        pool.beginTransaction(async (err, description) => {
+          assert.ifError(err)
+          assert(description !== null)
+          assert(description.connection !== null)
+
+          // Clean up and create table
+          const drop = env.dropTableSql(tableName)
+          await description.connection.promises.query(drop)
+          await description.connection.promises.query(`create table ${tableName} (id int, val int)`)
+          await description.connection.promises.query(`insert into ${tableName} values (1, 10)`)
+
+          pool.commitTransaction(description, async (err) => {
+            assert.ifError(err)
+
+            // Verify data was committed
+            const res = await pool.promises.query(`select * from ${tableName}`)
+            expect(res.first.length).to.equal(1)
+            expect(res.first[0].val).to.equal(10)
+
+            await env.theConnection.promises.query(drop)
+            pool.close(done)
+          })
+        })
+      })
+    })
+
+    it('pool.rollbackTransaction with callback', function handler (done) {
+      const pool = env.pool(4)
+      const tableName = 'poolRollbackCallbackTest'
+
+      pool.open(async () => {
+        // First create the table outside transaction
+        const drop = env.dropTableSql(tableName)
+        await pool.promises.query(drop)
+        await pool.promises.query(`create table ${tableName} (id int, val int)`)
+        await pool.promises.query(`insert into ${tableName} values (1, 5)`)
+
+        pool.beginTransaction(async (err, description) => {
+          assert.ifError(err)
+
+          // Insert more data in transaction
+          await description.connection.promises.query(`insert into ${tableName} values (2, 10)`)
+
+          pool.rollbackTransaction(description, async (err) => {
+            assert.ifError(err)
+
+            // Verify rollback - should only have original row
+            const res = await pool.promises.query(`select * from ${tableName}`)
+            expect(res.first.length).to.equal(1)
+            expect(res.first[0].id).to.equal(1)
+
+            await env.theConnection.promises.query(drop)
+            pool.close(done)
+          })
+        })
+      })
+    })
+
+    it('pool.beginTransaction error - no callback provided', async function handler () {
+      const pool = env.pool(4)
+      await pool.promises.open()
+
+      expect(() => {
+        pool.beginTransaction()
+      }).to.throw('[msnodesql] Pool beginTransaction called with empty callback.')
+
+      await pool.promises.close()
+    })
+
+    it('pool.commitTransaction error - invalid description', async function handler () {
+      const pool = env.pool(4)
+      await pool.promises.open()
+
+      expect(() => {
+        pool.commitTransaction(null, () => {})
+      }).to.throw('Cannot read properties of null')
+
+      await pool.promises.close()
+    })
+
+    it('pool.rollbackTransaction error - invalid description', async function handler () {
+      const pool = env.pool(4)
+      await pool.promises.open()
+
+      expect(() => {
+        pool.rollbackTransaction({}, () => {})
+      }).to.throw('[msnodesql] Pool end transaction called with unknown or finished transaction.')
+
+      await pool.promises.close()
+    })
+
+    it('multiple concurrent transactions on pool', async function handler () {
+      const pool = env.pool(4)
+      const pp = await pool.promises
+      await pp.open()
+
+      const tableName1 = 'poolTranConcurrent1'
+      const tableName2 = 'poolTranConcurrent2'
+
+      // Clean up tables
+      await pp.query(env.dropTableSql(tableName1))
+      await pp.query(env.dropTableSql(tableName2))
+
+      // Start two transactions concurrently
+      const [t1, t2] = await Promise.all([
+        pp.beginTransaction(),
+        pp.beginTransaction()
+      ])
+
+      // Each transaction creates its own table
+      await t1.connection.promises.query(`create table ${tableName1} (id int)`)
+      await t2.connection.promises.query(`create table ${tableName2} (id int)`)
+
+      await t1.connection.promises.query(`insert into ${tableName1} values (1)`)
+      await t2.connection.promises.query(`insert into ${tableName2} values (2)`)
+
+      // Commit both
+      await Promise.all([
+        pp.commitTransaction(t1),
+        pp.commitTransaction(t2)
+      ])
+
+      // Verify both tables exist with data
+      const [res1, res2] = await Promise.all([
+        pp.query(`select * from ${tableName1}`),
+        pp.query(`select * from ${tableName2}`)
+      ])
+
+      expect(res1.first[0].id).to.equal(1)
+      expect(res2.first[0].id).to.equal(2)
+
+      // Clean up
+      await pp.query(env.dropTableSql(tableName1))
+      await pp.query(env.dropTableSql(tableName2))
+      await pp.close()
+    })
+
+    it('pool.promises.transaction with error and automatic rollback', async function handler () {
+      const pool = env.pool(4)
+      const pp = await pool.promises
+      await pp.open()
+
+      const tableName = 'poolTranErrorTest'
+      await pp.query(env.dropTableSql(tableName))
+      await pp.query(`create table ${tableName} (id int, val int)`)
+      await pp.query(`insert into ${tableName} values (1, 5)`)
+
+      let errorThrown = false
+      try {
+        await pp.transaction(async function (description) {
+          const cp = description.connection.promises
+          await cp.query(`insert into ${tableName} values (2, 10)`)
+          // Force an error
+          throw new Error('Intentional error for testing')
+        })
+      } catch (e) {
+        errorThrown = true
+        expect(e.message).to.equal('Intentional error for testing')
+      }
+
+      expect(errorThrown).to.be.true
+
+      // Verify rollback happened - should only have original row
+      const res = await pp.query(`select * from ${tableName}`)
+      expect(res.first.length).to.equal(1)
+      expect(res.first[0].id).to.equal(1)
+
+      await pp.query(env.dropTableSql(tableName))
+      await pp.close()
+    })
+
+    it('nested transactions behavior', async function handler () {
+      const pool = env.pool(4)
+      const pp = await pool.promises
+      await pp.open()
+
+      const tableName = 'poolNestedTranTest'
+      await pp.query(env.dropTableSql(tableName))
+      await pp.query(`create table ${tableName} (id int, val int)`)
+
+      const t1 = await pp.beginTransaction()
+      await t1.connection.promises.query(`insert into ${tableName} values (1, 10)`)
+
+      // SQL Server doesn't support true nested transactions, but we can test the behavior
+      await t1.connection.promises.query('BEGIN TRANSACTION')
+      await t1.connection.promises.query(`insert into ${tableName} values (2, 20)`)
+      await t1.connection.promises.query('COMMIT TRANSACTION')
+
+      await pp.commitTransaction(t1)
+
+      const res = await pp.query(`select * from ${tableName}`)
+      expect(res.first.length).to.equal(2)
+
+      await pp.query(env.dropTableSql(tableName))
+      await pp.close()
+    })
+
+    it('transaction with SELECT FOR UPDATE pattern', async function handler () {
+      const pool = env.pool(4)
+      const pp = await pool.promises
+      await pp.open()
+
+      const tableName = 'poolSelectForUpdateTest'
+      await pp.query(env.dropTableSql(tableName))
+      await pp.query(`create table ${tableName} (id int primary key, val int)`)
+      await pp.query(`insert into ${tableName} values (1, 100)`)
+
+      const description = await pp.beginTransaction()
+
+      // Select with lock hints for update
+      const locked = await description.connection.promises.query(`
+        SELECT * FROM ${tableName} WITH (UPDLOCK, HOLDLOCK)
+        WHERE id = 1
+      `)
+
+      expect(locked.first[0].val).to.equal(100)
+
+      // Update the locked row
+      await description.connection.promises.query(`
+        UPDATE ${tableName} SET val = 200 WHERE id = 1
+      `)
+
+      await pp.commitTransaction(description)
+
+      // Verify update
+      const res = await pp.query(`select * from ${tableName} where id = 1`)
+      expect(res.first[0].val).to.equal(200)
+
+      await pp.query(env.dropTableSql(tableName))
+      await pp.close()
+    })
+  })
+
   it('submit error queries on pool with no on.error catch', async function handler () {
     const pool = env.pool(4)
     await pool.promises.open()
