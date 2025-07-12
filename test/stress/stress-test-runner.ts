@@ -1,4 +1,4 @@
-import * as sql from 'msnodesqlv8/lib/sql'
+import * as sql from 'msnodesqlv8'
 import * as os from 'os'
 
 interface StressTestConfig {
