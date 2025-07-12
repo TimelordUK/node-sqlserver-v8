@@ -1,6 +1,7 @@
 #include <napi.h>
 #include "include/utils/Logger.h"
 #include "include/js/Connection.h"
+#include "include/common/platform.h"
 
 static Napi::Value SetLogLevel(const Napi::CallbackInfo &info)
 {
@@ -56,6 +57,9 @@ static Napi::Value SetLogFile(const Napi::CallbackInfo &info)
 // Initialize the module
 Napi::Object InitModule(Napi::Env env, Napi::Object exports)
 {
+  // Initialize platform-specific signal handlers
+  Platform::InitializeSignalHandlers();
+
   // Initialize and export the Connection class
   mssql::Connection::Init(env, exports);
   exports.Set("setLogLevel", Napi::Function::New(env, SetLogLevel));

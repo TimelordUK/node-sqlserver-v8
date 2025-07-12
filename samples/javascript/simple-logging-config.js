@@ -1,5 +1,10 @@
 'use strict'
 
+// Handle SIGPIPE gracefully when output is piped
+process.on('SIGPIPE', () => {
+  process.exit(0)
+})
+
 const sql = require('../../lib/sql')
 
 // Example 1: Enable trace logging for debugging

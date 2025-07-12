@@ -56,6 +56,7 @@ inline void UnlockMutex(PlatformMutex* mutex) {
 #elif defined(PLATFORM_LINUX) || defined(PLATFORM_MACOS)
 #include <pthread.h>
 #include <unistd.h>
+#include <signal.h>
 typedef pthread_mutex_t PlatformMutex;
 
 inline void InitializeMutex(PlatformMutex* mutex) {
@@ -117,3 +118,40 @@ class ScopedLock {
   ScopedLock(const ScopedLock&) = delete;
   ScopedLock& operator=(const ScopedLock&) = delete;
 };
+
+// Platform-specific signal handling
+namespace Platform {
+  // Initialize platform-specific signal handlers
+  inline void InitializeSignalHandlers() {
+#if defined(PLATFORM_LINUX) || defined(PLATFORM_MACOS)
+    // Ignore SIGPIPE on Unix-like systems to handle broken pipes gracefully
+    // This prevents the process from terminating when writing to a closed pipe
+    signal(SIGPIPE, SIG_IGN);
+#endif
+    // Windows doesn't have SIGPIPE, it returns EPIPE errors instead
+  }
+  
+  // Check if a stream is still valid for writing
+  template<typename Stream>
+  inline bool IsStreamGood(Stream& stream) {
+    return stream.good();
+  }
+  
+  // Safe stream write that handles broken pipes
+  template<typename Stream>
+  inline bool SafeStreamWrite(Stream& stream, const std::string& data) {
+    if (!IsStreamGood(stream)) {
+      return false;
+    }
+    
+    stream << data;
+    
+    // Only flush if the write succeeded
+    if (IsStreamGood(stream)) {
+      stream.flush();
+      return true;
+    }
+    
+    return false;
+  }
+}

@@ -1,4 +1,5 @@
 #include "Logger.h"
+#include "common/platform.h"
 
 #include <chrono>
 #include <codecvt>
@@ -21,8 +22,13 @@ Logger::Logger() {}
 Logger::~Logger() {
   // Flush console output before destruction
   if (logToConsole_) {
-    std::cout.flush();
-    std::cerr.flush();
+    // Only flush if streams are still good (handles EPIPE)
+    if (Platform::IsStreamGood(std::cout)) {
+      std::cout.flush();
+    }
+    if (Platform::IsStreamGood(std::cerr)) {
+      std::cerr.flush();
+    }
   }
   
   if (logFile_.is_open()) {
@@ -102,8 +108,11 @@ void Logger::Log(LogLevel level, const std::string& message) {
   logLine << "[" << timestamp.str() << "] [CPP] [" << threadId.str() << "] [" << levelStr << "] " << message;
 
   if (logToConsole_) {
-    std::cout << logLine.str() << std::endl;
-    std::cout.flush();  // Ensure immediate flush for Node.js termination
+    // Write to appropriate stream based on log level
+    std::ostream& out = (level <= LogLevel::Warning) ? std::cerr : std::cout;
+    
+    // Use platform-safe stream writing that handles broken pipes
+    Platform::SafeStreamWrite(out, logLine.str() + "\n");
   }
 
   if (logFile_.is_open()) {
