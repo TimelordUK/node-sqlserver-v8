@@ -6,12 +6,12 @@
 [![npm](https://img.shields.io/npm/dm/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
 [![npm](https://img.shields.io/npm/dy/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
 
-1. *new* Ubuntu, Debian Node v18, v20 - install openssl 3.2 see WIKI
+1. Ubuntu, Debian Node v20 - install openssl 3.2 see WIKI
 1. docker images see WIKI
-1. *new* support always on encryption via tables and procedures.
-1. *new* support Node v20, v21
-1. *new* support electron v24, v25, v26
-1. *new* read numerics as strings - see WIKI
+1. support always on encryption via tables and procedures.
+1. support Node >= v20,
+1. support electron >= 32
+1. read numerics as strings - see WIKI
 1. Sybase Adaptive Server Enterprise support - see WIKI
 1. thread worker support - see WIKI
 1. manually register tables
