@@ -1,0 +1,127 @@
+name: NPM Package Validation and Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (validate only, do not publish)'
+        required: true
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      tag:
+        description: 'NPM tag (latest, beta, next, etc.)'
+        required: true
+        default: 'latest'
+        type: string
+
+jobs:
+  validate-and-publish:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        registry-url: 'https://registry.npmjs.org'
+        
+    - name: Get package info
+      id: package
+      run: |
+        echo "name=$(node -p "require('./package.json').name")" >> $GITHUB_OUTPUT
+        echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+        
+    - name: Clean build artifacts
+      run: |
+        echo "🧹 Cleaning build artifacts..."
+        find . -name "CMakeFiles" -type d -exec rm -rf {} + 2>/dev/null || true
+        find . -name "CMakeCache.txt" -type f -delete 2>/dev/null || true
+        find . -name "cmake_install.cmake" -type f -delete 2>/dev/null || true
+        find . -name "CMakeTmp" -type d -exec rm -rf {} + 2>/dev/null || true
+        find . -name "*.log" -type f -delete 2>/dev/null || true
+        
+    - name: Create npm package
+      run: |
+        echo "📦 Creating npm package..."
+        npm pack
+        
+    - name: Validate package contents
+      id: validate
+      run: |
+        echo "🔍 Validating package contents..."
+        PACKAGE_FILE="${{ steps.package.outputs.name }}-${{ steps.package.outputs.version }}.tgz"
+        
+        # List all files in the package
+        echo "📋 Package contents:"
+        tar -tzf "$PACKAGE_FILE" | sort
+        
+        # Check for unwanted files
+        echo ""
+        echo "🚫 Checking for unwanted files..."
+        UNWANTED_FILES=$(tar -tzf "$PACKAGE_FILE" | grep -E "(CMakeFiles/|CMakeCache\.txt|cmake_install\.cmake|CMakeTmp/|\.log$|\.o$|\.obj$|\.a$|\.lib$|\.so$|\.dylib$|\.dll$|\.exe$|\.node$|\.pdb$|\.ilk$|\.exp$|\.idb$|\.tlog$|\.DS_Store|Thumbs\.db|\.swp$|\.swo$|~$)" || true)
+        
+        if [ ! -z "$UNWANTED_FILES" ]; then
+          echo "❌ Found unwanted files in package:"
+          echo "$UNWANTED_FILES"
+          echo "validation_passed=false" >> $GITHUB_OUTPUT
+          exit 1
+        else
+          echo "✅ No unwanted files found"
+          echo "validation_passed=true" >> $GITHUB_OUTPUT
+        fi
+        
+        # Show package size
+        echo ""
+        echo "📊 Package size: $(du -h "$PACKAGE_FILE" | cut -f1)"
+        
+        # Count files
+        FILE_COUNT=$(tar -tzf "$PACKAGE_FILE" | wc -l)
+        echo "📁 Total files: $FILE_COUNT"
+        
+    - name: Publish to NPM (if not dry run)
+      if: ${{ github.event.inputs.dry_run == 'false' }}
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      run: |
+        if [ -z "$NODE_AUTH_TOKEN" ]; then
+          echo "❌ NPM_TOKEN secret is not set. Please add it to your repository secrets."
+          echo "   Go to Settings > Secrets and variables > Actions"
+          echo "   Add a new secret named 'NPM_TOKEN' with your npm access token"
+          echo ""
+          echo "   To create an npm token:"
+          echo "   1. Login to npmjs.com"
+          echo "   2. Go to Access Tokens in your account settings"
+          echo "   3. Generate a new Classic Token with 'Publish' permissions"
+          exit 1
+        fi
+        
+        echo "🚀 Publishing to npm with tag: ${{ github.event.inputs.tag }}"
+        npm publish --tag ${{ github.event.inputs.tag }}
+        
+        echo "✅ Published successfully!"
+        echo "📦 View package: https://www.npmjs.com/package/${{ steps.package.outputs.name }}"
+        
+    - name: Summary
+      if: always()
+      run: |
+        echo "## 📋 Publish Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Package**: ${{ steps.package.outputs.name }}@${{ steps.package.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Tag**: ${{ github.event.inputs.tag }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Dry Run**: ${{ github.event.inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Validation**: ${{ steps.validate.outputs.validation_passed == 'true' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ github.event.inputs.dry_run }}" == "false" ] && [ "${{ steps.validate.outputs.validation_passed }}" == "true" ]; then
+          echo "- **Published**: ✅ Yes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎉 Package published successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "Install with: \`npm install ${{ steps.package.outputs.name }}@${{ github.event.inputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "- **Published**: ❌ No" >> $GITHUB_STEP_SUMMARY
+        fi
