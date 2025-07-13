@@ -1,4 +1,4 @@
-#include <platform.h>
+#include <common/platform.h>
 
 #include <cstring>  // For std::memcpy
 #include <common/odbc_common.h>
