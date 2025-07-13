@@ -181,6 +181,33 @@ declare namespace MsNodeSqlV8 {
      * the connection string used for each connection opened in pool
      */
     connectionString: string
+
+    /**
+     * strategy used when growing the pool to meet demand
+     * - 'aggressive': immediately create all needed connections (default)
+     * - 'gradual': create connections in fixed increments
+     * - 'exponential': create connections based on exponential growth factor
+     */
+    scalingStrategy?: 'aggressive' | 'gradual' | 'exponential'
+    
+    /**
+     * number of connections to create at once when using 'gradual' strategy
+     * minimum value: 1, default: 5
+     */
+    scalingIncrement?: number
+    
+    /**
+     * growth factor when using 'exponential' strategy
+     * range: 1.1 to 2.0, default: 1.5
+     */
+    scalingFactor?: number
+    
+    /**
+     * delay in milliseconds between connection creations
+     * used when scalingStrategy is not 'aggressive'
+     * minimum value: 0, default: 100
+     */
+    scalingDelay?: number
   }
 
   export interface QueryAggregatorResults {

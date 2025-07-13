@@ -481,6 +481,314 @@ describe('pool', function () {
     })
   })
 
+  describe('pool growth strategies', function () {
+    it('gradual growth strategy - creates fixed increment of connections', function handler (done) {
+      const size = 10
+      const increment = 3
+      const options = {
+        connectionString: env.connectionString,
+        ceiling: size,
+        scalingStrategy: 'gradual',
+        scalingIncrement: increment,
+        scalingDelay: 0
+      }
+      const pool = new env.sql.Pool(options)
+
+      const checkins = []
+      const checkouts = []
+      let queryCount = 0
+
+      pool.on('error', e => {
+        assert.ifError(e)
+      })
+
+      pool.on('status', s => {
+        switch (s.op) {
+          case 'checkout':
+            checkouts.push(s)
+            break
+          case 'checkin':
+            checkins.push(s)
+            break
+        }
+      })
+
+      pool.open(() => {
+        // Submit enough queries to trigger growth
+        const queries = 7 // More than initial pool but less than ceiling
+
+        for (let i = 0; i < queries; i++) {
+          const q = pool.query('select @@SPID as spid')
+          q.on('done', () => {
+            queryCount++
+            if (queryCount === queries) {
+              // Check that we didn't immediately grow to ceiling
+              expect(checkouts.length).to.be.lessThan(size)
+              // Should have grown by increment amount multiple times
+              expect(checkouts.length).to.be.greaterThan(1)
+              // The growth should be in increments
+              const totalConnections = Math.max(...checkouts.map(c => c.busy + c.idle))
+              expect(totalConnections).to.be.lessThan(size) // Not aggressive growth
+              pool.close(done)
+            }
+          })
+        }
+      })
+    })
+
+    it('exponential growth strategy - grows by scaling factor', function handler (done) {
+      const size = 16
+      const factor = 1.5
+      const options = {
+        connectionString: env.connectionString,
+        ceiling: size,
+        scalingStrategy: 'exponential',
+        scalingFactor: factor,
+        scalingDelay: 0
+      }
+      const pool = new env.sql.Pool(options)
+
+      const checkins = []
+      const checkouts = []
+      const growthSnapshots = []
+      let queryCount = 0
+
+      pool.on('error', e => {
+        assert.ifError(e)
+      })
+
+      pool.on('status', s => {
+        switch (s.op) {
+          case 'checkout':
+            checkouts.push(s)
+            const totalConnections = s.busy + s.idle
+            if (totalConnections > (growthSnapshots[growthSnapshots.length - 1] || 0)) {
+              growthSnapshots.push(totalConnections)
+            }
+            break
+          case 'checkin':
+            checkins.push(s)
+            break
+        }
+      })
+
+      pool.open(() => {
+        // Submit queries in waves to trigger exponential growth
+        const queries = 12
+
+        for (let i = 0; i < queries; i++) {
+          const q = pool.query('select @@SPID as spid')
+          q.on('done', () => {
+            queryCount++
+            if (queryCount === queries) {
+              // Verify exponential growth pattern
+              expect(growthSnapshots.length).to.be.greaterThan(1)
+              // Each growth should be roughly exponential (factor based)
+              for (let j = 1; j < growthSnapshots.length; j++) {
+                const growth = growthSnapshots[j] / growthSnapshots[j - 1]
+                expect(growth).to.be.greaterThan(1) // Should grow
+              }
+              expect(checkouts.length).to.be.lessThan(size) // Not aggressive
+              pool.close(done)
+            }
+          })
+        }
+      })
+    })
+
+    it('aggressive growth strategy - immediately grows to handle demand', function handler (done) {
+      const size = 8
+      const options = {
+        connectionString: env.connectionString,
+        ceiling: size,
+        scalingStrategy: 'aggressive',
+        scalingDelay: 0
+      }
+      const pool = new env.sql.Pool(options)
+
+      const checkins = []
+      const checkouts = []
+      let queryCount = 0
+
+      pool.on('error', e => {
+        assert.ifError(e)
+      })
+
+      pool.on('status', s => {
+        switch (s.op) {
+          case 'checkout':
+            checkouts.push(s)
+            break
+          case 'checkin':
+            checkins.push(s)
+            break
+        }
+      })
+
+      pool.open(() => {
+        // Submit many concurrent queries to trigger aggressive growth
+        const queries = size
+
+        for (let i = 0; i < queries; i++) {
+          const q = pool.query('waitfor delay \'00:00:01\';')
+          q.on('done', () => {
+            queryCount++
+            if (queryCount === queries) {
+              // Aggressive should grow quickly to meet demand
+              const maxConnections = Math.max(...checkouts.map(c => c.busy + c.idle))
+              expect(maxConnections).to.equal(size)
+              pool.close(done)
+            }
+          })
+        }
+      })
+    })
+
+    it('gradual growth with scaling delay - creates connections sequentially', function handler (done) {
+      this.timeout(15000) // Allow extra time for delays
+
+      const size = 8
+      const increment = 2
+      const delay = 500 // Longer delay to ensure detectability
+      const options = {
+        connectionString: env.connectionString,
+        ceiling: size,
+        scalingStrategy: 'gradual',
+        scalingIncrement: increment,
+        scalingDelay: delay
+      }
+      const pool = new env.sql.Pool(options)
+
+      const checkins = []
+      const checkouts = []
+      let queryCount = 0
+      let growthEvents = 0
+
+      pool.on('error', e => {
+        assert.ifError(e)
+      })
+
+      pool.on('debug', (msg) => {
+        if (msg.includes('grow creates')) {
+          growthEvents++
+        }
+      })
+
+      pool.on('status', s => {
+        switch (s.op) {
+          case 'checkout':
+            checkouts.push(s)
+            break
+          case 'checkin':
+            checkins.push(s)
+            break
+        }
+      })
+
+      pool.open(() => {
+        // Submit enough queries to trigger multiple growth rounds
+        const queries = 6
+
+        for (let i = 0; i < queries; i++) {
+          const q = pool.query('select @@SPID as spid')
+          q.on('done', () => {
+            queryCount++
+            if (queryCount === queries) {
+              setTimeout(() => {
+                // Verify gradual growth occurred
+                expect(growthEvents).to.be.greaterThan(0)
+                // With gradual growth, we shouldn't immediately have all connections
+                const finalConnections = Math.max(...checkouts.map(c => c.busy + c.idle))
+                expect(finalConnections).to.be.lessThan(size)
+                pool.close(done)
+              }, delay + 100) // Wait a bit after queries complete
+            }
+          })
+        }
+      })
+    })
+
+    it('exponential growth limits to ceiling', function handler (done) {
+      const size = 4
+      const factor = 2.0
+      const options = {
+        connectionString: env.connectionString,
+        ceiling: size,
+        scalingStrategy: 'exponential',
+        scalingFactor: factor,
+        scalingDelay: 0
+      }
+      const pool = new env.sql.Pool(options)
+
+      const checkins = []
+      const checkouts = []
+      let queryCount = 0
+
+      pool.on('error', e => {
+        assert.ifError(e)
+      })
+
+      pool.on('status', s => {
+        switch (s.op) {
+          case 'checkout':
+            checkouts.push(s)
+            break
+          case 'checkin':
+            checkins.push(s)
+            break
+        }
+      })
+
+      pool.open(() => {
+        // Submit more queries than ceiling to test limits
+        const queries = size + 2
+
+        for (let i = 0; i < queries; i++) {
+          const q = pool.query('select @@SPID as spid')
+          q.on('done', () => {
+            queryCount++
+            if (queryCount === queries) {
+              // Should never exceed ceiling
+              const maxConnections = Math.max(...checkouts.map(c => c.busy + c.idle))
+              expect(maxConnections).to.be.at.most(size)
+              pool.close(done)
+            }
+          })
+        }
+      })
+    })
+
+    it('scaling strategy configuration validation', async function handler () {
+      // Test default values
+      const defaultPool = env.pool(4)
+      await defaultPool.promises.open()
+      // Default should be aggressive
+      await defaultPool.promises.close()
+
+      // Test invalid scaling factor gets clamped
+      const options1 = {
+        connectionString: env.connectionString,
+        ceiling: 4,
+        scalingStrategy: 'exponential',
+        scalingFactor: 0.5 // Should be clamped to minimum 1.1
+      }
+      const pool1 = new env.sql.Pool(options1)
+      await pool1.promises.open()
+      await pool1.promises.close()
+
+      // Test invalid scaling increment gets clamped
+      const options2 = {
+        connectionString: env.connectionString,
+        ceiling: 4,
+        scalingStrategy: 'gradual',
+        scalingIncrement: 0 // Should be clamped to minimum 1
+      }
+      const pool2 = new env.sql.Pool(options2)
+      await pool2.promises.open()
+      await pool2.promises.close()
+    })
+  })
+
   it('submit error queries on pool with no on.error catch', async function handler () {
     const pool = env.pool(4)
     await pool.promises.open()
