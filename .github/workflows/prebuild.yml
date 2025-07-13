@@ -5,10 +5,10 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Release tag to upload prebuilds to (e.g., v5.0.0)'
+        description: 'Release tag to upload prebuilds to (leave empty to use package.json version)'
         required: false
         type: string
-        default: 'v5.0.0'
+        default: ''
       create_release:
         description: "Create new release if it doesn't exist"
         required: false
@@ -228,23 +228,39 @@ jobs:
         echo "=== Workflow dispatch inputs ==="
         echo "Event name: ${{ github.event_name }}"
         echo "Release tag input: '${{ github.event.inputs.release_tag }}'"
-        echo "Will upload to release: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag != '' }}"
 
-    # Upload to existing release when manually triggered with a release tag
-    - name: Upload to Existing Release
-      if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag != ''
+    # Determine release tag (from input or package.json)
+    - name: Determine Release Tag
+      id: release_tag
+      run: |
+        if [ -n "${{ github.event.inputs.release_tag }}" ]; then
+          RELEASE_TAG="${{ github.event.inputs.release_tag }}"
+          echo "Using provided release tag: $RELEASE_TAG"
+        else
+          # Extract version from package.json and add 'v' prefix
+          VERSION=$(node -p "require('./package.json').version")
+          RELEASE_TAG="v${VERSION}"
+          echo "Using package.json version: $RELEASE_TAG"
+        fi
+        echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
+        echo "Final release tag: $RELEASE_TAG"
+
+    # Upload to existing release when manually triggered
+    - name: Upload to Release
+      if: github.event_name == 'workflow_dispatch'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        echo "Uploading prebuilds to existing release: ${{ github.event.inputs.release_tag }}"
+        RELEASE_TAG="${{ steps.release_tag.outputs.release_tag }}"
+        echo "Uploading prebuilds to release: $RELEASE_TAG"
         
         # Check if release exists
         echo "Checking if release exists..."
-        if gh release view "${{ github.event.inputs.release_tag }}" >/dev/null 2>&1; then
-          echo "Release ${{ github.event.inputs.release_tag }} exists"
+        if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+          echo "Release $RELEASE_TAG exists"
           RELEASE_EXISTS=true
         else
-          echo "Release ${{ github.event.inputs.release_tag }} not found"
+          echo "Release $RELEASE_TAG not found"
           RELEASE_EXISTS=false
         fi
         
@@ -267,7 +283,7 @@ jobs:
           cd upload-staging
           for file in *.tar.gz; do
             echo "Uploading $file..."
-            gh release upload "${{ github.event.inputs.release_tag }}" "$file" --clobber
+            gh release upload "$RELEASE_TAG" "$file" --clobber
           done
           
           # Note: Auto-generated notes only work when creating new releases
@@ -277,16 +293,16 @@ jobs:
           # Create new release with auto-generated notes and upload files
           echo "Creating new release with auto-generated notes..."
           cd upload-staging
-          if gh release create "${{ github.event.inputs.release_tag }}" \
-            --title "Release ${{ github.event.inputs.release_tag }}" \
+          if gh release create "$RELEASE_TAG" \
+            --title "Release $RELEASE_TAG" \
             --generate-notes \
             *.tar.gz 2>/dev/null; then
             echo "Release created with auto-generated notes"
           else
             echo "Auto-generated notes not supported, creating release without notes..."
-            gh release create "${{ github.event.inputs.release_tag }}" \
-              --title "Release ${{ github.event.inputs.release_tag }}" \
-              --notes "Release ${{ github.event.inputs.release_tag }}" \
+            gh release create "$RELEASE_TAG" \
+              --title "Release $RELEASE_TAG" \
+              --notes "Release $RELEASE_TAG" \
               *.tar.gz
           fi
         fi
@@ -302,21 +318,4 @@ jobs:
         echo ""
         echo "ℹ️  Alpine Linux (musl) prebuilds must be built manually:"
         echo "   npx prebuild --target alpine"
-        echo "   gh release upload ${{ github.event.inputs.release_tag }} *.tar.gz"
-        
-    # Create a draft release for testing (when no release tag specified)
-    - name: Create Draft Release with Prebuilds
-      if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag == ''
-      uses: softprops/action-gh-release@v1
-      with:
-        draft: true
-        tag_name: test-${{ github.run_number }}
-        name: Test Release ${{ github.run_number }}
-        files: prebuilds-artifacts/**/*.tar.gz
-        body: |
-          This is a test release created by workflow run #${{ github.run_number }}.
-          
-          ## Prebuilds included:
-          - Node.js versions: 20, 22, 23, 24
-          - Electron versions: 32, 33, 34, 35, 36
-          - Platforms: Windows, Linux, macOS
+        echo "   gh release upload $RELEASE_TAG *.tar.gz"
