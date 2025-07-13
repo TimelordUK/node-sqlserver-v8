@@ -593,6 +593,54 @@ describe('bulk', function () {
     })
   })
 
+  describe('uniqueidentifier', function () {
+    async function tGuidWithNulls (proxy) {
+      const helper = env.typeTableHelper('uniqueidentifier', proxy)
+      const testGuids = [
+        '0E984725-C51C-4BF4-9960-E1C80E27ABA0',
+        '12345678-1234-5678-9ABC-123456789ABC',
+        'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE',
+        'F47AC10B-58CC-4372-A567-0E02B2C3D479'
+      ]
+      const expected = helper.getVec(10, i => i % 2 === 0 ? null : testGuids[i % testGuids.length])
+      const table = await helper.create()
+      await table.promises.insert(expected)
+      const res = await table.promises.select(expected)
+      assert.deepStrictEqual(expected, res)
+    }
+
+    it('connection: use tableMgr bulk insert uniqueidentifier vector - with nulls', async function handler () {
+      await tGuidWithNulls(env.theConnection)
+    })
+
+    it('pool: use tableMgr bulk insert uniqueidentifier vector - with nulls', async function handler () {
+      await env.asPool(tGuidWithNulls)
+    })
+
+    async function tGuidNoNulls (proxy) {
+      const helper = env.typeTableHelper('uniqueidentifier', proxy)
+      const testGuids = [
+        '0E984725-C51C-4BF4-9960-E1C80E27ABA0',
+        '12345678-1234-5678-9ABC-123456789ABC',
+        'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE',
+        'F47AC10B-58CC-4372-A567-0E02B2C3D479'
+      ]
+      const expected = helper.getVec(10, i => testGuids[i % testGuids.length])
+      const table = await helper.create()
+      await table.promises.insert(expected)
+      const res = await table.promises.select(expected)
+      assert.deepStrictEqual(expected, res)
+    }
+
+    it('connection: use tableMgr bulk insert uniqueidentifier vector - no nulls', async function handler () {
+      await tGuidNoNulls(env.theConnection)
+    })
+
+    it('pool: use tableMgr bulk insert uniqueidentifier vector - no nulls', async function handler () {
+      await env.asPool(tGuidNoNulls)
+    })
+  })
+
   describe('int', function () {
     async function t15 (proxy) {
       const helper = env.typeTableHelper('int', proxy)
@@ -1329,6 +1377,37 @@ describe('bulk', function () {
 
   it(`bulk insert/update/select bit column ${test2BatchSize}`, async function handler () {
     await bitTest(test2BatchSize, true, true)
+  })
+
+  async function guidTest (batchSize, selectAfterInsert, runUpdateFunction) {
+    const testGuids = [
+      '0E984725-C51C-4BF4-9960-E1C80E27ABA0',
+      '12345678-1234-5678-9ABC-123456789ABC',
+      'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE',
+      'F47AC10B-58CC-4372-A567-0E02B2C3D479'
+    ]
+    const params = {
+      columnType: 'uniqueidentifier',
+      buildFunction: i => testGuids[i % testGuids.length],
+      updateFunction: runUpdateFunction ? i => testGuids[(i + 1) % testGuids.length] : null,
+      check: selectAfterInsert,
+      deleteAfterTest: false,
+      batchSize
+    }
+
+    await simpleColumnBulkTest(params)
+  }
+
+  it(`bulk insert/select uniqueidentifier column batchSize ${test1BatchSize}`, async function handler () {
+    await guidTest(test1BatchSize, true, false)
+  })
+
+  it(`bulk insert/select uniqueidentifier column batchSize ${test2BatchSize}`, async function handler () {
+    await guidTest(test2BatchSize, true, false)
+  })
+
+  it(`bulk insert/update/select uniqueidentifier column batchSize ${test2BatchSize}`, async function handler () {
+    await guidTest(test2BatchSize, true, true)
   })
 
   async function decimalTest (batchSize, selectAfterInsert, deleteAfterTest, runUpdateFunction) {
