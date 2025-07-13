@@ -1866,6 +1866,7 @@ bool BoundDatum::user_bind(const Napi::Object& p, const Napi::Object& v) {
       break;
 
     case SQL_WVARCHAR:
+    case SQL_GUID:
       if (pp.IsString()) {
         bind_w_var_char(pp.As<Napi::Object>());
       } else if (pp.IsObject()) {
@@ -2184,7 +2185,7 @@ const Napi::String BoundDatum::unbind_string(const Napi::Env& env) const {
 
   // Convert UTF-16 to UTF-8 for N-API
   const auto* utf16_data = _storage->uint16vec_ptr->data();
-  
+
   // For output parameters, use the indicator to determine actual string length
   size_t len = _storage->uint16vec_ptr->size();
   if (param_type == SQL_PARAM_OUTPUT || param_type == SQL_PARAM_INPUT_OUTPUT) {

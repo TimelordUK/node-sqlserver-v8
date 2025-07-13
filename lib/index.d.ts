@@ -585,6 +585,11 @@ declare namespace MsNodeSqlV8 {
      */
     asVarChar: (length: number) => TableColumn
     /**
+     * nominate column as non-Unicode 'varchar(MAX)'
+     * @returns this column instance for fluent calls
+     */
+    asVarCharMax: () => TableColumn
+    /**
      * nominate column as 'date'
      * @returns this column instance for fluent calls
      */

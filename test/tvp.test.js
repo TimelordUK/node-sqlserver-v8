@@ -238,4 +238,137 @@ describe('tvp', function () {
     const res = await promises.query(`select * from ${tableName}`)
     expect(res.first).to.deep.equal(tvpr.vec)
   })
+
+  it('test inspectionFindingsData TVP issue - single vs multiple rows', async function handler () {
+    const promises = env.theConnection.promises
+    const tableName = 'inspectionFindingsData'
+
+    // Clean up any previous test artifacts first (this is the missing piece!)
+    await promises.query(`IF OBJECT_ID('testInspectionFindings', 'P') IS NOT NULL DROP PROCEDURE testInspectionFindings`).catch(() => {})
+    await promises.query(`IF TYPE_ID(N'dbo.inspectionFindingsDataType') IS NOT NULL DROP TYPE dbo.inspectionFindingsDataType`).catch(() => {})
+
+    // Test data - single row that was failing
+    const singleRowData = [{
+      uuid: 'A2FF83F2-963F-4553-8837-D785E20707E3',
+      inspectionUuid: 'ECA07CC2-DF99-4868-999A-F14A2CC1A949',
+      identifierChecklistUuid: 'D274B030-A019-4C00-8396-01E53388E5FE',
+      inquiryId: '58BF1BE5-3FB7-4562-A239-27AFE621317C',
+      inspectionFindingId: '420B660C-B959-4B2B-90D9-55ACB657D94D',
+      parentFindingId: null,
+      deadline: '',
+      requirementsValue: '["58BF1BE5-3FB7-4562-A239-27AFE621317C"]',
+      classificationValue: '["2CA61A42-6F25-48E3-84EF-424692E3E1CC"]',
+      title: 'Specific Rights',
+      text: '<p>Violation</p><p></p><p></p>',
+      correctionRequired: '1',
+      findingAddedBy: 'Matt Hoffman',
+      findingAddedOn: '04/17/2025',
+      displayOrder: 0
+    }]
+
+    // Use table builder to create the TVP
+    const mgr = env.theConnection.tableMgr()
+    const builder = mgr.makeBuilder(tableName)
+
+    // Define the table structure using builder
+    builder.addColumn('uuid').asUniqueIdentifier().notNull()
+    builder.addColumn('inspectionUuid').asUniqueIdentifier().notNull()
+    builder.addColumn('identifierChecklistUuid').asUniqueIdentifier().notNull()
+    builder.addColumn('inquiryId').asUniqueIdentifier().notNull()
+    builder.addColumn('inspectionFindingId').asUniqueIdentifier().null()
+    builder.addColumn('parentFindingId').asUniqueIdentifier().null()
+    builder.addColumn('deadline').asVarChar(50).null()
+    builder.addColumn('requirementsValue').asVarCharMax().null()
+    builder.addColumn('classificationValue').asVarCharMax().null()
+    builder.addColumn('title').asVarCharMax().null()
+    builder.addColumn('text').asVarCharMax().null()
+    builder.addColumn('correctionRequired').asVarChar(5).null()
+    builder.addColumn('findingAddedBy').asVarChar(100).null()
+    builder.addColumn('findingAddedOn').asVarChar(50).null()
+    builder.addColumn('displayOrder').asInt().null()
+
+    // Setup table and TVP using builder pattern (like BuilderChecker.checkTvp)
+    const table = builder.toTable()
+    await builder.drop()
+    await builder.create()
+
+    // Create the TVP type and procedure using builder-generated SQL
+    const procName = builder.insertTvpProcedureName
+    const dropType = builder.dropTypeSql
+    const userTypeSql = builder.userTypeTableSql
+    const tvpProcSql = builder.insertProcedureTvpSql
+
+    const prochelper = env.procTest({
+      name: procName,
+      sql: tvpProcSql
+    })
+
+    await prochelper.drop()
+    await promises.query(dropType)
+    await promises.query(userTypeSql)
+    await promises.query(tvpProcSql)
+
+    // Test with single row - this was failing in the original issue
+    const tvpTableSingle = await promises.getUserTypeTable(builder.typeName)
+    tvpTableSingle.addRowsFromObjects(singleRowData)
+    const tvpSingle = env.sql.TvpFromTable(tvpTableSingle)
+
+    try {
+      await promises.callProc(procName, [tvpSingle])
+      console.log('Single row TVP test passed')
+
+      // Verify the data was inserted correctly
+      const singleResult = await promises.query(`SELECT * FROM ${tableName}`)
+      expect(singleResult.first.length).to.equal(1)
+      expect(singleResult.first[0].uuid.toLowerCase()).to.equal(singleRowData[0].uuid.toLowerCase())
+    } catch (error) {
+      console.error('Single row TVP test failed:', error.message)
+      throw error
+    }
+
+    // Clear table for next test
+    await promises.query(`DELETE FROM ${tableName}`)
+
+    // Test with multiple rows - this was working in the original issue
+    const multiRowData = [...singleRowData, {
+      uuid: 'B3FF83F2-963F-4553-8837-D785E20707E4',
+      inspectionUuid: 'ECA07CC2-DF99-4868-999A-F14A2CC1A949',
+      identifierChecklistUuid: 'D274B030-A019-4C00-8396-01E53388E5FE',
+      inquiryId: '58BF1BE5-3FB7-4562-A239-27AFE621317C',
+      inspectionFindingId: '420B660C-B959-4B2B-90D9-55ACB657D94D',
+      parentFindingId: null,
+      deadline: '',
+      requirementsValue: '["58BF1BE5-3FB7-4562-A239-27AFE621317C"]',
+      classificationValue: '["2CA61A42-6F25-48E3-84EF-424692E3E1CC"]',
+      title: 'Another Finding',
+      text: '<p>Another Violation</p>',
+      correctionRequired: '1',
+      findingAddedBy: 'Jane Doe',
+      findingAddedOn: '04/18/2025',
+      displayOrder: 1
+    }]
+
+    const tvpTableMulti = await promises.getUserTypeTable(builder.typeName)
+    tvpTableMulti.addRowsFromObjects(multiRowData)
+    const tvpMulti = env.sql.TvpFromTable(tvpTableMulti)
+
+    try {
+      await promises.callProc(procName, [tvpMulti])
+      console.log('Multiple row TVP test passed')
+
+      // Verify the data was inserted correctly
+      const multiResult = await promises.query(`SELECT * FROM ${tableName} ORDER BY displayOrder`)
+      expect(multiResult.first.length).to.equal(2)
+      expect(multiResult.first[0].uuid.toLowerCase()).to.equal(multiRowData[0].uuid.toLowerCase())
+      expect(multiResult.first[1].uuid.toLowerCase()).to.equal(multiRowData[1].uuid.toLowerCase())
+    } catch (error) {
+      console.error('Multiple row TVP test failed:', error.message)
+      throw error
+    }
+
+    // Clean up
+    await prochelper.drop()
+    await promises.query(dropType)
+    await builder.drop()
+  })
 })
