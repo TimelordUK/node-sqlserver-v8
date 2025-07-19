@@ -1780,6 +1780,153 @@ declare namespace MsNodeSqlV8 {
     totalElapsedQueryMs: number
   }
 
+  export enum LogLevel {
+    SILENT = 0,
+    ERROR = 1,
+    WARNING = 2,
+    INFO = 3,
+    DEBUG = 4,
+    TRACE = 5
+  }
+
+  export interface LogConfiguration {
+    logLevel: number
+    logLevelName: string
+    consoleEnabled: boolean
+    fileEnabled: boolean
+    logFile: string | null
+  }
+
+  export interface Logger {
+    /**
+     * Initialize the logger with the native module
+     * @param nativeModule - The native C++ module
+     */
+    initialize(nativeModule: any): void
+
+    /**
+     * Set the log level for both JS and C++ loggers
+     * @param level - Log level (number or string like 'DEBUG')
+     */
+    setLogLevel(level: number | string): void
+
+    /**
+     * Enable or disable console logging
+     * @param enabled
+     */
+    setConsoleLogging(enabled: boolean): void
+
+    /**
+     * Set the log file path
+     * @param filePath
+     */
+    setLogFile(filePath: string | null): void
+
+    /**
+     * Check if a log level is enabled
+     * @param level
+     * @returns {boolean}
+     */
+    isEnabled(level: number): boolean
+
+    /**
+     * Log a message
+     * @param level
+     * @param message
+     * @param context
+     */
+    log(level: number, message: string, context?: string): void
+
+    /**
+     * Log an error message
+     * @param message
+     * @param context
+     */
+    error(message: string, context?: string): void
+
+    /**
+     * Log a warning message
+     * @param message
+     * @param context
+     */
+    warning(message: string, context?: string): void
+
+    /**
+     * Log an info message
+     * @param message
+     * @param context
+     */
+    info(message: string, context?: string): void
+
+    /**
+     * Log a debug message
+     * @param message
+     * @param context
+     */
+    debug(message: string, context?: string): void
+
+    /**
+     * Log a trace message
+     * @param message
+     * @param context
+     */
+    trace(message: string, context?: string): void
+
+    /**
+     * Lazy evaluation trace logging for performance
+     * @param messageProvider - Function that returns the message
+     * @param context
+     */
+    traceLazy(messageProvider: () => string, context?: string): void
+
+    /**
+     * Lazy evaluation debug logging for performance
+     * @param messageProvider - Function that returns the message
+     * @param context
+     */
+    debugLazy(messageProvider: () => string, context?: string): void
+
+    /**
+     * Lazy evaluation info logging for performance
+     * @param messageProvider - Function that returns the message
+     * @param context
+     */
+    infoLazy(messageProvider: () => string, context?: string): void
+
+    /**
+     * Configure for production environment
+     * @param logDir
+     */
+    configureForProduction(logDir: string): void
+
+    /**
+     * Configure for info console logging
+     */
+    configureForInfoConsole(): void
+
+    /**
+     * Configure for development environment
+     */
+    configureForDevelopment(): void
+
+    /**
+     * Configure for testing environment
+     * @param tempLogFile
+     */
+    configureForTesting(tempLogFile?: string): void
+
+    /**
+     * Get current configuration
+     * @returns {LogConfiguration}
+     */
+    getConfiguration(): LogConfiguration
+
+    /**
+     * Close the logger and clean up resources
+     */
+    close(): void
+  }
+
   export interface SqlClient extends UserConversion {
     /**
      * helper promises allowing async style await to open connection or
@@ -1835,6 +1982,14 @@ declare namespace MsNodeSqlV8 {
      * @returns the Table Value Parameter instance ready for use in query
      */
     TvpFromTable: (table: Table) => TvpParam
+    /**
+     * Logger instance for configuring JavaScript and C++ logging
+     */
+    logger: Logger
+    /**
+     * LogLevel enum for setting logging verbosity
+     */
+    LogLevel: typeof LogLevel
   }
 }
 
@@ -1934,6 +2089,9 @@ declare module 'msnodesqlv8/types' {
   export import NativeParam = MsNodeSqlV8.NativeParam
   export import NativeConnection = MsNodeSqlV8.NativeConnection
   export import SqlClient = MsNodeSqlV8.SqlClient
+  export import Logger = MsNodeSqlV8.Logger
+  export import LogLevel = MsNodeSqlV8.LogLevel
+  export import LogConfiguration = MsNodeSqlV8.LogConfiguration
   export default SqlClient
 }
 
