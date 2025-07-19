@@ -187,8 +187,9 @@ declare namespace MsNodeSqlV8 {
      * - 'aggressive': immediately create all needed connections (default)
      * - 'gradual': create connections in fixed increments
      * - 'exponential': create connections based on exponential growth factor
+     * - 'efficient': only grow when idle connections are exhausted
      */
-    scalingStrategy?: 'aggressive' | 'gradual' | 'exponential'
+    scalingStrategy?: 'aggressive' | 'gradual' | 'exponential' | 'efficient'
     
     /**
      * number of connections to create at once when using 'gradual' strategy
