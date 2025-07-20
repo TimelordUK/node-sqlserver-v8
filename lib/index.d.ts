@@ -190,19 +190,19 @@ declare namespace MsNodeSqlV8 {
      * - 'efficient': only grow when idle connections are exhausted
      */
     scalingStrategy?: 'aggressive' | 'gradual' | 'exponential' | 'efficient'
-    
+
     /**
      * number of connections to create at once when using 'gradual' strategy
      * minimum value: 1, default: 5
      */
     scalingIncrement?: number
-    
+
     /**
      * growth factor when using 'exponential' strategy
      * range: 1.1 to 2.0, default: 1.5
      */
     scalingFactor?: number
-    
+
     /**
      * delay in milliseconds between connection creations
      * used when scalingStrategy is not 'aggressive'
@@ -344,10 +344,10 @@ declare namespace MsNodeSqlV8 {
      */
     getProc: (name: string) => Promise<ProcedureDefinition>
 
-    beginTransaction(): Promise<PoolDescription>
-    commitTransaction(description: PoolDescription): Promise<void>
-    rollbackTransaction(description: PoolDescription): Promise<void>
-    transaction(cb: (description: PoolDescription) => any): Promise<void>
+    beginTransaction: () => Promise<PoolDescription>
+    commitTransaction: (description: PoolDescription) => Promise<void>
+    rollbackTransaction: (description: PoolDescription) => Promise<void>
+    transaction: (cb: (description: PoolDescription) => any) => Promise<void>
   }
 
   export class Pool implements GetSetUTC, SubmitQuery {
@@ -1803,32 +1803,32 @@ declare namespace MsNodeSqlV8 {
      * Initialize the logger with the native module
      * @param nativeModule - The native C++ module
      */
-    initialize(nativeModule: any): void
+    initialize: (nativeModule: any) => void
 
     /**
      * Set the log level for both JS and C++ loggers
      * @param level - Log level (number or string like 'DEBUG')
      */
-    setLogLevel(level: number | string): void
+    setLogLevel: (level: number | string) => void
 
     /**
      * Enable or disable console logging
      * @param enabled
      */
-    setConsoleLogging(enabled: boolean): void
+    setConsoleLogging: (enabled: boolean) => void
 
     /**
      * Set the log file path
      * @param filePath
      */
-    setLogFile(filePath: string | null): void
+    setLogFile: (filePath: string | null) => void
 
     /**
      * Check if a log level is enabled
      * @param level
      * @returns {boolean}
      */
-    isEnabled(level: number): boolean
+    isEnabled: (level: number) => boolean
 
     /**
      * Log a message
@@ -1836,96 +1836,96 @@ declare namespace MsNodeSqlV8 {
      * @param message
      * @param context
      */
-    log(level: number, message: string, context?: string): void
+    log: (level: number, message: string, context?: string) => void
 
     /**
      * Log an error message
      * @param message
      * @param context
      */
-    error(message: string, context?: string): void
+    error: (message: string, context?: string) => void
 
     /**
      * Log a warning message
      * @param message
      * @param context
      */
-    warning(message: string, context?: string): void
+    warning: (message: string, context?: string) => void
 
     /**
      * Log an info message
      * @param message
      * @param context
      */
-    info(message: string, context?: string): void
+    info: (message: string, context?: string) => void
 
     /**
      * Log a debug message
      * @param message
      * @param context
      */
-    debug(message: string, context?: string): void
+    debug: (message: string, context?: string) => void
 
     /**
      * Log a trace message
      * @param message
      * @param context
      */
-    trace(message: string, context?: string): void
+    trace: (message: string, context?: string) => void
 
     /**
      * Lazy evaluation trace logging for performance
      * @param messageProvider - Function that returns the message
      * @param context
      */
-    traceLazy(messageProvider: () => string, context?: string): void
+    traceLazy: (messageProvider: () => string, context?: string) => void
 
     /**
      * Lazy evaluation debug logging for performance
      * @param messageProvider - Function that returns the message
      * @param context
      */
-    debugLazy(messageProvider: () => string, context?: string): void
+    debugLazy: (messageProvider: () => string, context?: string) => void
 
     /**
      * Lazy evaluation info logging for performance
      * @param messageProvider - Function that returns the message
      * @param context
      */
-    infoLazy(messageProvider: () => string, context?: string): void
+    infoLazy: (messageProvider: () => string, context?: string) => void
 
     /**
      * Configure for production environment
      * @param logDir
      */
-    configureForProduction(logDir: string): void
+    configureForProduction: (logDir: string) => void
 
     /**
      * Configure for info console logging
      */
-    configureForInfoConsole(): void
+    configureForInfoConsole: () => void
 
     /**
      * Configure for development environment
      */
-    configureForDevelopment(): void
+    configureForDevelopment: () => void
 
     /**
      * Configure for testing environment
      * @param tempLogFile
      */
-    configureForTesting(tempLogFile?: string): void
+    configureForTesting: (tempLogFile?: string) => void
 
     /**
      * Get current configuration
      * @returns {LogConfiguration}
      */
-    getConfiguration(): LogConfiguration
+    getConfiguration: () => LogConfiguration
 
     /**
      * Close the logger and clean up resources
      */
-    close(): void
+    close: () => void
   }
 
   export interface SqlClient extends UserConversion {
