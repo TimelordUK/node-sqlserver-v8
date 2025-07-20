@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver-always-encrypted
+    hostname: sqlserver-ae
+    environment:
+      # SQL Server configuration
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Password_123#
+      - MSSQL_PID=Developer
+      # Always Encrypted support
+      - MSSQL_ENABLE_HADR=1
+      - MSSQL_AGENT_ENABLED=true
+    ports:
+      - "1433:1433"
+    volumes:
+      # Mount local data directory (Windows path format)
+      - ${USERPROFILE}/sqlserver/data:/var/opt/mssql/data
+      - ${USERPROFILE}/sqlserver/log:/var/opt/mssql/log
+      - ${USERPROFILE}/sqlserver/backup:/var/opt/mssql/backup
+      # Mount initialization scripts
+      - ./init-scripts:/docker-entrypoint-initdb.d
+      - ./scripts:/scripts
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password_123# -Q 'SELECT 1' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - sqlserver-net
+
+networks:
+  sqlserver-net:
+    driver: bridge
