@@ -121,7 +121,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04, windows-2022, macos-latest]
-        electron: [30, 31, 32, 33, 34, 35, 36, 37]
+        electron: [30, 31, 32, 33, 34, 35, 36, 37, 38]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -314,7 +314,7 @@ jobs:
         echo "   • Linux glibc 2.35+ (linux-x64, built on Ubuntu 22.04)" 
         echo "   • macOS Apple Silicon (darwin-arm64)"
         echo "   • Node.js versions: 20, 22, 23, 24"
-        echo "   • Electron versions: 32, 33, 34, 35, 36"
+        echo "   • Electron versions: 30, 31, 32, 33, 34, 35, 36, 37, 38"
         echo ""
         echo "ℹ️  Alpine Linux (musl) prebuilds must be built manually:"
         echo "   npx prebuild --target alpine"
