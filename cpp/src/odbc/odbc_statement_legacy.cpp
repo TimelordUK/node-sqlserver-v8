@@ -202,6 +202,7 @@ OdbcStatementLegacy::OdbcStatementLegacy(
   // cerr << "OdbcStatement() " << _statementId << " " << endl;
   // fprintf(stderr, "OdbcStatement::OdbcStatement OdbcStatement ID = %ld\n ", statement_id);
   _numericStringEnabled = _operationParams->numeric_string;
+  _pollingEnabled.store(_operationParams->polling);
   _errors = make_shared<vector<shared_ptr<OdbcError>>>();
 }
 
