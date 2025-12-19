@@ -1,6 +1,6 @@
 # msnodesqlv8
 
-[![Build status](https://ci.appveyor.com/api/projects/status/vkv11o7e24v9u3kr/branch/master?svg=true)](https://ci.appveyor.com/project/TimelordUK/node-sqlserver-v8/branch/master)
+[![Build status](https://github.com/TimelordUK/node-sqlserver-v8/actions/workflows/test.yml/badge.svg)](https://github.com/TimelordUK/node-sqlserver-v8/actions/workflows/test.yml)
 [![GitHub stars](https://img.shields.io/github/stars/TimelordUK/node-sqlserver-v8.svg)](https://github.com/TimelordUK/node-sqlserver-v8/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/TimelordUK/node-sqlserver-v8.svg)](https://github.com/TimelordUK/node-sqlserver-v8/issues)
 [![npm](https://img.shields.io/npm/dm/msnodesqlv8.svg)](https://github.com/TimelordUK/node-sqlserver-v8)
