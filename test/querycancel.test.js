@@ -44,6 +44,46 @@ describe('querycancel', function () {
     })
   })
 
+it('cancel a call to proc that waits for delay of input param.', testDone => {
+    const spName = 'test_spwait_for'
+
+    const def = 'alter PROCEDURE <name>' +
+      '(\n' +
+      '@timeout datetime' +
+      '\n)' +
+      'AS\n' +
+      'BEGIN\n' +
+      'waitfor delay @timeout;' +
+      'END\n'
+
+    const fns = [
+      asyncDone => {
+        env.procedureHelper.createProcedure(spName, def, () => {
+          asyncDone()
+        })
+      },
+
+      asyncDone => {
+        const pm = env.theConnection.procedureMgr()
+        pm.setPolling(true)
+        const q = pm.callproc(spName, ['0:0:20'], err => {
+          assert(err)
+          assert(err.message.indexOf('Operation canceled') > 0)
+          asyncDone()
+        })
+        q.on('submitted', () => {
+          q.cancelQuery(err => {
+            assert(!err)
+          })
+        })
+      }
+    ]
+
+    env.async.series(fns, () => {
+      testDone()
+    })
+  })
+
   it('cancel a prepared call that waits refactor', testDone => {
     const s = 'waitfor delay ?;'
     let prepared
@@ -295,43 +335,5 @@ describe('querycancel', function () {
     })
   })
 
-  it('cancel a call to proc that waits for delay of input param.', testDone => {
-    const spName = 'test_spwait_for'
-
-    const def = 'alter PROCEDURE <name>' +
-      '(\n' +
-      '@timeout datetime' +
-      '\n)' +
-      'AS\n' +
-      'BEGIN\n' +
-      'waitfor delay @timeout;' +
-      'END\n'
-
-    const fns = [
-      asyncDone => {
-        env.procedureHelper.createProcedure(spName, def, () => {
-          asyncDone()
-        })
-      },
-
-      asyncDone => {
-        const pm = env.theConnection.procedureMgr()
-        pm.setPolling(true)
-        const q = pm.callproc(spName, ['0:0:20'], err => {
-          assert(err)
-          assert(err.message.indexOf('Operation canceled') > 0)
-          asyncDone()
-        })
-        q.on('submitted', () => {
-          q.cancelQuery(err => {
-            assert(!err)
-          })
-        })
-      }
-    ]
-
-    env.async.series(fns, () => {
-      testDone()
-    })
-  })
+  
 })

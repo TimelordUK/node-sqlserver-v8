@@ -76,9 +76,10 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/me/.nvm/versions/node/v22.15.0/bin/node",
+            "program": "/home/me/.nvm/versions/node/v24.11.0/bin/node",
             "args": [
-              "examples/state-tracking-example.js"
+                "./node_modules/mocha/bin/mocha.js",
+            //  "examples/test.js"
              //   "./node_modules/mocha/bin/mocha.js",
               //  "test/bind-table.test",
               // "test/napi/compound-query.test"
@@ -89,9 +90,10 @@
               // "test/prepared.test"
               // "test/query.test"
               // "test/connection-improved.test"
-              // "test/querycancel.test"
+              "test/querycancel.test"
               // "test/sproc.test"
               //"test/bcp.test"
+              //"test/txn.test"
               //"test/txn.test"
             ],
             "stopAtEntry": false,
