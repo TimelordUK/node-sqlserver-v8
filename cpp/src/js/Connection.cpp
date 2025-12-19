@@ -215,9 +215,14 @@ Napi::Value Connection::Close(const Napi::CallbackInfo& info) {
   const Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  // Check if we have a connection to close
+  // If connection was never opened or already closed, just call callback with success
+  // This makes Close() idempotent and prevents crashes when closing failed connections
   if (!isConnected_) {
-    Napi::Error::New(env, "Connection is not open").ThrowAsJavaScriptException();
+    SQL_LOG_DEBUG("Connection::Close - connection not open, calling callback with success");
+    if (info.Length() > 0 && info[info.Length() - 1].IsFunction()) {
+      Napi::Function callback = info[info.Length() - 1].As<Napi::Function>();
+      callback.Call({env.Null(), Napi::Boolean::New(env, true)});
+    }
     return env.Undefined();
   }
 
