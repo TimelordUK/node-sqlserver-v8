@@ -77,6 +77,37 @@ jobs:
     - name: Install npm dependencies
       run: npm install
 
+    - name: Patch prebuild dependencies for latest Electron support (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        echo "Updating node-abi and node-gyp in prebuild for Electron 38/39 support..."
+        npm install -g npm-check-updates
+        cd node_modules/prebuild
+        echo "Before update:"
+        cat package.json | grep -E '"node-abi"|"node-gyp"'
+        ncu -u node-abi node-gyp
+        echo "After update:"
+        cat package.json | grep -E '"node-abi"|"node-gyp"'
+        npm install
+        echo "Installed versions:"
+        npm ls node-abi node-gyp || true
+
+    - name: Patch prebuild dependencies for latest Electron support (Windows)
+      if: runner.os == 'Windows'
+      shell: powershell
+      run: |
+        Write-Host "Updating node-abi and node-gyp in prebuild for Electron 38/39 support..."
+        npm install -g npm-check-updates
+        Set-Location node_modules\prebuild
+        Write-Host "Before update:"
+        Get-Content package.json | Select-String -Pattern '"node-abi"|"node-gyp"'
+        ncu -u node-abi node-gyp
+        Write-Host "After update:"
+        Get-Content package.json | Select-String -Pattern '"node-abi"|"node-gyp"'
+        npm install
+        Write-Host "Installed versions:"
+        npm ls node-abi node-gyp
+
     - name: Prebuild binaries
       run: npx prebuild --strip
 
@@ -121,7 +152,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04, windows-2022, macos-latest]
-        electron: [30, 31, 32, 33, 34, 35, 36, 37, 38]
+        electron: [30, 31, 32, 33, 34, 35, 36, 37, 38, 39]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -159,6 +190,37 @@ jobs:
 
     - name: Install npm dependencies
       run: npm install
+
+    - name: Patch prebuild dependencies for latest Electron support (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        echo "Updating node-abi and node-gyp in prebuild for Electron 38/39 support..."
+        npm install -g npm-check-updates
+        cd node_modules/prebuild
+        echo "Before update:"
+        cat package.json | grep -E '"node-abi"|"node-gyp"'
+        ncu -u node-abi node-gyp
+        echo "After update:"
+        cat package.json | grep -E '"node-abi"|"node-gyp"'
+        npm install
+        echo "Installed versions:"
+        npm ls node-abi node-gyp || true
+
+    - name: Patch prebuild dependencies for latest Electron support (Windows)
+      if: runner.os == 'Windows'
+      shell: powershell
+      run: |
+        Write-Host "Updating node-abi and node-gyp in prebuild for Electron 38/39 support..."
+        npm install -g npm-check-updates
+        Set-Location node_modules\prebuild
+        Write-Host "Before update:"
+        Get-Content package.json | Select-String -Pattern '"node-abi"|"node-gyp"'
+        ncu -u node-abi node-gyp
+        Write-Host "After update:"
+        Get-Content package.json | Select-String -Pattern '"node-abi"|"node-gyp"'
+        npm install
+        Write-Host "Installed versions:"
+        npm ls node-abi node-gyp
 
     - name: Prebuild Electron binaries
       run: npx prebuild -r electron -t ${{ matrix.electron }}.0.0 --strip
@@ -314,7 +376,7 @@ jobs:
         echo "   • Linux glibc 2.35+ (linux-x64, built on Ubuntu 22.04)" 
         echo "   • macOS Apple Silicon (darwin-arm64)"
         echo "   • Node.js versions: 20, 22, 23, 24"
-        echo "   • Electron versions: 30, 31, 32, 33, 34, 35, 36, 37, 38"
+        echo "   • Electron versions: 30, 31, 32, 33, 34, 35, 36, 37, 38, 39"
         echo ""
         echo "ℹ️  Alpine Linux (musl) prebuilds must be built manually:"
         echo "   npx prebuild --target alpine"
