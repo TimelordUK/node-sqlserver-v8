@@ -9,7 +9,7 @@
       "name": "Stephen James"
     }
   ],
-  "version": "5.1.1",
+  "version": "5.1.2",
   "homepage": "https://github.com/TimelordUK/node-sqlserver-v8",
   "bugs": {
     "url": "https://github.com/TimelordUK/node-sqlserver-v8/issues"

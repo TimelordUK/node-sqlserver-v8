@@ -5,6 +5,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <set>
 #include <vector>
 
@@ -15,10 +16,11 @@
 namespace mssql {
 /**
  * @brief Manages ODBC statement handles for a connection
- * 
- * This class is NOT thread-safe by itself. Thread safety is provided
- * by the containing OdbcConnection class through external synchronization.
- * 
+ *
+ * This class is thread-safe. All public methods are protected by an internal
+ * mutex to prevent race conditions between concurrent operations like
+ * statement release (checkin) and connection close (clear).
+ *
  * The class provides a checkout/checkin pattern for statement handles
  * where each statement is identified by a unique ID.
  */
@@ -59,9 +61,13 @@ class ConnectionHandles {
  private:
   shared_ptr<IOdbcStatementHandle> store(const long statement_id,
                                          shared_ptr<IOdbcStatementHandle> handle);
-  shared_ptr<IOdbcStatementHandle> find(const long statement_id);
+  shared_ptr<IOdbcStatementHandle> find_unlocked(const long statement_id);
   std::map<long, std::shared_ptr<SafeHandle<IOdbcStatementHandle>>> _statementHandles;
   std::shared_ptr<IOdbcEnvironmentHandle> rawEnvHandle_;  // Raw handle - not wrapped in SafeHandle
   std::shared_ptr<SafeHandle<IOdbcConnectionHandle>> connectionHandle_;
+
+  // Mutex for thread-safe access to statement handles
+  // This prevents race conditions between checkin() and clear()
+  mutable std::mutex _handlesMutex;
 };
 }  // namespace mssql
