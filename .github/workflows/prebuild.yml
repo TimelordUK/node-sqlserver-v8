@@ -152,7 +152,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04, windows-2022, macos-latest]
-        electron: [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40.0.0-beta.4]
+        electron: [30, 31, 32, 33, 34, 35, 36, 37, 38, 39]
     runs-on: ${{ matrix.os }}
 
     steps:
