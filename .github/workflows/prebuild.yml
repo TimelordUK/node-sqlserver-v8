@@ -152,7 +152,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04, windows-2022, macos-latest]
-        electron: [30, 31, 32, 33, 34, 35, 36, 37, 38, 39]
+        electron: [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40.0.0-beta.4]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -223,7 +223,13 @@ jobs:
         npm ls node-abi node-gyp
 
     - name: Prebuild Electron binaries
-      run: npx prebuild -r electron -t ${{ matrix.electron }}.0.0 --strip
+      run: |
+        VERSION="${{ matrix.electron }}"
+        # Only append .0.0 if version doesn't already contain a dot (i.e., is just a number like 30, 31)
+        if [[ ! "$VERSION" =~ \. ]]; then
+          VERSION="${VERSION}.0.0"
+        fi
+        npx prebuild -r electron -t "$VERSION" --strip
 
     - name: List generated Electron prebuilds (Unix)
       if: runner.os != 'Windows'
