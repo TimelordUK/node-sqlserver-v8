@@ -117,5 +117,17 @@
     "bench-columns": "node dist/test/env/cmd-test.js -t benchmark --table=syscolumns --repeats=5 --delay=5000 2>&1",
     "bench-objects": "node dist/test/env/cmd-test.js -t benchmark --table=sysobjects --delay=250 --repeats=20 2>&1"
   },
-  "directories": {}
+  "directories": {},
+  "overrides": {
+    "axios": "^1.11.1",
+    "qs": "^6.14.1",
+    "form-data@<2.5.4": "2.5.4",
+    "tar-fs": "^2.1.3",
+    "brace-expansion": "^2.0.2",
+    "glob": "^10.4.6",
+    "semver": "^7.7.2",
+    "tar": "^6.2.1",
+    "tough-cookie": "^4.1.4",
+    "@babel/helpers": "^7.27.6"
+  }
 }
