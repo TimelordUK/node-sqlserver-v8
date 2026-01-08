@@ -66,7 +66,9 @@ jobs:
 
     - name: Run tests
       working-directory: node_modules/msnodesqlv8
-      run: ./node_modules/.bin/env-cmd -e github-linux -- npm test
+      env:
+        DEFAULT: "Driver={ODBC Driver 18 for SQL Server}; Server=localhost; Uid=SA; Pwd=YourStrong!Passw0rd; TrustServerCertificate=yes;"
+      run: npm test
       timeout-minutes: 30
 
     - name: Upload test results
@@ -131,7 +133,9 @@ jobs:
 
     - name: Run tests
       working-directory: node_modules/msnodesqlv8
-      run: ./node_modules/.bin/env-cmd -e github-windows -- npm test
+      env:
+        DEFAULT: "Driver={ODBC Driver 17 for SQL Server}; Server=localhost; Uid=sa; Pwd=Password12;"
+      run: npm test
       timeout-minutes: 30
 
     - name: Upload test results
