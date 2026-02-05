@@ -223,6 +223,7 @@ jobs:
         npm ls node-abi node-gyp
 
     - name: Prebuild Electron binaries
+      shell: bash
       run: |
         VERSION="${{ matrix.electron }}"
         # Only append .0.0 if version doesn't already contain a dot (i.e., is just a number like 30, 31)
