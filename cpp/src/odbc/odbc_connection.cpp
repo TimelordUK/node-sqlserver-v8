@@ -130,7 +130,14 @@ bool OdbcConnection::Close() {
       _connectionHandles.reset();
       _connectionHandles = nullptr;
     }
-    _statementFactory.reset();
+    {
+      // Acquire _statementMutex before destroying the factory to prevent
+      // racing with RemoveStatement() which also holds this lock while
+      // accessing _statementFactory. Without this, Close() can destroy
+      // the factory's statements_ map while RemoveStatement() is iterating it.
+      std::lock_guard statementLock(_statementMutex);
+      _statementFactory.reset();
+    }
     _transactionManager.reset();
     _errorHandler.reset();
     connectionState = ConnectionClosed;
@@ -223,9 +230,18 @@ std::shared_ptr<IOdbcStatement> OdbcConnection::CreateStatement(
 
 bool OdbcConnection::RemoveStatement(const std::shared_ptr<OdbcStatement>& statement) {
   std::lock_guard lock(_statementMutex);
+
+  // Take a local copy of the shared_ptr so the factory stays alive even if
+  // Close() concurrently resets _statementFactory while we are working.
+  auto factory = _statementFactory;
+  if (!factory) {
+    SQL_LOG_WARNING("RemoveStatement - factory already destroyed (connection closed)");
+    return false;
+  }
+
   // Ask the factory to remove the statement
   if (statement) {
-    _statementFactory->RemoveStatement(statement->GetStatementHandle().getStatementId());
+    factory->RemoveStatement(statement->GetStatementHandle().getStatementId());
   }
 
   return true;
@@ -234,8 +250,16 @@ bool OdbcConnection::RemoveStatement(const std::shared_ptr<OdbcStatement>& state
 bool OdbcConnection::RemoveStatement(int statementId) {
   std::lock_guard lock(_statementMutex);
 
+  // Take a local copy of the shared_ptr so the factory stays alive even if
+  // Close() concurrently resets _statementFactory while we are working.
+  auto factory = _statementFactory;
+  if (!factory) {
+    SQL_LOG_WARNING_STREAM("RemoveStatement - factory already destroyed for ID = " << statementId);
+    return false;
+  }
+
   // First get the statement from the factory
-  auto statement = _statementFactory->GetStatement(statementId);
+  auto statement = factory->GetStatement(statementId);
   if (statement) {
     // Set CLOSED state before destroying statement (while JS context is still valid)
     statement->Close();
@@ -243,7 +267,7 @@ bool OdbcConnection::RemoveStatement(int statementId) {
 
   SQL_LOG_DEBUG_STREAM("RemoveStatement ID = " << statementId);
   // Ask the factory to remove the statement
-  _statementFactory->RemoveStatement(statementId);
+  factory->RemoveStatement(statementId);
   return true;
 }
 
@@ -261,7 +285,12 @@ bool OdbcConnection::CancelStatement(int queryId) {
   }
 
   const auto statementId = it->second.getStatementId();
-  auto statement = _statementFactory->GetStatement(statementId);
+  auto factory = _statementFactory;
+  if (!factory) {
+    SQL_LOG_WARNING_STREAM("OdbcConnection::CancelStatement - factory already destroyed for ID = " << statementId);
+    return false;
+  }
+  auto statement = factory->GetStatement(statementId);
   if (statement) {
     SQL_LOG_DEBUG_STREAM("OdbcConnection::Found statement for ID = " << statementId);
 
@@ -289,7 +318,12 @@ std::shared_ptr<BoundDatumSet> OdbcConnection::UnbindStatement(int queryId) {
   }
 
   const auto statementId = it->second.getStatementId();
-  auto statement = _statementFactory->GetStatement(statementId);
+  auto factory = _statementFactory;
+  if (!factory) {
+    SQL_LOG_WARNING_STREAM("OdbcConnection::UnbindStatement - factory already destroyed for ID = " << statementId);
+    return nullptr;
+  }
+  auto statement = factory->GetStatement(statementId);
   if (statement) {
     SQL_LOG_DEBUG_STREAM("OdbcConnection::Found statement for ID = " << statementId);
 
@@ -396,7 +430,12 @@ const std::vector<std::shared_ptr<OdbcError>>& OdbcConnection::GetErrors() const
 }
 
 std::shared_ptr<IOdbcStatement> OdbcConnection::GetStatement(int statementId) const {
-  return _statementFactory->GetStatement(statementId);
+  auto factory = _statementFactory;
+  if (!factory) {
+    SQL_LOG_WARNING_STREAM("GetStatement - factory already destroyed for ID = " << statementId);
+    return nullptr;
+  }
+  return factory->GetStatement(statementId);
 }
 
 bool OdbcConnection::try_open(const std::u16string& connection_string, const int timeout) {
