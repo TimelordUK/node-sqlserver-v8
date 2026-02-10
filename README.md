@@ -154,6 +154,33 @@ If you are using Webpack for your application, you need to:
     }
 ```
 
+### Vite
+
+Since `msnodesqlv8` is a native Node.js addon, it cannot be bundled by Vite. The solution is to only import it in server-side code (e.g. Express API routes) and have the frontend communicate via `fetch`. See the [Vite example app](https://github.com/TimelordUK/msnodesqlv8-vite) for a complete working setup.
+
+If you are using Vite SSR and need to import the module in SSR code that Vite processes, mark it as external in your `vite.config.ts`:
+
+```ts
+export default defineConfig({
+  ssr: {
+    external: ['msnodesqlv8']
+  }
+})
+```
+
+### Example Apps
+
+| description | link |
+|---|---|
+| next js example, note cant run driver on UI thread. | [todo-with-nextjs_msnodesqlv8](https://github.com/TimelordUK/todo-with-nextjs_msnodesqlv8) |
+| using vite + express | [msnodesqlv8-vite](https://github.com/TimelordUK/msnodesqlv8-vite) |
+| using in typescript | [msnodesqlv8_ts_sample](https://github.com/TimelordUK/msnodesqlv8_ts_sample) |
+| js example typings in IDE | [msnodesqlv8_yarn_sample](https://github.com/TimelordUK/msnodesqlv8_yarn_sample) |
+| using sequelize | [msnodesqlv8-sequelize](https://github.com/TimelordUK/msnodesqlv8-sequelize) |
+| using mssql | [msnodesqlv8_mssql_sample](https://github.com/TimelordUK/msnodesqlv8_mssql_sample) |
+| using electron | [msnodesqlv8-electron](https://github.com/TimelordUK/msnodesqlv8-electron) |
+| using react | [msnodesqlv8-react](https://github.com/TimelordUK/msnodesqlv8-react) |
+
 ### Pool
 
 you can now submit queries through a native library connection pool.  This pool creates a set of connections and queues work submitting items such that all connections are busy providing work exists.  A keep alive is sent periodically to check connection integrity and idle connections beyond a threshold are closed and re-created when queries submitted at a later point in time. Queries can be cancelled and paused / resumed regardless of where they are in the work lifecycle
