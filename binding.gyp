@@ -19,7 +19,7 @@
             {
                 "variables": {
                     "cflags_cpp": "/std:c++20",
-                    "arch%": "<!(echo %PROCESSOR_ARCHITECTURE%)",
+                    "arch%": "<!(node -e \"console.log(process.arch)\")",
                 },
             },
         ]
@@ -136,18 +136,9 @@
             "actions": [
                 {
                     "action_name": "print_variables",
-                    "conditions": [
-                        ['OS=="win"', {
-                            "action": [
-                                "echo",
-                                "compiler: MSVC | cflags_cpp <(cflags_cpp) | arch: <(arch) | link_path: <(link_path) | msodbc_include_folders <(msodbc_include_folders) | fileset <(fileset)",
-                            ],
-                        }, {
-                            "action": [
-                                "echo", 
-                                "compiler: <!(echo ${CC:-gcc}) <!(echo ${CXX:-g++}) | cflags_cpp <(cflags_cpp) | arch: <(arch) | link_path: <(link_path) | msodbc_include_folders <(msodbc_include_folders) | fileset <(fileset)",
-                            ],
-                        }]
+                    "action": [
+                        "node", "-p",
+                        "'compiler: ' + (process.platform === 'win32' ? 'MSVC' : (process.env.CXX || 'g++')) + ' | cflags_cpp <(cflags_cpp) | arch: <(arch) | link_path: <(link_path) | msodbc_include_folders <(msodbc_include_folders) | fileset <(fileset)'",
                     ],
                     "inputs": [],
                     "outputs": ["<!@(node -p \"'<(fileset)'.split(' ')[0]\")"],
