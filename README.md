@@ -173,6 +173,7 @@ export default defineConfig({
 | description | link |
 |---|---|
 | next js example, note cant run driver on UI thread. | [todo-with-nextjs_msnodesqlv8](https://github.com/TimelordUK/todo-with-nextjs_msnodesqlv8) |
+| next js example using app router, note cant run driver on UI thread. | [todo-with-nextjs-app-router_msnodesqlv8](https://github.com/TimelordUK/todo-with-nextjs-app-router_msnodesqlv8) |
 | using vite + express | [msnodesqlv8-vite](https://github.com/TimelordUK/msnodesqlv8-vite) |
 | using in typescript | [msnodesqlv8_ts_sample](https://github.com/TimelordUK/msnodesqlv8_ts_sample) |
 | js example typings in IDE | [msnodesqlv8_yarn_sample](https://github.com/TimelordUK/msnodesqlv8_yarn_sample) |
