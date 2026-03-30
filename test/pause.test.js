@@ -306,6 +306,136 @@ describe('pause', function () {
     })
   })
 
+  describe('end-of-resultset pause/resume (issue #389)', () => {
+    // These tests cover the scenario where pause is called near the end of a
+    // result set. When the native ODBC batch is the final batch (endOfRows=true)
+    // and the query is paused mid-batch, resume must not call nativeGetRows again
+    // or the ODBC driver will crash (Windows: 0xC0000005) or return a function
+    // sequence error (Linux).
+
+    it('should handle pause near end of small result set', async function () {
+      const totalRows = 50
+      const query = `select top ${totalRows} * from syscolumns`
+      const pauseAt = totalRows - 5
+
+      return new Promise((resolve, reject) => {
+        let rows = 0
+        const q = env.theConnection.query(query)
+        q.on('error', reject)
+        q.on('row', () => {
+          rows++
+          if (rows === pauseAt) {
+            q.pauseQuery()
+            setTimeout(() => {
+              q.resumeQuery()
+            }, RESUME_DELAY)
+          }
+        })
+        q.on('done', () => {
+          try {
+            assert.strictEqual(rows, totalRows)
+            resolve()
+          } catch (e) {
+            reject(e)
+          }
+        })
+      })
+    })
+
+    it('should handle repeated pause/resume cycles across page boundaries', async function () {
+      const totalRows = 100
+      const query = `select top ${totalRows} * from syscolumns`
+      const pageSize = 10
+
+      return new Promise((resolve, reject) => {
+        let rows = 0
+        const q = env.theConnection.query(query)
+        q.on('error', reject)
+        q.on('row', () => {
+          rows++
+          if (rows % pageSize === 0) {
+            q.pauseQuery()
+            setTimeout(() => {
+              q.resumeQuery()
+            }, RESUME_DELAY)
+          }
+        })
+        q.on('done', () => {
+          try {
+            assert.strictEqual(rows, totalRows)
+            resolve()
+          } catch (e) {
+            reject(e)
+          }
+        })
+      })
+    })
+
+    it('should complete normally after pause near end then run subsequent query', async function () {
+      const totalRows = 50
+      const query = `select top ${totalRows} * from syscolumns`
+      const pauseAt = totalRows - 5
+
+      // First: run with pause near end
+      await new Promise((resolve, reject) => {
+        let rows = 0
+        const q = env.theConnection.query(query)
+        q.on('error', reject)
+        q.on('row', () => {
+          rows++
+          if (rows === pauseAt) {
+            q.pauseQuery()
+            setTimeout(() => {
+              q.resumeQuery()
+            }, RESUME_DELAY)
+          }
+        })
+        q.on('done', () => {
+          try {
+            assert.strictEqual(rows, totalRows)
+            resolve()
+          } catch (e) {
+            reject(e)
+          }
+        })
+      })
+
+      // Second: run a normal query to verify connection is still usable
+      const secondRows = await countQueryRows(env.theConnection, query)
+      assert.strictEqual(secondRows, totalRows)
+    })
+
+    it('should handle multiple pause/resume near end in sequence', async function () {
+      const totalRows = 50
+      const query = `select top ${totalRows} * from syscolumns`
+
+      for (let iteration = 0; iteration < 5; iteration++) {
+        await new Promise((resolve, reject) => {
+          let rows = 0
+          const q = env.theConnection.query(query)
+          q.on('error', reject)
+          q.on('row', () => {
+            rows++
+            if (rows === totalRows - 3) {
+              q.pauseQuery()
+              setTimeout(() => {
+                q.resumeQuery()
+              }, RESUME_DELAY)
+            }
+          })
+          q.on('done', () => {
+            try {
+              assert.strictEqual(rows, totalRows)
+              resolve()
+            } catch (e) {
+              reject(e)
+            }
+          })
+        })
+      }
+    })
+  })
+
   describe('performance', () => {
     it('should handle large query without pause', function (done) {
       const q = env.theConnection.query(QUERIES.all)
