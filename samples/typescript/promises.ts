@@ -41,7 +41,7 @@ async function cancelQuery (): Promise<any> {
   q.on('submitted', (description: QueryDescription) => {
     console.log(JSON.stringify(description, null, 4))
   })
-  q.on('error', (e: Error) => {
+  q.on('error', (e: any) => {
     console.error(e)
   })
   q.on('done', () => {

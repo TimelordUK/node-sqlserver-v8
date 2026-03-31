@@ -3,8 +3,8 @@ declare namespace MsNodeSqlV8 {
   export type sqlRecordType = Record<string | number, sqlJsColumnType>
   export type sqlObjectType = sqlRecordType | object | any
   export type sqlQueryParamType = sqlJsColumnType | sqlJsColumnType[] | ConcreteColumnType | ConcreteColumnType[] | TvpParam
-  export type sqlPoolEventType = MessageCb | PoolStatusRecordCb | PoolOptionsEventCb | StatusCb
-  export type sqlQueryEventType = SubmittedEventCb | ColumnEventCb | EventColumnCb | StatusCb | RowEventCb | MetaEventCb | RowCountEventCb
+  export type sqlPoolEventType = MessageCb | PoolStatusRecordCb | PoolOptionsEventCb | StatusCb | ErrorEventCb
+  export type sqlQueryEventType = SubmittedEventCb | ColumnEventCb | EventColumnCb | StatusCb | RowEventCb | MetaEventCb | RowCountEventCb | ErrorEventCb
   export type sqlProcParamType = sqlObjectType | sqlQueryParamType
   export type sqlQueryType = string | QueryDescription
   export type sqlConnectType = string | ConnectDescription
@@ -980,6 +980,8 @@ declare namespace MsNodeSqlV8 {
   export type QueryRawCb = (err?: Error, raw?: RawData, more?: boolean) => void
 
   export type StatusCb = (err?: Error) => void
+
+  export type ErrorEventCb = (err: Error) => void
 
   export type PrepareCb = (err?: Error, statement?: PreparedStatement) => void
 

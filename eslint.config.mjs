@@ -1,0 +1,125 @@
+import love from 'eslint-config-love'
+import stylistic from '@stylistic/eslint-plugin'
+
+export default [
+  {
+    ...love,
+    files: ['src/**/*.ts', 'lib/**/*.ts', 'test/**/*.ts', 'samples/**/*.ts'],
+    ignores: ['**/*.d.ts'],
+    languageOptions: {
+      ...love.languageOptions,
+      parserOptions: {
+        project: './tsconfig.json',
+        tsconfigRootDir: import.meta.dirname
+      }
+    },
+    plugins: {
+      ...love.plugins,
+      '@stylistic': stylistic
+    },
+    rules: {
+      ...love.rules,
+
+      // style rules (replaces what standard-with-typescript used to enforce)
+      '@stylistic/semi': ['error', 'never'],
+      '@stylistic/no-trailing-spaces': 'error',
+      '@stylistic/eol-last': ['error', 'always'],
+      '@stylistic/no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0 }],
+      '@stylistic/quotes': ['error', 'single', { avoidEscape: true }],
+      '@stylistic/comma-dangle': ['error', 'never'],
+      '@stylistic/space-before-function-paren': ['error', 'always'],
+      '@stylistic/keyword-spacing': 'error',
+      '@stylistic/space-infix-ops': 'error',
+      '@stylistic/comma-spacing': 'error',
+      '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: true }],
+      '@stylistic/block-spacing': 'error',
+      '@stylistic/key-spacing': 'error',
+      '@stylistic/space-before-blocks': 'error',
+      '@stylistic/no-multi-spaces': 'error',
+      '@stylistic/object-curly-spacing': ['error', 'always'],
+      '@stylistic/array-bracket-spacing': ['error', 'never'],
+      '@stylistic/spaced-comment': ['error', 'always'],
+
+      // rules carried over from old .eslintrc.js
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/return-await': 'off',
+      '@typescript-eslint/no-this-alias': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/restrict-template-expressions': 'off',
+      '@typescript-eslint/no-misused-promises': 'off',
+      '@typescript-eslint/strict-boolean-expressions': 'off',
+      '@typescript-eslint/consistent-type-assertions': 'off',
+      '@typescript-eslint/no-extraneous-class': 'off',
+      '@typescript-eslint/no-dynamic-delete': 'off',
+      '@typescript-eslint/consistent-type-imports': 'off',
+      'no-async-promise-executor': 'off',
+      'valid-typeof': 'off',
+
+      // new rules from eslint-config-love that don't suit this codebase
+      '@typescript-eslint/consistent-type-exports': 'off',
+      '@typescript-eslint/no-magic-numbers': 'off',
+      '@typescript-eslint/prefer-destructuring': 'off',
+      '@typescript-eslint/no-inferrable-types': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-type-assertion': 'off',
+      '@typescript-eslint/no-unsafe-enum-comparison': 'off',
+      '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/init-declarations': 'off',
+      '@typescript-eslint/class-methods-use-this': 'off',
+      '@typescript-eslint/prefer-promise-reject-errors': 'off',
+      '@typescript-eslint/use-unknown-in-catch-callback-variable': 'off',
+      '@typescript-eslint/switch-exhaustiveness-check': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/strict-void-return': 'off',
+      '@typescript-eslint/max-params': 'off',
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/no-unnecessary-template-expression': 'off',
+      '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/no-wrapper-object-types': 'off',
+      '@typescript-eslint/no-unsafe-function-type': 'off',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/no-deprecated': 'off',
+      '@typescript-eslint/no-unnecessary-type-arguments': 'off',
+      '@typescript-eslint/no-unnecessary-type-parameters': 'off',
+      '@typescript-eslint/no-unnecessary-type-conversion': 'off',
+      '@typescript-eslint/no-base-to-string': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
+      '@typescript-eslint/prefer-for-of': 'off',
+      'no-plusplus': 'off',
+      'no-console': 'off',
+      'no-param-reassign': 'off',
+      'no-negated-condition': 'off',
+      'no-await-in-loop': 'off',
+      'no-useless-assignment': 'off',
+      'no-multi-assign': 'off',
+      'no-lonely-if': 'off',
+      'eqeqeq': 'off',
+      'complexity': 'off',
+      'max-lines': 'off',
+      'max-nested-callbacks': 'off',
+      'arrow-body-style': 'off',
+      'consistent-this': 'off',
+      'logical-assignment-operators': 'off',
+      'operator-assignment': 'off',
+      'prefer-exponentiation-operator': 'off',
+      'prefer-arrow-callback': 'off',
+      'prefer-template': 'off',
+      'radix': 'off',
+      'require-unicode-regexp': 'off',
+      'promise/avoid-new': 'off',
+      'promise/no-multiple-resolved': 'off',
+      'import/enforce-node-protocol-usage': 'off',
+      '@eslint-community/eslint-comments/require-description': 'off',
+      '@eslint-community/eslint-comments/no-unlimited-disable': 'off'
+    }
+  },
+  {
+    ignores: ['dist/**', 'node_modules/**']
+  }
+]

@@ -46,18 +46,18 @@ dbid, loginame`
 
 class PrintConnection implements SimpleTest {
   public test (connectString: string, conn: Connection, done: Function): void {
-    conn.query('select @@SPID as id, CURRENT_USER as name', (err: Error, res: any[]) => {
+    conn.query('select @@SPID as id, CURRENT_USER as name', (err, res) => {
       if (err != null) {
         throw err
       }
       res = res == null ? [] : res
       const sp = res[0].id
       console.log(`open[${sp}]:  ${connectString}`)
-      conn.query(getConnectionsSql, (err: Error, res: any[]) => {
+      conn.query(getConnectionsSql, (err, res) => {
         if (err != null) {
           throw err
         }
-        const count = res[0].NumberOfConnections
+        const count = res![0].NumberOfConnections
         conn.close(() => {
           console.log(`close[${sp}]: NumberOfConnections = ${count}`)
           done()
@@ -107,8 +107,8 @@ class Benchmark implements SimpleTest {
       sql.promises.open(connectString).then(conn => {
         if (prepared) {
           console.log(`preparing query ${query}`)
-          conn.prepare(query, function (err, state: PreparedStatement) {
-            const cols = state.getMeta().map(x => x.name).join()
+          conn.prepare(query, function (err, state) {
+            const cols = state!.getMeta().map(x => x.name).join()
             console.log(cols)
             done(err, conn, state)
           })
@@ -217,7 +217,7 @@ class ProcedureOut implements SimpleTest {
   public run (connectString: string, argv: Options): void {
     const delay: number = argv.delay == null ? 50 : argv.delay
     console.log(connectString)
-    sql.open(connectString, (err: Error, theConnection) => {
+    sql.open(connectString, (err, theConnection) => {
       if (err != null) {
         throw err
       }
@@ -259,7 +259,7 @@ class Tvp implements SimpleTest {
     const delay: number = argv.delay == null ? 3000 : argv.delay
 
     console.log(connectString)
-    sql.open(connectString, (err: Error, conn: Connection) => {
+    sql.open(connectString, (err, conn: Connection) => {
       if (err != null) {
         throw err
       }
@@ -292,7 +292,7 @@ class DateTz implements SimpleTest {
     const delay: number = argv.delay == null ? 3000 : argv.delay
 
     console.log(connectString)
-    sql.open(connectString, (err: Error, conn) => {
+    sql.open(connectString, (err, conn) => {
       if (err != null) {
         throw err
       }
@@ -305,14 +305,14 @@ class DateTz implements SimpleTest {
 
         console.log(qs)
         const q = conn.query(qs,
-          (err, results: any, more: boolean) => {
-            console.log(`[${x}] more = ${more} err ${err} expected ${expected} results ${results[0].test_field}`)
-            assert.deepEqual(results[0].test_field, expected)
+          (err, results, more) => {
+            console.log(`[${x}] more = ${more} err ${err} expected ${expected} results ${results![0].test_field}`)
+            assert.deepEqual(results![0].test_field, expected)
             if (more) return
             console.log(`[${x}] completes more = ${more}`)
             ++x
           })
-        q.on('msg', (err: Error) => {
+        q.on('msg', (err: any) => {
           console.log(`[${x}]: q.msg = ${err.message}`)
         })
       }, delay)
@@ -324,7 +324,7 @@ class RaiseErrors implements SimpleTest {
   public run (connectString: string, argv: Options): void {
     const delay: number = argv.delay == null ? 3000 : argv.delay
 
-    sql.open(connectString, (err: Error, conn) => {
+    sql.open(connectString, (err, conn) => {
       if (err != null) {
         throw err
       }
@@ -337,7 +337,7 @@ class RaiseErrors implements SimpleTest {
           qs += `RAISERROR('[${x}]: Error Number ${i + 1}', 1, 1);`
         }
         const q = conn.query(qs,
-          (err, results, more: boolean) => {
+          (err, results, more) => {
             if (more && (err == null) && (results != null) && results.length === 0) {
               return
             }
@@ -346,7 +346,7 @@ class RaiseErrors implements SimpleTest {
             console.log(`[${x}] completes more = ${more}`)
             ++x
           })
-        q.on('info', (err: Error) => {
+        q.on('info', (err: any) => {
           console.log(`[${x}]: q.info = ${err.message}`)
         })
       }, delay)
@@ -358,7 +358,7 @@ class BusyConnection implements SimpleTest {
   public run (connectString: string, argv: Options): void {
     const delay: number = argv.delay == null ? 3000 : argv.delay
     const severity: number = argv.severity == null ? 9 : argv.severity
-    sql.open(connectString, (err: Error, conn) => {
+    sql.open(connectString, (err, conn) => {
       if (err != null) {
         throw err
       }
@@ -366,7 +366,7 @@ class BusyConnection implements SimpleTest {
       setInterval(() => {
         const query = `RAISERROR('User JS Error ${severity}', ${severity}, 1);SELECT ${x}+${x};`
         console.log(query)
-        conn.queryRaw(query, (err: Error, results, more: boolean) => {
+        conn.queryRaw(query, (err, results, more) => {
           console.log('>> queryRaw')
           console.log(err)
           console.log(JSON.stringify(results, null, 2))
@@ -388,7 +388,7 @@ class BusyConnection implements SimpleTest {
 class LargeStringSelect implements SimpleTest {
   public run (connectString: string, argv: Options): void {
     const delay: number = argv.delay == null ? 5000 : argv.delay
-    sql.open(connectString, (err: Error, conn) => {
+    sql.open(connectString, (err, conn) => {
       if (err != null) {
         throw err
       }
@@ -397,7 +397,7 @@ class LargeStringSelect implements SimpleTest {
       const query = `SELECT 'Result' AS [Result], '${p}' AS [ReallyLongString]`
       setInterval(() => {
         const q = conn.query(query,
-          (err, results, more: boolean) => {
+          (err, results, more) => {
             console.log(`[${x}] more = ${more} err ${err} results ${JSON.stringify(results)}`)
             if (more) return
             ++x
@@ -417,7 +417,7 @@ class PrintSelect implements SimpleTest {
   public run (connectString: string, argv: Options): void {
     const delay: number = argv.delay == null ? 5000 : argv.delay
 
-    sql.open(connectString, (err: Error, conn) => {
+    sql.open(connectString, (err, conn) => {
       if (err != null) {
         throw err
       }
@@ -425,7 +425,7 @@ class PrintSelect implements SimpleTest {
 
       setInterval(() => {
         conn.query(`print 'JS status message ${x}'; SELECT ${x} + ${x} as res;SELECT ${x} * ${x} as res2`,
-          (err, results, more: boolean) => {
+          (err, results, more) => {
             if (more && (err == null) && (results != null) && results.length === 0) {
               return
             }
@@ -452,7 +452,7 @@ class MemoryStress implements SimpleTest {
 
   async run (connectString: string, argv: Options): Promise<void> {
     const iterations = argv.iterations == null ? 10000 : argv.iterations
-    sql.open(connectString, async (err: Error, conn: Connection) => {
+    sql.open(connectString, async (err, conn: Connection) => {
       if (err != null) {
         throw err
       }

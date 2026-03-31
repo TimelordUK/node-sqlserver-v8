@@ -110,9 +110,9 @@ function event (done: Function): void {
       console.log('listen to the events raised from the driver')
       const s = "select top 1 id, name, type, crdate from sysobjects so where so.type='U'"
       console.log(s)
-      const q = conn.query(s, (err: Error, res: any[]) => {
+      const q = conn.query(s, (err, res) => {
         Assert.ifError(err)
-        console.log(`res.length = ${res.length}`)
+        console.log(`res.length = ${res?.length}`)
         console.log(res)
         asyncDone()
       })
@@ -324,12 +324,12 @@ function procedure (done: Function): void {
 
     function (asyncDone: Function) {
       const pm = conn.procedureMgr()
-      pm.callproc(spName, [10, 5], (err: Error, results: any, output: any[]) => {
+      pm.callproc(spName, [10, 5], (err, results, output) => {
         Assert.ifError(err)
         const expected = [99, 15]
         console.log(output)
-        Assert.check(expected[0] === output[0], "results didn't match")
-        Assert.check(expected[1] === output[1], "results didn't match")
+        Assert.check(expected[0] === output![0], "results didn't match")
+        Assert.check(expected[1] === output![1], "results didn't match")
         asyncDone()
       })
     },
@@ -726,9 +726,9 @@ function table (done: Function): void {
       console.log(summary.selectSignature)
       console.log('prepare the above statement.')
       const select: string = summary.selectSignature
-      conn.prepare(select, (err: Error, ps: PreparedStatement) => {
+      conn.prepare(select, (err, ps) => {
         Assert.ifError(err)
-        ps.preparedQuery([1], (err, res) => {
+        ps!.preparedQuery([1], (err, res) => {
           Assert.ifError(err)
 
           if (res != null) {
@@ -841,21 +841,21 @@ function cancel (done: Function): void {
 
       const fns: Function[] = [
         function (asyncDone: Function) {
-          conn.prepare(sql.PollingQuery(s), (err: Error, pq: PreparedStatement) => {
+          conn.prepare(sql.PollingQuery(s), (err, pq) => {
             Assert.ifError(err)
-            prepared = pq
+            prepared = pq!
             asyncDone()
           })
         },
 
         function (asyncDone: Function) {
-          const q: Query = prepared.preparedQuery(['00:00:20'], (err: Error) => {
-            Assert.check(err.message.indexOf('Operation canceled') > 0)
+          const q: Query = prepared.preparedQuery(['00:00:20'], (err) => {
+            Assert.check(err!.message.indexOf('Operation canceled') > 0)
             asyncDone()
           })
 
           q.on('submitted', function () {
-            q.cancelQuery((e: Error) => {
+            q.cancelQuery((e) => {
               Assert.ifError(e)
             })
           })

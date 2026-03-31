@@ -366,7 +366,7 @@ if (require.main === module) {
     console.log('Usage: node stress-test-runner.js <scenario> [options]')
     console.log('\nAvailable scenarios:')
     const runner = new StressTestRunner()
-    Object.entries((runner as any).scenarios).forEach(([key, scenario]: [string, TestScenario]) => {
+    Object.entries((runner as any).scenarios as Record<string, TestScenario>).forEach(([key, scenario]) => {
       console.log(`  ${key}: ${scenario.description}`)
     })
     console.log('\nOptions:')
