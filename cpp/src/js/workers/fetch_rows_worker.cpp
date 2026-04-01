@@ -55,7 +55,12 @@ void FetchRowsWorker::Execute() {
 
 void FetchRowsWorker::OnOK() {
   if (has_error_) {
-    SQL_LOG_ERROR_STREAM("Error in FetchRowsWorker::OnOK: terminating due to error");
+    SQL_LOG_ERROR_STREAM("Error in FetchRowsWorker::OnOK: dispatching error via OnError path");
+    const Napi::Env env = Env();
+    Napi::HandleScope scope(env);
+    const auto errorArg = GetErrors(env);
+    const auto meta = GetMetadata();
+    Callback().Call({errorArg, meta, Napi::Boolean::New(env, !result_->is_end_of_results())});
     return;
   }
 
@@ -64,28 +69,18 @@ void FetchRowsWorker::OnOK() {
   SQL_LOG_DEBUG("FetchRowsWorker::OnOK");
 
   try {
-    // Create a JavaScript array of rows
-    /*
-    Napi::Array rows = Napi::Array::New(env);
-    const auto& statement = GetStatement();
-    const auto& nativeData = statement->GetRows();
-    const auto& columnDefs = *statement->GetMetaData();
-
-    // Convert each row to a JavaScript object
-    for (size_t i = 0; i < nativeData.size(); ++i) {
-      const auto& row = nativeData[i];
-      const auto jsRow = options_.as_objects
-                             ? JsObjectMapper::fromOdbcRow(env, row, columnDefs)
-                             : JsObjectMapper::fromOdbcRowAsArray(env, row, columnDefs);
-      rows.Set(i, jsRow);
+    const auto statement = GetStatement();
+    if (!statement) {
+      SQL_LOG_ERROR("FetchRowsWorker::OnOK - statement no longer available (freed during async gap)");
+      Callback().Call({Napi::Error::New(env, "Statement handle was freed before results could be returned").Value(), env.Null()});
+      return;
     }
-
-    // Create a result object
-    Napi::Object result = Napi::Object::New(env);
-    result.Set("rows", rows);
-    result.Set("endOfRows", Napi::Boolean::New(env, result_->is_end_of_rows()));
-*/
-    const auto resultset = GetStatement()->GetResultSet();
+    const auto resultset = statement->GetResultSet();
+    if (!resultset) {
+      SQL_LOG_ERROR("FetchRowsWorker::OnOK - result set is null");
+      Callback().Call({Napi::Error::New(env, "Result set is null").Value(), env.Null()});
+      return;
+    }
     const auto result = JsObjectMapper::fromQueryResult(env, resultset);
     // Call the callback with the result
     Callback().Call({env.Null(), result});
