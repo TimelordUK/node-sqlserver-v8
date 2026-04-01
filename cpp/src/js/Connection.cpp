@@ -90,9 +90,10 @@ Connection::Connection(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Connec
 Connection::~Connection() {
   SQL_LOG_DEBUG("~Connection dtor");
   // Make sure connection is closed
-  if (isConnected_) {
+  if (isConnected_ && odbcConnection_) {
     odbcConnection_->Close();
   }
+  odbcConnection_.reset();
 }
 
 // ConnectionWorkerBase class has been moved to worker_base.h
