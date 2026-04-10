@@ -43,6 +43,16 @@ jobs:
     - name: Install Linux dependencies
       if: runner.os == 'Linux'
       run: |
+        # The GitHub-hosted Ubuntu runner image ships a pre-configured
+        # /etc/apt/sources.list.d/microsoft-prod.list with
+        # Signed-By=/usr/share/keyrings/microsoft-prod.gpg. If we add our
+        # own list pointing at the same source URL without a matching
+        # Signed-By, apt errors out with:
+        #   "Conflicting values set for option Signed-By regarding source
+        #    https://packages.microsoft.com/ubuntu/22.04/prod/ jammy"
+        # Remove the pre-installed file before writing our own.
+        sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
+
         # Add Microsoft repository
         curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
         curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
@@ -167,6 +177,8 @@ jobs:
     - name: Install Linux dependencies
       if: runner.os == 'Linux'
       run: |
+        # See note in matching step above for why this rm is necessary.
+        sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
         curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
         curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
         sudo apt-get update
