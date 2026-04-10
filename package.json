@@ -126,6 +126,9 @@
     "serialize-javascript": "^7.0.5",
     "diff": "^8.0.4",
     "tough-cookie": "^4.1.4",
-    "@babel/helpers": "^7.27.6"
+    "@babel/helpers": "^7.27.6",
+    "prebuild-install": {
+      "node-abi": "^4.28.0"
+    }
   }
 }
