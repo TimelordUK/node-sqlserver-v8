@@ -176,6 +176,22 @@ bool TransientStatement::ReadNextResult(std::shared_ptr<QueryResult> result) {
       }
       return false;
     }
+
+    case SQL_ERROR: {
+      // Issue #396: when a batch contains an info message (PRINT) or a prior
+      // result set followed by THROW/RAISERROR, SQLMoreResults surfaces the
+      // server error here. We must capture the diagnostic record immediately;
+      // any subsequent ODBC call against the statement (e.g. SQLNumResultCols
+      // via GetMetadata) will fail with HY007 "Associated statement is not
+      // prepared" and overwrite the diag rec, swallowing the real error.
+      SQL_LOG_DEBUG_STREAM("ReadNextResult ID = " << statementId
+                                                  << " - SQL_ERROR from SQLMoreResults");
+      check_odbc_error(ret);
+      state_ = State::STATEMENT_ERROR;
+      result->set_end_of_rows(true);
+      result->set_end_of_results(true);
+      return false;
+    }
     default:;
   }
   result->set_end_of_results(false);

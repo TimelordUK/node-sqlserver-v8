@@ -217,4 +217,76 @@ describe('multiple-error', function () {
       }
     })
   })
+
+  // Regression tests for issue #396 - SQL THROW/RAISERROR errors that follow
+  // a PRINT (or a previous result set) were swallowed and replaced with the
+  // generic HY007 "Associated statement is not prepared" message. The cause
+  // was that try_read_next_result called start_reading_results/GetMetadata
+  // (which calls SQLNumResultCols) after SQLMoreResults returned SQL_ERROR,
+  // overwriting the diag rec carrying the real server error.
+  describe('issue #396 - PRINT/SELECT followed by THROW/RAISERROR', function () {
+    it('bare THROW surfaces server message', done => {
+      env.theConnection.query("THROW 50001, 'BOOM', 1", (err) => {
+        assert(err, 'expected an error')
+        expect(err.message).to.include('BOOM')
+        expect(err.sqlstate).to.equal('42000')
+        expect(err.code).to.equal(50001)
+        done()
+      })
+    })
+
+    it('PRINT then THROW surfaces THROW message (not HY007)', done => {
+      env.theConnection.query(
+        "PRINT 'BAR' ; THROW 50000, 'BOOM BOOM', 1",
+        (err) => {
+          assert(err, 'expected an error')
+          expect(err.message).to.include('BOOM BOOM')
+          expect(err.message).to.not.include('Associated statement is not prepared')
+          expect(err.sqlstate).to.equal('42000')
+          expect(err.code).to.equal(50000)
+          done()
+        }
+      )
+    })
+
+    it('SELECT then THROW surfaces THROW message (not HY007)', done => {
+      env.theConnection.query(
+        "SELECT 1 AS x ; THROW 50002, 'BOOM3', 1",
+        (err) => {
+          assert(err, 'expected an error')
+          expect(err.message).to.include('BOOM3')
+          expect(err.message).to.not.include('Associated statement is not prepared')
+          expect(err.sqlstate).to.equal('42000')
+          expect(err.code).to.equal(50002)
+          done()
+        }
+      )
+    })
+
+    it('PRINT then RAISERROR surfaces RAISERROR message (not HY007)', done => {
+      env.theConnection.query(
+        "PRINT 'BAR' ; RAISERROR('BOOM4', 16, 1)",
+        (err) => {
+          assert(err, 'expected an error')
+          expect(err.message).to.include('BOOM4')
+          expect(err.message).to.not.include('Associated statement is not prepared')
+          done()
+        }
+      )
+    })
+
+    it('PRINT then THROW via promise surfaces THROW message', async function handler () {
+      try {
+        await env.theConnection.promises.query(
+          "PRINT 'BAR' ; THROW 50000, 'BOOM BOOM', 1"
+        )
+        assert.fail('expected promise to reject')
+      } catch (e) {
+        const errs = e._results ? e._results.errors : [e]
+        const messages = errs.map(x => x.message).join(' | ')
+        expect(messages).to.include('BOOM BOOM')
+        expect(messages).to.not.include('Associated statement is not prepared')
+      }
+    })
+  })
 })

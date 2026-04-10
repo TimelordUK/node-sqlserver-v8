@@ -2246,6 +2246,23 @@ bool OdbcStatementLegacy::try_read_next_result() {
       }
       return false;
     }
+
+    case SQL_ERROR: {
+      // Issue #396: when a batch contains an info message (PRINT) or a prior
+      // result set followed by THROW/RAISERROR, SQLMoreResults surfaces the
+      // server error here. We must capture the diagnostic record immediately;
+      // any subsequent ODBC call against the statement (e.g. SQLNumResultCols
+      // via start_reading_results) will fail with HY007 "Associated statement
+      // is not prepared" and overwrite the diag rec, swallowing the real
+      // error.
+      SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::try_read_next_result ["
+                           << _handle.toString()
+                           << "] try_read_next_result SQL_ERROR from SQLMoreResults");
+      return_odbc_error();
+      _resultset->_end_of_results = true;
+      _resultset->_end_of_rows = true;
+      return false;
+    }
     default:;
   }
   _resultset->_end_of_results = false;
