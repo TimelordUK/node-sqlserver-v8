@@ -100,6 +100,24 @@ Full API reference lives in the [wiki](https://github.com/TimelordUK/node-sqlser
 
 ---
 
+## Standalone example apps
+
+Full runnable projects in their own repos, showing `msnodesqlv8` wired into real frameworks. The driver is a native addon — **do not call it from a UI thread** (renderer process, Next.js client components). Use a server route, API handler or worker.
+
+| Stack                         | Repo |
+| ----------------------------- | ---- |
+| Next.js (pages router)        | [todo-with-nextjs_msnodesqlv8](https://github.com/TimelordUK/todo-with-nextjs_msnodesqlv8) |
+| Next.js (app router)          | [todo-with-nextjs-app-router_msnodesqlv8](https://github.com/TimelordUK/todo-with-nextjs-app-router_msnodesqlv8) |
+| Vite + Express                | [msnodesqlv8-vite](https://github.com/TimelordUK/msnodesqlv8-vite) |
+| TypeScript                    | [msnodesqlv8_ts_sample](https://github.com/TimelordUK/msnodesqlv8_ts_sample) |
+| JavaScript with IDE typings   | [msnodesqlv8_yarn_sample](https://github.com/TimelordUK/msnodesqlv8_yarn_sample) |
+| Sequelize                     | [msnodesqlv8-sequelize](https://github.com/TimelordUK/msnodesqlv8-sequelize) |
+| `mssql` package over this driver | [msnodesqlv8_mssql_sample](https://github.com/TimelordUK/msnodesqlv8_mssql_sample) |
+| Electron                      | [msnodesqlv8-electron](https://github.com/TimelordUK/msnodesqlv8-electron) |
+| React                         | [msnodesqlv8-react](https://github.com/TimelordUK/msnodesqlv8-react) |
+
+---
+
 ## Platform support
 
 | Platform              | Arch         | Node              | Electron |
