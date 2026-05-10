@@ -1708,6 +1708,7 @@ declare namespace MsNodeSqlV8 {
   export interface NativeQueryObj {
     query_str: string
     numeric_string?: boolean
+    bigint_as_native?: boolean
     query_polling?: boolean
     query_timeout?: number
     max_prepared_column_size?: number
