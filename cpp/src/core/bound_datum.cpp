@@ -1083,8 +1083,14 @@ void BoundDatum::bind_integer(const Napi::Object& p) {
   auto& vec = *_storage->int64vec_ptr;
   _indvec[0] = SQL_NULL_DATA;
   if (!p.IsNull() && !p.IsUndefined()) {
-    const auto v = p.ToNumber().Int64Value();
-    vec[0] = static_cast<long long>(v);
+    long long v;
+    if (p.IsBigInt()) {
+      bool lossless = false;
+      v = static_cast<long long>(p.As<Napi::BigInt>().Int64Value(&lossless));
+    } else {
+      v = p.ToNumber().Int64Value();
+    }
+    vec[0] = v;
     _indvec[0] = 0;
   }
 }
@@ -1133,7 +1139,13 @@ void BoundDatum::bind_integer_array(const Napi::Object& p) {
     const auto elem = arr[i];
     if (!elem.IsNull() && !elem.IsUndefined()) {
       _indvec[i] = 0;
-      const auto v = elem.ToNumber().Int64Value();
+      long long v;
+      if (elem.IsBigInt()) {
+        bool lossless = false;
+        v = static_cast<long long>(elem.As<Napi::BigInt>().Int64Value(&lossless));
+      } else {
+        v = elem.ToNumber().Int64Value();
+      }
       vec[i] = v;
     }
   }
@@ -1362,6 +1374,11 @@ bool sql_type_s_maps_to_any_int32(const Napi::Object p) {
   return res;
 }
 
+bool sql_type_s_maps_to_bigint(const Napi::Object p) {
+  const auto v = JsObjectMapper::safeGetString(p.As<Napi::Object>(), "type_id", "");
+  return v == "bigint";
+}
+
 bool sql_type_s_maps_to_tiny_int(const Napi::Object p) {
   const auto v = JsObjectMapper::safeGetString(p.As<Napi::Object>(), "type_id", "");
   const auto res = is_tiny_int(v);
@@ -1438,6 +1455,8 @@ bool BoundDatum::bind_datum_type(const Napi::Object& p) {
       // Floating point number
       bind_number(p);
     }
+  } else if (p.IsBigInt()) {
+    bind_integer(p);
   } else if (p.IsDate()) {
     bind_time_stamp_offset(p);
   } else if (p.IsBuffer()) {
@@ -1466,7 +1485,11 @@ bool BoundDatum::bind_datum_type(const Napi::Object& p) {
 Napi::Value reserve_output_param(napi_env env, const Napi::Object p, const int size) {
   Napi::Value pval;
 
-  if (sql_type_s_maps_to_any_int32(p) || sql_type_s_maps_to_boolean(p)) {
+  if (sql_type_s_maps_to_bigint(p)) {
+    // OUTPUT bigint placeholder — must be a BigInt so bind_datum_type
+    // routes via bind_integer (sql_type=SQL_BIGINT) rather than int32.
+    pval = Napi::BigInt::New(env, static_cast<int64_t>(0));
+  } else if (sql_type_s_maps_to_any_int32(p) || sql_type_s_maps_to_boolean(p)) {
     pval = Napi::Number::New(env, 0);
   } else if (sql_type_s_maps_to_u_int32(p)) {
     pval = Napi::Number::New(env, 0);
@@ -1901,7 +1924,7 @@ bool BoundDatum::user_bind(const Napi::Object& p, const Napi::Object& v) {
       break;
 
     case SQL_BIGINT:
-      if (pp.IsNumber()) {
+      if (pp.IsNumber() || pp.IsBigInt()) {
         bind_integer(pp.As<Napi::Object>());
       } else if (pp.IsObject()) {
         sql_bigint(pp.As<Napi::Object>());
@@ -2392,7 +2415,32 @@ void BoundDatum::reserve_column_type(const SQLSMALLINT type, size_t& len, const 
 }
 
 Napi::Value BoundDatum::unbind(const Napi::Env& env) const {
+  return unbind(env, false);
+}
+
+Napi::Value BoundDatum::unbind(const Napi::Env& env, bool bigIntAsNative) const {
   Napi::Value v;
+
+  SQL_LOG_TRACE_STREAM("BoundDatum::unbind bigIntAsNative="
+                       << (bigIntAsNative ? 1 : 0) << " js_type=" << (int)js_type
+                       << " sql_type=" << (int)sql_type);
+
+  // SQL_BIGINT OUTPUT params are stored under js_type == JS_NUMBER (see
+  // reserve_integer). When the caller has opted into bigIntAsNative, emit
+  // a JS BigInt so precision survives values above 2^53.
+  if (bigIntAsNative && js_type == JS_NUMBER && sql_type == SQL_BIGINT) {
+    if (_storage && _storage->int64vec_ptr && !_storage->int64vec_ptr->empty()) {
+      const auto& vec = *_storage->int64vec_ptr;
+      SQL_LOG_TRACE_STREAM("BoundDatum::unbind emitting Napi::BigInt(int64) val=" << vec[0]);
+      return Napi::BigInt::New(env, static_cast<int64_t>(vec[0]));
+    }
+    if (_storage && _storage->bigint_vec_ptr && !_storage->bigint_vec_ptr->empty()) {
+      const auto& vec = *_storage->bigint_vec_ptr;
+      SQL_LOG_TRACE_STREAM("BoundDatum::unbind emitting Napi::BigInt(bigint_t) val=" << vec[0]);
+      return Napi::BigInt::New(env, static_cast<int64_t>(vec[0]));
+    }
+    SQL_LOG_WARNING_STREAM("BoundDatum::unbind bigIntAsNative requested but no int64/bigint storage");
+  }
 
   switch (js_type) {
     case JS_STRING:

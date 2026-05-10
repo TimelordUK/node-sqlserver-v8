@@ -190,6 +190,7 @@ OdbcStatementLegacy::OdbcStatementLegacy(
       _cancelRequested(false),
       _pollingEnabled(false),
       _numericStringEnabled(false),
+      _bigIntAsNativeEnabled(false),
       _resultset(nullptr),
       _boundParamsSet(nullptr),
       _statement(statement),
@@ -202,6 +203,7 @@ OdbcStatementLegacy::OdbcStatementLegacy(
   // cerr << "OdbcStatement() " << _statementId << " " << endl;
   // fprintf(stderr, "OdbcStatement::OdbcStatement OdbcStatement ID = %ld\n ", statement_id);
   _numericStringEnabled = _operationParams->numeric_string;
+  _bigIntAsNativeEnabled = _operationParams->bigint_as_native;
   _pollingEnabled.store(_operationParams->polling);
   _errors = make_shared<vector<shared_ptr<OdbcError>>>();
 }
@@ -425,6 +427,12 @@ bool OdbcStatementLegacy::get_polling() {
 bool OdbcStatementLegacy::set_numeric_string(const bool mode) {
   lock_guard<recursive_mutex> lock(g_i_mutex);
   _numericStringEnabled = mode;
+  return true;
+}
+
+bool OdbcStatementLegacy::set_bigint_as_native(const bool mode) {
+  lock_guard<recursive_mutex> lock(g_i_mutex);
+  _bigIntAsNativeEnabled = mode;
   return true;
 }
 
@@ -1505,6 +1513,8 @@ bool OdbcStatementLegacy::get_data_big_int(
   const auto col = make_shared<BigIntColumn>(column, v);
   if (_numericStringEnabled) {
     col->AsString();
+  } else if (_bigIntAsNativeEnabled) {
+    col->AsBigInt();
   }
   _resultset->add_column(row_id, col);
   return true;
@@ -1619,6 +1629,8 @@ bool OdbcStatementLegacy::reserved_big_int(const size_t row_count, const size_t 
     auto col = make_shared<BigIntColumn>(column, v);
     if (_numericStringEnabled) {
       col->AsString();
+    } else if (_bigIntAsNativeEnabled) {
+      col->AsBigInt();
     }
     _resultset->add_column(row_id, col);
   }

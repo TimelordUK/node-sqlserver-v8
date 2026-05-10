@@ -191,6 +191,7 @@ class QueryOperationParams {
   int32_t id;
   size_t max_prepared_column_size;
   bool numeric_string;
+  bool bigint_as_native;
   bool polling;
 
   std::string toString() const {
@@ -201,6 +202,7 @@ class QueryOperationParams {
     result += ", id: " + std::to_string(id);
     result += ", max_prepared_column_size: " + std::to_string(max_prepared_column_size);
     result += ", numeric_string: " + std::to_string(numeric_string);
+    result += ", bigint_as_native: " + std::to_string(bigint_as_native);
     result += ", polling: " + std::to_string(polling);
     return result;
   }

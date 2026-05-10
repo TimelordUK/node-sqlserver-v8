@@ -13,12 +13,17 @@ namespace mssql {
 
 class Column {
  public:
-  Column(int id) : _id(id), _asNative(true) {}
+  Column(int id) : _id(id), _asNative(true), _asBigInt(false) {}
   virtual ~Column();
 
   virtual Napi::Object ToNative(Napi::Env env) = 0;
+  virtual Napi::Object ToBigInt(Napi::Env env) {
+    return ToNative(env);
+  }
   virtual Napi::Object ToValue(Napi::Env env) {
-    return _asNative ? ToNative(env) : ToString(env);
+    if (!_asNative) return ToString(env);
+    if (_asBigInt) return ToBigInt(env);
+    return ToNative(env);
   }
 
   virtual Napi::Object ToString(Napi::Env env) = 0;
@@ -28,6 +33,9 @@ class Column {
   }
   void AsString() {
     _asNative = false;
+  }
+  void AsBigInt() {
+    _asBigInt = true;
   }
 
   template <class T>
@@ -40,5 +48,6 @@ class Column {
  private:
   int _id;
   bool _asNative;
+  bool _asBigInt;
 };
 }  // namespace mssql

@@ -24,7 +24,11 @@ class BigIntColumn : public Column {
   }
 
   inline Napi::Object ToNative(Napi::Env env) override {
-    return Napi::Number::New(env, value).As<Napi::Object>();
+    return Napi::Number::New(env, static_cast<double>(value)).As<Napi::Object>();
+  }
+
+  inline Napi::Object ToBigInt(Napi::Env env) override {
+    return Napi::BigInt::New(env, static_cast<int64_t>(value)).As<Napi::Object>();
   }
 
  private:

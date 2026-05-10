@@ -48,6 +48,7 @@ class BoundDatum {
   }
 
   Napi::Value unbind(const Napi::Env& env) const;
+  Napi::Value unbind(const Napi::Env& env, bool bigIntAsNative) const;
 
   vector<SQLLEN>& get_ind_vec() {
     return _indvec;

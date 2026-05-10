@@ -174,6 +174,12 @@ declare namespace MsNodeSqlV8 {
      */
     useNumericString?: boolean
     /**
+     * return SQL BIGINT columns as native JS BigInt instead of Number.
+     * preserves precision above 2^53 without forcing all numerics to string.
+     * useNumericString takes precedence if both are set.
+     */
+    useBigIntAsNative?: boolean
+    /**
      * nvarchar(max) prepared columns must be constrained (Default 8k)
      */
     maxPreparedColumnSize?: number
@@ -758,6 +764,16 @@ declare namespace MsNodeSqlV8 {
      */
     getUseNumericString: () => boolean
     /**
+     * return SQL BIGINT columns as native JS BigInt instead of Number.
+     * preserves precision above 2^53 without forcing all numerics to string.
+     * useNumericString takes precedence if both are set.
+     */
+    setUseBigIntAsNative: (bigIntAsNative: boolean) => void
+    /**
+     * returns flag to indicate if SQL BIGINT columns are returned as native BigInt
+     */
+    getUseBigIntAsNative: () => boolean
+    /**
      * set max length of prepared strings or binary columns. Note this
      * will not work for a connection with always on encryption enabled
      * else a column marked nvarchar(max) is given a max size allocated
@@ -905,6 +921,11 @@ declare namespace MsNodeSqlV8 {
      * for BigInt can return string to avoid overflow
      */
     numeric_string?: boolean
+    /**
+     * return SQL BIGINT columns as native JS BigInt instead of Number for this query.
+     * numeric_string takes precedence if both are set.
+     */
+    bigint_as_native?: boolean
     query_timeout?: number
     query_polling?: boolean
     query_tz_adjustment?: number

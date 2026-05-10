@@ -112,13 +112,17 @@ bool BoundDatumSet::bind(const Napi::Array& node_params) {
 Napi::Array BoundDatumSet::unbind(Napi::Env& env) const {
   auto arr = Napi::Array::New(env, _output_param_count);
   auto i = 0;
+  const bool bigIntAsNative = _params ? _params->bigint_as_native : false;
+
+  SQL_LOG_TRACE_STREAM("BoundDatumSet::unbind output_param_count="
+                       << _output_param_count << " bigIntAsNative=" << (bigIntAsNative ? 1 : 0));
 
   std::for_each(
       _bindings->begin(), _bindings->end(), [&](const shared_ptr<BoundDatum>& param) mutable {
         switch (param->param_type) {
           case SQL_PARAM_OUTPUT:
           case SQL_PARAM_INPUT_OUTPUT: {
-            const auto v = param->unbind(env);
+            const auto v = param->unbind(env, bigIntAsNative);
             arr.Set(static_cast<uint32_t>(i++), v);
           } break;
 

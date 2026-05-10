@@ -126,6 +126,7 @@ class OdbcStatementLegacy : public IOdbcStatement {
   void set_state(const OdbcStatementState state);
   OdbcStatementState get_state();
   bool set_numeric_string(bool mode);
+  bool set_bigint_as_native(bool mode);
 
   shared_ptr<vector<shared_ptr<OdbcError>>> errors(void) const {
     return _errors;
@@ -210,6 +211,7 @@ class OdbcStatementLegacy : public IOdbcStatement {
   std::atomic<bool> _cancelRequested;
   std::atomic<bool> _pollingEnabled;
   bool _numericStringEnabled;
+  bool _bigIntAsNativeEnabled;
 
   std::atomic<OdbcStatementState> _statementState{OdbcStatementState::STATEMENT_IDLE};
 

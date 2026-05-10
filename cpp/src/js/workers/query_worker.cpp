@@ -24,7 +24,7 @@ QueryWorker::QueryWorker(Napi::Function& callback,
 
   // Or use it somewhere, perhaps in a logging statement:
   SQL_LOG_DEBUG_STREAM("Processing " << length << " parameters");
-  parameters_ = std::make_shared<BoundDatumSet>();
+  parameters_ = std::make_shared<BoundDatumSet>(q);
   // ParameterFactory::populateParameterSet(params, parameters_);
   if (!parameters_->bind(params)) {
     SQL_LOG_ERROR_STREAM("Failed to bind parameters: " << parameters_->err);
