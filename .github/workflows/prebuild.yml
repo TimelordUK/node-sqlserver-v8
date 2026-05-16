@@ -162,7 +162,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04, windows-2022, macos-latest]
-        electron: [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41]
+        electron: [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -280,9 +280,119 @@ jobs:
         name: prebuilds-electron-${{ matrix.electron }}-${{ matrix.os }}
         path: prebuilds/
 
+  # Alpine (musl) prebuilds run inside a node:<N>-alpine container on an
+  # ubuntu runner because GitHub Actions doesn't offer native alpine runners.
+  # Build steps mirror docker/alpine-msnodesqlv8/Dockerfile: apk-install the
+  # toolchain + unixodbc-dev, then drop in the Microsoft msodbcsql18 .apk for
+  # the ODBC headers (the driver itself is loaded dynamically at runtime).
+  # prebuild auto-detects musl libc and tags artefacts as linuxmusl-x64.
+  prebuild-node-alpine:
+    name: Prebuild Node ${{ matrix.node }} on Alpine Linux (musl)
+    strategy:
+      matrix:
+        node: [20, 22, 23, 24, 25]
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build in node:${{ matrix.node }}-alpine
+      run: |
+        docker run --rm \
+          -v "$PWD":/src \
+          -w /src \
+          node:${{ matrix.node }}-alpine sh -c '
+            set -ex
+            apk add --no-cache python3 make g++ unixodbc-dev curl
+            curl -sSO https://download.microsoft.com/download/1/f/f/1fffb537-26ab-4947-a46a-7a45c27f6f77/msodbcsql18_18.2.1.1-1_amd64.apk
+            apk add --allow-untrusted msodbcsql18_18.2.1.1-1_amd64.apk
+            rm -f msodbcsql18_18.2.1.1-1_amd64.apk
+
+            npm install
+
+            # Patch prebuild for latest Electron / node-abi support (mirrors the other matrix jobs)
+            npm install -g npm-check-updates
+            cd node_modules/prebuild
+            ncu -u node-abi node-gyp
+            npm install
+            cd /src
+
+            npx prebuild --strip
+
+            # Make prebuild output readable by the host runner (container writes as root).
+            chmod -R a+rwX prebuilds
+          '
+
+    - name: List generated prebuilds
+      run: |
+        echo "=== Generated prebuilds ==="
+        find prebuilds -type f -name "*.tar.gz" 2>/dev/null || echo "No tar.gz files found"
+        ls -la prebuilds/ || echo "prebuilds directory not found"
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: prebuilds-node-${{ matrix.node }}-alpine
+        path: prebuilds/
+
+  prebuild-electron-alpine:
+    name: Prebuild Electron ${{ matrix.electron }} on Alpine Linux (musl)
+    strategy:
+      matrix:
+        electron: [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42]
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build Electron ${{ matrix.electron }} in node:20-alpine
+      env:
+        ELECTRON_VERSION: ${{ matrix.electron }}
+      run: |
+        docker run --rm \
+          -v "$PWD":/src \
+          -w /src \
+          -e ELECTRON_VERSION \
+          node:20-alpine sh -c '
+            set -ex
+            apk add --no-cache python3 make g++ unixodbc-dev curl
+            curl -sSO https://download.microsoft.com/download/1/f/f/1fffb537-26ab-4947-a46a-7a45c27f6f77/msodbcsql18_18.2.1.1-1_amd64.apk
+            apk add --allow-untrusted msodbcsql18_18.2.1.1-1_amd64.apk
+            rm -f msodbcsql18_18.2.1.1-1_amd64.apk
+
+            npm install
+
+            npm install -g npm-check-updates
+            cd node_modules/prebuild
+            ncu -u node-abi node-gyp
+            npm install
+            cd /src
+
+            VERSION="$ELECTRON_VERSION"
+            case "$VERSION" in
+              *.*) ;;
+              *) VERSION="${VERSION}.0.0" ;;
+            esac
+            npx prebuild -r electron -t "$VERSION" --strip
+
+            chmod -R a+rwX prebuilds
+          '
+
+    - name: List generated Electron prebuilds
+      run: |
+        echo "=== Generated Electron prebuilds ==="
+        find prebuilds -type f -name "*.tar.gz" 2>/dev/null || echo "No tar.gz files found"
+        ls -la prebuilds/ || echo "prebuilds directory not found"
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: prebuilds-electron-${{ matrix.electron }}-alpine
+        path: prebuilds/
+
   test-prebuilds:
     name: Test prebuilds
-    needs: [prebuild-node, prebuild-electron]
+    needs: [prebuild-node, prebuild-electron, prebuild-node-alpine, prebuild-electron-alpine]
     runs-on: ubuntu-latest
 
     steps:
@@ -392,11 +502,8 @@ jobs:
         echo ""
         echo "📋 Automated prebuilds uploaded for:"
         echo "   • Windows (win32-x64)"
-        echo "   • Linux glibc 2.35+ (linux-x64, built on Ubuntu 22.04)" 
+        echo "   • Linux glibc 2.35+ (linux-x64, built on Ubuntu 22.04)"
+        echo "   • Linux musl (linuxmusl-x64, built in node:<N>-alpine container)"
         echo "   • macOS Apple Silicon (darwin-arm64)"
         echo "   • Node.js versions: 20, 22, 23, 24, 25"
-        echo "   • Electron versions: 30, 31, 32, 33, 34, 35, 36, 37, 38, 39"
-        echo ""
-        echo "ℹ️  Alpine Linux (musl) prebuilds must be built manually:"
-        echo "   npx prebuild --target alpine"
-        echo "   gh release upload $RELEASE_TAG *.tar.gz"
+        echo "   • Electron versions: 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42"
