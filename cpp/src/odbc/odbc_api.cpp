@@ -508,9 +508,10 @@ bool RealOdbcApi::IsServerReachable(const std::string& server) {
 }
 
 SQLRETURN RealOdbcApi::SQLExecDirectW(SQLHSTMT hstmt, SQLWCHAR* szSqlStr, SQLINTEGER TextLength) {
-  SQL_LOG_TRACE_STREAM("SQLExecDirectW called for handle: " << hstmt
-                                                            << ", SQL: " << WideToUtf8(szSqlStr)
-                                                            << ", TextLength: " << TextLength);
+  SQL_LOG_TRACE_STREAM("SQLExecDirectW called for handle: "
+                       << hstmt
+                       << ", SQL: " << WideToUtf8(szSqlStr, TextLength > 0 ? TextLength : -1)
+                       << ", TextLength: " << TextLength);
 
   SQLRETURN ret = ::SQLExecDirectW(hstmt, szSqlStr, TextLength);
   SQL_LOG_TRACE_STREAM("SQLExecDirectW returned: " << GetSqlReturnCodeString(ret));
@@ -554,7 +555,7 @@ SQLRETURN RealOdbcApi::SQLNumResultCols(SQLHSTMT StatementHandle, SQLSMALLINT* C
 SQLRETURN RealOdbcApi::SQLPrepareW(SQLHSTMT StatementHandle,
                                    SQLWCHAR* StatementText,
                                    SQLINTEGER TextLength) {
-  std::string sql = WideToUtf8(StatementText);
+  std::string sql = WideToUtf8(StatementText, TextLength > 0 ? TextLength : -1);
   SQL_LOG_TRACE_STREAM("SQLPrepareW called - Handle: " << StatementHandle << ", SQL: " << sql
                                                        << ", TextLength: " << TextLength);
 
@@ -799,13 +800,22 @@ SQLRETURN RealOdbcApi::SQLBindParameter(SQLHSTMT hstmt,
     bool isNull = pcbValue && *pcbValue == SQL_NULL_DATA;
 
     if (!isNull) {
+      SQLLEN byteLen = pcbValue ? *pcbValue : SQL_NTS;
       switch (fCType) {
         case SQL_C_CHAR:
-          valueStr = "'" + std::string(static_cast<char*>(rgbValue)) + "'";
+          if (byteLen > 0) {
+            valueStr =
+                "'" + std::string(static_cast<char*>(rgbValue), static_cast<size_t>(byteLen)) + "'";
+          } else {
+            valueStr = "'" + std::string(static_cast<char*>(rgbValue)) + "'";
+          }
           break;
-        case SQL_C_WCHAR:
-          valueStr = "'" + WideToUtf8(static_cast<SQLWCHAR*>(rgbValue)) + "'";
+        case SQL_C_WCHAR: {
+          int charLen =
+              byteLen > 0 ? static_cast<int>(byteLen / sizeof(SQLWCHAR)) : -1;
+          valueStr = "'" + WideToUtf8(static_cast<SQLWCHAR*>(rgbValue), charLen) + "'";
           break;
+        }
         case SQL_C_SLONG:
         case SQL_C_LONG:
           valueStr = std::to_string(*static_cast<SQLINTEGER*>(rgbValue));
