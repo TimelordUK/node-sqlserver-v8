@@ -180,6 +180,31 @@
                                 # Uncomment the next line to use Node-API instead of NAN
                             # "CONNECTION_USE_NODE_API",
                         ],
+                        # Node distributions compiled with clang-cl + (thin) LTO
+                        # (e.g. node 26 on Windows) leak -flto=thin / -flto=full
+                        # and /opt:lldltojobs into addon builds via the node
+                        # headers' common.gypi. MSVC's link.exe rejects
+                        # /opt:lldltojobs (LNK1117: syntax error), failing the
+                        # build. Strip the inherited LTO options from the MSVC
+                        # tools - mirrors the "-fno-lto" handling for linux below.
+                        "msvs_settings": {
+                            "VCCLCompilerTool": {
+                                "AdditionalOptions!": ["-flto=thin", "-flto=full"],
+                                "AdditionalOptions/": [["exclude", "flto"]],
+                            },
+                            "VCLibrarianTool": {
+                                "AdditionalOptions!": ["-flto=thin", "-flto=full"],
+                                "AdditionalOptions/": [["exclude", "flto|lldltojobs"]],
+                            },
+                            "VCLinkerTool": {
+                                "AdditionalOptions!": [
+                                    "-flto=thin",
+                                    "-flto=full",
+                                    "/opt:lldltojobs=2",
+                                ],
+                                "AdditionalOptions/": [["exclude", "flto|lldltojobs"]],
+                            },
+                        },
                     },
                 ],
                 [
