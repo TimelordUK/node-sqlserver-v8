@@ -78,6 +78,9 @@ jobs:
     - name: Install macOS dependencies
       if: runner.os == 'macOS'
       run: |
+        # Homebrew now requires explicit trust for third-party taps; the
+        # Microsoft mssql-release tap is trusted here so msodbcsql18 installs.
+        export HOMEBREW_NO_REQUIRE_TAP_TRUST=1
         brew install unixodbc
         # Download and install ODBC Driver
         brew tap microsoft/mssql-release https://github.com/Microsoft/homebrew-mssql-release
@@ -195,6 +198,9 @@ jobs:
     - name: Install macOS dependencies
       if: runner.os == 'macOS'
       run: |
+        # Homebrew now requires explicit trust for third-party taps; the
+        # Microsoft mssql-release tap is trusted here so msodbcsql18 installs.
+        export HOMEBREW_NO_REQUIRE_TAP_TRUST=1
         brew install unixodbc
         brew tap microsoft/mssql-release https://github.com/Microsoft/homebrew-mssql-release
         brew update
