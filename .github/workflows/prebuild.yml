@@ -302,6 +302,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    # download.microsoft.com is fronted by Akamai edges that sometimes serve an
+    # incomplete TLS chain; the musl/alpine CA bundle then can't verify it
+    # (curl error 60). Fetch the .apk on the host runner, which has a full CA
+    # store, and install the local file inside the container.
+    - name: Download msodbcsql18 apk (host)
+      run: |
+        curl -sSLO https://download.microsoft.com/download/1/f/f/1fffb537-26ab-4947-a46a-7a45c27f6f77/msodbcsql18_18.2.1.1-1_amd64.apk
+
     - name: Build in node:${{ matrix.node }}-alpine
       run: |
         docker run --rm \
@@ -309,9 +317,8 @@ jobs:
           -w /src \
           node:${{ matrix.node }}-alpine sh -c '
             set -ex
-            apk add --no-cache ca-certificates python3 make g++ unixodbc-dev curl
+            apk add --no-cache ca-certificates python3 make g++ unixodbc-dev
             update-ca-certificates || true
-            curl -sSO https://download.microsoft.com/download/1/f/f/1fffb537-26ab-4947-a46a-7a45c27f6f77/msodbcsql18_18.2.1.1-1_amd64.apk
             apk add --allow-untrusted msodbcsql18_18.2.1.1-1_amd64.apk
             rm -f msodbcsql18_18.2.1.1-1_amd64.apk
 
@@ -352,6 +359,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    # See note in prebuild-node-alpine: fetch the .apk on the host (full CA
+    # store) and install the local file inside the musl container.
+    - name: Download msodbcsql18 apk (host)
+      run: |
+        curl -sSLO https://download.microsoft.com/download/1/f/f/1fffb537-26ab-4947-a46a-7a45c27f6f77/msodbcsql18_18.2.1.1-1_amd64.apk
+
     - name: Build Electron ${{ matrix.electron }} in node:20-alpine
       env:
         ELECTRON_VERSION: ${{ matrix.electron }}
@@ -362,9 +375,8 @@ jobs:
           -e ELECTRON_VERSION \
           node:20-alpine sh -c '
             set -ex
-            apk add --no-cache ca-certificates python3 make g++ unixodbc-dev curl
+            apk add --no-cache ca-certificates python3 make g++ unixodbc-dev
             update-ca-certificates || true
-            curl -sSO https://download.microsoft.com/download/1/f/f/1fffb537-26ab-4947-a46a-7a45c27f6f77/msodbcsql18_18.2.1.1-1_amd64.apk
             apk add --allow-untrusted msodbcsql18_18.2.1.1-1_amd64.apk
             rm -f msodbcsql18_18.2.1.1-1_amd64.apk
 
