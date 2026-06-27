@@ -795,41 +795,43 @@ SQLRETURN RealOdbcApi::SQLBindParameter(SQLHSTMT hstmt,
                        << cbColDef << ", Scale: " << ibScale << ", ValueMax: " << cbValueMax);
 
   // For input parameters, try to log the actual value being bound
-  if ((fParamType == SQL_PARAM_INPUT || fParamType == SQL_PARAM_INPUT_OUTPUT) && rgbValue) {
-    std::string valueStr = "unknown";
-    bool isNull = pcbValue && *pcbValue == SQL_NULL_DATA;
+  if (mssql::Logger::GetInstance().IsEnabled(mssql::LogLevel::Trace)) {
+    if ((fParamType == SQL_PARAM_INPUT || fParamType == SQL_PARAM_INPUT_OUTPUT) && rgbValue) {
+      std::string valueStr = "unknown";
+      bool isNull = pcbValue && *pcbValue == SQL_NULL_DATA;
 
-    if (!isNull) {
-      SQLLEN byteLen = pcbValue ? *pcbValue : SQL_NTS;
-      switch (fCType) {
-        case SQL_C_CHAR:
-          if (byteLen > 0) {
-            valueStr =
-                "'" + std::string(static_cast<char*>(rgbValue), static_cast<size_t>(byteLen)) + "'";
-          } else {
-            valueStr = "'" + std::string(static_cast<char*>(rgbValue)) + "'";
+      if (!isNull) {
+        SQLLEN byteLen = pcbValue ? *pcbValue : SQL_NTS;
+        switch (fCType) {
+          case SQL_C_CHAR:
+            if (byteLen > 0) {
+              valueStr = "'" +
+                         std::string(static_cast<char*>(rgbValue), static_cast<size_t>(byteLen)) +
+                         "'";
+            } else {
+              valueStr = "'" + std::string(static_cast<char*>(rgbValue)) + "'";
+            }
+            break;
+          case SQL_C_WCHAR: {
+            int charLen = byteLen > 0 ? static_cast<int>(byteLen / sizeof(SQLWCHAR)) : -1;
+            valueStr = "'" + WideToUtf8(static_cast<SQLWCHAR*>(rgbValue), charLen) + "'";
+            break;
           }
-          break;
-        case SQL_C_WCHAR: {
-          int charLen =
-              byteLen > 0 ? static_cast<int>(byteLen / sizeof(SQLWCHAR)) : -1;
-          valueStr = "'" + WideToUtf8(static_cast<SQLWCHAR*>(rgbValue), charLen) + "'";
-          break;
+          case SQL_C_SLONG:
+          case SQL_C_LONG:
+            valueStr = std::to_string(*static_cast<SQLINTEGER*>(rgbValue));
+            break;
+          case SQL_C_DOUBLE:
+            valueStr = std::to_string(*static_cast<SQLDOUBLE*>(rgbValue));
+            break;
+            // Add more types as needed
         }
-        case SQL_C_SLONG:
-        case SQL_C_LONG:
-          valueStr = std::to_string(*static_cast<SQLINTEGER*>(rgbValue));
-          break;
-        case SQL_C_DOUBLE:
-          valueStr = std::to_string(*static_cast<SQLDOUBLE*>(rgbValue));
-          break;
-          // Add more types as needed
+      } else {
+        valueStr = "NULL";
       }
-    } else {
-      valueStr = "NULL";
-    }
 
-    SQL_LOG_TRACE_STREAM("Parameter " << ipar << " value: " << valueStr);
+      SQL_LOG_TRACE_STREAM("Parameter " << ipar << " value: " << valueStr);
+    }
   }
 
   SQLRETURN ret = ::SQLBindParameter(
