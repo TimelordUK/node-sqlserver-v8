@@ -1,7 +1,7 @@
 with proc_exist_cte(object_id, proc_name, type_desc) as
 (
 	SELECT object_id, name as proc_name, type_desc  
-		FROM sys.objects WHERE type = 'P' AND object_id = object_id('<schema_name>.<escaped_procedure_name>')
+		FROM sys.all_objects WHERE type = 'P' AND object_id = object_id('<schema_name>.<escaped_procedure_name>')
 ), 
 proc_params_cte(object_id,
 has_default_value,
@@ -33,7 +33,7 @@ select
                 then ServerProperty('collation') end),
     ty.is_user_defined
  from
-	sys.parameters sp
+	sys.all_parameters sp
 	left outer join sys.table_types ty
 	    on ty.name=type_name(sp.user_type_id)
 		and ty.schema_id = schema_id('<schema_name>')
