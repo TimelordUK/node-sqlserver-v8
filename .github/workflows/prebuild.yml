@@ -28,7 +28,10 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04, windows-2022, macos-latest]
-        node: [20, 22, 23, 24, 25, 26]
+        # Supported Node lines only. 20 (EOL 2026-04-30), 23 (2025-06-01) and
+        # 25 (2026-06-01) are past end-of-life; the build toolchain has dropped
+        # them (node-gyp >=13 requires ^22.22.2 || ^24.15.0 || >=26.0.0).
+        node: [22, 24, 26]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -90,36 +93,20 @@ jobs:
     - name: Install npm dependencies
       run: npm install
 
-    - name: Patch prebuild dependencies for latest Electron support (Unix)
-      if: runner.os != 'Windows'
+    # prebuild is unmaintained (last published 2024-05-16) and our lockfile
+    # pins its nested node-abi at 3.75.0, which predates Electron 38 and fails
+    # with "Could not detect abi for version 38.0.0". Refresh node-abi in
+    # prebuild's own tree so it knows current Electron/Node ABIs.
+    #
+    # The majors are pinned deliberately. This step previously ran an unbounded
+    # `ncu -u`, which silently pulled node-gyp 13 (engines: Node >=22) onto the
+    # Node 20 jobs and broke every build via undici 8. Bump these by hand.
+    - name: Refresh prebuild's ABI tables
+      shell: bash
       run: |
-        echo "Updating node-abi and node-gyp in prebuild for Electron 38/39 support..."
-        npm install -g npm-check-updates
         cd node_modules/prebuild
-        echo "Before update:"
-        cat package.json | grep -E '"node-abi"|"node-gyp"'
-        ncu -u node-abi node-gyp
-        echo "After update:"
-        cat package.json | grep -E '"node-abi"|"node-gyp"'
-        npm install
-        echo "Installed versions:"
+        npm install --no-save node-abi@^4 node-gyp@^13
         npm ls node-abi node-gyp || true
-
-    - name: Patch prebuild dependencies for latest Electron support (Windows)
-      if: runner.os == 'Windows'
-      shell: powershell
-      run: |
-        Write-Host "Updating node-abi and node-gyp in prebuild for Electron 38/39 support..."
-        npm install -g npm-check-updates
-        Set-Location node_modules\prebuild
-        Write-Host "Before update:"
-        Get-Content package.json | Select-String -Pattern '"node-abi"|"node-gyp"'
-        ncu -u node-abi node-gyp
-        Write-Host "After update:"
-        Get-Content package.json | Select-String -Pattern '"node-abi"|"node-gyp"'
-        npm install
-        Write-Host "Installed versions:"
-        npm ls node-abi node-gyp
 
     - name: Prebuild binaries
       run: npx prebuild --strip
@@ -165,7 +152,12 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04, windows-2022, macos-latest]
-        electron: [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43]
+        # Electron supports the latest three stable majors (41, 42, 43 as of
+        # 2026-07). 38-40 are kept as a safety net because Electron apps pin
+        # their version and upgrade slowly -- without a prebuild they fall back
+        # to compiling from source, which needs a full toolchain + unixODBC
+        # headers. Anything below 38 has been unpatched for over a year.
+        electron: [38, 39, 40, 41, 42, 43]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -174,7 +166,10 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 20  # Use a stable Node version for Electron builds
+        # Host runtime only -- the Electron ABI is selected by the explicit
+        # `-t $VERSION` passed to prebuild below, so this just needs to be a
+        # supported Node that the build toolchain still runs on.
+        node-version: 24
 
     # Linux specific setup (same as above)
     - name: Install Linux dependencies
@@ -209,36 +204,20 @@ jobs:
     - name: Install npm dependencies
       run: npm install
 
-    - name: Patch prebuild dependencies for latest Electron support (Unix)
-      if: runner.os != 'Windows'
+    # prebuild is unmaintained (last published 2024-05-16) and our lockfile
+    # pins its nested node-abi at 3.75.0, which predates Electron 38 and fails
+    # with "Could not detect abi for version 38.0.0". Refresh node-abi in
+    # prebuild's own tree so it knows current Electron/Node ABIs.
+    #
+    # The majors are pinned deliberately. This step previously ran an unbounded
+    # `ncu -u`, which silently pulled node-gyp 13 (engines: Node >=22) onto the
+    # Node 20 jobs and broke every build via undici 8. Bump these by hand.
+    - name: Refresh prebuild's ABI tables
+      shell: bash
       run: |
-        echo "Updating node-abi and node-gyp in prebuild for Electron 38/39 support..."
-        npm install -g npm-check-updates
         cd node_modules/prebuild
-        echo "Before update:"
-        cat package.json | grep -E '"node-abi"|"node-gyp"'
-        ncu -u node-abi node-gyp
-        echo "After update:"
-        cat package.json | grep -E '"node-abi"|"node-gyp"'
-        npm install
-        echo "Installed versions:"
+        npm install --no-save node-abi@^4 node-gyp@^13
         npm ls node-abi node-gyp || true
-
-    - name: Patch prebuild dependencies for latest Electron support (Windows)
-      if: runner.os == 'Windows'
-      shell: powershell
-      run: |
-        Write-Host "Updating node-abi and node-gyp in prebuild for Electron 38/39 support..."
-        npm install -g npm-check-updates
-        Set-Location node_modules\prebuild
-        Write-Host "Before update:"
-        Get-Content package.json | Select-String -Pattern '"node-abi"|"node-gyp"'
-        ncu -u node-abi node-gyp
-        Write-Host "After update:"
-        Get-Content package.json | Select-String -Pattern '"node-abi"|"node-gyp"'
-        npm install
-        Write-Host "Installed versions:"
-        npm ls node-abi node-gyp
 
     - name: Prebuild Electron binaries
       shell: bash
@@ -296,7 +275,8 @@ jobs:
     name: Prebuild Node ${{ matrix.node }} on Alpine Linux (musl)
     strategy:
       matrix:
-        node: [20, 22, 23, 24, 25]
+        # Keep in step with the prebuild-node matrix above.
+        node: [22, 24, 26]
     runs-on: ubuntu-22.04
 
     steps:
@@ -324,11 +304,10 @@ jobs:
 
             npm install
 
-            # Patch prebuild for latest Electron / node-abi support (mirrors the other matrix jobs)
-            npm install -g npm-check-updates
+            # Refresh prebuild ABI tables (mirrors the other matrix jobs; see
+            # the note there for why these majors are pinned rather than ncu-ed)
             cd node_modules/prebuild
-            ncu -u node-abi node-gyp
-            npm install
+            npm install --no-save node-abi@^4 node-gyp@^13
             cd /src
 
             npx prebuild --strip
@@ -353,7 +332,8 @@ jobs:
     name: Prebuild Electron ${{ matrix.electron }} on Alpine Linux (musl)
     strategy:
       matrix:
-        electron: [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43]
+        # Keep in step with the prebuild-electron matrix above.
+        electron: [38, 39, 40, 41, 42, 43]
     runs-on: ubuntu-22.04
 
     steps:
@@ -365,7 +345,7 @@ jobs:
       run: |
         curl -sSLO https://download.microsoft.com/download/1/f/f/1fffb537-26ab-4947-a46a-7a45c27f6f77/msodbcsql18_18.2.1.1-1_amd64.apk
 
-    - name: Build Electron ${{ matrix.electron }} in node:20-alpine
+    - name: Build Electron ${{ matrix.electron }} in node:24-alpine
       env:
         ELECTRON_VERSION: ${{ matrix.electron }}
       run: |
@@ -373,7 +353,7 @@ jobs:
           -v "$PWD":/src \
           -w /src \
           -e ELECTRON_VERSION \
-          node:20-alpine sh -c '
+          node:24-alpine sh -c '
             set -ex
             apk add --no-cache ca-certificates python3 make g++ unixodbc-dev
             update-ca-certificates || true
@@ -382,10 +362,10 @@ jobs:
 
             npm install
 
-            npm install -g npm-check-updates
+            # Refresh prebuild ABI tables (mirrors the other matrix jobs; see
+            # the note there for why these majors are pinned rather than ncu-ed)
             cd node_modules/prebuild
-            ncu -u node-abi node-gyp
-            npm install
+            npm install --no-save node-abi@^4 node-gyp@^13
             cd /src
 
             VERSION="$ELECTRON_VERSION"
@@ -525,5 +505,5 @@ jobs:
         echo "   • Linux glibc 2.35+ (linux-x64, built on Ubuntu 22.04)"
         echo "   • Linux musl (linuxmusl-x64, built in node:<N>-alpine container)"
         echo "   • macOS Apple Silicon (darwin-arm64)"
-        echo "   • Node.js versions: 20, 22, 23, 24, 25"
-        echo "   • Electron versions: 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43"
+        echo "   • Node.js versions: 22, 24, 26"
+        echo "   • Electron versions: 38, 39, 40, 41, 42, 43"
