@@ -165,7 +165,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04, windows-2022, macos-latest]
-        electron: [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42]
+        electron: [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -353,7 +353,7 @@ jobs:
     name: Prebuild Electron ${{ matrix.electron }} on Alpine Linux (musl)
     strategy:
       matrix:
-        electron: [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42]
+        electron: [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43]
     runs-on: ubuntu-22.04
 
     steps:
@@ -526,4 +526,4 @@ jobs:
         echo "   • Linux musl (linuxmusl-x64, built in node:<N>-alpine container)"
         echo "   • macOS Apple Silicon (darwin-arm64)"
         echo "   • Node.js versions: 20, 22, 23, 24, 25"
-        echo "   • Electron versions: 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42"
+        echo "   • Electron versions: 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43"
