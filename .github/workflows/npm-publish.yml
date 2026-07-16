@@ -28,7 +28,9 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        # Packaging/publish host only -- does not constrain what the published
+        # package supports. Node 18 went EOL on 2025-04-30; 24 is active LTS.
+        node-version: '24'
         registry-url: 'https://registry.npmjs.org'
         
     - name: Get package info
