@@ -61,9 +61,11 @@ describe('system-sproc', function () {
     const results = await describeProc('sys.sp_cdc_change_job')
     const names = results.map(p => p.name)
 
-    // before the fix this was ['@returns'] only
-    expect(names).to.deep.equal([
-      '@returns',
+    // before the fix this was ['@returns'] only. Asserted as a superset rather than an
+    // exact list so a future SQL Server build adding a param does not fail the suite -
+    // these 7 are stable from 2016 onward and verified on 2019 and 2022.
+    expect(names[0]).to.equal('@returns')
+    expect(names).to.include.members([
       '@job_type',
       '@maxtrans',
       '@maxscans',
@@ -135,14 +137,38 @@ describe('system-sproc', function () {
     expect(res.first.length).to.be.greaterThan(0)
   })
 
-  it('sys.sp_cdc_enable_db - zero/optional param system proc describes cleanly', async function () {
-    // reported as "has no parameters and arguments were supplied" - it does in fact
-    // carry one optional param, which was invisible before the fix
+  it('sys.sp_cdc_enable_db - proc resolves rather than describing as absent', async function () {
+    // the second proc from the issue, reported as "has no parameters and arguments
+    // were supplied". Its parameter list is not portable: some builds expose an
+    // undocumented @fCreateCDCUserImplicit, others expose none at all. So assert only
+    // the invariant this fix is about - the proc is *found*. Before the fix the whole
+    // result was [], because sys.objects cannot see mssqlsystemresource.
     const results = await describeProc('sys.sp_cdc_enable_db')
     const names = results.map(p => p.name)
 
+    expect(results.length).to.be.greaterThan(0)
     expect(names).to.include('@returns')
-    expect(names).to.include('@fCreateCDCUserImplicit')
+
+    // a zero-param proc still resolves: the outer apply yields a single null-param row,
+    // which constructMeta later filters out on object_id === null
+    const params = names.filter(n => n !== '@returns' && n !== null)
+    params.forEach(n => expect(n).to.match(/^@/))
+  })
+
+  it('sys.sp_cdc_help_jobs - zero param system proc resolves as found, not absent', async function () {
+    // a system proc that genuinely takes no params on every build (verified 2019, 2022).
+    // It pins the shape a zero-param proc produces - the outer apply emits one row whose
+    // param columns are all null - which is how a *found* proc with no params is
+    // distinguished from a proc that does not exist (an empty result).
+    const results = await describeProc('sys.sp_cdc_help_jobs')
+
+    expect(results.length).to.equal(2)
+    expect(results[0].name).to.equal('@returns')
+    expect(results[1].name).to.equal(null)
+    expect(results[1].proc_name).to.equal('sp_cdc_help_jobs')
+    // the null-param row is dropped when the proc is bound
+    const proc = await getProc('sys.sp_cdc_help_jobs')
+    expect(proc.getMeta().params.map(p => p.name)).to.deep.equal(['@returns'])
   })
 
   it('unqualified system proc name resolves via the sys schema', async function () {
