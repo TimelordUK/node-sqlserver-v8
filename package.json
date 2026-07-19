@@ -77,11 +77,11 @@
   "scripts": {
     "build": "tsc",
     "build:test": "tsc -p tsconfig.json",
-    "test": "mocha test/**/*.test.js",
+    "test": "mocha \"test/**/*.test.js\"",
     "test:improved": "mocha test/connection-improved.test.js --reporter spec",
     "test:webstorm": "mocha test/connection-webstorm.test.js --config test/.mocharc.webstorm.js",
     "test:connection": "mocha test/connect*.js --reporter spec --timeout 30000",
-    "test:watch": "mocha test/**/*.js --watch --reporter min",
+    "test:watch": "mocha \"test/**/*.js\" --watch --reporter min",
     "watch": "tsc --watch",
     "watch:test": "tsc -p tsconfig.json --watch",
     "builddbg": "node-gyp build --debug",
