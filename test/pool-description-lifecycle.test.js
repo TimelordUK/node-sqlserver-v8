@@ -122,6 +122,52 @@ describe('pool description lifecycle (issue #317)', function () {
       'the heartbeat failure was swallowed')
   })
 
+  it('closing the pool actually closes its idle connections', async function handler () {
+    // close() used to map `promises.close` without invoking it, so Promise.all
+    // resolved over an array of functions and the connections stayed open.
+    let closeCalls = 0
+    let opened = 0
+    client.promises.open = async () => {
+      opened++
+      const c = {
+        setSharedCache () {},
+        setMaxPreparedColumnSize () {},
+        setUseUTC () {},
+        setUseNumericString () {},
+        setUseBigIntAsNative () {},
+        promises: { close: async () => { closeCalls++ } },
+        query () {
+          const q = new EventEmitter()
+          setImmediate(() => {
+            q.emit('column', 0, 51)
+            q.emit('done', null)
+            q.emit('free')
+          })
+          return q
+        }
+      }
+      c.queryRaw = c.query
+      c.callproc = c.query
+      return c
+    }
+
+    const pool = new poolModule.Pool({
+      connectionString: 'stub',
+      floor: 2,
+      ceiling: 2,
+      heartbeatSecs: 30,
+      inactivityTimeoutSecs: 30
+    })
+
+    await new Promise((resolve, reject) => pool.open(e => e ? reject(e) : resolve()))
+    assert.strictEqual(opened, 2, 'expected the pool to open ceiling connections')
+    assert.strictEqual(closeCalls, 0)
+
+    await new Promise(resolve => pool.close(resolve))
+    assert.strictEqual(closeCalls, 2, 'idle connections were not closed on pool shutdown')
+    assert.isTrue(pool.isClosed())
+  })
+
   it('healthy heartbeats park an idle connection without duplication', async function handler () {
     const state = { failHeartbeat: false }
     stubDriver(state)
