@@ -1,0 +1,72 @@
+name: Security Audit
+
+# Dependabot tells us about advisories asynchronously, and it cannot fix a
+# transitive dev dependency whose parent has no new release - those have to be
+# pinned by hand through package.json "overrides". This job makes the state
+# visible on every dependency change instead of only in the Security tab.
+on:
+  push:
+    branches: [master, n_api]
+    paths:
+      - package.json
+      - package-lock.json
+      - .github/workflows/security.yml
+  pull_request:
+    branches: [master, n_api]
+    paths:
+      - package.json
+      - package-lock.json
+      - .github/workflows/security.yml
+  schedule:
+    # Monday 06:30 UTC - catches advisories published against unchanged code.
+    - cron: '30 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: npm audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # --ignore-scripts skips the native build; we only need the dependency
+      # tree. npm ci also fails outright if package.json and the lockfile have
+      # drifted apart, which is a useful guard in its own right.
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      # Only node-abi, node-addon-api and prebuild-install reach consumers of
+      # the published package, so anything at all here is a real finding.
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=low
+
+      # Dev-only advisories should not block a release, but they should be
+      # loud. This fails on high/critical and reports everything else.
+      - name: Audit dev dependencies
+        id: dev_audit
+        continue-on-error: true
+        run: npm audit --audit-level=high
+
+      - name: Publish audit report
+        if: always()
+        run: |
+          {
+            echo '## npm audit (full tree)'
+            echo ''
+            if [ '${{ steps.dev_audit.outcome }}' = 'failure' ]; then
+              echo '> High or critical advisories present in dev dependencies.'
+              echo '> Fix by bumping the direct dep, or by pinning the transitive'
+              echo '> package through `overrides` in package.json.'
+              echo ''
+            fi
+            echo '```'
+            npm audit || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
