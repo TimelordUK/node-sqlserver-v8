@@ -1,0 +1,38 @@
+name: CodeQL
+
+# Static analysis of the JS/TS surface. The native C++ layer is not analysed
+# here - CodeQL would need the full ODBC toolchain to build it; add a c-cpp
+# matrix entry mirroring the install steps in test.yml if that is wanted.
+on:
+  push:
+    branches: [master, n_api]
+  pull_request:
+    branches: [master, n_api]
+  schedule:
+    - cron: '30 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze JavaScript/TypeScript
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-and-quality
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:javascript-typescript

@@ -1,0 +1,48 @@
+# Dependabot configuration.
+#
+# Alerts + automated security fixes are already enabled on the repo, but with no
+# config file Dependabot only ever opened security PRs for npm and never touched
+# the workflow actions themselves. This adds weekly version updates (grouped so
+# we get one PR of dev-tooling bumps rather than twenty) and keeps the GitHub
+# Actions we call pinned to current majors.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/London
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+    groups:
+      # Routine tooling churn: one PR a week for the lot.
+      dev-dependencies:
+        applies-to: version-updates
+        dependency-type: development
+        update-types: [minor, patch]
+      # node-abi / node-addon-api / prebuild-install ship in the published
+      # package, so keep them in their own PR - it is the one CI must be green on.
+      production-dependencies:
+        applies-to: version-updates
+        dependency-type: production
+        update-types: [minor, patch]
+      # Everything Dependabot can fix from an advisory lands in a single PR.
+      security-updates:
+        applies-to: security-updates
+        patterns: ["*"]
+    # Majors stay ungrouped so electron/typescript jumps arrive as their own PR.
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "ci(deps)"
+    groups:
+      github-actions:
+        patterns: ["*"]
