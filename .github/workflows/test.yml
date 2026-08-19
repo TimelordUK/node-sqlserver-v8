@@ -60,10 +60,28 @@ jobs:
         show-log: true
 
     - name: Create test databases
+      timeout-minutes: 5
       run: |
-        # Wait for SQL Server to be ready and create databases
-        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -C -Q "CREATE DATABASE [node];"
-        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -C -Q "CREATE DATABASE [scratch];"
+        # potatoqualitee/mssqlsuite reports success after a fixed 10s sleep plus a
+        # `docker ps` check. On a slow first boot that lands while SQL Server is
+        # still running its upgrade steps, and the sa login is rejected. Poll for a
+        # login that actually works rather than trusting the action's timing.
+        SQLCMD=/opt/mssql-tools18/bin/sqlcmd
+        SA_PWD='YourStrong!Passw0rd'
+        for attempt in $(seq 1 60); do
+          if $SQLCMD -S localhost -U sa -P "$SA_PWD" -C -l 5 -Q "SELECT 1" >/dev/null 2>&1; then
+            echo "SQL Server ready after ${attempt} attempt(s)"
+            break
+          fi
+          if [ "$attempt" -eq 60 ]; then
+            echo "SQL Server did not accept a login within 2 minutes"
+            docker logs sql 2>&1 | tail -50 || true
+            exit 1
+          fi
+          sleep 2
+        done
+        $SQLCMD -S localhost -U sa -P "$SA_PWD" -C -Q "CREATE DATABASE [node];"
+        $SQLCMD -S localhost -U sa -P "$SA_PWD" -C -Q "CREATE DATABASE [scratch];"
 
     - name: Install dependencies
       working-directory: node_modules/msnodesqlv8
@@ -124,13 +142,30 @@ jobs:
 
     - name: Create test databases
       shell: powershell
+      timeout-minutes: 5
       run: |
-        # Wait for SQL Server to be ready
-        Start-Sleep -Seconds 10
+        # Same race as the Linux job: a fixed sleep is a guess at how long the
+        # instance takes to finish first-boot recovery. Poll for a working login.
+        $ErrorActionPreference = "Continue"
+        $ready = $false
+        foreach ($attempt in 1..60) {
+          $null = & sqlcmd -S localhost -U sa -P Password12 -l 5 -Q "SELECT 1" 2>&1
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "SQL Server ready after $attempt attempt(s)"
+            $ready = $true
+            break
+          }
+          Start-Sleep -Seconds 2
+        }
+        if (-not $ready) {
+          Write-Host "SQL Server did not accept a login within 2 minutes"
+          exit 1
+        }
 
-        # Create test databases
         sqlcmd -S localhost -U sa -P Password12 -Q "CREATE DATABASE [node];"
+        if ($LASTEXITCODE -ne 0) { exit 1 }
         sqlcmd -S localhost -U sa -P Password12 -Q "CREATE DATABASE [scratch];"
+        if ($LASTEXITCODE -ne 0) { exit 1 }
 
     - name: Install dependencies
       working-directory: node_modules/msnodesqlv8
