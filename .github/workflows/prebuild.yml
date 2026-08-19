@@ -44,6 +44,7 @@ jobs:
 
     # Linux specific setup
     - name: Install Linux dependencies
+      timeout-minutes: 20
       if: runner.os == 'Linux'
       run: |
         # The GitHub-hosted Ubuntu runner image ships a pre-configured
@@ -61,8 +62,17 @@ jobs:
         curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
 
         # Install dependencies
-        sudo apt-get update
-        sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18 unixodbc-dev gcc-10 g++-10
+        # Hosted runners point apt at an azure.archive.ubuntu.com mirror that is
+        # frequently unreachable. apt then falls back to archive.ubuntu.com, which
+        # can trickle bytes indefinitely - with no timeout the step never fails, it
+        # just runs until the 6 hour job limit kills the whole job.
+        APT_OPTS="-o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 -o Acquire::Retries=3"
+        for attempt in 1 2 3; do
+          sudo timeout 300 apt-get update $APT_OPTS && break
+          echo "apt-get update stalled or failed (attempt $attempt/3), retrying"
+          sleep 15
+        done
+        sudo timeout 900 env ACCEPT_EULA=Y DEBIAN_FRONTEND=noninteractive apt-get install -y $APT_OPTS msodbcsql18 mssql-tools18 unixodbc-dev gcc-10 g++-10
 
         # Set compiler
         echo "CC=gcc-10" >> $GITHUB_ENV
@@ -173,14 +183,24 @@ jobs:
 
     # Linux specific setup (same as above)
     - name: Install Linux dependencies
+      timeout-minutes: 20
       if: runner.os == 'Linux'
       run: |
         # See note in matching step above for why this rm is necessary.
         sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
         curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
         curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
-        sudo apt-get update
-        sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18 unixodbc-dev gcc-10 g++-10
+        # Hosted runners point apt at an azure.archive.ubuntu.com mirror that is
+        # frequently unreachable. apt then falls back to archive.ubuntu.com, which
+        # can trickle bytes indefinitely - with no timeout the step never fails, it
+        # just runs until the 6 hour job limit kills the whole job.
+        APT_OPTS="-o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 -o Acquire::Retries=3"
+        for attempt in 1 2 3; do
+          sudo timeout 300 apt-get update $APT_OPTS && break
+          echo "apt-get update stalled or failed (attempt $attempt/3), retrying"
+          sleep 15
+        done
+        sudo timeout 900 env ACCEPT_EULA=Y DEBIAN_FRONTEND=noninteractive apt-get install -y $APT_OPTS msodbcsql18 mssql-tools18 unixodbc-dev gcc-10 g++-10
         echo "CC=gcc-10" >> $GITHUB_ENV
         echo "CXX=g++-10" >> $GITHUB_ENV
 
