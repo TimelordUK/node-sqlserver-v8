@@ -23,10 +23,10 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
         # Packaging/publish host only -- does not constrain what the published
         # package supports. Node 18 went EOL on 2025-04-30; 24 is active LTS.
