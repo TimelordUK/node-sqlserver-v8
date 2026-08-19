@@ -35,10 +35,10 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
         node-version: ${{ matrix.node }}
 
@@ -152,7 +152,7 @@ jobs:
         echo "Skipping individual upload - uploads are done centrally in test-prebuilds job"
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: prebuilds-node-${{ matrix.node }}-${{ matrix.os }}
         path: prebuilds/
@@ -171,10 +171,10 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
         # Host runtime only -- the Electron ABI is selected by the explicit
         # `-t $VERSION` passed to prebuild below, so this just needs to be a
@@ -280,7 +280,7 @@ jobs:
         echo "Skipping individual upload - uploads are done centrally in test-prebuilds job"
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: prebuilds-electron-${{ matrix.electron }}-${{ matrix.os }}
         path: prebuilds/
@@ -300,7 +300,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     # download.microsoft.com is fronted by Akamai edges that sometimes serve an
     # incomplete TLS chain; the musl/alpine CA bundle then can't verify it
@@ -343,7 +343,7 @@ jobs:
         ls -la prebuilds/ || echo "prebuilds directory not found"
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: prebuilds-node-${{ matrix.node }}-alpine
         path: prebuilds/
@@ -357,7 +357,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     # See note in prebuild-node-alpine: fetch the .apk on the host (full CA
     # store) and install the local file inside the musl container.
@@ -405,7 +405,7 @@ jobs:
         ls -la prebuilds/ || echo "prebuilds directory not found"
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: prebuilds-electron-${{ matrix.electron }}-alpine
         path: prebuilds/
@@ -416,10 +416,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Download all artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         path: prebuilds-artifacts/
 
