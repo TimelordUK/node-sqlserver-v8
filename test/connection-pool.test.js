@@ -323,7 +323,7 @@ describe('pool', function () {
 
       expect(() => {
         pool.commitTransaction(null, () => {})
-      }).to.throw('Cannot read properties of null')
+      }).to.throw('[msnodesql] Pool end transaction called with non-description.')
 
       await pool.promises.close()
     })
@@ -334,7 +334,7 @@ describe('pool', function () {
 
       expect(() => {
         pool.rollbackTransaction({}, () => {})
-      }).to.throw('[msnodesql] Pool end transaction called with unknown or finished transaction.')
+      }).to.throw('[msnodesql] Pool end transaction called with non-description.')
 
       await pool.promises.close()
     })
