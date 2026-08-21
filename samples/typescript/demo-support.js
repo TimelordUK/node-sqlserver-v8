@@ -77,7 +77,7 @@ const GlobalConn = (() => {
           driver,
           database,
           conn_str: cs,
-          support: new DemoSupport(sql, cs),
+          support: new DemoSupport(sql),
           async: new ds.Async(),
           helper: new ds.EmployeeHelper(sql, cs)
         }
@@ -88,7 +88,7 @@ const GlobalConn = (() => {
         driver,
         database,
         conn_str: candidateConnStr,
-        support: new DemoSupport(sql, candidateConnStr),
+        support: new DemoSupport(sql),
         async: new ds.Async(),
         helper: new ds.EmployeeHelper(sql, candidateConnStr)
       }

@@ -1,12 +1,10 @@
 // build-config.js - Common configuration for both node-gyp and CMake
 const fs = require('fs');
-const path = require('path');
 const os = require('os');
 
 // Platform detection
 const isWindows = os.platform() === 'win32';
 const isMac = os.platform() === 'darwin';
-const isLinux = !isWindows && !isMac;
 
 // Common configuration
 const config = {

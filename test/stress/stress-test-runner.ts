@@ -1,5 +1,4 @@
 import * as sql from 'msnodesqlv8'
-import * as os from 'os'
 
 interface StressTestConfig {
   connectionString?: string

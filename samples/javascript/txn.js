@@ -172,7 +172,9 @@ async function runner () {
     countSql: `select count(*) as count from ${table}`
   }
 
-  const scenario = scenario7
+  // pick the scenario to run - see the comments above each definition
+  const scenarios = { scenario1, scenario2, scenario3, scenario4, scenario5, scenario7 }
+  const scenario = scenarios.scenario7
 
   const saConnection = await mssql.promises.open(saString)
   const opens = Array(scenario.connections).fill(0).map(() => mssql.promises.open(connectionString))

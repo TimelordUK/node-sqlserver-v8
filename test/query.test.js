@@ -25,14 +25,12 @@ const chai = require('chai')
 const assert = chai.assert
 const expect = chai.expect
 const { TestEnv } = require('./env/test-env')
-const sql = require('../lib/sql')
 const env = new TestEnv()
 
 describe('query', function () {
   this.timeout(30000)
 
   this.beforeEach(done => {
-    const { configureTestLogging } = require('./common/logging-helper')
     env.open().then(() => {
       done()
     }).catch(e => {
