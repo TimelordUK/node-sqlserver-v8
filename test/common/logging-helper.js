@@ -62,7 +62,6 @@ function configureTestLogging (sql) {
 
   // Only show configuration if not silent
   if (logLevel !== 'SILENT') {
-    const config = sql.logger.getConfiguration()
     console.log('Test logging configured:', {
       level: logLevel,
       console: consoleLogging,

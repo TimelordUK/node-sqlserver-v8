@@ -1,4 +1,3 @@
-const sql = require('./lib/sql')
 const { TestEnv } = require('./test/env/test-env')
 const env = new TestEnv()
 

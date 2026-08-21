@@ -6,7 +6,6 @@ const { TestEnv } = require('./env/test-env')
 const env = new TestEnv()
 const chai = require('chai')
 const assert = chai.assert
-const expect = chai.expect
 
 // Enable trace-level logging for debugging test failures
 const sql = require('../lib/sql')
@@ -100,7 +99,7 @@ describe('compoundqueries', function () {
     const testdata1 = null
     const testdata2Expected = 'string data row 2'
     const testdata2TsqlInsert = '\'' + testdata2Expected + '\''
-    const tsql = `SELECT * FROM ${tablename} ORDER BY id;  INSERT INTO ${tablename} (${testcolumnname}) VALUES (${testdata1});SELECT * FROM ${tablename} ORDER BY id;`
+    const tsql = `SELECT * FROM ${tablename} ORDER BY id;  INSERT INTO ${tablename} (${testcolumnname}) VALUES (NULL);SELECT * FROM ${tablename} ORDER BY id;`
 
     const expected1 = {
       meta: [
@@ -340,7 +339,7 @@ describe('compoundqueries', function () {
     const testdata1 = null
     const testdata2Expected = 'string data row 2'
     const testdata2TsqlInsert = `'${testdata2Expected}'`
-    const tsql = `SELECT * FROM ${tablename} ORDER BY id;  INSERT INTO ${invalidtablename} (${testcolumnname}) VALUES (${testdata1});SELECT * FROM ${tablename} ORDER BY id;`
+    const tsql = `SELECT * FROM ${tablename} ORDER BY id;  INSERT INTO ${invalidtablename} (${testcolumnname}) VALUES (NULL);SELECT * FROM ${tablename} ORDER BY id;`
 
     const expectedError = new Error('[Microsoft][' + driver + '][SQL Server]Invalid object name \'' + invalidtablename + '\'.')
     expectedError.sqlstate = '42S02'

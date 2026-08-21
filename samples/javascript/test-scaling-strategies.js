@@ -1,4 +1,3 @@
-const sql = require('./lib/index')
 
 // Example configurations for different scaling strategies
 

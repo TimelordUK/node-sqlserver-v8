@@ -8,7 +8,6 @@ const env = new TestEnv()
 const chai = require('chai')
 chai.use(chaiAsPromised)
 const expect = chai.expect
-const assert = chai.assert
 
 const sql = require('../lib/sql')
 const { configureTestLogging } = require('./common/logging-helper')

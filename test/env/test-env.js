@@ -17,7 +17,6 @@ const { EncryptHelper } = require('./encrypt-helper')
 const util = require('util')
 const fs = require('fs')
 const path = require('path')
-const chai = require('chai')
 
 class CommonTestFnPromises {
   constructor () {

@@ -6,7 +6,6 @@ const env = new TestEnv()
 const chai = require('chai')
 chai.use(chaiAsPromised)
 const expect = chai.expect
-const assert = chai.assert
 
 const sql = require('../lib/sql')
 const { configureTestLogging } = require('./common/logging-helper')
@@ -288,7 +287,7 @@ describe('tvp', function () {
     builder.addColumn('displayOrder').asInt().null()
 
     // Setup table and TVP using builder pattern (like BuilderChecker.checkTvp)
-    const table = builder.toTable()
+    builder.toTable()
     await builder.drop()
     await builder.create()
 

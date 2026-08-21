@@ -1,4 +1,3 @@
-const sql = require('msnodesqlv8')
 const { TestEnv } = require('../../test/env/test-env')
 const env = new TestEnv()
 const connectionString = env.connectionString

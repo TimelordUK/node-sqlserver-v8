@@ -29,7 +29,6 @@ const env = new TestEnv()
 const chai = require('chai')
 chai.use(chaiAsPromised)
 const expect = chai.expect
-const assert = chai.assert
 
 // Enable trace-level logging for debugging test failures
 const sql = require('../lib/sql')

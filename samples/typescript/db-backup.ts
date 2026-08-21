@@ -6,9 +6,8 @@ const sqlQuery = `BACKUP DATABASE [AdventureWorks2019] TO  DISK = N'H:\\sql serv
 NOFORMAT, INIT,  NAME = N'SampleDb-Full Database Backup', SKIP, NOREWIND, NOUNLOAD,  STATS = 10`
 
 const query = sql.query(connectionString, sqlQuery, (err, rows, more) => {
-  more = more ?? false
-  if (more) return
-  console.error(`cb more ${more ? 'T' : 'F'}`)
+  if (more ?? false) return
+  console.error('cb more F')
   if (err != null) {
     console.error('cb err')
   } else {

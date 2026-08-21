@@ -2,7 +2,6 @@
 
 /* global describe it */
 
-const assert = require('assert')
 const { TestEnv } = require('./env/test-env')
 
 describe('pool growth current behavior', function () {

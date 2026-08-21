@@ -51,6 +51,12 @@ for (let i = 0; i < iterations; i++) {
 }
 console.timeEnd('String interpolation (always evaluated)')
 
+console.time('Early exit check (string still built)')
+for (let i = 0; i < iterations; i++) {
+  exampleWithEarlyExit(i, testData)
+}
+console.timeEnd('Early exit check (string still built)')
+
 console.time('Lazy evaluation (function not called)')
 for (let i = 0; i < iterations; i++) {
   exampleWithLazyEvaluation(i, testData)
@@ -66,6 +72,12 @@ for (let i = 0; i < 100; i++) { // Fewer iterations when logging
   exampleWithStringInterpolation(i, testData)
 }
 console.timeEnd('String interpolation (with logging)')
+
+console.time('Early exit check (with logging)')
+for (let i = 0; i < 100; i++) {
+  exampleWithEarlyExit(i, testData)
+}
+console.timeEnd('Early exit check (with logging)')
 
 console.time('Lazy evaluation (with logging)')
 for (let i = 0; i < 100; i++) {

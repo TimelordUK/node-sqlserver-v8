@@ -6,7 +6,7 @@
 'use strict'
 
 const { describe, it, beforeEach, afterEach } = require('mocha')
-const { assert, expect } = require('chai')
+const { assert } = require('chai')
 const { TestEnv } = require('./env/test-env')
 
 /**
