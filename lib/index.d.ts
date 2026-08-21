@@ -1301,6 +1301,17 @@ declare namespace MsNodeSqlV8 {
 
     setPolling: (poll: boolean) => void
 
+    /**
+     * empty the metadata cache - required after DDL changes the shape of a
+     * cached object, since a pool shares one cache across all connections.
+     */
+    clear: () => void
+
+    /**
+     * number of entries currently held in the metadata cache
+     */
+    getCount: () => number
+
     ServerDialect: ServerDialect
   }
 
@@ -1509,6 +1520,17 @@ declare namespace MsNodeSqlV8 {
 
     // or use builder to build columns
     ServerDialect: ServerDialect
+
+    /**
+     * empty the metadata cache - required after DDL changes the shape of a
+     * cached object, since a pool shares one cache across all connections.
+     */
+    clear: () => void
+
+    /**
+     * number of entries currently held in the metadata cache
+     */
+    getCount: () => number
 
     makeColumn: (tableName: string, tableSchema: string, position: number, columnName: string, paramType: string, paramLength: number, isPrimaryKey: number) => TableColumn
   }
