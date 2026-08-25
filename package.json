@@ -131,6 +131,8 @@
     "js-yaml@<4": "^3.15.1",
     "js-yaml@>=4": "^4.3.1",
     "@babel/core": "^7.29.6",
-    "@babel/helpers": "^7.27.6"
+    "@babel/helpers": "^7.27.6",
+    "node-ninja": "npm:node-gyp@^12",
+    "nw-gyp": "npm:node-gyp@^12"
   }
 }
