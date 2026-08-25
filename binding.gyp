@@ -64,6 +64,19 @@
             "variables": {
                 # Set the target variable only if it is not passed in by prebuild
                 "target%": '<!(node -e "console.log(process.versions.node)")',
+                # Resolution order for napi_build_version, highest first:
+                #   1. -Dnapi_build_version=<N> on the gyp command line, which
+                #      is how prebuild drives `-r napi` (prebuild/gypbuild.js:14).
+                #      This is what our published prebuilds compile against, so
+                #      the advertised binary.napi_versions floor is the real one.
+                #   2. build/config.gypi, inherited from the running Node's own
+                #      config (e.g. "10" on Node 22). This is what a plain
+                #      `node-gyp rebuild` -- the fallback half of our install
+                #      script -- picks up, so source builds track the host.
+                #   3. The default below, a backstop so <(napi_build_version)
+                #      always resolves and gyp never hard-errors on it.
+                # Keep in step with binary.napi_versions in package.json.
+                "napi_build_version%": 8,
                 # which folders are available for include eg.
                 # /opt/microsoft/msodbcsql18/include/ /opt/microsoft/msodbcsql17/include/
                 "msodbc_include_folders%": [
@@ -129,9 +142,18 @@
                 "cpp/include/odbc",
                 "cpp/include/utils",
             ],
+            # NOTE: this is the *effective* defines block for the target. There
+            # is a second "defines" key earlier in this same dict; GYP parses
+            # the file as a Python dict literal, so the later key wins and the
+            # earlier one is silently discarded. Verified against
+            # build/sqlserver.target.mk: NODE_GYP_V4 is present,
+            # BOUNDDATUM_USE_NODE_API is not. Add defines here, not there.
             "defines": [
             "NODE_GYP_V4",
-
+            # Pin the N-API level so the ABI floor we advertise as
+            # binary.napi_versions is the one we actually compile against,
+            # rather than whatever the build headers happen to expose.
+            "NAPI_VERSION=<(napi_build_version)",
             ],
             "actions": [
                 {

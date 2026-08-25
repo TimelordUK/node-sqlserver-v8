@@ -114,6 +114,15 @@
     "bench-objects": "node dist/test/env/cmd-test.js -t benchmark --table=sysobjects --delay=250 --repeats=20 2>&1"
   },
   "directories": {},
+  "binary": {
+    "napi_versions": [
+      8
+    ]
+  },
+  "config": {
+    "runtime": "napi",
+    "target": "8"
+  },
   "overrides": {
     "axios": "^1.11.1",
     "qs": "^6.14.1",

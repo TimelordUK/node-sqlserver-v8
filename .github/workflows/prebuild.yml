@@ -23,15 +23,20 @@ on:
 #    branches: [n_api, master]
 
 jobs:
-  prebuild-node:
-    name: Prebuild Node ${{ matrix.node }} on ${{ matrix.os }}
+  # These builds are N-API, not ABI-tagged. cpp/ is pure node-addon-api (no
+  # v8:: anywhere), so one binary per platform/arch/libc serves every Node line
+  # AND every Electron version -- which is why there is no longer a node axis
+  # here and no separate Electron job at all. The build matrix is now exactly
+  # the set of platforms we ship, nothing more.
+  #
+  # The Node version below only builds the artifact; it does not appear in the
+  # artifact name and does not constrain who can consume it. Any Node whose
+  # N-API level is >= binary.napi_versions in package.json will do.
+  prebuild-napi:
+    name: Prebuild N-API on ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-22.04, windows-2022, macos-latest]
-        # Supported Node lines only. 20 (EOL 2026-04-30), 23 (2025-06-01) and
-        # 25 (2026-06-01) are past end-of-life; the build toolchain has dropped
-        # them (node-gyp >=13 requires ^22.22.2 || ^24.15.0 || >=26.0.0).
-        node: [22, 24, 26]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -40,7 +45,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v7
       with:
-        node-version: ${{ matrix.node }}
+        node-version: 22
 
     # Linux specific setup
     - name: Install Linux dependencies
@@ -103,14 +108,16 @@ jobs:
     - name: Install npm dependencies
       run: npm install
 
-    # prebuild is unmaintained (last published 2024-05-16) and our lockfile
-    # pins its nested node-abi at 3.75.0, which predates Electron 38 and fails
-    # with "Could not detect abi for version 38.0.0". Refresh node-abi in
-    # prebuild's own tree so it knows current Electron/Node ABIs.
+    # prebuild is unmaintained (last published 2024-05-16) and ships a nested
+    # node-gyp 10.3.1, too old for current Node. Refresh it in prebuild's own
+    # tree. The majors are pinned deliberately: this step previously ran an
+    # unbounded `ncu -u`, which silently pulled node-gyp 13 (engines: Node >=22)
+    # onto the then-present Node 20 jobs and broke every build via undici 8.
     #
-    # The majors are pinned deliberately. This step previously ran an unbounded
-    # `ncu -u`, which silently pulled node-gyp 13 (engines: Node >=22) onto the
-    # Node 20 jobs and broke every build via undici 8. Bump these by hand.
+    # node-abi is refreshed too, but is now largely vestigial: for `-r napi`
+    # getAbi() returns the N-API version unchanged rather than looking up a
+    # module ABI, so the stale-ABI-table failures this originally worked around
+    # ("Could not detect abi for version 38.0.0") can no longer occur.
     - name: Refresh prebuild's ABI tables
       shell: bash
       run: |
@@ -118,8 +125,14 @@ jobs:
         npm install --no-save node-abi@^4 node-gyp@^13
         npm ls node-abi node-gyp || true
 
+    # -r napi must be passed explicitly: unlike prebuild-install, which reads
+    # config.runtime from package.json, prebuild's own rc.js hardcodes
+    # runtime: 'node' as its default and never looks at the package
+    # (prebuild/rc.js:8-10). --all builds every version in
+    # binary.napi_versions, so the output is driven by package.json rather
+    # than by whichever Node happens to be on the runner.
     - name: Prebuild binaries
-      run: npx prebuild --strip
+      run: npx prebuild -r napi --all --strip
 
     - name: List generated prebuilds (Unix)
       if: runner.os != 'Windows'
@@ -154,135 +167,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v7
       with:
-        name: prebuilds-node-${{ matrix.node }}-${{ matrix.os }}
-        path: prebuilds/
-
-  prebuild-electron:
-    name: Prebuild Electron ${{ matrix.electron }} on ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-22.04, windows-2022, macos-latest]
-        # Electron supports the latest three stable majors (41, 42, 43 as of
-        # 2026-07). 38-40 are kept as a safety net because Electron apps pin
-        # their version and upgrade slowly -- without a prebuild they fall back
-        # to compiling from source, which needs a full toolchain + unixODBC
-        # headers. Anything below 38 has been unpatched for over a year.
-        electron: [38, 39, 40, 41, 42, 43]
-    runs-on: ${{ matrix.os }}
-
-    steps:
-    - uses: actions/checkout@v7
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v7
-      with:
-        # Host runtime only -- the Electron ABI is selected by the explicit
-        # `-t $VERSION` passed to prebuild below, so this just needs to be a
-        # supported Node that the build toolchain still runs on.
-        node-version: 24
-
-    # Linux specific setup (same as above)
-    - name: Install Linux dependencies
-      timeout-minutes: 20
-      if: runner.os == 'Linux'
-      run: |
-        # See note in matching step above for why this rm is necessary.
-        sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
-        curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
-        curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
-        # Hosted runners point apt at an azure.archive.ubuntu.com mirror that is
-        # frequently unreachable. apt then falls back to archive.ubuntu.com, which
-        # can trickle bytes indefinitely - with no timeout the step never fails, it
-        # just runs until the 6 hour job limit kills the whole job.
-        APT_OPTS="-o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 -o Acquire::Retries=3"
-        for attempt in 1 2 3; do
-          sudo timeout 300 apt-get update $APT_OPTS && break
-          echo "apt-get update stalled or failed (attempt $attempt/3), retrying"
-          sleep 15
-        done
-        sudo timeout 900 env ACCEPT_EULA=Y DEBIAN_FRONTEND=noninteractive apt-get install -y $APT_OPTS msodbcsql18 mssql-tools18 unixodbc-dev gcc-10 g++-10
-        echo "CC=gcc-10" >> $GITHUB_ENV
-        echo "CXX=g++-10" >> $GITHUB_ENV
-
-    - name: Install Windows dependencies
-      if: runner.os == 'Windows'
-      shell: powershell
-      run: |
-        Get-OdbcDriver -Name "*SQL Server*"
-
-    - name: Install macOS dependencies
-      if: runner.os == 'macOS'
-      run: |
-        # Homebrew now requires explicit trust for third-party taps; the
-        # Microsoft mssql-release tap is trusted here so msodbcsql18 installs.
-        export HOMEBREW_NO_REQUIRE_TAP_TRUST=1
-        brew install unixodbc
-        brew tap microsoft/mssql-release https://github.com/Microsoft/homebrew-mssql-release
-        brew update
-        HOMEBREW_ACCEPT_EULA=Y brew install msodbcsql18 mssql-tools18
-
-    - name: Install npm dependencies
-      run: npm install
-
-    # prebuild is unmaintained (last published 2024-05-16) and our lockfile
-    # pins its nested node-abi at 3.75.0, which predates Electron 38 and fails
-    # with "Could not detect abi for version 38.0.0". Refresh node-abi in
-    # prebuild's own tree so it knows current Electron/Node ABIs.
-    #
-    # The majors are pinned deliberately. This step previously ran an unbounded
-    # `ncu -u`, which silently pulled node-gyp 13 (engines: Node >=22) onto the
-    # Node 20 jobs and broke every build via undici 8. Bump these by hand.
-    - name: Refresh prebuild's ABI tables
-      shell: bash
-      run: |
-        cd node_modules/prebuild
-        npm install --no-save node-abi@^4 node-gyp@^13
-        npm ls node-abi node-gyp || true
-
-    - name: Prebuild Electron binaries
-      shell: bash
-      run: |
-        VERSION="${{ matrix.electron }}"
-        # Only append .0.0 if version doesn't already contain a dot (i.e., is just a number like 30, 31)
-        if [[ ! "$VERSION" =~ \. ]]; then
-          VERSION="${VERSION}.0.0"
-        fi
-        npx prebuild -r electron -t "$VERSION" --strip
-
-    - name: List generated Electron prebuilds (Unix)
-      if: runner.os != 'Windows'
-      run: |
-        echo "=== Generated Electron prebuilds ==="
-        find prebuilds -type f -name "*.tar.gz" 2>/dev/null || echo "No tar.gz files found"
-        ls -la prebuilds/ || echo "prebuilds directory not found"
-
-    - name: List generated Electron prebuilds (Windows)
-      if: runner.os == 'Windows'
-      shell: powershell
-      run: |
-        Write-Host "=== Generated Electron prebuilds ==="
-        if (Test-Path prebuilds) {
-          Get-ChildItem -Path prebuilds -Filter "*.tar.gz" -Recurse | ForEach-Object { $_.FullName }
-          Get-ChildItem -Path prebuilds
-        } else {
-          Write-Host "prebuilds directory not found"
-        }
-
-    - name: Debug GitHub ref (Electron)
-      run: |
-        echo "GitHub ref: ${{ github.ref }}"
-        echo "Is tag: ${{ startsWith(github.ref, 'refs/tags/') }}"
-        echo "GitHub event name: ${{ github.event_name }}"
-
-    # Skip individual uploads - we do centralized upload in the test-prebuilds job
-    - name: Skip Upload (Done Centrally)
-      run: |
-        echo "Skipping individual upload - uploads are done centrally in test-prebuilds job"
-
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v7
-      with:
-        name: prebuilds-electron-${{ matrix.electron }}-${{ matrix.os }}
+        name: prebuilds-napi-${{ matrix.os }}
         path: prebuilds/
 
   # Alpine (musl) prebuilds run inside a node:<N>-alpine container on an
@@ -291,12 +176,8 @@ jobs:
   # toolchain + unixodbc-dev, then drop in the Microsoft msodbcsql18 .apk for
   # the ODBC headers (the driver itself is loaded dynamically at runtime).
   # prebuild auto-detects musl libc and tags artefacts as linuxmusl-x64.
-  prebuild-node-alpine:
-    name: Prebuild Node ${{ matrix.node }} on Alpine Linux (musl)
-    strategy:
-      matrix:
-        # Keep in step with the prebuild-node matrix above.
-        node: [22, 24, 26]
+  prebuild-napi-alpine:
+    name: Prebuild N-API on Alpine Linux (musl)
     runs-on: ubuntu-22.04
 
     steps:
@@ -310,12 +191,12 @@ jobs:
       run: |
         curl -sSLO https://download.microsoft.com/download/1/f/f/1fffb537-26ab-4947-a46a-7a45c27f6f77/msodbcsql18_18.2.1.1-1_amd64.apk
 
-    - name: Build in node:${{ matrix.node }}-alpine
+    - name: Build in node:22-alpine
       run: |
         docker run --rm \
           -v "$PWD":/src \
           -w /src \
-          node:${{ matrix.node }}-alpine sh -c '
+          node:22-alpine sh -c '
             set -ex
             apk add --no-cache ca-certificates python3 make g++ unixodbc-dev
             update-ca-certificates || true
@@ -330,7 +211,9 @@ jobs:
             npm install --no-save node-abi@^4 node-gyp@^13
             cd /src
 
-            npx prebuild --strip
+            # See the note on the equivalent step in prebuild-napi for why
+            # -r napi is passed explicitly rather than read from package.json.
+            npx prebuild -r napi --all --strip
 
             # Make prebuild output readable by the host runner (container writes as root).
             chmod -R a+rwX prebuilds
@@ -345,74 +228,12 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v7
       with:
-        name: prebuilds-node-${{ matrix.node }}-alpine
-        path: prebuilds/
-
-  prebuild-electron-alpine:
-    name: Prebuild Electron ${{ matrix.electron }} on Alpine Linux (musl)
-    strategy:
-      matrix:
-        # Keep in step with the prebuild-electron matrix above.
-        electron: [38, 39, 40, 41, 42, 43]
-    runs-on: ubuntu-22.04
-
-    steps:
-    - uses: actions/checkout@v7
-
-    # See note in prebuild-node-alpine: fetch the .apk on the host (full CA
-    # store) and install the local file inside the musl container.
-    - name: Download msodbcsql18 apk (host)
-      run: |
-        curl -sSLO https://download.microsoft.com/download/1/f/f/1fffb537-26ab-4947-a46a-7a45c27f6f77/msodbcsql18_18.2.1.1-1_amd64.apk
-
-    - name: Build Electron ${{ matrix.electron }} in node:24-alpine
-      env:
-        ELECTRON_VERSION: ${{ matrix.electron }}
-      run: |
-        docker run --rm \
-          -v "$PWD":/src \
-          -w /src \
-          -e ELECTRON_VERSION \
-          node:24-alpine sh -c '
-            set -ex
-            apk add --no-cache ca-certificates python3 make g++ unixodbc-dev
-            update-ca-certificates || true
-            apk add --allow-untrusted msodbcsql18_18.2.1.1-1_amd64.apk
-            rm -f msodbcsql18_18.2.1.1-1_amd64.apk
-
-            npm install
-
-            # Refresh prebuild ABI tables (mirrors the other matrix jobs; see
-            # the note there for why these majors are pinned rather than ncu-ed)
-            cd node_modules/prebuild
-            npm install --no-save node-abi@^4 node-gyp@^13
-            cd /src
-
-            VERSION="$ELECTRON_VERSION"
-            case "$VERSION" in
-              *.*) ;;
-              *) VERSION="${VERSION}.0.0" ;;
-            esac
-            npx prebuild -r electron -t "$VERSION" --strip
-
-            chmod -R a+rwX prebuilds
-          '
-
-    - name: List generated Electron prebuilds
-      run: |
-        echo "=== Generated Electron prebuilds ==="
-        find prebuilds -type f -name "*.tar.gz" 2>/dev/null || echo "No tar.gz files found"
-        ls -la prebuilds/ || echo "prebuilds directory not found"
-
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v7
-      with:
-        name: prebuilds-electron-${{ matrix.electron }}-alpine
+        name: prebuilds-napi-alpine
         path: prebuilds/
 
   test-prebuilds:
     name: Test prebuilds
-    needs: [prebuild-node, prebuild-electron, prebuild-node-alpine, prebuild-electron-alpine]
+    needs: [prebuild-napi, prebuild-napi-alpine]
     runs-on: ubuntu-latest
 
     steps:
@@ -523,7 +344,9 @@ jobs:
         echo "📋 Automated prebuilds uploaded for:"
         echo "   • Windows (win32-x64)"
         echo "   • Linux glibc 2.35+ (linux-x64, built on Ubuntu 22.04)"
-        echo "   • Linux musl (linuxmusl-x64, built in node:<N>-alpine container)"
+        echo "   • Linux musl (linuxmusl-x64, built in node:22-alpine container)"
         echo "   • macOS Apple Silicon (darwin-arm64)"
-        echo "   • Node.js versions: 22, 24, 26"
-        echo "   • Electron versions: 38, 39, 40, 41, 42, 43"
+        echo ""
+        echo "   These are N-API v$(node -p "require('./package.json').binary.napi_versions.join(', v')") builds."
+        echo "   One binary per platform serves every Node line and every"
+        echo "   Electron version, so there is no per-ABI artifact any more."
