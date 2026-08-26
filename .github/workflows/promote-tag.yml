@@ -1,0 +1,73 @@
+name: NPM Promote Dist-Tag
+
+# Points an npm dist-tag (latest, next, beta...) at an already-published
+# version. Useful after publishing under `next` for soak testing, and as the
+# rollback lever if a release turns out bad -- unpublish is only possible for
+# 72 hours, but re-pointing `latest` at the previous version works forever.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Published version to promote (e.g. 5.3.0)'
+        required: true
+        type: string
+      tag:
+        description: 'Dist-tag to point at that version'
+        required: true
+        default: 'latest'
+        type: string
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+
+    steps:
+    # No checkout needed -- dist-tag only talks to the registry.
+    - name: Setup Node.js
+      uses: actions/setup-node@v7
+      with:
+        # Registry client only -- does not constrain what the package supports.
+        node-version: '24'
+        registry-url: 'https://registry.npmjs.org'
+
+    - name: Verify version is published
+      run: |
+        echo "🔍 Checking msnodesqlv8@${{ inputs.version }} exists on the registry..."
+        if ! npm view "msnodesqlv8@${{ inputs.version }}" version; then
+          echo "❌ msnodesqlv8@${{ inputs.version }} is not published -- nothing to promote."
+          exit 1
+        fi
+
+    - name: Show current dist-tags
+      run: |
+        echo "🏷️  Before:"
+        npm dist-tag ls msnodesqlv8
+
+    - name: Promote dist-tag
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      run: |
+        if [ -z "$NODE_AUTH_TOKEN" ]; then
+          echo "❌ NPM_TOKEN secret is not set. Add it under Settings > Secrets and variables > Actions."
+          exit 1
+        fi
+
+        echo "🚀 Pointing '${{ inputs.tag }}' at msnodesqlv8@${{ inputs.version }}"
+        npm dist-tag add "msnodesqlv8@${{ inputs.version }}" "${{ inputs.tag }}"
+
+    - name: Show resulting dist-tags
+      run: |
+        echo "🏷️  After:"
+        npm dist-tag ls msnodesqlv8
+
+    - name: Summary
+      if: always()
+      run: |
+        echo "## 🏷️ Dist-Tag Promotion" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Package**: msnodesqlv8@${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Tag**: ${{ inputs.tag }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Result**: ${{ job.status == 'success' && '✅ Promoted' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Install with: \`npm install msnodesqlv8@${{ inputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
