@@ -60,7 +60,7 @@
     "minimist": "^1.2.8",
     "mocha": "^11.7.5",
     "mochawesome": "^8.0.1",
-    "node-gyp": "^12.2.0",
+    "node-gyp": "^13.0.2",
     "nyc": "^18.0.0",
     "prebuild": "^13.0.1",
     "rimraf": "^6.1.3",
