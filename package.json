@@ -56,7 +56,7 @@
     "electron": "^44.0.0",
     "env-cmd": "^11.0.0",
     "eslint": "^10.8.1",
-    "eslint-config-love": "^155.0.0",
+    "eslint-config-love": "^156.0.0",
     "minimist": "^1.2.8",
     "mocha": "^12.0.0",
     "mochawesome": "^8.0.1",
