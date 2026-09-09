@@ -103,7 +103,15 @@ jobs:
 
     - name: Install dependencies
       working-directory: node_modules/msnodesqlv8
-      run: npm install
+      # Build the addon from this checkout. Without the flag, npm runs the package's own
+      # install script, `prebuild-install || node-gyp rebuild`, and prebuild-install
+      # succeeds: every release carries napi-v8 prebuilds, which match any Node version on
+      # every platform we test. The addon under test would then be the last *published*
+      # binary, so no C++ change on a branch is ever compiled here, let alone exercised -
+      # a C++ fix looks broken and a C++ regression looks fine. --build-from-source makes
+      # prebuild-install decline with exit 1 so the fallback compiles the source. It is
+      # scoped to this package by name so no other dependency is forced to compile.
+      run: npm install --build-from-source=msnodesqlv8
 
     - name: Build TypeScript
       working-directory: node_modules/msnodesqlv8
@@ -187,7 +195,15 @@ jobs:
 
     - name: Install dependencies
       working-directory: node_modules/msnodesqlv8
-      run: npm install
+      # Build the addon from this checkout. Without the flag, npm runs the package's own
+      # install script, `prebuild-install || node-gyp rebuild`, and prebuild-install
+      # succeeds: every release carries napi-v8 prebuilds, which match any Node version on
+      # every platform we test. The addon under test would then be the last *published*
+      # binary, so no C++ change on a branch is ever compiled here, let alone exercised -
+      # a C++ fix looks broken and a C++ regression looks fine. --build-from-source makes
+      # prebuild-install decline with exit 1 so the fallback compiles the source. It is
+      # scoped to this package by name so no other dependency is forced to compile.
+      run: npm install --build-from-source=msnodesqlv8
 
     - name: Build TypeScript
       working-directory: node_modules/msnodesqlv8
@@ -246,7 +262,15 @@ jobs:
 
     - name: Install dependencies
       working-directory: node_modules/msnodesqlv8
-      run: npm install
+      # Build the addon from this checkout. Without the flag, npm runs the package's own
+      # install script, `prebuild-install || node-gyp rebuild`, and prebuild-install
+      # succeeds: every release carries napi-v8 prebuilds, which match any Node version on
+      # every platform we test. The addon under test would then be the last *published*
+      # binary, so no C++ change on a branch is ever compiled here, let alone exercised -
+      # a C++ fix looks broken and a C++ regression looks fine. --build-from-source makes
+      # prebuild-install decline with exit 1 so the fallback compiles the source. It is
+      # scoped to this package by name so no other dependency is forced to compile.
+      run: npm install --build-from-source=msnodesqlv8
 
     - name: Build TypeScript
       working-directory: node_modules/msnodesqlv8

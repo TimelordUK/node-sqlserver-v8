@@ -180,5 +180,35 @@ namespace mssql
                 (SQLSMALLINT HandleType,
                  SQLHANDLE Handle),
                 (override));
+
+    MOCK_METHOD(SQLRETURN, SQLSetEnvAttr,
+                (SQLHENV EnvironmentHandle,
+                 SQLINTEGER Attribute,
+                 SQLPOINTER Value,
+                 SQLINTEGER StringLength),
+                (override));
+
+    MOCK_METHOD(SQLRETURN, SQLGetDiagField,
+                (SQLSMALLINT HandleType,
+                 SQLHANDLE Handle,
+                 SQLSMALLINT RecNumber,
+                 SQLSMALLINT DiagIdentifier,
+                 SQLPOINTER DiagInfo,
+                 SQLSMALLINT BufferLength,
+                 SQLSMALLINT *StringLength),
+                (override));
+
+    MOCK_METHOD(SQLRETURN, SQLCloseCursor,
+                (SQLHSTMT StatementHandle),
+                (override));
+
+    MOCK_METHOD(SQLRETURN, SQLGetDescField,
+                (SQLHDESC DescriptorHandle,
+                 SQLSMALLINT RecNumber,
+                 SQLSMALLINT FieldIdentifier,
+                 SQLPOINTER Value,
+                 SQLINTEGER BufferLength,
+                 SQLINTEGER *StringLength),
+                (override));
   };
 }

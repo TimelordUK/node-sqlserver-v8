@@ -96,12 +96,37 @@ class OdbcHandleImpl : public InterfaceType {
                                              sql_state.data(),
                                              &native_error,
                                              msg.data(),
-                                             msg.capacity(),
+                                             static_cast<SQLSMALLINT>(msg.size()),
                                              &msg_len)) != SQL_NO_DATA) {
       SQL_LOG_TRACE_STREAM("SQLGetDiagRecW returned: " << rc2 << " for record: " << i);
       if (rc2 < 0) {
         SQL_LOG_ERROR_STREAM("SQLGetDiagRecW failed with return code: " << rc2);
         break;
+      }
+      // `SQLGetDiagRecW` reports the number of characters **available**, not the number
+      // written, so a message longer than the buffer has already been cut. Ask again for
+      // the same record with a buffer that fits: a PRINT of a generated statement runs
+      // past 10240 routinely -- `print cast(substring(@sql, 1, 16000) as ntext)` is the
+      // documented way around PRINT's own 4000/8000 limit -- and a statement 5761
+      // characters shorter than it should be still looks like a statement.
+      //
+      // `msg_len` is a SQLSMALLINT, so the ODBC API caps one record at 32767 characters
+      // whatever we do here; the buffer is grown no further than that.
+      if (msg_len > 0 && static_cast<size_t>(msg_len) >= msg.size()) {
+        constexpr size_t max_diag_chars = 32767;
+        msg.assign(min(static_cast<size_t>(msg_len) + 1, max_diag_chars), 0);
+        rc2 = odbcApiPtr->SQLGetDiagRecW(HandleType,
+                                         handle_,
+                                         i,
+                                         sql_state.data(),
+                                         &native_error,
+                                         msg.data(),
+                                         static_cast<SQLSMALLINT>(msg.size()),
+                                         &msg_len);
+        if (rc2 < 0) {
+          SQL_LOG_ERROR_STREAM("SQLGetDiagRecW failed on retry with return code: " << rc2);
+          break;
+        }
       }
       auto c_msg = odbcstr::trim(msg, msg_len);
       auto c_state = odbcstr::swcvec2str(sql_state, sql_state.size());

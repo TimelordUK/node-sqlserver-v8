@@ -523,3 +523,56 @@ gtest_discover_tests(cpp_tests
         TIMEOUT 120
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
+# ---------------------------------------------------------------------------------------
+# Standalone diagnostics tests (issue #446)
+#
+# The diagnostic text path - odbcstr::swcvec2str and OdbcHandleImpl::read_errors - lives
+# entirely in headers, so it needs nothing from the addon beyond Logger.cpp and the gmock
+# ODBC api. It is built as its own target so these regression tests can be run on their
+# own, and so they keep working while cpp_tests cannot build: mocks/include/
+# mock_odbc_statement.h is out of date against the current IOdbcStatement interface.
+#
+#   cmake --build test/cpp/build --config Debug --target diagnostics_tests
+#   test/cpp/build/Debug/diagnostics_tests
+# ---------------------------------------------------------------------------------------
+add_executable(diagnostics_tests
+    "${CMAKE_CURRENT_SOURCE_DIR}/unit/diagnostic_text_test.cpp"
+    "../../cpp/src/utils/Logger.cpp"
+)
+
+target_compile_definitions(diagnostics_tests PRIVATE
+    UNIT_TEST=1
+    NAPI_DISABLE_CPP_EXCEPTIONS
+)
+
+if(WIN32)
+    target_compile_definitions(diagnostics_tests PRIVATE
+        WINDOWS_BUILD
+        UNICODE=1
+    )
+    set_target_properties(diagnostics_tests PROPERTIES LINK_FLAGS "/NODEFAULTLIB:msvcrt.lib")
+endif()
+
+target_include_directories(diagnostics_tests PRIVATE
+    "../../cpp"
+    "../../cpp/include"
+    "../../cpp/include/common"
+    "../../cpp/include/odbc"
+    "../../cpp/include/utils"
+    "${CMAKE_CURRENT_SOURCE_DIR}/mocks/include"
+)
+
+target_link_libraries(diagnostics_tests PRIVATE
+    ${ODBC_LIBRARIES}
+    GTest::gtest
+    GTest::gtest_main
+    GTest::gmock
+)
+
+gtest_discover_tests(diagnostics_tests
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DISCOVERY_MODE PRE_TEST
+    PROPERTIES
+        TIMEOUT 120
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)

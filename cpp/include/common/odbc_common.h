@@ -147,25 +147,70 @@ class odbcstr {
     return ret;
   }
 
+  /**
+   * Convert a driver-supplied SQLWCHAR buffer to UTF-8.
+   *
+   * `l` counts SQLWCHAR units, not bytes, and may exceed the buffer: `trim` derives it
+   * from `capacity()`, and `SQLGetDiagRecW` reports the length *available* rather than
+   * the length written. It is clamped to `size()` here so neither can read off the end.
+   *
+   * `SQLWCHAR` is UTF-16 where it is two bytes (Windows, unixODBC's default ABI) and
+   * UTF-32 where it is four (iODBC), so surrogate pairs are recombined only in the
+   * two-byte case.
+   *
+   * Trailing NULs are dropped, because two callers pass the *buffer* size rather than a
+   * string length and rely on the terminator. An **embedded** NUL is kept: a diagnostic
+   * message that legitimately contains U+0000 must not lose everything after it.
+   */
   static string swcvec2str(const vector<SQLWCHAR>& v, const size_t l) {
-    vector<char> c_str;
-    c_str.reserve(l + 1);
-    c_str.resize(l + 1);
-    constexpr auto c = static_cast<int>(sizeof(SQLWCHAR));
-    const auto* ptr = reinterpret_cast<const char*>(v.data());
-    for (size_t i = 0, j = 0; i < l * c; i += c, j++) {
-      c_str[j] = ptr[i];
+    size_t take = min(l, v.size());
+    while (take > 0 && v[take - 1] == 0) {
+      --take;
     }
-    if (l > 0)
-      c_str.resize(l - 1);
-    string s(c_str.data());
-    return s;
+    string out;
+    out.reserve(take);
+    for (size_t i = 0; i < take; ++i) {
+      auto cp = static_cast<char32_t>(static_cast<uint32_t>(v[i]));
+      if (sizeof(SQLWCHAR) == 2 && cp >= 0xD800 && cp <= 0xDBFF && i + 1 < take) {
+        const auto low = static_cast<char32_t>(static_cast<uint32_t>(v[i + 1]));
+        if (low >= 0xDC00 && low <= 0xDFFF) {
+          cp = 0x10000 + ((cp - 0xD800) << 10) + (low - 0xDC00);
+          ++i;
+        }
+      }
+      // A lone surrogate or an out-of-range unit cannot be encoded. U+FFFD keeps the
+      // rest of the text readable, which is the whole point of a diagnostic message.
+      if ((cp >= 0xD800 && cp <= 0xDFFF) || cp > 0x10FFFF) {
+        cp = 0xFFFD;
+      }
+      appendUtf8(out, cp);
+    }
+    return out;
   }
 
   static std::string trim(const vector<SQLWCHAR>& v, SQLSMALLINT len) {
-    auto take = min(v.capacity(), (size_t)len);
+    auto take = min(v.size(), (size_t)len);
     auto c_msg = odbcstr::swcvec2str(v, take);
     return c_msg;
+  }
+
+ private:
+  static void appendUtf8(string& out, const char32_t cp) {
+    if (cp < 0x80) {
+      out.push_back(static_cast<char>(cp));
+    } else if (cp < 0x800) {
+      out.push_back(static_cast<char>(0xC0 | (cp >> 6)));
+      out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+    } else if (cp < 0x10000) {
+      out.push_back(static_cast<char>(0xE0 | (cp >> 12)));
+      out.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F)));
+      out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+    } else {
+      out.push_back(static_cast<char>(0xF0 | (cp >> 18)));
+      out.push_back(static_cast<char>(0x80 | ((cp >> 12) & 0x3F)));
+      out.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F)));
+      out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+    }
   }
 };
 
