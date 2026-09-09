@@ -12,6 +12,7 @@
 #endif
 
 // Common C++ headers
+#include <cstdint>
 #include <vector>
 #include <queue>
 #include <string>
