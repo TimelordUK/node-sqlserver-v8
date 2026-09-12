@@ -1,10 +1,16 @@
 name: NPM Package Validation and Publish
 
+# One button. This builds the per-platform N-API binaries, assembles them into a
+# single package, validates it, and publishes THAT EXACT ARTIFACT.
+#
+# It does not `npm pack` a checkout. prebuilds/ is gitignored, so packing a
+# checkout would publish a package containing no binaries at all -- which would
+# look like a success and break every consumer who cannot compile from source.
 on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Dry run (validate only, do not publish)'
+        description: 'Dry run (build and validate only, do not publish)'
         required: true
         default: 'true'
         type: choice
@@ -18,13 +24,21 @@ on:
         type: string
 
 jobs:
+  # Reuses the build workflow rather than duplicating the four platform jobs,
+  # so the thing we publish is built exactly the way a plain build is.
+  build:
+    name: Build
+    uses: ./.github/workflows/prebuild.yml
+
   validate-and-publish:
+    name: Validate and publish
+    needs: build
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v7
-      
+
     - name: Setup Node.js
       uses: actions/setup-node@v7
       with:
@@ -32,98 +46,133 @@ jobs:
         # package supports. Node 18 went EOL on 2025-04-30; 24 is active LTS.
         node-version: '24'
         registry-url: 'https://registry.npmjs.org'
-        
+
     - name: Get package info
       id: package
       run: |
         echo "name=$(node -p "require('./package.json').name")" >> $GITHUB_OUTPUT
         echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-        
-    - name: Clean build artifacts
+
+    # Fail before doing anything irreversible. npm rejects a republish of an
+    # existing version, but it does so after the build, and the error is much
+    # less obvious than saying so up front.
+    - name: Check the version is not already published
       run: |
-        echo "🧹 Cleaning build artifacts..."
-        find . -name "CMakeFiles" -type d -exec rm -rf {} + 2>/dev/null || true
-        find . -name "CMakeCache.txt" -type f -delete 2>/dev/null || true
-        find . -name "cmake_install.cmake" -type f -delete 2>/dev/null || true
-        find . -name "CMakeTmp" -type d -exec rm -rf {} + 2>/dev/null || true
-        find . -name "*.log" -type f -delete 2>/dev/null || true
-        
-    - name: Create npm package
-      run: |
-        echo "📦 Creating npm package..."
-        npm pack
-        
+        NAME="${{ steps.package.outputs.name }}"
+        VERSION="${{ steps.package.outputs.version }}"
+        echo "Checking whether $NAME@$VERSION already exists on npm..."
+        if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+          echo "::error::$NAME@$VERSION is already published. Bump the version in package.json first."
+          echo "Published versions (most recent last):"
+          npm view "$NAME" versions --json | tail -20
+          exit 1
+        fi
+        echo "$NAME@$VERSION is not yet published."
+
+    - name: Download the packed tarball
+      uses: actions/download-artifact@v8
+      with:
+        name: npm-tarball
+
     - name: Validate package contents
       id: validate
       run: |
-        echo "🔍 Validating package contents..."
-        PACKAGE_FILE="${{ steps.package.outputs.name }}-${{ steps.package.outputs.version }}.tgz"
-        
-        # List all files in the package
-        echo "📋 Package contents:"
-        tar -tzf "$PACKAGE_FILE" | sort
-        
-        # Check for unwanted files
-        echo ""
-        echo "🚫 Checking for unwanted files..."
-        UNWANTED_FILES=$(tar -tzf "$PACKAGE_FILE" | grep -E "(CMakeFiles/|CMakeCache\.txt|cmake_install\.cmake|CMakeTmp/|\.log$|\.o$|\.obj$|\.a$|\.lib$|\.so$|\.dylib$|\.dll$|\.exe$|\.node$|\.pdb$|\.ilk$|\.exp$|\.idb$|\.tlog$|\.DS_Store|Thumbs\.db|\.swp$|\.swo$|~$)" || true)
-        
-        if [ ! -z "$UNWANTED_FILES" ]; then
-          echo "❌ Found unwanted files in package:"
-          echo "$UNWANTED_FILES"
-          echo "validation_passed=false" >> $GITHUB_OUTPUT
+        PACKAGE_FILE="${{ needs.build.outputs.tarball }}"
+        echo "Validating $PACKAGE_FILE"
+
+        # The artifact must match the version we are about to publish. If
+        # package.json were bumped after the build started, these would differ.
+        EXPECTED="${{ steps.package.outputs.name }}-${{ steps.package.outputs.version }}.tgz"
+        if [ "$PACKAGE_FILE" != "$EXPECTED" ]; then
+          echo "::error::built $PACKAGE_FILE but package.json says $EXPECTED"
           exit 1
-        else
-          echo "✅ No unwanted files found"
-          echo "validation_passed=true" >> $GITHUB_OUTPUT
         fi
-        
-        # Show package size
-        echo ""
-        echo "📊 Package size: $(du -h "$PACKAGE_FILE" | cut -f1)"
-        
-        # Count files
-        FILE_COUNT=$(tar -tzf "$PACKAGE_FILE" | wc -l)
-        echo "📁 Total files: $FILE_COUNT"
-        
+
+        echo "::group::Package contents"
+        tar -tzf "$PACKAGE_FILE" | sort
+        echo "::endgroup::"
+
+        # The four bundled binaries ARE the package. Assert every one is
+        # present: a missing platform is the failure mode that matters now,
+        # and it is invisible in a file listing nobody reads.
+        echo "Checking bundled binaries..."
+        missing=0
+        while read -r f; do
+          if ! tar -tzf "$PACKAGE_FILE" | grep -qx "package/$f"; then
+            echo "::error::MISSING $f"
+            missing=1
+          else
+            echo "  ok  $f"
+          fi
+        done <<FILES
+        prebuilds/win32-x64/msnodesqlv8.node
+        prebuilds/darwin-arm64/msnodesqlv8.node
+        prebuilds/linux-x64/msnodesqlv8.glibc.node
+        prebuilds/linux-x64/msnodesqlv8.musl.node
+        FILES
+        [ "$missing" = "0" ] || exit 1
+
+        # Build spoil and editor droppings. Note .node is deliberately NOT in
+        # this list any more -- bundled .node files are the whole point of the
+        # package. Everything here is still junk, including object files and
+        # the MSVC link by-products that sit next to a freshly built addon.
+        echo "Checking for unwanted files..."
+        UNWANTED=$(tar -tzf "$PACKAGE_FILE" | grep -E "(CMakeFiles/|CMakeCache\.txt|cmake_install\.cmake|CMakeTmp/|\.log$|\.o$|\.obj$|\.a$|\.lib$|\.so$|\.dylib$|\.dll$|\.exe$|\.pdb$|\.ilk$|\.exp$|\.idb$|\.tlog$|\.DS_Store|Thumbs\.db|\.swp$|\.swo$|~$)" || true)
+        if [ -n "$UNWANTED" ]; then
+          echo "::error::Found unwanted files in package:"
+          echo "$UNWANTED"
+          exit 1
+        fi
+        echo "No unwanted files found."
+
+        SIZE=$(du -h "$PACKAGE_FILE" | cut -f1)
+        COUNT=$(tar -tzf "$PACKAGE_FILE" | wc -l)
+        echo "size=$SIZE" >> $GITHUB_OUTPUT
+        echo "files=$COUNT" >> $GITHUB_OUTPUT
+        echo "Package size: $SIZE across $COUNT files"
+
     - name: Publish to NPM (if not dry run)
       if: ${{ github.event.inputs.dry_run == 'false' }}
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       run: |
         if [ -z "$NODE_AUTH_TOKEN" ]; then
-          echo "❌ NPM_TOKEN secret is not set. Please add it to your repository secrets."
-          echo "   Go to Settings > Secrets and variables > Actions"
-          echo "   Add a new secret named 'NPM_TOKEN' with your npm access token"
-          echo ""
-          echo "   To create an npm token:"
-          echo "   1. Login to npmjs.com"
-          echo "   2. Go to Access Tokens in your account settings"
-          echo "   3. Generate a new Classic Token with 'Publish' permissions"
+          echo "::error::NPM_TOKEN secret is not set."
+          echo "   Settings > Secrets and variables > Actions, add a secret named 'NPM_TOKEN'."
+          echo "   Create the token at npmjs.com > Access Tokens, with Publish permission."
           exit 1
         fi
-        
-        echo "🚀 Publishing to npm with tag: ${{ github.event.inputs.tag }}"
-        npm publish --tag ${{ github.event.inputs.tag }}
-        
-        echo "✅ Published successfully!"
-        echo "📦 View package: https://www.npmjs.com/package/${{ steps.package.outputs.name }}"
-        
+
+        # Publish the built artifact, not a fresh pack of the checkout.
+        echo "Publishing ${{ needs.build.outputs.tarball }} with tag ${{ github.event.inputs.tag }}"
+        npm publish "${{ needs.build.outputs.tarball }}" --tag "${{ github.event.inputs.tag }}"
+
+        echo "Published. https://www.npmjs.com/package/${{ steps.package.outputs.name }}"
+
     - name: Summary
       if: always()
       run: |
-        echo "## 📋 Publish Summary" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "- **Package**: ${{ steps.package.outputs.name }}@${{ steps.package.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Tag**: ${{ github.event.inputs.tag }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Dry Run**: ${{ github.event.inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Validation**: ${{ steps.validate.outputs.validation_passed == 'true' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
-        
-        if [ "${{ github.event.inputs.dry_run }}" == "false" ] && [ "${{ steps.validate.outputs.validation_passed }}" == "true" ]; then
-          echo "- **Published**: ✅ Yes" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🎉 Package published successfully!" >> $GITHUB_STEP_SUMMARY
-          echo "Install with: \`npm install ${{ steps.package.outputs.name }}@${{ github.event.inputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+        {
+          echo "## Publish Summary"
+          echo ""
+          echo "- **Package**: ${{ steps.package.outputs.name }}@${{ steps.package.outputs.version }}"
+          echo "- **Artifact**: \`${{ needs.build.outputs.tarball }}\`"
+          echo "- **Tag**: ${{ github.event.inputs.tag }}"
+          echo "- **Dry run**: ${{ github.event.inputs.dry_run }}"
+          echo "- **Size**: ${{ steps.validate.outputs.size }} across ${{ steps.validate.outputs.files }} files"
+          echo "- **Validation**: ${{ steps.validate.outcome == 'success' && 'passed' || 'failed' }}"
+          echo ""
+          echo "Bundled binaries: win32-x64, darwin-arm64, linux-x64 (glibc), linux-x64 (musl)."
+          echo "No install-time download; each was smoke tested on its own platform during the build."
+        } >> $GITHUB_STEP_SUMMARY
+
+        if [ "${{ github.event.inputs.dry_run }}" == "false" ] && [ "${{ steps.validate.outcome }}" == "success" ]; then
+          {
+            echo ""
+            echo "### Published"
+            echo "Install with: \`npm install ${{ steps.package.outputs.name }}@${{ github.event.inputs.tag }}\`"
+          } >> $GITHUB_STEP_SUMMARY
         else
-          echo "- **Published**: ❌ No" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Not published.**" >> $GITHUB_STEP_SUMMARY
         fi
