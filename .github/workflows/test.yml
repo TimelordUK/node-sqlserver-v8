@@ -103,15 +103,27 @@ jobs:
 
     - name: Install dependencies
       working-directory: node_modules/msnodesqlv8
-      # Build the addon from this checkout. Without the flag, npm runs the package's own
-      # install script, `prebuild-install || node-gyp rebuild`, and prebuild-install
-      # succeeds: every release carries napi-v8 prebuilds, which match any Node version on
-      # every platform we test. The addon under test would then be the last *published*
-      # binary, so no C++ change on a branch is ever compiled here, let alone exercised -
-      # a C++ fix looks broken and a C++ regression looks fine. --build-from-source makes
-      # prebuild-install decline with exit 1 so the fallback compiles the source. It is
-      # scoped to this package by name so no other dependency is forced to compile.
-      run: npm install --build-from-source=msnodesqlv8
+      # Build the addon from THIS checkout, explicitly, in two steps.
+      #
+      # The addon under test must be compiled from the branch, not taken from a
+      # shipped binary: otherwise no C++ change is ever exercised here, a C++
+      # fix looks broken and a C++ regression looks fine.
+      #
+      # This used to be `npm install --build-from-source=msnodesqlv8`, which
+      # worked because prebuild-install understood the flag and declined with
+      # exit 1. The install script is now node-gyp-build, and it does NOT honour
+      # that form: it reads npm_config_argv (dead since npm 7) or requires
+      # npm_config_build_from_source to be exactly "true", whereas the scoped
+      # form sets it to "msnodesqlv8". Passing the flag would silently do
+      # nothing. `npm_config_build_from_source=true` would work but forces every
+      # other native dependency to compile too.
+      #
+      # So: skip the install script entirely, then invoke node-gyp directly.
+      # node-gyp-build resolves build/Release ahead of prebuilds/, so the binary
+      # compiled here is the one that loads even if a prebuilds/ tree is present.
+      run: |
+        npm install --ignore-scripts
+        npm run rebuild
 
     - name: Build TypeScript
       working-directory: node_modules/msnodesqlv8
@@ -195,15 +207,27 @@ jobs:
 
     - name: Install dependencies
       working-directory: node_modules/msnodesqlv8
-      # Build the addon from this checkout. Without the flag, npm runs the package's own
-      # install script, `prebuild-install || node-gyp rebuild`, and prebuild-install
-      # succeeds: every release carries napi-v8 prebuilds, which match any Node version on
-      # every platform we test. The addon under test would then be the last *published*
-      # binary, so no C++ change on a branch is ever compiled here, let alone exercised -
-      # a C++ fix looks broken and a C++ regression looks fine. --build-from-source makes
-      # prebuild-install decline with exit 1 so the fallback compiles the source. It is
-      # scoped to this package by name so no other dependency is forced to compile.
-      run: npm install --build-from-source=msnodesqlv8
+      # Build the addon from THIS checkout, explicitly, in two steps.
+      #
+      # The addon under test must be compiled from the branch, not taken from a
+      # shipped binary: otherwise no C++ change is ever exercised here, a C++
+      # fix looks broken and a C++ regression looks fine.
+      #
+      # This used to be `npm install --build-from-source=msnodesqlv8`, which
+      # worked because prebuild-install understood the flag and declined with
+      # exit 1. The install script is now node-gyp-build, and it does NOT honour
+      # that form: it reads npm_config_argv (dead since npm 7) or requires
+      # npm_config_build_from_source to be exactly "true", whereas the scoped
+      # form sets it to "msnodesqlv8". Passing the flag would silently do
+      # nothing. `npm_config_build_from_source=true` would work but forces every
+      # other native dependency to compile too.
+      #
+      # So: skip the install script entirely, then invoke node-gyp directly.
+      # node-gyp-build resolves build/Release ahead of prebuilds/, so the binary
+      # compiled here is the one that loads even if a prebuilds/ tree is present.
+      run: |
+        npm install --ignore-scripts
+        npm run rebuild
 
     - name: Build TypeScript
       working-directory: node_modules/msnodesqlv8
@@ -262,15 +286,27 @@ jobs:
 
     - name: Install dependencies
       working-directory: node_modules/msnodesqlv8
-      # Build the addon from this checkout. Without the flag, npm runs the package's own
-      # install script, `prebuild-install || node-gyp rebuild`, and prebuild-install
-      # succeeds: every release carries napi-v8 prebuilds, which match any Node version on
-      # every platform we test. The addon under test would then be the last *published*
-      # binary, so no C++ change on a branch is ever compiled here, let alone exercised -
-      # a C++ fix looks broken and a C++ regression looks fine. --build-from-source makes
-      # prebuild-install decline with exit 1 so the fallback compiles the source. It is
-      # scoped to this package by name so no other dependency is forced to compile.
-      run: npm install --build-from-source=msnodesqlv8
+      # Build the addon from THIS checkout, explicitly, in two steps.
+      #
+      # The addon under test must be compiled from the branch, not taken from a
+      # shipped binary: otherwise no C++ change is ever exercised here, a C++
+      # fix looks broken and a C++ regression looks fine.
+      #
+      # This used to be `npm install --build-from-source=msnodesqlv8`, which
+      # worked because prebuild-install understood the flag and declined with
+      # exit 1. The install script is now node-gyp-build, and it does NOT honour
+      # that form: it reads npm_config_argv (dead since npm 7) or requires
+      # npm_config_build_from_source to be exactly "true", whereas the scoped
+      # form sets it to "msnodesqlv8". Passing the flag would silently do
+      # nothing. `npm_config_build_from_source=true` would work but forces every
+      # other native dependency to compile too.
+      #
+      # So: skip the install script entirely, then invoke node-gyp directly.
+      # node-gyp-build resolves build/Release ahead of prebuilds/, so the binary
+      # compiled here is the one that loads even if a prebuilds/ tree is present.
+      run: |
+        npm install --ignore-scripts
+        npm run rebuild
 
     - name: Build TypeScript
       working-directory: node_modules/msnodesqlv8

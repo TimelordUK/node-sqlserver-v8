@@ -108,61 +108,40 @@ jobs:
     - name: Install npm dependencies
       run: npm install
 
-    # prebuild is unmaintained (last published 2024-05-16) and ships a nested
-    # node-gyp 10.3.1, too old for current Node. Refresh it in prebuild's own
-    # tree. The majors are pinned deliberately: this step previously ran an
-    # unbounded `ncu -u`, which silently pulled node-gyp 13 (engines: Node >=22)
-    # onto the then-present Node 20 jobs and broke every build via undici 8.
+    # prebuildify writes prebuilds/<platform>-<arch>/<name>[.tags].node, which
+    # is the layout node-gyp-build resolves at require time. There is no ABI
+    # axis under --napi, so this produces exactly one file per job.
     #
-    # node-abi is refreshed too, but is now largely vestigial: for `-r napi`
-    # getAbi() returns the N-API version unchanged rather than looking up a
-    # module ABI, so the stale-ABI-table failures this originally worked around
-    # ("Could not detect abi for version 38.0.0") can no longer occur.
-    - name: Refresh prebuild's ABI tables
+    # --tag-libc is Linux-only and matters more than it looks. node-gyp-build
+    # only filters on the libc tag when the tag is present, so an UNTAGGED
+    # glibc binary would happily be selected on Alpine and then fail to link.
+    # Both Linux jobs must tag, or the musl job's output is pointless.
+    # prebuildify defaults opts.libc to 'glibc' on every non-Alpine host,
+    # including Windows and macOS, so those jobs deliberately do not tag.
+    - name: Prebuild binaries
       shell: bash
       run: |
-        cd node_modules/prebuild
-        npm install --no-save node-abi@^4 node-gyp@^13
-        npm ls node-abi node-gyp || true
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          npx prebuildify --napi --strip --tag-libc
+        else
+          npx prebuildify --napi --strip
+        fi
 
-    # -r napi must be passed explicitly: unlike prebuild-install, which reads
-    # config.runtime from package.json, prebuild's own rc.js hardcodes
-    # runtime: 'node' as its default and never looks at the package
-    # (prebuild/rc.js:8-10). --all builds every version in
-    # binary.napi_versions, so the output is driven by package.json rather
-    # than by whichever Node happens to be on the runner.
-    - name: Prebuild binaries
-      run: npx prebuild -r napi --all --strip
+    # Prove the artifact we are about to ship actually loads on this platform.
+    # PREBUILDS_ONLY=1 stops node-gyp-build falling back to the build/Release
+    # tree that prebuildify just left behind, so this tests the real binary.
+    - name: Smoke test the prebuild
+      shell: bash
+      run: PREBUILDS_ONLY=1 node .github/scripts/smoke-prebuild.js
 
-    - name: List generated prebuilds (Unix)
-      if: runner.os != 'Windows'
+    # One `shell: bash` listing serves every OS now that the Windows runner
+    # does not need its own PowerShell variant. Note BSD find on macOS has no
+    # -printf, so sizes come from ls rather than find.
+    - name: List generated prebuilds
+      shell: bash
       run: |
         echo "=== Generated prebuilds ==="
-        find prebuilds -type f -name "*.tar.gz" 2>/dev/null || echo "No tar.gz files found"
-        ls -la prebuilds/ || echo "prebuilds directory not found"
-
-    - name: List generated prebuilds (Windows)
-      if: runner.os == 'Windows'
-      shell: powershell
-      run: |
-        Write-Host "=== Generated prebuilds ==="
-        if (Test-Path prebuilds) {
-          Get-ChildItem -Path prebuilds -Filter "*.tar.gz" -Recurse | ForEach-Object { $_.FullName }
-          Get-ChildItem -Path prebuilds
-        } else {
-          Write-Host "prebuilds directory not found"
-        }
-
-    - name: Debug GitHub ref
-      run: |
-        echo "GitHub ref: ${{ github.ref }}"
-        echo "Is tag: ${{ startsWith(github.ref, 'refs/tags/') }}"
-        echo "GitHub event name: ${{ github.event_name }}"
-
-    # Skip individual uploads - we do centralized upload in the test-prebuilds job
-    - name: Skip Upload (Done Centrally)
-      run: |
-        echo "Skipping individual upload - uploads are done centrally in test-prebuilds job"
+        find prebuilds -type f -name "*.node" -exec ls -l {} +
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v7
@@ -175,7 +154,9 @@ jobs:
   # Build steps mirror docker/alpine-msnodesqlv8/Dockerfile: apk-install the
   # toolchain + unixodbc-dev, then drop in the Microsoft msodbcsql18 .apk for
   # the ODBC headers (the driver itself is loaded dynamically at runtime).
-  # prebuild auto-detects musl libc and tags artefacts as linuxmusl-x64.
+  # prebuildify auto-detects musl libc; with --tag-libc the output lands at
+  # prebuilds/linux-x64/msnodesqlv8.musl.node, i.e. the SAME directory as the
+  # glibc job, disambiguated only by the tag. That is why both Linux jobs tag.
   prebuild-napi-alpine:
     name: Prebuild N-API on Alpine Linux (musl)
     runs-on: ubuntu-22.04
@@ -205,25 +186,20 @@ jobs:
 
             npm install
 
-            # Refresh prebuild ABI tables (mirrors the other matrix jobs; see
-            # the note there for why these majors are pinned rather than ncu-ed)
-            cd node_modules/prebuild
-            npm install --no-save node-abi@^4 node-gyp@^13
-            cd /src
+            npx prebuildify --napi --strip --tag-libc
 
-            # See the note on the equivalent step in prebuild-napi for why
-            # -r napi is passed explicitly rather than read from package.json.
-            npx prebuild -r napi --all --strip
+            # Same smoke test as the other jobs: prove the musl binary loads
+            # inside the musl container before it is ever published.
+            PREBUILDS_ONLY=1 node .github/scripts/smoke-prebuild.js
 
-            # Make prebuild output readable by the host runner (container writes as root).
+            # Make prebuildify output readable by the host runner (container writes as root).
             chmod -R a+rwX prebuilds
           '
 
     - name: List generated prebuilds
       run: |
         echo "=== Generated prebuilds ==="
-        find prebuilds -type f -name "*.tar.gz" 2>/dev/null || echo "No tar.gz files found"
-        ls -la prebuilds/ || echo "prebuilds directory not found"
+        find prebuilds -type f -name "*.node" -exec ls -l {} +
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v7
@@ -231,122 +207,111 @@ jobs:
         name: prebuilds-napi-alpine
         path: prebuilds/
 
-  test-prebuilds:
-    name: Test prebuilds
+  # Everything the matrix produced is merged back into a single prebuilds/
+  # tree here, which is exactly the layout that ships inside the npm tarball.
+  # The old job in this slot counted files and pushed tar.gz assets to a
+  # GitHub release; consumers no longer fetch those at install time, so the
+  # deliverable is now the packed .tgz itself.
+  pack:
+    name: Assemble and pack
     needs: [prebuild-napi, prebuild-napi-alpine]
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v7
 
-    - name: Download all artifacts
+    - uses: actions/setup-node@v7
+      with:
+        node-version: 22
+
+    # merge-multiple flattens every artifact into one prebuilds/ tree. Each
+    # job uploaded the CONTENTS of its prebuilds/ dir, so the platform-arch
+    # directories land side by side and the two Linux jobs merge into the
+    # single linux-x64 directory, distinguished by their libc tags.
+    - name: Download all prebuilds
       uses: actions/download-artifact@v8
       with:
-        path: prebuilds-artifacts/
+        pattern: prebuilds-napi-*
+        merge-multiple: true
+        path: prebuilds/
 
-    - name: List all prebuilds
+    - name: Verify the expected set is present
       run: |
-        echo "=== All prebuild artifacts ==="
-        find prebuilds-artifacts -name "*.node" -o -name "*.tar.gz" | sort
+        echo "=== Assembled prebuilds ==="
+        find prebuilds -type f -name "*.node" -exec ls -l {} +
 
-    - name: Count prebuilds
-      run: |
-        TOTAL=$(find prebuilds-artifacts -name "*.node" -o -name "*.tar.gz" | wc -l)
-        echo "Total prebuilds created: $TOTAL"
-
-    # Show input parameters
-    - name: Show Workflow Inputs
-      run: |
-        echo "=== Workflow dispatch inputs ==="
-        echo "Event name: ${{ github.event_name }}"
-        echo "Release tag input: '${{ github.event.inputs.release_tag }}'"
-
-    # Determine release tag (from input or package.json)
-    - name: Determine Release Tag
-      id: release_tag
-      run: |
-        if [ -n "${{ github.event.inputs.release_tag }}" ]; then
-          RELEASE_TAG="${{ github.event.inputs.release_tag }}"
-          echo "Using provided release tag: $RELEASE_TAG"
-        else
-          # Extract version from package.json and add 'v' prefix
-          VERSION=$(node -p "require('./package.json').version")
-          RELEASE_TAG="v${VERSION}"
-          echo "Using package.json version: $RELEASE_TAG"
-        fi
-        echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
-        echo "Final release tag: $RELEASE_TAG"
-
-    # Upload to existing release when manually triggered
-    - name: Upload to Release
-      if: github.event_name == 'workflow_dispatch'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        RELEASE_TAG="${{ steps.release_tag.outputs.release_tag }}"
-        echo "Uploading prebuilds to release: $RELEASE_TAG"
-        
-        # Check if release exists
-        echo "Checking if release exists..."
-        if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-          echo "Release $RELEASE_TAG exists"
-          RELEASE_EXISTS=true
-        else
-          echo "Release $RELEASE_TAG not found"
-          RELEASE_EXISTS=false
-        fi
-        
-        # List all releases for debugging
-        echo "Available releases:"
-        gh release list --limit 10
-        
-        # Create a temporary directory and copy all tar.gz files
-        mkdir -p upload-staging
-        find prebuilds-artifacts -name "*.tar.gz" -exec cp {} upload-staging/ \;
-        
-        # List files to upload
-        echo "Files to upload:"
-        ls -la upload-staging/
-        FILE_COUNT=$(ls upload-staging/*.tar.gz 2>/dev/null | wc -l)
-        echo "Total files to upload: $FILE_COUNT"
-        
-        if [ "$RELEASE_EXISTS" = "true" ]; then
-          # Upload to existing release
-          cd upload-staging
-          for file in *.tar.gz; do
-            echo "Uploading $file..."
-            gh release upload "$RELEASE_TAG" "$file" --clobber
-          done
-          
-          # Note: Auto-generated notes only work when creating new releases
-          echo "Prebuilds uploaded to existing release (release notes unchanged)"
-          
-        else
-          # Create new release with auto-generated notes and upload files
-          echo "Creating new release with auto-generated notes..."
-          cd upload-staging
-          if gh release create "$RELEASE_TAG" \
-            --title "Release $RELEASE_TAG" \
-            --generate-notes \
-            *.tar.gz 2>/dev/null; then
-            echo "Release created with auto-generated notes"
-          else
-            echo "Auto-generated notes not supported, creating release without notes..."
-            gh release create "$RELEASE_TAG" \
-              --title "Release $RELEASE_TAG" \
-              --notes "Release $RELEASE_TAG" \
-              *.tar.gz
+        # Fail loudly on a partial matrix rather than publishing a package
+        # that silently drops a platform.
+        missing=0
+        while read -r f; do
+          if [ ! -f "$f" ]; then
+            echo "MISSING: $f"
+            missing=1
           fi
-        fi
-        
-        echo "Upload complete! Uploaded $FILE_COUNT prebuilds."
-        echo ""
-        echo "📋 Automated prebuilds uploaded for:"
-        echo "   • Windows (win32-x64)"
-        echo "   • Linux glibc 2.35+ (linux-x64, built on Ubuntu 22.04)"
-        echo "   • Linux musl (linuxmusl-x64, built in node:22-alpine container)"
-        echo "   • macOS Apple Silicon (darwin-arm64)"
-        echo ""
-        echo "   These are N-API v$(node -p "require('./package.json').binary.napi_versions.join(', v')") builds."
-        echo "   One binary per platform serves every Node line and every"
-        echo "   Electron version, so there is no per-ABI artifact any more."
+        done <<FILES
+        prebuilds/win32-x64/msnodesqlv8.node
+        prebuilds/darwin-arm64/msnodesqlv8.node
+        prebuilds/linux-x64/msnodesqlv8.glibc.node
+        prebuilds/linux-x64/msnodesqlv8.musl.node
+        FILES
+        [ "$missing" = "0" ] || exit 1
+        echo "All four platform binaries present."
+
+    # --ignore-scripts because the install script is node-gyp-build, and there
+    # is no reason to build native code just to pack an already-built tree.
+    - name: Install dependencies
+      run: npm ci --ignore-scripts
+
+    - name: Pack
+      id: pack
+      run: |
+        TARBALL=$(npm pack --silent)
+        echo "tarball=$TARBALL" >> $GITHUB_OUTPUT
+        echo "=== $TARBALL ==="
+        ls -l "$TARBALL"
+
+    # Prove the packed artifact works with no install script and no build
+    # toolchain step -- the situation of an Artifactory mirror, a locked-down
+    # host, or anyone running `npm ci --ignore-scripts` as policy.
+    #
+    # --ignore-scripts is the load-bearing flag: it stops node-gyp-build
+    # running, so nothing can compile and nothing can fetch a binary. A pass
+    # here can only come from the bundled prebuild. Note this is deliberately
+    # NOT `--offline`: the package's own deps (node-addon-api, node-gyp-build)
+    # still resolve from the registry or its mirror, as they always have. What
+    # this change removes is the separate binary download from GitHub
+    # releases, not the registry itself.
+    - name: Verify the packed tarball installs and loads without scripts
+      run: |
+        TARBALL="${{ steps.pack.outputs.tarball }}"
+        mkdir -p /tmp/verify && cd /tmp/verify
+        npm init -y >/dev/null
+        npm install --ignore-scripts --no-audit --no-fund "$GITHUB_WORKSPACE/$TARBALL"
+        echo "=== bundled binaries in the installed package ==="
+        find node_modules/msnodesqlv8/prebuilds -type f -name "*.node" -exec ls -l {} +
+        node -e "
+          const sql = require('msnodesqlv8')
+          console.log('offline install loaded ok, exports:', Object.keys(sql).length)
+          if (Object.keys(sql).length === 0) process.exit(1)
+        "
+
+    - name: Upload packed tarball
+      uses: actions/upload-artifact@v7
+      with:
+        name: npm-tarball
+        path: ${{ steps.pack.outputs.tarball }}
+
+    - name: Summary
+      run: |
+        echo "### Packed \`${{ steps.pack.outputs.tarball }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Bundled N-API binaries (no install-time download):" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- Windows (win32-x64)" >> $GITHUB_STEP_SUMMARY
+        echo "- Linux glibc 2.35+ (linux-x64, built on Ubuntu 22.04)" >> $GITHUB_STEP_SUMMARY
+        echo "- Linux musl (linux-x64 .musl, built in node:22-alpine)" >> $GITHUB_STEP_SUMMARY
+        echo "- macOS Apple Silicon (darwin-arm64)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "N-API v$(node -p "require('./package.json').binary.napi_versions.join(', v')"). One binary per platform serves every Node line and every Electron version." >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Publish with: \`npm publish ${{ steps.pack.outputs.tarball }}\`" >> $GITHUB_STEP_SUMMARY
