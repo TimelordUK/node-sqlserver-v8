@@ -26,6 +26,7 @@
   },
   "files": [
     "lib/",
+    "prebuilds/*/*.node",
     "binding.gyp",
     "cpp/"
   ],
@@ -37,7 +38,7 @@
   ],
   "dependencies": {
     "node-addon-api": "^8.7.0",
-    "prebuild-install": "^7.1.3"
+    "node-gyp-build": "^4.8.4"
   },
   "devDependencies": {
     "@electron/rebuild": "^4.0.3",
@@ -61,7 +62,7 @@
     "mochawesome": "^8.0.1",
     "node-gyp": "^13.0.2",
     "nyc": "^18.0.0",
-    "prebuild": "^13.0.1",
+    "prebuildify": "^6.0.1",
     "rimraf": "^6.1.3",
     "sequelize": "^6.37.8",
     "source-map-support": "^0.5.21",
@@ -85,13 +86,8 @@
     "watch:test": "tsc -p tsconfig.json --watch",
     "builddbg": "node-gyp build --debug",
     "rebuild": "node-gyp rebuild -j 4",
-    "install": "prebuild-install || node-gyp rebuild -j 4",
-    "install-verbose": "prebuild-install --verbose || node-gyp rebuild -j 4",
-    "prebuild-ci": "prebuild --all --strip --verbose -j 4",
-    "prebuild-linux": "prebuild --targets 18.20.0 20.18.0 22.12.0 23.0.0 24.0.0 --strip --verbose -j 4",
-    "prebuild-upload": "./prebuild-upload.sh",
-    "prebuild-electron": "prebuild --runtime electron --targets 32.0.0 33.0.0 34.0.0 35.0.0 36.0.0 --strip --verbose -j 4",
-    "prebuild-all-platforms": "npm run prebuild-linux && npm run prebuild-electron",
+    "install": "node-gyp-build",
+    "prebuildify": "prebuildify --napi --strip",
     "configure:cpp-tests": "cmake -B test/cpp/build -S test/cpp",
     "configure:cpp-tests:vs": "cmake -G \"Visual Studio 17 2022\" -A x64 -B test/cpp/build -S test/cpp",
     "open:vs": "start test/cpp/build/msnodesqlv8_tests.sln",

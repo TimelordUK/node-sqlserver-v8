@@ -12,7 +12,8 @@ runtest.js
 # Build artifacts
 build/
 dist/
-prebuilds/
+# prebuilds/ is deliberately NOT ignored: the bundled per-platform N-API
+# binaries are the whole point of the package now (see files[] in package.json).
 
 # Dependencies (not needed in published package)
 node_modules/
