@@ -24,7 +24,7 @@ updates:
         applies-to: version-updates
         dependency-type: development
         update-types: [minor, patch]
-      # node-addon-api / prebuild-install ship in the published package, so keep
+      # node-addon-api / node-gyp-build ship in the published package, so keep
       # them in their own PR - it is the one CI must be green on.
       production-dependencies:
         applies-to: version-updates
