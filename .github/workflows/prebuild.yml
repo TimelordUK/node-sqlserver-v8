@@ -7,7 +7,16 @@ name: Build Package
 # uploaded as GitHub release assets because nothing downloads them at install
 # time any more.
 on:
+  # Run directly to produce a tarball for inspection...
   workflow_dispatch:
+  # ...or be called by npm-publish.yml, which publishes the artifact this
+  # produces. Publishing must never pack a bare checkout: prebuilds/ is
+  # gitignored, so a checkout alone would yield a package with no binaries.
+  workflow_call:
+    outputs:
+      tarball:
+        description: 'Filename of the packed npm tarball, uploaded as the npm-tarball artifact'
+        value: ${{ jobs.pack.outputs.tarball }}
 
 jobs:
   # These builds are N-API, not ABI-tagged. cpp/ is pure node-addon-api (no
@@ -203,6 +212,8 @@ jobs:
     name: Assemble and pack
     needs: [prebuild-napi, prebuild-napi-alpine]
     runs-on: ubuntu-latest
+    outputs:
+      tarball: ${{ steps.pack.outputs.tarball }}
 
     steps:
     - uses: actions/checkout@v7
