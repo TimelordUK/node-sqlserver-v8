@@ -1,26 +1,13 @@
-name: Prebuild Binaries
+name: Build Package
 
-# Allow manual triggering
+# Manual only. The output is the packed npm tarball, uploaded as the
+# `npm-tarball` artifact; publishing stays a deliberate local step.
+#
+# The old release_tag / create_release inputs are gone: binaries are no longer
+# uploaded as GitHub release assets because nothing downloads them at install
+# time any more.
 on:
   workflow_dispatch:
-    inputs:
-      release_tag:
-        description: 'Release tag to upload prebuilds to (leave empty to use package.json version)'
-        required: false
-        type: string
-        default: ''
-      create_release:
-        description: "Create new release if it doesn't exist"
-        required: false
-        type: boolean
-        default: true
-
-#  push:
- #   branches: [n_api, master]
-#  tags:
-#      - 'v*'
-#  pull_request:
-#    branches: [n_api, master]
 
 jobs:
   # These builds are N-API, not ABI-tagged. cpp/ is pure node-addon-api (no
