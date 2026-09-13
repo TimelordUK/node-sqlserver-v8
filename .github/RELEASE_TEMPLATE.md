@@ -73,8 +73,18 @@ ABI coupling.
 Where there is no bundled binary the `install` script falls back to a
 `node-gyp` source build, which needs a C++ toolchain and the unixODBC headers.
 
-**Runtime requirements:** any Node with N-API ≥ 8 (`engines: node >=18`), and
-any Electron with N-API ≥ 8. Electron needs no `electron-rebuild` and no
+**Supported means: a Node line that upstream still supports, which CI tests on
+every commit.** Currently Node 22, 24 and 26, and `engines` requires
+`node >=22`. Node 18 (EOL 2025-04-30) and Node 20 (EOL 2026-04-30) are past
+upstream end-of-life and are not tested.
+
+**32-bit Windows (`ia32`) is not supported.** `cpu` is declared as
+`["x64", "arm64"]`, so `npm install` refuses with `EBADPLATFORM` rather than
+failing later at load. Note `win32` is Node's platform string for *all*
+Windows including 64-bit, so "win32 unsupported" would be the wrong way to say
+this.
+
+Any Electron with N-API ≥ 8 works, with no `electron-rebuild` and no
 Electron-specific artifact.
 
 <details>
@@ -218,7 +228,9 @@ production rollout.
 4. Linux support requires **glibc 2.35+** (Ubuntu 22.04 or later). Earlier
    distributions must build the driver themselves.
 5. As close to a drop-in replacement for 4.x as possible.
-6. **win32 (32-bit Windows) is no longer supported.**
+6. **32-bit Windows (`ia32`) is no longer supported**, and `npm install` now
+   refuses it outright with `EBADPLATFORM`. 64-bit Windows is fully supported -
+   Node calls it `win32` too, which the old wording made sound otherwise.
 7. Windows, Linux and macOS are the supported platforms.
 8. Alpine/musl was originally best-effort and out of scope. **As of 5.5.0 a
    musl binary is built, smoke tested in CI and shipped in the package.**
