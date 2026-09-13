@@ -35,6 +35,18 @@ updates:
         applies-to: security-updates
         patterns: ["*"]
     # Majors stay ungrouped so electron/typescript jumps arrive as their own PR.
+    ignore:
+      # TypeScript 7 is the native rewrite, and typescript-eslint refuses to
+      # load against it: it hard-throws "typescript-eslint does not support
+      # TS 7.0" on any major >= 7, so `npm run lint` dies before linting a
+      # single file. Its peer range is >=4.8.4 <6.1.0.
+      #
+      # We were on ^7.0.2 for weeks with lint silently broken as a result, so
+      # this stays ignored rather than being re-offered every Monday. Lift it
+      # when typescript-eslint ships TS >=7 support - tracked upstream at
+      # https://github.com/typescript-eslint/typescript-eslint/issues/10940
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: "/"
