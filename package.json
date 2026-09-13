@@ -22,7 +22,7 @@
     "url": "git+https://github.com/TimelordUK/node-sqlserver-v8.git"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "files": [
     "lib/",
@@ -73,6 +73,10 @@
     "win32",
     "linux",
     "darwin"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
   ],
   "scripts": {
     "build": "tsc",

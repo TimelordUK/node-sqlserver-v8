@@ -30,7 +30,10 @@ Reproduce: `node samples/javascript/benchmark.js --rows 1000,10000,100000 --mode
 npm install msnodesqlv8 --save
 ```
 
-Prebuilt binaries are downloaded automatically for Linux (x64, glibc ≥ 2.28 and musl), macOS (x64, arm64) and Windows (x64, ia32). Electron binaries are published alongside Node binaries for current major versions.
+Prebuilt binaries **ship inside the package** - nothing is downloaded at install
+time and nothing is compiled on a supported platform. One binary per platform
+serves every Node line and every Electron version, because the addon is pure
+N-API. See [Platform support](#platform-support) for what is bundled.
 
 You also need a Microsoft ODBC driver on the host:
 
@@ -120,13 +123,32 @@ Full runnable projects in their own repos, showing `msnodesqlv8` wired into real
 
 ## Platform support
 
-| Platform              | Arch         | Node              | Electron |
-| --------------------- | ------------ | ----------------- | -------- |
-| Linux (glibc ≥ 2.28)  | x64          | 20, 22, 24        | 32+      |
-| Linux (musl / Alpine) | x64          | 20, 22, 24        | 32+      |
-| macOS                 | x64, arm64   | 20, 22, 24        | 32+      |
-| Windows               | x64, ia32    | 20, 22, 24        | 32+      |
-| Windows Integrated Auth | x64        | supported via `Trusted_Connection=yes` | — |
+**Supported means: a Node line that upstream still supports, which CI tests on
+every commit.** Currently that is Node 22, 24 and 26. `engines` requires
+`node >=22`; older lines are past their upstream end-of-life (Node 18 ended
+2025-04-30, Node 20 ended 2026-04-30) and are not tested here.
+
+Binaries bundled in the published package:
+
+| Platform                | Arch    | Bundled | Notes                                   |
+| ----------------------- | ------- | ------- | --------------------------------------- |
+| Windows                 | x64     | yes     |                                         |
+| Linux (glibc)           | x64     | yes     | built on Ubuntu 22.04, needs glibc 2.35+ |
+| Linux (musl / Alpine)   | x64     | yes     | built in `node:22-alpine`               |
+| macOS                   | arm64   | yes     | Apple Silicon                           |
+| macOS                   | x64     | no      | compiles from source on install         |
+| Linux                   | arm64   | no      | compiles from source on install         |
+| Windows                 | arm64   | no      | compiles from source on install         |
+
+**32-bit Windows (`ia32`) is not supported.** `npm install` refuses with
+`EBADPLATFORM` rather than failing later at load. Note that Node reports
+*64-bit* Windows as platform `win32` too - `win32` is not the same as 32-bit.
+
+Any Electron with N-API ≥ 8 works, with no `electron-rebuild` and no
+Electron-specific artifact. Verified against Electron 41 (ABI 145) and 43
+(ABI 148) on the same single binary.
+
+Windows Integrated Auth (x64) is supported via `Trusted_Connection=yes`.
 
 Tested against SQL Server 2017, 2019, 2022. Sybase ASE support is smaller in scope — see [samples/javascript/sybase-query.js](samples/javascript/sybase-query.js) and the wiki.
 
@@ -138,11 +160,14 @@ Tested against SQL Server 2017, 2019, 2022. Sybase ASE support is smaller in sco
 
 **`SSL Provider: certificate verify failed`** on newer SQL Server — add `Encrypt=yes;TrustServerCertificate=yes` to the connection string, or install the server certificate.
 
-**Segfault on Ubuntu/Debian with Node 18/20** — requires OpenSSL 3.2. See `tool/openssl.sh` in this repo and the [wiki install notes](https://github.com/TimelordUK/node-sqlserver-v8/wiki).
+**Segfault on Ubuntu/Debian with Node 18/20** — requires OpenSSL 3.2. See `tool/openssl.sh` in this repo and the [wiki install notes](https://github.com/TimelordUK/node-sqlserver-v8/wiki). Node 18 and 20 are both past end-of-life and are no longer supported; on Node 22+ this does not arise.
 
 **BCP crashes or silently falls back** — BCP requires ODBC Driver 17 or 18 *exactly*. Any older driver (SQL Server Native Client, FreeTDS) will either crash the process or silently no-op. Check with `odbcinst -q -d`.
 
-**Prebuilt binary fails to load** — your glibc, Node ABI or Electron version may not match a published binary. Try building from source: [docs/building-from-source.md](docs/building-from-source.md).
+**Prebuilt binary fails to load** — the bundled binaries are not ABI-specific, so
+a Node or Electron version mismatch is not the cause. The likely reasons are an
+unbundled platform (see the table above), or glibc older than 2.35 on Linux.
+Build from source: [docs/building-from-source.md](docs/building-from-source.md).
 
 More issues and workarounds: [GitHub Issues](https://github.com/TimelordUK/node-sqlserver-v8/issues).
 
