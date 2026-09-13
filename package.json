@@ -88,6 +88,7 @@
     "rebuild": "node-gyp rebuild -j 4",
     "install": "node-gyp-build",
     "prebuildify": "prebuildify --napi --strip",
+    "fetch-prebuild": "node tools/fetch-prebuild.js",
     "configure:cpp-tests": "cmake -B test/cpp/build -S test/cpp",
     "configure:cpp-tests:vs": "cmake -G \"Visual Studio 17 2022\" -A x64 -B test/cpp/build -S test/cpp",
     "open:vs": "start test/cpp/build/msnodesqlv8_tests.sln",
