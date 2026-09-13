@@ -27,14 +27,14 @@ interface TestScenario {
 }
 
 class StressTestRunner {
-  private config: Required<StressTestConfig>
+  private readonly config: Required<StressTestConfig>
   private startTime: number | null = null
   private memoryBaseline: MemoryUsage | null = null
   private iterationCount = 0
   private errors: TestError[] = []
   private connection: any = null
 
-  constructor(config: StressTestConfig = {}) {
+  constructor (config: StressTestConfig = {}) {
     this.config = {
       connectionString: config.connectionString || process.env.CONNECTION_STRING || '',
       iterations: config.iterations || 10000,
@@ -43,7 +43,7 @@ class StressTestRunner {
     }
   }
 
-  private getMemoryUsage(): MemoryUsage {
+  private getMemoryUsage (): MemoryUsage {
     const usage = process.memoryUsage()
     return {
       rss: (usage.rss / 1024 / 1024).toFixed(2),
@@ -54,7 +54,7 @@ class StressTestRunner {
     }
   }
 
-  private logMemory(message = ''): void {
+  private logMemory (message = ''): void {
     const memory = this.getMemoryUsage()
     console.log(`[Memory] ${message}`)
     console.log(`  RSS: ${memory.rss} MB`)
@@ -62,7 +62,7 @@ class StressTestRunner {
     console.log(`  Heap Used: ${memory.heapUsed} MB`)
     console.log(`  External: ${memory.external} MB`)
     console.log(`  Array Buffers: ${memory.arrayBuffers} MB`)
-    
+
     if (this.memoryBaseline) {
       const heapDelta = (parseFloat(memory.heapUsed) - parseFloat(this.memoryBaseline.heapUsed)).toFixed(2)
       const rssDelta = (parseFloat(memory.rss) - parseFloat(this.memoryBaseline.rss)).toFixed(2)
@@ -72,7 +72,7 @@ class StressTestRunner {
     console.log('')
   }
 
-  private async connect(): Promise<void> {
+  private async connect (): Promise<void> {
     try {
       this.connection = await sql.promises.open(this.config.connectionString)
       console.log('Connected to database')
@@ -82,7 +82,7 @@ class StressTestRunner {
     }
   }
 
-  private async disconnect(): Promise<void> {
+  private async disconnect (): Promise<void> {
     if (this.connection) {
       try {
         await this.connection.promises.close()
@@ -93,7 +93,7 @@ class StressTestRunner {
     }
   }
 
-  private async setupTestTable(): Promise<void> {
+  private async setupTestTable (): Promise<void> {
     try {
       // Drop table if exists
       await this.connection.promises.query(`
@@ -145,7 +145,7 @@ class StressTestRunner {
     }
   }
 
-  private async cleanupTestTable(): Promise<void> {
+  private async cleanupTestTable (): Promise<void> {
     try {
       await this.connection.promises.query(`
         IF OBJECT_ID('dbo.stress_test_table', 'U') IS NOT NULL
@@ -157,7 +157,7 @@ class StressTestRunner {
     }
   }
 
-  private async runScenario(scenario: TestScenario): Promise<void> {
+  private async runScenario (scenario: TestScenario): Promise<void> {
     console.log(`\nRunning scenario: ${scenario.name}`)
     console.log(`Description: ${scenario.description}`)
     console.log(`Iterations: ${this.config.iterations}`)
@@ -166,11 +166,11 @@ class StressTestRunner {
     this.startTime = Date.now()
     this.iterationCount = 0
     this.errors = []
-    
+
     // Force GC and record baseline memory
     if ((global as any).gc) {
       (global as any).gc()
-      await new Promise(resolve => setTimeout(resolve, 100))
+      await new Promise(resolve => { setTimeout(resolve, 100) })
     }
     this.memoryBaseline = this.getMemoryUsage()
     this.logMemory('Baseline')
@@ -192,7 +192,7 @@ class StressTestRunner {
         // Force GC periodically
         if ((global as any).gc && i > 0 && i % this.config.gcInterval === 0) {
           (global as any).gc()
-          await new Promise(resolve => setTimeout(resolve, 10))
+          await new Promise(resolve => { setTimeout(resolve, 10) })
         }
 
       } catch (err) {
@@ -205,7 +205,7 @@ class StressTestRunner {
     }
 
     // Final report
-    const totalTime = (Date.now() - this.startTime!) / 1000
+    const totalTime = (Date.now() - this.startTime) / 1000
     const rate = this.iterationCount / totalTime
 
     console.log('\n----------------------------------------')
@@ -214,7 +214,7 @@ class StressTestRunner {
     console.log(`Total time: ${totalTime.toFixed(2)} seconds`)
     console.log(`Average rate: ${rate.toFixed(1)} operations/second`)
     console.log(`Errors: ${this.errors.length}`)
-    
+
     if (this.errors.length > 0) {
       console.log('\nFirst few errors:')
       this.errors.slice(0, 3).forEach(({ iteration, error }) => {
@@ -225,12 +225,12 @@ class StressTestRunner {
     // Force GC and final memory report
     if ((global as any).gc) {
       (global as any).gc()
-      await new Promise(resolve => setTimeout(resolve, 100))
+      await new Promise(resolve => { setTimeout(resolve, 100) })
     }
     this.logMemory('Final')
   }
 
-  async run(scenarioName: string): Promise<void> {
+  async run (scenarioName: string): Promise<void> {
     try {
       await this.connect()
       await this.setupTestTable()
@@ -253,7 +253,7 @@ class StressTestRunner {
   }
 
   // Define stress test scenarios
-  private scenarios: Record<string, TestScenario> = {
+  private readonly scenarios: Record<string, TestScenario> = {
     'string-select': {
       name: 'String Column Selection',
       description: 'Repeatedly select string columns to check for memory leaks',
@@ -330,14 +330,14 @@ class StressTestRunner {
         return new Promise<void>((resolve, reject) => {
           const query = conn.query('SELECT * FROM stress_test_table')
           let rowCount = 0
-          
+
           query.on('row', (row: any) => {
             rowCount++
             // Access the data
             const _ = row
           })
-          
-          query.on('done', () => resolve())
+
+          query.on('done', () => { resolve() })
           query.on('error', reject)
         })
       }
@@ -360,7 +360,7 @@ class StressTestRunner {
 // CLI interface
 if (require.main === module) {
   const args = process.argv.slice(2)
-  
+
   if (args.length === 0) {
     console.log('Usage: node stress-test-runner.js <scenario> [options]')
     console.log('\nAvailable scenarios:')
@@ -389,7 +389,7 @@ if (require.main === module) {
   for (let i = 1; i < args.length; i += 2) {
     const option = args[i]
     const value = args[i + 1]
-    
+
     switch (option) {
       case '--iterations':
         config.iterations = parseInt(value, 10)
