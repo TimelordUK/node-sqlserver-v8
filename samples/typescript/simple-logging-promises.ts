@@ -27,30 +27,30 @@ console.log('Current logger configuration:', config)
 // Example connection string - replace with your own
 const connectionString = 'Driver={ODBC Driver 18 for SQL Server};Server=127.0.0.1,1433;Database=node;UID=node_user;PWD=StrongPassword123!;TrustServerCertificate=yes;;Connect Timeout=10'
 
-async function demonstrateLogging(): Promise<void> {
+async function demonstrateLogging (): Promise<void> {
   try {
     // Log custom messages at different levels
     sql.logger.trace('Starting promise-based SQL operations', 'demonstrateLogging')
     sql.logger.debug('Connection string configured', 'demonstrateLogging')
-    
+
     // Open connection using promises
     sql.logger.info('Opening database connection...', 'demonstrateLogging')
     const connection = await sql.promises.open(connectionString)
     sql.logger.info('Connection opened successfully', 'demonstrateLogging')
-    
+
     // Execute a simple query
     sql.logger.debug('Executing test query', 'demonstrateLogging')
     const results: QueryAggregatorResults = await connection.promises.query('SELECT 1 as test, GETDATE() as currentTime')
-    
+
     sql.logger.info(`Query completed in ${results.elapsed}ms`, 'demonstrateLogging')
     sql.logger.debug(`Results: ${JSON.stringify(results.first)}`, 'demonstrateLogging')
-    
+
     // Demonstrate lazy logging for expensive operations
     sql.logger.traceLazy(() => {
       // This function is only called if TRACE level is enabled
       return `Detailed results: ${JSON.stringify(results, null, 2)}`
     }, 'demonstrateLogging')
-    
+
     // Execute multiple queries using pool
     sql.logger.info('Creating connection pool...', 'demonstrateLogging')
     const pool = new sql.Pool({
@@ -61,10 +61,10 @@ async function demonstrateLogging(): Promise<void> {
       heartbeatSql: 'SELECT @@SPID as spid',
       inactivityTimeoutSecs: 60
     })
-    
+
     await pool.promises.open()
     sql.logger.info('Pool opened successfully', 'demonstrateLogging')
-    
+
     // Execute queries in parallel
     sql.logger.debug('Executing parallel queries', 'demonstrateLogging')
     const parallelQueries = Promise.all([
@@ -72,19 +72,19 @@ async function demonstrateLogging(): Promise<void> {
       pool.promises.query('SELECT 2 as query2'),
       pool.promises.query('SELECT 3 as query3')
     ])
-    
+
     const parallelResults = await parallelQueries
     sql.logger.info(`Completed ${parallelResults.length} parallel queries`, 'demonstrateLogging')
-    
+
     // Clean up
     sql.logger.debug('Closing pool', 'demonstrateLogging')
     await pool.promises.close()
-    
+
     sql.logger.debug('Closing connection', 'demonstrateLogging')
     await connection.promises.close()
-    
+
     sql.logger.info('All operations completed successfully', 'demonstrateLogging')
-    
+
   } catch (error) {
     sql.logger.error(`Operation failed: ${error}`, 'demonstrateLogging')
     throw error

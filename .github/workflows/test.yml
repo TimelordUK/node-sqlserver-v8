@@ -8,6 +8,41 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Lint runs as its own job, first and cheapest. It needs no SQL Server, no ODBC
+  # driver and no native build, so `npm ci --ignore-scripts` is enough and it
+  # finishes in well under a minute.
+  #
+  # It exists because `npm run lint` was broken for weeks without anyone
+  # noticing: the script was never wired into CI, so a TypeScript major bump that
+  # made typescript-eslint refuse to load cost nothing and went unseen. Lint that
+  # nothing runs is lint that rots.
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Create directory structure
+      run: mkdir -p node_modules
+
+    - uses: actions/checkout@v7
+      with:
+        path: node_modules/msnodesqlv8
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v7
+      with:
+        node-version: 22
+
+    # --ignore-scripts skips the native build: eslint never loads the addon, and
+    # building it here would add minutes for no benefit.
+    - name: Install dependencies
+      working-directory: node_modules/msnodesqlv8
+      run: npm ci --ignore-scripts
+
+    - name: Lint
+      working-directory: node_modules/msnodesqlv8
+      run: npm run lint
+
   test-linux:
     name: Test Linux - Node ${{ matrix.node }}
     strategy:

@@ -17,26 +17,26 @@ sql.logger.configureForDevelopment()
 // Replace with your connection string
 const connectionString = 'Driver={ODBC Driver 18 for SQL Server};Server=127.0.0.1,1433;Database=node;UID=node_user;PWD=StrongPassword123!;TrustServerCertificate=yes;;Connect Timeout=10'
 
-async function main(): Promise<void> {
+async function main (): Promise<void> {
   let connection
 
   try {
     // The logger will automatically log connection attempts
     connection = await sql.promises.open(connectionString)
-    
+
     // Simple query
     const result: QueryAggregatorResults = await connection.promises.query(
       'SELECT name, create_date FROM sys.tables WHERE type = ?',
-      ['U']  // 'U' for user tables
+      ['U'] // 'U' for user tables
     )
-    
+
     console.log(`Found ${result.rows} tables`)
     console.log('First few tables:', result.first?.slice(0, 3))
-    
+
     // Stored procedure call (if you have one)
     // const procResult = await connection.promises.callProc('sp_who')
     // console.log('Active connections:', procResult.first?.length)
-    
+
   } catch (error) {
     // Errors are automatically logged at ERROR level
     console.error('Database operation failed:', error)
@@ -48,7 +48,7 @@ async function main(): Promise<void> {
 }
 
 // Using connection pool with logging
-async function poolExample(): Promise<void> {
+async function poolExample (): Promise<void> {
   const pool = new sql.Pool({
     connectionString,
     floor: 2,
@@ -57,16 +57,16 @@ async function poolExample(): Promise<void> {
 
   try {
     await pool.promises.open()
-    
+
     // Execute multiple queries - the pool and logger will show which connection handles each
     const results = await Promise.all([
       pool.promises.query('SELECT 1 as num'),
       pool.promises.query('SELECT 2 as num'),
       pool.promises.query('SELECT 3 as num')
     ])
-    
+
     console.log('Pool query results:', results.map(r => r.first?.[0]))
-    
+
   } finally {
     await pool.promises.close()
   }
@@ -76,11 +76,16 @@ async function poolExample(): Promise<void> {
 (async () => {
   console.log('=== Single Connection Example ===')
   await main()
-  
+
   console.log('\n=== Connection Pool Example ===')
   await poolExample()
-  
+
   // Get final logger stats
   const config = sql.logger.getConfiguration()
   console.log('\nLogger configuration:', config)
-})()
+})().catch(e => {
+  // Without this the IIFE is a floating promise: any failure above becomes
+  // an unhandled rejection, exiting with a bare stack trace and no context.
+  console.error(e)
+  process.exitCode = 1
+})
