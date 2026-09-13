@@ -1048,7 +1048,12 @@ describe('pool', function () {
     tester(500, 4, () => 'select @@SPID as spid', 5000, 0, testDone)
   })
 
-  it('open pool size 4 - submit queries on parked connections', testDone => {
+  // Assertions run in the test body, not inside pool.on('close'). A throw from
+  // an emitter handler never reaches mocha, so a failed expectation there is
+  // reported as "Timeout of 60000ms exceeded" with no mention of the real
+  // cause - which is how a count mismatch on a slow runner looked like a
+  // mystery hang for so long.
+  it('open pool size 4 - submit queries on parked connections', async function handler () {
     const size = 4
     const iterations = 4
 
@@ -1057,6 +1062,8 @@ describe('pool', function () {
     const parked = tester.parked
     const checkin = tester.checkin
     const pool = tester.pool
+
+    const closed = new Promise(resolve => pool.once('close', resolve))
 
     let free = 0
     function submit (sql) {
@@ -1072,29 +1079,37 @@ describe('pool', function () {
       return q
     }
 
+    // Latched, and >= rather than ===. Two effects: the exact instant when
+    // parked.length equals size no longer has to be observed, and the block
+    // cannot fire twice - which would submit 8 queries and then close the pool
+    // with 4 still in flight once free reached 4.
+    let submitted = false
     pool.on('status', s => {
-      switch (s.op) {
-        case 'parked':
-          if (parked.length === size) {
-            for (let i = 0; i < iterations; ++i) {
-              submit('waitfor delay \'00:00:01\';')
-            }
-          }
-          break
+      if (s.op !== 'parked') return
+      if (submitted || parked.length < size) return
+      submitted = true
+      for (let i = 0; i < iterations; ++i) {
+        submit('waitfor delay \'00:00:01\';')
       }
     })
 
-    pool.on('close', () => {
-      expect(parked[size - 1].parked).to.equal(size)
-      expect(parked[size - 1].idle).to.equal(0)
-      expect(tester.opened).to.be.equal(true)
-      expect(checkin.length).to.be.equal(size * 5) // 3 x 4 heartbeats + 1 x 4 'grow' + 1 x 4 queries
-      // assert.strictEqual(size * 4, checkout.length)
-      testDone()
-    })
+    await closed
+
+    expect(submitted).to.equal(true)
+    expect(free).to.equal(iterations)
+    expect(parked[size - 1].parked).to.equal(size)
+    expect(parked[size - 1].idle).to.equal(0)
+    expect(tester.opened).to.be.equal(true)
+    // A lower bound, not an exact count. Each connection contributes one
+    // 'grow' checkin plus one per query it serves, and then a further checkin
+    // per heartbeatSecs that elapse. That heartbeat component is wall-clock,
+    // so the old `size * 5` was really asserting "this test took about three
+    // seconds" and broke whenever a runner was slow enough to fit a fourth
+    // heartbeat in.
+    expect(checkin.length).to.be.at.least(size * 2)
   })
 
-  it('open pool size 4 - leave inactive so connections closed and parked', testDone => {
+  it('open pool size 4 - leave inactive so connections closed and parked', async function handler () {
     const size = 4
     const ci = new Checkins({
       connectionString: env.connectionString,
@@ -1109,22 +1124,31 @@ describe('pool', function () {
     const checkin = ci.checkin
     const checkout = ci.checkout
 
+    const closed = new Promise(resolve => pool.once('close', resolve))
+
+    // Latched and >=, for the same reason as the test above.
+    let closing = false
     pool.on('status', () => {
-      if (parked.length === 0) return
-      if (parked.length === size) {
-        pool.close()
-      }
+      if (closing || parked.length < size) return
+      closing = true
+      pool.close()
     })
 
-    // with 3 second inactivity will check out each connection 3 times for 3 heartbeats
-    pool.on('close', () => {
-      assert.strictEqual(size, parked[size - 1].parked)
-      assert.strictEqual(0, parked[size - 1].idle)
-      assert.strictEqual(true, ci.opened)
-      assert.strictEqual(size * 3, checkin.length)
-      assert.strictEqual(size * 3, checkout.length)
-      testDone()
-    })
+    await closed
+
+    assert.strictEqual(size, parked[size - 1].parked)
+    assert.strictEqual(0, parked[size - 1].idle)
+    assert.strictEqual(true, ci.opened)
+    // The old assertion was `size * 3` for both, whose own comment explained
+    // it as "check out each connection 3 times for 3 heartbeats" - i.e. it
+    // encoded how many seconds the test took, which is precisely what varies
+    // on a loaded runner. Assert the invariants that actually hold instead:
+    // every checkin implies an earlier checkout, and each connection has been
+    // cycled at least once by the time all of them are parked.
+    assert(checkin.length >= size, `expected >= ${size} checkins, got ${checkin.length}`)
+    assert(checkout.length >= size, `expected >= ${size} checkouts, got ${checkout.length}`)
+    assert(checkin.length <= checkout.length,
+      `checkins (${checkin.length}) cannot exceed checkouts (${checkout.length})`)
   })
 
   function pauseCancelTester (iterations, size, cancelled, strategy, expectedTimeToComplete, testDone) {
