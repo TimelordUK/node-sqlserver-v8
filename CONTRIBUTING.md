@@ -14,7 +14,52 @@ The easiest way to ask and answer questions is to visit the [Issues][Issues] pag
 
 ### Obtaining the binaries
 
-Pre-compiled binaries of Driver are available at the [download page][Download]. 
+Pre-compiled binaries ship **inside the npm package** as of 5.5.0, so
+`npm install msnodesqlv8` needs no download and no compiler on a supported
+platform. See the platform table in the release notes for what is bundled.
+
+### Setting up a development build
+
+Most contributions only touch the JavaScript in `lib/`, and you should not need
+a C++ toolchain for that.
+
+A fresh clone contains no binary: `prebuilds/` and `build/` are both gitignored,
+and the `install` script (`node-gyp-build`) compiles from source when it finds
+nothing. So a plain `npm install` in a clone will try to build the addon, and
+`require`ing the driver before that succeeds fails with:
+
+```
+Error: No native build was found for platform=... arch=... runtime=node ...
+```
+
+To work on the JavaScript without building the C++, pull the published binary
+into your working tree:
+
+```sh
+npm install --ignore-scripts
+npm run fetch-prebuild
+```
+
+That downloads the latest published package from the npm registry and copies its
+`prebuilds/` directory into your clone. Pass a version to pin one:
+
+```sh
+npm run fetch-prebuild -- 5.5.0
+```
+
+`node-gyp-build` resolves `build/Release`, then `build/Debug`, then
+`prebuilds/`. A fetched binary is therefore used only while you have not built
+from source - if you later run `npm run rebuild`, your own build wins
+automatically and there is nothing to undo.
+
+**When you do need to build from source:** if your change touches `cpp/`, or if
+`cpp/` has moved on since the release you fetched, the published binary will not
+contain your changes and may not match what `lib/` expects. Build it properly:
+
+```sh
+npm run rebuild          # release
+npm run build:debug      # debug, which lib/util.js prefers if present
+```
 
 ### Obtaining the source code
 
