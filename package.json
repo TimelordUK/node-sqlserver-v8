@@ -52,7 +52,7 @@
     "@types/sinon": "^22.0.0",
     "chai": "^6.2.2",
     "chai-as-promised": "^8.0.2",
-    "dotenv": "^17.3.1",
+    "dotenv": "^18.0.0",
     "electron": "^44.0.0",
     "env-cmd": "^11.0.0",
     "eslint": "^10.8.1",
