@@ -105,7 +105,7 @@ jobs:
         fi
 
     - name: Run SQL Server
-      uses: potatoqualitee/mssqlsuite@v1.12
+      uses: potatoqualitee/mssqlsuite@v2
       with:
         install: sqlengine, sqlclient
         version: 2022
@@ -206,7 +206,7 @@ jobs:
         node-version: ${{ matrix.node }}
 
     - name: Install SQL Server
-      uses: potatoqualitee/mssqlsuite@v1.12
+      uses: potatoqualitee/mssqlsuite@v2
       with:
         install: sqlengine, sqlclient
         version: 2019
