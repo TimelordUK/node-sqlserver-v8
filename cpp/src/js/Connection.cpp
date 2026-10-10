@@ -160,6 +160,12 @@ Napi::Value Connection::Open(const Napi::CallbackInfo& info) {
 
   const auto connectionString = info[0].As<Napi::String>().Utf16Value();
 
+  // Optional login timeout in seconds; 0 leaves the driver default in place
+  int timeout = 0;
+  if (info.Length() > 1 && info[1].IsNumber()) {
+    timeout = info[1].As<Napi::Number>().Int32Value();
+  }
+
   // Check for callback (last argument)
   Napi::Function callback;
 
@@ -183,7 +189,7 @@ Napi::Value Connection::Open(const Napi::CallbackInfo& info) {
       return env.Undefined();
     });
 
-    auto worker = new OpenWorker(callback, odbcConnection_.get(), this, connectionString);
+    auto worker = new OpenWorker(callback, odbcConnection_.get(), this, connectionString, timeout);
 
     worker->Queue();
 
@@ -196,9 +202,9 @@ Napi::Value Connection::Open(const Napi::CallbackInfo& info) {
       callback,
       odbcConnection_.get(),
       this,
-      [connectionString](IOdbcConnection* conn) {
+      [connectionString, timeout](IOdbcConnection* conn) {
         SQL_LOG_DEBUG("Connection::Open - invoking native open");
-        return conn->Open(connectionString, 0);
+        return conn->Open(connectionString, timeout);
       },
       [this]() {
         // This will be called on success in the OnOK method

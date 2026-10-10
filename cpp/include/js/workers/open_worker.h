@@ -13,7 +13,8 @@ class OpenWorker : public OdbcAsyncWorker {
   OpenWorker(Napi::Function& callback,
              IOdbcConnection* connection,
              Connection* parent,
-             const std::u16string& connectionString);
+             const std::u16string& connectionString,
+             int timeout = 0);
 
   void Execute() override;
   void OnOK() override;
@@ -21,6 +22,7 @@ class OpenWorker : public OdbcAsyncWorker {
  private:
   Connection* parent_;
   std::u16string connectionString_;
+  int timeout_;
   // Using connection_ inherited from OdbcAsyncWorker
   int connectionId_;
 };
