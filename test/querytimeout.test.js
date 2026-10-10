@@ -221,3 +221,34 @@ END
     }
   })
 })
+
+// issue #468 - open() against an unreachable server must call back rather than
+// hang; needs no server, so it sits outside the querytimeout db setup
+describe('login timeout', function () {
+  const unreachable = `Driver={${env.driver}};Server=tcp:127.0.0.1,1;Trusted_Connection=Yes;`
+
+  function openWithin (connectObj, limitMs) {
+    const start = Date.now()
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error(`no callback within ${limitMs} ms`)), limitMs)
+      sql.open(connectObj, (err, conn) => {
+        clearTimeout(timer)
+        if (conn) conn.close(() => {})
+        resolve({ err, elapsed: Date.now() - start })
+      })
+    })
+  }
+
+  it('conn_timeout is honoured when server unreachable', async function handler () {
+    this.timeout(20000)
+    const { err, elapsed } = await openWithin({ conn_str: unreachable, conn_timeout: 2 }, 15000)
+    assert(err, 'expected open to fail')
+    expect(elapsed).to.be.lessThan(15000)
+  })
+
+  it('no conn_timeout falls back to driver default rather than hanging', async function handler () {
+    this.timeout(45000)
+    const { err } = await openWithin(unreachable, 40000)
+    assert(err, 'expected open to fail')
+  })
+})
