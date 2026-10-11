@@ -698,6 +698,40 @@ bool OdbcStatementLegacy::return_cancelled() {
   return false;
 }
 
+// a statement failing part way through a batch, e.g. raiserror severity 16, does not end
+// the batch: SQL Server runs the statements after it and SQLMoreResults moves on to them.
+// a cancel, timeout or broken connection does end it, as does an error that is only about
+// the statement's own state (which SQLMoreResults would just repeat).
+bool OdbcStatementLegacy::more_results_after_error() const {
+  if (!_statement || _cancelRequested.load() || _cancelHandleIssued.load() || _errors->empty()) {
+    return false;
+  }
+  return std::none_of(_errors->begin(), _errors->end(), [](const auto& e) {
+    const auto& s = e->sqlstate;
+    return s == "HY008" || s == "HYT00" || s == "HY010" || s == "HY007" || s == "24000" ||
+           s.rfind("08", 0) == 0;
+  });
+}
+
+// whether the batch goes on can only be known by asking: call SQLMoreResults now, so a
+// batch that ends with the error still ends with it (one callback, more = false). the
+// result it moves to is picked up by the next try_read_next_result. the diag records of
+// the failed statement were read before this call replaces them.
+bool OdbcStatementLegacy::look_ahead_after_error() {
+  _pendingMoreResults.reset();
+  if (!more_results_after_error()) {
+    return false;
+  }
+  const auto ret = _odbcApi->SQLMoreResults(_statement->get_handle());
+  SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] look_ahead_after_error SQLMoreResults "
+                           << ret);
+  if (ret == SQL_NO_DATA) {
+    return false;
+  }
+  _pendingMoreResults = ret;
+  return true;
+}
+
 bool OdbcStatementLegacy::check_odbc_error(const SQLRETURN ret) {
   if (!SQL_SUCCEEDED(ret)) {
     SQL_LOG_DEBUG_STREAM("check_odbc_error failed: " << ret);
@@ -1082,6 +1116,7 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
   // cout << "id " << _statementId << " try_execute_direct" << endl;
   _errors->clear();
   _errorHandler->ClearErrors();
+  _pendingMoreResults.reset();
   _query = q;
 
   const auto timeout = q->timeout;
@@ -1113,6 +1148,8 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
                                << "] bind_params failed, statement needs cleanup");
       return false;
     }
+    // output params are read by Unbind() when the batch ends, which can be after an error
+    _boundParamsSet = param_set;
     _resultset->_end_of_results = true;  // reset
     const auto ret = query_timeout(timeout);
     if (!check_odbc_error(ret)) {
@@ -1173,6 +1210,7 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
       _resultset = make_unique<ResultSet>(0);
     }
     _resultset->_end_of_rows = true;
+    _resultset->_end_of_results = !look_ahead_after_error();
     return false;
   }
 
@@ -2263,7 +2301,9 @@ bool OdbcStatementLegacy::try_read_next_result() {
     return false;
   }
   const auto& statement = *_statement;
-  const auto ret = _odbcApi->SQLMoreResults(statement.get_handle());
+  const auto ret = _pendingMoreResults ? *_pendingMoreResults
+                                       : _odbcApi->SQLMoreResults(statement.get_handle());
+  _pendingMoreResults.reset();
   switch (ret) {
     case SQL_NO_DATA: {
       SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::try_read_next_result ["
@@ -2301,8 +2341,11 @@ bool OdbcStatementLegacy::try_read_next_result() {
       SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::try_read_next_result ["
                            << _handle.toString()
                            << "] try_read_next_result SQL_ERROR from SQLMoreResults");
+      // don't read this result's columns (that is what fails with HY007), but the
+      // statements after the failed one may still have results to move on to.
       return_odbc_error();
-      _resultset->_end_of_results = true;
+      _resultset = make_unique<ResultSet>(0);
+      _resultset->_end_of_results = !look_ahead_after_error();
       _resultset->_end_of_rows = true;
       return false;
     }
