@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <atomic>
+#include <optional>
 
 #include "odbc_common.h"
 #include "odbc_driver_types.h"
@@ -198,6 +199,8 @@ class OdbcStatementLegacy : public IOdbcStatement {
   bool return_odbc_error();
   bool check_odbc_error(SQLRETURN ret);
   bool return_cancelled();
+  bool more_results_after_error() const;
+  bool look_ahead_after_error();
 
   shared_ptr<QueryOperationParams> _query;
 
@@ -212,6 +215,8 @@ class OdbcStatementLegacy : public IOdbcStatement {
   std::atomic<bool> _cancelRequested;
   // set by Cancel() on the cancel thread before SQLCancelHandle; read by the worker
   std::atomic<bool> _cancelHandleIssued{false};
+  // SQLMoreResults already called by look_ahead_after_error, for try_read_next_result
+  std::optional<SQLRETURN> _pendingMoreResults;
   std::atomic<bool> _pollingEnabled;
   bool _numericStringEnabled;
   bool _bigIntAsNativeEnabled;
