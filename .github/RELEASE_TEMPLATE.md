@@ -1,8 +1,14 @@
 # Release notes template
 
-Copy everything below the line into a new GitHub release and fill in the two
-`EDIT ME` sections. Everything else is standing content that stays the same
-release to release, so it should not need retyping or hunting down again.
+The GitHub release is created from this file automatically when the
+`NPM Package Validation and Publish` workflow publishes (not on a dry run, which
+shows a preview in the job summary instead). `.github/scripts/release-notes.js`
+keeps everything below the line and fills the two `EDIT ME` sections: "What's
+changed" from the PR titles merged since the previous tag (`feat:` / `fix:` /
+`perf:`; chore, ci, test, docs and dependency bumps are left out), and
+"Upgrading" from the workflow's `upgrading` input, dropping it when that is
+empty. Preview locally with `node .github/scripts/release-notes.js --version X.Y.Z`.
+Everything else is standing content that stays the same release to release.
 
 Keep the per-release part at the top: that is the only bit a returning reader
 needs. The standing sections are collapsed with `<details>` so the page stays

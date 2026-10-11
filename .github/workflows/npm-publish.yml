@@ -22,6 +22,11 @@ on:
         required: true
         default: 'latest'
         type: string
+      upgrading:
+        description: 'Upgrading notes for the GitHub release (leave empty if a plain npm install is all it takes)'
+        required: false
+        default: ''
+        type: string
 
 jobs:
   # Reuses the build workflow rather than duplicating the four platform jobs,
@@ -38,6 +43,9 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v7
+      with:
+        # tags, so the release notes preview can find the previous release
+        fetch-depth: 0
 
     - name: Setup Node.js
       uses: actions/setup-node@v7
@@ -131,6 +139,20 @@ jobs:
         echo "files=$COUNT" >> $GITHUB_OUTPUT
         echo "Package size: $SIZE across $COUNT files"
 
+    # The same notes the github-release job will publish, shown on every run so a
+    # dry run doubles as a preview of the release page.
+    - name: Preview release notes
+      env:
+        VERSION: ${{ steps.package.outputs.version }}
+        UPGRADING: ${{ github.event.inputs.upgrading }}
+      run: |
+        node .github/scripts/release-notes.js --version "$VERSION" --upgrading "$UPGRADING" --out release-notes.md
+        {
+          echo "## Release notes preview (v$VERSION)"
+          echo ""
+          cat release-notes.md
+        } >> $GITHUB_STEP_SUMMARY
+
     - name: Publish to NPM (if not dry run)
       if: ${{ github.event.inputs.dry_run == 'false' }}
       env:
@@ -176,3 +198,64 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Not published.**" >> $GITHUB_STEP_SUMMARY
         fi
+
+  # Tags the published commit and creates the GitHub release from
+  # .github/RELEASE_TEMPLATE.md, with "What's changed" filled from the PRs merged
+  # since the previous release. Its own job so that, if it fails after npm has
+  # published, "Re-run failed jobs" retries just this part; it updates an existing
+  # release rather than failing on one.
+  github-release:
+    name: GitHub release
+    needs: [build, validate-and-publish]
+    if: ${{ github.event.inputs.dry_run == 'false' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v7
+      with:
+        node-version: '24'
+
+    - name: Download the packed tarball
+      uses: actions/download-artifact@v8
+      with:
+        name: npm-tarball
+
+    - name: Create or update the release
+      env:
+        GH_TOKEN: ${{ github.token }}
+        UPGRADING: ${{ github.event.inputs.upgrading }}
+        NPM_TAG: ${{ github.event.inputs.tag }}
+        TARBALL: ${{ needs.build.outputs.tarball }}
+      run: |
+        VERSION=$(node -p "require('./package.json').version")
+        TAG="v$VERSION"
+        node .github/scripts/release-notes.js --version "$VERSION" --upgrading "$UPGRADING" --out release-notes.md
+
+        # only a release published to npm 'latest' becomes the latest GitHub release;
+        # next / beta publishes are marked pre-release.
+        if [ "$NPM_TAG" = "latest" ]; then
+          FLAGS="--latest"
+        else
+          FLAGS="--prerelease --latest=false"
+        fi
+
+        if gh release view "$TAG" >/dev/null 2>&1; then
+          echo "Release $TAG exists, updating its notes and tarball"
+          gh release edit "$TAG" --title "Release $TAG" --notes-file release-notes.md $FLAGS
+          gh release upload "$TAG" "$TARBALL" --clobber
+        else
+          gh release create "$TAG" "$TARBALL" --target "$GITHUB_SHA" \
+            --title "Release $TAG" --notes-file release-notes.md $FLAGS
+        fi
+
+        echo "## GitHub release" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "$(gh release view "$TAG" --json url --jq .url)" >> $GITHUB_STEP_SUMMARY
