@@ -164,61 +164,40 @@ END
 `
   }
 
-  it('call long running proc with timeout aggregator', async function handler () {
+  // these three used to return their error rather than throw it, so they could not fail
+  async function expectTimeout (call) {
+    const ph = env.procTest(def)
+    await ph.create()
+    const startedAt = Date.now()
+    let err = null
     try {
-      const ph = env.procTest(def)
-      await ph.create()
-      const p = {
-        timeout: '0:0:02'
-      }
-      const res = await env.theConnection.callprocAggregator(def.name, p, {
-        timeoutMs: 1000
-      })
-      return new Error(`res = ${JSON.stringify(res, null, 4)}`)
+      await call({ timeout: '0:0:05' }, { timeoutMs: 1000 })
     } catch (e) {
-      if (e.message.indexOf('timeout') >= 0) {
-        return null
-      } else {
-        return e
-      }
+      err = e
     }
+    assert(err, 'expected the call to time out')
+    assert(err.message.includes('timeout') || err.message.includes('Operation canceled'), err.message)
+    assert(Date.now() - startedAt < 4000, 'proc was not cancelled by the timeout')
+    const res = await env.theConnection.promises.query('select 1 as n')
+    expect(res.first[0].n).equals(1)
+  }
+
+  it('call long running proc with timeout aggregator', async function handler () {
+    await expectTimeout((p, o) => env.theConnection.callprocAggregator(def.name, p, o))
   })
 
   it('call long running proc with timeout', async function handler () {
-    try {
-      const ph = env.procTest(def)
-      await ph.create()
-      const p = {
-        timeout: '0:0:02'
-      }
-      const res = await env.theConnection.promises.callProc(def.name, p, {
-        timeoutMs: 1000
-      })
-      return new Error(`res = ${JSON.stringify(res, null, 4)}`)
-    } catch (e) {
-      if (e.message.indexOf('timeout') >= 0) {
-        return null
-      } else {
-        return e
-      }
-    }
+    await expectTimeout((p, o) => env.theConnection.promises.callProc(def.name, p, o))
   })
 
   it('call long running proc with timeout - complete in time', async function handler () {
-    try {
-      const ph = env.procTest(def)
-      await ph.create()
-      const p = {
-        timeout: '0:0:01'
-      }
-      const res = await env.theConnection.promises.callProc(def.name, p, {
-        timeoutMs: 30000
-      })
-      assert(res !== null)
-      assert.deepStrictEqual(res.results.length, 2)
-    } catch (e) {
-      return e
-    }
+    const ph = env.procTest(def)
+    await ph.create()
+    const res = await env.theConnection.promises.callProc(def.name, { timeout: '0:0:01' }, {
+      timeoutMs: 30000
+    })
+    assert(res !== null)
+    assert.deepStrictEqual(res.results.length, 2)
   })
 })
 
