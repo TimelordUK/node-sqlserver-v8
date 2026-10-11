@@ -42,6 +42,22 @@ npm install msnodesqlv8
 
 ---
 
+## New to msnodesqlv8? Start with the API tour
+
+[**msnodesqlv8-api-tour**](https://github.com/TimelordUK/msnodesqlv8-api-tour)
+is one file that walks through the whole API, one copyable section per area:
+connections and parameters, streaming with pause / resume, multiple result
+sets, prepared statements, stored procedures with output params, transactions,
+the table manager's bulk insert / update / delete, BCP, TVPs, geography,
+print and error handling, cancel and timeouts, and the connection pool. It
+cleans up after itself, so it is safe to re-run and hack on.
+
+```sh
+git clone https://github.com/TimelordUK/msnodesqlv8-api-tour && cd msnodesqlv8-api-tour
+npm install
+CONNECTION_STRING="Driver={ODBC Driver 18 for SQL Server};Server=localhost,1433;Database=tempdb;UID=sa;PWD=...;TrustServerCertificate=yes;" node api-tour.js
+```
+
 ## Prebuilt binaries ship inside the npm package
 
 Since **5.5.0** the per-platform N-API binary is bundled in the published
@@ -106,6 +122,7 @@ ways to place one, in increasing order of scope:
 
 | description | link |
 |---|---|
+| **start here**: the whole API in one runnable file | [msnodesqlv8-api-tour](https://github.com/TimelordUK/msnodesqlv8-api-tour) |
 | next js example, note cant run driver on UI thread. | [todo-with-nextjs_msnodesqlv8](https://github.com/TimelordUK/todo-with-nextjs_msnodesqlv8) |
 | next js example using app router, note cant run driver on UI thread. | [todo-with-nextjs-app-router_msnodesqlv8](https://github.com/TimelordUK/todo-with-nextjs-app-router_msnodesqlv8) |
 | using vite + express | [msnodesqlv8-vite](https://github.com/TimelordUK/msnodesqlv8-vite) |
