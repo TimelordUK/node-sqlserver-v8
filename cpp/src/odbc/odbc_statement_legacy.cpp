@@ -1,5 +1,6 @@
 #include <common/platform.h>
 
+#include <algorithm>
 #include <cstring>  // For std::memcpy
 #include <common/odbc_common.h>
 #include <common/string_utils.h>
@@ -230,6 +231,9 @@ bool OdbcStatementLegacy::fetch_read(const size_t number_rows) {
   auto res = false;
   for (size_t row_id = 0; row_id < number_rows; ++row_id) {
     const auto ret = _odbcApi->SQLFetch(statement.get_handle());
+    if (_cancelHandleIssued.load() && !SQL_SUCCEEDED(ret)) {
+      return return_cancelled();
+    }
     if (ret == SQL_NO_DATA) {
       SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] fetch_read SQL_NO_DATA " << ret);
       _resultset->_end_of_rows = true;
@@ -344,24 +348,22 @@ bool OdbcStatementLegacy::Cancel() {
 
   if (!_pollingEnabled && (state == OdbcStatementState::STATEMENT_SUBMITTED ||
                            state == OdbcStatementState::STATEMENT_READING)) {
-    cancel_handle();
-    set_state(OdbcStatementState::STATEMENT_CANCEL_HANDLE);
-    SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Cancel ["
-                         << _handle.toString() << "] cancel handle"
-                         << OdbcStatementStateToString(OdbcStatementState::STATEMENT_CANCEL_HANDLE)
-                         << " " << _statementId);
-
-    // Use lock only for _resultset modification (non-atomic)
-    {
-      lock_guard<recursive_mutex> lock(g_i_mutex);
-      _resultset = make_unique<ResultSet>(0);
-      _resultset->_end_of_rows = false;
-      _resultset->_end_of_results = false;
+    // this runs on the cancel thread while a worker thread may be inside SQLExecDirect
+    // or SQLFetch on this statement. SQLCancelHandle is made to be called from another
+    // thread; the result set and error list are not - the worker writes rows into
+    // _resultset without a lock, and replacing it here freed it under a running fetch
+    // (segv). the worker's own execute / fetch returns HY008 (or HY010 / 24000) and
+    // ends the query, setting the result set flags itself.
+    if (!_statement) {
+      return false;
     }
-
+    _cancelHandleIssued.store(true);
+    const auto ret = _odbcApi->SQLCancelHandle(SQL_HANDLE_STMT, _statement->get_handle());
+    set_state(OdbcStatementState::STATEMENT_CANCEL_HANDLE);
     SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Cancel Exit [" << _handle.toString()
-                                                              << "] cancel handle");
-    return true;
+                                                              << "] SQLCancelHandle returned "
+                                                              << ret);
+    return SQL_SUCCEEDED(ret);
   }
   if (get_polling()) {
     _cancelRequested.store(true);
@@ -670,9 +672,38 @@ bool OdbcStatementLegacy::return_odbc_error() {
   return false;
 }
 
+// a non polling cancel (SQLCancelHandle from the cancel thread) that lands while no
+// ODBC call is running on this statement - e.g. between fetch batches - does not make
+// the next call return HY008: the driver just closes the cursor, so the next SQLFetch
+// returns HY010 or SQL_NO_DATA and SQLMoreResults HY007. end the query here, on the
+// worker thread, as the cancel it is.
+bool OdbcStatementLegacy::return_cancelled() {
+  if (_statement) {
+    _statement->read_errors(_odbcApi, _errors);
+  }
+  const auto driver_reported = std::any_of(
+      _errors->begin(), _errors->end(), [](const auto& e) { return e->sqlstate == "HY008"; });
+  if (!driver_reported) {
+    _errors->clear();
+    _errors->push_back(
+        make_shared<OdbcError>("HY008", "[msnodesql] Operation canceled", 0, 0, "", "", 0));
+  }
+  _errorHandler->ClearErrors();
+  for (const auto& error : *_errors) {
+    _errorHandler->AddError(error);
+  }
+  _resultset->_end_of_rows = true;
+  _resultset->_end_of_results = true;
+  set_state(OdbcStatementState::STATEMENT_ERROR);
+  return false;
+}
+
 bool OdbcStatementLegacy::check_odbc_error(const SQLRETURN ret) {
   if (!SQL_SUCCEEDED(ret)) {
     SQL_LOG_DEBUG_STREAM("check_odbc_error failed: " << ret);
+    if (_cancelHandleIssued.load()) {
+      return return_cancelled();
+    }
     set_state(OdbcStatementState::STATEMENT_ERROR);
     return return_odbc_error();
   }
@@ -2224,7 +2255,7 @@ bool OdbcStatementLegacy::try_read_next_result() {
   // fprintf(stderr, "TryReadNextResult ID = %llu\n ", get_statement_id());
   const auto state = get_state();
   if (state == OdbcStatementState::STATEMENT_CANCELLED ||
-      state == OdbcStatementState::STATEMENT_CANCEL_HANDLE) {
+      state == OdbcStatementState::STATEMENT_CANCEL_HANDLE || _cancelHandleIssued.load()) {
     // fprintf(stderr, "TryReadNextResult - cancel mode.\n");
     _resultset->_end_of_rows = true;
     _resultset->_end_of_results = true;

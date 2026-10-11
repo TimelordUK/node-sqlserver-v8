@@ -197,6 +197,7 @@ class OdbcStatementLegacy : public IOdbcStatement {
 
   bool return_odbc_error();
   bool check_odbc_error(SQLRETURN ret);
+  bool return_cancelled();
 
   shared_ptr<QueryOperationParams> _query;
 
@@ -209,6 +210,8 @@ class OdbcStatementLegacy : public IOdbcStatement {
   long _statementId;
   bool _prepared;
   std::atomic<bool> _cancelRequested;
+  // set by Cancel() on the cancel thread before SQLCancelHandle; read by the worker
+  std::atomic<bool> _cancelHandleIssued{false};
   std::atomic<bool> _pollingEnabled;
   bool _numericStringEnabled;
   bool _bigIntAsNativeEnabled;
