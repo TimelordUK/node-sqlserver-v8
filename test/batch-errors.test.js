@@ -135,6 +135,7 @@ describe('errors part way through a batch', function () {
       as
       begin
         set nocount on
+        select 'started' as step
         print 'before'
         raiserror('proc failed a step', 16, 1)
         print 'after'
@@ -147,8 +148,51 @@ describe('errors part way through a batch', function () {
       assert.strictEqual(strip(err.message), 'proc failed a step')
       const res = err._results
       assert.deepStrictEqual(res.info.map(strip), ['before', 'after'])
-      assert.deepStrictEqual(res.first, [{ status: 'still here' }])
+      assert.deepStrictEqual(res.results, [[{ step: 'started' }], [{ status: 'still here' }]])
       assert.deepStrictEqual(res.output, [7, 42])
+      await assertUsable(conn)
+    } finally {
+      await conn.promises.query(`drop procedure ${name}`)
+    }
+  })
+
+  // when the very first result of a batch is the error, SQLExecDirect itself fails. on
+  // linux / macOS the unixODBC driver manager then answers SQLMoreResults with
+  // SQL_NO_DATA without asking the driver, so the batch ends there. on windows it goes on.
+  it('error as the first result: windows carries on, unixODBC ends the batch', async function handler () {
+    const err = await env.theConnection.promises.query(`
+      raiserror('first thing fails', 16, 1)
+      print 'after'
+      select 1 as n`).then(() => null, e => e)
+    assert.strictEqual(strip(err.message), 'first thing fails')
+    const res = err._results
+    if (process.platform === 'win32') {
+      assert.deepStrictEqual(res.info.map(strip), ['after'])
+      assert.deepStrictEqual(res.first, [{ n: 1 }])
+    } else {
+      assert.isNull(res.info)
+      assert.deepStrictEqual(res.results, [])
+    }
+    await assertUsable(env.theConnection)
+  })
+
+  it('a print in the same diagnostics as the final error is not dropped', async function handler () {
+    const conn = env.theConnection
+    const name = 'test_batch_errors_info'
+    await conn.promises.query(`if object_id('${name}') is not null drop procedure ${name}`)
+    // inside a proc with nocount on, the print and the throw arrive together
+    await conn.promises.query(`
+      create procedure ${name}
+      as
+      begin
+        set nocount on
+        print 'about to throw'
+        ;throw 50002, 'thrown in proc', 1
+      end`)
+    try {
+      const err = await conn.promises.callProc(name, {}).then(() => null, e => e)
+      assert.strictEqual(strip(err.message), 'thrown in proc')
+      assert.deepStrictEqual(err._results.info.map(strip), ['about to throw'])
       await assertUsable(conn)
     } finally {
       await conn.promises.query(`drop procedure ${name}`)
