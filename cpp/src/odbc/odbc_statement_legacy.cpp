@@ -344,24 +344,21 @@ bool OdbcStatementLegacy::Cancel() {
 
   if (!_pollingEnabled && (state == OdbcStatementState::STATEMENT_SUBMITTED ||
                            state == OdbcStatementState::STATEMENT_READING)) {
-    cancel_handle();
-    set_state(OdbcStatementState::STATEMENT_CANCEL_HANDLE);
-    SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Cancel ["
-                         << _handle.toString() << "] cancel handle"
-                         << OdbcStatementStateToString(OdbcStatementState::STATEMENT_CANCEL_HANDLE)
-                         << " " << _statementId);
-
-    // Use lock only for _resultset modification (non-atomic)
-    {
-      lock_guard<recursive_mutex> lock(g_i_mutex);
-      _resultset = make_unique<ResultSet>(0);
-      _resultset->_end_of_rows = false;
-      _resultset->_end_of_results = false;
+    // this runs on the cancel thread while a worker thread may be inside SQLExecDirect
+    // or SQLFetch on this statement. SQLCancelHandle is made to be called from another
+    // thread; the result set and error list are not - the worker writes rows into
+    // _resultset without a lock, and replacing it here freed it under a running fetch
+    // (segv). the worker's own execute / fetch returns HY008 (or HY010 / 24000) and
+    // ends the query, setting the result set flags itself.
+    if (!_statement) {
+      return false;
     }
-
+    const auto ret = _odbcApi->SQLCancelHandle(SQL_HANDLE_STMT, _statement->get_handle());
+    set_state(OdbcStatementState::STATEMENT_CANCEL_HANDLE);
     SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Cancel Exit [" << _handle.toString()
-                                                              << "] cancel handle");
-    return true;
+                                                              << "] SQLCancelHandle returned "
+                                                              << ret);
+    return SQL_SUCCEEDED(ret);
   }
   if (get_polling()) {
     _cancelRequested.store(true);
