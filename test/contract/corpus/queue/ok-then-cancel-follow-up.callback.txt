@@ -1,0 +1,17 @@
+# scenario: queue/ok-then-cancel-follow-up.callback
+# status: unreviewed
+# sql: select 1 as n
+# follow-up q2 on free: waitfor delay '00:00:01'; select 2 as n at {"later":{"300":["cancel"]}}
+submitted
+meta n
+row
+cb ok rows=1 more=false
+done
+free
+q2: submitted
+q2: action cancel
+q2: done
+q2: cancel-cb ok
+q2: free
+q2: cb error HY008 0 Operation canceled more=false
+check ok

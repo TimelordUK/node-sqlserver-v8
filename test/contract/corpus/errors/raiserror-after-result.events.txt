@@ -1,0 +1,10 @@
+# scenario: errors/raiserror-after-result.events
+# status: unreviewed
+# sql: select 1 as n; raiserror('boom', 16, 1)
+submitted
+meta n
+row
+column 0 1
+error 42000 50000 boom more=false
+free
+check ok

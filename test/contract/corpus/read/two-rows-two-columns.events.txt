@@ -1,0 +1,14 @@
+# scenario: read/two-rows-two-columns.events
+# status: unreviewed
+# sql: select 1 as a, 'x' as b union all select 2, 'y'
+submitted
+meta a,b
+row
+column 0 1
+column 1 "x"
+row
+column 0 2
+column 1 "y"
+done
+free
+check ok

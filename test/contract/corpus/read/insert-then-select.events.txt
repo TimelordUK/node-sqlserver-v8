@@ -1,0 +1,12 @@
+# scenario: read/insert-then-select.events
+# status: unreviewed
+# setup: create table #r (id int)
+# sql: insert #r values (1); select id from #r
+submitted
+rowcount 1
+meta id
+row
+column 0 1
+done
+free
+check ok

@@ -1,0 +1,13 @@
+# scenario: read/two-result-sets.events
+# status: unreviewed
+# sql: select 1 as a; select 2 as b
+submitted
+meta a
+row
+column 0 1
+meta b
+row
+column 0 2
+done
+free
+check ok

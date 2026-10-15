@@ -1,0 +1,17 @@
+# scenario: queue/error-at-execute-then-cancel-follow-up.callback
+# status: unreviewed
+# sql: raiserror('boom', 16, 1)
+# follow-up q2 on free: waitfor delay '00:00:01'; select 2 as n at {"later":{"300":["cancel"]}}
+submitted
+free
+cb error 42000 50000 boom more=false
+q2: submitted
+q2: action cancel
+q2: done
+q2: cancel-cb error Error: [msnodesql] cannot cancel query (empty queue) id 1
+q2: meta n
+q2: row
+q2: cb ok rows=1 more=false
+q2: done
+q2: free
+check ok

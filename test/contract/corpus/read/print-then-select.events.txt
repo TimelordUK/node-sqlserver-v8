@@ -1,0 +1,12 @@
+# scenario: read/print-then-select.events
+# status: unreviewed
+# sql: print 'p1'; select 1 as n
+submitted
+info 01000 0 p1
+rowcount 0
+meta n
+row
+column 0 1
+done
+free
+check ok

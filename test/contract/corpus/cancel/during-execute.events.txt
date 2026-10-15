@@ -1,0 +1,11 @@
+# scenario: cancel/during-execute.events
+# status: unreviewed
+# sql: waitfor delay '00:00:01'; select 2 as n
+# at: {"later":{"300":["cancel"]}}
+submitted
+action cancel
+done
+cancel-cb ok
+error HY008 0 Operation canceled more=false
+free
+check ok

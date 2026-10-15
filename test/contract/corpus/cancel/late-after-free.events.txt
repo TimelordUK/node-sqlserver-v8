@@ -1,0 +1,13 @@
+# scenario: cancel/late-after-free.events
+# status: unreviewed
+# sql: select 1 as n
+# at: {"free":["cancel"]}
+submitted
+meta n
+row
+done
+free
+action cancel
+done
+cancel-cb error Error: [msnodesql] cannot cancel query (empty queue) id 0
+check ok

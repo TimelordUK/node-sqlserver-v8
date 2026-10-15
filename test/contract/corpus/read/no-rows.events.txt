@@ -1,0 +1,8 @@
+# scenario: read/no-rows.events
+# status: unreviewed
+# sql: select top 0 1 as n
+submitted
+meta n
+done
+free
+check ok

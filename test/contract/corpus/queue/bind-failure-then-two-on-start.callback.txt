@@ -1,0 +1,36 @@
+# scenario: queue/bind-failure-then-two-on-start.callback
+# status: unreviewed
+# sql: select ? as v
+# params: ["Infinity"]
+# follow-up q2 on start: waitfor delay '00:00:01'; select 2 as n
+# follow-up q3 on start: select 3 as n
+# NOT DETERMINISTIC: 2 different transcripts in 3 runs
+submitted
+done
+free
+q2: submitted
+q3: submitted
+cb error - - IMNOD: [msnodesql] Parameter 1: Invalid number parameter more=false
+q3: free
+q3: cb error HY000 0 Connection is busy with results for another command more=false
+q2: meta n
+q2: row
+q2: cb ok rows=1 more=false
+q2: done
+q2: free
+check ok
+--- or
+submitted
+done
+free
+q2: submitted
+q3: submitted
+cb error - - IMNOD: [msnodesql] Parameter 1: Invalid number parameter more=false
+q3: meta n
+q2: free
+q2: cb error HY000 0 Connection is busy with results for another command more=false
+q3: row
+q3: cb ok rows=1 more=false
+q3: done
+q3: free
+check ok

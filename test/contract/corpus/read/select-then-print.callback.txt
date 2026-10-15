@@ -1,0 +1,14 @@
+# scenario: read/select-then-print.callback
+# status: unreviewed
+# sql: select 1 as n; print 'p1'
+submitted
+meta n
+row
+column 0 1
+info 01000 0 p1
+rowcount 0
+cb ok rows=0 more=true
+cb ok rows=1 more=false
+done
+free
+check ok

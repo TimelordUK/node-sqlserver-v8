@@ -1,0 +1,20 @@
+# scenario: queue/error-after-result-then-two-on-free.callback
+# status: unreviewed
+# sql: select 1 as n; raiserror('boom', 16, 1)
+# follow-up q2 on free: waitfor delay '00:00:01'; select 2 as n
+# follow-up q3 on free: select 3 as n
+submitted
+meta n
+row
+cb error 42000 50000 boom more=false
+free
+q2: submitted
+q3: submitted
+q3: free
+q3: cb error HY000 0 Connection is busy with results for another command more=false
+q2: meta n
+q2: row
+q2: cb ok rows=1 more=false
+q2: done
+q2: free
+check ok
