@@ -99,8 +99,26 @@ class Run {
     this.queries = new Map()
   }
 
+  // in a scripted scenario every line carries its label: there is no main query
   log (label, line) {
-    this.t.push(label === 'q1' ? line : `${label}: ${line}`)
+    this.t.push(label === 'q1' && !this.scenario.script ? line : `${label}: ${line}`)
+  }
+
+  // what a script (scripts/*.js) is given: see scripts/README.md
+  scriptApi () {
+    return {
+      sql: this.sql,
+      conn: this.conn,
+      query: (label, sql, params, options = {}) => this.start(label, { sql, params, ...options }),
+      act: (label, actions) => this.act(label, this.queries.get(label), actions),
+      freed: label => this.pending.get(label),
+      // freed, and the time after it in which late events still belong to the transcript
+      settled: label => this.pending.get(label).then(() => delay(SETTLE_MS)),
+      note: line => this.t.push(`-- ${line}`),
+      section: title => this.t.push(`== ${title}`),
+      log: (label, line) => this.log(label, line),
+      delay
+    }
   }
 
   start (label, def) {
@@ -180,8 +198,12 @@ class Run {
     for (const statement of s.setup ?? []) {
       await this.conn.promises.query(statement)
     }
-    this.start('q1', s)
-    this.startFollowUps('start')
+    if (s.script) {
+      await require(s.script)(this.scriptApi())
+    } else {
+      this.start('q1', s)
+      this.startFollowUps('start')
+    }
 
     const timeoutMs = s.timeoutMs ?? 6000
     const deadline = Date.now() + timeoutMs

@@ -83,8 +83,9 @@ at execute, the error comes with `more=false` and the rest of the batch is lost:
 `rowcount`, no following result set, no `done`. Windows gives `more=true`, then the rest. So
 the #475 fix in 5.6.0 (`odbc_statement_legacy.cpp`, the look-ahead after a failed execute)
 does not hold on Linux. The same 4 scenarios differ with the base commit's `lib/`, so it is
-older than the queue work. Pinned as `errors/{raiserror-then-result,dup-key-d}.*.linux.txt`,
-`# status: known-bug`, so that CI is green and the fix shows up as a diff.
+older than the queue work. Pinned as `errors/{raiserror-then-result,dup-key-d}.*.linux.txt`
+and `scripts/issue-478.linux.txt` (its case D), `# status: known-bug`, so that CI is green
+and the fix shows up as a diff. Filed as #483.
 
 To run the corpus on WSL: a `git worktree` under `/tmp/<x>/node_modules/msnodesqlv8` (the
 tests `require('msnodesqlv8')`), `npx node-gyp rebuild`, copy `.env-cmdrc`, symlink

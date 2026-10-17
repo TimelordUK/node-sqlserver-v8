@@ -191,12 +191,14 @@ function fakeSql (native, { version = 18 } = {}) {
     conn.setDriverVersion(version)
     native.open(connectionString, 0, err => setImmediate(() => cb(Array.isArray(err) ? err[0] : err, conn)))
   }
-  return {
-    open,
-    promises: {
-      open: connectionString => new Promise((resolve, reject) => open(connectionString, (e, c) => e ? reject(e) : resolve(c)))
-    }
-  }
+  // everything else (PollingQuery, the types, ...) is the real module's
+  const real = require(root)
+  const fake = Object.create(real)
+  fake.open = open
+  fake.promises = Object.assign(Object.create(real.promises ?? {}), {
+    open: connectionString => new Promise((resolve, reject) => open(connectionString, (e, c) => e ? reject(e) : resolve(c)))
+  })
+  return fake
 }
 
 module.exports = { ReplayNative, fakeSql }

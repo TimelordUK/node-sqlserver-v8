@@ -8,6 +8,7 @@
 //   node test/contract/capture.js --repeat 10 [filter] run each scenario 10 times (default 3)
 //   node test/contract/capture.js --root <dir>         use the msnodesqlv8 in <dir>, e.g. an
 //                                                      older release, to see how it differs
+//   node test/contract/capture.js --exact <name>       only the scenario with exactly that name
 //   node test/contract/capture.js --native [filter]    also record each scenario's native calls
 //                                                      into native/<name>.json, for the fake
 //                                                      driver to replay (a run whose transcript
@@ -24,12 +25,13 @@ const { captureScenario, runIsolated } = require('./recorder')
 const corpus = require('./corpus')
 
 function parseArgs (argv) {
-  const opts = { update: false, print: false, native: false, repeat: 3, root: path.join(__dirname, '../..'), filters: [] }
+  const opts = { update: false, print: false, native: false, exact: false, repeat: 3, root: path.join(__dirname, '../..'), filters: [] }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     if (a === '--update') opts.update = true
     else if (a === '--print') opts.print = true
     else if (a === '--native') opts.native = true
+    else if (a === '--exact') opts.exact = true
     else if (a === '--repeat') opts.repeat = Number(argv[++i])
     else if (a === '--root') opts.root = path.resolve(argv[++i])
     else opts.filters.push(a)
@@ -41,7 +43,8 @@ async function main () {
   const opts = parseArgs(process.argv.slice(2))
   const version = require(path.join(opts.root, 'package.json')).version
   const connectionString = new TestEnv().connectionString
-  const selected = scenarios.filter(s => opts.filters.length === 0 || opts.filters.some(f => s.name.includes(f)))
+  const chosen = s => opts.exact ? opts.filters.includes(s.name) : opts.filters.some(f => s.name.includes(f))
+  const selected = scenarios.filter(s => opts.filters.length === 0 || chosen(s))
   console.log(`msnodesqlv8 ${version} (${opts.root}) - ${selected.length} scenarios, ${opts.repeat} runs each`)
 
   const summary = { same: 0, different: 0, missing: 0, nondeterministic: [] }

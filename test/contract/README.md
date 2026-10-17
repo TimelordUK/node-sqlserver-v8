@@ -12,6 +12,8 @@ event order shows up as a diff in review, and the contract can be discussed line
 | File | What it is |
 |---|---|
 | `scenarios.js` | the scenarios: query, setup, actions (pause / resume / cancel at row n, at start, after n ms, after free), follow-up queries |
+| `scripts/` | scripted scenarios, for what one query can't say: the issue repros (`issue-478.js` ...), several cases in sequence. See `scripts/README.md` |
+| `record.js` | `npm run record-corpus -- <tester.js>`: copies a script into `scripts/` and records its transcript and native log |
 | `recorder.js` | runs a scenario and records the transcript; line format documented at the top |
 | `corpus.js` | reads / writes / diffs corpus files |
 | `capture.js` | CLI to record and compare |

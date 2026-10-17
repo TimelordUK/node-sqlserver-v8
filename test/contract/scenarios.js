@@ -26,6 +26,14 @@
 //               callback also pass a callback
 //
 // polling queries (sql.PollingQuery) are not covered: the contract is for ordinary queries.
+//
+// a scenario can also be a script, for what a scenario cannot say: several queries in
+// sequence, several cases in one transcript, a repro taken from an issue. each file in
+// scripts/ is the scenario scripts/<file name>; see scripts/README.md for what it gets.
+// npm run record-corpus <file> copies a script there and records it.
+
+const fs = require('fs')
+const path = require('path')
 
 const BIG = 'select top 5000 a.name from sys.all_objects a cross join sys.all_objects b'
 const SLOW = "waitfor delay '00:00:01'; select 2 as n"
@@ -147,6 +155,15 @@ function expand (s) {
   }))
 }
 
-const scenarios = base.flatMap(expand)
+const SCRIPTS_DIR = path.join(__dirname, 'scripts')
+function scripted () {
+  if (!fs.existsSync(SCRIPTS_DIR)) return []
+  return fs.readdirSync(SCRIPTS_DIR)
+    .filter(f => f.endsWith('.js'))
+    .sort()
+    .map(f => ({ name: `scripts/${f.slice(0, -3)}`, script: path.join(SCRIPTS_DIR, f) }))
+}
+
+const scenarios = [...base.flatMap(expand), ...scripted()]
 
 module.exports = { scenarios }

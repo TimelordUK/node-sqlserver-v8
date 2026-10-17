@@ -1,0 +1,37 @@
+# scenario: scripts/issue-478
+# status: known-bug
+# script: test/contract/scripts/issue-478.js
+setup: submitted
+setup: rowcount 1
+setup: cb ok rows=0 more=false
+setup: done
+setup: free
+== A insert #t values (1)
+A: submitted
+A: info 01000 3621 The statement has been terminated.
+A: error 23000 2627 Violation of PRIMARY KEY constraint 'pk_t'. Cannot insert duplicate key in object 'dbo.#t'. The duplicate key value is (1). more=false
+A: free
+== B select 1 as n; insert #t values (1)
+B: submitted
+B: meta n
+B: row
+B: info 01000 3621 The statement has been terminated.
+B: error 23000 2627 Violation of PRIMARY KEY constraint 'pk_t'. Cannot insert duplicate key in object 'dbo.#t'. The duplicate key value is (1). more=false
+B: free
+== C select 1 as n; insert #t values (1); select 2 as m
+C: submitted
+C: meta n
+C: row
+C: info 01000 3621 The statement has been terminated.
+C: error 23000 2627 Violation of PRIMARY KEY constraint 'pk_t'. Cannot insert duplicate key in object 'dbo.#t'. The duplicate key value is (1). more=true
+C: rowcount 0
+C: meta m
+C: row
+C: done
+C: free
+== D insert #t values (1); select 2 as m
+D: submitted
+D: info 01000 3621 The statement has been terminated.
+D: error 23000 2627 Violation of PRIMARY KEY constraint 'pk_t'. Cannot insert duplicate key in object 'dbo.#t'. The duplicate key value is (1). more=false
+D: free
+check ok

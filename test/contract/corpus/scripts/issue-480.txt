@@ -1,0 +1,36 @@
+# scenario: scripts/issue-480
+# status: unreviewed
+# script: test/contract/scripts/issue-480.js
+== pause at row 50, resume 50 ms later
+at50: submitted
+at50: meta a
+at50: row x50
+at50: action pause
+at50: action resume
+at50: row
+at50: meta b
+at50: row x51
+at50: done
+at50: free
+== pause at row 51, resume 50 ms later
+at51: submitted
+at51: meta a
+at51: row x51
+at51: action pause
+at51: action resume
+at51: meta b
+at51: row x51
+at51: done
+at51: free
+== pause at row 52, resume 50 ms later
+at52: submitted
+at52: meta a
+at52: row x51
+at52: meta b
+at52: row
+at52: action pause
+at52: action resume
+at52: row x50
+at52: done
+at52: free
+check ok

@@ -39,12 +39,13 @@ describe('event contract, replayed over the fake driver', function () {
 
 // the same recordings with jittered timing, at fixed seeds so that a failure here can be
 // replayed exactly: node test/contract/explore.js --seed <seed> --runs 1 <scenario>.
-// the groups where timing matters most: pause, cancel and the queue.
+// the groups where timing matters most: pause, cancel, the queue, and the scripts (the
+// issue repros, mostly about those).
 describe('event contract, replayed over the fake driver with varied timing', function () {
   this.timeout(60000)
   const SEED = 1000
   const RUNS = 2
-  const timingSensitive = recordings().filter(r => /^(pause|cancel|queue)\//.test(r.scenario.name))
+  const timingSensitive = recordings().filter(r => /^(pause|cancel|queue|scripts)\//.test(r.scenario.name))
 
   for (const { scenario, platform, recorded, expected } of timingSensitive) {
     it(`${scenario.name} (${platform}) holds over seeds ${SEED}..${SEED + RUNS - 1}`, async () => {
