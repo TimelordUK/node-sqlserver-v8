@@ -183,6 +183,8 @@ describe('pause', function () {
         onRow: () => {
           queryHelper.query.pauseQuery()
           queryHelper.query.pauseQuery() // Double pause
+          // nothing more, not even done, until resumed - and one resume is enough
+          setTimeout(() => queryHelper.query.resumeQuery(), PAUSE_CHECK_DELAY)
         },
         onDone: (rowCount) => {
           assert.strictEqual(rowCount, 1)

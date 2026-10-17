@@ -1,10 +1,7 @@
 # scenario: pause/every-row.events
-# status: unreviewed
+# status: agreed
 # sql: select top 51 object_id as a from sys.all_objects; select top 51 object_id as b from sys.all_objects
 # at: {"row":{"1":["pause","resume:1"],"2":["pause","resume:1"],"3":["pause","resume:1"],"4":["pause","resume:1"],"5":["pause","resume:1"],"6":["pause","resume:1"],"7":["pause","resume:1"],"8":["pause","resume:1"],"9":["pause","resume:1"],"10":["pause","resume:1"],"11":["pause","resume:1"],"12":["pause","resume:1"],"13":["pause","resume:1"],"14":["pause","resume:1"],"15":["pause","resume:1"],"16":["pause","resume:1"],"17":["pause","resume:1"],"18":["pause","resume:1"],"19":["pause","resume:1"],"20":["pause","resume:1"],"21":["pause","resume:1"],"22":["pause","resume:1"],"23":["pause","resume:1"],"24":["pause","resume:1"],"25":["pause","resume:1"],"26":["pause","resume:1"],"27":["pause","resume:1"],"28":["pause","resume:1"],"29":["pause","resume:1"],"30":["pause","resume:1"],"31":["pause","resume:1"],"32":["pause","resume:1"],"33":["pause","resume:1"],"34":["pause","resume:1"],"35":["pause","resume:1"],"36":["pause","resume:1"],"37":["pause","resume:1"],"38":["pause","resume:1"],"39":["pause","resume:1"],"40":["pause","resume:1"],"41":["pause","resume:1"],"42":["pause","resume:1"],"43":["pause","resume:1"],"44":["pause","resume:1"],"45":["pause","resume:1"],"46":["pause","resume:1"],"47":["pause","resume:1"],"48":["pause","resume:1"],"49":["pause","resume:1"],"50":["pause","resume:1"],"51":["pause","resume:1"],"52":["pause","resume:1"],"53":["pause","resume:1"],"54":["pause","resume:1"],"55":["pause","resume:1"],"56":["pause","resume:1"],"57":["pause","resume:1"],"58":["pause","resume:1"],"59":["pause","resume:1"],"60":["pause","resume:1"],"61":["pause","resume:1"],"62":["pause","resume:1"],"63":["pause","resume:1"],"64":["pause","resume:1"],"65":["pause","resume:1"],"66":["pause","resume:1"],"67":["pause","resume:1"],"68":["pause","resume:1"],"69":["pause","resume:1"],"70":["pause","resume:1"],"71":["pause","resume:1"],"72":["pause","resume:1"],"73":["pause","resume:1"],"74":["pause","resume:1"],"75":["pause","resume:1"],"76":["pause","resume:1"],"77":["pause","resume:1"],"78":["pause","resume:1"],"79":["pause","resume:1"],"80":["pause","resume:1"],"81":["pause","resume:1"],"82":["pause","resume:1"],"83":["pause","resume:1"],"84":["pause","resume:1"],"85":["pause","resume:1"],"86":["pause","resume:1"],"87":["pause","resume:1"],"88":["pause","resume:1"],"89":["pause","resume:1"],"90":["pause","resume:1"],"91":["pause","resume:1"],"92":["pause","resume:1"],"93":["pause","resume:1"],"94":["pause","resume:1"],"95":["pause","resume:1"],"96":["pause","resume:1"],"97":["pause","resume:1"],"98":["pause","resume:1"],"99":["pause","resume:1"],"100":["pause","resume:1"],"101":["pause","resume:1"],"102":["pause","resume:1"]}}
-# NOT DETERMINISTIC: 2 different transcripts in 3 runs
-PROCESS FAILED 3221225477 
---- or
 submitted
 meta a
 row
@@ -159,7 +156,160 @@ action pause
 action resume
 row
 action pause
+action resume
 meta b
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
+action resume
+row
+action pause
 action resume
 done
 free

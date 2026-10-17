@@ -9,7 +9,36 @@ way through a batch. The **event contract at the edges** is broken: the order of
 infos, cancel, pausing at a batch boundary, and the work queue after a failure. node-mssql
 drives all of those. Every point in the four issues reproduced on localdb (ODBC 18, Windows).
 
-No fixes have been made yet. This branch adds:
+## Progress — 2026-10-17
+
+**Fixed: the pause/resume crash, #480, and the loop after pausing on the last row.** All
+three had one cause. A pause on the *last* row of a batch was ignored: `dispatch()` went on to
+`nextResult()` (or ended the query) while paused, and `resume()` then did the same step again
+from the stale `batchData`. If the first `nextResultSet` was still in flight, two native calls
+ran on one statement at once (0xC0000005). If it had finished, the second one skipped a
+whole result set (#480). Or, at the end of the last set, `done`/`free` came out twice and
+then the endless `rowcount 0` loop.
+
+The fix in `lib/reader.js`: a query has exactly one next step at any time. Either it is
+running, or it is *parked* by a pause (`park()`, `continueBatch()`). `resume()` runs the
+parked step and never starts another. Nothing that a step would emit, `done` included,
+comes out while paused, except what a native call already in flight brings back.
+- `pause/every-row`, `pause/two-by-51-at-51`, `pause/two-by-51-at-102` are now
+  `# status: agreed`. every-row: 23 runs the same, no crash.
+- `test/pause.test.js` "should handle multiple pause calls" expected `done` while still
+  paused. It now resumes, then expects `done`.
+- Full mocha suite: 897 passing; the only failures were the three transcripts above, before
+  they were updated.
+
+Still open, not this change: `queue/bind-failure-then-two-on-start` is non-deterministic
+(#481, overlapping follow-ups), and so is `cancel/paused-before-execute` (#479, `free` x2).
+
+Open decision: a pause that lands while a native call is in flight still lets that call's
+events out, e.g. the next result set's `meta`. Should paused mean no events at all?
+
+## State at first handover
+
+No fixes had been made. This branch adds:
 - `test/contract/`: the event-contract corpus (see `README.md`), 77 scenarios, every one
   pinned to what **5.6.0 does today**, bugs included (`# status: unreviewed`);
 - `test/contract/repro/`: dhensby's repro scripts from the issues, runnable as they are
@@ -64,7 +93,7 @@ corpus is our guard.
 
 ## Suggested order
 
-1. **The crash on pause/resume on every row.** An untested hypothesis: `resume()` calls
+1. ~~**The crash on pause/resume on every row.**~~ Fixed, see Progress. The hypothesis was right:: `resume()` calls
    `dispatch()` (or `nextResult()`) while the previous `nativeGetRows` / `nextResultSet` is
    still in flight, so two native calls run on one statement at once. Nothing in `reader.js`
    stops a second fetch while one is outstanding. #480 is the same family: `dispatch()` and
@@ -73,7 +102,7 @@ corpus is our guard.
    `capture.js --repeat 20 every-row`.
 2. **#481 queue.** Make finishing an item specific to that item and idempotent
    (`WorkQueue.finish(op)`, as in dhensby's option 2).
-3. **#480 and the last-row loop.** Likely solved together with 1.
+3. ~~**#480 and the last-row loop.**~~ Fixed together with 1.
 4. **#479 cancel.** `done` only for a cancel that worked, and after the HY008. Report a
    refused native cancel (`CancelWorker::OnOK` passes `(null, false)`). The `STATEMENT_ERROR`
    that info-only diagnostics set makes a cancel after a PRINT a silent no-op.
