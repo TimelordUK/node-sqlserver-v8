@@ -12,30 +12,10 @@
 //
 // a failing run prints its seed; --seed <n> --runs 1 replays exactly that timing.
 
-const { replayable, nativeLog, replayScenario } = require('./replay')
+const { recordings, nativeLog, replayScenario } = require('./replay')
 const corpus = require('./corpus')
 
 const DELAYS = [0, 0, 0, 0, 1, 2, 5, 8]
-
-// for a timed scenario, how the rows split around a timer depends on timing: compare the
-// shape (consecutive rows as one line) and, separately, the number of rows of each query
-const ROW = /^((?:q\d+: )?row)(?: x(\d+))?$/
-function shape (lines) {
-  const out = []
-  const rows = {}
-  for (const l of lines) {
-    const m = ROW.exec(l)
-    if (!m) { out.push(l); continue }
-    rows[m[1]] = (rows[m[1]] ?? 0) + Number(m[2] ?? 1)
-    if (out[out.length - 1] !== m[1]) out.push(m[1])
-  }
-  return JSON.stringify([out, rows])
-}
-
-function matches (scenario, expected, lines) {
-  if (!scenario.timed) return corpus.matches(expected, lines)
-  return expected.variants.some(v => shape(v) === shape(lines))
-}
 
 // mulberry32: small, seedable
 function random (seed) {
@@ -56,8 +36,8 @@ function delays (seed, scale = 1) {
 }
 
 // every distinct outcome of runs of the scenario: [{ lines, violations, seeds }]
-async function exploreScenario (scenario, { runs = 20, seed = 1, scale = 1 } = {}) {
-  const recorded = nativeLog(scenario.name)
+// recorded: the native log to replay (default: the one recorded on this platform)
+async function exploreScenario (scenario, { runs = 20, seed = 1, scale = 1, recorded = nativeLog(scenario.name) } = {}) {
   const outcomes = new Map()
   for (let i = 0; i < runs; i++) {
     const s = seed + i
@@ -79,24 +59,23 @@ async function main () {
     else if (args[i] === '--scale') opts.scale = Number(args[++i])
     else filters.push(args[i])
   }
-  const selected = replayable().filter(s => filters.length === 0 || filters.some(f => s.name.includes(f)))
-  console.log(`${selected.length} scenarios, ${opts.runs} runs each, seeds ${opts.seed}..${opts.seed + opts.runs - 1}, delays x${opts.scale}`)
+  const selected = recordings().filter(r => filters.length === 0 || filters.some(f => r.scenario.name.includes(f)))
+  console.log(`${selected.length} recordings, ${opts.runs} runs each, seeds ${opts.seed}..${opts.seed + opts.runs - 1}, delays x${opts.scale}`)
   let held = 0
   let broke = 0
-  for (const scenario of selected) {
-    const outcomes = await exploreScenario(scenario, opts)
-    const expected = corpus.read(scenario.name)
-    const bad = outcomes.filter(o => o.violations.length > 0 || !matches(scenario, expected, o.lines))
+  for (const { scenario, platform, recorded, expected } of selected) {
+    const outcomes = await exploreScenario(scenario, { ...opts, recorded })
+    const bad = outcomes.filter(o => o.violations.length > 0 || !corpus.matchesScenario(scenario, expected, o.lines))
     if (bad.length === 0) {
       held++
       continue
     }
     broke++
-    console.log(`BROKE ${scenario.name}  (${outcomes.length} outcomes)`)
+    console.log(`BROKE ${scenario.name} (${platform})  (${outcomes.length} outcomes)`)
     for (const o of bad) {
       console.log(`  -- ${o.seeds.length}/${opts.runs} runs, e.g. --seed ${o.seeds[0]} --runs 1`)
       for (const v of o.violations) console.log(`    ! ${v}`)
-      if (!matches(scenario, expected, o.lines)) {
+      if (!corpus.matchesScenario(scenario, expected, o.lines)) {
         const diff = corpus.diff(expected.variants[0], o.lines).split('\n')
           .filter(l => !/^ {2}(row|q\d: row)( x\d+)?$/.test(l))
         console.log(diff.map(l => `    ${l}`).join('\n'))
