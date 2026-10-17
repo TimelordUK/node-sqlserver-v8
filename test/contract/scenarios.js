@@ -73,6 +73,15 @@ const base = [
   })),
   { name: 'pause/before-execute', sql: 'select 1 as n', at: { start: ['pause', 'resume:50'] }, modes: EVENTS },
   // back pressure as node streams apply it: pause on every row, resume shortly after
+  // a pause that lands while a native call is in flight: what that call brings back waits
+  // for the resume. the server sends nothing of a batch until a waitfor in it is over,
+  // unless what comes before fills a packet - so the first two are paused while the query
+  // executes, the third while a fetch (of the rows buffered behind the waitfor) is in flight.
+// timed: the pause comes from a timer, so how the rows split around it depends on timing
+// (the explorer then compares the shape and the total of rows, not the split)
+  { name: 'pause/during-execute-then-error', sql: "select 1 as n; waitfor delay '00:00:00.300'; raiserror('boom', 16, 1)", at: { later: { 100: ['pause', 'resume:300'] } }, modes: EVENTS },
+  { name: 'pause/during-execute-then-result', sql: "select 1 as a; waitfor delay '00:00:00.300'; select 2 as b", at: { later: { 100: ['pause', 'resume:300'] } }, modes: EVENTS },
+  { name: 'pause/during-fetch', sql: "select top 1000 a.name from sys.all_objects a cross join sys.all_objects b; waitfor delay '00:00:00.400'; select 2 as b", at: { later: { 200: ['pause', 'resume:300'] } }, timed: true, modes: EVENTS },
   { name: 'pause/every-row', sql: TWO_51, at: { row: Object.fromEntries(Array.from({ length: 102 }, (_, i) => [i + 1, ['pause', 'resume:1']])) }, modes: EVENTS },
 
   // ----- cancel (#479)

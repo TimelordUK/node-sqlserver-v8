@@ -30,8 +30,8 @@ function fileFor (name, platform = process.platform) {
   return path.join(CORPUS_DIR, `${name}.txt`)
 }
 
-function read (name) {
-  const file = fileFor(name)
+function read (name, platform = process.platform) {
+  const file = fileFor(name, platform)
   if (!fs.existsSync(file)) return null
   const text = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n')
   const status = /^# status: (\S+)/m.exec(text)?.[1] ?? 'unreviewed'
@@ -102,4 +102,30 @@ function diff (expected, actual) {
   return out.join('\n')
 }
 
-module.exports = { read, write, matches, diff, CORPUS_DIR }
+// a timed scenario's pause comes from a timer, so how the rows split around it depends on
+// timing: compare its shape (consecutive rows as one line) and the number of rows of each
+// query, not the split
+const ROW = /^((?:q\d+: )?row)(?: x(\d+))?$/
+function shape (lines) {
+  const out = []
+  const rows = {}
+  for (const l of lines) {
+    const m = ROW.exec(l)
+    if (!m) {
+      out.push(l)
+      continue
+    }
+    rows[m[1]] = (rows[m[1]] ?? 0) + Number(m[2] ?? 1)
+    if (out[out.length - 1] !== m[1]) out.push(m[1])
+  }
+  return JSON.stringify([out, rows])
+}
+
+// whether lines are an accepted transcript of the scenario
+function matchesScenario (scenario, expected, lines) {
+  if (!scenario?.timed) return matches(expected, lines)
+  const actual = shape(lines)
+  return expected.variants.some(v => shape(v) === actual)
+}
+
+module.exports = { read, write, matches, matchesScenario, diff, CORPUS_DIR }

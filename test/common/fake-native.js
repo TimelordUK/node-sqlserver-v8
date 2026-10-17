@@ -7,7 +7,9 @@
 //
 // results are released in causal order: a recorded result is delivered only once JS has
 // made every call recorded before it, one result per tick. so a query whose recorded result
-// is HY008 waits until JS has actually sent the cancel - no timestamps needed.
+// is HY008 waits until JS has actually sent the cancel. and a result is held for as long
+// as the driver took to give it, counted from when JS made the call, so a scenario that
+// acts on a timer (pause after 100 ms) sees the timing the server gave it.
 //
 // it also checks, whatever the log says, that JS respects the driver:
 //   overlap        a second call (cancel apart) while one is still in flight on the connection
@@ -22,10 +24,17 @@ const { decode } = require('../contract/native-tap')
 
 const STALL_MS = 1000
 
+// delay: optional (entry, recordedMs) => ms, how long to hold each recorded state or result,
+// counted from when JS made its call (default: recordedMs, as long as the driver took). the
+// explorer uses it to vary timing against the scenario's own timers - what comes back stays
+// what the driver sent.
 class ReplayNative {
-  constructor (log, { stallMs = STALL_MS } = {}) {
+  constructor (log, { stallMs = STALL_MS, delay = null } = {}) {
     this.log = log
     this.stallMs = stallMs
+    this.delay = delay
+    this.calledAt = new Map() // recorded call id -> when JS made it
+    this.callById = new Map(log.filter(e => e.ev === 'call').map(e => [e.id, e]))
     this.consumed = new Set() // recorded call ids JS has made
     this.callbacks = new Map() // recorded call id -> JS callback
     this.stateCallbacks = new Map() // recorded call id -> JS stateChangeCallback
@@ -78,6 +87,7 @@ class ReplayNative {
     const entry = this.match(name, callArgs)
     if (!entry) return
     this.consumed.add(entry.id)
+    this.calledAt.set(entry.id, performance.now())
     if (cb) this.callbacks.set(entry.id, { name, cb })
     if (name !== 'cancelQuery' && cb) this.inFlight.set(entry.id, name)
     const queryObj = callArgs[1]
@@ -102,14 +112,27 @@ class ReplayNative {
         continue
       }
       this.delivering = true
-      setImmediate(() => {
+      const next = () => {
         this.delivering = false
         this.cursor++
         this.deliver(e)
         this.pump()
-      })
+      }
+      const ms = this.holdFor(e)
+      if (ms > 0) setTimeout(next, ms)
+      else setImmediate(next)
       return
     }
+  }
+
+  // how much longer to hold a recorded state or result: as long as the driver took to give
+  // it after the call (or what the delay option makes of that), less the time already passed
+  holdFor (e) {
+    const call = this.callById.get(e.of)
+    const recorded = call && typeof e.t === 'number' && typeof call.t === 'number' ? Math.max(0, e.t - call.t) : 0
+    const target = this.delay ? this.delay(e, recorded) : recorded
+    const since = performance.now() - (this.calledAt.get(e.of) ?? performance.now())
+    return Math.max(0, Math.round(target - since))
   }
 
   deliver (e) {
@@ -129,7 +152,7 @@ class ReplayNative {
     this.stallTimer = setTimeout(() => {
       const waiting = [...this.inFlight.values()]
       const blocked = this.log[this.cursor]
-      if (waiting.length > 0 && blocked) {
+      if (waiting.length > 0 && blocked?.ev === 'call' && !this.consumed.has(blocked.id)) {
         this.violation('stalled', `JS waits on ${waiting.join(', ')}; the log waits on ${blocked.name ?? blocked.ev}(${JSON.stringify(blocked.args?.[0] ?? '')})`)
       }
     }, this.stallMs)

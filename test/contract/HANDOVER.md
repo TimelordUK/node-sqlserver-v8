@@ -102,8 +102,13 @@ tests `require('msnodesqlv8')`), `npx node-gyp rebuild`, copy `.env-cmdrc`, syml
    (`queue/paused-then-cancel-queued-before`), and submit while paused (`queue/paused-then-submit`).
 3. `done` on every path (#479, the errors), then #478.
 
-Open decision: a pause that lands while a native call is in flight still lets that call's
-events out, e.g. the next result set's `meta`. Should paused mean no events at all?
+Settled (2026-10-17): a paused query emits nothing until resumed, including what a native
+call that was in flight when the pause landed brings back: the `meta` after execute or after
+`nextResultSet`, rows, and an error from a fetch or `nextResultSet` (with its `done` and
+`free`). The explorer found the old behaviour: `pause/before-execute` gave `meta` before or
+after the resume, depending on timing. Corpus: `pause/during-execute-then-{result,error}`,
+`pause/during-fetch`. Still not held: an error *at execute* while paused, because `beginQuery`
+queues the free before it rejects, so holding the error would let `free` out first.
 
 ## State at first handover
 

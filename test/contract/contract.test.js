@@ -24,7 +24,7 @@ describe('event contract', function () {
       const expected = corpus.read(scenario.name)
       assert.isNotNull(expected, `no transcript for ${scenario.name} - record one with: node test/contract/capture.js --update ${scenario.name}`)
       const lines = await runIsolated(root, connectionString, scenario)
-      if (!corpus.matches(expected, lines)) {
+      if (!corpus.matchesScenario(scenario, expected, lines)) {
         assert.fail(`${scenario.name} (${expected.status}) differs from ${path.basename(expected.file)}:\n${corpus.diff(expected.variants[0], lines)}`)
       }
     })

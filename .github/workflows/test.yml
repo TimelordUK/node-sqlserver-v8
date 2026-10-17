@@ -377,6 +377,12 @@ jobs:
         }
         "
 
+    # no SQL Server here, but the event contract can still be checked: each recorded native
+    # session (test/contract/native) is replayed through the real JS layer over a fake driver
+    - name: Event contract, replayed over the fake driver (no SQL Server needed)
+      working-directory: node_modules/msnodesqlv8
+      run: npx mocha --exit test/contract/replay.test.js
+
     - name: Verify macOS build success
       working-directory: node_modules/msnodesqlv8
       run: |

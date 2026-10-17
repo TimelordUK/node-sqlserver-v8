@@ -49,7 +49,7 @@ async function main () {
     const variants = await captureScenario(opts.root, connectionString, scenario, opts.repeat)
     const expected = corpus.read(scenario.name)
     if (variants.length > 1) summary.nondeterministic.push(`${scenario.name} (${variants.map(v => v.count).join('/')})`)
-    const allMatch = expected && variants.every(v => corpus.matches(expected, v.lines))
+    const allMatch = expected && variants.every(v => corpus.matchesScenario(scenario, expected, v.lines))
     const mark = !expected ? 'NEW ' : allMatch ? 'same' : 'DIFF'
     if (!expected) summary.missing++
     else if (allMatch) summary.same++
@@ -60,7 +60,7 @@ async function main () {
       for (const v of variants) {
         const indent = s => s.split('\n').map(l => `    ${l}`).join('\n')
         console.log(`  -- seen ${v.count}x`)
-        if (expected && !corpus.matches(expected, v.lines)) console.log(indent(corpus.diff(expected.variants[0], v.lines)))
+        if (expected && !corpus.matchesScenario(scenario, expected, v.lines)) console.log(indent(corpus.diff(expected.variants[0], v.lines)))
         else console.log(indent(v.lines.join('\n')))
       }
     }
@@ -85,7 +85,7 @@ async function recordNative (root, connectionString, scenario) {
   fs.mkdirSync(path.dirname(file), { recursive: true })
   const lines = await runIsolated(root, connectionString, scenario, tmp)
   const expected = corpus.read(scenario.name)
-  if (fs.existsSync(tmp) && expected && corpus.matches(expected, lines)) {
+  if (fs.existsSync(tmp) && expected && corpus.matchesScenario(scenario, expected, lines)) {
     fs.renameSync(tmp, file)
     console.log(`  native log ${path.relative(process.cwd(), file)}`)
   } else {
