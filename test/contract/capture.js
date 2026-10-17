@@ -8,22 +8,28 @@
 //   node test/contract/capture.js --repeat 10 [filter] run each scenario 10 times (default 3)
 //   node test/contract/capture.js --root <dir>         use the msnodesqlv8 in <dir>, e.g. an
 //                                                      older release, to see how it differs
+//   node test/contract/capture.js --native [filter]    also record each scenario's native calls
+//                                                      into native/<name>.json, for the fake
+//                                                      driver to replay (a run whose transcript
+//                                                      is not in the corpus is not kept)
 //
 // a filter matches any part of a scenario name, e.g. 'cancel/' or 'dup-key'.
 // the connection string comes from the test environment, as for the mocha tests.
 
+const fs = require('fs')
 const path = require('path')
 const { TestEnv } = require('../env/test-env')
 const { scenarios } = require('./scenarios')
-const { captureScenario } = require('./recorder')
+const { captureScenario, runIsolated } = require('./recorder')
 const corpus = require('./corpus')
 
 function parseArgs (argv) {
-  const opts = { update: false, print: false, repeat: 3, root: path.join(__dirname, '../..'), filters: [] }
+  const opts = { update: false, print: false, native: false, repeat: 3, root: path.join(__dirname, '../..'), filters: [] }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     if (a === '--update') opts.update = true
     else if (a === '--print') opts.print = true
+    else if (a === '--native') opts.native = true
     else if (a === '--repeat') opts.repeat = Number(argv[++i])
     else if (a === '--root') opts.root = path.resolve(argv[++i])
     else opts.filters.push(a)
@@ -61,6 +67,7 @@ async function main () {
     if (opts.update && !allMatch) {
       console.log(`  wrote ${path.relative(process.cwd(), corpus.write(scenario, variants))}`)
     }
+    if (opts.native) await recordNative(opts.root, connectionString, scenario)
   }
 
   console.log(`\n${summary.same} same, ${summary.different} different, ${summary.missing} new`)
@@ -69,6 +76,26 @@ async function main () {
   }
   // a hung query can leave native work outstanding, so don't wait for the event loop
   process.exit(0)
+}
+
+// one more run, recording its native calls; kept only if its transcript is in the corpus
+async function recordNative (root, connectionString, scenario) {
+  const file = nativeFile(scenario.name)
+  const tmp = `${file}.tmp`
+  fs.mkdirSync(path.dirname(file), { recursive: true })
+  const lines = await runIsolated(root, connectionString, scenario, tmp)
+  const expected = corpus.read(scenario.name)
+  if (fs.existsSync(tmp) && expected && corpus.matches(expected, lines)) {
+    fs.renameSync(tmp, file)
+    console.log(`  native log ${path.relative(process.cwd(), file)}`)
+  } else {
+    fs.rmSync(tmp, { force: true })
+    console.log('  native log not kept: that run does not match the corpus')
+  }
+}
+
+function nativeFile (name, platform = process.platform) {
+  return path.join(__dirname, 'native', `${name}.${platform}.json`)
 }
 
 main().catch(e => {

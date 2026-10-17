@@ -227,10 +227,13 @@ async function runScenario (sql, connectionString, scenario) {
 }
 
 // runs the scenario in a child process (see run-one.js) and returns its transcript
-function runIsolated (root, connectionString, scenario) {
+// nativeFile: also record the native calls of the run there (see native-tap.js)
+function runIsolated (root, connectionString, scenario, nativeFile) {
   return new Promise(resolve => {
+    const env = { ...process.env, MSSQL_CONTRACT_CS: connectionString }
+    if (nativeFile) env.MSSQL_CONTRACT_NATIVE = nativeFile
     execFile(process.execPath, [path.join(__dirname, 'run-one.js'), root, scenario.name], {
-      env: { ...process.env, MSSQL_CONTRACT_CS: connectionString },
+      env,
       timeout: PROCESS_TIMEOUT_MS,
       maxBuffer: 16 * 1024 * 1024,
       windowsHide: true

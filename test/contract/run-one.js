@@ -4,7 +4,11 @@
 // recorder.js starts this as a child process for every run, so that a query that
 // hangs, floods events or leaves native work behind cannot affect the next run.
 //   node run-one.js <msnodesqlv8 root> <scenario name>     (connection string in MSSQL_CONTRACT_CS)
+// with MSSQL_CONTRACT_NATIVE=<file>, the native calls and results are also recorded there
+// (see native-tap.js), for test/common/fake-native.js to replay.
 
+const fs = require('fs')
+const path = require('path')
 const { scenarios } = require('./scenarios')
 const { runScenario } = require('./recorder')
 
@@ -15,8 +19,16 @@ if (!scenario) {
   process.exit(2)
 }
 
+const nativeFile = process.env.MSSQL_CONTRACT_NATIVE
+let tap = null
+if (nativeFile) {
+  const { utilModule } = require(path.join(root, 'lib/util'))
+  tap = require('./native-tap').install(new utilModule.Native().cppDriver, { keepData: !!scenario.columns })
+}
+
 runScenario(require(root), process.env.MSSQL_CONTRACT_CS, scenario)
   .then(lines => {
+    if (tap) fs.writeFileSync(nativeFile, JSON.stringify({ scenario: scenario.name, transcript: lines, log: tap.log }))
     process.stdout.write(JSON.stringify(lines), () => process.exit(0))
   })
   .catch(e => {
