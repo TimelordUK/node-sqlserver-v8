@@ -2,22 +2,11 @@
 # status: unreviewed
 # sql: waitfor delay '00:00:01'; select 2 as n
 # at: {"start":["pause","cancel"]}
-# NOT DETERMINISTIC: 2 different transcripts in 3 runs
 action pause
 action cancel
 submitted
 done
 cancel-cb ok
-error HY008 0 Operation canceled more=false
-free x2
-check ok
---- or
-action pause
-action cancel
-submitted
-done
-cancel-cb ok
-free
 error HY008 0 Operation canceled more=false
 free
 check ok

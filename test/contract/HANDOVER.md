@@ -30,8 +30,59 @@ comes out while paused, except what a native call already in flight brings back.
 - Full mocha suite: 897 passing; the only failures were the three transcripts above, before
   they were updated.
 
-Still open, not this change: `queue/bind-failure-then-two-on-start` is non-deterministic
-(#481, overlapping follow-ups), and so is `cancel/paused-before-execute` (#479, `free` x2).
+**Fixed: #481, the work queue.** Every item on the queue is now finished by its owner:
+`WorkQueue.finish(op)` removes that item only (by identity), starts the next only if it was
+the head, and does nothing the second time. The blind `nextOp()` is gone.
+- Each query keeps its own queue item (`Query.operation`). A prepared statement shares one
+  notify across its executions, so `notify.getOperation()` is only the latest one queued.
+- A statement's unbind and free are *follow-ups* (`enqueueFollowUp`). They run straight after
+  their query, before anything that was already waiting. Before, q2 (or `close()`) could run
+  ahead of q1's free.
+- `close()` always finishes its item. The cancelled branch of `moveToNextResult` had cleared
+  `running` first, so `close()` returned early. That is what the extra advance in `end()`
+  (93f1590f) was covering.
+- `dropItem` matches by identity. It used to drop every item with the same priority.
+
+**Fixed: a paused query holds the connection.** Owner's rule: once paused, no other operation
+runs on the connection.
+- A paused query keeps its place at the head. Before, it moved to the back, and `park()` then
+  removed the item that was waiting behind it **without running it**. On 5.6.0 such a query was
+  never submitted and its callback never fired.
+- A query submitted while another is paused waits behind it (`headPaused`, which freed the
+  paused query, is gone).
+- Cancelling a paused query sends the native cancel, then ends the query as cancelled
+  (`Query.cancelPaused`): `error HY008` → `free`, the same as cancelling one that is not paused.
+  Before, it was freed silently.
+- `close()` cancels a paused query at the head first, so the close cannot wait forever.
+
+Corpus: all 11 changed `queue/*` and `cancel/paused-*` transcripts re-recorded, now
+deterministic. No more "Connection is busy"; `paused-before-execute` frees once.
+`queue/ok-then-two-on-*` are agreed. The rest still show #479/#478 behaviour, so they stay
+unreviewed. Tests changed to the new rules: `pause.test.js` (a new query waits; close and
+cancel give HY008) and `querycancel.test.js` (HY008 on a paused cancel).
+
+## The contract (owner, 2026-10-17), to ship as v6
+
+- `done`: no more results. Raised on **every** query, exactly once: errors, cancels and bind
+  failures included.
+- `free`: the native statement has been released. It comes after `done`.
+- Nothing after `done` but `free`; an in-flight error may be unavoidable.
+- A paused query emits nothing until resumed, and holds the connection.
+
+`done` is not raised by any `errors/*` scenario today. On cancel it comes before the HY008.
+Prepared executions never raise `free` (there is no free item for them).
+
+## Next
+
+1. A fake native connection (`test/common/fake-native.js`) that holds every callback until
+   the test releases it, and asserts the invariants (one native call in flight per
+   connection, nothing after `releaseStatement` or `free`, one `done` then `free`). Then
+   scripted tests and an interleaving explorer for queue and reader.
+2. Cases to pin with it: pause then cancel a compound query with another queued; pause and
+   submit a fresh query without cancelling (it waits; is that what we want?); an error coming
+   back from a fetch in flight when the pause lands (today it is emitted while paused, but the
+   rows are held).
+3. `done` on every path (#479, the errors), then #478.
 
 Open decision: a pause that lands while a native call is in flight still lets that call's
 events out, e.g. the next result set's `meta`. Should paused mean no events at all?

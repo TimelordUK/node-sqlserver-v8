@@ -319,8 +319,9 @@ it('cancel a call to proc that waits for delay of input param.', testDone => {
   it('pause a large query and cancel check done', testDone => {
     let rows = 0
     const q = env.theConnection.query('select top 3000 * from syscolumns')
+    // a paused query ends on cancel as any other: HY008
     q.on('error', (e) => {
-      assert.ifError(e)
+      if (e.sqlstate !== 'HY008') assert.ifError(e)
     })
     q.on('row', () => {
       ++rows

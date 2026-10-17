@@ -4,17 +4,17 @@
 # follow-up q2 on start: waitfor delay '00:00:01'; select 2 as n
 # follow-up q3 on start: select 3 as n
 submitted
+free
+cb error 42000 50000 boom more=false
 q2: submitted
 q2: meta n
 q2: row
-q3: submitted
-q3: meta n
-q3: row
-free
-cb error 42000 50000 boom more=false
 q2: cb ok rows=1 more=false
 q2: done
 q2: free
+q3: submitted
+q3: meta n
+q3: row
 q3: cb ok rows=1 more=false
 q3: done
 q3: free

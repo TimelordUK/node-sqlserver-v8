@@ -9,5 +9,6 @@ action pause
 action cancel
 done
 cancel-cb ok
+error HY008 0 Operation canceled more=false
 free
 check ok

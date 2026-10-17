@@ -8,10 +8,7 @@ cb error 42000 50000 boom more=false
 q2: submitted
 q2: action cancel
 q2: done
-q2: cancel-cb error Error: [msnodesql] cannot cancel query (empty queue) id 1
-q2: meta n
-q2: row
-q2: cb ok rows=1 more=false
-q2: done
+q2: cancel-cb ok
 q2: free
+q2: cb error HY008 0 Operation canceled more=false
 check ok
