@@ -1,0 +1,116 @@
+# scenario: scripts/issue-481
+# status: unreviewed
+# script: test/contract/scripts/issue-481.js
+== A1 ok: q2 and q3 queued at once
+A1 ok.q1: submitted
+A1 ok.q1: meta v
+A1 ok.q1: row
+A1 ok.q1: cb ok rows=1 more=false
+A1 ok.q1: done
+A1 ok.q1: free
+A1 ok.q2: submitted
+A1 ok.q2: meta n
+A1 ok.q2: row
+A1 ok.q2: cb ok rows=1 more=false
+A1 ok.q2: done
+A1 ok.q2: free
+A1 ok.q3: submitted
+A1 ok.q3: meta n
+A1 ok.q3: row
+A1 ok.q3: cb ok rows=1 more=false
+A1 ok.q3: done
+A1 ok.q3: free
+== A2 bind failure: q2 and q3 queued at once
+A2 bind failure.q1: submitted
+A2 bind failure.q1: done
+A2 bind failure.q1: free
+A2 bind failure.q2: submitted
+A2 bind failure.q1: cb error - - IMNOD: [msnodesql] Parameter 1: Invalid number parameter more=false
+A2 bind failure.q2: meta n
+A2 bind failure.q2: row
+A2 bind failure.q2: cb ok rows=1 more=false
+A2 bind failure.q2: done
+A2 bind failure.q2: free
+A2 bind failure.q3: submitted
+A2 bind failure.q3: meta n
+A2 bind failure.q3: row
+A2 bind failure.q3: cb ok rows=1 more=false
+A2 bind failure.q3: done
+A2 bind failure.q3: free
+== A3 ok: q2 and q3 queued from q1 free
+A3 ok.q1: submitted
+A3 ok.q1: meta n
+A3 ok.q1: row
+A3 ok.q1: cb ok rows=1 more=false
+A3 ok.q1: done
+A3 ok.q1: free
+A3 ok.q2: submitted
+A3 ok.q2: meta n
+A3 ok.q2: row
+A3 ok.q2: cb ok rows=1 more=false
+A3 ok.q2: done
+A3 ok.q2: free
+A3 ok.q3: submitted
+A3 ok.q3: meta n
+A3 ok.q3: row
+A3 ok.q3: cb ok rows=1 more=false
+A3 ok.q3: done
+A3 ok.q3: free
+== A4 error at execute: q2 and q3 queued from q1 free
+A4 error at execute.q1: submitted
+A4 error at execute.q1: free
+A4 error at execute.q1: cb error 42000 50000 boom more=false
+A4 error at execute.q2: submitted
+A4 error at execute.q2: meta n
+A4 error at execute.q2: row
+A4 error at execute.q2: cb ok rows=1 more=false
+A4 error at execute.q2: done
+A4 error at execute.q2: free
+A4 error at execute.q3: submitted
+A4 error at execute.q3: meta n
+A4 error at execute.q3: row
+A4 error at execute.q3: cb ok rows=1 more=false
+A4 error at execute.q3: done
+A4 error at execute.q3: free
+== A5 error after a result: q2 and q3 queued from q1 free
+A5 error after a result.q1: submitted
+A5 error after a result.q1: meta n
+A5 error after a result.q1: row
+A5 error after a result.q1: cb error 42000 50000 boom more=false
+A5 error after a result.q1: free
+A5 error after a result.q2: submitted
+A5 error after a result.q2: meta n
+A5 error after a result.q2: row
+A5 error after a result.q2: cb ok rows=1 more=false
+A5 error after a result.q2: done
+A5 error after a result.q2: free
+A5 error after a result.q3: submitted
+A5 error after a result.q3: meta n
+A5 error after a result.q3: row
+A5 error after a result.q3: cb ok rows=1 more=false
+A5 error after a result.q3: done
+A5 error after a result.q3: free
+== B1 ok: from q1 free, a slow q2 cancelled after 300 ms
+B1 ok.q1: submitted
+B1 ok.q1: meta n
+B1 ok.q1: row
+B1 ok.q1: cb ok rows=1 more=false
+B1 ok.q1: done
+B1 ok.q1: free
+B1 ok.q2: submitted
+B1 ok.q2: action cancel
+B1 ok.q2: done
+B1 ok.q2: cancel-cb ok
+B1 ok.q2: free
+B1 ok.q2: cb error HY008 0 Operation canceled more=false
+== B2 error at execute: from q1 free, a slow q2 cancelled after 300 ms
+B2 error at execute.q1: submitted
+B2 error at execute.q1: free
+B2 error at execute.q1: cb error 42000 50000 boom more=false
+B2 error at execute.q2: submitted
+B2 error at execute.q2: action cancel
+B2 error at execute.q2: done
+B2 error at execute.q2: cancel-cb ok
+B2 error at execute.q2: free
+B2 error at execute.q2: cb error HY008 0 Operation canceled more=false
+check ok

@@ -46,7 +46,8 @@ function read (name, platform = process.platform) {
 function header (scenario, status) {
   const lines = [`# scenario: ${scenario.name}`, `# status: ${status}`]
   for (const statement of scenario.setup ?? []) lines.push(`# setup: ${statement}`)
-  lines.push(`# sql: ${scenario.sql}`)
+  if (scenario.script) lines.push(`# script: test/contract/scripts/${path.basename(scenario.script)}`)
+  else lines.push(`# sql: ${scenario.sql}`)
   if (scenario.params) lines.push(`# params: ${JSON.stringify(scenario.params, (k, v) => typeof v === 'number' && !isFinite(v) ? String(v) : v)}`)
   if (scenario.at) lines.push(`# at: ${JSON.stringify(scenario.at)}`)
   for (const f of scenario.followUps ?? []) {

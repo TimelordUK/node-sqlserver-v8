@@ -82,6 +82,7 @@
     "build": "tsc",
     "build:test": "tsc -p tsconfig.json",
     "test": "mocha \"test/**/*.test.js\"",
+    "record-corpus": "node test/contract/record.js",
     "test:improved": "mocha test/connection-improved.test.js --reporter spec",
     "test:webstorm": "mocha test/connection-webstorm.test.js --config test/.mocharc.webstorm.js",
     "test:connection": "mocha test/connect*.js --reporter spec --timeout 30000",
