@@ -1,0 +1,12 @@
+# scenario: pause/before-execute.events
+# status: unreviewed
+# sql: select 1 as n
+# at: {"start":["pause","resume:50"]}
+action pause
+submitted
+meta n
+action resume
+row
+done
+free
+check ok

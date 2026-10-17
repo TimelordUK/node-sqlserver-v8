@@ -453,25 +453,29 @@ bool OdbcConnection::try_open(const std::u16string& connection_string, const int
     return false;
   }
 
-  // Set connection timeout
-  auto ret =
-      _odbcApi->SQLSetConnectAttr(connection->get_handle(),
-                                  SQL_ATTR_CONNECTION_TIMEOUT,
-                                  reinterpret_cast<SQLPOINTER>(static_cast<intptr_t>(timeout)),
-                                  SQL_IS_INTEGER);
-  if (!_errorHandler->CheckOdbcError(ret)) {
-    SQL_LOG_ERROR("OdbcConnection::try_open: Failed to set connection timeout");
-    return false;
-  }
-
-  // Set login timeout
-  ret = _odbcApi->SQLSetConnectAttr(connection->get_handle(),
-                                    SQL_ATTR_LOGIN_TIMEOUT,
+  // Only override the driver's login timeout when one is given - a value of 0
+  // means wait forever, which hangs open() against an unreachable server
+  SQLRETURN ret;
+  if (timeout > 0) {
+    ret =
+        _odbcApi->SQLSetConnectAttr(connection->get_handle(),
+                                    SQL_ATTR_CONNECTION_TIMEOUT,
                                     reinterpret_cast<SQLPOINTER>(static_cast<intptr_t>(timeout)),
                                     SQL_IS_INTEGER);
-  if (!_errorHandler->CheckOdbcError(ret)) {
-    SQL_LOG_ERROR("OdbcConnection::try_open: Failed to set login timeout");
-    return false;
+    if (!_errorHandler->CheckOdbcError(ret)) {
+      SQL_LOG_ERROR("OdbcConnection::try_open: Failed to set connection timeout");
+      return false;
+    }
+
+    // Set login timeout
+    ret = _odbcApi->SQLSetConnectAttr(connection->get_handle(),
+                                      SQL_ATTR_LOGIN_TIMEOUT,
+                                      reinterpret_cast<SQLPOINTER>(static_cast<intptr_t>(timeout)),
+                                      SQL_IS_INTEGER);
+    if (!_errorHandler->CheckOdbcError(ret)) {
+      SQL_LOG_ERROR("OdbcConnection::try_open: Failed to set login timeout");
+      return false;
+    }
   }
 
   // Set BCP option (SQL Server specific)

@@ -164,60 +164,70 @@ END
 `
   }
 
-  it('call long running proc with timeout aggregator', async function handler () {
+  // these three used to return their error rather than throw it, so they could not fail
+  async function expectTimeout (call) {
+    const ph = env.procTest(def)
+    await ph.create()
+    const startedAt = Date.now()
+    let err = null
     try {
-      const ph = env.procTest(def)
-      await ph.create()
-      const p = {
-        timeout: '0:0:02'
-      }
-      const res = await env.theConnection.callprocAggregator(def.name, p, {
-        timeoutMs: 1000
-      })
-      return new Error(`res = ${JSON.stringify(res, null, 4)}`)
+      await call({ timeout: '0:0:05' }, { timeoutMs: 1000 })
     } catch (e) {
-      if (e.message.indexOf('timeout') >= 0) {
-        return null
-      } else {
-        return e
-      }
+      err = e
     }
+    assert(err, 'expected the call to time out')
+    assert(err.message.includes('timeout') || err.message.includes('Operation canceled'), err.message)
+    assert(Date.now() - startedAt < 4000, 'proc was not cancelled by the timeout')
+    const res = await env.theConnection.promises.query('select 1 as n')
+    expect(res.first[0].n).equals(1)
+  }
+
+  it('call long running proc with timeout aggregator', async function handler () {
+    await expectTimeout((p, o) => env.theConnection.callprocAggregator(def.name, p, o))
   })
 
   it('call long running proc with timeout', async function handler () {
-    try {
-      const ph = env.procTest(def)
-      await ph.create()
-      const p = {
-        timeout: '0:0:02'
-      }
-      const res = await env.theConnection.promises.callProc(def.name, p, {
-        timeoutMs: 1000
-      })
-      return new Error(`res = ${JSON.stringify(res, null, 4)}`)
-    } catch (e) {
-      if (e.message.indexOf('timeout') >= 0) {
-        return null
-      } else {
-        return e
-      }
-    }
+    await expectTimeout((p, o) => env.theConnection.promises.callProc(def.name, p, o))
   })
 
   it('call long running proc with timeout - complete in time', async function handler () {
-    try {
-      const ph = env.procTest(def)
-      await ph.create()
-      const p = {
-        timeout: '0:0:01'
-      }
-      const res = await env.theConnection.promises.callProc(def.name, p, {
-        timeoutMs: 30000
+    const ph = env.procTest(def)
+    await ph.create()
+    const res = await env.theConnection.promises.callProc(def.name, { timeout: '0:0:01' }, {
+      timeoutMs: 30000
+    })
+    assert(res !== null)
+    assert.deepStrictEqual(res.results.length, 2)
+  })
+})
+
+// issue #468 - open() against an unreachable server must call back rather than
+// hang; needs no server, so it sits outside the querytimeout db setup
+describe('login timeout', function () {
+  const unreachable = `Driver={${env.driver}};Server=tcp:127.0.0.1,1;Trusted_Connection=Yes;`
+
+  function openWithin (connectObj, limitMs) {
+    const start = Date.now()
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error(`no callback within ${limitMs} ms`)), limitMs)
+      sql.open(connectObj, (err, conn) => {
+        clearTimeout(timer)
+        if (conn) conn.close(() => {})
+        resolve({ err, elapsed: Date.now() - start })
       })
-      assert(res !== null)
-      assert.deepStrictEqual(res.results.length, 2)
-    } catch (e) {
-      return e
-    }
+    })
+  }
+
+  it('conn_timeout is honoured when server unreachable', async function handler () {
+    this.timeout(20000)
+    const { err, elapsed } = await openWithin({ conn_str: unreachable, conn_timeout: 2 }, 15000)
+    assert(err, 'expected open to fail')
+    expect(elapsed).to.be.lessThan(15000)
+  })
+
+  it('no conn_timeout falls back to driver default rather than hanging', async function handler () {
+    this.timeout(45000)
+    const { err } = await openWithin(unreachable, 40000)
+    assert(err, 'expected open to fail')
   })
 })

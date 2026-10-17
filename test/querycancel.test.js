@@ -228,15 +228,17 @@ it('cancel a call to proc that waits for delay of input param.', testDone => {
     })
   })
 
-  it('cancel single waitfor on non polling query - expect cancel error and query to complete', testDone => {
-    const q = env.theConnection.query(env.waitForSql(3), err => {
-      assert(!err)
+  // the native driver cancels a non polling statement directly (SQLCancelHandle), so
+  // polling is no longer needed to cancel.
+  it('cancel single waitfor on non polling query - expect Operation canceled', testDone => {
+    const q = env.theConnection.query(env.waitForSql(20), err => {
+      assert(err)
+      assert(err.message.indexOf('Operation canceled') > 0)
       testDone()
     })
 
     env.theConnection.cancelQuery(q, err => {
-      assert(err)
-      assert(err.message.indexOf('only supported') > 0)
+      assert(!err)
     })
   })
 
@@ -317,8 +319,9 @@ it('cancel a call to proc that waits for delay of input param.', testDone => {
   it('pause a large query and cancel check done', testDone => {
     let rows = 0
     const q = env.theConnection.query('select top 3000 * from syscolumns')
+    // a paused query ends on cancel as any other: HY008
     q.on('error', (e) => {
-      assert.ifError(e)
+      if (e.sqlstate !== 'HY008') assert.ifError(e)
     })
     q.on('row', () => {
       ++rows

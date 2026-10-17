@@ -1,0 +1,21 @@
+# scenario: queue/paused-then-cancel-queued-before.events
+# status: unreviewed
+# sql: select top 51 object_id as a from sys.all_objects; select top 51 object_id as b from sys.all_objects
+# at: {"row":{"3":["pause"]},"later":{"300":["cancel"]}}
+# follow-up q2 on start: select 2 as n
+submitted
+meta a
+row x3
+action pause
+action cancel
+done
+cancel-cb ok
+error HY008 0 Operation canceled more=false
+free
+q2: submitted
+q2: meta n
+q2: row
+q2: cb ok rows=1 more=false
+q2: done
+q2: free
+check ok

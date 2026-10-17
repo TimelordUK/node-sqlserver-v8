@@ -34,7 +34,7 @@ function submit (sql: string): Query {
   console.log(`send ${timeStr}, sql = ${sql}`)
   q.on('submitted', (d: QueryDescription) => {
     console.log(`query submitted ${timeStr}, sql = ${d.query_str}`)
-    q.on('done', () => console.log(`query done ${timeStr}`))
+    q.on('done', () => { console.log(`query done ${timeStr}`) })
   })
   return q
 }

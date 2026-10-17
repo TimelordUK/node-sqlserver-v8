@@ -1,0 +1,10 @@
+# scenario: read/one-row.events
+# status: unreviewed
+# sql: select 1 as n
+submitted
+meta n
+row
+column 0 1
+done
+free
+check ok

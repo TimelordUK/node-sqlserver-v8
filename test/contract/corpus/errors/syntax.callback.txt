@@ -1,0 +1,7 @@
+# scenario: errors/syntax.callback
+# status: unreviewed
+# sql: select from where
+submitted
+free
+cb error 42000 156 Incorrect syntax near the keyword 'from'. more=false
+check ok

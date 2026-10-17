@@ -1,0 +1,16 @@
+# scenario: read/types.events
+# status: unreviewed
+# sql: select 1 as i, N'x' as s, cast(1.5 as decimal(5, 2)) as d, cast('2020-01-02T03:04:05' as datetime2(0)) as dt, cast(null as int) as nul, 0x0102 as b, cast(1 as bit) as bt
+submitted
+meta i,s,d,dt,nul,b,bt
+row
+column 0 1
+column 1 "x"
+column 2 1.5
+column 3 2020-01-02T03:04:05.000Z
+column 4 null
+column 5 0x0102
+column 6 true
+done
+free
+check ok

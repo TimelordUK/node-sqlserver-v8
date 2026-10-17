@@ -1,0 +1,12 @@
+# scenario: read/param.callback
+# status: unreviewed
+# sql: select ? as v
+# params: [1]
+submitted
+meta v
+row
+column 0 1
+cb ok rows=1 more=false
+done
+free
+check ok

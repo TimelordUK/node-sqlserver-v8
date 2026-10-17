@@ -13,10 +13,12 @@ namespace mssql {
 OpenWorker::OpenWorker(Napi::Function& callback,
                        IOdbcConnection* connection,
                        Connection* parent,
-                       const std::u16string& connectionString)
+                       const std::u16string& connectionString,
+                       const int timeout)
     : OdbcAsyncWorker(callback, connection),
       parent_(parent),
       connectionString_(connectionString),
+      timeout_(timeout),
       connectionId_(-1) {
 #ifdef __APPLE__
   SQL_LOG_DEBUG_U16STREAM("OpenWorker constructor for connection: " << StringUtils::U16StringToUtf8(connectionString_));
@@ -33,7 +35,7 @@ void OpenWorker::Execute() {
     SQL_LOG_DEBUG_U16STREAM("Executing OpenWorker for connection: " << connectionString_);
 #endif
 
-    if (!connection_->Open(connectionString_, 0)) {
+    if (!connection_->Open(connectionString_, timeout_)) {
       SetError("Failed to open connection");
       return;
     }

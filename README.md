@@ -77,6 +77,8 @@ await table.promises.insert(rows)          // array-bind, ~130k rows/s
 // table.setUseBcp(true)                    // opt-in to native BCP protocol
 ```
 
+**New here? Start with the [API tour](https://github.com/TimelordUK/msnodesqlv8-api-tour)**: one runnable file covering the whole API (pool, procs, bulk / BCP, TVP, geography, cancel, print and error handling) that cleans up after itself.
+
 See [samples/javascript/](samples/javascript/) for runnable versions of every snippet below.
 
 ---
@@ -109,6 +111,7 @@ Full runnable projects in their own repos, showing `msnodesqlv8` wired into real
 
 | Stack                         | Repo |
 | ----------------------------- | ---- |
+| **Start here: the whole API in one file** | [msnodesqlv8-api-tour](https://github.com/TimelordUK/msnodesqlv8-api-tour) |
 | Next.js (pages router)        | [todo-with-nextjs_msnodesqlv8](https://github.com/TimelordUK/todo-with-nextjs_msnodesqlv8) |
 | Next.js (app router)          | [todo-with-nextjs-app-router_msnodesqlv8](https://github.com/TimelordUK/todo-with-nextjs-app-router_msnodesqlv8) |
 | Vite + Express                | [msnodesqlv8-vite](https://github.com/TimelordUK/msnodesqlv8-vite) |

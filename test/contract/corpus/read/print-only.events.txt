@@ -1,0 +1,9 @@
+# scenario: read/print-only.events
+# status: unreviewed
+# sql: print 'p1'
+submitted
+info 01000 0 p1
+rowcount 0
+done
+free
+check ok

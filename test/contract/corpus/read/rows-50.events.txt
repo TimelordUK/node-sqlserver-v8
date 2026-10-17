@@ -1,0 +1,9 @@
+# scenario: read/rows-50.events
+# status: unreviewed
+# sql: select top 50 object_id as a from sys.all_objects
+submitted
+meta a
+row x50
+done
+free
+check ok

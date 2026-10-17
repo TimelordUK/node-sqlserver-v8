@@ -56,7 +56,6 @@ prebuilds/
 **/_CPack_Packages/
 
 # Build output directories
-lib/
 dist/
 out/
 
@@ -108,7 +107,6 @@ out
 **/*.d.ts
 
 # Compiled/built JavaScript (only for specific output directories)
-lib/**/*.js
 dist/**/*.js
 
 # Editor directories and files
@@ -158,9 +156,6 @@ runtest-macos
 **/test/cpp/**/Testing/
 **/GoogleTest*
 **/_deps/
-
-# Local build scripts
-lib/index.d.ts
 
 # IDE specific files
 **/.vs/

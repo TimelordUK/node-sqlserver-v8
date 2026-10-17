@@ -1,0 +1,11 @@
+# scenario: read/one-row.callback
+# status: unreviewed
+# sql: select 1 as n
+submitted
+meta n
+row
+column 0 1
+cb ok rows=1 more=false
+done
+free
+check ok

@@ -1,8 +1,14 @@
 # Release notes template
 
-Copy everything below the line into a new GitHub release and fill in the two
-`EDIT ME` sections. Everything else is standing content that stays the same
-release to release, so it should not need retyping or hunting down again.
+The GitHub release is created from this file automatically when the
+`NPM Package Validation and Publish` workflow publishes (not on a dry run, which
+shows a preview in the job summary instead). `.github/scripts/release-notes.js`
+keeps everything below the line and fills the two `EDIT ME` sections: "What's
+changed" from the PR titles merged since the previous tag (`feat:` / `fix:` /
+`perf:`; chore, ci, test, docs and dependency bumps are left out), and
+"Upgrading" from the workflow's `upgrading` input, dropping it when that is
+empty. Preview locally with `node .github/scripts/release-notes.js --version X.Y.Z`.
+Everything else is standing content that stays the same release to release.
 
 Keep the per-release part at the top: that is the only bit a returning reader
 needs. The standing sections are collapsed with `<details>` so the page stays
@@ -35,6 +41,22 @@ npm install msnodesqlv8
 ```
 
 ---
+
+## New to msnodesqlv8? Start with the API tour
+
+[**msnodesqlv8-api-tour**](https://github.com/TimelordUK/msnodesqlv8-api-tour)
+is one file that walks through the whole API, one copyable section per area:
+connections and parameters, streaming with pause / resume, multiple result
+sets, prepared statements, stored procedures with output params, transactions,
+the table manager's bulk insert / update / delete, BCP, TVPs, geography,
+print and error handling, cancel and timeouts, and the connection pool. It
+cleans up after itself, so it is safe to re-run and hack on.
+
+```sh
+git clone https://github.com/TimelordUK/msnodesqlv8-api-tour && cd msnodesqlv8-api-tour
+npm install
+CONNECTION_STRING="Driver={ODBC Driver 18 for SQL Server};Server=localhost,1433;Database=tempdb;UID=sa;PWD=...;TrustServerCertificate=yes;" node api-tour.js
+```
 
 ## Prebuilt binaries ship inside the npm package
 
@@ -110,6 +132,7 @@ ways to place one, in increasing order of scope:
 
 | description | link |
 |---|---|
+| **start here**: the whole API in one runnable file | [msnodesqlv8-api-tour](https://github.com/TimelordUK/msnodesqlv8-api-tour) |
 | next js example, note cant run driver on UI thread. | [todo-with-nextjs_msnodesqlv8](https://github.com/TimelordUK/todo-with-nextjs_msnodesqlv8) |
 | next js example using app router, note cant run driver on UI thread. | [todo-with-nextjs-app-router_msnodesqlv8](https://github.com/TimelordUK/todo-with-nextjs-app-router_msnodesqlv8) |
 | using vite + express | [msnodesqlv8-vite](https://github.com/TimelordUK/msnodesqlv8-vite) |

@@ -337,8 +337,10 @@ void BoundDatum::bind_w_var_char(const Napi::Object& p, const int precision) {
     auto* const first_p = _storage->uint16vec_ptr->data();
     const auto copy_len = min(utf16_str.size(), static_cast<size_t>(precision));
     memcpy(first_p, utf16_str.c_str(), copy_len * size);
+    // buffer_len is the capacity (an output param can return up to this much),
+    // the indicator is how much of it the input value occupies.
     buffer_len = static_cast<SQLLEN>(precision) * static_cast<SQLLEN>(size);
-    _indvec[0] = buffer_len;
+    _indvec[0] = static_cast<SQLLEN>(copy_len * size);
   }
 }
 
@@ -1409,6 +1411,19 @@ bool sql_type_s_maps_to_string(const Napi::Object p) {
   return res;
 }
 
+bool sql_type_s_maps_to_unicode_string(const Napi::Object p) {
+  const auto v = JsObjectMapper::safeGetString(p.As<Napi::Object>(), "type_id", "");
+  return v == "nvarchar" || v == "nchar" || v == "ntext";
+}
+
+// characters to reserve for a string output param from its declared max_length (bytes,
+// as reported by sys.parameters), plus one for the terminator the driver writes.
+// -1 means (max), which is given 4000 characters.
+size_t output_string_chars(const int max_length) {
+  constexpr int max_type_chars = 4000;
+  return static_cast<size_t>(max_length > 0 ? max_length : max_type_chars) + 1;
+}
+
 bool sql_type_s_maps_to_boolean(const Napi::Object p) {
   const auto v = JsObjectMapper::safeGetString(p.As<Napi::Object>(), "type_id", "");
   const auto res = is_bit(v);
@@ -1497,10 +1512,13 @@ Napi::Value reserve_output_param(napi_env env, const Napi::Object p, const int s
     pval = Napi::Number::New(env, 0.0);
   } else if (sql_type_s_maps_to_date(p)) {
     pval = Napi::Date::New(env, 0);
-  } else if (sql_type_s_maps_to_string(p)) {
+  } else if (sql_type_s_maps_to_string(p) || sql_type_s_maps_to_unicode_string(p)) {
+    // the placeholder's length sizes the output buffer. nvarchar etc. used to fall
+    // through to the binary placeholder below, binding the param as varbinary.
+    const auto chars = output_string_chars(size);
     vector<char> b;
-    b.resize(static_cast<size_t>(size) + 1);
-    pval = Napi::String::New(env, b.data(), size + 1);
+    b.resize(chars);
+    pval = Napi::String::New(env, b.data(), chars);
   } else {
     // Create a buffer filled with zeros
     pval = Napi::Buffer<uint8_t>::New(env, static_cast<size_t>(size));
@@ -1550,12 +1568,25 @@ bool BoundDatum::proc_bind(const Napi::Env& env, const Napi::Object& p, const Na
 
   bool res = true;
 
-  if (!pval_value.IsNull() && !pval_value.IsUndefined()) {
+  if (param_type == SQL_PARAM_INPUT_OUTPUT && pval_value.IsString()) {
+    // the buffer must hold whatever the proc sets, not just the value passed in
+    const auto pval_obj = pval_value.As<Napi::Object>();
+    const auto length = pval_value.As<Napi::String>().Utf16Value().length();
+    const auto chars = max(length, output_string_chars(size));
+    bind_w_var_char(pval_obj, static_cast<int>(chars));
+  } else if (!pval_value.IsNull() && !pval_value.IsUndefined()) {
     auto pval_obj = pval_value.As<Napi::Object>();
     res = bind_datum_type(pval_obj);
   } else if (pval.IsObject()) {
     auto pval_obj = pval.As<Napi::Object>();
     res = bind_datum_type(pval_obj);
+  }
+
+  if (is_output && sql_type == SQL_WLONGVARCHAR) {
+    // a long string buffer binds as ntext, which the server refuses as an output
+    // param. nvarchar with column size 0 is nvarchar(max).
+    sql_type = SQL_WVARCHAR;
+    param_size = 0;
   }
   return res;
 }

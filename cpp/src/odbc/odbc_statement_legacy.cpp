@@ -1,5 +1,6 @@
 #include <common/platform.h>
 
+#include <algorithm>
 #include <cstring>  // For std::memcpy
 #include <common/odbc_common.h>
 #include <common/string_utils.h>
@@ -230,6 +231,9 @@ bool OdbcStatementLegacy::fetch_read(const size_t number_rows) {
   auto res = false;
   for (size_t row_id = 0; row_id < number_rows; ++row_id) {
     const auto ret = _odbcApi->SQLFetch(statement.get_handle());
+    if (_cancelHandleIssued.load() && !SQL_SUCCEEDED(ret)) {
+      return return_cancelled();
+    }
     if (ret == SQL_NO_DATA) {
       SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] fetch_read SQL_NO_DATA " << ret);
       _resultset->_end_of_rows = true;
@@ -344,24 +348,22 @@ bool OdbcStatementLegacy::Cancel() {
 
   if (!_pollingEnabled && (state == OdbcStatementState::STATEMENT_SUBMITTED ||
                            state == OdbcStatementState::STATEMENT_READING)) {
-    cancel_handle();
-    set_state(OdbcStatementState::STATEMENT_CANCEL_HANDLE);
-    SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Cancel ["
-                         << _handle.toString() << "] cancel handle"
-                         << OdbcStatementStateToString(OdbcStatementState::STATEMENT_CANCEL_HANDLE)
-                         << " " << _statementId);
-
-    // Use lock only for _resultset modification (non-atomic)
-    {
-      lock_guard<recursive_mutex> lock(g_i_mutex);
-      _resultset = make_unique<ResultSet>(0);
-      _resultset->_end_of_rows = false;
-      _resultset->_end_of_results = false;
+    // this runs on the cancel thread while a worker thread may be inside SQLExecDirect
+    // or SQLFetch on this statement. SQLCancelHandle is made to be called from another
+    // thread; the result set and error list are not - the worker writes rows into
+    // _resultset without a lock, and replacing it here freed it under a running fetch
+    // (segv). the worker's own execute / fetch returns HY008 (or HY010 / 24000) and
+    // ends the query, setting the result set flags itself.
+    if (!_statement) {
+      return false;
     }
-
+    _cancelHandleIssued.store(true);
+    const auto ret = _odbcApi->SQLCancelHandle(SQL_HANDLE_STMT, _statement->get_handle());
+    set_state(OdbcStatementState::STATEMENT_CANCEL_HANDLE);
     SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::Cancel Exit [" << _handle.toString()
-                                                              << "] cancel handle");
-    return true;
+                                                              << "] SQLCancelHandle returned "
+                                                              << ret);
+    return SQL_SUCCEEDED(ret);
   }
   if (get_polling()) {
     _cancelRequested.store(true);
@@ -670,9 +672,72 @@ bool OdbcStatementLegacy::return_odbc_error() {
   return false;
 }
 
+// a non polling cancel (SQLCancelHandle from the cancel thread) that lands while no
+// ODBC call is running on this statement - e.g. between fetch batches - does not make
+// the next call return HY008: the driver just closes the cursor, so the next SQLFetch
+// returns HY010 or SQL_NO_DATA and SQLMoreResults HY007. end the query here, on the
+// worker thread, as the cancel it is.
+bool OdbcStatementLegacy::return_cancelled() {
+  if (_statement) {
+    _statement->read_errors(_odbcApi, _errors);
+  }
+  const auto driver_reported = std::any_of(
+      _errors->begin(), _errors->end(), [](const auto& e) { return e->sqlstate == "HY008"; });
+  if (!driver_reported) {
+    _errors->clear();
+    _errors->push_back(
+        make_shared<OdbcError>("HY008", "[msnodesql] Operation canceled", 0, 0, "", "", 0));
+  }
+  _errorHandler->ClearErrors();
+  for (const auto& error : *_errors) {
+    _errorHandler->AddError(error);
+  }
+  _resultset->_end_of_rows = true;
+  _resultset->_end_of_results = true;
+  set_state(OdbcStatementState::STATEMENT_ERROR);
+  return false;
+}
+
+// a statement failing part way through a batch, e.g. raiserror severity 16, does not end
+// the batch: SQL Server runs the statements after it and SQLMoreResults moves on to them.
+// a cancel, timeout or broken connection does end it, as does an error that is only about
+// the statement's own state (which SQLMoreResults would just repeat).
+bool OdbcStatementLegacy::more_results_after_error() const {
+  if (!_statement || _cancelRequested.load() || _cancelHandleIssued.load() || _errors->empty()) {
+    return false;
+  }
+  return std::none_of(_errors->begin(), _errors->end(), [](const auto& e) {
+    const auto& s = e->sqlstate;
+    return s == "HY008" || s == "HYT00" || s == "HY010" || s == "HY007" || s == "24000" ||
+           s.rfind("08", 0) == 0;
+  });
+}
+
+// whether the batch goes on can only be known by asking: call SQLMoreResults now, so a
+// batch that ends with the error still ends with it (one callback, more = false). the
+// result it moves to is picked up by the next try_read_next_result. the diag records of
+// the failed statement were read before this call replaces them.
+bool OdbcStatementLegacy::look_ahead_after_error() {
+  _pendingMoreResults.reset();
+  if (!more_results_after_error()) {
+    return false;
+  }
+  const auto ret = _odbcApi->SQLMoreResults(_statement->get_handle());
+  SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] look_ahead_after_error SQLMoreResults "
+                           << ret);
+  if (ret == SQL_NO_DATA) {
+    return false;
+  }
+  _pendingMoreResults = ret;
+  return true;
+}
+
 bool OdbcStatementLegacy::check_odbc_error(const SQLRETURN ret) {
   if (!SQL_SUCCEEDED(ret)) {
     SQL_LOG_DEBUG_STREAM("check_odbc_error failed: " << ret);
+    if (_cancelHandleIssued.load()) {
+      return return_cancelled();
+    }
     set_state(OdbcStatementState::STATEMENT_ERROR);
     return return_odbc_error();
   }
@@ -1051,6 +1116,7 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
   // cout << "id " << _statementId << " try_execute_direct" << endl;
   _errors->clear();
   _errorHandler->ClearErrors();
+  _pendingMoreResults.reset();
   _query = q;
 
   const auto timeout = q->timeout;
@@ -1082,6 +1148,8 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
                                << "] bind_params failed, statement needs cleanup");
       return false;
     }
+    // output params are read by Unbind() when the batch ends, which can be after an error
+    _boundParamsSet = param_set;
     _resultset->_end_of_results = true;  // reset
     const auto ret = query_timeout(timeout);
     if (!check_odbc_error(ret)) {
@@ -1142,6 +1210,7 @@ bool OdbcStatementLegacy::try_execute_direct(const shared_ptr<QueryOperationPara
       _resultset = make_unique<ResultSet>(0);
     }
     _resultset->_end_of_rows = true;
+    _resultset->_end_of_results = !look_ahead_after_error();
     return false;
   }
 
@@ -2224,7 +2293,7 @@ bool OdbcStatementLegacy::try_read_next_result() {
   // fprintf(stderr, "TryReadNextResult ID = %llu\n ", get_statement_id());
   const auto state = get_state();
   if (state == OdbcStatementState::STATEMENT_CANCELLED ||
-      state == OdbcStatementState::STATEMENT_CANCEL_HANDLE) {
+      state == OdbcStatementState::STATEMENT_CANCEL_HANDLE || _cancelHandleIssued.load()) {
     // fprintf(stderr, "TryReadNextResult - cancel mode.\n");
     _resultset->_end_of_rows = true;
     _resultset->_end_of_results = true;
@@ -2232,7 +2301,9 @@ bool OdbcStatementLegacy::try_read_next_result() {
     return false;
   }
   const auto& statement = *_statement;
-  const auto ret = _odbcApi->SQLMoreResults(statement.get_handle());
+  const auto ret = _pendingMoreResults ? *_pendingMoreResults
+                                       : _odbcApi->SQLMoreResults(statement.get_handle());
+  _pendingMoreResults.reset();
   switch (ret) {
     case SQL_NO_DATA: {
       SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::try_read_next_result ["
@@ -2270,8 +2341,11 @@ bool OdbcStatementLegacy::try_read_next_result() {
       SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::try_read_next_result ["
                            << _handle.toString()
                            << "] try_read_next_result SQL_ERROR from SQLMoreResults");
+      // don't read this result's columns (that is what fails with HY007), but the
+      // statements after the failed one may still have results to move on to.
       return_odbc_error();
-      _resultset->_end_of_results = true;
+      _resultset = make_unique<ResultSet>(0);
+      _resultset->_end_of_results = !look_ahead_after_error();
       _resultset->_end_of_rows = true;
       return false;
     }

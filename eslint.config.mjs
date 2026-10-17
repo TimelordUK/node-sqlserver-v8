@@ -85,12 +85,31 @@ export default [
       '@typescript-eslint/no-empty-object-type': 'off',
       '@typescript-eslint/no-empty-function': 'off',
       '@typescript-eslint/no-deprecated': 'off',
+      // Harness and sample code rethrows errors straight from driver
+      // callbacks. QueryCb types err as `Error | undefined`, but the
+      // overloaded query(sqlOrQuery, paramsOrCb?, cb?) signature leaves it
+      // unresolvable at some call sites, and test/env/cmd-test.ts declares
+      // several of its own handlers as `err: any`. The rule then cannot
+      // prove the thrown value is an Error even where a `!= null` guard
+      // precedes it. Off for the same reason the no-unsafe-* rules above
+      // are off - the driver's own surface is loosely typed.
+      '@typescript-eslint/only-throw-error': 'off',
+      // `res![0]` in a test that has just inserted the row it selects.
+      // Consistent with consistent-type-assertions being off above.
+      '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-unnecessary-type-arguments': 'off',
       '@typescript-eslint/no-unnecessary-type-parameters': 'off',
       '@typescript-eslint/no-unnecessary-type-conversion': 'off',
       '@typescript-eslint/no-base-to-string': 'off',
       '@typescript-eslint/prefer-optional-chain': 'off',
       '@typescript-eslint/prefer-for-of': 'off',
+      // Its autofix rewrites Object.prototype.hasOwnProperty.call(o, k) to
+      // Object.hasOwn(o, k), which does not compile here: tsconfig sets
+      // target es6 with no explicit lib, and Object.hasOwn is es2022, so tsc
+      // fails with TS2550. Raising the target is the real fix but it changes
+      // emitted dist/ output and the generated declarations, so it wants its
+      // own change rather than riding along with lint wiring.
+      'prefer-object-has-own': 'off',
       'no-plusplus': 'off',
       'no-console': 'off',
       'no-param-reassign': 'off',
@@ -117,6 +136,39 @@ export default [
       'import/enforce-node-protocol-usage': 'off',
       '@eslint-community/eslint-comments/require-description': 'off',
       '@eslint-community/eslint-comments/no-unlimited-disable': 'off'
+    }
+  },
+  {
+    // lib/ is the shipped JavaScript and had NO lint coverage at all: the block
+    // above targets lib/**/*.ts, and the only .ts in lib is index.d.ts, which
+    // the same block then ignores. So 26 product files were never linted.
+    //
+    // Stylistic rules only. eslint-config-love is type-aware and expects a
+    // tsconfig project; pointing it at plain .js files would need type info
+    // these files do not have. This at least holds the shipped code to the same
+    // formatting as everything else.
+    files: ['lib/**/*.js'],
+    plugins: { '@stylistic': stylistic },
+    rules: {
+      '@stylistic/semi': ['error', 'never'],
+      '@stylistic/no-trailing-spaces': 'error',
+      '@stylistic/eol-last': ['error', 'always'],
+      '@stylistic/no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0 }],
+      '@stylistic/quotes': ['error', 'single', { avoidEscape: true }],
+      '@stylistic/comma-dangle': ['error', 'never'],
+      '@stylistic/space-before-function-paren': ['error', 'always'],
+      '@stylistic/keyword-spacing': 'error',
+      '@stylistic/space-infix-ops': 'error',
+      '@stylistic/comma-spacing': 'error',
+      '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: true }],
+      '@stylistic/block-spacing': 'error',
+      '@stylistic/key-spacing': 'error',
+      '@stylistic/space-before-blocks': 'error',
+      '@stylistic/no-multi-spaces': 'error',
+      '@stylistic/object-curly-spacing': ['error', 'always'],
+      '@stylistic/array-bracket-spacing': ['error', 'never'],
+      '@stylistic/spaced-comment': ['error', 'always'],
+      '@stylistic/indent': ['error', 2]
     }
   },
   {
