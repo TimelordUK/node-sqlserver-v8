@@ -1,0 +1,11 @@
+# scenario: read/param.events
+# status: unreviewed
+# sql: select ? as v
+# params: [1]
+submitted
+meta v
+row
+column 0 1
+done
+free
+check ok

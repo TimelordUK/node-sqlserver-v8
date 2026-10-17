@@ -77,7 +77,8 @@ describe('pause', function () {
       query: q,
       getRowCount: () => rows,
       onRow: options.onRow || (() => {}),
-      onError: options.onError || ((e) => { assert.ifError(e) }),
+      // a query a test leaves paused is cancelled when the connection closes (HY008)
+      onError: options.onError || ((e) => { if (e?.sqlstate !== 'HY008') assert.ifError(e) }),
       onDone: options.onDone || (() => {})
     }
 
@@ -93,15 +94,24 @@ describe('pause', function () {
 
   describe('basic pause/resume functionality', () => {
     it('should pause a large query and cancel without resume', function (done) {
+      // a paused query ends on cancel as any other: no more rows, an HY008 error, then free
+      let cancelErr
       const queryHelper = createRowCountingQuery(env.theConnection, QUERIES.large, {
         onRow: (rowCount) => {
+          assert(!cancelErr, 'no rows after a cancel')
           if (rowCount % PAUSE_INTERVAL === 0) {
             queryHelper.query.pauseQuery()
             setTimeout(() => {
-              queryHelper.query.cancelQuery(done)
+              queryHelper.query.cancelQuery(e => { assert.ifError(e) })
             }, RESUME_DELAY)
           }
-        }
+        },
+        onError: e => { cancelErr = e }
+      })
+      queryHelper.query.on('free', () => {
+        assert(cancelErr, 'expected an error on cancel')
+        assert.strictEqual(cancelErr.sqlstate, 'HY008')
+        done()
       })
     })
 
@@ -136,7 +146,11 @@ describe('pause', function () {
 
       setTimeout(() => {
         assert.strictEqual(rowCount, 0, 'Should not receive any rows when starting paused')
-        done()
+        q.on('free', () => {
+          assert(rowCount > 0, 'rows once resumed')
+          done()
+        })
+        q.resumeQuery()
       }, PAUSE_CHECK_DELAY)
     })
 
@@ -183,6 +197,8 @@ describe('pause', function () {
         onRow: () => {
           queryHelper.query.pauseQuery()
           queryHelper.query.pauseQuery() // Double pause
+          // nothing more, not even done, until resumed - and one resume is enough
+          setTimeout(() => queryHelper.query.resumeQuery(), PAUSE_CHECK_DELAY)
         },
         onDone: (rowCount) => {
           assert.strictEqual(rowCount, 1)
@@ -193,25 +209,73 @@ describe('pause', function () {
   })
 
   describe('query interaction', () => {
-    it('should kill paused query when new query is submitted', function (done) {
+    it('should refuse a new query while paused - HY010, done, free', function (done) {
       const pauseAt = 10
+      const queryHelper = createRowCountingQuery(env.theConnection, QUERIES.large, {
+        onRow: (rowCount) => {
+          if (rowCount !== pauseAt) return
+          queryHelper.query.pauseQuery()
+          const events = []
+          const q2 = env.theConnection.query(QUERIES.large, (err, res) => {
+            events.push('cb')
+            assert(err, 'refused while the first query is paused')
+            assert.strictEqual(err.sqlstate, 'HY010')
+            assert.strictEqual(res, null)
+          })
+          q2.on('submitted', () => events.push('submitted'))
+          q2.on('done', () => events.push('done'))
+          q2.on('free', () => {
+            events.push('free')
+            assert.deepStrictEqual(events, ['cb', 'done', 'free'])
+            assert.strictEqual(queryHelper.getRowCount(), pauseAt)
+            // the paused query is untouched: resume it and it completes
+            queryHelper.query.resumeQuery()
+          })
+        },
+        onDone: rowCount => {
+          assert(rowCount > pauseAt)
+          done()
+        }
+      })
+    })
+
+    it('should run a query queued before the pause once the paused one completes', function (done) {
+      const pauseAt = 10
+      let resumed = false
+      let firstFree = false
       const queryHelper = createRowCountingQuery(env.theConnection, QUERIES.large, {
         onRow: (rowCount) => {
           if (rowCount === pauseAt) {
             queryHelper.query.pauseQuery()
             setTimeout(() => {
-              assert.strictEqual(queryHelper.getRowCount(), pauseAt)
-              // New query should kill the paused one
-              env.theConnection.query(QUERIES.large, (err, res) => {
-                assert.ifError(err)
-                assert(Array.isArray(res))
-                assert(res.length > 0)
-                done()
-              })
+              resumed = true
+              queryHelper.query.resumeQuery()
             }, PAUSE_CHECK_DELAY)
           }
         }
       })
+      queryHelper.query.on('free', () => { firstFree = true })
+      // queued while the first query runs, before it is paused: waits its turn
+      const q2 = env.theConnection.query(QUERIES.large, (err, res) => {
+        assert.ifError(err)
+        assert(firstFree, 'the paused query finishes first')
+        assert(res.length > 0)
+        done()
+      })
+      q2.on('submitted', () => assert(resumed, 'not submitted while the first is paused'))
+    })
+
+    it('should refuse a transaction while a query is paused', function (done) {
+      const q = env.theConnection.query(QUERIES.large)
+      q.pauseQuery()
+      setTimeout(() => {
+        env.theConnection.beginTransaction(err => {
+          assert(err)
+          assert.strictEqual(err.sqlstate, 'HY010')
+          q.on('done', () => done())
+          q.resumeQuery()
+        })
+      }, PAUSE_CHECK_DELAY)
     })
 
     it('should allow new query after cancel', function (done) {
@@ -276,14 +340,20 @@ describe('pause', function () {
         q.pauseQuery()
 
         let rowCount = 0
+        let cancelErr
+        let freed = false
         q.on('row', () => rowCount++)
-        q.on('error', (e) => { assert.ifError(e) })
+        q.on('error', (e) => { cancelErr = e })
+        q.on('free', () => { freed = true })
 
-        // Wait a bit to ensure no rows are received, then close
+        // Wait a bit to ensure no rows are received, then close: the close cancels the
+        // paused query, which ends and frees its statement before the connection closes
         setTimeout(() => {
           assert.strictEqual(rowCount, 0, 'Should not receive rows while paused')
           newConn.close((err) => {
             assert.ifError(err)
+            assert.strictEqual(cancelErr?.sqlstate, 'HY008')
+            assert(freed, 'the paused query is freed before the close completes')
             done()
           })
         }, PAUSE_CHECK_DELAY * 5) // Longer wait for this test

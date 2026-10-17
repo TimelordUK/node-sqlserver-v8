@@ -1,0 +1,9 @@
+# scenario: read/insert-rowcount.events
+# status: unreviewed
+# setup: create table #r (id int)
+# sql: insert #r values (1)
+submitted
+rowcount 1
+done
+free
+check ok

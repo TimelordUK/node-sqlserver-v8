@@ -1,0 +1,15 @@
+# scenario: read/two-result-sets.callback
+# status: unreviewed
+# sql: select 1 as a; select 2 as b
+submitted
+meta a
+row
+column 0 1
+meta b
+cb ok rows=1 more=true
+row
+column 0 2
+cb ok rows=1 more=false
+done
+free
+check ok

@@ -1,0 +1,14 @@
+# scenario: read/insert-then-select.callback
+# status: unreviewed
+# setup: create table #r (id int)
+# sql: insert #r values (1); select id from #r
+submitted
+rowcount 1
+meta id
+cb ok rows=0 more=true
+row
+column 0 1
+cb ok rows=1 more=false
+done
+free
+check ok

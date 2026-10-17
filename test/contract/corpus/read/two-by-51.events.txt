@@ -1,0 +1,11 @@
+# scenario: read/two-by-51.events
+# status: unreviewed
+# sql: select top 51 object_id as a from sys.all_objects; select top 51 object_id as b from sys.all_objects
+submitted
+meta a
+row x51
+meta b
+row x51
+done
+free
+check ok

@@ -1,0 +1,25 @@
+# scenario: queue/ok-then-two-on-start.callback
+# status: agreed
+# sql: select ? as v
+# params: [1]
+# follow-up q2 on start: waitfor delay '00:00:01'; select 2 as n
+# follow-up q3 on start: select 3 as n
+submitted
+meta v
+row
+cb ok rows=1 more=false
+done
+free
+q2: submitted
+q2: meta n
+q2: row
+q2: cb ok rows=1 more=false
+q2: done
+q2: free
+q3: submitted
+q3: meta n
+q3: row
+q3: cb ok rows=1 more=false
+q3: done
+q3: free
+check ok

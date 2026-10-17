@@ -1,0 +1,14 @@
+# scenario: errors/raiserror-then-result.callback
+# status: unreviewed
+# sql: raiserror('boom', 16, 1); select 2 as m
+submitted
+cb error 42000 50000 boom more=true
+rowcount 0
+meta m
+cb ok rows=0 more=true
+row
+column 0 2
+cb ok rows=1 more=false
+done
+free
+check ok

@@ -1,0 +1,15 @@
+# scenario: pause/two-by-51-at-1.events
+# status: unreviewed
+# sql: select top 51 object_id as a from sys.all_objects; select top 51 object_id as b from sys.all_objects
+# at: {"row":{"1":["pause","resume:50"]}}
+submitted
+meta a
+row
+action pause
+action resume
+row x50
+meta b
+row x51
+done
+free
+check ok

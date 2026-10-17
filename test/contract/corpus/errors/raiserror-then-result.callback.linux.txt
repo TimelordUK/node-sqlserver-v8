@@ -1,0 +1,7 @@
+# scenario: errors/raiserror-then-result.callback
+# status: known-bug
+# sql: raiserror('boom', 16, 1); select 2 as m
+submitted
+free
+cb error 42000 50000 boom more=false
+check ok

@@ -1,0 +1,18 @@
+# scenario: queue/paused-then-submit.callback
+# status: agreed
+# sql: select top 20 object_id as a from sys.all_objects
+# at: {"row":{"10":["pause","queue:paused","resume:100"]}}
+# follow-up q2 on paused: select 2 as n
+submitted
+meta a
+row x10
+action pause
+q2: cb error HY010 0 query 0 on this connection is paused - resume or cancel it before submitting more work more=false
+q2: done
+q2: free
+action resume
+row x10
+cb ok rows=20 more=false
+done
+free
+check ok

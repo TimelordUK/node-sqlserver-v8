@@ -1,0 +1,9 @@
+# scenario: errors/bind-failure.callback
+# status: unreviewed
+# sql: select ? as v
+# params: ["Infinity"]
+submitted
+done
+free
+cb error - - IMNOD: [msnodesql] Parameter 1: Invalid number parameter more=false
+check ok
