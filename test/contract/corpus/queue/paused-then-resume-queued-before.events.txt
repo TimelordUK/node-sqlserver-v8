@@ -1,0 +1,22 @@
+# scenario: queue/paused-then-resume-queued-before.events
+# status: agreed
+# sql: select top 51 object_id as a from sys.all_objects; select top 51 object_id as b from sys.all_objects
+# at: {"row":{"3":["pause","resume:100"]}}
+# follow-up q2 on start: select 2 as n
+submitted
+meta a
+row x3
+action pause
+action resume
+row x48
+meta b
+row x51
+done
+free
+q2: submitted
+q2: meta n
+q2: row
+q2: cb ok rows=1 more=false
+q2: done
+q2: free
+check ok

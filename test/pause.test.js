@@ -209,7 +209,37 @@ describe('pause', function () {
   })
 
   describe('query interaction', () => {
-    it('should hold the connection while paused - a new query waits', function (done) {
+    it('should refuse a new query while paused - HY010, done, free', function (done) {
+      const pauseAt = 10
+      const queryHelper = createRowCountingQuery(env.theConnection, QUERIES.large, {
+        onRow: (rowCount) => {
+          if (rowCount !== pauseAt) return
+          queryHelper.query.pauseQuery()
+          const events = []
+          const q2 = env.theConnection.query(QUERIES.large, (err, res) => {
+            events.push('cb')
+            assert(err, 'refused while the first query is paused')
+            assert.strictEqual(err.sqlstate, 'HY010')
+            assert.strictEqual(res, null)
+          })
+          q2.on('submitted', () => events.push('submitted'))
+          q2.on('done', () => events.push('done'))
+          q2.on('free', () => {
+            events.push('free')
+            assert.deepStrictEqual(events, ['cb', 'done', 'free'])
+            assert.strictEqual(queryHelper.getRowCount(), pauseAt)
+            // the paused query is untouched: resume it and it completes
+            queryHelper.query.resumeQuery()
+          })
+        },
+        onDone: rowCount => {
+          assert(rowCount > pauseAt)
+          done()
+        }
+      })
+    })
+
+    it('should run a query queued before the pause once the paused one completes', function (done) {
       const pauseAt = 10
       let resumed = false
       let firstFree = false
@@ -217,15 +247,7 @@ describe('pause', function () {
         onRow: (rowCount) => {
           if (rowCount === pauseAt) {
             queryHelper.query.pauseQuery()
-            const q2 = env.theConnection.query(QUERIES.large, (err, res) => {
-              assert.ifError(err)
-              assert(firstFree, 'the paused query finishes first')
-              assert(res.length > 0)
-              done()
-            })
-            q2.on('submitted', () => assert(resumed, 'not submitted while the first is paused'))
             setTimeout(() => {
-              assert.strictEqual(queryHelper.getRowCount(), pauseAt)
               resumed = true
               queryHelper.query.resumeQuery()
             }, PAUSE_CHECK_DELAY)
@@ -233,6 +255,27 @@ describe('pause', function () {
         }
       })
       queryHelper.query.on('free', () => { firstFree = true })
+      // queued while the first query runs, before it is paused: waits its turn
+      const q2 = env.theConnection.query(QUERIES.large, (err, res) => {
+        assert.ifError(err)
+        assert(firstFree, 'the paused query finishes first')
+        assert(res.length > 0)
+        done()
+      })
+      q2.on('submitted', () => assert(resumed, 'not submitted while the first is paused'))
+    })
+
+    it('should refuse a transaction while a query is paused', function (done) {
+      const q = env.theConnection.query(QUERIES.large)
+      q.pauseQuery()
+      setTimeout(() => {
+        env.theConnection.beginTransaction(err => {
+          assert(err)
+          assert.strictEqual(err.sqlstate, 'HY010')
+          q.on('done', () => done())
+          q.resumeQuery()
+        })
+      }, PAUSE_CHECK_DELAY)
     })
 
     it('should allow new query after cancel', function (done) {

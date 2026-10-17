@@ -48,11 +48,15 @@ runs on the connection.
 - A paused query keeps its place at the head. Before, it moved to the back, and `park()` then
   removed the item that was waiting behind it **without running it**. On 5.6.0 such a query was
   never submitted and its callback never fired.
-- A query submitted while another is paused waits behind it (`headPaused`, which freed the
-  paused query, is gone).
+- Work submitted while a query is paused is **refused** (owner's decision): a query gets an
+  error with sqlstate `HY010` (function sequence error), then `done` and `free`, and no
+  `submitted`. `beginTransaction`, `commit`, `rollback` and `prepare` get the error in their
+  callback. Work queued *before* the pause waits its turn. (`headPaused`, which freed the paused
+  query when a new one came, is gone.) Corpus: `queue/paused-then-*`.
 - Cancelling a paused query sends the native cancel, then ends the query as cancelled
   (`Query.cancelPaused`): `error HY008` → `free`, the same as cancelling one that is not paused.
-  Before, it was freed silently.
+  Before, it was freed silently. Once the cancel is accepted the query no longer holds the
+  connection, so work submitted from the cancel callback queues behind it.
 - `close()` cancels a paused query at the head first, so the close cannot wait forever.
 
 Corpus: all 11 changed `queue/*` and `cancel/paused-*` transcripts re-recorded, now
@@ -72,16 +76,30 @@ cancel give HY008) and `querycancel.test.js` (HY008 on a paused cancel).
 `done` is not raised by any `errors/*` scenario today. On cancel it comes before the HY008.
 Prepared executions never raise `free` (there is no free item for them).
 
+## Linux: results after an error at execute are lost (5.6.0, not this branch)
+
+On Linux (msodbcsql18, CI's Ubuntu and WSL Fedora), when the first statement of a batch fails
+at execute, the error comes with `more=false` and the rest of the batch is lost: no
+`rowcount`, no following result set, no `done`. Windows gives `more=true`, then the rest. So
+the #475 fix in 5.6.0 (`odbc_statement_legacy.cpp`, the look-ahead after a failed execute)
+does not hold on Linux. The same 4 scenarios differ with the base commit's `lib/`, so it is
+older than the queue work. Pinned as `errors/{raiserror-then-result,dup-key-d}.*.linux.txt`,
+`# status: known-bug`, so that CI is green and the fix shows up as a diff.
+
+To run the corpus on WSL: a `git worktree` under `/tmp/<x>/node_modules/msnodesqlv8` (the
+tests `require('msnodesqlv8')`), `npx node-gyp rebuild`, copy `.env-cmdrc`, symlink
+`node_modules` from an existing checkout.
+
 ## Next
 
 1. A fake native connection (`test/common/fake-native.js`) that holds every callback until
    the test releases it, and asserts the invariants (one native call in flight per
    connection, nothing after `releaseStatement` or `free`, one `done` then `free`). Then
    scripted tests and an interleaving explorer for queue and reader.
-2. Cases to pin with it: pause then cancel a compound query with another queued; pause and
-   submit a fresh query without cancelling (it waits; is that what we want?); an error coming
-   back from a fetch in flight when the pause lands (today it is emitted while paused, but the
-   rows are held).
+2. Cases to pin with it: an error coming back from a fetch in flight when the pause lands
+   (today it is emitted while paused, but the rows are held). Already in the corpus against a
+   real server: pause then cancel a compound query with another queued
+   (`queue/paused-then-cancel-queued-before`), and submit while paused (`queue/paused-then-submit`).
 3. `done` on every path (#479, the errors), then #478.
 
 Open decision: a pause that lands while a native call is in flight still lets that call's

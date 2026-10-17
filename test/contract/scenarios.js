@@ -104,7 +104,30 @@ const base = [
     sql,
     followUps: [{ label: 'q2', sql: SLOW, when: 'free', callback: true, at: { later: { 300: ['cancel'] } } }],
     modes: ['callback']
-  }))
+  })),
+  // a paused query holds the connection: work submitted while it is paused is refused
+  // (HY010), work queued before the pause waits its turn - after a resume or a cancel
+  {
+    name: 'queue/paused-then-submit',
+    sql: 'select top 20 object_id as a from sys.all_objects',
+    at: { row: { 10: ['pause', 'queue:paused', 'resume:100'] } },
+    followUps: [{ label: 'q2', sql: 'select 2 as n', when: 'paused', callback: true }],
+    modes: ['callback']
+  },
+  {
+    name: 'queue/paused-then-cancel-queued-before',
+    sql: TWO_51,
+    at: { row: { 3: ['pause'] }, later: { 300: ['cancel'] } },
+    followUps: [{ label: 'q2', sql: 'select 2 as n', when: 'start', callback: true }],
+    modes: ['events']
+  },
+  {
+    name: 'queue/paused-then-resume-queued-before',
+    sql: TWO_51,
+    at: { row: { 3: ['pause', 'resume:100'] } },
+    followUps: [{ label: 'q2', sql: 'select 2 as n', when: 'start', callback: true }],
+    modes: ['events']
+  }
 ]
 
 function expand (s) {
