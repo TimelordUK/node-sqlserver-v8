@@ -21,8 +21,9 @@ function nativeLog (name, platform = process.platform) {
 }
 
 // { lines, violations, unconsumed } for one replayed run of the scenario
-async function replayScenario (scenario, recorded) {
-  const native = new ReplayNative(recorded.log)
+// options are passed to ReplayNative (e.g. delay)
+async function replayScenario (scenario, recorded, options = {}) {
+  const native = new ReplayNative(recorded.log, options)
   const lines = await runScenario(fakeSql(native), '<connection string>', scenario)
   return { lines, violations: native.violations, unconsumed: native.unconsumed() }
 }

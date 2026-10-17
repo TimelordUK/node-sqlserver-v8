@@ -1,0 +1,15 @@
+# scenario: pause/during-fetch.events
+# status: agreed
+# sql: select top 1000 a.name from sys.all_objects a cross join sys.all_objects b; waitfor delay '00:00:00.400'; select 2 as b
+# at: {"later":{"200":["pause","resume:300"]}}
+submitted
+meta name
+row x800
+action pause
+action resume
+row x200
+meta b
+row
+done
+free
+check ok

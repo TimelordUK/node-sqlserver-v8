@@ -5,11 +5,11 @@
 // the order they happened. test/common/fake-native.js replays such a log in place of the
 // driver, so a scenario's event stream can be reproduced without a server.
 //
-// log entries:
-//   { ev: 'call', id, name, args }      JS called native.<name>(...args, callback)
-//   { ev: 'state', of, change }         a statement state change, through the stateChangeCallback
+// log entries (t: ms since the tap was installed):
+//   { ev: 'call', id, t, name, args }   JS called native.<name>(...args, callback)
+//   { ev: 'state', of, t, change }      a statement state change, through the stateChangeCallback
 //                                       passed to call <of>
-//   { ev: 'return', of, result }        the callback of call <of> ran with ...result
+//   { ev: 'return', of, t, result }     the callback of call <of> ran with ...result
 //
 // values are encoded so they survive JSON (errors keep their message, dates and buffers
 // their value). unless keepData is set, the rows of a fetch are reduced to a count and the
@@ -84,6 +84,8 @@ function compactRows (result) {
 function install (nativeModule, { keepData = false } = {}) {
   const Real = nativeModule.Connection
   const log = []
+  const t0 = performance.now()
+  const now = () => Math.round((performance.now() - t0) * 10) / 10
   nativeModule.Connection = function () {
     const real = new Real()
     return new Proxy(real, {
@@ -97,12 +99,12 @@ function install (nativeModule, { keepData = false } = {}) {
           const callArgs = hasCb ? args.slice(0, -1) : args
           // never record a connection string: the log is committed, and it carries credentials
           const recorded = name === 'open' ? ['<connection string>', ...callArgs.slice(1)] : callArgs
-          log.push({ ev: 'call', id, name, args: encode(recorded) })
+          log.push({ ev: 'call', id, t: now(), name, args: encode(recorded) })
           const queryObj = args[1]
           if (queryObj && typeof queryObj.stateChangeCallback === 'function' && !queryObj.stateChangeCallback[WRAPPED]) {
             const onState = queryObj.stateChangeCallback
             queryObj.stateChangeCallback = (e, change) => {
-              log.push({ ev: 'state', of: id, change: encode(change) })
+              log.push({ ev: 'state', of: id, t: now(), change: encode(change) })
               onState(e, change)
             }
             queryObj.stateChangeCallback[WRAPPED] = true
@@ -110,7 +112,7 @@ function install (nativeModule, { keepData = false } = {}) {
           if (hasCb) {
             args[args.length - 1] = (...result) => {
               const enc = encode(result)
-              log.push({ ev: 'return', of: id, result: name === 'fetchRows' && !keepData ? compactRows(enc) : enc })
+              log.push({ ev: 'return', of: id, t: now(), result: name === 'fetchRows' && !keepData ? compactRows(enc) : enc })
               cb(...result)
             }
           }

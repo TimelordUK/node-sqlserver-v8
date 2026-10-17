@@ -62,6 +62,24 @@ npx mocha test/contract/replay.test.js           # all of them, ~20 s
 When a change to the JS is meant to change the native calls (not just the events), record
 again. The recordings are per platform, because the drivers differ (#483).
 
+Each result is held for as long as the driver took to give it, so a scenario that acts on a
+timer (pause after 100 ms) replays with the timing the server gave it.
+
+## Exploring timing
+
+`explore.js` replays each recording many times, holding each result for its recorded
+latency, give or take a fifth, plus a few ms. The scenario's own timers and the JS layer's
+steps then land at different points against the driver's results. A contract has to hold
+whatever the timing: every run must match the corpus with no violations. A `timed`
+scenario, one whose pause comes from a timer, is compared by shape and total rows, since
+how the rows split around the pause is timing.
+
+```sh
+node test/contract/explore.js --runs 20 pause/        # 20 timings per scenario
+node test/contract/explore.js --scale 10 cancel/      # wider jitter
+node test/contract/explore.js --seed 7 --runs 1 x     # replay exactly the timing of a failure
+```
+
 ## Status of a transcript
 
 Each file has `# status: unreviewed` or `# status: agreed`.

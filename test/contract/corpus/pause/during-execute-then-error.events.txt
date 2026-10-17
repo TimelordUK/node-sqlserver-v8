@@ -1,0 +1,12 @@
+# scenario: pause/during-execute-then-error.events
+# status: unreviewed
+# sql: select 1 as n; waitfor delay '00:00:00.300'; raiserror('boom', 16, 1)
+# at: {"later":{"100":["pause","resume:300"]}}
+submitted
+action pause
+action resume
+meta n
+row
+error 42000 50000 boom more=false
+free
+check ok
