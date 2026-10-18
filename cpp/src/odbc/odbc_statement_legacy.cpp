@@ -664,10 +664,15 @@ bool OdbcStatementLegacy::return_odbc_error() {
   for (const auto& error : *_errors) {
     _errorHandler->AddError(error);
   }
-  if (_errorHandler->HasErrors()) {
+  // only a real error puts the statement in error. info (sqlstate 01xxx, e.g. a PRINT)
+  // comes with SQL_SUCCESS_WITH_INFO on a statement that is still reading - and while it
+  // is, a cancel must reach it (#479).
+  const auto is_error = std::any_of(_errors->begin(), _errors->end(), [](const auto& e) {
+    return e->sqlstate.rfind("01", 0) != 0;
+  });
+  if (is_error) {
     SQL_LOG_DEBUG_STREAM("return_odbc_error: has errors");
     set_state(OdbcStatementState::STATEMENT_ERROR);
-    return false;
   }
   return false;
 }
@@ -729,6 +734,11 @@ bool OdbcStatementLegacy::look_ahead_after_error() {
     return false;
   }
   _pendingMoreResults = ret;
+  // the batch goes on, so the statement is reading again - and can be cancelled (#479).
+  // not over a cancel that has landed meanwhile.
+  if (get_state() == OdbcStatementState::STATEMENT_ERROR) {
+    set_state(OdbcStatementState::STATEMENT_READING);
+  }
   return true;
 }
 
@@ -2294,11 +2304,8 @@ bool OdbcStatementLegacy::try_read_next_result() {
   const auto state = get_state();
   if (state == OdbcStatementState::STATEMENT_CANCELLED ||
       state == OdbcStatementState::STATEMENT_CANCEL_HANDLE || _cancelHandleIssued.load()) {
-    // fprintf(stderr, "TryReadNextResult - cancel mode.\n");
-    _resultset->_end_of_rows = true;
-    _resultset->_end_of_results = true;
-    set_state(OdbcStatementState::STATEMENT_ERROR);
-    return false;
+    // a cancel that landed between calls: end the query as the cancel it is (HY008)
+    return return_cancelled();
   }
   const auto& statement = *_statement;
   const auto ret = _pendingMoreResults ? *_pendingMoreResults

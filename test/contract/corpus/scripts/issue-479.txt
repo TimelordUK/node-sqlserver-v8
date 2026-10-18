@@ -1,5 +1,5 @@
 # scenario: scripts/issue-479
-# status: known-bug
+# status: agreed
 # script: test/contract/scripts/issue-479.js
 == A running cancel, at row 100
 A: submitted
@@ -38,7 +38,7 @@ C: meta name
 C: row x100
 C: action cancel
 C: cancel-cb ok
-C: row x4900
+C: error HY008 0 Operation canceled more=false
 C: done
 C: free
 C.check: submitted

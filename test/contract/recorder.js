@@ -149,7 +149,12 @@ class Run {
     }
     q.on('rowcount', n => log(`rowcount ${n}`))
     q.on('info', m => log(`info ${describeError(m)}`))
-    q.on('error', (e, more) => log(`error ${describeError(e)} more=${more}`))
+    let errors = 0
+    q.on('error', (e, more) => {
+      log(`error ${describeError(e)} more=${more}`)
+      const actions = at.error?.[++errors]
+      if (actions) this.act(label, q, actions)
+    })
     q.on('output', () => log('output'))
     q.on('done', () => log('done'))
     q.on('free', () => { log('free'); resolveFree() })

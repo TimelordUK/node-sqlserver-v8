@@ -1,0 +1,11 @@
+# scenario: cancel/after-error-mid-batch.events
+# status: known-bug
+# sql: raiserror('boom', 16, 1); waitfor delay '00:00:01'; select 2 as n
+# at: {"error":{"1":["cancel"]}}
+submitted
+error 42000 50000 boom more=false
+action cancel
+cancel-cb error Error: [msnodesql] cannot cancel query (not found) id 0
+done
+free
+check ok
