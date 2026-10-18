@@ -1,5 +1,5 @@
 # scenario: cancel/paused-streaming-at-100.events
-# status: unreviewed
+# status: agreed
 # sql: select top 5000 a.name from sys.all_objects a cross join sys.all_objects b
 # at: {"row":{"100":["pause","cancel"]}}
 submitted
@@ -7,8 +7,8 @@ meta name
 row x100
 action pause
 action cancel
-done
 cancel-cb ok
 error HY008 0 Operation canceled more=false
+done
 free
 check ok

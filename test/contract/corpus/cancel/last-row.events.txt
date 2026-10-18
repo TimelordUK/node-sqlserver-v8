@@ -1,12 +1,11 @@
 # scenario: cancel/last-row.events
-# status: unreviewed
+# status: agreed
 # sql: select top 5 object_id as a from sys.all_objects
 # at: {"row":{"5":["cancel"]}}
 submitted
 meta a
 row x5
 action cancel
-done
 cancel-cb ok
 done
 free

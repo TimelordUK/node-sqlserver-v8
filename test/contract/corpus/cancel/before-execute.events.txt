@@ -1,11 +1,11 @@
 # scenario: cancel/before-execute.events
-# status: unreviewed
+# status: agreed
 # sql: waitfor delay '00:00:01'; select 2 as n
 # at: {"start":["cancel"]}
 action cancel
 submitted
-done
 cancel-cb ok
 error HY008 0 Operation canceled more=false
+done
 free
 check ok

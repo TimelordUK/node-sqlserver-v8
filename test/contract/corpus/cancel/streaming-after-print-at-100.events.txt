@@ -1,5 +1,5 @@
 # scenario: cancel/streaming-after-print-at-100.events
-# status: unreviewed
+# status: known-bug
 # sql: print 'start'; select top 5000 a.name from sys.all_objects a cross join sys.all_objects b
 # at: {"row":{"100":["cancel"]}}
 submitted
@@ -8,7 +8,6 @@ rowcount 0
 meta name
 row x100
 action cancel
-done
 cancel-cb ok
 row x4900
 done

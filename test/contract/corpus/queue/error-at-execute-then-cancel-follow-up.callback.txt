@@ -1,14 +1,15 @@
 # scenario: queue/error-at-execute-then-cancel-follow-up.callback
-# status: unreviewed
+# status: agreed
 # sql: raiserror('boom', 16, 1)
 # follow-up q2 on free: waitfor delay '00:00:01'; select 2 as n at {"later":{"300":["cancel"]}}
 submitted
-free
 cb error 42000 50000 boom more=false
+done
+free
 q2: submitted
 q2: action cancel
-q2: done
 q2: cancel-cb ok
-q2: free
 q2: cb error HY008 0 Operation canceled more=false
+q2: done
+q2: free
 check ok

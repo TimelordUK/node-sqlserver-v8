@@ -1,14 +1,14 @@
 # scenario: queue/bind-failure-then-two-on-start.callback
-# status: unreviewed
+# status: agreed
 # sql: select ? as v
 # params: ["Infinity"]
 # follow-up q2 on start: waitfor delay '00:00:01'; select 2 as n
 # follow-up q3 on start: select 3 as n
 submitted
+cb error - - IMNOD: [msnodesql] Parameter 1: Invalid number parameter more=false
 done
 free
 q2: submitted
-cb error - - IMNOD: [msnodesql] Parameter 1: Invalid number parameter more=false
 q2: meta n
 q2: row
 q2: cb ok rows=1 more=false

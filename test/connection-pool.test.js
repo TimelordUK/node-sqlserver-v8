@@ -878,10 +878,12 @@ describe('pool', function () {
     const checkin = []
     const checkout = []
     const errors = []
+    const poolErrors = []
 
+    // the pool forwards each query's error as well. no assert here: a throw from a
+    // listener lands in the driver, not in the test
     pool.on('error', e => {
-      assert.ifError(e)
-      errors.push(e)
+      poolErrors.push(e)
     })
     pool.on('debug', s => {
       logger.debugLazy(() => s, 'Pool')
@@ -924,6 +926,8 @@ describe('pool', function () {
         if (free === iterations) {
           pool.close(() => {
             expect(errors.length).to.equal(iterations)
+            expect(poolErrors.length).to.equal(iterations)
+            expect(done).to.equal(iterations)
             expect(checkin.length).to.equal(iterations)
             expect(checkout.length).to.equal(iterations)
             testDone()

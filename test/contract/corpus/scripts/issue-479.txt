@@ -1,14 +1,14 @@
 # scenario: scripts/issue-479
-# status: unreviewed
+# status: known-bug
 # script: test/contract/scripts/issue-479.js
 == A running cancel, at row 100
 A: submitted
 A: meta name
 A: row x100
 A: action cancel
-A: done
 A: cancel-cb ok
 A: error HY008 0 Operation canceled more=false
+A: done
 A: free
 A.check: submitted
 A.check: meta n
@@ -23,7 +23,6 @@ B: row
 B: done
 B: free
 B: action cancel
-B: done
 B: cancel-cb error Error: [msnodesql] cannot cancel query (empty queue) id 2
 B.check: submitted
 B.check: meta n
@@ -38,7 +37,6 @@ C: rowcount 0
 C: meta name
 C: row x100
 C: action cancel
-C: done
 C: cancel-cb ok
 C: row x4900
 C: done
@@ -55,9 +53,9 @@ P4: meta name
 P4: row x100
 P4: action pause
 P4: action cancel
-P4: done
 P4: cancel-cb ok
 P4: error HY008 0 Operation canceled more=false
+P4: done
 P4: free
 P4.check: submitted
 P4.check: meta n
@@ -69,9 +67,9 @@ P4.check: free
 P5: action pause
 P5: action cancel
 P5: submitted
-P5: done
 P5: cancel-cb ok
 P5: error HY008 0 Operation canceled more=false
+P5: done
 P5: free
 P5.check: submitted
 P5.check: meta n

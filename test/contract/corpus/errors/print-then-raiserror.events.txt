@@ -1,8 +1,9 @@
 # scenario: errors/print-then-raiserror.events
-# status: unreviewed
+# status: agreed
 # sql: print 'p1'; raiserror('boom', 16, 1)
 submitted
 info 01000 0 p1
 error 42000 50000 boom more=false
+done
 free
 check ok
