@@ -2,6 +2,8 @@
 # status: agreed
 # sql: select top 5000 a.name from sys.all_objects a cross join sys.all_objects b
 # at: {"row":{"100":["cancel","cancel"]}}
+# the cancel callback and the HY008 from the fetch in flight are two native completions,
+# on different threads: either can come first (seen on CI, 2026-10-18)
 submitted
 meta name
 row x100
@@ -9,6 +11,17 @@ action cancel x2
 cancel-cb error cannot cancel query (cancel already requested) id 0
 cancel-cb ok
 error HY008 0 Operation canceled more=false
+done
+free
+check ok
+--- or
+submitted
+meta name
+row x100
+action cancel x2
+cancel-cb error cannot cancel query (cancel already requested) id 0
+error HY008 0 Operation canceled more=false
+cancel-cb ok
 done
 free
 check ok

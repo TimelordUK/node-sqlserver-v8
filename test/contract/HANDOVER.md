@@ -254,9 +254,15 @@ that replay covers them.
 - #483 (Linux, native) on WSL. When it is fixed, the `known-bug` Linux pins show as diffs:
   `errors/{raiserror-then-result,dup-key-d}.*.linux.txt`, `scripts/issue-478.linux.txt`,
   `cancel/after-error-mid-batch.events.linux.txt`.
-- `cancel/again-after-confirm-at-100` failed once in about 50 local runs (2026-10-18), and the
-  transcript was not kept. If it shows again, read the variant. If it is only the refusal
-  and the HY008 swapping places, both meet the contract: add it as an `--- or` alternative.
+- A race in accepted cancels: the cancel's own callback (`cancel-cb ok`) and the HY008 from the
+  fetch in flight are two native completions on different threads, so either can reach JS
+  first. CI showed it on `cancel/twice-streaming-at-100`, which now has an `--- or`
+  alternative (the first in the corpus). `cancel/again-after-confirm-at-100` failed once
+  locally, probably the same race, but its transcript was not kept. Other accepted cancels
+  of a statement in flight can show it too: add the alternative when one does. Or tighten the
+  contract: hold the HY008 in JS until the cancel callback has run, so that `cancel-cb ok`
+  always comes first. That is the owner's call. Note that `capture.js --update` rewrites a file
+  from what it saw, so it drops an alternative it did not see.
 - The 36 `unreviewed` transcripts (listed under Where we are): read them against the
   contract and agree them. `read/print-*` belong with the `info/` work above.
 
