@@ -1,8 +1,38 @@
-# Handover: 5.6.0 event regressions (#478 – #481) — 2026-10-15
+# Handover: the v6 event contract (from the 5.6.0 regressions, #478 – #481)
 
-Where the investigation of dhensby's reports stands, and where to pick it up.
+Started 2026-10-15 from dhensby's reports. Last updated 2026-10-18. The newest state is
+first; the dated Progress sections below have the detail, and the older sections are history.
 
-## Summary
+## Where we are — end of 2026-10-18
+
+**All four issues are fixed on master** (PRs #482, #484 – #491). #492, the prepared statement
+lifecycle, was open at the end of the day. Nothing is released yet: it ships as **v6**.
+
+| Issue | State |
+|---|---|
+| #481 work queue after a failure | fixed, closed |
+| #480 pause on the last row skipped a result set (and the pause crash) | fixed; closing comment posted |
+| #479 `done` on cancel: early, doubled or missing | fixed; closing comment posted |
+| #478 info before its error (3621 before 2627) | fixed (#491) |
+| #483 Linux: rest of the batch lost after an error at execute | open, native, pinned `known-bug` |
+
+**Guarding against regressions**, all run on every PR into master:
+- the corpus against a live server, on Windows and Linux;
+- the replay of every native recording over the fake driver, on Windows, Linux and macOS;
+- jittered replays of the timing-sensitive groups.
+
+The tools are `capture.js`, `replay.js`, `explore.js` and `npm run record-corpus`, and the
+script helpers `t.watch` and `t.next` for prepared statements. Corpus status at the end of the day:
+64 `agreed`, 6 `known-bug` (the Linux pins for #483) and 36 `unreviewed`. The unreviewed ones
+are all of `read/`, `pause/two-by-51-*`, `errors/{bind-failure.events,raiserror-then-result.*,
+two-raiserrors-then-result.*}` and `scripts/issue-480`.
+
+**Before releasing v6:** release notes on the GitHub release, listing every behaviour change in
+the contract below. Workarounds for a missing or doubled `done` (node-mssql 12.7.8+) may
+break. Then decide the node-mssql guard: an RC on `next` for dhensby, node-mssql-shaped
+scenarios, or their suite as a canary job.
+
+## Summary at first handover (2026-10-15)
 
 The normal streaming path is fine: plain reads, multiple result sets, and pause/resume part
 way through a batch. The **event contract at the edges** is broken: the order of errors and
@@ -65,17 +95,25 @@ deterministic. No more "Connection is busy"; `paused-before-execute` frees once.
 unreviewed. Tests changed to the new rules: `pause.test.js` (a new query waits; close and
 cancel give HY008) and `querycancel.test.js` (HY008 on a paused cancel).
 
-## The contract (owner, 2026-10-17), to ship as v6
+## The contract (owner, 2026-10-17 – 18), to ship as v6
 
-- `done`: no more results. Raised on **every** query, exactly once: errors, cancels and bind
-  failures included.
-- `free`: the native statement has been released. It comes after `done`.
-- Nothing after `done` but `free`; an in-flight error may be unavoidable.
-- A paused query emits nothing until resumed, and holds the connection.
-
-Since 2026-10-18 (see below) every query raises `done` once, after its error and callback,
-and `free` waits for it. Prepared executions still never raise `free` (there is no free item
-for them).
+- **`done`**: no more results. Raised on every query, exactly once, whatever happened:
+  success, error, bind failure, cancel, refusal. It comes after the query's errors and after
+  its callback.
+- **`free`**: the native statement has been released. It always comes after `done`. Nothing
+  comes after `done` but `free`.
+- **Pause:** a paused query emits nothing until it is resumed, including what a native call in
+  flight brings back. It holds the connection: new work is refused with HY010. Work queued
+  before the pause waits its turn.
+- **Cancel:** an accepted cancel gives `cancel-cb ok` → `error HY008` → `done` → `free`. A
+  cancel that is not accepted (too late, refused by the driver, or a repeat: one cancel per
+  query) gives only an error in its own callback, a tick later. It is never thrown and never
+  touches the query's events. Every cancel's callback is called.
+- **Diagnostics** are routed in driver order. `more` is counted over errors only.
+- **Prepared statements:** each execution is `submitted` … `done`, with no `free`. `ps.free()`
+  raises `free` once, when the native statement is released. After that, an execution is
+  refused with HY010 (its error or callback, then `done`), and a second `free()` with an error
+  in its callback.
 
 ## Linux: results after an error at execute are lost (5.6.0, not this branch)
 
@@ -160,13 +198,73 @@ Found while there, not fixed: info from some DDL is mostly lost, on master too. 
 on master and 1 of 20 here, while PRINT info always comes. It is probably native: the
 diagnostics are not read when the driver returns plain `SQL_SUCCESS`.
 
+## Progress — 2026-10-18: the prepared statement lifecycle
+
+The owner's rule: a prepared statement's executions are each `submitted` … `done`, with no
+`free`. `free` is raised once, by `ps.free()`, when the native statement is released. After
+that, any use of the statement is an error. Corpus: `scripts/prepared` (agreed), recorded
+through the new `t.watch` and `t.next` script helpers. Executions share one query object and
+raise no free, so `t.query` does not fit them.
+
+- Native (`bind_fetch`): each execution clears the last one's diagnostics and closes the
+  cursor it left open. After an execution failed part way (divide by zero), the next one
+  failed with 24000 invalid cursor state and then reported the old error again, and stale
+  errors were reported even after free.
+- `PreparedStatement` (`lib/prepared-statement.js`): once `free()` is called, an execution is
+  refused with HY010, "prepared statement N has been freed". That is the error or callback,
+  then `done`, with no native call. Before, it ran natively on the released handle, with two
+  callbacks and a garbled message. A second `free()` is refused in its callback. Before, it
+  threw "Invalid statement handle" and the connection could not close. A `free()` asked for
+  while an execution runs waits for it: the execution's `done`, then `free`.
+
+Found, not fixed: a prepared select with no table behind it (`select 10 / ? as n`) is
+described with no columns at prepare, so its executions return no rows (`rowcount 1`, no
+`meta`).
+
 ## Next
 
-1. Info lost from DDL (above): pin it with a scenario, then look at the native diagnostics reads.
-2. Hold an error *at execute* while paused. `free` now waits for `done`, which removes the
-   reason it was not held (below).
-3. Prepared executions: `free` per execution, or document that only `free()` raises it.
-4. #483 (Linux, native), on WSL.
+### 1. Nothing the driver sends is dropped (the next session's theme)
+
+Any information the driver sends should reach the caller. Today some is silently lost:
+- Info from some DDL is mostly lost, on master too: 1756 "Skipping FOREIGN KEY constraint …
+  for temporary table", from `create table #fk (id int constraint fk_x references
+  no_such_table(id))`, came 0 of 20 times on master. PRINT info always comes. It is probably
+  native: the diagnostics are not read when a call returns plain `SQL_SUCCESS`, or are read
+  only on some paths. Check every ODBC call that can carry diagnostics: `SQLExecDirect`,
+  `SQLExecute`, `SQLFetch`, `SQLMoreResults` (SQL_NO_DATA included), `SQLRowCount`, and the
+  cancel path.
+- A prepared select with no table behind it (`select 10 / ? as n`) is described with no
+  columns at prepare, so its executions return no rows: `rowcount 1`, no `meta`.
+
+Plan: a new corpus group, `info/`, before any fix:
+- PRINT in each position: first, between results, last, after an error, inside a proc;
+- RAISERROR severity 0 – 10 (info) next to 11+ (error), and `with nowait`;
+- DDL warnings (1756 and others), `set` warnings (ANSI_WARNINGS, arithmetic overflow at
+  warning level), a truncation warning (01004), and the 3621 that follows a failed statement;
+- many messages in one batch, more than one packet, to check that none are lost or reordered;
+- each of these through a stored procedure, a prepared statement and a polling query.
+
+Then agree the transcripts, watch them fail, and fix (mostly native). Record native logs so
+that replay covers them.
+
+### 2. Smaller items
+
+- Hold an error *at execute* while paused. `free` now waits for `done`, which removes the
+  reason it was not held (see Settled, below).
+- #483 (Linux, native) on WSL. When it is fixed, the `known-bug` Linux pins show as diffs:
+  `errors/{raiserror-then-result,dup-key-d}.*.linux.txt`, `scripts/issue-478.linux.txt`,
+  `cancel/after-error-mid-batch.events.linux.txt`.
+- A race in accepted cancels: the cancel's own callback (`cancel-cb ok`) and the HY008 from the
+  fetch in flight are two native completions on different threads, so either can reach JS
+  first. CI showed it on `cancel/twice-streaming-at-100`, which now has an `--- or`
+  alternative (the first in the corpus). `cancel/again-after-confirm-at-100` failed once
+  locally, probably the same race, but its transcript was not kept. Other accepted cancels
+  of a statement in flight can show it too: add the alternative when one does. Or tighten the
+  contract: hold the HY008 in JS until the cancel callback has run, so that `cancel-cb ok`
+  always comes first. That is the owner's call. Note that `capture.js --update` rewrites a file
+  from what it saw, so it drops an alternative it did not see.
+- The 36 `unreviewed` transcripts (listed under Where we are): read them against the
+  contract and agree them. `read/print-*` belong with the `info/` work above.
 
 Settled (2026-10-17): a paused query emits nothing until resumed, including what a native
 call that was in flight when the pause landed brings back: the `meta` after execute or after
@@ -231,7 +329,7 @@ junctioned in as `node_modules/msnodesqlv8`:
 So their suite is worth adding to CI, but it would not reliably have caught these. The
 corpus is our guard.
 
-## Suggested order
+## Suggested order (2026-10-15; all done)
 
 1. ~~**The crash on pause/resume on every row.**~~ Fixed, see Progress. The hypothesis was right:: `resume()` calls
    `dispatch()` (or `nextResult()`) while the previous `nativeGetRows` / `nextResultSet` is
@@ -251,7 +349,7 @@ corpus is our guard.
 For each one: edit the corpus transcripts to the agreed behaviour first (`# status: agreed`),
 watch them fail, then fix.
 
-## Decisions to make while reviewing the corpus
+## Decisions made while reviewing the corpus (all settled; see The contract)
 
 - Callback before the next result set's `meta`? (recommended: yes)
 - On cancel: `cancel-cb` → `error HY008` → `done` → `free`, or no `done` at all on cancel?
@@ -263,9 +361,9 @@ watch them fail, then fix.
 ## Picking up on another machine
 
 ```sh
-git fetch && git checkout test/event-contract-corpus
-npm run fetch-prebuild        # or build
-npx mocha test/contract/contract.test.js        # ~40 s, expect 77 passing
+git fetch && git checkout master
+npx node-gyp rebuild          # native changes are not in a prebuild until v6 ships
+npx mocha test/contract/contract.test.js test/contract/replay.test.js   # ~4 min
 node test/contract/capture.js pause/            # compare a group, 3 runs each
 ```
 - The connection comes from `.env-cmdrc` (`CONNECTION_KEY`) as for the other tests. The corpus

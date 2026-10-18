@@ -1042,6 +1042,13 @@ bool OdbcStatementLegacy::bind_fetch(const shared_ptr<BoundDatumSet>& param_set)
   if (!_statement)
     return false;
   const auto& statement = *_statement;
+  // each execution starts clean: the errors of the last one are not this one's, and a
+  // cursor it left open (it failed part way through its rows, say) is closed - else this
+  // execute fails with 24000 invalid cursor state. with no cursor open, SQLCloseCursor
+  // fails harmlessly (24000), and SQLExecute clears its diagnostics.
+  _errors->clear();
+  _errorHandler->ClearErrors();
+  _odbcApi->SQLCloseCursor(statement.get_handle());
   const bool polling_mode = get_polling();
   const auto bound = bind_params(param_set);
   if (!bound) {

@@ -34,6 +34,8 @@ module.exports = async t => {
 |---|---|
 | `t.query(label, sql, params, options)` | runs a query on the connection and logs its events as `label: <event>`. Returns the query (its event emitter). `options`: `callback` (also pass a callback and log it), `columns` (log column values), `at` (actions, as in `scenarios.js`: `start`, `row: { n: [...] }`, `later: { ms: [...] }`, `free`) |
 | `t.act(label, actions)` | do `pause`, `resume`, `resume:<ms>` or `cancel` to that query now |
+| `t.watch(label, q, options)` | log the events of a query made some other way, e.g. a prepared statement (`conn.prepare`), whose executions share one query object. It is not waited for: use `t.next` |
+| `t.next(label, event)` | resolves on that query's next `event`, e.g. `'done'` |
 | `t.freed(label)` | resolves on the query's `free` |
 | `t.settled(label)` | its `free`, plus the time in which late events still belong to the transcript (a cancel callback after `free`, say) |
 | `t.section(title)` | a `== title` line, to divide cases |
