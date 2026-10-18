@@ -1,0 +1,63 @@
+# scenario: scripts/prepared
+# status: agreed
+# script: test/contract/scripts/prepared.js
+setup: submitted
+setup: rowcount 3
+setup: cb ok rows=0 more=false
+setup: done
+setup: free
+== A an execution
+ps: submitted
+ps: meta r
+ps: row
+ps: column 0 10
+ps: done
+== B a second execution
+ps: submitted
+ps: meta r
+ps: row
+ps: column 0 5
+ps: done
+== C an execution with a callback
+ps: submitted
+ps: meta r
+ps: row
+ps: column 0 10
+C: cb ok rows=1 more=false
+ps: done
+== D an execution that fails at execute (divide by zero)
+ps: submitted
+ps: meta r
+ps: error 22012 8134 Divide by zero error encountered. more=false
+ps: done
+== E it still runs after a failure
+ps: submitted
+ps: meta r
+ps: row
+ps: column 0 5
+ps: done
+== F free
+ps: free-cb ok
+ps: free
+== G executions after free
+G: cb error prepared statement 1 has been freed more=false
+ps: done
+ps: error HY010 0 prepared statement 1 has been freed more=false
+ps: done
+== H free again
+ps: free-cb error prepared statement 1 has been freed
+== J free asked for while an execution runs: the execution ends, then free
+ps2: submitted
+ps2: meta n
+ps2: row x2
+ps2: done
+ps2: free-cb ok
+ps2: free
+== I the connection still works
+I: submitted
+I: meta n
+I: row
+I: cb ok rows=1 more=false
+I: done
+I: free
+check ok

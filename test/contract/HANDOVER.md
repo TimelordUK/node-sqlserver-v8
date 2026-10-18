@@ -160,12 +160,35 @@ Found while there, not fixed: info from some DDL is mostly lost, on master too. 
 on master and 1 of 20 here, while PRINT info always comes. It is probably native: the
 diagnostics are not read when the driver returns plain `SQL_SUCCESS`.
 
+## Progress — 2026-10-18: the prepared statement lifecycle
+
+The owner's rule: a prepared statement's executions are each `submitted` … `done`, with no
+`free`. `free` is raised once, by `ps.free()`, when the native statement is released. After
+that, any use of the statement is an error. Corpus: `scripts/prepared` (agreed), recorded
+through the new `t.watch` and `t.next` script helpers. Executions share one query object and
+raise no free, so `t.query` does not fit them.
+
+- Native (`bind_fetch`): each execution clears the last one's diagnostics and closes the
+  cursor it left open. After an execution failed part way (divide by zero), the next one
+  failed with 24000 invalid cursor state and then reported the old error again, and stale
+  errors were reported even after free.
+- `PreparedStatement` (`lib/prepared-statement.js`): once `free()` is called, an execution is
+  refused with HY010, "prepared statement N has been freed". That is the error or callback,
+  then `done`, with no native call. Before, it ran natively on the released handle, with two
+  callbacks and a garbled message. A second `free()` is refused in its callback. Before, it
+  threw "Invalid statement handle" and the connection could not close. A `free()` asked for
+  while an execution runs waits for it: the execution's `done`, then `free`.
+
+Found, not fixed: a prepared select with no table behind it (`select 10 / ? as n`) is
+described with no columns at prepare, so its executions return no rows (`rowcount 1`, no
+`meta`).
+
 ## Next
 
 1. Info lost from DDL (above): pin it with a scenario, then look at the native diagnostics reads.
 2. Hold an error *at execute* while paused. `free` now waits for `done`, which removes the
    reason it was not held (below).
-3. Prepared executions: `free` per execution, or document that only `free()` raises it.
+3. A prepared select with no table returns no rows (above).
 4. #483 (Linux, native), on WSL.
 
 Settled (2026-10-17): a paused query emits nothing until resumed, including what a native

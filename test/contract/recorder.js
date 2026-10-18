@@ -111,6 +111,8 @@ class Run {
       conn: this.conn,
       query: (label, sql, params, options = {}) => this.start(label, { sql, params, ...options }),
       act: (label, actions) => this.act(label, this.queries.get(label), actions),
+      watch: (label, q, options) => this.watch(label, q, options),
+      next: (label, event) => new Promise(resolve => this.queries.get(label).once(event, resolve)),
       freed: label => this.pending.get(label),
       // freed, and the time after it in which late events still belong to the transcript
       settled: label => this.pending.get(label).then(() => delay(SETTLE_MS)),
@@ -134,6 +136,15 @@ class Run {
       })
     }
     const q = this.conn.query(...args)
+    this.watch(label, q, def)
+    q.on('free', () => resolveFree())
+    return q
+  }
+
+  // log a query's events as label: <event>. a prepared statement's executions share one
+  // query object, and raise no free of their own, so a script watches it once.
+  watch (label, q, def = {}) {
+    const log = line => this.log(label, line)
     this.queries.set(label, q)
     const at = def.at ?? {}
     let rows = 0
@@ -157,7 +168,7 @@ class Run {
     })
     q.on('output', () => log('output'))
     q.on('done', () => log('done'))
-    q.on('free', () => { log('free'); resolveFree() })
+    q.on('free', () => log('free'))
     q.once('free', () => {
       if (label === 'q1') this.startFollowUps('free')
       // actions on a query that has already freed, e.g. a late cancel
