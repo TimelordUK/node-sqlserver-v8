@@ -181,8 +181,15 @@ class Run {
         if (arg) setTimeout(resume, Number(arg))
         else resume()
       } else if (name === 'cancel') {
-        this.log(label, 'action cancel')
-        q.cancelQuery(e => this.log(label, e ? `cancel-cb error ${strip(e.message)}` : 'cancel-cb ok'))
+        // cancel:again cancels once more from the first cancel's callback
+        const cancel = again => {
+          this.log(label, again ? 'action cancel again' : 'action cancel')
+          q.cancelQuery(e => {
+            this.log(label, e ? `cancel-cb error ${strip(e.message)}` : 'cancel-cb ok')
+            if (arg === 'again' && !again) cancel(true)
+          })
+        }
+        cancel(false)
       } else if (name === 'queue') {
         // start the follow-up queries now, while this query is still on the connection
         this.startFollowUps(arg)

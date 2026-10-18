@@ -129,6 +129,19 @@ is not accepted gives only the error in its callback. New scenario `cancel/after
 `scripts/issue-479` are agreed. Their Windows native logs were re-recorded; the Linux corpus
 has no pins for them, so CI on Linux checks the native change there.
 
+## Progress — 2026-10-18: a repeated cancel is answered, not left dangling
+
+`StreamEvents.cancelQuery` ignored a second cancel: it never called its callback, so a
+caller awaiting it hung. Before execute, the second overwrote the first's pending token,
+and the first was the one never answered. Now one cancel per query: a repeat is refused in
+its own callback a tick later ("cancel already requested"), and the query's events are
+untouched (one HY008, `done`, `free`). It is not thrown, because cancels are issued from
+inside event handlers. The deferred cancel is sent through `sendDeferredCancel`, which
+clears the token first. New, agreed: `cancel/twice-*`, `cancel/again-after-confirm-*`
+(`cancel:again` cancels again from the first callback), `cancel/paused-twice-at-100`,
+`cancel/paused-again-after-confirm-at-100`, `cancel/paused-before-execute-twice`, and
+`cancel/paused-resumed-after-cancel-at-100` (a resume after the cancel does nothing).
+
 ## Next
 
 1. #478: route each set of diagnostics in driver order; count `more` over errors only.
