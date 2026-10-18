@@ -1,0 +1,12 @@
+# scenario: cancel/after-error-mid-batch.events
+# status: agreed
+# sql: raiserror('boom', 16, 1); waitfor delay '00:00:01'; select 2 as n
+# at: {"error":{"1":["cancel"]}}
+submitted
+error 42000 50000 boom more=true
+action cancel
+cancel-cb ok
+error HY008 0 Operation canceled more=false
+done
+free
+check ok

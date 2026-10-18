@@ -17,6 +17,7 @@
 //               row: { 51: [...] }      on the nth row (1 based, counted across result sets)
 //               later: { 300: [...] }   ms after query()
 //               free: [...]             just after 'free'
+//               error: { 1: [...] }     on the nth error
 //             a follow-up can have its own 'at' as well.
 //             actions: 'pause', 'resume', 'resume:50' (after 50 ms), 'cancel',
 //             'queue:<when>' (start followUps with that when, now)
@@ -101,6 +102,8 @@ const base = [
   { name: 'cancel/during-execute', sql: SLOW, at: { later: { 300: ['cancel'] } }, modes: BOTH },
   { name: 'cancel/last-row', sql: 'select top 5 object_id as a from sys.all_objects', at: { row: { 5: ['cancel'] } }, modes: EVENTS },
   { name: 'cancel/late-after-free', sql: 'select 1 as n', at: { free: ['cancel'] }, modes: EVENTS },
+  // a failed statement mid batch: the rest of the batch still runs, so it can be cancelled
+  { name: 'cancel/after-error-mid-batch', sql: `raiserror('boom', 16, 1); ${SLOW}`, at: { error: { 1: ['cancel'] } }, modes: EVENTS },
 
   // ----- the connection's work queue (#481): a follow-up must not run until the
   // query before it has freed, whatever way that query ended

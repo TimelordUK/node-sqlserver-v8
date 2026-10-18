@@ -110,15 +110,32 @@ tests `require('msnodesqlv8')`), `npx node-gyp rebuild`, copy `.env-cmdrc`, syml
 - `connection-pool.test.js` "submit error queries with callback": its pool `error` listener
   asserted, and the throw had been swallowed. It now counts the pool errors and the `done`s.
 
+## Progress — 2026-10-18: cancel always takes effect, or says it did not (#479 C)
+
+Native (`odbc_statement_legacy.cpp`):
+- `return_odbc_error` puts the statement in `STATEMENT_ERROR` only for a real error, not for
+  info (`01xxx`). A PRINT left a reading statement in error, and `Cancel()` refused it.
+- `look_ahead_after_error`: when the batch goes on after a failed statement, the statement is
+  `READING` again, so the rest of the batch can be cancelled.
+- `try_read_next_result`: a cancel that landed between calls ends the query with HY008
+  (`return_cancelled`) instead of silently.
+
+JS: a cancel the driver refuses (`cancelQuery` calls back `(null, false)`) is now an error in
+the cancel callback, "cannot cancel query (refused by the driver)". Before, it said ok.
+
+So every accepted cancel gives `cancel-cb ok` → `error HY008` → `done` → `free`, and a cancel that
+is not accepted gives only the error in its callback. New scenario `cancel/after-error-mid-batch`
+(and an `at.error` trigger). `cancel/last-row` gains its HY008. All `cancel/*` and
+`scripts/issue-479` are agreed. Their Windows native logs were re-recorded; the Linux corpus
+has no pins for them, so CI on Linux checks the native change there.
+
 ## Next
 
-1. #479 C (native): info-only diagnostics set `STATEMENT_ERROR`, so a cancel after a PRINT
-   is a silent no-op. Report a refused native cancel (`CancelWorker::OnOK` passes `(null, false)`).
-2. #478: route each set of diagnostics in driver order; count `more` over errors only.
-3. Hold an error *at execute* while paused. `free` now waits for `done`, which removes the
+1. #478: route each set of diagnostics in driver order; count `more` over errors only.
+2. Hold an error *at execute* while paused. `free` now waits for `done`, which removes the
    reason it was not held (below).
-4. Prepared executions: `free` per execution, or document that only `free()` raises it.
-5. #483 (Linux, native), on WSL.
+3. Prepared executions: `free` per execution, or document that only `free()` raises it.
+4. #483 (Linux, native), on WSL.
 
 Settled (2026-10-17): a paused query emits nothing until resumed, including what a native
 call that was in flight when the pause landed brings back: the `meta` after execute or after
