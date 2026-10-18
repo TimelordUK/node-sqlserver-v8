@@ -85,7 +85,7 @@ at execute, the error comes with `more=false` and the rest of the batch is lost:
 the #475 fix in 5.6.0 (`odbc_statement_legacy.cpp`, the look-ahead after a failed execute)
 does not hold on Linux. The same 4 scenarios differ with the base commit's `lib/`, so it is
 older than the queue work. Pinned as `errors/{raiserror-then-result,dup-key-d}.*.linux.txt`
-and `scripts/issue-478.linux.txt` (its case D), `# status: known-bug`, so that CI is green
+`scripts/issue-478.linux.txt` (its case D) and `cancel/after-error-mid-batch.events.linux.txt` (the batch is gone, so the cancel finds nothing), `# status: known-bug`, so that CI is green
 and the fix shows up as a diff. Filed as #483.
 
 To run the corpus on WSL: a `git worktree` under `/tmp/<x>/node_modules/msnodesqlv8` (the
