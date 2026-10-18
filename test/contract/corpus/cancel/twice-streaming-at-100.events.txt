@@ -1,0 +1,14 @@
+# scenario: cancel/twice-streaming-at-100.events
+# status: agreed
+# sql: select top 5000 a.name from sys.all_objects a cross join sys.all_objects b
+# at: {"row":{"100":["cancel","cancel"]}}
+submitted
+meta name
+row x100
+action cancel x2
+cancel-cb error cannot cancel query (cancel already requested) id 0
+cancel-cb ok
+error HY008 0 Operation canceled more=false
+done
+free
+check ok
