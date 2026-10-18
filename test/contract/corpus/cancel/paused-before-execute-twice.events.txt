@@ -1,0 +1,13 @@
+# scenario: cancel/paused-before-execute-twice.events
+# status: agreed
+# sql: waitfor delay '00:00:01'; select 2 as n
+# at: {"start":["pause","cancel","cancel"]}
+action pause
+action cancel x2
+submitted
+cancel-cb error cannot cancel query (cancel already requested) id 0
+cancel-cb ok
+error HY008 0 Operation canceled more=false
+done
+free
+check ok

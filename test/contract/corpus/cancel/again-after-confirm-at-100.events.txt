@@ -1,0 +1,15 @@
+# scenario: cancel/again-after-confirm-at-100.events
+# status: agreed
+# sql: select top 5000 a.name from sys.all_objects a cross join sys.all_objects b
+# at: {"row":{"100":["cancel:again"]}}
+submitted
+meta name
+row x100
+action cancel
+cancel-cb ok
+action cancel again
+cancel-cb error cannot cancel query (cancel already requested) id 0
+error HY008 0 Operation canceled more=false
+done
+free
+check ok

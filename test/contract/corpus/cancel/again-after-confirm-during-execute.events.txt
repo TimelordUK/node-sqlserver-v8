@@ -1,0 +1,13 @@
+# scenario: cancel/again-after-confirm-during-execute.events
+# status: agreed
+# sql: waitfor delay '00:00:01'; select 2 as n
+# at: {"later":{"300":["cancel:again"]}}
+submitted
+action cancel
+cancel-cb ok
+action cancel again
+cancel-cb error cannot cancel query (cancel already requested) id 0
+error HY008 0 Operation canceled more=false
+done
+free
+check ok

@@ -20,6 +20,7 @@
 //               error: { 1: [...] }     on the nth error
 //             a follow-up can have its own 'at' as well.
 //             actions: 'pause', 'resume', 'resume:50' (after 50 ms), 'cancel',
+//             'cancel:again' (and once more from its callback),
 //             'queue:<when>' (start followUps with that when, now)
 //   followUps queries put on the same connection: { label, sql, when: 'start' | 'free' }
 //   modes     which variants to generate, each a separate corpus file:
@@ -103,6 +104,16 @@ const base = [
   { name: 'cancel/last-row', sql: 'select top 5 object_id as a from sys.all_objects', at: { row: { 5: ['cancel'] } }, modes: EVENTS },
   { name: 'cancel/late-after-free', sql: 'select 1 as n', at: { free: ['cancel'] }, modes: EVENTS },
   // a failed statement mid batch: the rest of the batch still runs, so it can be cancelled
+  // a cancel repeated: one done, and every cancel's callback is called - none left dangling
+  { name: 'cancel/twice-before-execute', sql: SLOW, at: { start: ['cancel', 'cancel'] }, modes: EVENTS },
+  { name: 'cancel/twice-during-execute', sql: SLOW, at: { later: { 300: ['cancel', 'cancel'] } }, modes: EVENTS },
+  { name: 'cancel/twice-streaming-at-100', sql: BIG, at: { row: { 100: ['cancel', 'cancel'] } }, modes: EVENTS },
+  { name: 'cancel/again-after-confirm-at-100', sql: BIG, at: { row: { 100: ['cancel:again'] } }, modes: EVENTS },
+  { name: 'cancel/again-after-confirm-during-execute', sql: SLOW, at: { later: { 300: ['cancel:again'] } }, modes: EVENTS },
+  { name: 'cancel/paused-twice-at-100', sql: BIG, at: { row: { 100: ['pause', 'cancel', 'cancel'] } }, modes: EVENTS },
+  { name: 'cancel/paused-again-after-confirm-at-100', sql: BIG, at: { row: { 100: ['pause', 'cancel:again'] } }, modes: EVENTS },
+  { name: 'cancel/paused-resumed-after-cancel-at-100', sql: BIG, at: { row: { 100: ['pause', 'cancel', 'resume:50'] } }, modes: EVENTS },
+  { name: 'cancel/paused-before-execute-twice', sql: SLOW, at: { start: ['pause', 'cancel', 'cancel'] }, modes: EVENTS },
   { name: 'cancel/after-error-mid-batch', sql: `raiserror('boom', 16, 1); ${SLOW}`, at: { error: { 1: ['cancel'] } }, modes: EVENTS },
 
   // ----- the connection's work queue (#481): a follow-up must not run until the
