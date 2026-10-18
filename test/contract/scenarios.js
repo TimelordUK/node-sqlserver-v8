@@ -76,6 +76,8 @@ const base = [
   { name: 'errors/dup-key-b', setup: DUP_TABLE, sql: 'select 1 as n; insert #t values (1)', columns: true, modes: BOTH },
   { name: 'errors/dup-key-c', setup: DUP_TABLE, sql: 'select 1 as n; insert #t values (1); select 2 as m', columns: true, modes: BOTH },
   { name: 'errors/dup-key-d', setup: DUP_TABLE, sql: 'insert #t values (1); select 2 as m', columns: true, modes: BOTH },
+  // one statement, two errors (1779 then 1750): only the last error has more=false
+  { name: 'errors/two-errors-one-statement', setup: DUP_TABLE, sql: 'alter table #t add constraint pk_t2 primary key (id)', modes: BOTH },
 
   // ----- pause / resume (#480, #470): 51 rows is one full batch of 50 plus one
   ...[1, 49, 50, 51, 52, 101, 102].map(n => ({

@@ -1,10 +1,10 @@
 # scenario: errors/dup-key-a.events
-# status: known-bug
+# status: agreed
 # setup: create table #t (id int constraint pk_t primary key); insert #t values (1)
 # sql: insert #t values (1)
 submitted
-info 01000 3621 The statement has been terminated.
 error 23000 2627 Violation of PRIMARY KEY constraint 'pk_t'. Cannot insert duplicate key in object 'dbo.#t'. The duplicate key value is (1). more=false
+info 01000 3621 The statement has been terminated.
 done
 free
 check ok
