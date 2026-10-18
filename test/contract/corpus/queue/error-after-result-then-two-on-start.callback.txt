@@ -1,5 +1,5 @@
 # scenario: queue/error-after-result-then-two-on-start.callback
-# status: unreviewed
+# status: agreed
 # sql: select 1 as n; raiserror('boom', 16, 1)
 # follow-up q2 on start: waitfor delay '00:00:01'; select 2 as n
 # follow-up q3 on start: select 3 as n
@@ -7,6 +7,7 @@ submitted
 meta n
 row
 cb error 42000 50000 boom more=false
+done
 free
 q2: submitted
 q2: meta n

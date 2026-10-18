@@ -1,10 +1,11 @@
 # scenario: errors/throw-ends-batch.events
-# status: unreviewed
+# status: agreed
 # sql: select 1 as n; throw 50001, 'thrown', 1; select 2 as m
 submitted
 meta n
 row
 column 0 1
 error 42000 50001 thrown more=false
+done
 free
 check ok

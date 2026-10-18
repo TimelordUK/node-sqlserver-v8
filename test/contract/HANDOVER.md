@@ -73,8 +73,9 @@ cancel give HY008) and `querycancel.test.js` (HY008 on a paused cancel).
 - Nothing after `done` but `free`; an in-flight error may be unavoidable.
 - A paused query emits nothing until resumed, and holds the connection.
 
-`done` is not raised by any `errors/*` scenario today. On cancel it comes before the HY008.
-Prepared executions never raise `free` (there is no free item for them).
+Since 2026-10-18 (see below) every query raises `done` once, after its error and callback,
+and `free` waits for it. Prepared executions still never raise `free` (there is no free item
+for them).
 
 ## Linux: results after an error at execute are lost (5.6.0, not this branch)
 
@@ -91,17 +92,33 @@ To run the corpus on WSL: a `git worktree` under `/tmp/<x>/node_modules/msnodesq
 tests `require('msnodesqlv8')`), `npx node-gyp rebuild`, copy `.env-cmdrc`, symlink
 `node_modules` from an existing checkout.
 
+## Progress — 2026-10-18: `done` on every query
+
+- The `Query` alone raises `done`, exactly once (`raiseDone`), a tick after the error and
+  the user's callback (the connection defers that by one tick). `free` waits for it
+  (`Query.afterDone`, used by `DriverMgr.raiseFree`), and the queue moves on only after both.
+- Error paths (`end`, the execute failure in `begin`) now raise `done`; before, `end` set
+  `this.done` and never emitted it. A throwing listener cannot cost the query its `done` or
+  `free` (`finally`). A bind failure holds the queue until its `done` and `free`.
+- Cancel: `connection.cancelQuery` no longer emits `done`. A cancel gives
+  `cancel-cb ok` → `error HY008` → `done` → `free`; a late cancel only the error in its
+  callback (#479 A and B). A bound procedure refused for bad params raises `done` then `free`.
+- Corpus: 42 transcripts changed. Those that meet the contract are `agreed`. #478 (info before
+  the error, every `dup-key-*`, `scripts/issue-478`) and #479 C (`cancel/streaming-after-print-at-100`,
+  `scripts/issue-479`) are `known-bug`. The Linux pins were edited by hand to the same rule,
+  and the replay of the Linux recordings matches them.
+- `connection-pool.test.js` "submit error queries with callback": its pool `error` listener
+  asserted, and the throw had been swallowed. It now counts the pool errors and the `done`s.
+
 ## Next
 
-1. A fake native connection (`test/common/fake-native.js`) that holds every callback until
-   the test releases it, and asserts the invariants (one native call in flight per
-   connection, nothing after `releaseStatement` or `free`, one `done` then `free`). Then
-   scripted tests and an interleaving explorer for queue and reader.
-2. Cases to pin with it: an error coming back from a fetch in flight when the pause lands
-   (today it is emitted while paused, but the rows are held). Already in the corpus against a
-   real server: pause then cancel a compound query with another queued
-   (`queue/paused-then-cancel-queued-before`), and submit while paused (`queue/paused-then-submit`).
-3. `done` on every path (#479, the errors), then #478.
+1. #479 C (native): info-only diagnostics set `STATEMENT_ERROR`, so a cancel after a PRINT
+   is a silent no-op. Report a refused native cancel (`CancelWorker::OnOK` passes `(null, false)`).
+2. #478: route each set of diagnostics in driver order; count `more` over errors only.
+3. Hold an error *at execute* while paused. `free` now waits for `done`, which removes the
+   reason it was not held (below).
+4. Prepared executions: `free` per execution, or document that only `free()` raises it.
+5. #483 (Linux, native), on WSL.
 
 Settled (2026-10-17): a paused query emits nothing until resumed, including what a native
 call that was in flight when the pause landed brings back: the `meta` after execute or after

@@ -1,7 +1,8 @@
 # scenario: errors/raiserror-at-execute.events
-# status: unreviewed
+# status: agreed
 # sql: raiserror('boom', 16, 1)
 submitted
 error 42000 50000 boom more=false
+done
 free
 check ok

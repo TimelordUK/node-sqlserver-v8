@@ -1,7 +1,8 @@
 # scenario: errors/raiserror-at-execute.callback
-# status: unreviewed
+# status: agreed
 # sql: raiserror('boom', 16, 1)
 submitted
-free
 cb error 42000 50000 boom more=false
+done
+free
 check ok

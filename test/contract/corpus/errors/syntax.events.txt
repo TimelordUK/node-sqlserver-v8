@@ -1,7 +1,8 @@
 # scenario: errors/syntax.events
-# status: unreviewed
+# status: agreed
 # sql: select from where
 submitted
 error 42000 156 Incorrect syntax near the keyword 'from'. more=false
+done
 free
 check ok

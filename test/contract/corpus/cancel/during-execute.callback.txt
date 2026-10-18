@@ -1,11 +1,11 @@
 # scenario: cancel/during-execute.callback
-# status: unreviewed
+# status: agreed
 # sql: waitfor delay '00:00:01'; select 2 as n
 # at: {"later":{"300":["cancel"]}}
 submitted
 action cancel
-done
 cancel-cb ok
-free
 cb error HY008 0 Operation canceled more=false
+done
+free
 check ok
