@@ -142,9 +142,27 @@ clears the token first. New, agreed: `cancel/twice-*`, `cancel/again-after-confi
 `cancel/paused-again-after-confirm-at-100`, `cancel/paused-before-execute-twice`, and
 `cancel/paused-resumed-after-cancel-at-100` (a resume after the cancel does nothing).
 
+## Progress — 2026-10-18: diagnostics in driver order (#478)
+
+`dispatchInfoReturnErrors` routed a set's info at once and handed back only its errors, so
+3621 "The statement has been terminated." overtook its 2627. Now a set with an error in it is
+routed whole, in driver order, by the error path. A set of info only is routed at once, as
+before. `routeStatementError` counts `more` over errors only: an error has more when another
+error follows it or the batch goes on. Before, it also counted info, which was latent while
+info and errors were routed apart. In callback mode, info that follows an error in a set is
+emitted a tick on, after the (deferred) callback. `asCancelled` ignores info. New:
+`errors/two-errors-one-statement` (1779 then 1750). All `dup-key-*` and `scripts/issue-478`
+are agreed; the Linux pins were reordered by hand and stay known-bug for #483.
+
+Found while there, not fixed: info from some DDL is mostly lost, on master too. 1756
+"Skipping FOREIGN KEY constraint ... for temporary table" from
+`create table #fk (id int constraint fk_x references no_such_table(id))` came 0 of 20 times
+on master and 1 of 20 here, while PRINT info always comes. It is probably native: the
+diagnostics are not read when the driver returns plain `SQL_SUCCESS`.
+
 ## Next
 
-1. #478: route each set of diagnostics in driver order; count `more` over errors only.
+1. Info lost from DDL (above): pin it with a scenario, then look at the native diagnostics reads.
 2. Hold an error *at execute* while paused. `free` now waits for `done`, which removes the
    reason it was not held (below).
 3. Prepared executions: `free` per execution, or document that only `free()` raises it.
