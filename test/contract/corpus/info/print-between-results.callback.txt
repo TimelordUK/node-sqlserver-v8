@@ -1,0 +1,18 @@
+# scenario: info/print-between-results.callback
+# status: unreviewed
+# sql: select 1 as a; print 'p1'; select 2 as b
+submitted
+meta a
+row
+column 0 1
+info 01000 0 p1
+rowcount 0
+cb ok rows=0 more=true
+meta b
+cb ok rows=1 more=true
+row
+column 0 2
+cb ok rows=1 more=false
+done
+free
+check ok

@@ -1,0 +1,11 @@
+# scenario: info/warning-mid-rows.callback
+# status: unreviewed
+# sql: set ansi_warnings off; set arithabort off; select top 120 1 / case when n = 75 then 0 else 1 end as v from (select row_number() over (order by (select 1)) as n from sys.all_objects) t; set ansi_warnings on; set arithabort on
+submitted
+meta v
+row x120
+info 01000 3607 Division by zero occurred.
+cb ok rows=120 more=false
+done
+free
+check ok

@@ -1,0 +1,9 @@
+# scenario: info/fk-on-temp-table.events
+# status: unreviewed
+# sql: /* {unique} */ create table #fk (id int constraint fk_x references no_such_table(id))
+submitted
+info 01000 1756 Skipping FOREIGN KEY constraint 'fk_x' definition for temporary table. FOREIGN KEY constraints are not enforced on local or global temporary tables.
+rowcount 0
+done
+free
+check ok

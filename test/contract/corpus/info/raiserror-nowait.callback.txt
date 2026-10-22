@@ -1,0 +1,14 @@
+# scenario: info/raiserror-nowait.callback
+# status: unreviewed
+# sql: raiserror('now', 0, 1) with nowait; waitfor delay '00:00:00.2'; select 1 as n
+submitted
+info 01000 50000 now
+rowcount 0
+meta n
+cb ok rows=0 more=true
+row
+column 0 1
+cb ok rows=1 more=false
+done
+free
+check ok

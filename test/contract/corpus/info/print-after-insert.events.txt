@@ -1,0 +1,10 @@
+# scenario: info/print-after-insert.events
+# status: unreviewed
+# setup: create table #r (id int)
+# sql: insert #r values (1); print 'p1'
+submitted
+info 01000 0 p1
+rowcount 1 x2
+done
+free
+check ok

@@ -163,6 +163,9 @@ bool OdbcStatementLegacy::TryReadRows(std::shared_ptr<QueryResult> result,
   SQL_LOG_FUNC_TRACER();
   lock_guard<recursive_mutex> lock(g_i_mutex);
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::TryReadRows [" << _handle.toString() << "]");
+  // what this fetch reports is only what its own calls came with
+  _errors->clear();
+  _errorHandler->ClearErrors();
   auto res = try_read_columns(number_rows);
   assign_result(result, _resultset);
   return res;
@@ -236,6 +239,7 @@ bool OdbcStatementLegacy::fetch_read(const size_t number_rows) {
     }
     if (ret == SQL_NO_DATA) {
       SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] fetch_read SQL_NO_DATA " << ret);
+      keep_diagnostics();
       _resultset->_end_of_rows = true;
       return true;
     }
@@ -244,6 +248,9 @@ bool OdbcStatementLegacy::fetch_read(const size_t number_rows) {
       SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] fetch_read check_odbc_error " << ret);
       // fprintf(stderr, "fetch_read check_odbc_error\n");
       return false;
+    }
+    if (ret == SQL_SUCCESS_WITH_INFO) {
+      keep_diagnostics();
     }
     _resultset->_end_of_rows = false;
     res = true;
@@ -272,6 +279,7 @@ bool OdbcStatementLegacy::prepared_read() {
   const auto ret = _odbcApi->SQLFetchScroll(statement.get_handle(), SQL_FETCH_NEXT, 0);
   // cerr << " row_count " << row_count << endl;
   if (ret == SQL_NO_DATA) {
+    keep_diagnostics();
     _resultset->_end_of_rows = true;
     return true;
   }
@@ -279,6 +287,9 @@ bool OdbcStatementLegacy::prepared_read() {
   auto res = true;
   if (!check_odbc_error(ret))
     return false;
+  if (ret == SQL_SUCCESS_WITH_INFO) {
+    keep_diagnostics();
+  }
   const auto column_count = static_cast<int>(_resultset->get_column_count());
   for (auto c = 0; c < column_count; ++c) {
     const auto& definition = _resultset->get_meta_data(c);
@@ -675,6 +686,33 @@ bool OdbcStatementLegacy::return_odbc_error() {
     set_state(OdbcStatementState::STATEMENT_ERROR);
   }
   return false;
+}
+
+// keep the diagnostics a call came with when it did not fail. msodbcsql hands a warning
+// raised at the end of a result set - 8153 "null value is eliminated by an aggregate",
+// 3607 "division by zero occurred" - to the SQLFetch that returns SQL_NO_DATA, and only
+// there. they are added to what this call has collected so far (read_errors replaces),
+// so one fetch batch keeps every message its fetches came with, in order.
+void OdbcStatementLegacy::keep_diagnostics() {
+  if (!_statement) {
+    return;
+  }
+  auto found = make_shared<vector<shared_ptr<OdbcError>>>();
+  _statement->read_errors(_odbcApi, found);
+  if (found->empty()) {
+    return;
+  }
+  SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] keep_diagnostics: " << found->size());
+  for (const auto& error : *found) {
+    _errors->push_back(error);
+    _errorHandler->AddError(error);
+  }
+  const auto is_error = std::any_of(found->begin(), found->end(), [](const auto& e) {
+    return e->sqlstate.rfind("01", 0) != 0;
+  });
+  if (is_error) {
+    set_state(OdbcStatementState::STATEMENT_ERROR);
+  }
 }
 
 // a non polling cancel (SQLCancelHandle from the cancel thread) that lands while no
@@ -1086,6 +1124,15 @@ bool OdbcStatementLegacy::bind_fetch(const shared_ptr<BoundDatumSet>& param_set)
   if (!check_odbc_error(ret)) {
     SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] bind_fetch failed to execute");
     return false;
+  }
+  // this execution has its results still to read: the result set's end flags are the
+  // last execution's (taken with info, they would say this one has nothing to read)
+  _resultset->_end_of_rows = false;
+  _resultset->_end_of_results = false;
+  if (ret == SQL_SUCCESS_WITH_INFO) {
+    // e.g. 8153 when the driver has read ahead to the end of a short result: read it now,
+    // before SQLRowCount clears it
+    keep_diagnostics();
   }
 
   ret = _odbcApi->SQLRowCount(statement.get_handle(), &_resultset->_row_count);
@@ -2322,6 +2369,7 @@ bool OdbcStatementLegacy::try_read_next_result() {
     case SQL_NO_DATA: {
       SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::try_read_next_result ["
                            << _handle.toString() << "] try_read_next_result SQL_NO_DATA " << ret);
+      keep_diagnostics();
       _resultset->_end_of_results = true;
       _resultset->_end_of_rows = true;
       if (_prepared) {

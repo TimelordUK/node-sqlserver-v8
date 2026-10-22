@@ -1,0 +1,11 @@
+# scenario: info/overflow-warning.events
+# status: unreviewed
+# sql: set ansi_warnings off; set arithabort off; select cast(300 as tinyint) as n; set ansi_warnings on; set arithabort on
+submitted
+meta n
+row
+column 0 null
+info 01000 3606 Arithmetic overflow occurred.
+done
+free
+check ok

@@ -1,0 +1,25 @@
+# scenario: info/proc-prints.callback
+# status: unreviewed
+# setup: create procedure #p as begin print 'in'; select 1 as n; print 'between'; select 2 as m; print 'out' end
+# sql: exec #p
+submitted
+info 01000 0 in
+rowcount 0
+meta n
+cb ok rows=0 more=true
+row
+column 0 1
+info 01000 0 between
+rowcount 0
+cb ok rows=0 more=true
+meta m
+cb ok rows=1 more=true
+row
+column 0 2
+info 01000 0 out
+rowcount 0
+cb ok rows=0 more=true
+cb ok rows=1 more=false
+done
+free
+check ok

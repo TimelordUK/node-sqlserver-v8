@@ -1,0 +1,9 @@
+# scenario: info/fk-on-temp-table-cached.events
+# status: unreviewed
+# setup: create table #fk (id int constraint fk_x references no_such_table(id)); drop table #fk
+# sql: create table #fk (id int constraint fk_x references no_such_table(id)); drop table #fk
+submitted
+rowcount 0
+done
+free
+check ok

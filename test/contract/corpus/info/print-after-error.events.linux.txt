@@ -1,0 +1,9 @@
+# scenario: info/print-after-error.events
+# status: known-bug
+# sql: raiserror('e1', 16, 1); print 'p1'; select 1 as n
+# #483: on Linux the batch ends at an error at execute - the print and the result after it are lost
+submitted
+error 42000 50000 e1 more=false
+done
+free
+check ok

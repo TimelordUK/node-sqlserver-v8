@@ -1,0 +1,15 @@
+# scenario: info/print-between-results.events
+# status: unreviewed
+# sql: select 1 as a; print 'p1'; select 2 as b
+submitted
+meta a
+row
+column 0 1
+info 01000 0 p1
+rowcount 0
+meta b
+row
+column 0 2
+done
+free
+check ok

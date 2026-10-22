@@ -1,0 +1,12 @@
+# scenario: info/divide-by-zero-warning.callback
+# status: unreviewed
+# sql: set ansi_warnings off; set arithabort off; select 1 / 0 as n; set ansi_warnings on; set arithabort on
+submitted
+meta n
+row
+column 0 null
+info 01000 3607 Division by zero occurred.
+cb ok rows=1 more=false
+done
+free
+check ok

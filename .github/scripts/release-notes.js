@@ -52,8 +52,27 @@ const groups = [
 ]
 const skipped = ['chore', 'ci', 'build', 'test', 'docs', 'style', 'refactor', 'revert']
 
+// a PR merged with a merge commit ("Merge pull request #123 from owner/branch") has its
+// title on the message's first body line: take that, as a squash merge's "title (#123)"
+function prTitles (prev) {
+  const log = git('log', '--first-parent', '--format=%s%x1f%b%x1e', `${prev}..HEAD`)
+  const titles = []
+  for (const entry of log.split('\x1e')) {
+    const [subject = '', body = ''] = entry.trim().split('\x1f')
+    if (!subject) continue
+    const merged = subject.match(/^Merge pull request #(\d+) from /)
+    if (merged) {
+      const title = body.split('\n').map(l => l.trim()).find(Boolean)
+      titles.push(title ? `${title} (#${merged[1]})` : subject)
+    } else if (!/^Merge (remote-tracking )?branch /.test(subject)) {
+      titles.push(subject)
+    }
+  }
+  return titles
+}
+
 function changes (prev) {
-  const subjects = git('log', '--first-parent', '--format=%s', `${prev}..HEAD`).split('\n').filter(Boolean)
+  const subjects = prTitles(prev)
   const byGroup = new Map(groups.map(g => [g.title, []]))
   const other = []
   for (const subject of subjects) {

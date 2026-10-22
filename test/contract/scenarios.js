@@ -8,7 +8,9 @@
 //
 // a scenario:
 //   name      group/name - the corpus file, without the mode suffix
-//   sql       the query text; params optional
+//   sql       the query text; params optional. '{unique}' in it is replaced on every run
+//             (put it in a comment), so the server compiles the batch every time - a
+//             warning raised at compile time is not raised again for a cached plan
 //   setup     statements run first on the same connection
 //   columns   also record each 'column' event with its value - only for small queries
 //             whose values are the same on every server
@@ -78,6 +80,64 @@ const base = [
   { name: 'errors/dup-key-d', setup: DUP_TABLE, sql: 'insert #t values (1); select 2 as m', columns: true, modes: BOTH },
   // one statement, two errors (1779 then 1750): only the last error has more=false
   { name: 'errors/two-errors-one-statement', setup: DUP_TABLE, sql: 'alter table #t add constraint pk_t2 primary key (id)', modes: BOTH },
+
+  // ----- info: everything the driver sends must reach the caller, in the server's order.
+  // the server raises a message as part of the statement that caused it, but the driver
+  // hands it over on whichever ODBC call reads that part of the stream - SQLExecDirect,
+  // SQLFetch, SQLMoreResults, SQLNumResultCols, SQLRowCount ... - so these vary where the
+  // message falls: before, between and after results, after rows, after errors.
+  // where
+  { name: 'info/print-between-results', sql: "select 1 as a; print 'p1'; select 2 as b", columns: true, modes: BOTH },
+  { name: 'info/print-after-rows', sql: "select top 3 x from (values (1), (2), (3)) t(x); print 'p1'", columns: true, modes: BOTH },
+  { name: 'info/prints-around-everything', sql: "print 'p1'; select 1 as a; print 'p2'; print 'p3'; select 2 as b; print 'p4'", columns: true, modes: BOTH },
+  { name: 'info/print-after-error', sql: "raiserror('e1', 16, 1); print 'p1'; select 1 as n", columns: true, modes: BOTH },
+  { name: 'info/print-after-error-at-end', sql: "select 1 as n; raiserror('e1', 16, 1); print 'p1'", columns: true, modes: BOTH },
+  { name: 'info/print-after-insert', setup: ['create table #r (id int)'], sql: "insert #r values (1); print 'p1'", modes: BOTH },
+  // raiserror below severity 11 is info, whatever its number
+  { name: 'info/raiserror-severity-0', sql: "raiserror('i0', 0, 1); select 1 as n", columns: true, modes: BOTH },
+  { name: 'info/raiserror-severity-10', sql: "raiserror('i10', 10, 1); select 1 as n", columns: true, modes: BOTH },
+  { name: 'info/raiserror-info-then-error', sql: "raiserror('i10', 10, 1); raiserror('e16', 16, 1); select 1 as n", columns: true, modes: BOTH },
+  { name: 'info/raiserror-nowait', sql: "raiserror('now', 0, 1) with nowait; waitfor delay '00:00:00.2'; select 1 as n", columns: true, modes: BOTH },
+  // warnings the server raises itself, not PRINT
+  // 8153: arrives at the end of the rows that caused it, i.e. on a fetch
+  { name: 'info/null-eliminated', sql: 'select sum(x) as s from (values (1), (cast(null as int))) t(x)', columns: true, modes: BOTH },
+  { name: 'info/null-eliminated-many-rows', sql: 'select g, sum(x) as s from (select top 200 row_number() over (order by (select 1)) % 120 as g, case when row_number() over (order by (select 1)) % 7 = 0 then null else 1 end as x from sys.all_objects) t group by g order by g', modes: EVENTS },
+  { name: 'info/null-eliminated-then-select', sql: 'select sum(x) as s from (values (1), (cast(null as int))) t(x); select 2 as n', columns: true, modes: BOTH },
+  // 1756: a DDL warning raised when the batch is compiled. the 2026-10-18 handover had it as
+  // lost almost every time: it was the plan cache - the server only raises it on a compile
+  { name: 'info/fk-on-temp-table', sql: '/* {unique} */ create table #fk (id int constraint fk_x references no_such_table(id))', modes: BOTH },
+  { name: 'info/fk-on-temp-table-then-select', sql: '/* {unique} */ create table #fk (id int constraint fk_x references no_such_table(id)); select 1 as n', columns: true, modes: BOTH },
+  // the same batch with its plan cached: the server sends no 1756, so none is expected
+  { name: 'info/fk-on-temp-table-cached', setup: ['create table #fk (id int constraint fk_x references no_such_table(id)); drop table #fk'], sql: 'create table #fk (id int constraint fk_x references no_such_table(id)); drop table #fk', modes: EVENTS },
+  // 3607: with ansi_warnings and arithabort off a divide by zero is info (after the row), and null
+  { name: 'info/divide-by-zero-warning', sql: 'set ansi_warnings off; set arithabort off; select 1 / 0 as n; set ansi_warnings on; set arithabort on', columns: true, modes: BOTH },
+  // 3606: an overflow with the same settings is info too
+  { name: 'info/overflow-warning', sql: 'set ansi_warnings off; set arithabort off; select cast(300 as tinyint) as n; set ansi_warnings on; set arithabort on', columns: true, modes: BOTH },
+  // a warning on a row part way through, not at the end: on that row's fetch, or at the end
+  { name: 'info/warning-mid-rows', sql: `set ansi_warnings off; set arithabort off; select top 120 1 / case when n = 75 then 0 else 1 end as v from (select row_number() over (order by (select 1)) as n from sys.all_objects) t; set ansi_warnings on; set arithabort on`, modes: BOTH },
+  // a warning in a result that is not the last, then an error, then more
+  { name: 'info/warning-then-error-then-result', sql: "select sum(x) as s from (values (1), (cast(null as int))) t(x); raiserror('e16', 16, 1); select 2 as n", columns: true, modes: BOTH },
+  // the warning comes with the batch's last fetch: paused before it, it waits for the resume
+  { name: 'info/warning-paused-on-last-row', sql: 'select g, sum(x) as s from (select top 200 row_number() over (order by (select 1)) % 120 as g, case when row_number() over (order by (select 1)) % 7 = 0 then null else 1 end as x from sys.all_objects) t group by g order by g', at: { row: { 120: ['pause', 'resume:50'] } }, modes: EVENTS },
+  { name: 'info/warning-paused-mid-batch', sql: 'select g, sum(x) as s from (select top 200 row_number() over (order by (select 1)) % 120 as g, case when row_number() over (order by (select 1)) % 7 = 0 then null else 1 end as x from sys.all_objects) t group by g order by g', at: { row: { 110: ['pause', 'resume:50'] } }, modes: EVENTS },
+  // more messages than fit in one packet: none lost, none reordered
+  { name: 'info/many-prints', sql: "declare @i int = 0; while @i < 60 begin print cast(@i as varchar(3)) + ' ' + replicate('x', 200); set @i += 1 end; select 1 as n", columns: true, modes: EVENTS },
+  { name: 'info/many-prints-between-results', sql: "select 1 as a; declare @i int = 0; while @i < 60 begin print cast(@i as varchar(3)) + ' ' + replicate('x', 200); set @i += 1 end; select 2 as b", columns: true, modes: EVENTS },
+  // inside a procedure
+  {
+    name: 'info/proc-prints',
+    setup: ["create procedure #p as begin print 'in'; select 1 as n; print 'between'; select 2 as m; print 'out' end"],
+    sql: 'exec #p',
+    columns: true,
+    modes: BOTH
+  },
+  {
+    name: 'info/proc-warning-then-error',
+    setup: ["create procedure #p as begin select sum(x) as s from (values (1), (cast(null as int))) t(x); raiserror('e16', 16, 1) end"],
+    sql: 'exec #p',
+    columns: true,
+    modes: BOTH
+  },
 
   // ----- pause / resume (#480, #470): 51 rows is one full batch of 50 plus one
   ...[1, 49, 50, 51, 52, 101, 102].map(n => ({

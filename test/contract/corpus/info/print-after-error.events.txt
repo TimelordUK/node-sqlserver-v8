@@ -1,0 +1,13 @@
+# scenario: info/print-after-error.events
+# status: unreviewed
+# sql: raiserror('e1', 16, 1); print 'p1'; select 1 as n
+submitted
+error 42000 50000 e1 more=true
+info 01000 0 p1
+rowcount 0 x2
+meta n
+row
+column 0 1
+done
+free
+check ok

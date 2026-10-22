@@ -1,0 +1,13 @@
+# scenario: info/raiserror-info-then-error.events
+# status: unreviewed
+# sql: raiserror('i10', 10, 1); raiserror('e16', 16, 1); select 1 as n
+submitted
+info 01000 50000 i10
+error 42000 50000 e16 more=true
+rowcount 0 x2
+meta n
+row
+column 0 1
+done
+free
+check ok

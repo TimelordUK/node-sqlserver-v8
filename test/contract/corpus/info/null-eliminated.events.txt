@@ -1,0 +1,11 @@
+# scenario: info/null-eliminated.events
+# status: unreviewed
+# sql: select sum(x) as s from (values (1), (cast(null as int))) t(x)
+submitted
+meta s
+row
+column 0 1
+info 01003 8153 Warning: Null value is eliminated by an aggregate or other SET operation.
+done
+free
+check ok

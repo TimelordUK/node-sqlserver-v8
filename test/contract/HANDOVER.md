@@ -32,6 +32,106 @@ the contract below. Workarounds for a missing or doubled `done` (node-mssql 12.7
 break. Then decide the node-mssql guard: an RC on `next` for dhensby, node-mssql-shaped
 scenarios, or their suite as a canary job.
 
+## Progress — 2026-10-22: node-mssql against v6
+
+node-mssql's own msnodesqlv8 suite (`npx mocha --exit -t 30000 test/msnodesqlv8` in a clone,
+with `node_modules/msnodesqlv8` a junction to this repo) against branch
+`fix/info-dropped-on-fetch`:
+
+| node-mssql | ODBC 18 | SQL Server Native Client 11 (their CI's driver) |
+|---|---|---|
+| master (f20c197) | 151 passing, 6 failing | **155 passing, 2 failing** |
+| v12.7.10 (latest release) | | **155 passing, 2 failing** |
+| v12.7.7 (no 5.6 workarounds) | | **154 passing, 2 failing** |
+
+The 2 are environmental (SQL login tests; LocalDB is trusted-connection only). With ODBC 18,
+4 more fail on their exact-message asserts (the driver prefix), as a 30 s timeout because the
+assert throws in a callback - not a hang. Use SNAC 11 for a clean baseline: in `.mssql.json`,
+`Driver={SQL Server Native Client 11.0}`. Note `npm install` in the clone removes the junction.
+
+`test/contract/mssql/tap.js`, loaded with `--require` into their run, records every call
+node-mssql makes on us and the transcript it saw (`MSNODESQLV8_TAP_OUT=<file.jsonl>`). On master:
+154 tests, 873 calls - `queryRaw` with `{query_str, query_timeout}` (269), `query` with a
+callback (267, pool validation and transactions), `setUseUTC`, `close`, bulk through
+`tableMgr().bind` / `insertRows`. Never our `prepare` or `callproc`; no chunked column
+(`more=true`). Their stream back pressure pauses on 50-row boundaries (our batch size).
+
+**For the release notes, and dhensby:** node-mssql still emits `done` on our query itself after
+a cancel of a paused query is accepted (`if (!err && req.isPaused()) req.emit('done')`). v6
+raises its own `done` after the HY008, so their listeners now see
+`cancel-cb ok | done (theirs) | error HY008 | done | free` - 4 of their tests. They pass (they
+use `once('done')`), but the workaround should go for msnodesqlv8 >= 6.
+
+They also read our internals: `query.queryWorker.running` (`stopped()`), `req.isPaused()`,
+`req.getCancelSent()`, and assume a fetch batch of 50 rows. v6 keeps all of them; a change to
+any is a break for node-mssql.
+
+Their suite skips for msnodesqlv8: raiserror through a request, XACT_ABORT transactions,
+timeouts, concurrent requests, type validation, several bulk column types. Candidates for our
+corpus, as nothing of theirs guards them.
+
+## Progress — 2026-10-22: info the driver sends is no longer dropped
+
+Branch `fix/info-dropped-on-fetch`. New corpus group `info/` (45 transcripts) and
+`scripts/prepared-info`. The reference for "what the server sent" is .NET SqlClient, which reads
+TDS directly and reports every message token in order (a PowerShell probe; classic `sqlcmd` is
+ODBC and has the same blind spot, so it is not a reference).
+
+**What was lost, and why:**
+- **Warnings raised at the end of a result set** — 8153 "Null value is eliminated by an
+  aggregate", 3607 "Division by zero occurred", 3606 "Arithmetic overflow occurred" — were
+  dropped **every time**. msodbcsql hands them to the `SQLFetch` that returns `SQL_NO_DATA`, as
+  a diagnostic record, and `fetch_read` returned on `SQL_NO_DATA` without reading it. Found by a
+  temporary probe in `RealOdbcApi` that logged `SQL_DIAG_NUMBER` after every statement call,
+  whatever it returned. A mid-rowset warning (row 75 of 120) is sent at the end too.
+- And a fetch that worked could not carry diagnostics to JS at all: `FetchRowsWorker` called
+  back `(null, result)`, and `BasePromises.op` rejects whatever comes first.
+- **Prepared executions**: the driver hands the same warning to `SQLExecute`
+  (`SQL_SUCCESS_WITH_INFO`), short result or long. `bind_fetch` passed it as success and
+  `SQLRowCount` then cleared it; and `BindQueryWorker` also called back `(null, meta)`.
+- **1756 "Skipping FOREIGN KEY constraint … temporary table" was not lost by us.** It is raised
+  when the batch is compiled, so a cached plan raises nothing: SqlClient gets it the first time
+  and not the second, on identical text. The "0 of 20" in the 2026-10-18 notes was the plan
+  cache. With unique text it arrives every time. Scenarios with compile-time warnings put
+  `{unique}` in a comment (the recorder replaces it on every run); `info/fk-on-temp-table-cached`
+  pins that a cached plan sends none.
+- PRINT and RAISERROR (any severity, `with nowait`) were always delivered, in order, including
+  60 messages over several packets and inside procedures.
+
+**The fix:**
+- Native: `keep_diagnostics()` appends whatever records a call that did not fail came with
+  (`read_errors` replaces). Called on `SQL_NO_DATA` and `SQL_SUCCESS_WITH_INFO` from `SQLFetch`
+  and `SQLFetchScroll`, on `SQL_NO_DATA` from `SQLMoreResults`, and on `SQL_SUCCESS_WITH_INFO`
+  from `SQLExecute` in `bind_fetch`. `TryReadRows` now clears the last call's errors first.
+  `FetchRowsWorker` and `BindQueryWorker` call back `(info, result)` when a call worked with info,
+  as `NextResultWorker` already did.
+- `bind_fetch` resets the result set's end flags after a successful execute. They were the last
+  execution's, and with info `beginQuery` read "end of rows and results" as a failed query with
+  nothing to read: the second execution with a warning lost its rows (found by `prepared-info`).
+- JS: `nativeGetRows` keeps a batch's info with the batch (`d.info`); `continueBatch` emits it
+  after the batch's rows, before the next fetch or result — the server's order. A pause holds it
+  until the resume (`info/warning-paused-*`).
+- `test/warnings.test.js` "TEST TWO - NULL ELIMNATED WARNING" asserted `res.info === null`,
+  i.e. it pinned the bug. It now expects the 8153.
+
+**Known, not fixed:**
+- Prepared: the info comes *before* the `meta`, because the driver hands it to `SQLExecute`;
+  ODBC does not say where in the stream it was (`scripts/prepared-info`).
+- `keep_diagnostics` appends, but a later real error in the same fetch goes through
+  `return_odbc_error`, which replaces: info before an error *within one fetch call* would be lost.
+  Not seen in any scenario.
+- `QueryWorker` (direct execute) still calls back `(null, meta)` on success; info at execute
+  reaches JS because `try_execute_direct` returns false on `SQL_SUCCESS_WITH_INFO`. Works, but it
+  is not the same shape as the other workers.
+- `cancel/after-error-mid-batch` shows the cancel-cb / HY008 race (about 1 in 10, on master's
+  native code too): it has an `--- or` alternative now.
+
+**To review in the `info/` transcripts** (all `unreviewed`):
+- each PRINT, and each statement with no result (a DDL), is followed by `rowcount 0`; an insert
+  then a print gives `rowcount 1 x2`. Contract question: should a PRINT end a "result"?
+- callback mode, `info/warning-then-error-then-result.callback`: result 1's callback comes after
+  the error's callback, and the error's empty result gets `cb ok rows=0 more=true`.
+
 ## Summary at first handover (2026-10-15)
 
 The normal streaming path is fine: plain reads, multiple result sets, and pause/resume part
@@ -123,7 +223,7 @@ at execute, the error comes with `more=false` and the rest of the batch is lost:
 the #475 fix in 5.6.0 (`odbc_statement_legacy.cpp`, the look-ahead after a failed execute)
 does not hold on Linux. The same 4 scenarios differ with the base commit's `lib/`, so it is
 older than the queue work. Pinned as `errors/{raiserror-then-result,dup-key-d}.*.linux.txt`
-`scripts/issue-478.linux.txt` (its case D) and `cancel/after-error-mid-batch.events.linux.txt` (the batch is gone, so the cancel finds nothing), `# status: known-bug`, so that CI is green
+`scripts/issue-478.linux.txt` (its case D) and `cancel/after-error-mid-batch.events.linux.txt` (the batch is gone, so the cancel finds nothing) and `info/print-after-error.{events,callback}.linux.txt` (2026-10-22: the print and result after the error are lost), `# status: known-bug`, so that CI is green
 and the fix shows up as a diff. Filed as #483.
 
 To run the corpus on WSL: a `git worktree` under `/tmp/<x>/node_modules/msnodesqlv8` (the
@@ -223,7 +323,7 @@ described with no columns at prepare, so its executions return no rows (`rowcoun
 
 ## Next
 
-### 1. Nothing the driver sends is dropped (the next session's theme)
+### 1. Nothing the driver sends is dropped (done 2026-10-22, see Progress; the 1756 below was the plan cache)
 
 Any information the driver sends should reach the caller. Today some is silently lost:
 - Info from some DDL is mostly lost, on master too: 1756 "Skipping FOREIGN KEY constraint …
