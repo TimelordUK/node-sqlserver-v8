@@ -58,6 +58,10 @@ void BindQueryWorker::Execute() {
         SetError(errorMessage);
         has_error_ = true;
       }
+    } else {
+      // an execution that worked can come with info (e.g. 8153, when the driver has read
+      // to the end of a short result): it goes back with the metadata
+      errorDetails_ = connection_->GetErrors();
     }
   } catch (const std::exception& e) {
     SQL_LOG_ERROR("Exception in BindQueryWorker::Execute: " + std::string(e.what()));
@@ -80,7 +84,11 @@ void BindQueryWorker::OnOK() {
 
   try {
     const auto metadata = GetMetadata();
-    Callback().Call({env.Null(), metadata});
+    if (errorDetails_.empty()) {
+      Callback().Call({env.Null(), metadata});
+    } else {
+      Callback().Call({GetErrors(env), metadata});
+    }
   } catch (const std::exception& e) {
     // Call the callback with an error
     Callback().Call({Napi::Error::New(env, e.what()).Value(), env.Null()});

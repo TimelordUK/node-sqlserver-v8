@@ -127,7 +127,10 @@ class Run {
     const log = line => this.log(label, line)
     let resolveFree
     this.pending.set(label, new Promise(resolve => { resolveFree = resolve }))
-    const args = [def.sql]
+    // {unique} makes the text new on every run, so the server compiles it every time:
+    // warnings raised at compile (e.g. 1756) only come when there's no cached plan
+    const unique = `${process.pid}_${Date.now()}_${Math.random().toString(36).slice(2)}`
+    const args = [typeof def.sql === 'string' ? def.sql.replaceAll('{unique}', unique) : def.sql]
     if (def.params) args.push(def.params)
     if (def.callback) {
       args.push((err, rows, more) => {

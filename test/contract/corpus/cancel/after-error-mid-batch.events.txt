@@ -2,11 +2,22 @@
 # status: agreed
 # sql: raiserror('boom', 16, 1); waitfor delay '00:00:01'; select 2 as n
 # at: {"error":{"1":["cancel"]}}
+# the cancel callback and the HY008 from the call in flight are two native completions;
+# either can reach JS first (about 1 run in 10, on master too)
 submitted
 error 42000 50000 boom more=true
 action cancel
 cancel-cb ok
 error HY008 0 Operation canceled more=false
+done
+free
+check ok
+--- or
+submitted
+error 42000 50000 boom more=true
+action cancel
+error HY008 0 Operation canceled more=false
+cancel-cb ok
 done
 free
 check ok

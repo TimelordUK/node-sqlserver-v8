@@ -43,6 +43,10 @@ void FetchRowsWorker::Execute() {
         SetError(errorMessage);
         has_error_ = true;
       }
+    } else {
+      // a fetch that worked can still come with info (e.g. 8153 at the end of the rows):
+      // it goes back alongside the rows, as nextResultSet does
+      errorDetails_ = connection_->GetErrors();
     }
   } catch (const std::exception& e) {
     SQL_LOG_ERROR("Exception in FetchRowsWorker::Execute: " + std::string(e.what()));
@@ -82,8 +86,12 @@ void FetchRowsWorker::OnOK() {
       return;
     }
     const auto result = JsObjectMapper::fromQueryResult(env, resultset);
-    // Call the callback with the result
-    Callback().Call({env.Null(), result});
+    // Call the callback with the result, and the info the fetch came with if any
+    if (errorDetails_.empty()) {
+      Callback().Call({env.Null(), result});
+    } else {
+      Callback().Call({GetErrors(env), result});
+    }
   } catch (const std::exception& e) {
     // Call the callback with an error
     Callback().Call({Napi::Error::New(env, e.what()).Value(), env.Null()});

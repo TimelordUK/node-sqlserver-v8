@@ -1,0 +1,43 @@
+# scenario: scripts/prepared-info
+# status: unreviewed
+# script: test/contract/scripts/prepared-info.js
+setup: submitted
+setup: rowcount 4
+setup: cb ok rows=0 more=false
+setup: done
+setup: free
+== A a null is eliminated: 8153
+ps: submitted
+ps: info 01003 8153 Warning: Null value is eliminated by an aggregate or other SET operation.
+ps: meta s
+ps: row
+ps: column 0 1
+ps: done
+== B no null: no info, nothing left over from A
+ps: submitted
+ps: meta s
+ps: row
+ps: column 0 3
+ps: done
+== C a null again: 8153 again, once
+ps: submitted
+ps: info 01003 8153 Warning: Null value is eliminated by an aggregate or other SET operation.
+ps: meta s
+ps: row
+ps: column 0 1
+ps: done
+ps: free-cb ok
+ps: free
+== D a longer result (120 rows): 8153 at execute too
+setup2: submitted
+setup2: rowcount 240
+setup2: cb ok rows=0 more=false
+setup2: done
+setup2: free
+ps2: submitted
+ps2: info 01003 8153 Warning: Null value is eliminated by an aggregate or other SET operation.
+ps2: meta g,s
+ps2: row x120
+ps2: done
+ps2: free
+check ok

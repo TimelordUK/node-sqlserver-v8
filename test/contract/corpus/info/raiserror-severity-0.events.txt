@@ -1,0 +1,12 @@
+# scenario: info/raiserror-severity-0.events
+# status: unreviewed
+# sql: raiserror('i0', 0, 1); select 1 as n
+submitted
+info 01000 50000 i0
+rowcount 0
+meta n
+row
+column 0 1
+done
+free
+check ok

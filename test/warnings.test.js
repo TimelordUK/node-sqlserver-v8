@@ -123,7 +123,10 @@ describe('warning', function () {
     const res = await env.theConnection.promises.query(nullEliminatedTestQry, [], { raw: true })
     expect(res.first).is.deep.equal(expected)
     expect(res.meta.length).is.equal(1)
-    expect(res.info).is.equal(null)
+    // the driver hands 8153 to the fetch that ends the rows (SQL_NO_DATA): it used to be
+    // dropped there, and this test expected no info
+    expect(res.info.length).is.equal(1)
+    expect(res.info[0]).to.include('Null value is eliminated')
   })
 
   it('TEST FIVE - Stord Proc - JOIN HINT WARNING', testDone => {

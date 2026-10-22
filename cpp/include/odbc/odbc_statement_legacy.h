@@ -197,6 +197,7 @@ class OdbcStatementLegacy : public IOdbcStatement {
   bool try_read_string(bool binary, size_t row_id, size_t column);
 
   bool return_odbc_error();
+  void keep_diagnostics();
   bool check_odbc_error(SQLRETURN ret);
   bool return_cancelled();
   bool more_results_after_error() const;

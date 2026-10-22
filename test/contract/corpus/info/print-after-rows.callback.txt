@@ -1,0 +1,18 @@
+# scenario: info/print-after-rows.callback
+# status: unreviewed
+# sql: select top 3 x from (values (1), (2), (3)) t(x); print 'p1'
+submitted
+meta x
+row
+column 0 1
+row
+column 0 2
+row
+column 0 3
+info 01000 0 p1
+rowcount 0
+cb ok rows=0 more=true
+cb ok rows=3 more=false
+done
+free
+check ok

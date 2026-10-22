@@ -1,0 +1,27 @@
+# scenario: info/prints-around-everything.callback
+# status: unreviewed
+# sql: print 'p1'; select 1 as a; print 'p2'; print 'p3'; select 2 as b; print 'p4'
+submitted
+info 01000 0 p1
+rowcount 0
+meta a
+cb ok rows=0 more=true
+row
+column 0 1
+info 01000 0 p2
+rowcount 0
+cb ok rows=0 more=true
+info 01000 0 p3
+rowcount 0
+cb ok rows=0 more=true
+meta b
+cb ok rows=1 more=true
+row
+column 0 2
+info 01000 0 p4
+rowcount 0
+cb ok rows=0 more=true
+cb ok rows=1 more=false
+done
+free
+check ok

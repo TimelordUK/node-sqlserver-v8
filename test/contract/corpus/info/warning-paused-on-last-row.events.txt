@@ -1,0 +1,13 @@
+# scenario: info/warning-paused-on-last-row.events
+# status: unreviewed
+# sql: select g, sum(x) as s from (select top 200 row_number() over (order by (select 1)) % 120 as g, case when row_number() over (order by (select 1)) % 7 = 0 then null else 1 end as x from sys.all_objects) t group by g order by g
+# at: {"row":{"120":["pause","resume:50"]}}
+submitted
+meta g,s
+row x120
+action pause
+action resume
+info 01003 8153 Warning: Null value is eliminated by an aggregate or other SET operation.
+done
+free
+check ok

@@ -1,0 +1,20 @@
+# scenario: info/proc-prints.events
+# status: unreviewed
+# setup: create procedure #p as begin print 'in'; select 1 as n; print 'between'; select 2 as m; print 'out' end
+# sql: exec #p
+submitted
+info 01000 0 in
+rowcount 0
+meta n
+row
+column 0 1
+info 01000 0 between
+rowcount 0
+meta m
+row
+column 0 2
+info 01000 0 out
+rowcount 0
+done
+free
+check ok

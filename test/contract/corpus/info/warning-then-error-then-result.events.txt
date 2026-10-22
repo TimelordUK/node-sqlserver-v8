@@ -1,0 +1,16 @@
+# scenario: info/warning-then-error-then-result.events
+# status: unreviewed
+# sql: select sum(x) as s from (values (1), (cast(null as int))) t(x); raiserror('e16', 16, 1); select 2 as n
+submitted
+meta s
+row
+column 0 1
+info 01003 8153 Warning: Null value is eliminated by an aggregate or other SET operation.
+error 42000 50000 e16 more=true
+rowcount 0
+meta n
+row
+column 0 2
+done
+free
+check ok
