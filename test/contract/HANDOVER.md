@@ -32,6 +32,44 @@ the contract below. Workarounds for a missing or doubled `done` (node-mssql 12.7
 break. Then decide the node-mssql guard: an RC on `next` for dhensby, node-mssql-shaped
 scenarios, or their suite as a canary job.
 
+## Progress — 2026-10-22: node-mssql against v6
+
+node-mssql's own msnodesqlv8 suite (`npx mocha --exit -t 30000 test/msnodesqlv8` in a clone,
+with `node_modules/msnodesqlv8` a junction to this repo) against branch
+`fix/info-dropped-on-fetch`:
+
+| node-mssql | ODBC 18 | SQL Server Native Client 11 (their CI's driver) |
+|---|---|---|
+| master (f20c197) | 151 passing, 6 failing | **155 passing, 2 failing** |
+| v12.7.10 (latest release) | | **155 passing, 2 failing** |
+| v12.7.7 (no 5.6 workarounds) | | **154 passing, 2 failing** |
+
+The 2 are environmental (SQL login tests; LocalDB is trusted-connection only). With ODBC 18,
+4 more fail on their exact-message asserts (the driver prefix), as a 30 s timeout because the
+assert throws in a callback - not a hang. Use SNAC 11 for a clean baseline: in `.mssql.json`,
+`Driver={SQL Server Native Client 11.0}`. Note `npm install` in the clone removes the junction.
+
+`test/contract/mssql/tap.js`, loaded with `--require` into their run, records every call
+node-mssql makes on us and the transcript it saw (`MSNODESQLV8_TAP_OUT=<file.jsonl>`). On master:
+154 tests, 873 calls - `queryRaw` with `{query_str, query_timeout}` (269), `query` with a
+callback (267, pool validation and transactions), `setUseUTC`, `close`, bulk through
+`tableMgr().bind` / `insertRows`. Never our `prepare` or `callproc`; no chunked column
+(`more=true`). Their stream back pressure pauses on 50-row boundaries (our batch size).
+
+**For the release notes, and dhensby:** node-mssql still emits `done` on our query itself after
+a cancel of a paused query is accepted (`if (!err && req.isPaused()) req.emit('done')`). v6
+raises its own `done` after the HY008, so their listeners now see
+`cancel-cb ok | done (theirs) | error HY008 | done | free` - 4 of their tests. They pass (they
+use `once('done')`), but the workaround should go for msnodesqlv8 >= 6.
+
+They also read our internals: `query.queryWorker.running` (`stopped()`), `req.isPaused()`,
+`req.getCancelSent()`, and assume a fetch batch of 50 rows. v6 keeps all of them; a change to
+any is a break for node-mssql.
+
+Their suite skips for msnodesqlv8: raiserror through a request, XACT_ABORT transactions,
+timeouts, concurrent requests, type validation, several bulk column types. Candidates for our
+corpus, as nothing of theirs guards them.
+
 ## Progress — 2026-10-22: info the driver sends is no longer dropped
 
 Branch `fix/info-dropped-on-fetch`. New corpus group `info/` (45 transcripts) and
