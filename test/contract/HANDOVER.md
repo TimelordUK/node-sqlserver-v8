@@ -123,8 +123,8 @@ ODBC and has the same blind spot, so it is not a reference).
 - `QueryWorker` (direct execute) still calls back `(null, meta)` on success; info at execute
   reaches JS because `try_execute_direct` returns false on `SQL_SUCCESS_WITH_INFO`. Works, but it
   is not the same shape as the other workers.
-- `cancel/after-error-mid-batch` shows the cancel-cb / HY008 race (about 1 in 10, on master's
-  native code too): it has an `--- or` alternative now.
+- `cancel/after-error-mid-batch` showed the cancel-cb / HY008 race (about 1 in 10, on master's
+  native code too). Fixed since: see the cancel race under Smaller items.
 
 **To review in the `info/` transcripts** (all `unreviewed`):
 - each PRINT, and each statement with no result (a DDL), is followed by `rowcount 0`; an insert
@@ -354,15 +354,14 @@ that replay covers them.
 - #483 (Linux, native) on WSL. When it is fixed, the `known-bug` Linux pins show as diffs:
   `errors/{raiserror-then-result,dup-key-d}.*.linux.txt`, `scripts/issue-478.linux.txt`,
   `cancel/after-error-mid-batch.events.linux.txt`.
-- A race in accepted cancels: the cancel's own callback (`cancel-cb ok`) and the HY008 from the
-  fetch in flight are two native completions on different threads, so either can reach JS
-  first. CI showed it on `cancel/twice-streaming-at-100`, which now has an `--- or`
-  alternative (the first in the corpus). `cancel/again-after-confirm-at-100` failed once
-  locally, probably the same race, but its transcript was not kept. Other accepted cancels
-  of a statement in flight can show it too: add the alternative when one does. Or tighten the
-  contract: hold the HY008 in JS until the cancel callback has run, so that `cancel-cb ok`
-  always comes first. That is the owner's call. Note that `capture.js --update` rewrites a file
-  from what it saw, so it drops an alternative it did not see.
+- ~~A race in accepted cancels~~, fixed (2026-10-22). The cancel's own callback (`cancel-cb ok`)
+  and the HY008 from the fetch in flight are two native completions on different threads, so
+  either could reach JS first. CI showed it on `cancel/twice-streaming-at-100`,
+  `cancel/again-after-confirm-at-100` and `scripts/issue-479`. Now, once a cancel is sent,
+  `StreamEvents` holds what a native call brings back to the reader (`afterCancel` in
+  `begin`, `dispatch`, `nextResult`) until the cancel's callback has run, then releases it a
+  tick on, after anything that callback queued. An accepted cancel is always `cancel-cb ok`,
+  `error HY008`, `done`, `free`, and the corpus no longer has `--- or` alternatives for it.
 - The 36 `unreviewed` transcripts (listed under Where we are): read them against the
   contract and agree them. `read/print-*` belong with the `info/` work above.
 
