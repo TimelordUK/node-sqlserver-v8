@@ -42,6 +42,50 @@ npm install msnodesqlv8
 
 ---
 
+## Known issue: some warnings are missing on Linux with unixODBC older than 2.3.12
+
+Since **6.0.0**, warnings that SQL Server raises at the end of a result set
+are delivered as `info` messages. Examples:
+
+- 8153 "Null value is eliminated by an aggregate or other SET operation"
+- 3606 arithmetic overflow
+- 3607 division by zero
+
+The ODBC driver hands these over on the fetch that finds no more rows. The
+unixODBC driver manager before 2.3.12 discards them there, so they never reach
+msnodesqlv8. Nothing errors and no rows are lost; those `info` messages just
+don't appear. PRINT and `RAISERROR` messages are not affected. 2.3.9 is
+confirmed affected and 2.3.12 confirmed fine.
+
+This mostly hits **Ubuntu 22.04**, which ships 2.3.9; Microsoft's package repo
+for 22.04 has only 2.3.7. Ubuntu 24.04 ships 2.3.12. Windows and macOS
+(Homebrew) are not affected.
+
+Check the version your app actually loads. An `odbcinst` from conda or
+similar on your `PATH` can report a different one:
+
+```sh
+ldconfig -p | grep 'libodbc.so.2 '
+dpkg -l | grep -E 'libodbc2|unixodbc '
+```
+
+To fix it, install unixODBC 2.3.12 or later. On Ubuntu 22.04 that means
+building it into `/usr/local`, which the dynamic linker searches before the
+system copy. No rebuild of msnodesqlv8 is needed: the prebuilt binary links
+`libodbc.so.2`, the same library name.
+
+```sh
+sudo apt-get install -y build-essential
+curl -LO https://www.unixodbc.org/unixODBC-2.3.12.tar.gz
+tar xzf unixODBC-2.3.12.tar.gz && cd unixODBC-2.3.12
+./configure --prefix=/usr/local --sysconfdir=/etc --disable-gui   # keeps using /etc/odbcinst.ini
+make -j"$(nproc)" && sudo make install && sudo ldconfig
+ldconfig -p | grep 'libodbc.so.2 '   # /usr/local/lib should now be listed first
+```
+
+To undo it, run `sudo make uninstall && sudo ldconfig` from the same
+directory.
+
 ## New to msnodesqlv8? Start with the API tour
 
 [**msnodesqlv8-api-tour**](https://github.com/TimelordUK/msnodesqlv8-api-tour)
