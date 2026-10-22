@@ -14,14 +14,3 @@ error HY008 0 Operation canceled more=false
 done
 free
 check ok
---- or
-submitted
-meta name
-row x100
-action cancel x2
-cancel-cb error cannot cancel query (cancel already requested) id 0
-error HY008 0 Operation canceled more=false
-cancel-cb ok
-done
-free
-check ok
