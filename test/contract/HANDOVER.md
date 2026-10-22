@@ -362,6 +362,9 @@ that replay covers them.
   `begin`, `dispatch`, `nextResult`) until the cancel's callback has run, then releases it a
   tick on, after anything that callback queued. An accepted cancel is always `cancel-cb ok`,
   `error HY008`, `done`, `free`, and the corpus no longer has `--- or` alternatives for it.
+  The refusal of a repeated cancel is held for the same way (#495 missed it: a cancel sent
+  from the first cancel's callback is refused a tick on, and a native result landing in the
+  poll phase between came first). `test/cancel-order.test.js` pins both, without a server.
 - The 36 `unreviewed` transcripts (listed under Where we are): read them against the
   contract and agree them. `read/print-*` belong with the `info/` work above.
 
