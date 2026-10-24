@@ -49,11 +49,13 @@ Repros in `repro/i497.js`, `repro/i498.js`; corpus `scripts/issue-497` (+ `-ns`,
 - **bigint max read as a double** came back as INT64_MIN: the int64 range check used bounds
   that round to 2^63. Bounds exact as doubles now.
 - **#498 part 1 fixed:** a double under numeric strings is `String(n)`'s text (`"1e-10"`), not `%f`.
-- **#498 part 2 open, the owner's call:** `decimal`, `money` and `smallmoney` are still read as a
-  double, so under numeric strings digits beyond a double are lost (`decimal(38,2)` with 20
-  integer digits, large `money`); a prepared statement binds `numeric` as a double too. The fix,
-  reading `SQL_DECIMAL` as text like `SQL_NUMERIC`, changes what users get: the driver's text
-  keeps the scale (`"5.00"`) and has no leading zero (`".0000001"`, as `numeric` already does).
+- **#498 part 2 fixed (owner's call: option 1, no new config):** under numeric strings `decimal`,
+  `money` and `smallmoney` are read as the driver's text, as `numeric` is - they are the same
+  type to SQL Server, and gave different text ("5" against "5.00"). Both now get the leading zero
+  the driver leaves out ("-0.50", not "-.50"). Corpus `scripts/issue-498` agreed.
+- **#498 still open: prepared statements** bind `numeric`/`decimal` result columns as a double
+  (`bound_datum.cpp` reserve, `reserved_decimal`), so they still lose digits under numeric
+  strings. Pinned `known-bug` in `scripts/issue-498-prepared`; needs a text binding.
 - The replay keeps whole rows for scripts now (`run-one.js`), so a script's column values replay.
   A transcript stops at 400 lines: split a script that needs more (as `issue-497-ns`).
 

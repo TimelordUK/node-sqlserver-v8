@@ -1458,15 +1458,17 @@ bool OdbcStatementLegacy::dispatch(
       }
       break;
 
+    // decimal (and money, smallmoney) is numeric under another name: under numeric strings
+    // both are the driver's exact text, never a double (#498)
     case SQL_NUMERIC:
+    case SQL_DECIMAL:
       if (_numericStringEnabled) {
-        res = try_read_string(false, row_id, column);
+        res = get_data_numeric_string(row_id, column);
       } else {
         res = get_data_decimal(row_id, column);
       }
       break;
 
-    case SQL_DECIMAL:
     case SQL_REAL:
     case SQL_FLOAT:
     case SQL_DOUBLE:
@@ -1973,6 +1975,43 @@ bool OdbcStatementLegacy::get_data_decimal(const size_t row_id, const size_t col
     _resultset->add_column(row_id, col);
   }
 
+  return true;
+}
+
+// a numeric or decimal as the driver's text, which keeps every digit and the scale ("5.00").
+// the driver leaves out the zero before the point ("-.50"); it is put back ("-0.50").
+bool OdbcStatementLegacy::get_data_numeric_string(const size_t row_id, const size_t column) {
+  // 38 digits, a sign and a point
+  constexpr SQLLEN capacity = 64;
+  constexpr auto unit = static_cast<SQLLEN>(sizeof(uint16_t));
+  std::vector<uint16_t> text(capacity, 0);
+  SQLLEN value_len = 0;
+  const auto ret = _odbcApi->SQLGetData(_statement->get_handle(),
+                                        static_cast<SQLSMALLINT>(column + 1),
+                                        SQL_C_WCHAR,
+                                        text.data(),
+                                        capacity * unit,
+                                        &value_len);
+  if (!check_odbc_error(ret)) {
+    SQL_LOG_DEBUG_STREAM("get_data_numeric_string failed to get data");
+    return false;
+  }
+  if (value_len == SQL_NULL_DATA) {
+    _resultset->add_column(row_id, make_shared<NullColumn>(column));
+    return true;
+  }
+  auto len = static_cast<size_t>(value_len / unit);
+  if (len >= static_cast<size_t>(capacity)) {
+    len = static_cast<size_t>(capacity) - 1;
+  }
+  text.resize(len);
+  const auto sign = !text.empty() && text[0] == u'-' ? 1 : 0;
+  if (text.size() > static_cast<size_t>(sign) && text[sign] == u'.') {
+    text.insert(text.begin() + sign, u'0');
+  }
+  const auto size = text.size();
+  const auto storage = make_shared<std::vector<uint16_t>>(std::move(text));
+  _resultset->add_column(row_id, make_shared<StringColumn>(column, storage, 0, size));
   return true;
 }
 

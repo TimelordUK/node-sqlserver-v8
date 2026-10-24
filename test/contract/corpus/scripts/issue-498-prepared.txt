@@ -1,0 +1,20 @@
+# scenario: scripts/issue-498-prepared
+# status: known-bug
+# script: test/contract/scripts/issue-498-prepared.js
+# #498: a prepared statement binds numeric and decimal result columns as a double, so column 1
+# loses digits (should be "12345678901234567.89")
+setup: submitted
+setup: rowcount 1
+setup: cb ok rows=0 more=false
+setup: done
+setup: free
+== prepared, numeric strings on
+ps: submitted
+ps: meta n,d,f
+ps: row
+ps: column 0 "1.0123456789"
+ps: column 1 "12345678901234568"
+ps: column 2 "1e-10"
+ps: done
+ps: free
+check ok

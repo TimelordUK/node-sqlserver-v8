@@ -981,13 +981,26 @@ describe('Parameter Tests', function () {
       assert.deepStrictEqual(result.first[0], { f1: '1e-10', f2: '0.1234567890123', f3: '1.5e+300', f4: '-2.5', r1: '0.5' })
     })
 
-    it('should return decimal and money as strings without %f padding', async function () {
+    // decimal is numeric under another name: both are the server's exact text
+    it('should return decimal and money as their exact text', async function () {
       const result = await env.theConnection.promises.query({
-        query_str: 'select cast(1.0123456789 as decimal(38,10)) as d1, cast(0.0000001 as decimal(10,7)) as d2, ' +
-          'cast(-0.0001 as money) as m1, cast(1.2345 as smallmoney) as m2',
+        query_str: 'select cast(1.0123456789 as decimal(38,10)) as d1, cast(12345678901234567890.12 as decimal(38,2)) as d2, ' +
+          'cast(9007199254740993 as decimal(19,0)) as d3, cast(922337203685477.5807 as money) as m1, ' +
+          'cast(-0.0001 as money) as m2, cast(1.2345 as smallmoney) as m3',
         numeric_string: true
       })
-      assert.deepStrictEqual(result.first[0], { d1: '1.0123456789', d2: '1e-7', m1: '-0.0001', m2: '1.2345' })
+      assert.deepStrictEqual(result.first[0], {
+        d1: '1.0123456789', d2: '12345678901234567890.12', d3: '9007199254740993', m1: '922337203685477.5807', m2: '-0.0001', m3: '1.2345'
+      })
+    })
+
+    it('should return decimal and numeric with their scale and a leading zero', async function () {
+      const result = await env.theConnection.promises.query({
+        query_str: 'select cast(5 as decimal(5,2)) as d1, cast(-0.5 as decimal(5,2)) as d2, cast(0 as decimal(5,2)) as d3, ' +
+          'cast(5 as numeric(5,2)) as n1, cast(-0.5 as numeric(5,2)) as n2, cast(0.0000001 as numeric(10,7)) as n3, cast(null as decimal(5,2)) as nul',
+        numeric_string: true
+      })
+      assert.deepStrictEqual(result.first[0], { d1: '5.00', d2: '-0.50', d3: '0.00', n1: '5.00', n2: '-0.50', n3: '0.0000001', nul: null })
     })
   })
 

@@ -151,6 +151,7 @@ class OdbcStatementLegacy : public IOdbcStatement {
   SQLRETURN poll_check(SQLRETURN ret, shared_ptr<vector<uint16_t>> vec, const bool direct);
   bool get_data_binary(size_t row_id, size_t column);
   bool get_data_decimal(size_t row_id, size_t column);
+  bool get_data_numeric_string(size_t row_id, size_t column);
   bool get_data_numeric(size_t row_id, size_t column);
   bool get_data_bit(size_t row_id, size_t column);
   bool get_data_timestamp(size_t row_id, size_t column);
