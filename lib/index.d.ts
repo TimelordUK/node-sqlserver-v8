@@ -754,7 +754,9 @@ declare namespace MsNodeSqlV8 {
     id: number
     /**
      * optionally return all number based columns as strings
-     * to prevent exceeding max numeric for JS
+     * to prevent exceeding max numeric for JS. numeric, decimal, money and
+     * smallmoney are the server's exact text, with their scale and a leading
+     * zero ('5.00', '-0.50'); float and real are the text String(n) gives.
      * @param numericString boolean true for numers as strings.
      */
     setUseNumericString: (numericString: boolean) => void
