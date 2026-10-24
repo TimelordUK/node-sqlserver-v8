@@ -11,6 +11,9 @@ shared_ptr<Column> ResultSet::get_column(const size_t row_id, const size_t colum
     return nullptr;
   }
   const auto& row = _rows[row_id];
+  if (column_id >= row.size()) {
+    return nullptr;
+  }
   return row[column_id];
 }
 

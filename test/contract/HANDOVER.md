@@ -1,6 +1,6 @@
 # Handover: the v6 event contract (from the 5.6.0 regressions, #478 – #481)
 
-Started 2026-10-15 from dhensby's reports. Last updated 2026-10-18. The newest state is
+Started 2026-10-15 from dhensby's reports. Last updated 2026-10-24. The newest state is
 first; the dated Progress sections below have the detail, and the older sections are history.
 
 ## Where we are — end of 2026-10-18
@@ -31,6 +31,31 @@ two-raiserrors-then-result.*}` and `scripts/issue-480`.
 the contract below. Workarounds for a missing or doubled `done` (node-mssql 12.7.8+) may
 break. Then decide the node-mssql guard: an RC on `next` for dhensby, node-mssql-shaped
 scenarios, or their suite as a canary job.
+
+## Progress — 2026-10-24: #497 (sql_variant) and #498 (numeric strings)
+
+Both reported by dhensby against 6.0.0; both reproduced here (ODBC 18), the crash included.
+Repros in `repro/i497.js`, `repro/i498.js`; corpus `scripts/issue-497` (+ `-ns`, agreed) and
+`scripts/issue-498` (known-bug). Unit tests in `test/params-complete-refactored.test.js`.
+
+- **#497 fixed.** `d_variant` wrote the first row's base type into the column's definition, so
+  every later row was read as that type. It now dispatches each row on its own type, and stores
+  a NULL from its first `SQLGetData` (a second read of a NULL is `SQL_NO_DATA`, which lost the row).
+- **The 0xC0000005 crash fixed.** A failed cell left a hole in the row, and building the JS rows
+  dereferenced it. `get_column` and `fromQueryResult` now give null for a missing cell, and a
+  failed cell ends the fetch: the partial row is dropped and the query ends in an error - one of
+  ours (HY000 "cannot read column N") if the driver gave none, so a failed read is never silent.
+  Still open: the rows read before it in the same fetch batch are not delivered.
+- **bigint max read as a double** came back as INT64_MIN: the int64 range check used bounds
+  that round to 2^63. Bounds exact as doubles now.
+- **#498 part 1 fixed:** a double under numeric strings is `String(n)`'s text (`"1e-10"`), not `%f`.
+- **#498 part 2 open, the owner's call:** `decimal`, `money` and `smallmoney` are still read as a
+  double, so under numeric strings digits beyond a double are lost (`decimal(38,2)` with 20
+  integer digits, large `money`); a prepared statement binds `numeric` as a double too. The fix,
+  reading `SQL_DECIMAL` as text like `SQL_NUMERIC`, changes what users get: the driver's text
+  keeps the scale (`"5.00"`) and has no leading zero (`".0000001"`, as `numeric` already does).
+- The replay keeps whole rows for scripts now (`run-one.js`), so a script's column values replay.
+  A transcript stops at 400 lines: split a script that needs more (as `issue-497-ns`).
 
 ## Progress — 2026-10-22: node-mssql against v6
 

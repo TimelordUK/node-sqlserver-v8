@@ -866,6 +866,49 @@ describe('Parameter Tests', function () {
       assert(smalldt.getMonth() === date.getMonth())
       assert(smalldt.getDay() === date.getDay())
     })
+
+    // #497: each row of a variant column is read by its own base type, not the first row's
+    const variantColumn = (...values) =>
+      'select i, v from (values ' +
+      values.map((x, i) => `(${i + 1}, cast(${x} as sql_variant))`).join(', ') +
+      ') t(i, v) order by i'
+
+    const variantValues = async (query, numericString) => {
+      const res = await env.theConnection.promises.query({
+        query_str: query,
+        numeric_string: numericString,
+        bigint_as_native: true
+      })
+      return res.first.map(r => r.v)
+    }
+
+    it('should read each row of a mixed sql_variant column by its own type', async function () {
+      const query = variantColumn('cast(7 as int)', 'cast(1.5 as decimal(5,2))', "cast(N'abc' as nvarchar(10))",
+        'cast(9223372036854775807 as bigint)', 'cast(2.25e-9 as float)', "cast('2020-01-02' as datetime)",
+        'cast(1 as bit)', 'null')
+      const values = await variantValues(query, false)
+      assert.deepStrictEqual(values.slice(0, 5), [7, 1.5, 'abc', 9223372036854775807n, 2.25e-9])
+      assert.strictEqual(values[5].toISOString(), '2020-01-02T00:00:00.000Z')
+      assert.deepStrictEqual(values.slice(6), [true, null])
+    })
+
+    it('should read a sql_variant column whose first row is null', async function () {
+      const values = await variantValues(variantColumn('null', '1', "N'abc'", '1.5'), false)
+      assert.deepStrictEqual(values, [null, 1, 'abc', 1.5])
+    })
+
+    it('should read a datetime-first sql_variant column', async function () {
+      const values = await variantValues(variantColumn("cast('2020-01-02' as datetime)", 'cast(7 as int)'), false)
+      assert.strictEqual(values[0].toISOString(), '2020-01-02T00:00:00.000Z')
+      assert.strictEqual(values[1], 7)
+    })
+
+    it('should read a mixed sql_variant column with numeric strings', async function () {
+      const query = variantColumn('cast(7 as int)', "cast(N'abc' as nvarchar(10))", 'cast(2.25e-9 as float)',
+        'cast(9223372036854775807 as bigint)', 'cast(1 as bit)')
+      const values = await variantValues(query, true)
+      assert.deepStrictEqual(values, ['7', 'abc', '2.25e-9', '9223372036854775807', true])
+    })
   })
 
   // ========================================
@@ -926,6 +969,25 @@ describe('Parameter Tests', function () {
       })
 
       assert.deepStrictEqual(result.first[0].number, num)
+    })
+
+    // #498: a float under numeric strings is the text String(n) gives, not %f
+    it('should return float and real as strings that keep the value', async function () {
+      const result = await env.theConnection.promises.query({
+        query_str: 'select cast(1e-10 as float) as f1, cast(0.1234567890123 as float) as f2, ' +
+          'cast(1.5e300 as float) as f3, cast(-2.5 as float) as f4, cast(0.5 as real) as r1',
+        numeric_string: true
+      })
+      assert.deepStrictEqual(result.first[0], { f1: '1e-10', f2: '0.1234567890123', f3: '1.5e+300', f4: '-2.5', r1: '0.5' })
+    })
+
+    it('should return decimal and money as strings without %f padding', async function () {
+      const result = await env.theConnection.promises.query({
+        query_str: 'select cast(1.0123456789 as decimal(38,10)) as d1, cast(0.0000001 as decimal(10,7)) as d2, ' +
+          'cast(-0.0001 as money) as m1, cast(1.2345 as smallmoney) as m2',
+        numeric_string: true
+      })
+      assert.deepStrictEqual(result.first[0], { d1: '1.0123456789', d2: '1e-7', m1: '-0.0001', m2: '1.2345' })
     })
   })
 

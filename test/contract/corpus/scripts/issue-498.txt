@@ -1,0 +1,66 @@
+# scenario: scripts/issue-498
+# status: known-bug
+# script: test/contract/scripts/issue-498.js
+# #498: doubles now print as String(n) does. still open: decimal and money are read as a double,
+# so digits a double cannot hold are lost (c6, c8, c10), and a prepared statement binds numeric
+# as a double too (ps column 1). numeric's text has no leading zero (c14 ".0000001")
+-- c0 cast(0.1234567890123 as float); c1 cast(1e-10 as float); c2 cast(1.5e300 as float); c3 cast(-2.5 as float); c4 cast(0.12345678 as real); c5 cast(1.0123456789 as decimal(38,10)); c6 cast(12345678901234567890.12 as decimal(38,2)); c7 cast(0.0000001 as decimal(10,7)); c8 cast(9007199254740993 as decimal(19,0)); c9 cast(709 as decimal(10,0)); c10 cast(922337203685477.5807 as money); c11 cast(-0.0001 as money); c12 cast(1.2345 as smallmoney); c13 cast(1.0123456789 as numeric(38,10)); c14 cast(0.0000001 as numeric(10,7)); c15 cast(9223372036854775807 as bigint)
+== numeric strings off
+plain: submitted
+plain: meta c0,c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15
+plain: row
+plain: column 0 0.1234567890123
+plain: column 1 1e-10
+plain: column 2 1.5e+300
+plain: column 3 -2.5
+plain: column 4 0.12345678359270096
+plain: column 5 1.0123456789
+plain: column 6 12345678901234567000
+plain: column 7 1e-7
+plain: column 8 9007199254740992
+plain: column 9 709
+plain: column 10 922337203685477.6
+plain: column 11 -0.0001
+plain: column 12 1.2345
+plain: column 13 1.0123456789
+plain: column 14 1e-7
+plain: column 15 9223372036854776000
+plain: done
+plain: free
+== numeric strings on
+ns: submitted
+ns: meta c0,c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15
+ns: row
+ns: column 0 "0.1234567890123"
+ns: column 1 "1e-10"
+ns: column 2 "1.5e+300"
+ns: column 3 "-2.5"
+ns: column 4 "0.12345678359270096"
+ns: column 5 "1.0123456789"
+ns: column 6 "12345678901234567000"
+ns: column 7 "1e-7"
+ns: column 8 "9007199254740992"
+ns: column 9 "709"
+ns: column 10 "922337203685477.6"
+ns: column 11 "-0.0001"
+ns: column 12 "1.2345"
+ns: column 13 "1.0123456789"
+ns: column 14 ".0000001"
+ns: column 15 "9223372036854775807"
+ns: done
+ns: free
+setup: submitted
+setup: rowcount 1
+setup: cb ok rows=0 more=false
+setup: done
+setup: free
+== prepared, numeric strings on
+ps: submitted
+ps: meta n,d,f
+ps: row
+ps: column 0 "1.0123456789"
+ps: column 1 "12345678901234568"
+ps: column 2 "1e-10"
+ps: done
+ps: free
+check ok

@@ -18,8 +18,10 @@ class NumberColumn : public Column {
   NumberColumn(int id, shared_ptr<DatumStorageLegacy> storage)
       : Column(id), value((*storage->doublevec_ptr)[0]) {}
 
+  // the same text as String(n) in JS: the shortest string that reads back as the same
+  // double. to_wstring is %f, six decimal places and no exponent (1e-10 gave "0.000000", #498)
   inline Napi::Object ToString(Napi::Env env) override {
-    return AsString<double>(env, value);
+    return Napi::Number::New(env, value).ToString().As<Napi::Object>();
   }
 
   inline Napi::Object ToNative(Napi::Env env) override {
