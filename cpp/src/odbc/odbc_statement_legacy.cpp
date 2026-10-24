@@ -1358,6 +1358,14 @@ bool OdbcStatementLegacy::dispatch_prepared(
 
     case SQL_DECIMAL:
     case SQL_NUMERIC:
+      // bound as text at prepare when numeric strings were on
+      if (_preparedStorage->atIndex(static_cast<int>(column))->c_type == SQL_C_WCHAR) {
+        res = reserved_numeric_text(rows_read, column);
+      } else {
+        res = reserved_decimal(rows_read, column);
+      }
+      break;
+
     case SQL_REAL:
     case SQL_FLOAT:
     case SQL_DOUBLE:
@@ -1978,6 +1986,14 @@ bool OdbcStatementLegacy::get_data_decimal(const size_t row_id, const size_t col
   return true;
 }
 
+// the driver's text for a numeric leaves out the zero before the point ("-.50"): put it back
+static void add_leading_zero(std::vector<uint16_t>& text) {
+  const size_t sign = !text.empty() && text[0] == u'-' ? 1 : 0;
+  if (text.size() > sign && text[sign] == u'.') {
+    text.insert(text.begin() + static_cast<std::ptrdiff_t>(sign), u'0');
+  }
+}
+
 // a numeric or decimal as the driver's text, which keeps every digit and the scale ("5.00").
 // the driver leaves out the zero before the point ("-.50"); it is put back ("-0.50").
 bool OdbcStatementLegacy::get_data_numeric_string(const size_t row_id, const size_t column) {
@@ -2005,13 +2021,39 @@ bool OdbcStatementLegacy::get_data_numeric_string(const size_t row_id, const siz
     len = static_cast<size_t>(capacity) - 1;
   }
   text.resize(len);
-  const auto sign = !text.empty() && text[0] == u'-' ? 1 : 0;
-  if (text.size() > static_cast<size_t>(sign) && text[sign] == u'.') {
-    text.insert(text.begin() + sign, u'0');
-  }
+  add_leading_zero(text);
   const auto size = text.size();
   const auto storage = make_shared<std::vector<uint16_t>>(std::move(text));
   _resultset->add_column(row_id, make_shared<StringColumn>(column, storage, 0, size));
+  return true;
+}
+
+// a prepared numeric or decimal column bound as text (numeric strings at prepare). an
+// execution with numeric strings off reads the same text back as a number.
+bool OdbcStatementLegacy::reserved_numeric_text(const size_t row_count, const size_t column) const {
+  const auto& bound_datum = _preparedStorage->atIndex(static_cast<int>(column));
+  const auto& ind = bound_datum->get_ind_vec();
+  const auto& store = *bound_datum->get_storage()->uint16vec_ptr;
+  constexpr auto unit = sizeof(uint16_t);
+  for (size_t row_id = 0; row_id < row_count; ++row_id) {
+    if (ind[row_id] == SQL_NULL_DATA) {
+      _resultset->add_column(row_id, make_shared<NullColumn>(column));
+      continue;
+    }
+    const auto offset = BoundDatum::numeric_text_width * row_id;
+    const auto len = min(static_cast<size_t>(ind[row_id]) / unit, BoundDatum::numeric_text_width - 1);
+    std::vector<uint16_t> text(store.begin() + static_cast<std::ptrdiff_t>(offset),
+                               store.begin() + static_cast<std::ptrdiff_t>(offset + len));
+    add_leading_zero(text);
+    if (_numericStringEnabled) {
+      const auto size = text.size();
+      const auto storage = make_shared<std::vector<uint16_t>>(std::move(text));
+      _resultset->add_column(row_id, make_shared<StringColumn>(column, storage, 0, size));
+    } else {
+      const std::string narrow(text.begin(), text.end());
+      _resultset->add_column(row_id, make_shared<NumberColumn>(column, std::strtod(narrow.c_str(), nullptr)));
+    }
+  }
   return true;
 }
 

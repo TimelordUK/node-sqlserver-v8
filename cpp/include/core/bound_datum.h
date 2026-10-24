@@ -88,6 +88,10 @@ class BoundDatum {
     _params = nullptr;
   }
 
+  // a numeric or decimal result column bound as text: 38 digits, a sign, a point, a leading
+  // zero and a terminator
+  static constexpr size_t numeric_text_width = 64;
+
   BoundDatum(shared_ptr<QueryOperationParams> params) : BoundDatum() {
     _params = params;
   }
