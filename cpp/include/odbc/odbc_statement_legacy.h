@@ -172,6 +172,7 @@ class OdbcStatementLegacy : public IOdbcStatement {
   bool reserved_int(const size_t row_count, const size_t column) const;
   bool reserved_big_int(const size_t row_count, const size_t column) const;
   bool reserved_decimal(const size_t row_count, const size_t column) const;
+  bool reserved_numeric_text(const size_t row_count, const size_t column) const;
   bool reserved_time(const size_t row_count, const size_t column) const;
   bool reserved_timestamp(const size_t row_count, const size_t column) const;
   bool reserved_timestamp_offset(const size_t row_count, const size_t column) const;

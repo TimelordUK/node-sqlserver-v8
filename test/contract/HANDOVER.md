@@ -53,9 +53,13 @@ Repros in `repro/i497.js`, `repro/i498.js`; corpus `scripts/issue-497` (+ `-ns`,
   `money` and `smallmoney` are read as the driver's text, as `numeric` is - they are the same
   type to SQL Server, and gave different text ("5" against "5.00"). Both now get the leading zero
   the driver leaves out ("-0.50", not "-.50"). Corpus `scripts/issue-498` agreed.
-- **#498 still open: prepared statements** bind `numeric`/`decimal` result columns as a double
-  (`bound_datum.cpp` reserve, `reserved_decimal`), so they still lose digits under numeric
-  strings. Pinned `known-bug` in `scripts/issue-498-prepared`; needs a text binding.
+- **#498 prepared statements fixed:** with numeric strings on at prepare, `BoundDatum::
+  reserve_column_type` binds `numeric`/`decimal` result columns as wide text (64 units a row)
+  instead of a double; `dispatch_prepared` picks the reader from the binding's `c_type`
+  (`reserved_numeric_text`). The text is the same as a query's, row for row
+  (`scripts/issue-498-prepared`, agreed). Seen on the way: a prepared `select top (?) …` is
+  described with no columns at prepare and returns no rows, numeric strings or not - the same
+  no-meta-at-prepare bug as `select 10 / ? as n`.
 - The replay keeps whole rows for scripts now (`run-one.js`), so a script's column values replay.
   A transcript stops at 400 lines: split a script that needs more (as `issue-497-ns`).
 

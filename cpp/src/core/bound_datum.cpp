@@ -2408,6 +2408,15 @@ void BoundDatum::reserve_column_type(const SQLSMALLINT type, size_t& len, const 
 
     case SQL_DECIMAL:
     case SQL_NUMERIC:
+      // under numeric strings, the driver's exact text: as a double it lost what a double
+      // cannot hold (#498). the reader picks its path from c_type
+      if (_params && _params->numeric_string) {
+        reserve_w_var_char_array(numeric_text_width, row_count);
+      } else {
+        reserve_double(static_cast<SQLLEN>(row_count));
+      }
+      break;
+
     case SQL_REAL:
     case SQL_FLOAT:
     case SQL_DOUBLE:

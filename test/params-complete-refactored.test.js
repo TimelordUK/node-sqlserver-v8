@@ -994,6 +994,28 @@ describe('Parameter Tests', function () {
       })
     })
 
+    // a prepared statement binds these columns as text under numeric strings; 120 rows is three
+    // fetch blocks of 50, so each row is read from its own place in the bound array
+    it('should return prepared decimal and numeric as their exact text', async function () {
+      const q = {
+        query_str: "select cast('12345678901234567.' + right('00' + cast(i as varchar(3)), 2) as decimal(38,2)) as d, " +
+          'cast(-i / 1000.0 as numeric(10,4)) as n from (select row_number() over (order by object_id) as i from sys.all_objects) t ' +
+          'where i <= ? order by i',
+        numeric_string: true
+      }
+      const prepared = await env.theConnection.promises.prepare(q)
+      try {
+        const res = await prepared.promises.query([120])
+        const expected = Array.from({ length: 120 }, (_, k) => {
+          const i = k + 1
+          return { d: `12345678901234567.${String(i % 100).padStart(2, '0')}`, n: `-${(i / 1000).toFixed(4)}` }
+        })
+        assert.deepStrictEqual(res.first, expected)
+      } finally {
+        await prepared.promises.free()
+      }
+    })
+
     it('should return decimal and numeric with their scale and a leading zero', async function () {
       const result = await env.theConnection.promises.query({
         query_str: 'select cast(5 as decimal(5,2)) as d1, cast(-0.5 as decimal(5,2)) as d2, cast(0 as decimal(5,2)) as d3, ' +
