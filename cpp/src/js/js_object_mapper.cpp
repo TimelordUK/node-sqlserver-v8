@@ -89,7 +89,9 @@ Napi::Object JsObjectMapper::fromQueryResult(const Napi::Env& env,
     auto row_array = Napi::Array::New(env, column_count);
     results_array.Set(static_cast<uint32_t>(row_id), row_array);
     for (auto c = 0; c < column_count; ++c) {
-      row_array.Set(static_cast<uint32_t>(c), resultset->get_column(row_id, c)->ToValue(env));
+      // a cell never stored (its read failed) is null, not a dereference of nothing
+      const auto column = resultset->get_column(row_id, c);
+      row_array.Set(static_cast<uint32_t>(c), column ? column->ToValue(env) : env.Null());
     }
   }
 

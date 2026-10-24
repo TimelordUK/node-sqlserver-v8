@@ -40,6 +40,12 @@ class ResultSet {
   void add_column(size_t row_id, const shared_ptr<Column>& column);
   Napi::Object get_entry(Napi::Env env, const ColumnDefinition& definition);
   shared_ptr<Column> get_column(size_t row_id, size_t id) const;
+  // forget rows from row_id on: a row whose read failed part way
+  void drop_rows_from(size_t row_id) {
+    if (_rows.size() > row_id) {
+      _rows.resize(row_id);
+    }
+  }
   size_t get_result_count() const {
     return _rows.size();
   }

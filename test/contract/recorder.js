@@ -44,6 +44,7 @@ const formatValue = v => {
   if (v === null || v === undefined) return String(v)
   if (Buffer.isBuffer(v)) return `0x${v.toString('hex')}`
   if (v instanceof Date) return v.toISOString()
+  if (typeof v === 'bigint') return `${v}n`
   return JSON.stringify(v)
 }
 

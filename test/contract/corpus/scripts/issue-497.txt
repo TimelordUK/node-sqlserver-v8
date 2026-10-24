@@ -1,0 +1,236 @@
+# scenario: scripts/issue-497
+# status: agreed
+# script: test/contract/scripts/issue-497.js
+== int first, numeric strings off
+int: submitted
+int: meta i,v
+int: row
+int: column 0 1
+int: column 1 7
+int: row
+int: column 0 2
+int: column 1 9223372036854775807n
+int: row
+int: column 0 3
+int: column 1 1.5
+int: row
+int: column 0 4
+int: column 1 2.25e-9
+int: row
+int: column 0 5
+int: column 1 "abc"
+int: row
+int: column 0 6
+int: column 1 2020-01-02T00:00:00.000Z
+int: row
+int: column 0 7
+int: column 1 true
+int: row
+int: column 0 8
+int: column 1 null
+int: done
+int: free
+== bigint first, numeric strings off
+bigint: submitted
+bigint: meta i,v
+bigint: row
+bigint: column 0 1
+bigint: column 1 9223372036854775807n
+bigint: row
+bigint: column 0 2
+bigint: column 1 7
+bigint: row
+bigint: column 0 3
+bigint: column 1 1.5
+bigint: row
+bigint: column 0 4
+bigint: column 1 2.25e-9
+bigint: row
+bigint: column 0 5
+bigint: column 1 "abc"
+bigint: row
+bigint: column 0 6
+bigint: column 1 2020-01-02T00:00:00.000Z
+bigint: row
+bigint: column 0 7
+bigint: column 1 true
+bigint: row
+bigint: column 0 8
+bigint: column 1 null
+bigint: done
+bigint: free
+== decimal first, numeric strings off
+decimal: submitted
+decimal: meta i,v
+decimal: row
+decimal: column 0 1
+decimal: column 1 1.5
+decimal: row
+decimal: column 0 2
+decimal: column 1 7
+decimal: row
+decimal: column 0 3
+decimal: column 1 9223372036854775807n
+decimal: row
+decimal: column 0 4
+decimal: column 1 2.25e-9
+decimal: row
+decimal: column 0 5
+decimal: column 1 "abc"
+decimal: row
+decimal: column 0 6
+decimal: column 1 2020-01-02T00:00:00.000Z
+decimal: row
+decimal: column 0 7
+decimal: column 1 true
+decimal: row
+decimal: column 0 8
+decimal: column 1 null
+decimal: done
+decimal: free
+== float first, numeric strings off
+float: submitted
+float: meta i,v
+float: row
+float: column 0 1
+float: column 1 2.25e-9
+float: row
+float: column 0 2
+float: column 1 7
+float: row
+float: column 0 3
+float: column 1 9223372036854775807n
+float: row
+float: column 0 4
+float: column 1 1.5
+float: row
+float: column 0 5
+float: column 1 "abc"
+float: row
+float: column 0 6
+float: column 1 2020-01-02T00:00:00.000Z
+float: row
+float: column 0 7
+float: column 1 true
+float: row
+float: column 0 8
+float: column 1 null
+float: done
+float: free
+== nvarchar first, numeric strings off
+nvarchar: submitted
+nvarchar: meta i,v
+nvarchar: row
+nvarchar: column 0 1
+nvarchar: column 1 "abc"
+nvarchar: row
+nvarchar: column 0 2
+nvarchar: column 1 7
+nvarchar: row
+nvarchar: column 0 3
+nvarchar: column 1 9223372036854775807n
+nvarchar: row
+nvarchar: column 0 4
+nvarchar: column 1 1.5
+nvarchar: row
+nvarchar: column 0 5
+nvarchar: column 1 2.25e-9
+nvarchar: row
+nvarchar: column 0 6
+nvarchar: column 1 2020-01-02T00:00:00.000Z
+nvarchar: row
+nvarchar: column 0 7
+nvarchar: column 1 true
+nvarchar: row
+nvarchar: column 0 8
+nvarchar: column 1 null
+nvarchar: done
+nvarchar: free
+== datetime first, numeric strings off
+datetime: submitted
+datetime: meta i,v
+datetime: row
+datetime: column 0 1
+datetime: column 1 2020-01-02T00:00:00.000Z
+datetime: row
+datetime: column 0 2
+datetime: column 1 7
+datetime: row
+datetime: column 0 3
+datetime: column 1 9223372036854775807n
+datetime: row
+datetime: column 0 4
+datetime: column 1 1.5
+datetime: row
+datetime: column 0 5
+datetime: column 1 2.25e-9
+datetime: row
+datetime: column 0 6
+datetime: column 1 "abc"
+datetime: row
+datetime: column 0 7
+datetime: column 1 true
+datetime: row
+datetime: column 0 8
+datetime: column 1 null
+datetime: done
+datetime: free
+== bit first, numeric strings off
+bit: submitted
+bit: meta i,v
+bit: row
+bit: column 0 1
+bit: column 1 true
+bit: row
+bit: column 0 2
+bit: column 1 7
+bit: row
+bit: column 0 3
+bit: column 1 9223372036854775807n
+bit: row
+bit: column 0 4
+bit: column 1 1.5
+bit: row
+bit: column 0 5
+bit: column 1 2.25e-9
+bit: row
+bit: column 0 6
+bit: column 1 "abc"
+bit: row
+bit: column 0 7
+bit: column 1 2020-01-02T00:00:00.000Z
+bit: row
+bit: column 0 8
+bit: column 1 null
+bit: done
+bit: free
+== null first, numeric strings off
+null: submitted
+null: meta i,v
+null: row
+null: column 0 1
+null: column 1 null
+null: row
+null: column 0 2
+null: column 1 7
+null: row
+null: column 0 3
+null: column 1 9223372036854775807n
+null: row
+null: column 0 4
+null: column 1 1.5
+null: row
+null: column 0 5
+null: column 1 2.25e-9
+null: row
+null: column 0 6
+null: column 1 "abc"
+null: row
+null: column 0 7
+null: column 1 2020-01-02T00:00:00.000Z
+null: row
+null: column 0 8
+null: column 1 true
+null: done
+null: free
+check ok

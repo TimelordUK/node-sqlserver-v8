@@ -23,7 +23,8 @@ const nativeFile = process.env.MSSQL_CONTRACT_NATIVE
 let tap = null
 if (nativeFile) {
   const { utilModule } = require(path.join(root, 'lib/util'))
-  tap = require('./native-tap').install(new utilModule.Native().cppDriver, { keepData: !!scenario.columns })
+  // a script may log column values on any query, so its rows are kept whole
+  tap = require('./native-tap').install(new utilModule.Native().cppDriver, { keepData: !!(scenario.columns || scenario.script) })
 }
 
 runScenario(require(root), process.env.MSSQL_CONTRACT_CS, scenario)

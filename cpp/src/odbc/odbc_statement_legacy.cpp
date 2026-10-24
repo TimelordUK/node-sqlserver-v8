@@ -259,9 +259,21 @@ bool OdbcStatementLegacy::fetch_read(const size_t number_rows) {
     const auto column_count = static_cast<int>(_resultset->get_column_count());
     for (auto c = 0; c < column_count; ++c) {
       const auto& definition = _resultset->get_meta_data(c);
-      res = dispatch(definition.dataType, row_id, c);
-      if (!res) {
-        break;
+      const auto errors = _errors->size();
+      if (!dispatch(definition.dataType, row_id, c)) {
+        // a cell that cannot be read ends the fetch with its error: drop the part of the row
+        // already read, rather than go on and leave a row with holes in it (#497)
+        _resultset->drop_rows_from(row_id);
+        if (_errors->size() == errors) {
+          // the read failed with no diagnostic from the driver: the query must still end in
+          // an error, not look complete with its remaining rows missing
+          const auto msg = "[msnodesql] cannot read column " + std::to_string(c) + " of the result";
+          const auto error = make_shared<OdbcError>("HY000", msg.c_str(), 0, 0, "", "", 0);
+          _errors->push_back(error);
+          _errorHandler->AddError(error);
+          set_state(OdbcStatementState::STATEMENT_ERROR);
+        }
+        return false;
       }
     }
   }
@@ -1505,6 +1517,12 @@ bool OdbcStatementLegacy::d_variant(
     SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] d_variant failed to get data");
     return false;
   }
+  // a NULL is known from this first read; a second SQLGetData on the column would return
+  // SQL_NO_DATA, and the row would be lost
+  if (iv == SQL_NULL_DATA) {
+    _resultset->add_column(row_id, make_shared<NullColumn>(column));
+    return true;
+  }
   // Figure out the type
   ret = _odbcApi->SQLColAttribute(statement.get_handle(),
                                   column + 1,
@@ -1517,11 +1535,9 @@ bool OdbcStatementLegacy::d_variant(
     SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] d_variant failed to get variant type");
     return false;
   }
-  // set the definiton to actual data underlying data type.
-  auto& definition = _resultset->get_meta_data(static_cast<int>(column));
-  definition.dataType = static_cast<SQLSMALLINT>(variant_type);
-  const auto res = dispatch(definition.dataType, row_id, column);
-  return res;
+  // read this row by its own base type. the column stays SQL_SS_VARIANT, so every row is
+  // resolved again: rows of one variant column can each hold a different type (#497)
+  return dispatch(static_cast<SQLSMALLINT>(variant_type), row_id, column);
 }
 
 bool OdbcStatementLegacy::d_time(
@@ -1940,9 +1956,9 @@ bool OdbcStatementLegacy::get_data_decimal(const size_t row_id, const size_t col
   }
 
   const auto v2 = trunc(v);
-  if (v2 == v &&
-      v2 >= static_cast<long double>(numeric_limits<DatumStorageLegacy::bigint_t>::min()) &&
-      v2 <= static_cast<long double>(numeric_limits<DatumStorageLegacy::bigint_t>::max())) {
+  // the bounds are exact as doubles: INT64_MAX is not, and rounds up to 2^63, which does not
+  // fit in an int64 (bigint max read as a double came back as INT64_MIN)
+  if (v2 == v && v2 >= -9223372036854775808.0 && v2 < 9223372036854775808.0) {
     auto bi = static_cast<DatumStorageLegacy::bigint_t>(v);
     const auto col = make_shared<BigIntColumn>(column, bi);
     if (_numericStringEnabled) {

@@ -1,0 +1,236 @@
+# scenario: scripts/issue-497-ns
+# status: agreed
+# script: test/contract/scripts/issue-497-ns.js
+== int first, numeric strings on
+int-ns: submitted
+int-ns: meta i,v
+int-ns: row
+int-ns: column 0 "1"
+int-ns: column 1 "7"
+int-ns: row
+int-ns: column 0 "2"
+int-ns: column 1 "9223372036854775807"
+int-ns: row
+int-ns: column 0 "3"
+int-ns: column 1 "1.50"
+int-ns: row
+int-ns: column 0 "4"
+int-ns: column 1 "2.25e-9"
+int-ns: row
+int-ns: column 0 "5"
+int-ns: column 1 "abc"
+int-ns: row
+int-ns: column 0 "6"
+int-ns: column 1 2020-01-02T00:00:00.000Z
+int-ns: row
+int-ns: column 0 "7"
+int-ns: column 1 true
+int-ns: row
+int-ns: column 0 "8"
+int-ns: column 1 null
+int-ns: done
+int-ns: free
+== bigint first, numeric strings on
+bigint-ns: submitted
+bigint-ns: meta i,v
+bigint-ns: row
+bigint-ns: column 0 "1"
+bigint-ns: column 1 "9223372036854775807"
+bigint-ns: row
+bigint-ns: column 0 "2"
+bigint-ns: column 1 "7"
+bigint-ns: row
+bigint-ns: column 0 "3"
+bigint-ns: column 1 "1.50"
+bigint-ns: row
+bigint-ns: column 0 "4"
+bigint-ns: column 1 "2.25e-9"
+bigint-ns: row
+bigint-ns: column 0 "5"
+bigint-ns: column 1 "abc"
+bigint-ns: row
+bigint-ns: column 0 "6"
+bigint-ns: column 1 2020-01-02T00:00:00.000Z
+bigint-ns: row
+bigint-ns: column 0 "7"
+bigint-ns: column 1 true
+bigint-ns: row
+bigint-ns: column 0 "8"
+bigint-ns: column 1 null
+bigint-ns: done
+bigint-ns: free
+== decimal first, numeric strings on
+decimal-ns: submitted
+decimal-ns: meta i,v
+decimal-ns: row
+decimal-ns: column 0 "1"
+decimal-ns: column 1 "1.50"
+decimal-ns: row
+decimal-ns: column 0 "2"
+decimal-ns: column 1 "7"
+decimal-ns: row
+decimal-ns: column 0 "3"
+decimal-ns: column 1 "9223372036854775807"
+decimal-ns: row
+decimal-ns: column 0 "4"
+decimal-ns: column 1 "2.25e-9"
+decimal-ns: row
+decimal-ns: column 0 "5"
+decimal-ns: column 1 "abc"
+decimal-ns: row
+decimal-ns: column 0 "6"
+decimal-ns: column 1 2020-01-02T00:00:00.000Z
+decimal-ns: row
+decimal-ns: column 0 "7"
+decimal-ns: column 1 true
+decimal-ns: row
+decimal-ns: column 0 "8"
+decimal-ns: column 1 null
+decimal-ns: done
+decimal-ns: free
+== float first, numeric strings on
+float-ns: submitted
+float-ns: meta i,v
+float-ns: row
+float-ns: column 0 "1"
+float-ns: column 1 "2.25e-9"
+float-ns: row
+float-ns: column 0 "2"
+float-ns: column 1 "7"
+float-ns: row
+float-ns: column 0 "3"
+float-ns: column 1 "9223372036854775807"
+float-ns: row
+float-ns: column 0 "4"
+float-ns: column 1 "1.50"
+float-ns: row
+float-ns: column 0 "5"
+float-ns: column 1 "abc"
+float-ns: row
+float-ns: column 0 "6"
+float-ns: column 1 2020-01-02T00:00:00.000Z
+float-ns: row
+float-ns: column 0 "7"
+float-ns: column 1 true
+float-ns: row
+float-ns: column 0 "8"
+float-ns: column 1 null
+float-ns: done
+float-ns: free
+== nvarchar first, numeric strings on
+nvarchar-ns: submitted
+nvarchar-ns: meta i,v
+nvarchar-ns: row
+nvarchar-ns: column 0 "1"
+nvarchar-ns: column 1 "abc"
+nvarchar-ns: row
+nvarchar-ns: column 0 "2"
+nvarchar-ns: column 1 "7"
+nvarchar-ns: row
+nvarchar-ns: column 0 "3"
+nvarchar-ns: column 1 "9223372036854775807"
+nvarchar-ns: row
+nvarchar-ns: column 0 "4"
+nvarchar-ns: column 1 "1.50"
+nvarchar-ns: row
+nvarchar-ns: column 0 "5"
+nvarchar-ns: column 1 "2.25e-9"
+nvarchar-ns: row
+nvarchar-ns: column 0 "6"
+nvarchar-ns: column 1 2020-01-02T00:00:00.000Z
+nvarchar-ns: row
+nvarchar-ns: column 0 "7"
+nvarchar-ns: column 1 true
+nvarchar-ns: row
+nvarchar-ns: column 0 "8"
+nvarchar-ns: column 1 null
+nvarchar-ns: done
+nvarchar-ns: free
+== datetime first, numeric strings on
+datetime-ns: submitted
+datetime-ns: meta i,v
+datetime-ns: row
+datetime-ns: column 0 "1"
+datetime-ns: column 1 2020-01-02T00:00:00.000Z
+datetime-ns: row
+datetime-ns: column 0 "2"
+datetime-ns: column 1 "7"
+datetime-ns: row
+datetime-ns: column 0 "3"
+datetime-ns: column 1 "9223372036854775807"
+datetime-ns: row
+datetime-ns: column 0 "4"
+datetime-ns: column 1 "1.50"
+datetime-ns: row
+datetime-ns: column 0 "5"
+datetime-ns: column 1 "2.25e-9"
+datetime-ns: row
+datetime-ns: column 0 "6"
+datetime-ns: column 1 "abc"
+datetime-ns: row
+datetime-ns: column 0 "7"
+datetime-ns: column 1 true
+datetime-ns: row
+datetime-ns: column 0 "8"
+datetime-ns: column 1 null
+datetime-ns: done
+datetime-ns: free
+== bit first, numeric strings on
+bit-ns: submitted
+bit-ns: meta i,v
+bit-ns: row
+bit-ns: column 0 "1"
+bit-ns: column 1 true
+bit-ns: row
+bit-ns: column 0 "2"
+bit-ns: column 1 "7"
+bit-ns: row
+bit-ns: column 0 "3"
+bit-ns: column 1 "9223372036854775807"
+bit-ns: row
+bit-ns: column 0 "4"
+bit-ns: column 1 "1.50"
+bit-ns: row
+bit-ns: column 0 "5"
+bit-ns: column 1 "2.25e-9"
+bit-ns: row
+bit-ns: column 0 "6"
+bit-ns: column 1 "abc"
+bit-ns: row
+bit-ns: column 0 "7"
+bit-ns: column 1 2020-01-02T00:00:00.000Z
+bit-ns: row
+bit-ns: column 0 "8"
+bit-ns: column 1 null
+bit-ns: done
+bit-ns: free
+== null first, numeric strings on
+null-ns: submitted
+null-ns: meta i,v
+null-ns: row
+null-ns: column 0 "1"
+null-ns: column 1 null
+null-ns: row
+null-ns: column 0 "2"
+null-ns: column 1 "7"
+null-ns: row
+null-ns: column 0 "3"
+null-ns: column 1 "9223372036854775807"
+null-ns: row
+null-ns: column 0 "4"
+null-ns: column 1 "1.50"
+null-ns: row
+null-ns: column 0 "5"
+null-ns: column 1 "2.25e-9"
+null-ns: row
+null-ns: column 0 "6"
+null-ns: column 1 "abc"
+null-ns: row
+null-ns: column 0 "7"
+null-ns: column 1 2020-01-02T00:00:00.000Z
+null-ns: row
+null-ns: column 0 "8"
+null-ns: column 1 true
+null-ns: done
+null-ns: free
+check ok
