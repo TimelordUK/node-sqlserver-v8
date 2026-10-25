@@ -77,6 +77,7 @@ A4 error at execute.q3: free
 A5 error after a result.q1: submitted
 A5 error after a result.q1: meta n
 A5 error after a result.q1: row
+A5 error after a result.q1: cb ok rows=1 more=true
 A5 error after a result.q1: cb error 42000 50000 boom more=false
 A5 error after a result.q1: done
 A5 error after a result.q1: free

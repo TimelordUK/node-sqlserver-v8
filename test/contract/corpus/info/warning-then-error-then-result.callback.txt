@@ -6,11 +6,11 @@ meta s
 row
 column 0 1
 info 01003 8153 Warning: Null value is eliminated by an aggregate or other SET operation.
-cb error 42000 50000 e16 more=true
 cb ok rows=1 more=true
+cb error 42000 50000 e16 more=true
 rowcount 0
-meta n
 cb ok rows=0 more=true
+meta n
 row
 column 0 2
 cb ok rows=1 more=false

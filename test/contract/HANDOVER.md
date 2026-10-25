@@ -32,6 +32,42 @@ the contract below. Workarounds for a missing or doubled `done` (node-mssql 12.7
 break. Then decide the node-mssql guard: an RC on `next` for dhensby, node-mssql-shaped
 scenarios, or their suite as a canary job.
 
+## Progress — 2026-10-25: one rowcount per result, in the server's order
+
+The owner's contract (2026-10-25): events follow the order the server sent them in, and each
+result the server reports raises exactly one `rowcount`, its own. A result with no count gives 0.
+
+What the server reports (raw ODBC, `SQLRowCount` after each `SQLMoreResults`, via pyodbc):
+- a PRINT, or a raiserror below severity 11, is a result of its own with no count (-1);
+- DDL, `declare` and `set` inside a batch are not results at all. The driver never stops on
+  them, so they leave no trace. A DDL statement on its own is the batch's one result, with no count.
+
+What `reader.js` did, and does now:
+- It emitted a result's rowcount as it moved on to the next. For a PRINT result it reused the
+  previous result's count, so `insert; print` gave `rowcount 1` twice. Now each result has its own
+  (`insert; print` gives `rowcount 1`, `info`, `rowcount 0`).
+- It emitted the next result's info, and a mid-batch error, before the previous result's rowcount
+  and callback. Now what comes with a result is held on it until the previous result is complete
+  (`nativeNextResult`, `moveToNextResult`, `enterResult`). In callback mode the next result
+  waits a tick for the previous result's callback, which the connection defers.
+- When an error ended the batch after a result (`select 1; throw ...`), that result's callback
+  was never called. It is now called first, with `more=true`, then the error with `more=false`.
+  The same goes for `print; raiserror(16)`: `rowcount 0` and its callback come before the error.
+  A cancel still ends the query at once: `cancel-cb`, HY008, `done`, `free`.
+
+37 transcripts changed (6 agreed among them: `errors/dup-key-b/c/d`, `print-then-raiserror`,
+`raiserror-after-result`, `throw-ends-batch`, `queue/error-after-result-*`, `scripts/issue-481`).
+The Linux pins need no change, since none of them has a result before its error. Unit tests:
+`compoundqueries.test.js` "rowcount per result". The #396 tests in `multiple-errors.test.js` now
+read to the last callback.
+
+Behaviour change for the release notes: a callback query whose batch fails after a result
+gets a callback for that result first. node-mssql pushes every `rowcount` into `rowsAffected`,
+so `insert; print` is `[1, 0]` there now (was `[1, 1]`).
+
+Still to settle: a failed statement in the middle of a batch is a result too (`rowcount 0`, and
+in callback mode an `ok rows=0` after its error). One that ends the batch is not.
+
 ## Progress — 2026-10-24: #497 (sql_variant) and #498 (numeric strings)
 
 Both reported by dhensby against 6.0.0; both reproduced here (ODBC 18), the crash included.

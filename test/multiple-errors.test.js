@@ -235,44 +235,50 @@ describe('multiple-error', function () {
       })
     })
 
-    it('PRINT then THROW surfaces THROW message (not HY007)', done => {
-      env.theConnection.query(
-        "PRINT 'BAR' ; THROW 50000, 'BOOM BOOM', 1",
-        (err) => {
-          assert(err, 'expected an error')
-          expect(err.message).to.include('BOOM BOOM')
-          expect(err.message).to.not.include('Associated statement is not prepared')
-          expect(err.sqlstate).to.equal('42000')
-          expect(err.code).to.equal(50000)
-          done()
-        }
-      )
+    // the statement before the failed one is a result of its own: its callback comes first
+    // (more set), then the error ends the query
+    function callbacks (sql) {
+      return new Promise(resolve => {
+        const seen = []
+        env.theConnection.query(sql, (err, rows, more) => {
+          seen.push({ err, rows, more })
+          if (!more) resolve(seen)
+        })
+      })
+    }
+
+    it('PRINT then THROW surfaces THROW message (not HY007)', async function handler () {
+      const [first, last] = await callbacks("PRINT 'BAR' ; THROW 50000, 'BOOM BOOM', 1")
+      assert.isNull(first.err)
+      assert.isTrue(first.more)
+      const err = last.err
+      assert(err, 'expected an error')
+      expect(err.message).to.include('BOOM BOOM')
+      expect(err.message).to.not.include('Associated statement is not prepared')
+      expect(err.sqlstate).to.equal('42000')
+      expect(err.code).to.equal(50000)
     })
 
-    it('SELECT then THROW surfaces THROW message (not HY007)', done => {
-      env.theConnection.query(
-        "SELECT 1 AS x ; THROW 50002, 'BOOM3', 1",
-        (err) => {
-          assert(err, 'expected an error')
-          expect(err.message).to.include('BOOM3')
-          expect(err.message).to.not.include('Associated statement is not prepared')
-          expect(err.sqlstate).to.equal('42000')
-          expect(err.code).to.equal(50002)
-          done()
-        }
-      )
+    it('SELECT then THROW surfaces THROW message (not HY007)', async function handler () {
+      const [first, last] = await callbacks("SELECT 1 AS x ; THROW 50002, 'BOOM3', 1")
+      assert.isNull(first.err)
+      assert.deepStrictEqual(first.rows, [{ x: 1 }])
+      assert.isTrue(first.more)
+      const err = last.err
+      assert(err, 'expected an error')
+      expect(err.message).to.include('BOOM3')
+      expect(err.message).to.not.include('Associated statement is not prepared')
+      expect(err.sqlstate).to.equal('42000')
+      expect(err.code).to.equal(50002)
     })
 
-    it('PRINT then RAISERROR surfaces RAISERROR message (not HY007)', done => {
-      env.theConnection.query(
-        "PRINT 'BAR' ; RAISERROR('BOOM4', 16, 1)",
-        (err) => {
-          assert(err, 'expected an error')
-          expect(err.message).to.include('BOOM4')
-          expect(err.message).to.not.include('Associated statement is not prepared')
-          done()
-        }
-      )
+    it('PRINT then RAISERROR surfaces RAISERROR message (not HY007)', async function handler () {
+      const [first, last] = await callbacks("PRINT 'BAR' ; RAISERROR('BOOM4', 16, 1)")
+      assert.isNull(first.err)
+      const err = last.err
+      assert(err, 'expected an error')
+      expect(err.message).to.include('BOOM4')
+      expect(err.message).to.not.include('Associated statement is not prepared')
     })
 
     it('PRINT then THROW via promise surfaces THROW message', async function handler () {

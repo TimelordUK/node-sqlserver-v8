@@ -3,10 +3,10 @@
 # setup: create table #r (id int)
 # sql: insert #r values (1); print 'p1'
 submitted
-info 01000 0 p1
 rowcount 1
 cb ok rows=0 more=true
-rowcount 1
+info 01000 0 p1
+rowcount 0
 cb ok rows=0 more=false
 done
 free

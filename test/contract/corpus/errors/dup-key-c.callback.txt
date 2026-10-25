@@ -6,12 +6,12 @@ submitted
 meta n
 row
 column 0 1
+cb ok rows=1 more=true
 cb error 23000 2627 Violation of PRIMARY KEY constraint 'pk_t'. Cannot insert duplicate key in object 'dbo.#t'. The duplicate key value is (1). more=true
 info 01000 3621 The statement has been terminated.
-cb ok rows=1 more=true
 rowcount 0
-meta m
 cb ok rows=0 more=true
+meta m
 row
 column 0 2
 cb ok rows=1 more=false

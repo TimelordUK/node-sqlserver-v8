@@ -3,8 +3,9 @@
 # sql: raiserror('e1', 16, 1); print 'p1'; select 1 as n
 submitted
 error 42000 50000 e1 more=true
+rowcount 0
 info 01000 0 p1
-rowcount 0 x2
+rowcount 0
 meta n
 row
 column 0 1

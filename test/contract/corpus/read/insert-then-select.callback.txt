@@ -4,8 +4,8 @@
 # sql: insert #r values (1); select id from #r
 submitted
 rowcount 1
-meta id
 cb ok rows=0 more=true
+meta id
 row
 column 0 1
 cb ok rows=1 more=false

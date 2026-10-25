@@ -7,6 +7,7 @@ meta s
 row
 column 0 1
 info 01003 8153 Warning: Null value is eliminated by an aggregate or other SET operation.
+cb ok rows=1 more=true
 cb error 42000 50000 e16 more=false
 done
 free

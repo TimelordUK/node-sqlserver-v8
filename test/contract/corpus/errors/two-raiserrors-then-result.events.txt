@@ -3,12 +3,13 @@
 # sql: print 'p1'; raiserror('e1', 16, 1); print 'p2'; raiserror('e2', 16, 1); select 1 as n
 submitted
 info 01000 0 p1
+rowcount 0
 error 42000 50000 e1 more=true
 rowcount 0
 info 01000 0 p2
 rowcount 0
 error 42000 50000 e2 more=true
-rowcount 0 x2
+rowcount 0
 meta n
 row
 column 0 1
