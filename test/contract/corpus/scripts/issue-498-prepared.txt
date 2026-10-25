@@ -37,7 +37,6 @@ query: done
 query: free
 == prepared, numeric strings on
 ps-ns: submitted
-ps-ns: info 01S02 0 Cursor type changed
 ps-ns: meta i,n,d,m,f
 ps-ns: row
 ps-ns: column 0 "1"
@@ -67,7 +66,6 @@ ps-ns: done
 ps-ns: free
 == prepared, numeric strings off
 ps: submitted
-ps: info 01S02 0 Cursor type changed
 ps: meta i,n,d,m,f
 ps: row
 ps: column 0 1

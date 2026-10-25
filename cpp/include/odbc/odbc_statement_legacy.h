@@ -179,6 +179,10 @@ class OdbcStatementLegacy : public IOdbcStatement {
   bool apply_precision(const shared_ptr<BoundDatum>& datum, int current_param);
   bool read_col_attributes(ColumnDefinition& current, int column);
   bool read_next(int column);
+  bool bind_prepared_columns();
+  bool bind_prepared_storage();
+  bool read_next_result_columns();
+  bool describe_deferred() const;
   bool raise_cancel();
   bool check_more_read(SQLRETURN r, bool& status);
   bool lob(size_t, size_t column);
@@ -215,6 +219,10 @@ class OdbcStatementLegacy : public IOdbcStatement {
   // bool _endOfResults;
   long _statementId;
   bool _prepared;
+  // the prepare could not describe the result: it is described and bound at each execution
+  bool _describeAtExecute{false};
+  // false once a later result of an execution has been bound: the next execution binds again
+  bool _boundToFirstResult{true};
   std::atomic<bool> _cancelRequested;
   // set by Cancel() on the cancel thread before SQLCancelHandle; read by the worker
   std::atomic<bool> _cancelHandleIssued{false};
