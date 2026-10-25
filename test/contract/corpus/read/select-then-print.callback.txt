@@ -1,5 +1,5 @@
 # scenario: read/select-then-print.callback
-# status: unreviewed
+# status: agreed
 # sql: select 1 as n; print 'p1'
 submitted
 meta n

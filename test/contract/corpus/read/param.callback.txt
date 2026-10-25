@@ -1,5 +1,5 @@
 # scenario: read/param.callback
-# status: unreviewed
+# status: agreed
 # sql: select ? as v
 # params: [1]
 submitted

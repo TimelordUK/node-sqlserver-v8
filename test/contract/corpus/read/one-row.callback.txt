@@ -1,5 +1,5 @@
 # scenario: read/one-row.callback
-# status: unreviewed
+# status: agreed
 # sql: select 1 as n
 submitted
 meta n

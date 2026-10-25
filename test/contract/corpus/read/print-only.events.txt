@@ -1,5 +1,5 @@
 # scenario: read/print-only.events
-# status: unreviewed
+# status: agreed
 # sql: print 'p1'
 submitted
 info 01000 0 p1

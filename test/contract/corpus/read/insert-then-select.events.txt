@@ -1,5 +1,5 @@
 # scenario: read/insert-then-select.events
-# status: unreviewed
+# status: agreed
 # setup: create table #r (id int)
 # sql: insert #r values (1); select id from #r
 submitted
