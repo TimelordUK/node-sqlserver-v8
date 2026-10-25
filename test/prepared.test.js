@@ -233,14 +233,18 @@ describe('prepared', function () {
     expect(res1.first[0]).to.deep.equal(o1)
     expect(res2.first[0]).to.deep.equal(o2)
   })
-  // the server cannot describe the result of 'select ? as n' at prepare (11521: a parameter
-  // decides a column's type), so the prepare fails. executing the statement it left crashed
-  // the process: it had no storage for its result. with column encryption enabled the
-  // driver does not describe at prepare at all, and the prepare does not fail: these run on
-  // a connection without it
+  // with column encryption enabled the driver checks nothing at prepare (a syntax error is
+  // reported at execute), and describes no result: the tests that need a plain prepare run
+  // on a connection without it
+  const plainConnectionString = () => env.connectionString.replace(/ColumnEncryption=Enabled;?/i, '')
+  const encryptedConnectionString = () => /ColumnEncryption=Enabled/i.test(env.connectionString)
+    ? env.connectionString
+    : `${env.connectionString.replace(/;?$/, ';')}ColumnEncryption=Enabled`
+
+  // a prepare that failed gave a statement all the same, and executing it crashed the
+  // process: it had no storage for its result
   describe('a prepare that fails', function () {
-    const unpreparable = 'select ? as n'
-    const plainConnectionString = () => env.connectionString.replace(/ColumnEncryption=Enabled;?/i, '')
+    const unpreparable = 'selec ? as n'
     let conn
 
     this.beforeEach(async function () {
@@ -257,7 +261,7 @@ describe('prepared', function () {
       })
       assert(err, 'expected the prepare to fail')
       const first = Array.isArray(err) ? err[0] : err
-      expect(first.code).to.equal(11521)
+      expect(first.code).to.equal(156)
       assert.isNull(ps)
       const rows = await conn.promises.query('select 1 as n')
       assert.deepStrictEqual(rows.first, [{ n: 1 }])
@@ -303,4 +307,64 @@ describe('prepared', function () {
       }
     })
   })
+
+  // the server cannot always say what a statement returns before it runs: 11521 when a
+  // parameter decides a column's type, 11525 for a temp table in a batch, and with column
+  // encryption enabled the driver describes nothing at prepare. such a statement prepares,
+  // and each execution describes and binds what it returns
+  for (const [mode, connectionString] of [['plain', plainConnectionString], ['column encryption', encryptedConnectionString]]) {
+    describe(`a result described at execute (${mode})`, function () {
+      let conn
+
+      this.beforeEach(async function () {
+        conn = await sql.promises.open(connectionString())
+        await conn.promises.query('create table #pd (id int); insert #pd values (1), (2)')
+      })
+
+      this.afterEach(async function () {
+        await conn.promises.close()
+      })
+
+      async function execute (ps, params) {
+        return new Promise((resolve, reject) => {
+          const results = []
+          ps.preparedQuery(params, (err, rows, more) => {
+            if (err) return reject(err)
+            results.push(rows)
+            if (!more) resolve(results)
+          })
+        })
+      }
+
+      it('a parameter that decides the column type, by each execution', async function handler () {
+        const ps = await conn.promises.prepare('select ? as n')
+        assert.deepStrictEqual(await execute(ps, [2]), [[{ n: 2 }]])
+        assert.deepStrictEqual(await execute(ps, ['abc']), [[{ n: 'abc' }]])
+        assert.deepStrictEqual(await execute(ps, [1.5]), [[{ n: 1.5 }]])
+        await ps.promises.free()
+      })
+
+      it('an expression over a parameter returns its rows', async function handler () {
+        const ps = await conn.promises.prepare('select cast(? as int) * 10 as n')
+        assert.deepStrictEqual(await execute(ps, [2]), [[{ n: 20 }]])
+        assert.deepStrictEqual(await execute(ps, [3]), [[{ n: 30 }]])
+        await ps.promises.free()
+      })
+
+      it('a temp table in a batch: the result after an insert', async function handler () {
+        const ps = await conn.promises.prepare('insert #pd values (?); select count(*) as c from #pd')
+        assert.deepStrictEqual(await execute(ps, [7]), [[], [{ c: 3 }]])
+        assert.deepStrictEqual(await execute(ps, [8]), [[], [{ c: 4 }]])
+        await ps.promises.free()
+      })
+
+      it('results of different types, read by their own columns, execution after execution', async function handler () {
+        const ps = await conn.promises.prepare("select id from #pd where id = ?; select 'x' as b, 2.5 as d")
+        const expected = [[{ id: 1 }], [{ b: 'x', d: 2.5 }]]
+        assert.deepStrictEqual(await execute(ps, [1]), expected)
+        assert.deepStrictEqual(await execute(ps, [1]), expected)
+        await ps.promises.free()
+      })
+    })
+  }
 })

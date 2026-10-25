@@ -1589,8 +1589,11 @@ declare namespace MsNodeSqlV8 {
     getId: () => number
 
     /**
-     * metadata returned by binding the prepared query.
-     * @returns array of bound parameter information describing parameter.
+     * the result's columns as described at prepare. empty when the server cannot say before
+     * the statement runs (a parameter decides a column's type, a temp table in a batch, or
+     * column encryption enabled): each execution then describes its own result, raised as
+     * its 'meta' event.
+     * @returns the columns of the first result, as known at prepare.
      */
     getMeta: () => Meta[]
   }

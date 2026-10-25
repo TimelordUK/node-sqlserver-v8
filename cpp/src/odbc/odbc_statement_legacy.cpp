@@ -979,7 +979,6 @@ bool OdbcStatementLegacy::try_prepare(const shared_ptr<QueryOperationParams>& q)
   const auto& statement = *_statement;
   _query = q;
   auto query = q->query_string;
-  SQLSMALLINT num_cols = 0;
 
   auto ret = _odbcApi->SQLPrepare(
       statement.get_handle(), reinterpret_cast<SQLWCHAR*>(query.data()), query.size());
@@ -988,21 +987,66 @@ bool OdbcStatementLegacy::try_prepare(const shared_ptr<QueryOperationParams>& q)
     return false;
   }
 
-  ret = _odbcApi->SQLNumResultCols(statement.get_handle(), &num_cols);
+  _preparedStorage = make_shared<BoundDatumSet>(q);
+  _describeAtExecute = false;
+  _boundToFirstResult = true;
+  if (!bind_prepared_columns()) {
+    if (!describe_deferred()) {
+      return false;
+    }
+    // the server cannot say yet what the result will be: bound at each execution
+    SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] try_prepare: result described at execute");
+    _errors->clear();
+    _errorHandler->ClearErrors();
+    _describeAtExecute = true;
+    _resultset = make_unique<ResultSet>(0);
+  } else if (_resultset->get_column_count() == 0) {
+    // no columns: a statement with no result, or one the driver does not describe before it
+    // runs (with column encryption enabled, say). described again once it has run
+    _describeAtExecute = true;
+  }
+
+  _resultset->_end_of_rows = true;
+  _prepared = true;
+
+  set_state(OdbcStatementState::STATEMENT_PREPARED);
+
+  return true;
+}
+
+// the result's columns: described, storage reserved for a block of rows, and bound
+bool OdbcStatementLegacy::bind_prepared_columns() {
+  const auto& statement = *_statement;
+  SQLSMALLINT num_cols = 0;
+  auto ret = _odbcApi->SQLNumResultCols(statement.get_handle(), &num_cols);
   if (!check_odbc_error(ret)) {
     SQL_LOG_DEBUG_STREAM("[" << _handle.toString()
-                             << "] try_prepare failed to get num result cols");
+                             << "] bind_prepared_columns failed to get num result cols");
     return false;
   }
 
-  _preparedStorage = make_shared<BoundDatumSet>(q);
   _resultset = make_unique<ResultSet>(num_cols);
 
   for (auto i = 0; i < num_cols; i++) {
-    read_next(i);
+    if (!read_next(i)) {
+      return false;
+    }
   }
+  return bind_prepared_storage();
+}
 
-  ret = _odbcApi->SQLSetStmtAttr(statement.get_handle(),
+// storage for a block of rows of the result described in _resultset, bound to its columns
+bool OdbcStatementLegacy::bind_prepared_storage() {
+  const auto& statement = *_statement;
+  // release the columns bound for the last result before their storage goes
+  const auto bound = _preparedStorage ? _preparedStorage->size() : 0;
+  for (size_t c = 0; c < bound; ++c) {
+    _odbcApi->SQLBindCol(
+        statement.get_handle(), static_cast<SQLUSMALLINT>(c + 1), SQL_C_DEFAULT, nullptr, 0, nullptr);
+  }
+  _preparedStorage = make_shared<BoundDatumSet>(_query);
+
+  auto ret = _odbcApi->SQLSetStmtAttr(statement.get_handle(),
                                  SQL_ATTR_ROW_ARRAY_SIZE,
                                  reinterpret_cast<SQLPOINTER>(prepared_rows_to_bind),
                                  0);
@@ -1017,18 +1061,30 @@ bool OdbcStatementLegacy::try_prepare(const shared_ptr<QueryOperationParams>& q)
                                datum->buffer_len,
                                datum->get_ind_vec().data());
     if (!check_odbc_error(ret)) {
-      SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] try_prepare failed to bind col");
+      SQL_LOG_DEBUG_STREAM("[" << _handle.toString()
+                               << "] bind_prepared_columns failed to bind col");
       return false;
     }
     ++i;
   }
-
-  _resultset->_end_of_rows = true;
-  _prepared = true;
-
-  set_state(OdbcStatementState::STATEMENT_PREPARED);
-
   return true;
+}
+
+// the describe at prepare failed only because the server cannot know the result before the
+// statement runs: "the metadata could not be determined" (11500 - 11599, e.g. 11521 a
+// parameter decides a column's type, 11525 a temp table in a batch), perhaps with 8180
+// "statement(s) could not be prepared". any other error is the prepare's own
+bool OdbcStatementLegacy::describe_deferred() const {
+  auto deferred = false;
+  for (const auto& e : *_errors) {
+    const auto code = e->code;
+    if (code >= 11500 && code < 11600) {
+      deferred = true;
+    } else if (code != 8180) {
+      return false;
+    }
+  }
+  return deferred;
 }
 
 SQLRETURN OdbcStatementLegacy::poll_check(SQLRETURN ret,
@@ -1156,15 +1212,25 @@ bool OdbcStatementLegacy::bind_fetch(const shared_ptr<BoundDatumSet>& param_set)
     SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] bind_fetch failed to execute");
     return false;
   }
+  if (ret == SQL_SUCCESS_WITH_INFO) {
+    // read before describing the result clears them
+    keep_diagnostics();
+  }
+  if (_describeAtExecute || !_boundToFirstResult) {
+    // what this execution returns is known now that it has run, or the storage is still
+    // bound to a later result of the last execution: bind its first result
+    const auto kept = *_errors;
+    if (!bind_prepared_columns()) {
+      SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] bind_fetch failed to bind the result");
+      return false;
+    }
+    *_errors = kept;
+    _boundToFirstResult = true;
+  }
   // this execution has its results still to read: the result set's end flags are the
   // last execution's (taken with info, they would say this one has nothing to read)
   _resultset->_end_of_rows = false;
   _resultset->_end_of_results = false;
-  if (ret == SQL_SUCCESS_WITH_INFO) {
-    // e.g. 8153 when the driver has read ahead to the end of a short result: read it now,
-    // before SQLRowCount clears it
-    keep_diagnostics();
-  }
 
   ret = _odbcApi->SQLRowCount(statement.get_handle(), &_resultset->_row_count);
   auto result = check_odbc_error(ret);
@@ -2499,7 +2565,7 @@ bool OdbcStatementLegacy::try_read_next_result() {
                            << _handle.toString() << "] try_read_next_result SQL_SUCCESS_WITH_INFO "
                            << ret);
       return_odbc_error();
-      const auto res = start_reading_results();
+      const auto res = read_next_result_columns();
       if (res) {
         _resultset->_end_of_rows = false;
       } else {
@@ -2530,6 +2596,19 @@ bool OdbcStatementLegacy::try_read_next_result() {
     default:;
   }
   _resultset->_end_of_results = false;
-  return start_reading_results();
+  return read_next_result_columns();
+}
+
+// the columns of the result the statement has moved on to. a prepared statement reads its
+// rows through bound storage, which is the last result's until bound again for this one
+bool OdbcStatementLegacy::read_next_result_columns() {
+  if (!start_reading_results()) {
+    return false;
+  }
+  if (!_prepared) {
+    return true;
+  }
+  _boundToFirstResult = false;
+  return bind_prepared_storage();
 }
 }  // namespace mssql

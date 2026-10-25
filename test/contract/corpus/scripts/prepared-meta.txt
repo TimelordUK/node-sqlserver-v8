@@ -1,0 +1,58 @@
+# scenario: scripts/prepared-meta
+# status: unreviewed
+# script: test/contract/scripts/prepared-meta.js
+setup: submitted
+setup: rowcount 2
+setup: cb ok rows=0 more=false
+setup: done
+setup: free
+== A a parameter decides the column type: each execution has its own
+a: getMeta (none)
+a: submitted
+a: meta n
+a: row
+a: column 0 2
+a: done
+a: submitted
+a: meta n
+a: row
+a: column 0 "abc"
+a: done
+a: free
+== B an insert, then a result: no meta for the insert, meta for the result
+b: submitted
+b: rowcount 1
+b: meta c
+b: row
+b: column 0 3
+b: done
+b: submitted
+b: rowcount 1
+b: meta c
+b: row
+b: column 0 4
+b: done
+b: free
+== C two results of different types, twice
+c: submitted
+c: info 01000 16954 Executing SQL directly; no cursor.
+c: meta id
+c: row
+c: column 0 1
+c: meta s,d
+c: row
+c: column 0 "x"
+c: column 1 2.5
+c: done
+c: submitted
+c: info 01000 16954 Executing SQL directly; no cursor.
+c: meta id
+c: row
+c: column 0 2
+c: meta s,d
+c: row
+c: column 0 "x"
+c: column 1 2.5
+c: done
+c: free
+check ok

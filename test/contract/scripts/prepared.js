@@ -5,8 +5,8 @@
 // done; free comes only from ps.free(), when the native statement is released. after
 // that, any use of the statement is an error.
 //
-// on a table: a select with no table behind it (select 10 / ? as n) is described with no
-// columns when prepared, so its executions return no rows - a separate bug.
+// on a table: a select with no table behind it (select 10 / ? as n) is not described at
+// prepare; its executions describe their own result (see prepared-meta).
 
 // the driver's [vendor][driver] prefixes vary by driver and version
 const strip = m => m.replace(/^(\[[^\]]*\]\s*)+/, '')
