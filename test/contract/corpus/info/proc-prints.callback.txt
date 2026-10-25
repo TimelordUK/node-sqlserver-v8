@@ -5,21 +5,21 @@
 submitted
 info 01000 0 in
 rowcount 0
-meta n
 cb ok rows=0 more=true
+meta n
 row
 column 0 1
+cb ok rows=1 more=true
 info 01000 0 between
 rowcount 0
 cb ok rows=0 more=true
 meta m
-cb ok rows=1 more=true
 row
 column 0 2
+cb ok rows=1 more=true
 info 01000 0 out
 rowcount 0
-cb ok rows=0 more=true
-cb ok rows=1 more=false
+cb ok rows=0 more=false
 done
 free
 check ok

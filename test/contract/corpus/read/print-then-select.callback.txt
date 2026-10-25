@@ -4,8 +4,8 @@
 submitted
 info 01000 0 p1
 rowcount 0
-meta n
 cb ok rows=0 more=true
+meta n
 row
 column 0 1
 cb ok rows=1 more=false

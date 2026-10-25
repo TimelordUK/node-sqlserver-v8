@@ -5,8 +5,8 @@ submitted
 meta a
 row
 column 0 1
-meta b
 cb ok rows=1 more=true
+meta b
 row
 column 0 2
 cb ok rows=1 more=false

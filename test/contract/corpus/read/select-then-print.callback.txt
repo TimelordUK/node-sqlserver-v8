@@ -5,10 +5,10 @@ submitted
 meta n
 row
 column 0 1
+cb ok rows=1 more=true
 info 01000 0 p1
 rowcount 0
-cb ok rows=0 more=true
-cb ok rows=1 more=false
+cb ok rows=0 more=false
 done
 free
 check ok

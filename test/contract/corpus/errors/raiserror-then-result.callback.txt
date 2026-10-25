@@ -4,8 +4,8 @@
 submitted
 cb error 42000 50000 boom more=true
 rowcount 0
-meta m
 cb ok rows=0 more=true
+meta m
 row
 column 0 2
 cb ok rows=1 more=false

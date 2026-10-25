@@ -6,6 +6,7 @@
 submitted
 meta n
 row
+cb ok rows=1 more=true
 cb error 42000 50000 boom more=false
 done
 free

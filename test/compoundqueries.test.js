@@ -373,4 +373,78 @@ describe('compoundqueries', function () {
       done()
     }) // end of async.series()
   }) // end of it()
+  // one rowcount per result the server reports, in the server's order, each its own count:
+  // a result with no count (a PRINT, a lone DDL statement) reports 0. DDL, declare and set
+  // within a batch are not results at all.
+  describe('rowcount per result', function () {
+    function events (batch) {
+      return new Promise(resolve => {
+        const seen = []
+        const q = env.theConnection.query(batch)
+        q.on('rowcount', n => seen.push(`rowcount ${n}`))
+        q.on('info', i => seen.push(`info ${i.message.replace(/^.*\]/, '')}`))
+        q.on('meta', m => seen.push(`meta ${m.map(c => c.name).join(',')}`))
+        q.on('error', e => seen.push(`error ${e.message.replace(/^.*\]/, '')}`))
+        q.on('free', () => resolve(seen))
+      })
+    }
+
+    function callbacks (batch) {
+      return new Promise(resolve => {
+        const seen = []
+        env.theConnection.query(batch, (err, rows, more) => {
+          seen.push(err ? `error ${err.message.replace(/^.*\]/, '')}` : `ok ${rows.length}`)
+          if (!more) resolve(seen)
+        })
+      })
+    }
+
+    this.beforeEach(async function () {
+      await env.theConnection.promises.query('create table #rc (id int)')
+    })
+
+    it('a print after an insert has its own count, after the insert count', async function () {
+      assert.deepStrictEqual(await events("insert #rc values (1); print 'p1'"),
+        ['rowcount 1', 'info p1', 'rowcount 0'])
+    })
+
+    it('a print on its own reports 0', async function () {
+      assert.deepStrictEqual(await events("print 'p1'"), ['info p1', 'rowcount 0'])
+    })
+
+    it('a print after a select follows its rows', async function () {
+      assert.deepStrictEqual(await events("select 1 as n; print 'p1'"),
+        ['meta n', 'info p1', 'rowcount 0'])
+    })
+
+    it('ddl, declare and set within a batch report nothing', async function () {
+      const batch = "insert #rc values (1), (2); create table #t (x int); drop table #t; declare @x int = 1; set @x = 2; update #rc set id = id; print 'p'; delete #rc"
+      assert.deepStrictEqual(await events(batch),
+        ['rowcount 2', 'rowcount 2', 'info p', 'rowcount 0', 'rowcount 2'])
+    })
+
+    it('a ddl statement on its own reports 0', async function () {
+      assert.deepStrictEqual(await events('create table #t2 (x int)'), ['rowcount 0'])
+    })
+
+    it('a print between selects comes between them', async function () {
+      assert.deepStrictEqual(await events("select 1 as a; print 'p1'; select 2 as b"),
+        ['meta a', 'info p1', 'rowcount 0', 'meta b'])
+    })
+
+    it('a callback for a result comes before an error that follows it', async function () {
+      assert.deepStrictEqual(await callbacks("select 1 as n; raiserror('e16', 16, 1); select 2 as m"),
+        ['ok 1', 'error e16', 'ok 0', 'ok 1'])
+    })
+
+    it('a callback for a result comes before the error that ends the batch', async function () {
+      assert.deepStrictEqual(await callbacks("select 1 as n; raiserror('e16', 16, 1)"),
+        ['ok 1', 'error e16'])
+    })
+
+    it('an insert callback comes before a print callback', async function () {
+      assert.deepStrictEqual(await callbacks("insert #rc values (1); print 'p1'; select 1 as n"),
+        ['ok 0', 'ok 0', 'ok 1'])
+    })
+  })
 })
