@@ -1,5 +1,5 @@
 # scenario: read/two-result-sets.events
-# status: unreviewed
+# status: agreed
 # sql: select 1 as a; select 2 as b
 submitted
 meta a

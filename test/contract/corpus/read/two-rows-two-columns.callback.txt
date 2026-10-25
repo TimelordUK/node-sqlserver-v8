@@ -1,5 +1,5 @@
 # scenario: read/two-rows-two-columns.callback
-# status: unreviewed
+# status: agreed
 # sql: select 1 as a, 'x' as b union all select 2, 'y'
 submitted
 meta a,b
