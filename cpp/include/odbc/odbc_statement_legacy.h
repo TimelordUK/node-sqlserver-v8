@@ -25,6 +25,14 @@ class OdbcError;
 
 using namespace std;
 
+// the statement's definitions are split by concern, all in cpp/src/odbc:
+//   odbc_statement_legacy.cpp           lifecycle, state, cancel, execute direct, moving to the
+//                                       next result, describing columns, diagnostics
+//   odbc_statement_legacy_params.cpp    binding parameters and TVPs, bcp
+//   odbc_statement_legacy_prepared.cpp  prepare, execute a prepared statement, its bound
+//                                       block of rows (the reserved_* readers)
+//   odbc_statement_legacy_read.cpp      a query's rows, read a cell at a time (the get_data_*)
+//   odbc_statement_legacy_strings.cpp   strings, binary and LOBs
 class OdbcStatementLegacy : public IOdbcStatement {
  public:
   mutex _statement_mutex;
