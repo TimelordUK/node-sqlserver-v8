@@ -1,5 +1,5 @@
 # scenario: errors/bind-failure.events
-# status: unreviewed
+# status: agreed
 # sql: select ? as v
 # params: ["Infinity"]
 submitted
