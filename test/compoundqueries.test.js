@@ -399,8 +399,15 @@ describe('compoundqueries', function () {
       })
     }
 
+    // temp tables are dropped here, as the connection may be pooled (unixODBC) and keep them
+    const dropTemp = "drop table if exists #rc; drop table if exists #t2"
+
     this.beforeEach(async function () {
-      await env.theConnection.promises.query('create table #rc (id int)')
+      await env.theConnection.promises.query(`${dropTemp}; create table #rc (id int)`)
+    })
+
+    this.afterEach(async function () {
+      await env.theConnection.promises.query(dropTemp)
     })
 
     it('a print after an insert has its own count, after the insert count', async function () {
