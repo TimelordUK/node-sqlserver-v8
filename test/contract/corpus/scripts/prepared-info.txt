@@ -1,5 +1,5 @@
 # scenario: scripts/prepared-info
-# status: unreviewed
+# status: agreed
 # script: test/contract/scripts/prepared-info.js
 setup: submitted
 setup: rowcount 4

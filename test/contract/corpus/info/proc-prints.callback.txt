@@ -1,5 +1,5 @@
 # scenario: info/proc-prints.callback
-# status: unreviewed
+# status: agreed
 # setup: create procedure #p as begin print 'in'; select 1 as n; print 'between'; select 2 as m; print 'out' end
 # sql: exec #p
 submitted

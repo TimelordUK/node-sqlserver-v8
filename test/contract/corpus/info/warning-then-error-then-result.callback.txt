@@ -1,5 +1,5 @@
 # scenario: info/warning-then-error-then-result.callback
-# status: unreviewed
+# status: agreed
 # sql: select sum(x) as s from (values (1), (cast(null as int))) t(x); raiserror('e16', 16, 1); select 2 as n
 submitted
 meta s

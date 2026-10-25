@@ -1,5 +1,5 @@
 # scenario: info/many-prints.events
-# status: unreviewed
+# status: agreed
 # sql: declare @i int = 0; while @i < 60 begin print cast(@i as varchar(3)) + ' ' + replicate('x', 200); set @i += 1 end; select 1 as n
 submitted
 info 01000 0 0 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

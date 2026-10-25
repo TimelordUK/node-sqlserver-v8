@@ -1,5 +1,5 @@
 # scenario: info/divide-by-zero-warning.events
-# status: unreviewed
+# status: agreed
 # sql: set ansi_warnings off; set arithabort off; select 1 / 0 as n; set ansi_warnings on; set arithabort on
 submitted
 meta n

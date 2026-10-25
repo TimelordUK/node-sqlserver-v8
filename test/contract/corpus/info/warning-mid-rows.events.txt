@@ -1,5 +1,5 @@
 # scenario: info/warning-mid-rows.events
-# status: unreviewed
+# status: agreed
 # sql: set ansi_warnings off; set arithabort off; select top 120 1 / case when n = 75 then 0 else 1 end as v from (select row_number() over (order by (select 1)) as n from sys.all_objects) t; set ansi_warnings on; set arithabort on
 submitted
 meta v

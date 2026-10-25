@@ -1,5 +1,5 @@
 # scenario: info/print-after-error.events
-# status: unreviewed
+# status: agreed
 # sql: raiserror('e1', 16, 1); print 'p1'; select 1 as n
 submitted
 error 42000 50000 e1 more=true

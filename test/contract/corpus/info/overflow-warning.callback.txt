@@ -1,5 +1,5 @@
 # scenario: info/overflow-warning.callback
-# status: unreviewed
+# status: agreed
 # sql: set ansi_warnings off; set arithabort off; select cast(300 as tinyint) as n; set ansi_warnings on; set arithabort on
 submitted
 meta n
