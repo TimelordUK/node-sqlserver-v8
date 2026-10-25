@@ -811,6 +811,10 @@ declare namespace MsNodeSqlV8 {
     tableMgr: () => TableManager
     pollingMode: (q: Query, v: boolean, cb?: SimpleCb) => void
     cancelQuery: (q: Query, cb?: StatusCb) => void
+    /**
+     * prepare a statement to execute many times. a prepare that fails, e.g. when the server
+     * cannot describe the result (11521), calls back with the error and no statement.
+     */
     prepare: (sql: sqlQueryType, cb: PrepareCb) => void
     setFilterNonCriticalErrors: (flag: boolean) => void
     callproc: (name: string, params?: sqlProcParamType[], cb?: CallProcedureCb) => Query

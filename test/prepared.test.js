@@ -233,4 +233,74 @@ describe('prepared', function () {
     expect(res1.first[0]).to.deep.equal(o1)
     expect(res2.first[0]).to.deep.equal(o2)
   })
+  // the server cannot describe the result of 'select ? as n' at prepare (11521: a parameter
+  // decides a column's type), so the prepare fails. executing the statement it left crashed
+  // the process: it had no storage for its result. with column encryption enabled the
+  // driver does not describe at prepare at all, and the prepare does not fail: these run on
+  // a connection without it
+  describe('a prepare that fails', function () {
+    const unpreparable = 'select ? as n'
+    const plainConnectionString = () => env.connectionString.replace(/ColumnEncryption=Enabled;?/i, '')
+    let conn
+
+    this.beforeEach(async function () {
+      conn = await sql.promises.open(plainConnectionString())
+    })
+
+    this.afterEach(async function () {
+      await conn.promises.close()
+    })
+
+    it('calls back with the error and no statement', async function handler () {
+      const { err, ps } = await new Promise(resolve => {
+        conn.prepare(unpreparable, (err, ps) => resolve({ err, ps }))
+      })
+      assert(err, 'expected the prepare to fail')
+      const first = Array.isArray(err) ? err[0] : err
+      expect(first.code).to.equal(11521)
+      assert.isNull(ps)
+      const rows = await conn.promises.query('select 1 as n')
+      assert.deepStrictEqual(rows.first, [{ n: 1 }])
+    })
+
+    it('rejects the promise', async function handler () {
+      let err = null
+      try {
+        await conn.promises.prepare(unpreparable)
+      } catch (e) {
+        err = e
+      }
+      assert(err, 'expected the prepare to fail')
+    })
+
+    it('leaves the connection able to prepare again', async function handler () {
+      await new Promise(resolve => conn.prepare(unpreparable, () => resolve()))
+      const ps = await conn.promises.prepare('select cast(? as int) * 10 as n')
+      const res = await ps.promises.query([2])
+      assert.deepStrictEqual(res.first, [{ n: 20 }])
+      await ps.promises.free()
+    })
+
+    it('the native statement refuses to execute (HY010), not crash', async function handler () {
+      const { utilModule } = require('../lib/util')
+      const native = new (new utilModule.Native().cppDriver.Connection)()
+      await new Promise((resolve, reject) => native.open(plainConnectionString(), 10, e => e ? reject(e) : resolve()))
+      try {
+        const queryId = 1
+        const prepared = await new Promise(resolve => {
+          native.prepare(queryId, { query_str: unpreparable }, (err, meta) => resolve({ err, meta }))
+        })
+        assert(prepared.err, 'expected the prepare to fail')
+        const executed = await new Promise(resolve => {
+          native.bindQuery(queryId, [1], (err, meta) => resolve({ err, meta }))
+        })
+        const err = Array.isArray(executed.err) ? executed.err[0] : executed.err
+        assert(err, 'expected the execution to be refused')
+        expect(err.sqlstate).to.equal('HY010')
+        await new Promise(resolve => native.releaseStatement(queryId, prepared.meta?.handle, () => resolve()))
+      } finally {
+        await new Promise(resolve => native.close(() => resolve()))
+      }
+    })
+  })
 })

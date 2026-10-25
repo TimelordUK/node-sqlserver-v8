@@ -50,6 +50,12 @@ OdbcStatementLegacy::~OdbcStatementLegacy() {
 
 void OdbcStatementLegacy::assign_result(std::shared_ptr<QueryResult>& result,
                                         std::shared_ptr<ResultSet> resultset) {
+  if (!_resultset) {
+    // nothing was read (e.g. a prepare that failed before it described the result)
+    result->set_end_of_rows(true);
+    result->set_end_of_results(true);
+    return;
+  }
   auto cols = _resultset->get_column_count();
   for (size_t i = 0; i < cols; ++i) {
     auto col = _resultset->get_meta_data(i);
@@ -84,6 +90,19 @@ bool OdbcStatementLegacy::BindExecute(const std::shared_ptr<BoundDatumSet> param
   lock_guard<recursive_mutex> lock(g_i_mutex);
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::BindExecute [" << _handle.toString()
                                                             << "] Enter BindExecute");
+  if (!_prepared || !_resultset) {
+    // a statement whose prepare failed has no result storage to execute into: refuse it
+    // rather than execute and read through it
+    _errors->clear();
+    _errorHandler->ClearErrors();
+    const auto error = make_shared<OdbcError>(
+        "HY010", "[msnodesql] statement has not been prepared", 0, 0, "", "", 0);
+    _errors->push_back(error);
+    _errorHandler->AddError(error);
+    set_state(OdbcStatementState::STATEMENT_ERROR);
+    assign_result(result, _resultset);
+    return false;
+  }
   auto res = bind_fetch(parameters);
   assign_result(result, _resultset);
   SQL_LOG_DEBUG_STREAM("OdbcStatementLegacy::BindExecute [" << _handle.toString()
