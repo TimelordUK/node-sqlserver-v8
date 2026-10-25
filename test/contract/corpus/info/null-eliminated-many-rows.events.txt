@@ -1,5 +1,5 @@
 # scenario: info/null-eliminated-many-rows.events
-# status: unreviewed
+# status: agreed
 # sql: select g, sum(x) as s from (select top 200 row_number() over (order by (select 1)) % 120 as g, case when row_number() over (order by (select 1)) % 7 = 0 then null else 1 end as x from sys.all_objects) t group by g order by g
 submitted
 meta g,s

@@ -1,5 +1,5 @@
 # scenario: info/many-prints-between-results.events
-# status: unreviewed
+# status: agreed
 # sql: select 1 as a; declare @i int = 0; while @i < 60 begin print cast(@i as varchar(3)) + ' ' + replicate('x', 200); set @i += 1 end; select 2 as b
 submitted
 meta a

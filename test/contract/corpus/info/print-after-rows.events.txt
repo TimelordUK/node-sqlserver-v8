@@ -1,5 +1,5 @@
 # scenario: info/print-after-rows.events
-# status: unreviewed
+# status: agreed
 # sql: select top 3 x from (values (1), (2), (3)) t(x); print 'p1'
 submitted
 meta x

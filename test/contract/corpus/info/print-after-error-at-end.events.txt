@@ -1,5 +1,5 @@
 # scenario: info/print-after-error-at-end.events
-# status: unreviewed
+# status: agreed
 # sql: select 1 as n; raiserror('e1', 16, 1); print 'p1'
 submitted
 meta n

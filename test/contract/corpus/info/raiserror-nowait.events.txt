@@ -1,5 +1,5 @@
 # scenario: info/raiserror-nowait.events
-# status: unreviewed
+# status: agreed
 # sql: raiserror('now', 0, 1) with nowait; waitfor delay '00:00:00.2'; select 1 as n
 submitted
 info 01000 50000 now

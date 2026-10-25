@@ -1,5 +1,5 @@
 # scenario: info/prints-around-everything.callback
-# status: unreviewed
+# status: agreed
 # sql: print 'p1'; select 1 as a; print 'p2'; print 'p3'; select 2 as b; print 'p4'
 submitted
 info 01000 0 p1
