@@ -318,7 +318,8 @@ describe('prepared', function () {
 
       this.beforeEach(async function () {
         conn = await sql.promises.open(connectionString())
-        await conn.promises.query('create table #pd (id int); insert #pd values (1), (2)')
+        // dropped first: on Linux a new connection can still have the last one's temp tables
+        await conn.promises.query('drop table if exists #pd; create table #pd (id int); insert #pd values (1), (2)')
       })
 
       this.afterEach(async function () {
