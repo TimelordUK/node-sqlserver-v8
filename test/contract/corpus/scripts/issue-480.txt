@@ -1,5 +1,5 @@
 # scenario: scripts/issue-480
-# status: unreviewed
+# status: agreed
 # script: test/contract/scripts/issue-480.js
 == pause at row 50, resume 50 ms later
 at50: submitted

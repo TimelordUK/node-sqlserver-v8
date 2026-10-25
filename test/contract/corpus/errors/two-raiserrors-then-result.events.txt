@@ -1,5 +1,5 @@
 # scenario: errors/two-raiserrors-then-result.events
-# status: unreviewed
+# status: agreed
 # sql: print 'p1'; raiserror('e1', 16, 1); print 'p2'; raiserror('e2', 16, 1); select 1 as n
 submitted
 info 01000 0 p1
