@@ -695,12 +695,27 @@ Napi::Object OdbcStatementLegacy::end_of_rows(Napi::Env env) const {
   return Napi::Boolean::New(env, _resultset->EndOfRows()).As<Napi::Object>();
 }
 
+// what the driver says about how it runs the statement for us, not what the statement did:
+// 01S02 "cursor type changed" and 16954 "executing SQL directly; no cursor", from the block
+// cursor a prepared statement is read with. whether they come differs by driver build and
+// environment, and they tell the caller nothing about their query, so they are not passed on
+static void drop_cursor_notices(vector<shared_ptr<OdbcError>>& diagnostics) {
+  diagnostics.erase(std::remove_if(diagnostics.begin(),
+                                   diagnostics.end(),
+                                   [](const auto& e) {
+                                     return e->sqlstate == "01S02" ||
+                                            (e->sqlstate == "01000" && e->code == 16954);
+                                   }),
+                    diagnostics.end());
+}
+
 bool OdbcStatementLegacy::return_odbc_error() {
   if (!_statement) {
     SQL_LOG_DEBUG_STREAM("return_odbc_error: no statement");
     return false;
   }
   _statement->read_errors(_odbcApi, _errors);
+  drop_cursor_notices(*_errors);
   SQL_LOG_DEBUG_STREAM("return_odbc_error: " << _errors->size());
   _errorHandler->ClearErrors();
   for (const auto& error : *_errors) {
@@ -730,6 +745,7 @@ void OdbcStatementLegacy::keep_diagnostics() {
   }
   auto found = make_shared<vector<shared_ptr<OdbcError>>>();
   _statement->read_errors(_odbcApi, found);
+  drop_cursor_notices(*found);
   if (found->empty()) {
     return;
   }
@@ -754,6 +770,7 @@ void OdbcStatementLegacy::keep_diagnostics() {
 bool OdbcStatementLegacy::return_cancelled() {
   if (_statement) {
     _statement->read_errors(_odbcApi, _errors);
+    drop_cursor_notices(*_errors);
   }
   const auto driver_reported = std::any_of(
       _errors->begin(), _errors->end(), [](const auto& e) { return e->sqlstate == "HY008"; });

@@ -1,5 +1,5 @@
 # scenario: scripts/prepared-meta
-# status: unreviewed
+# status: agreed
 # script: test/contract/scripts/prepared-meta.js
 setup: submitted
 setup: rowcount 2
@@ -35,7 +35,6 @@ b: done
 b: free
 == C two results of different types, twice
 c: submitted
-c: info 01000 16954 Executing SQL directly; no cursor.
 c: meta id
 c: row
 c: column 0 1
@@ -45,7 +44,6 @@ c: column 0 "x"
 c: column 1 2.5
 c: done
 c: submitted
-c: info 01000 16954 Executing SQL directly; no cursor.
 c: meta id
 c: row
 c: column 0 2
