@@ -1,6 +1,7 @@
 // OdbcApi.cpp
 #include <platform.h>
 #include <common/odbc_common.h>
+#include <common/string_utils.h>
 #include <cctype>
 #include <iomanip>
 #include <sstream>
@@ -161,15 +162,7 @@ void RealOdbcApi::DiagnoseConnectionString(const std::wstring& connectionString)
   }
 
   // Sanitize password for logging
-  size_t pwdStart = utf8Conn.find("PWD=");
-  if (pwdStart != std::string::npos) {
-    size_t pwdEnd = utf8Conn.find(";", pwdStart);
-    if (pwdEnd != std::string::npos) {
-      utf8Conn.replace(pwdStart, pwdEnd - pwdStart, "PWD=********");
-    } else {
-      utf8Conn.replace(pwdStart, utf8Conn.length() - pwdStart, "PWD=********");
-    }
-  }
+  utf8Conn = StringUtils::SanitizeConnectionString(utf8Conn);
 
   // Log the sanitized connection string with character positions
   SQL_LOG_DEBUG("Connection string contents (sanitized):");
@@ -285,15 +278,7 @@ SQLRETURN RealOdbcApi::SQLDriverConnect(SQLHDBC ConnectionHandle,
     }
 
     // Mask password in the log
-    size_t pwdStart = safeConnStr.find("PWD=");
-    if (pwdStart != std::string::npos) {
-      size_t pwdEnd = safeConnStr.find(";", pwdStart);
-      if (pwdEnd != std::string::npos) {
-        safeConnStr.replace(pwdStart, pwdEnd - pwdStart, "PWD=********");
-      } else {
-        safeConnStr.replace(pwdStart, safeConnStr.length() - pwdStart, "PWD=********");
-      }
-    }
+    safeConnStr = StringUtils::SanitizeConnectionString(safeConnStr);
 
     SQL_LOG_DEBUG_STREAM("SQLDriverConnect called - Handle: "
                          << ConnectionHandle << ", Connection String: " << safeConnStr

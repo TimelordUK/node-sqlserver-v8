@@ -16,9 +16,9 @@ sql.logger.setConsoleLogging(true)
 // sql.logger.setLogFile('/var/log/myapp/sql-trace.log')
 
 // Example 3: Use pre-configured settings
-// sql.logger.configureForDevelopment()  // TRACE level, console enabled
-// sql.logger.configureForProduction('/var/log/myapp')  // ERROR level, file only
-// sql.logger.configureForTesting()  // SILENT level
+// sql.logger.configureForDevelopment()  // DEBUG level, console enabled
+// sql.logger.configureForProduction('/var/log/myapp')  // INFO level, file only
+// sql.logger.configureForTesting()  // TRACE level, console enabled
 
 // Example 4: Disable all logging (default for production)
 // sql.logger.setLogLevel(sql.LogLevel.SILENT)
