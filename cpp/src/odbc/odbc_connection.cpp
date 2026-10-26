@@ -80,7 +80,8 @@ bool OdbcConnection::Open(const std::u16string& connectionString, int timeout) {
   SQL_LOG_FUNC_TRACER();
   SQL_LOG_INFO("Opening connection");
 
-  SQL_LOG_DEBUG_STREAM("Connection string " << StringUtils::U16StringToUtf8(connectionString)
+  SQL_LOG_DEBUG_STREAM("Connection string " << StringUtils::SanitizeConnectionString(
+                                                   StringUtils::U16StringToUtf8(connectionString))
                                             << "...");
 
   std::lock_guard lock(_connectionMutex);

@@ -268,42 +268,52 @@ std::string StringUtils::SanitizeConnectionString(const std::string& connStr) {
 
   size_t i = 0;
 
-  // Process the string, redacting passwords
+  // a key matches only at the start of a field: the start of the string, or after a ';'
+  // and any spaces
+  auto atFieldStart = [&connStr](size_t pos) {
+    while (pos > 0 && connStr[pos - 1] == ' ') pos--;
+    return pos == 0 || connStr[pos - 1] == ';';
+  };
+
+  // the position of the '=' after a key, case insensitive, with spaces before the '='
+  auto keyEquals = [&connStr](size_t pos, const char* key) -> size_t {
+    for (; *key; ++key, ++pos) {
+      if (pos >= connStr.size() || std::toupper(static_cast<unsigned char>(connStr[pos])) != *key)
+        return std::string::npos;
+    }
+    while (pos < connStr.size() && connStr[pos] == ' ') pos++;
+    return pos < connStr.size() && connStr[pos] == '=' ? pos : std::string::npos;
+  };
+
+  // Process the string, redacting passwords: PWD= or Password=, any case, braced or not
   while (i < connStr.size()) {
-    // Case-insensitive check for "pwd=" or "password="
-    bool isPwdField = false;
-
-    // Check for "PWD=" (case insensitive)
-    if (i + 4 <= connStr.size()) {
-      std::string pwdKey = connStr.substr(i, 4);
-      for (auto& c : pwdKey)
-        c = std::toupper(c);
-      isPwdField = (pwdKey == "PWD=");
+    size_t equalsPos = std::string::npos;
+    if (atFieldStart(i)) {
+      equalsPos = keyEquals(i, "PWD");
+      if (equalsPos == std::string::npos) equalsPos = keyEquals(i, "PASSWORD");
     }
 
-    // Check for "Password=" (case insensitive)
-    if (!isPwdField && i + 9 <= connStr.size()) {
-      std::string passKey = connStr.substr(i, 9);
-      for (auto& c : passKey)
-        c = std::toupper(c);
-      isPwdField = (passKey == "PASSWORD=");
-    }
-
-    if (isPwdField) {
-      // Find the key's equals sign
-      size_t equalsPos = connStr.find('=', i);
-      if (equalsPos == std::string::npos) {
-        // Malformed connection string - just append the rest and break
-        result.append(connStr.substr(i));
-        break;
-      }
-
+    if (equalsPos != std::string::npos) {
       // Add the key with equals sign
       result.append(connStr.substr(i, equalsPos - i + 1));
       i = equalsPos + 1;  // Move past the equals sign
 
       // Add asterisks instead of actual password
       result.append("********");
+
+      while (i < connStr.size() && connStr[i] == ' ') i++;
+      if (i < connStr.size() && connStr[i] == '{') {
+        // a braced value can hold ';', and '}}' is a '}' within it
+        for (i++; i < connStr.size(); i++) {
+          if (connStr[i] != '}') continue;
+          if (i + 1 < connStr.size() && connStr[i + 1] == '}') {
+            i++;
+            continue;
+          }
+          i++;
+          break;
+        }
+      }
 
       // Skip until next semicolon or end of string
       while (i < connStr.size() && connStr[i] != ';') {

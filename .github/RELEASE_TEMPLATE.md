@@ -86,6 +86,28 @@ ldconfig -p | grep 'libodbc.so.2 '   # /usr/local/lib should now be listed first
 To undo it, run `sudo make uninstall && sudo ldconfig` from the same
 directory.
 
+## Hit a problem? Send us a trace
+
+The driver can log everything it does, from the JavaScript layer and the C++
+layer (including the ODBC calls it makes and what each one returned), to one
+file. Turn it on before your app opens its first connection, reproduce the
+problem, and attach the file to your issue:
+
+```js
+const sql = require('msnodesqlv8')
+
+sql.logger.setLogLevel(sql.LogLevel.TRACE)     // SILENT (default), ERROR, WARNING, INFO, DEBUG, TRACE
+sql.logger.setLogFile('./msnodesqlv8-trace.log')
+// sql.logger.setConsoleLogging(true)          // or write it to the console as well
+```
+
+The password in the connection string is masked in the log. Query text,
+parameter values and the rows returned are logged as they are, so look the file
+over before you post it.
+
+TRACE is verbose and slows the driver down: use it to reproduce a problem,
+not in production.
+
 ## New to msnodesqlv8? Start with the API tour
 
 [**msnodesqlv8-api-tour**](https://github.com/TimelordUK/msnodesqlv8-api-tour)
@@ -274,9 +296,9 @@ sql.logger.setLogLevel(sql.LogLevel.TRACE)
 sql.logger.setConsoleLogging(true)
 
 // sql.logger.setLogFile('/var/log/myapp/sql-trace.log')
-// sql.logger.configureForDevelopment()            // TRACE, console
-// sql.logger.configureForProduction('/var/log/myapp')  // ERROR, file only
-// sql.logger.configureForTesting()                // SILENT
+// sql.logger.configureForDevelopment()            // DEBUG, console
+// sql.logger.configureForProduction('/var/log/myapp')  // INFO, file only
+// sql.logger.configureForTesting()                // TRACE, console
 // sql.logger.setLogLevel(sql.LogLevel.SILENT)     // default for production
 ```
 
