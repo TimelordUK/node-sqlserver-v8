@@ -1,0 +1,15 @@
+# scenario: cancel/paused-in-cancel-cb-at-10.events
+# status: unreviewed
+# sql: select top 5000 a.name from sys.all_objects a cross join sys.all_objects b
+# at: {"row":{"10":["cancel:pause"]}}
+submitted
+meta name
+row x10
+action cancel
+row x40
+cancel-cb ok
+action pause
+error HY008 0 Operation canceled more=false
+done
+free
+check ok
