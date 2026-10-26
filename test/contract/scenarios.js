@@ -22,7 +22,8 @@
 //               error: { 1: [...] }     on the nth error
 //             a follow-up can have its own 'at' as well.
 //             actions: 'pause', 'resume', 'resume:50' (after 50 ms), 'cancel',
-//             'cancel:again' (and once more from its callback),
+//             'cancel:again' (and once more from its callback), 'cancel:pause' (and
+//             pause from its callback),
 //             'queue:<when>' (start followUps with that when, now)
 //   followUps queries put on the same connection: { label, sql, when: 'start' | 'free' }
 //   modes     which variants to generate, each a separate corpus file:
@@ -175,6 +176,10 @@ const base = [
   { name: 'cancel/paused-twice-at-100', sql: BIG, at: { row: { 100: ['pause', 'cancel', 'cancel'] } }, modes: EVENTS },
   { name: 'cancel/paused-again-after-confirm-at-100', sql: BIG, at: { row: { 100: ['pause', 'cancel:again'] } }, modes: EVENTS },
   { name: 'cancel/paused-resumed-after-cancel-at-100', sql: BIG, at: { row: { 100: ['pause', 'cancel', 'resume:50'] } }, modes: EVENTS },
+  // a pause after an accepted cancel, while the rows already fetched are still emitted
+  // (#513): the cancel still ends the query, and the pause does not hold the connection
+  { name: 'cancel/paused-after-cancel-at-10-20', sql: BIG, at: { row: { 10: ['cancel'], 20: ['pause'] } }, modes: EVENTS },
+  { name: 'cancel/paused-in-cancel-cb-at-10', sql: BIG, at: { row: { 10: ['cancel:pause'] } }, modes: EVENTS },
   { name: 'cancel/paused-before-execute-twice', sql: SLOW, at: { start: ['pause', 'cancel', 'cancel'] }, modes: EVENTS },
   { name: 'cancel/after-error-mid-batch', sql: `raiserror('boom', 16, 1); ${SLOW}`, at: { error: { 1: ['cancel'] } }, modes: EVENTS },
 

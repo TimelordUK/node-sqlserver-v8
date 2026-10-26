@@ -196,12 +196,14 @@ class Run {
         if (arg) setTimeout(resume, Number(arg))
         else resume()
       } else if (name === 'cancel') {
-        // cancel:again cancels once more from the first cancel's callback
+        // cancel:again cancels once more from the first cancel's callback, cancel:pause
+        // pauses the query from it
         const cancel = again => {
           this.log(label, again ? 'action cancel again' : 'action cancel')
           q.cancelQuery(e => {
             this.log(label, e ? `cancel-cb error ${strip(e.message)}` : 'cancel-cb ok')
             if (arg === 'again' && !again) cancel(true)
+            if (arg === 'pause') this.act(label, q, ['pause'])
           })
         }
         cancel(false)

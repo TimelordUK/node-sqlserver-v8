@@ -376,6 +376,66 @@ describe('pause', function () {
     })
   })
 
+  // a cancel that is accepted ends the query: a pause that lands after it, while rows
+  // already fetched are still emitted, stops the rows but does not hold the query
+  describe('pause after an accepted cancel (issue #513)', () => {
+    const crossJoin = 'select top 400 a.object_id as a from sys.all_objects a cross join sys.all_objects b'
+
+    function cancelThenPause (conn, pauseInCancelCallback) {
+      return new Promise((resolve, reject) => {
+        const events = []
+        let rows = 0
+        let rowsAtPause = -1
+        const q = conn.queryRaw(crossJoin)
+        q.on('meta', () => events.push('meta'))
+        q.on('error', (e, more) => events.push(`error ${e.sqlstate} ${more}`))
+        q.on('done', () => events.push('done'))
+        q.on('free', () => {
+          events.push('free')
+          resolve({ events, rows, rowsAtPause })
+        })
+        const pause = () => {
+          rowsAtPause = rows
+          q.pauseQuery()
+        }
+        q.on('row', () => {
+          rows++
+          if (rows === 10) {
+            q.cancelQuery(e => {
+              events.push(`cancel ${e ? e.message : 'ok'}`)
+              if (pauseInCancelCallback) pause()
+            })
+          }
+          if (!pauseInCancelCallback && rows === 20) pause()
+        })
+        setTimeout(() => reject(new Error(`query held: ${events.join(', ')}`)), 5000)
+      })
+    }
+
+    const expected = ['meta', 'cancel ok', 'error HY008 false', 'done', 'free']
+
+    async function check (pauseInCancelCallback) {
+      const conn = await env.sql.promises.open(env.connectionString)
+      try {
+        const { events, rows, rowsAtPause } = await cancelThenPause(conn, pauseInCancelCallback)
+        assert.deepStrictEqual(events, expected)
+        assert.strictEqual(rows, rowsAtPause, 'no rows after the pause')
+        const res = await conn.promises.query('select 1 as a')
+        assert.deepStrictEqual(res.first, [{ a: 1 }])
+      } finally {
+        await conn.promises.close()
+      }
+    }
+
+    it('a pause before the cancel callback ends the query, and the connection closes', async function () {
+      await check(false)
+    })
+
+    it('a pause in the cancel callback ends the query, and the connection closes', async function () {
+      await check(true)
+    })
+  })
+
   describe('end-of-resultset pause/resume (issue #389)', () => {
     // These tests cover the scenario where pause is called near the end of a
     // result set. When the native ODBC batch is the final batch (endOfRows=true)
