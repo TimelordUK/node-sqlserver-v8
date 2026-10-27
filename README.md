@@ -151,7 +151,10 @@ Any Electron with N-API ≥ 8 works, with no `electron-rebuild` and no
 Electron-specific artifact. Verified against Electron 41 (ABI 145) and 43
 (ABI 148) on the same single binary.
 
-Windows Integrated Auth (x64) is supported via `Trusted_Connection=yes`.
+Windows Integrated Auth (x64) is supported via `Trusted_Connection=yes`. It
+also works from Linux and macOS over Kerberos, once you have a ticket - see
+[docs/kerberos-linux.md](docs/kerberos-linux.md) (`kinit`, `klist`, and a
+keytab with a systemd timer for services).
 
 Tested against SQL Server 2017, 2019, 2022. Sybase ASE support is smaller in scope — see [samples/javascript/sybase-query.js](samples/javascript/sybase-query.js) and the wiki.
 
