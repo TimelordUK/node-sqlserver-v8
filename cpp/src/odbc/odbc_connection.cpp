@@ -138,6 +138,7 @@ bool OdbcConnection::Close() {
       // the factory's statements_ map while RemoveStatement() is iterating it.
       std::lock_guard statementLock(_statementMutex);
       _statementFactory.reset();
+      _queryIdToStatementHandle.clear();
     }
     _transactionManager.reset();
     _errorHandler.reset();
@@ -215,6 +216,9 @@ std::shared_ptr<IOdbcStatement> OdbcConnection::CreateStatement(
     return nullptr;
   }
 
+  // Same lock as RemoveStatement/CancelStatement, which read and erase the map concurrently
+  std::lock_guard lock(_statementMutex);
+
   // Create the statement using the factory
   SQL_LOG_DEBUG_STREAM("OdbcConnection::CreateStatement: " << operationParams->toString());
   const auto statement = _statementFactory->CreateStatement(
@@ -242,7 +246,11 @@ bool OdbcConnection::RemoveStatement(const std::shared_ptr<OdbcStatement>& state
 
   // Ask the factory to remove the statement
   if (statement) {
-    factory->RemoveStatement(statement->GetStatementHandle().getStatementId());
+    const int statementId = statement->GetStatementHandle().getStatementId();
+    factory->RemoveStatement(statementId);
+    std::erase_if(_queryIdToStatementHandle, [statementId](const auto& entry) {
+      return entry.second.getStatementId() == statementId;
+    });
   }
 
   return true;
@@ -269,6 +277,10 @@ bool OdbcConnection::RemoveStatement(int statementId) {
   SQL_LOG_DEBUG_STREAM("RemoveStatement ID = " << statementId);
   // Ask the factory to remove the statement
   factory->RemoveStatement(statementId);
+  // The query id -> handle entry is only needed while the statement is live
+  std::erase_if(_queryIdToStatementHandle, [statementId](const auto& entry) {
+    return entry.second.getStatementId() == statementId;
+  });
   return true;
 }
 
