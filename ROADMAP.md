@@ -75,6 +75,6 @@ Each of these is a focused PR with its own opt-in flag and test file (the BigInt
 
 ## How to use this document
 
-- Items here are candidates, not commitments. Pull one in when it has an owner and a concrete starting point.
+- Items here are candidates, not commitments. Pull one in when it has an owner and a concrete starting point, and track it in [docs/work-tracker.md](docs/work-tracker.md).
 - When something lands, move the bullet from this file into the appropriate release notes and delete it here.
 - New ideas welcome — keep entries short (one paragraph + a "why now / why not") so the document stays scannable.
