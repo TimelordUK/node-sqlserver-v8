@@ -79,7 +79,7 @@ in `test/common/fake-native.js`).
 
 ## Done
 
-- **#528** - binary parameters over 2,000 bytes were bound as `SQL_LONGVARBINARY` (`image`),
+- **#529** - #528: binary parameters over 2,000 bytes were bound as `SQL_LONGVARBINARY` (`image`),
   which Always Encrypted rejects for `varbinary(max)`; now `SQL_VARBINARY`, size 0 above
   8,000. Added encrypted `varbinary(max)` round trips (2,000 bytes to 1 MiB, by procedure and
   by query) that also cover #525.
