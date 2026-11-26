@@ -613,6 +613,61 @@ describe('encrypt', function () {
       await runTable(new FieldBuilderVarBinary())
     })
 
+  // #528 - binary parameters over 2,000 bytes were bound as image, which Always Encrypted
+  // rejects for a varbinary(max) column; insert one row by procedure and one by query.
+  // #525 - reading one back over a single 24 KiB read could see SQL_NO_TOTAL and crash
+  async function runVarBinaryMax (bytes) {
+    if (!env.isEncryptedConnection()) return
+
+    const tableName = 'test_encrypted_varbinary_max'
+    const procName = `proc_insert_${tableName}`
+    const promises = env.theConnection.promises
+    await promises.query(`IF OBJECT_ID('${procName}', 'P') IS NOT NULL DROP PROCEDURE ${procName}`)
+    await promises.query(`IF OBJECT_ID('${tableName}', 'U') IS NOT NULL DROP TABLE ${tableName}`)
+    await promises.query(`CREATE TABLE ${tableName} (
+      id int NOT NULL PRIMARY KEY,
+      field varbinary(max) ENCRYPTED WITH (COLUMN_ENCRYPTION_KEY = [${encryptHelper.encrptKey}],
+        ENCRYPTION_TYPE = Randomized, ALGORITHM = '${encryptHelper.encrptAlgo}') NULL)`)
+    await promises.query(`CREATE PROCEDURE ${procName} (@id int, @field varbinary(max))
+      AS BEGIN INSERT INTO ${tableName} (id, field) VALUES (@id, @field) END`)
+    await promises.query(`exec sp_refresh_parameter_encryption ${procName}`)
+
+    const expected = Buffer.alloc(bytes)
+    for (let i = 0; i < bytes; ++i) {
+      expected[i] = (i * 31 + 7) & 0xff
+    }
+    await promises.callProc(procName, { id: 1, field: expected })
+    await promises.query(`INSERT INTO ${tableName} (id, field) VALUES (?, ?)`, [2, expected])
+    const res = await promises.query(`SELECT id, field FROM ${tableName} ORDER BY id`)
+    expect(res.first.map(r => r.id)).to.deep.equal([1, 2])
+    res.first.forEach(r => {
+      expect(r.field.length).to.equal(expected.length)
+      expect(Buffer.compare(r.field, expected)).to.equal(0)
+    })
+    await promises.query(`DROP PROCEDURE ${procName}`)
+    await promises.query(`DROP TABLE ${tableName}`)
+  }
+
+  it('encrypted varbinary(max) 2000 bytes', async function handler () {
+    await runVarBinaryMax(2000)
+  })
+
+  it('encrypted varbinary(max) 2001 bytes', async function handler () {
+    await runVarBinaryMax(2001)
+  })
+
+  it('encrypted varbinary(max) 8001 bytes', async function handler () {
+    await runVarBinaryMax(8001)
+  })
+
+  it('encrypted varbinary(max) just over one 24 KiB read', async function handler () {
+    await runVarBinaryMax(24 * 1024 + 1)
+  })
+
+  it('encrypted varbinary(max) 1 MiB', async function handler () {
+    await runVarBinaryMax(1024 * 1024)
+  })
+
   it('encrypted decimal via proc',
     async function handler () {
       await runProc(new FieldBuilderDecimal())

@@ -365,6 +365,8 @@ size_t get_max_object_len(const Napi::Object& p) {
 void BoundDatum::bind_long_var_binary(const Napi::Object& p) {
   bind_var_binary(p);
   sql_type = SQL_LONGVARBINARY;
+  // image needs its real length; size 0 is only valid for varbinary(max)
+  param_size = buffer_len;
 }
 
 void BoundDatum::reserve_binary_array(const size_t max_obj_len, const size_t array_len) {
@@ -383,14 +385,16 @@ void BoundDatum::reserve_binary_array(const size_t max_obj_len, const size_t arr
 void BoundDatum::reserve_var_binary_array(const size_t max_obj_len, const size_t array_len) {
   js_type = JS_BUFFER;
   c_type = SQL_C_BINARY;
-  sql_type = max_obj_len > 2000 ? SQL_LONGVARBINARY : SQL_VARBINARY;
+  // SQL_LONGVARBINARY is sent as image, which Always Encrypted rejects for a varbinary(max)
+  // column (#528); varbinary with size 0 is varbinary(max)
+  sql_type = SQL_VARBINARY;
   digits = 0;
   constexpr auto size = sizeof(uint8_t);
   _storage->ReserveChars(array_len * max_obj_len);
   _indvec.resize(array_len);
   buffer = _storage->charvec_ptr->data();
   buffer_len = static_cast<SQLLEN>(max_obj_len) * static_cast<SQLLEN>(size);
-  param_size = max_obj_len;
+  param_size = max_obj_len > 8000 ? 0 : max_obj_len;
 }
 
 /*

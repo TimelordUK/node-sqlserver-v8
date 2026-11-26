@@ -7,17 +7,6 @@ is done, move it to **Done** with the PR number, and drop it at the next release
 
 ## In progress
 
-### Retire the non-legacy statement classes
-Only `StatementType::Legacy` was ever created (`odbc_connection.cpp`), so `OdbcStatement`,
-`TransientStatement`, `PreparedStatement` and `TvpStatement` were dead code: about 2,000
-lines that duplicated bugs (#525's `SQL_NO_TOTAL` crash was in both copies). Removed;
-`IOdbcStatement` stays as the interface and `OdbcStatementLegacy` is the one implementation.
-
-### #525 - large encrypted `varbinary(max)` read crash - PR #526 (contributed)
-When the driver reports `SQL_NO_TOTAL` on a truncated binary read, `get_data_binary` resized
-its buffer to -4 and threw `Unknown exception occurred`. The fix reads in 24 KiB chunks until
-the final read. There is no test yet, because of the insert bug below.
-
 ### Leak soak tool - PR #518
 `samples/javascript/leak-soak.js` runs each query path many times on one connection and
 reports native memory growth per operation. It confirmed the #517 leak (70-110 B per
@@ -30,16 +19,13 @@ answer is "the ODBC driver does that", answer it with a short doc note rather th
 
 ## Next
 
-### #528 - encrypted binary over 2,000 bytes cannot be inserted
-On an Always Encrypted connection, inserting a `Buffer` longer than 2,000 bytes into an
-encrypted `varbinary(max)` column never calls back, whether through `query` or `callProc`.
-Node exits mid-await with nothing pending. 2,000 bytes works and 2,001 does not, which matches
-`reserve_var_binary_array` (`bound_datum.cpp`) switching to `SQL_LONGVARBINARY` above 2,000.
-That is presumably a type clash with the column; the driver error is then lost instead of
-reported, which breaks the done/free event contract. Two fixes:
-- bind long binaries as `SQL_VARBINARY` with size 0 (max), as long strings already are;
-- find where the error loses its callback.
-Then add the encrypted `varbinary(max)` round trip for #525 (16 KiB, 24 KiB + 1, 1 MiB).
+### #530 - encrypted strings over 4,000 characters rejected for `nvarchar(max)`
+The string sibling of #528. 4,000 characters inserts and 4,001 fails with "Encryption scheme
+mismatch ... PLAINTEXT", through `callProc` and `query`. Strings over 4,000 bind as
+`SQL_WLONGVARCHAR`; the #529 binary fix bound as the plain type with size 0 instead. The
+error differs from #528's, so confirm the cause first, and mind the `SQL_WCHAR`-at-4,000 and
+`varchar` 8,000 special cases. Add `nvarchar(max)` / `varchar(max)` round trips beside the
+`varbinary(max)` ones in `test/encrypt.test.js`.
 
 ### Keep splitting `OdbcStatementLegacy`
 It is already split into `_params`, `_prepared`, `_read` and `_strings`. TVP handling is not
@@ -101,6 +87,15 @@ in `test/common/fake-native.js`).
 
 ## Done
 
+- **#529** - #528: binary parameters over 2,000 bytes were bound as `SQL_LONGVARBINARY` (`image`),
+  which Always Encrypted rejects for `varbinary(max)`; now `SQL_VARBINARY`, size 0 above
+  8,000. Added encrypted `varbinary(max)` round trips (2,000 bytes to 1 MiB, by procedure and
+  by query) that also cover #525.
+- **#527** - removed the never-created non-legacy statement classes (`OdbcStatement`,
+  `TransientStatement`, `PreparedStatement`, `TvpStatement`), about 2,000 lines;
+  `OdbcStatementLegacy` is the only implementation.
+- **#526** - #525: a truncated binary read reporting `SQL_NO_TOTAL` resized the buffer to -4
+  and threw `Unknown exception occurred`; now reads in 24 KiB chunks (contributed).
 - **#517** - query id to statement handle map erased on statement release and cleared on
   close; fixed a ~65 B per query native leak on long-lived connections (contributed).
 - **#516** - [kerberos-linux.md](kerberos-linux.md): Windows authentication from Linux,
