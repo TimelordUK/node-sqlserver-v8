@@ -31,7 +31,6 @@ class BoundDatumSet;
 class IOdbcStatementHandle;
 class ConnectionHandles;
 class OdbcErrorHandler;
-class OdbcStatement;
 class IOdbcEnvironment;
 class OdbcTransactionManager;
 class OdbcStatementFactory;
@@ -114,7 +113,6 @@ class OdbcConnection : public IOdbcConnection {
   bool RemoveStatement(int statementId) override;
   bool CancelStatement(int statementId) override;
   std::shared_ptr<BoundDatumSet> UnbindStatement(int statementId) override;
-  bool RemoveStatement(const std::shared_ptr<OdbcStatement>& statement);
 
   // Legacy ExecuteQuery implementation
   bool ExecuteQuery(const std::shared_ptr<QueryOperationParams> operationParams,

@@ -233,29 +233,6 @@ std::shared_ptr<IOdbcStatement> OdbcConnection::CreateStatement(
   return statement;
 }
 
-bool OdbcConnection::RemoveStatement(const std::shared_ptr<OdbcStatement>& statement) {
-  std::lock_guard lock(_statementMutex);
-
-  // Take a local copy of the shared_ptr so the factory stays alive even if
-  // Close() concurrently resets _statementFactory while we are working.
-  auto factory = _statementFactory;
-  if (!factory) {
-    SQL_LOG_WARNING("RemoveStatement - factory already destroyed (connection closed)");
-    return false;
-  }
-
-  // Ask the factory to remove the statement
-  if (statement) {
-    const int statementId = statement->GetStatementHandle().getStatementId();
-    factory->RemoveStatement(statementId);
-    std::erase_if(_queryIdToStatementHandle, [statementId](const auto& entry) {
-      return entry.second.getStatementId() == statementId;
-    });
-  }
-
-  return true;
-}
-
 bool OdbcConnection::RemoveStatement(int statementId) {
   std::lock_guard lock(_statementMutex);
 

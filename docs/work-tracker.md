@@ -7,6 +7,17 @@ is done, move it to **Done** with the PR number, and drop it at the next release
 
 ## In progress
 
+### Retire the non-legacy statement classes
+Only `StatementType::Legacy` was ever created (`odbc_connection.cpp`), so `OdbcStatement`,
+`TransientStatement`, `PreparedStatement` and `TvpStatement` were dead code: about 2,000
+lines that duplicated bugs (#525's `SQL_NO_TOTAL` crash was in both copies). Removed;
+`IOdbcStatement` stays as the interface and `OdbcStatementLegacy` is the one implementation.
+
+### #525 - large encrypted `varbinary(max)` read crash - PR #526 (contributed)
+When the driver reports `SQL_NO_TOTAL` on a truncated binary read, `get_data_binary` resized
+its buffer to -4 and threw `Unknown exception occurred`. The fix reads in 24 KiB chunks until
+the final read. There is no test yet, because of the insert bug below.
+
 ### Leak soak tool - PR #518
 `samples/javascript/leak-soak.js` runs each query path many times on one connection and
 reports native memory growth per operation. It confirmed the #517 leak (70-110 B per
@@ -18,6 +29,34 @@ answer is "the ODBC driver does that", answer it with a short doc note rather th
 (as #323 got [kerberos-linux.md](kerberos-linux.md)).
 
 ## Next
+
+### #528 - encrypted binary over 2,000 bytes cannot be inserted
+On an Always Encrypted connection, inserting a `Buffer` longer than 2,000 bytes into an
+encrypted `varbinary(max)` column never calls back, whether through `query` or `callProc`.
+Node exits mid-await with nothing pending. 2,000 bytes works and 2,001 does not, which matches
+`reserve_var_binary_array` (`bound_datum.cpp`) switching to `SQL_LONGVARBINARY` above 2,000.
+That is presumably a type clash with the column; the driver error is then lost instead of
+reported, which breaks the done/free event contract. Two fixes:
+- bind long binaries as `SQL_VARBINARY` with size 0 (max), as long strings already are;
+- find where the error loses its callback.
+Then add the encrypted `varbinary(max)` round trip for #525 (16 KiB, 24 KiB + 1, 1 MiB).
+
+### Keep splitting `OdbcStatementLegacy`
+It is already split into `_params`, `_prepared`, `_read` and `_strings`. TVP handling is not
+encapsulated: it is spread through `bound_datum.cpp`, `bound_datum_set.cpp`,
+`query_parameter.h` and `odbc_statement_legacy_params.cpp`. Pull it into one unit.
+
+### C++ tests - start again
+`test/cpp` does not compile. It was dropped because keeping it working during the N-API port
+took too long, but it holds reasonable ideas. Start again rather than repair:
+1. Build a usable mock of the ODBC API (`IOdbcApi`) that scripts what each call returns.
+2. Get a few simple tests working against it.
+3. Test the main transformation points directly in C++: chunked `SQLGetData` reads
+   (including `SQL_NO_TOTAL`), parameter binding type and size choices, and column
+   conversion. #525 is the example: it needed an encrypted SQL Server to reproduce, but a
+   mocked `SQLGetData` returning -4 would have caught it.
+
+The `diagnostics_tests` target (Logger plus `mock_odbc_api.h`) is the shape to start from.
 
 ### Prepared statement re-execute growth - unresolved
 Re-executing one prepared statement reads 18-75 B per execute from run to run, with or
@@ -56,8 +95,6 @@ in `test/common/fake-native.js`).
 ## Later
 
 - **Lint cleanup** - about 75 eslint violations; the code has not been linted in years.
-- **C++ tests** - `test/cpp` no longer builds. Strip it back, get the mocked ODBC API
-  working, add cases as needed.
 - **Console showcase** - one self-cleaning console program that demos every feature, to
   become the headline reference.
 - **Wiki** - rebuild `wiki.md` from scratch, with sample code leading over prose.
