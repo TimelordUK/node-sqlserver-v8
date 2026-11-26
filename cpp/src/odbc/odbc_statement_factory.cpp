@@ -31,18 +31,6 @@ std::shared_ptr<IOdbcStatement> OdbcStatementFactory::MakeStatement(
       return std::make_shared<OdbcStatementLegacy>(
           connectionHandle, handle, errorHandler, odbcApi, statementHandle, operationParams);
 
-    case StatementType::Transient:
-      return std::make_shared<TransientStatement>(
-          handle, errorHandler, operationParams, odbcApi, statementHandle);
-
-    case StatementType::Prepared:
-      return std::make_shared<PreparedStatement>(
-          handle, errorHandler, operationParams, odbcApi, statementHandle);
-
-    case StatementType::TVP:
-      return std::make_shared<TvpStatement>(
-          handle, errorHandler, operationParams, odbcApi, statementHandle);
-
     default:
       return nullptr;
   }

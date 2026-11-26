@@ -44,7 +44,7 @@ class OdbcStatementFactory {
   std::shared_ptr<IOdbcStatement> MakeStatement(
       std::shared_ptr<IOdbcConnectionHandle> connectionHandle,
       std::shared_ptr<IOdbcApi> odbcApi,
-      OdbcStatement::Type type,
+      StatementType type,
       std::shared_ptr<OdbcErrorHandler> errorHandler,
       const std::shared_ptr<QueryOperationParams> operationParams);
 };
