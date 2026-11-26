@@ -19,6 +19,14 @@ answer is "the ODBC driver does that", answer it with a short doc note rather th
 
 ## Next
 
+### #530 - encrypted strings over 4,000 characters rejected for `nvarchar(max)`
+The string sibling of #528. 4,000 characters inserts and 4,001 fails with "Encryption scheme
+mismatch ... PLAINTEXT", through `callProc` and `query`. Strings over 4,000 bind as
+`SQL_WLONGVARCHAR`; the #529 binary fix bound as the plain type with size 0 instead. The
+error differs from #528's, so confirm the cause first, and mind the `SQL_WCHAR`-at-4,000 and
+`varchar` 8,000 special cases. Add `nvarchar(max)` / `varchar(max)` round trips beside the
+`varbinary(max)` ones in `test/encrypt.test.js`.
+
 ### Keep splitting `OdbcStatementLegacy`
 It is already split into `_params`, `_prepared`, `_read` and `_strings`. TVP handling is not
 encapsulated: it is spread through `bound_datum.cpp`, `bound_datum_set.cpp`,
