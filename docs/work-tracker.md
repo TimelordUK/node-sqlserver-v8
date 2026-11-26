@@ -30,7 +30,7 @@ answer is "the ODBC driver does that", answer it with a short doc note rather th
 
 ## Next
 
-### Encrypted binary over 2,000 bytes cannot be inserted
+### #528 - encrypted binary over 2,000 bytes cannot be inserted
 On an Always Encrypted connection, inserting a `Buffer` longer than 2,000 bytes into an
 encrypted `varbinary(max)` column never calls back, whether through `query` or `callProc`.
 Node exits mid-await with nothing pending. 2,000 bytes works and 2,001 does not, which matches
