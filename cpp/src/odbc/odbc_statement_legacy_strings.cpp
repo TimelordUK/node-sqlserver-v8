@@ -30,59 +30,51 @@ bool OdbcStatementLegacy::get_data_binary(const size_t row_id, const size_t colu
   auto storage = make_shared<DatumStorageLegacy>();
 
   const auto& statement = *_statement;
-  constexpr SQLLEN atomic_read = 24 * 1024;
-  auto bytes_to_read = atomic_read;
-  storage->ReserveChars(bytes_to_read + 1);
-  const auto& char_data = storage->charvec_ptr;
-  auto* write_ptr = char_data->data();
-  SQLLEN total_bytes_to_read = 0;
-  auto r = _odbcApi->SQLGetData(statement.get_handle(),
-                                static_cast<SQLSMALLINT>(column + 1),
-                                SQL_C_BINARY,
-                                write_ptr,
-                                bytes_to_read,
-                                &total_bytes_to_read);
-  if (!check_odbc_error(r)) {
-    SQL_LOG_DEBUG_STREAM("get_data_binary failed to get data");
-    return false;
-  }
-  if (total_bytes_to_read == SQL_NULL_DATA) {
-    _resultset->add_column(row_id, make_shared<NullColumn>(column));
-    return true;  // break
-  }
-  auto status = false;
-  auto more = check_more_read(r, status);
-  if (!status) {
-    return false;
-  }
-  char_data->resize(total_bytes_to_read);
+  constexpr SQLLEN buffer_size = 24 * 1024;
+  storage->ReserveChars(buffer_size);
+  auto& data = *storage->charvec_ptr;
+  size_t offset = 0;
 
-  if (total_bytes_to_read > bytes_to_read) {
-    total_bytes_to_read -= bytes_to_read;
-  }
-  write_ptr = char_data->data();
-  write_ptr += bytes_to_read;
-  while (more) {
-    bytes_to_read = min(static_cast<SQLLEN>(atomic_read), total_bytes_to_read);
-    r = _odbcApi->SQLGetData(statement.get_handle(),
-                             static_cast<SQLSMALLINT>(column + 1),
-                             SQL_C_BINARY,
-                             write_ptr,
-                             bytes_to_read,
-                             &total_bytes_to_read);
+  for (;;) {
+    SQLLEN available = 0;
+    const auto r = _odbcApi->SQLGetData(statement.get_handle(),
+                                       static_cast<SQLSMALLINT>(column + 1),
+                                       SQL_C_BINARY,
+                                       data.data() + offset,
+                                       buffer_size,
+                                       &available);
     if (!check_odbc_error(r)) {
       SQL_LOG_DEBUG_STREAM("get_data_binary failed to get data");
       return false;
     }
-    more = check_more_read(r, status);
+    if (available == SQL_NULL_DATA && offset == 0) {
+      _resultset->add_column(row_id, make_shared<NullColumn>(column));
+      return true;
+    }
+
+    auto status = false;
+    const auto more = check_more_read(r, status);
     if (!status) {
       return false;
     }
-    write_ptr += bytes_to_read;
-  }
+    if (!more) {
+      if (available < 0 || available > buffer_size) {
+        SQL_LOG_DEBUG_STREAM("get_data_binary invalid final chunk length: " << available);
+        return false;
+      }
+      data.resize(offset + static_cast<size_t>(available));
+      _resultset->add_column(row_id, make_shared<BinaryColumn>(column, storage, data.size()));
+      return true;
+    }
 
-  _resultset->add_column(row_id, make_shared<BinaryColumn>(column, storage, char_data->size()));
-  return true;
+    // A truncated binary read fills the buffer even when ODBC reports SQL_NO_TOTAL.
+    if (offset == 0 && available > buffer_size) {
+      const auto length = static_cast<size_t>(available);
+      data.reserve(((length - 1) / buffer_size + 1) * buffer_size);
+    }
+    offset += buffer_size;
+    data.resize(offset + buffer_size);
+  }
 }
 
 bool OdbcStatementLegacy::check_more_read(SQLRETURN r, bool& status) {
