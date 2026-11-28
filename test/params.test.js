@@ -652,6 +652,14 @@ describe('bulk', function () {
       assert.deepStrictEqual(result.first, expected)
     })
 
+    it('should round trip an empty buffer as empty, not null (#533)', async function () {
+      const result = await env.theConnection.promises.query(
+        'declare @b10 varbinary(10) = ?; declare @bmax varbinary(max) = ?; select @b10 as b10, @bmax as bmax',
+        [Buffer.alloc(0), Buffer.alloc(0)]
+      )
+      assert.deepStrictEqual(result.first, [{ b10: Buffer.alloc(0), bmax: Buffer.alloc(0) }])
+    })
+
     it('should handle long buffer using callback', async function () {
       const longString = TestData.strings.repeatedChar('a', 50000)
       const longBuffer = TestData.buffers.fromString(longString)

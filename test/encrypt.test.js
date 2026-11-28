@@ -613,6 +613,50 @@ describe('encrypt', function () {
       await runTable(new FieldBuilderVarBinary())
     })
 
+  // One encrypted column of the given type, and an insert procedure whose parameter is typed
+  // exactly as the column. Always Encrypted allows no conversion, so a value inserted by either
+  // route only arrives if the library binds it as the column's own type.
+  async function encryptedColumn (type, { text = false, encryption = 'Deterministic' } = {}) {
+    const tableName = 'test_encrypted_column'
+    const procName = `proc_insert_${tableName}`
+    const promises = env.theConnection.promises
+    await promises.query(`IF OBJECT_ID('${procName}', 'P') IS NOT NULL DROP PROCEDURE ${procName}`)
+    await promises.query(`IF OBJECT_ID('${tableName}', 'U') IS NOT NULL DROP TABLE ${tableName}`)
+    await promises.query(`CREATE TABLE ${tableName} (
+      id int NOT NULL PRIMARY KEY,
+      field ${type} ${text ? 'COLLATE Latin1_General_BIN2' : ''}
+        ENCRYPTED WITH (COLUMN_ENCRYPTION_KEY = [${encryptHelper.encrptKey}],
+        ENCRYPTION_TYPE = ${encryption}, ALGORITHM = '${encryptHelper.encrptAlgo}') NULL)`)
+    await promises.query(`CREATE PROCEDURE ${procName} (@id int, @field ${type})
+      AS BEGIN INSERT INTO ${tableName} (id, field) VALUES (@id, @field) END`)
+    await promises.query(`exec sp_refresh_parameter_encryption ${procName}`)
+    return {
+      byProc: (id, field) => promises.callProc(procName, { id, field }),
+      byQuery: (id, field) => promises.query(`INSERT INTO ${tableName} (id, field) VALUES (?, ?)`, [id, field]),
+      values: async () => (await promises.query(`SELECT field FROM ${tableName} ORDER BY id`)).first.map(r => r.field),
+      drop: async () => {
+        await promises.query(`DROP PROCEDURE ${procName}`)
+        await promises.query(`DROP TABLE ${tableName}`)
+      }
+    }
+  }
+
+  it('encrypted empty buffer into varbinary(50) stays empty (#533)', async function handler () {
+    const column = await encryptedColumn('varbinary(50)')
+    await column.byProc(1, Buffer.alloc(0))
+    await column.byQuery(2, Buffer.alloc(0))
+    expect(await column.values()).to.deep.equal([Buffer.alloc(0), Buffer.alloc(0)])
+    await column.drop()
+  })
+
+  it('encrypted null into varbinary(50)', async function handler () {
+    const column = await encryptedColumn('varbinary(50)')
+    await column.byProc(1, null)
+    await column.byQuery(2, sql.VarBinary(null))
+    expect(await column.values()).to.deep.equal([null, null])
+    await column.drop()
+  })
+
   // #528 - binary parameters over 2,000 bytes were bound as image, which Always Encrypted
   // rejects for a varbinary(max) column; insert one row by procedure and one by query.
   // #525 - reading one back over a single 24 KiB read could see SQL_NO_TOTAL and crash

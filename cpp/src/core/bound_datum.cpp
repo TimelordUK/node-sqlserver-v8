@@ -366,7 +366,7 @@ void BoundDatum::bind_long_var_binary(const Napi::Object& p) {
   bind_var_binary(p);
   sql_type = SQL_LONGVARBINARY;
   // image needs its real length; size 0 is only valid for varbinary(max)
-  param_size = buffer_len;
+  param_size = max(buffer_len, static_cast<SQLLEN>(1));
 }
 
 void BoundDatum::reserve_binary_array(const size_t max_obj_len, const size_t array_len) {
@@ -386,15 +386,18 @@ void BoundDatum::reserve_var_binary_array(const size_t max_obj_len, const size_t
   js_type = JS_BUFFER;
   c_type = SQL_C_BINARY;
   // SQL_LONGVARBINARY is sent as image, which Always Encrypted rejects for a varbinary(max)
-  // column (#528); varbinary with size 0 is varbinary(max)
+  // column (#528); varbinary with size 0 is varbinary(max), so an empty buffer binds as
+  // varbinary(1), not max, or Always Encrypted rejects it for a varbinary(n) column (#533)
   sql_type = SQL_VARBINARY;
   digits = 0;
   constexpr auto size = sizeof(uint8_t);
-  _storage->ReserveChars(array_len * max_obj_len);
+  // never an empty vector: its data() can be null, and a null buffer reads as NULL, so an
+  // empty buffer would arrive as NULL rather than empty
+  _storage->ReserveChars(max(static_cast<size_t>(1), array_len * max_obj_len));
   _indvec.resize(array_len);
   buffer = _storage->charvec_ptr->data();
   buffer_len = static_cast<SQLLEN>(max_obj_len) * static_cast<SQLLEN>(size);
-  param_size = max_obj_len > 8000 ? 0 : max_obj_len;
+  param_size = max_obj_len > 8000 ? 0 : max(max_obj_len, static_cast<size_t>(1));
 }
 
 /*
