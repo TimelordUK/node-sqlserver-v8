@@ -288,10 +288,11 @@ jobs:
       timeout-minutes: 30
 
     - name: Run Always Encrypted tests
-      # The main run above has no ColumnEncryption, so these suites skip there.
+      # The main run above has no ColumnEncryption, so these suites skip there. The keys are
+      # in [node], so name it: without Database= the sa login lands in master.
       working-directory: node_modules/msnodesqlv8
       env:
-        DEFAULT: "Driver={ODBC Driver 17 for SQL Server}; Server=localhost; Uid=sa; Pwd=Password12;ColumnEncryption=Enabled;"
+        DEFAULT: "Driver={ODBC Driver 17 for SQL Server}; Server=localhost; Database=node; Uid=sa; Pwd=Password12;ColumnEncryption=Enabled;"
       run: npx mocha test/encrypt.test.js test/encrypt-verification.test.js
       timeout-minutes: 10
 
