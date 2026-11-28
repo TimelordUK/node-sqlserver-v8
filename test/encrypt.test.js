@@ -642,6 +642,7 @@ describe('encrypt', function () {
   }
 
   it('encrypted empty buffer into varbinary(50) stays empty (#533)', async function handler () {
+    if (!env.isEncryptedConnection()) this.skip()
     const column = await encryptedColumn('varbinary(50)')
     await column.byProc(1, Buffer.alloc(0))
     await column.byQuery(2, Buffer.alloc(0))
@@ -650,6 +651,7 @@ describe('encrypt', function () {
   })
 
   it('encrypted null into varbinary(50)', async function handler () {
+    if (!env.isEncryptedConnection()) this.skip()
     const column = await encryptedColumn('varbinary(50)')
     await column.byProc(1, null)
     await column.byQuery(2, sql.VarBinary(null))
