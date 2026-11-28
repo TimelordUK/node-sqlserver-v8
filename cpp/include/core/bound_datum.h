@@ -79,6 +79,7 @@ class BoundDatum {
         bcp_terminator(NULL),
         is_tvp(false),
         is_money(false),
+        server_type(0),
         tvp_no_cols(0),
         definedPrecision(false),
         definedScale(false),
@@ -127,6 +128,9 @@ class BoundDatum {
 
   bool is_tvp;
   bool is_money;
+  // SQL_CA_SS_SERVER_TYPE: the server type to send for a parameter whose ODBC SQL type
+  // covers more than one (datetime / smalldatetime, money / smallmoney); 0 is the default
+  int32_t server_type;
   int tvp_no_cols;
   wstring name;
 

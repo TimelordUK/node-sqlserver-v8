@@ -1030,6 +1030,14 @@ void BoundDatum::reserve_time_stamp(const SQLLEN len) {
   if (digits <= 0) {
     digits = sql_server_2008_default_datetime_scale;
   }
+  // datetime and smalldatetime have fixed sizes, and the server type says which is meant
+  if (server_type == SQL_SS_TYPE_DATETIME) {
+    param_size = 23;
+    digits = 3;
+  } else if (server_type == SQL_SS_TYPE_SMALLDATETIME) {
+    param_size = 16;
+    digits = 0;
+  }
   if (is_bcp) {
     sql_type = SQLDATETIME2N;
     param_size = sizeof(SQL_TIMESTAMP_STRUCT);
@@ -1614,6 +1622,11 @@ void BoundDatum::assign_precision(Napi::Object& pv) {
     is_money = money.ToBoolean().Value();
   }
 
+  const auto st = get("server_type", pv);
+  if (!st.IsUndefined()) {
+    server_type = st.ToNumber().Int32Value();
+  }
+
   const auto bcp = get("bcp", pv);
   if (!bcp.IsUndefined()) {
     is_bcp = bcp.ToBoolean().Value();
@@ -1927,7 +1940,6 @@ bool BoundDatum::user_bind(const Napi::Object& p, const Napi::Object& v) {
       break;
 
     case SQL_WVARCHAR:
-    case SQL_GUID:
       if (pp.IsString()) {
         bind_w_var_char(pp.As<Napi::Object>());
       } else if (pp.IsObject()) {
@@ -1936,6 +1948,24 @@ bool BoundDatum::user_bind(const Napi::Object& p, const Napi::Object& v) {
         bind_null(p);
       }
       break;
+
+    // nchar and uniqueidentifier bind their text as nvarchar does, but keep their own SQL
+    // type: Always Encrypted converts nothing, so nvarchar cannot reach an encrypted nchar
+    // or uniqueidentifier column (#531)
+    case SQL_WCHAR:
+    case SQL_GUID: {
+      const auto declared = sql_type;
+      if (pp.IsString()) {
+        bind_w_var_char(pp.As<Napi::Object>());
+      } else if (pp.IsObject()) {
+        sql_wvarchar(pp.As<Napi::Object>());
+      } else {
+        bind_null(p);
+        break;
+      }
+      if (!is_bcp)
+        sql_type = declared;
+    } break;
 
     case SQL_WLONGVARCHAR:
       if (pp.IsObject()) {

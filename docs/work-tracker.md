@@ -19,13 +19,34 @@ answer is "the ODBC driver does that", answer it with a short doc note rather th
 
 ## Next
 
-### #530 - encrypted strings over 4,000 characters rejected for `nvarchar(max)`
-The string sibling of #528. 4,000 characters inserts and 4,001 fails with "Encryption scheme
-mismatch ... PLAINTEXT", through `callProc` and `query`. Strings over 4,000 bind as
-`SQL_WLONGVARCHAR`; the #529 binary fix bound as the plain type with size 0 instead. The
-error differs from #528's, so confirm the cause first, and mind the `SQL_WCHAR`-at-4,000 and
-`varchar` 8,000 special cases. Add `nvarchar(max)` / `varchar(max)` round trips beside the
-`varbinary(max)` ones in `test/encrypt.test.js`.
+### #530 and #534 - long string parameters
+- **#534:** any `varchar` parameter over 8,000 characters fails with `Invalid precision value`,
+  on any connection, through `callProc` or a typed `sql.VarChar`. `reserve_var_char_array`
+  switches to `SQL_WLONGVARCHAR` with size 0 while the C type stays `SQL_C_CHAR`.
+- **#530:** an encrypted `nvarchar(max)` rejects strings over 4,000 characters ("Encryption
+  scheme mismatch ... PLAINTEXT"); they bind as `SQL_WLONGVARCHAR`. Confirm the cause first.
+
+Likely one fix: bind long strings as the plain type with size 0 (`max`), as #529 did for binary.
+Mind the `SQL_WCHAR`-at-4,000 and `varchar` 8,000 special cases. Add plain round trips (so every
+CI platform covers it) and `nvarchar(max)` / `varchar(max)` cases with `encryptedColumn` in
+`test/encrypt.test.js`.
+
+### CI hardening
+From a review of every test run from 16 to 28 November: one real test flake, the rest infrastructure.
+- **SQL Server fails to start on Windows** (mssqlsuite `Restart-Service`), the most common
+  cause of reruns. Retry the step.
+- **`contract/replay` "paused-resumed-after-cancel-at-100"** flaked once (Windows, Node 26).
+  The seed does not make the run deterministic: after an event-loop stall the fake driver's
+  hold times collapse to 0 (`test/common/fake-native.js` `holdFor`), so the scenario's 50 ms
+  resume timer can fire before the cancel callback. Possibly also a real window in the JS:
+  `resume()` between the cancel being sent and its callback can issue a fetch, since
+  `pausedCancelled` is only set in that callback (`lib/reader.js`). Not yet verified.
+
+### Document: Always Encrypted needs typed parameters
+In a plain `query`, untyped values (`null`, a JS string for `varchar`, a `Date` for
+`datetime2`) bind as the library's default type, and Always Encrypted converts nothing, so
+they are rejected. `callProc` and the table manager know the column types; a plain query needs
+`sql.Int(null)`, `sql.VarChar(...)`, `sql.DateTime2(...)` and so on.
 
 ### Keep splitting `OdbcStatementLegacy`
 It is already split into `_params`, `_prepared`, `_read` and `_strings`. TVP handling is not
@@ -87,6 +108,15 @@ in `test/common/fake-native.js`).
 
 ## Done
 
+- **#531, #532** - parameters now bind as their exact type: `datetime` / `smalldatetime` /
+  `money` / `smallmoney` set `SQL_CA_SS_SERVER_TYPE` (they went as `datetime2` / `numeric`),
+  `uniqueidentifier` binds as `SQL_GUID` and `nchar` as `SQL_WCHAR`, through `callProc` and the
+  typed helpers (`sql.NChar` was `Char`, so it also lost non-Latin text on any connection).
+- **#536** - #533: an empty `Buffer` was stored as NULL on any connection (null data pointer),
+  and bound as `varbinary(max)`.
+- **#535** - the Always Encrypted suites run on Windows CI
+  (`.github/scripts/setup-always-encrypted.ps1` builds the keys); on a plain connection they
+  report pending instead of passing without testing.
 - **#529** - #528: binary parameters over 2,000 bytes were bound as `SQL_LONGVARBINARY` (`image`),
   which Always Encrypted rejects for `varbinary(max)`; now `SQL_VARBINARY`, size 0 above
   8,000. Added encrypted `varbinary(max)` round trips (2,000 bytes to 1 MiB, by procedure and

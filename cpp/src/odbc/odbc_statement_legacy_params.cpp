@@ -37,6 +37,29 @@ std::shared_ptr<BoundDatumSet> OdbcStatementLegacy::Unbind() {
   return _boundParamsSet;
 }
 
+// Tell the driver which server type to send where one ODBC SQL type covers several:
+// SQL_TYPE_TIMESTAMP is sent as datetime2 and SQL_NUMERIC as numeric unless told otherwise.
+// Always Encrypted converts nothing, so a datetime, smalldatetime, money or smallmoney column
+// rejects anything else (#531, #532). Drivers before 17.7 do not know the money types; there
+// the field is refused and the parameter goes as before, so the failure is logged, not raised.
+void OdbcStatementLegacy::apply_server_type(const shared_ptr<BoundDatum>& datum,
+                                            const int current_param) {
+  SQLHDESC ipd = nullptr;
+  auto r = _odbcApi->SQLGetStmtAttr(
+      _statement->get_handle(), SQL_ATTR_IMP_PARAM_DESC, &ipd, SQL_IS_POINTER, nullptr);
+  if (SQL_SUCCEEDED(r)) {
+    r = _odbcApi->SQLSetDescField(ipd,
+                                  current_param,
+                                  SQL_CA_SS_SERVER_TYPE,
+                                  reinterpret_cast<SQLPOINTER>(static_cast<intptr_t>(datum->server_type)),
+                                  SQL_IS_INTEGER);
+  }
+  if (!SQL_SUCCEEDED(r)) {
+    SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] bind_datum could not set server type "
+                             << datum->server_type << " on parameter " << current_param);
+  }
+}
+
 bool OdbcStatementLegacy::apply_precision(const shared_ptr<BoundDatum>& datum,
                                           const int current_param) {
   /* Modify the fields in the implicit application parameter descriptor */
@@ -134,6 +157,9 @@ bool OdbcStatementLegacy::bind_datum(const int current_param, const shared_ptr<B
     SQL_LOG_DEBUG_STREAM("[" << _handle.toString() << "] bind_datum failed to bind parameter "
                              << current_param);
     return false;
+  }
+  if (datum->server_type != SQL_SS_TYPE_DEFAULT) {
+    apply_server_type(datum, current_param);
   }
   /*
   if (datum->is_money) {

@@ -659,6 +659,51 @@ describe('encrypt', function () {
     await column.drop()
   })
 
+  // #531 callProc bound these as a neighbouring type (datetime2, numeric, varchar, char);
+  // #532 the typed helpers did the same. Each goes in once by procedure, once by typed query.
+  async function exactType (type, value, typed, options) {
+    const column = await encryptedColumn(type, options)
+    await column.byProc(1, value)
+    await column.byQuery(2, typed(value))
+    const values = await column.values()
+    await column.drop()
+    return values
+  }
+
+  it('encrypted datetime (#531, #532)', async function handler () {
+    const d = new Date(Date.UTC(2020, 1, 3, 4, 5, 6, 7))
+    const values = await exactType('datetime', d, sql.DateTime)
+    expect(values.map(v => v.getTime())).to.deep.equal([d.getTime(), d.getTime()])
+  })
+
+  it('encrypted smalldatetime (#531, #532)', async function handler () {
+    const d = new Date(Date.UTC(2020, 1, 3, 4, 5, 0, 0))
+    const values = await exactType('smalldatetime', d, sql.SmallDateTime)
+    expect(values.map(v => v.getTime())).to.deep.equal([d.getTime(), d.getTime()])
+  })
+
+  it('encrypted money (#531, #532)', async function handler () {
+    const values = await exactType('money', 12345.6789, sql.Money)
+    expect(values).to.deep.equal([12345.6789, 12345.6789])
+  })
+
+  it('encrypted smallmoney (#531, #532)', async function handler () {
+    const values = await exactType('smallmoney', -12.34, sql.SmallMoney)
+    expect(values).to.deep.equal([-12.34, -12.34])
+  })
+
+  it('encrypted uniqueidentifier (#531, #532)', async function handler () {
+    const g = 'E2A5F3F4-0D9C-4E1C-9F7B-1C2D3E4F5A6B'
+    const values = await exactType('uniqueidentifier', g, sql.UniqueIdentifier)
+    expect(values.map(v => v.toUpperCase())).to.deep.equal([g, g])
+  })
+
+  it('encrypted nchar keeps unicode (#531, #532)', async function handler () {
+    const s = 'héllo'
+    const values = await exactType('nchar(5)', s, v => sql.NChar(v), { text: true })
+    expect(values).to.deep.equal([s, s])
+  })
+
   // #528 - binary parameters over 2,000 bytes were bound as image, which Always Encrypted
   // rejects for a varbinary(max) column; insert one row by procedure and one by query.
   // #525 - reading one back over a single 24 KiB read could see SQL_NO_TOTAL and crash

@@ -803,6 +803,60 @@ describe('bulk', function () {
   })
 
   // ========================================
+  // EXACT TYPE TESTS (#531, #532)
+  // ========================================
+
+  // each typed helper binds as its own server type, not a neighbour the server would convert
+  describe('Exact Typed Parameters', function () {
+    async function roundTrip (type, param) {
+      const result = await env.theConnection.promises.query(
+        `declare @v ${type} = ?; select @v as v`,
+        [param]
+      )
+      return result.first[0]
+    }
+
+    it('should round trip sql.DateTime', async function () {
+      const d = new Date(Date.UTC(2020, 1, 3, 4, 5, 6, 7))
+      const r = await roundTrip('datetime', env.sql.DateTime(d))
+      assert.deepStrictEqual(r.v.getTime(), d.getTime())
+    })
+
+    it('should round trip sql.SmallDateTime', async function () {
+      const d = new Date(Date.UTC(2020, 1, 3, 4, 5, 0, 0))
+      const r = await roundTrip('smalldatetime', env.sql.SmallDateTime(d))
+      assert.deepStrictEqual(r.v.getTime(), d.getTime())
+    })
+
+    it('should round trip sql.Money and sql.SmallMoney', async function () {
+      assert.deepStrictEqual((await roundTrip('money', env.sql.Money(12345.6789))).v, 12345.6789)
+      assert.deepStrictEqual((await roundTrip('smallmoney', env.sql.SmallMoney(-12.34))).v, -12.34)
+    })
+
+    it('should round trip sql.UniqueIdentifier', async function () {
+      const g = 'E2A5F3F4-0D9C-4E1C-9F7B-1C2D3E4F5A6B'
+      const r = await roundTrip('uniqueidentifier', env.sql.UniqueIdentifier(g))
+      assert.deepStrictEqual(r.v.toUpperCase(), g)
+    })
+
+    it('should keep unicode in sql.NChar', async function () {
+      const r = await roundTrip('nchar(5)', env.sql.NChar('héll☃'))
+      assert.deepStrictEqual(r.v, 'héll☃')
+    })
+
+    it('should pass null through each typed helper', async function () {
+      const helpers = [
+        ['datetime', env.sql.DateTime], ['smalldatetime', env.sql.SmallDateTime],
+        ['money', env.sql.Money], ['smallmoney', env.sql.SmallMoney],
+        ['uniqueidentifier', env.sql.UniqueIdentifier], ['nchar(5)', env.sql.NChar]
+      ]
+      for (const [type, helper] of helpers) {
+        assert.deepStrictEqual((await roundTrip(type, helper(null))).v, null, type)
+      }
+    })
+  })
+
+  // ========================================
   // SQL VARIANT TESTS
   // ========================================
 

@@ -185,6 +185,7 @@ class OdbcStatementLegacy : public IOdbcStatement {
   bool reserved_timestamp(const size_t row_count, const size_t column) const;
   bool reserved_timestamp_offset(const size_t row_count, const size_t column) const;
   bool apply_precision(const shared_ptr<BoundDatum>& datum, int current_param);
+  void apply_server_type(const shared_ptr<BoundDatum>& datum, int current_param);
   bool read_col_attributes(ColumnDefinition& current, int column);
   bool read_next(int column);
   bool bind_prepared_columns();

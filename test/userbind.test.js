@@ -278,7 +278,7 @@ describe('userbind', function () {
     compare(params, res)
   })
 
-  it('user bind DateTime to sql type datetime2(7)', async function handler () {
+  it('user bind DateTime to sql type datetime2(7) arrives as a datetime', async function handler () {
     const now = new Date()
     now.nanosecondsDelta = 0
     const params = {
@@ -290,7 +290,9 @@ describe('userbind', function () {
       }
     }
     const res = await testUserBindAsync(params)
-    compare(params, res)
+    // sql.DateTime is sent as a datetime (#532), which keeps 1/300 s, so the value is rounded
+    // to within 2 ms; sql.DateTime2 keeps the milliseconds
+    res.forEach(r => expect(Math.abs(r.v.getTime() - now.getTime())).to.be.at.most(2))
   })
 
   it('user bind DateTime to sql type datetime - driver currently only supports 10ms accuracy with datetime', async function handler () {
