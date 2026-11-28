@@ -240,6 +240,14 @@ jobs:
         sqlcmd -S localhost -U sa -P Password12 -Q "CREATE DATABASE [scratch];"
         if ($LASTEXITCODE -ne 0) { exit 1 }
 
+    - name: Set up Always Encrypted keys
+      # A self-signed certificate in CurrentUser\My is the column master key. Only the
+      # client needs it, and the client is this runner, so the encrypt suites can run here.
+      # Linux and macOS have no Windows certificate store, so only Windows covers them.
+      working-directory: node_modules/msnodesqlv8
+      shell: pwsh
+      run: ./.github/scripts/setup-always-encrypted.ps1 -Password Password12
+
     - name: Install dependencies
       working-directory: node_modules/msnodesqlv8
       # Build the addon from THIS checkout, explicitly, in two steps.
@@ -278,6 +286,15 @@ jobs:
         DEFAULT: "Driver={ODBC Driver 17 for SQL Server}; Server=localhost; Uid=sa; Pwd=Password12;"
       run: npm test
       timeout-minutes: 30
+
+    - name: Run Always Encrypted tests
+      # The main run above has no ColumnEncryption, so these suites skip there. The keys are
+      # in [node], so name it: without Database= the sa login lands in master.
+      working-directory: node_modules/msnodesqlv8
+      env:
+        DEFAULT: "Driver={ODBC Driver 17 for SQL Server}; Server=localhost; Database=node; Uid=sa; Pwd=Password12;ColumnEncryption=Enabled;"
+      run: npx mocha test/encrypt.test.js test/encrypt-verification.test.js
+      timeout-minutes: 10
 
     - name: Upload test results
       if: always()
