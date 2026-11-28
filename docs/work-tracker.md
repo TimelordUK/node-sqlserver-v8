@@ -62,8 +62,22 @@ took too long, but it holds reasonable ideas. Start again rather than repair:
    (including `SQL_NO_TOTAL`), parameter binding type and size choices, and column
    conversion. #525 is the example: it needed an encrypted SQL Server to reproduce, but a
    mocked `SQLGetData` returning -4 would have caught it.
+4. Aim to drive the real `OdbcStatementLegacy` and connection against the mock, so a test
+   covers the whole bridge, JS to C++ to ODBC and back, and all the type mapping. The binding
+   bugs of November 2026 (#528, #531 to #534: wrong `SQLBindParameter` type or size, a null
+   data pointer, a missing `SQL_CA_SS_SERVER_TYPE`) would show up as wrong recorded
+   arguments, without a live server.
 
-The `diagnostics_tests` target (Logger plus `mock_odbc_api.h`) is the shape to start from.
+Salvage the basic ideas only; most of `test/cpp` no longer matches the code. The
+`diagnostics_tests` target (Logger plus `mock_odbc_api.h`) is the shape to start from.
+Planned for the same session as Trusted Publishing.
+
+### npm Trusted Publishing
+Publishing uses the `NPM_TOKEN` secret, a granular token that npm revokes in January 2027
+because it publishes without 2FA, whatever its expiry. Move `npm-publish.yml` to Trusted
+Publishing: on npmjs.com add this repo and `npm-publish.yml` as the package's trusted
+publisher; in the workflow add `permissions: id-token: write`, run npm 11.5.1 or later for
+the publish step, and drop `NODE_AUTH_TOKEN`. `promote-tag.yml` also uses the token.
 
 ### Prepared statement re-execute growth - unresolved
 Re-executing one prepared statement reads 18-75 B per execute from run to run, with or
@@ -108,25 +122,4 @@ in `test/common/fake-native.js`).
 
 ## Done
 
-- **#531, #532** - parameters now bind as their exact type: `datetime` / `smalldatetime` /
-  `money` / `smallmoney` set `SQL_CA_SS_SERVER_TYPE` (they went as `datetime2` / `numeric`),
-  `uniqueidentifier` binds as `SQL_GUID` and `nchar` as `SQL_WCHAR`, through `callProc` and the
-  typed helpers (`sql.NChar` was `Char`, so it also lost non-Latin text on any connection).
-- **#536** - #533: an empty `Buffer` was stored as NULL on any connection (null data pointer),
-  and bound as `varbinary(max)`.
-- **#535** - the Always Encrypted suites run on Windows CI
-  (`.github/scripts/setup-always-encrypted.ps1` builds the keys); on a plain connection they
-  report pending instead of passing without testing.
-- **#529** - #528: binary parameters over 2,000 bytes were bound as `SQL_LONGVARBINARY` (`image`),
-  which Always Encrypted rejects for `varbinary(max)`; now `SQL_VARBINARY`, size 0 above
-  8,000. Added encrypted `varbinary(max)` round trips (2,000 bytes to 1 MiB, by procedure and
-  by query) that also cover #525.
-- **#527** - removed the never-created non-legacy statement classes (`OdbcStatement`,
-  `TransientStatement`, `PreparedStatement`, `TvpStatement`), about 2,000 lines;
-  `OdbcStatementLegacy` is the only implementation.
-- **#526** - #525: a truncated binary read reporting `SQL_NO_TOTAL` resized the buffer to -4
-  and threw `Unknown exception occurred`; now reads in 24 KiB chunks (contributed).
-- **#517** - query id to statement handle map erased on statement release and cleared on
-  close; fixed a ~65 B per query native leak on long-lived connections (contributed).
-- **#516** - [kerberos-linux.md](kerberos-linux.md): Windows authentication from Linux,
-  closes #323.
+Nothing since 6.3.0. Earlier work is listed in the GitHub release notes.
