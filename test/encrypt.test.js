@@ -22,6 +22,10 @@ configureTestLogging(sql)
 
 describe('encrypt', function () {
   this.timeout(50000)
+  // without ColumnEncryption=Enabled nothing here is tested, so report it as pending
+  this.beforeAll(function () {
+    if (!env.isEncryptedConnection()) this.skip()
+  })
   this.beforeEach(async function () {
     sql.logger.info('Starting test setup', 'params.test.beforeEach')
     await env.open()
@@ -486,16 +490,12 @@ describe('encrypt', function () {
   }
 
   async function runProc (fieldBuilder) {
-    if (!env.isEncryptedConnection()) return
-
     const tester = new EncryptionFieldTester(fieldBuilder)
     await tester.prepare()
     await tester.testProc()
   }
 
   async function runTable (fieldBuilder) {
-    if (!env.isEncryptedConnection()) return
-
     const tester = new EncryptionFieldTester(fieldBuilder)
     await tester.prepare()
     await tester.testTable()
@@ -663,8 +663,6 @@ describe('encrypt', function () {
   // rejects for a varbinary(max) column; insert one row by procedure and one by query.
   // #525 - reading one back over a single 24 KiB read could see SQL_NO_TOTAL and crash
   async function runVarBinaryMax (bytes) {
-    if (!env.isEncryptedConnection()) return
-
     const tableName = 'test_encrypted_varbinary_max'
     const procName = `proc_insert_${tableName}`
     const promises = env.theConnection.promises
